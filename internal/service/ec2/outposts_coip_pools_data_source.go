@@ -7,18 +7,20 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_coip_pools")
-func DataSourceCoIPPools() *schema.Resource {
+// @SDKDataSource("aws_ec2_coip_pools", name="COIP Pools")
+func dataSourceCoIPPools() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCoIPPoolsRead,
 
@@ -33,22 +35,22 @@ func DataSourceCoIPPools() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchema(),
 		},
 	}
 }
 
 func dataSourceCoIPPoolsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeCoipPoolsInput{}
 
-	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterListV2(
+		TagsV2(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, newCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterListV2(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -56,20 +58,16 @@ func dataSourceCoIPPoolsRead(ctx context.Context, d *schema.ResourceData, meta i
 		input.Filters = nil
 	}
 
-	output, err := FindCOIPPools(ctx, conn, input)
+	output, err := findCOIPPools(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 COIP Pools: %s", err)
 	}
 
-	var poolIDs []string
-
-	for _, v := range output {
-		poolIDs = append(poolIDs, aws.StringValue(v.PoolId))
-	}
-
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("pool_ids", poolIDs)
+	d.Set("pool_ids", tfslices.ApplyToAll(output, func(v awstypes.CoipPool) string {
+		return aws.ToString(v.PoolId)
+	}))
 
 	return diags
 }

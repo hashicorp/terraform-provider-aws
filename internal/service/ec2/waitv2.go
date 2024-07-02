@@ -1752,9 +1752,65 @@ func waitIPAMScopeDeleted(ctx context.Context, conn *ec2.Client, id string, time
 	return nil, err
 }
 
-const (
-	TransitGatewayIncorrectStateTimeout = 5 * time.Minute
-)
+func waitLocalGatewayRouteDeleted(ctx context.Context, conn *ec2.Client, localGatewayRouteTableID, destinationCIDRBlock string) (*awstypes.LocalGatewayRoute, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.LocalGatewayRouteStateDeleting),
+		Target:  []string{},
+		Refresh: statusLocalGatewayRoute(ctx, conn, localGatewayRouteTableID, destinationCIDRBlock),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.LocalGatewayRoute); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitLocalGatewayRouteTableVPCAssociationAssociated(ctx context.Context, conn *ec2.Client, id string) (*awstypes.LocalGatewayRouteTableVpcAssociation, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RouteTableAssociationStateCodeAssociating),
+		Target:  enum.Slice(awstypes.RouteTableAssociationStateCodeAssociated),
+		Refresh: statusLocalGatewayRouteTableVPCAssociation(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.LocalGatewayRouteTableVpcAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitLocalGatewayRouteTableVPCAssociationDisassociated(ctx context.Context, conn *ec2.Client, id string) (*awstypes.LocalGatewayRouteTableVpcAssociation, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RouteTableAssociationStateCodeDisassociating),
+		Target:  []string{},
+		Refresh: statusLocalGatewayRouteTableVPCAssociation(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.LocalGatewayRouteTableVpcAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
 
 func waitTransitGatewayCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGateway, error) {
 	stateConf := &retry.StateChangeConf{

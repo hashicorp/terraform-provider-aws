@@ -290,7 +290,10 @@ func resourceTransitGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, TransitGatewayIncorrectStateTimeout, func() (interface{}, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
 		return conn.DeleteTransitGateway(ctx, &ec2.DeleteTransitGatewayInput{
 			TransitGatewayId: aws.String(d.Id()),
 		})
