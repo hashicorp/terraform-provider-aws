@@ -1,9 +1,22 @@
 ## 5.57.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_cognito_user_pool` ([#37399](https://github.com/hashicorp/terraform-provider-aws/issues/37399))
+* **New Data Source:** `aws_ec2_transit_gateway_peering_attachments` ([#25743](https://github.com/hashicorp/terraform-provider-aws/issues/25743))
+
+ENHANCEMENTS:
+
+* resource/aws_amplify_domain_association: Add `certificate_settings` argument ([#37105](https://github.com/hashicorp/terraform-provider-aws/issues/37105))
+* resource/aws_sagemaker_endpoint_configuration: Add support for `InputAndOutput` in `capture_mode` ([#37726](https://github.com/hashicorp/terraform-provider-aws/issues/37726))
+
+## 5.56.1 (June 28, 2024)
+
 BUG FIXES:
 
-* data-source/aws_cognito_user_pool_client: Fix `InvalidParameterException: 2 validation errors detected`  errors on Read ([#38168](https://github.com/hashicorp/terraform-provider-aws/issues/38168))
+* data-source/aws_cognito_user_pool_client: Fix `InvalidParameterException: 2 validation errors detected` errors on Read ([#38168](https://github.com/hashicorp/terraform-provider-aws/issues/38168))
 * resource/aws_cognito_user: Fix a bug that caused resource recreation for resources imported with certain [import ID](https://developer.hashicorp.com/terraform/language/import#import-id) formats ([#38182](https://github.com/hashicorp/terraform-provider-aws/issues/38182))
+* resource/aws_cognito_user_pool: Fix `runtime error: index out of range [0] with length 0` panic when adding `lambda_config` ([#38184](https://github.com/hashicorp/terraform-provider-aws/issues/38184))
 
 ## 5.56.0 (June 27, 2024)
 
