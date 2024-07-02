@@ -121,6 +121,7 @@ FinSpace
 GameLift
 Global Accelerator
 Glue
+Glue DataBrew
 Ground Station
 GuardDuty
 HealthLake

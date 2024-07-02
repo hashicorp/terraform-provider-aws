@@ -74,7 +74,7 @@ class MyConvertedCode(TerraformStack):
 For more detailed documentation about each argument, refer to
 the [AWS official documentation][3].
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `resource_arn` - (Required, Forces new resources) The Amazon Resource Name (ARN) of the DB cluster.
 * `mode` - (Required, Forces new resources) Specifies the mode of the database activity stream. Database events such as a change or access generate an activity stream event. The database session can handle these events either synchronously or asynchronously. One of: `sync`, `async`.
@@ -117,4 +117,4 @@ Using `terraform import`, import RDS Aurora Cluster Database Activity Streams us
 [2]: https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_StartActivityStream.html
 [3]: https://docs.aws.amazon.com/cli/latest/reference/rds/start-activity-stream.html
 
-<!-- cache-key: cdktf-0.20.1 input-fcf3731d612996fd4027d7e88ab025bc39f9569cb19372c8fee944d11a24a797 -->
+<!-- cache-key: cdktf-0.20.1 input-a5bf6e1eec33c9f5f4167e730c5e39fc3f9274681a227644702d196bcdac1c90 -->
