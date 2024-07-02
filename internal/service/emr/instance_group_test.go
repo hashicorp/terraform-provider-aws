@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/emr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccEMRInstanceGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v emr.InstanceGroup
+	var v awstypes.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
 
@@ -53,7 +53,7 @@ func TestAccEMRInstanceGroup_basic(t *testing.T) {
 
 func TestAccEMRInstanceGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v emr.InstanceGroup
+	var v awstypes.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
 
@@ -79,8 +79,8 @@ func TestAccEMRInstanceGroup_disappears(t *testing.T) {
 // Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1355
 func TestAccEMRInstanceGroup_Disappears_emrCluster(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
-	var ig emr.InstanceGroup
+	var cluster awstypes.Cluster
+	var ig awstypes.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
 	emrClusterResourceName := "aws_emr_cluster.test"
@@ -106,7 +106,7 @@ func TestAccEMRInstanceGroup_Disappears_emrCluster(t *testing.T) {
 
 func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 emr.InstanceGroup
+	var v1, v2 awstypes.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
 
@@ -159,7 +159,7 @@ func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
 
 func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v emr.InstanceGroup
+	var v awstypes.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
 
@@ -203,7 +203,7 @@ func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
 
 func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v emr.InstanceGroup
+	var v awstypes.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
 
@@ -249,7 +249,7 @@ func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
 // Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1264
 func TestAccEMRInstanceGroup_instanceCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v emr.InstanceGroup
+	var v awstypes.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
 
@@ -280,7 +280,7 @@ func TestAccEMRInstanceGroup_instanceCount(t *testing.T) {
 
 func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v emr.InstanceGroup
+	var v awstypes.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
 
@@ -317,7 +317,7 @@ func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceGroupExists(ctx context.Context, name string, ig *emr.InstanceGroup) resource.TestCheckFunc {
+func testAccCheckInstanceGroupExists(ctx context.Context, name string, ig *awstypes.InstanceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -329,7 +329,7 @@ func testAccCheckInstanceGroupExists(ctx context.Context, name string, ig *emr.I
 		}
 
 		meta := acctest.Provider.Meta()
-		conn := meta.(*conns.AWSClient).EMRConn(ctx)
+		conn := meta.(*conns.AWSClient).EMRClient(ctx)
 		group, err := tfemr.FetchInstanceGroup(ctx, conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("EMR error: %v", err)
@@ -355,10 +355,10 @@ func testAccInstanceGroupResourceImportStateIdFunc(resourceName string) resource
 	}
 }
 
-func testAccInstanceGroupRecreated(t *testing.T, before, after *emr.InstanceGroup) resource.TestCheckFunc {
+func testAccInstanceGroupRecreated(t *testing.T, before, after *awstypes.InstanceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(before.Id) == aws.StringValue(after.Id) {
-			t.Fatalf("Expected change of Instance Group Ids, but both were %v", aws.StringValue(before.Id))
+		if aws.ToString(before.Id) == aws.ToString(after.Id) {
+			t.Fatalf("Expected change of Instance Group Ids, but both were %v", aws.ToString(before.Id))
 		}
 
 		return nil
