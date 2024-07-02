@@ -160,19 +160,9 @@ func testAccCheckThingGroupMembershipExists(ctx context.Context, n string) resou
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IoT Thing Group Membership ID is set")
-		}
-
-		thingGroupName, thingName, err := tfiot.ThingGroupMembershipParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
-		_, err = tfiot.FindThingGroupMembership(ctx, conn, thingGroupName, thingName)
+		_, err := tfiot.FindThingGroupMembershipByTwoPartKey(ctx, conn, rs.Primary.Attributes["thing_group_name"], rs.Primary.Attributes["thing_name"])
 
 		return err
 	}
@@ -187,13 +177,7 @@ func testAccCheckThingGroupMembershipDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			thingGroupName, thingName, err := tfiot.ThingGroupMembershipParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfiot.FindThingGroupMembership(ctx, conn, thingGroupName, thingName)
+			_, err := tfiot.FindThingGroupMembershipByTwoPartKey(ctx, conn, rs.Primary.Attributes["thing_group_name"], rs.Primary.Attributes["thing_name"])
 
 			if tfresource.NotFound(err) {
 				continue

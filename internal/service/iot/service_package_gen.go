@@ -132,8 +132,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceThingGroupMembership,
+			Factory:  resourceThingGroupMembership,
 			TypeName: "aws_iot_thing_group_membership",
+			Name:     "Thing Group Membership",
 		},
 		{
 			Factory:  ResourceThingPrincipalAttachment,
