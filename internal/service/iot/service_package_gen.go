@@ -47,7 +47,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceBillingGroup,
+			Factory:  resourceBillingGroup,
 			TypeName: "aws_iot_billing_group",
 			Name:     "Billing Group",
 			Tags: &types.ServicePackageResourceTags{

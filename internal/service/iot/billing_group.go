@@ -26,7 +26,7 @@ import (
 
 // @SDKResource("aws_iot_billing_group", name="Billing Group")
 // @Tags(identifierAttribute="arn")
-func ResourceBillingGroup() *schema.Resource {
+func resourceBillingGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBillingGroupCreate,
 		ReadWithoutTimeout:   resourceBillingGroupRead,
