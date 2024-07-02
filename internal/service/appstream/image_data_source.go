@@ -42,29 +42,6 @@ func (d *dataSourceImage) Metadata(_ context.Context, req datasource.MetadataReq
 	resp.TypeName = "aws_appstream_image"
 }
 
-// TIP: ==== SCHEMA ====
-// In the schema, add each of the arguments and attributes in snake
-// case (e.g., delete_automated_backups).
-// * Alphabetize arguments to make them easier to find.
-// * Do not add a blank line between arguments/attributes.
-//
-// Users can configure argument values while attribute values cannot be
-// configured and are used as output. Arguments have either:
-// Required: true,
-// Optional: true,
-//
-// All attributes will be computed and some arguments. If users will
-// want to read updated information or detect drift for an argument,
-// it should be computed:
-// Computed: true,
-//
-// You will typically find arguments in the input struct
-// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-// the modify operation.
-//
-// For more about schema options, visit
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
 func (d *dataSourceImage) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	{
 		resp.Schema = schema.Schema{
