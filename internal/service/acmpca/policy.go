@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_acmpca_policy", name="Policy")
@@ -35,7 +36,7 @@ func resourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -46,7 +47,7 @@ func resourcePolicy() *schema.Resource {
 					return json
 				},
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -59,12 +60,12 @@ func resourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	resourceARN := d.Get("resource_arn").(string)
+	resourceARN := d.Get(names.AttrResourceARN).(string)
 	input := &acmpca.PutPolicyInput{
 		Policy:      aws.String(policy),
 		ResourceArn: aws.String(resourceARN),
@@ -99,8 +100,8 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("policy", policy)
-	d.Set("resource_arn", d.Id())
+	d.Set(names.AttrPolicy, policy)
+	d.Set(names.AttrResourceARN, d.Id())
 
 	return diags
 }

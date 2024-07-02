@@ -104,12 +104,14 @@ This resource supports the following arguments:
 
 ### Oidc Config
 
+* `authentication_request_extra_params` - (Optional) A string to string map of identifiers specific to the custom identity provider (IdP) being used.
 * `authorization_endpoint` - (Required) The OIDC IdP authorization endpoint used to configure your private workforce.
 * `client_id` - (Required) The OIDC IdP client ID used to configure your private workforce.
 * `client_secret` - (Required) The OIDC IdP client secret used to configure your private workforce.
 * `issuer` - (Required) The OIDC IdP issuer used to configure your private workforce.
 * `jwks_uri` - (Required) The OIDC IdP JSON Web Key Set (Jwks) URI used to configure your private workforce.
 * `logout_endpoint` - (Required) The OIDC IdP logout endpoint used to configure your private workforce.
+* `scope` - (Optional) An array of string identifiers used to refer to the specific pieces of user data or claims that the client application wants to access.
 * `token_endpoint` - (Required) The OIDC IdP token endpoint used to configure your private workforce.
 * `user_info_endpoint` - (Required) The OIDC IdP user information endpoint used to configure your private workforce.
 
@@ -157,4 +159,4 @@ Using `terraform import`, import SageMaker Workforces using the `workforce_name`
 % terraform import aws_sagemaker_workforce.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b4c9ab9708ddac7777a4511e715674b772e0a778ceb4beb60491fda22462d138 -->
+<!-- cache-key: cdktf-0.20.1 input-dfe4e6d6b426026571ddfd549a3e41a20f0d8a81b1ad80e28a8b0c0f37c7656b -->

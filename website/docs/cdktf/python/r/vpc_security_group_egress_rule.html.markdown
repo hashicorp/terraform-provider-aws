@@ -46,7 +46,7 @@ class MyConvertedCode(TerraformStack):
 
 ~> **Note** Although `cidr_ipv4`, `cidr_ipv6`, `prefix_list_id`, and `referenced_security_group_id` are all marked as optional, you *must* provide one of them in order to configure the destination of the traffic. The `from_port` and `to_port` arguments are required unless `ip_protocol` is set to `-1` or `icmpv6`.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `cidr_ipv4` - (Optional) The destination IPv4 CIDR range.
 * `cidr_ipv6` - (Optional) The destination IPv6 CIDR range.
@@ -92,4 +92,4 @@ Using `terraform import`, import security group egress rules using the `security
 % terraform import aws_vpc_security_group_egress_rule.example sgr-02108b27edd666983
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3621cd75bed627759b23d79804e271902694303345d1faee64fd0fa94f65fd5d -->
+<!-- cache-key: cdktf-0.20.1 input-7a73ac63b6439344bb83937132e305eb93a82b3bb487df55449cc554d3b11dd0 -->

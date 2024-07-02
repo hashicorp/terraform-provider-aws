@@ -37,8 +37,8 @@ func TestAccVPCLatticeAuthPolicyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAuthPolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "policy", regexache.MustCompile(`"Action":"*"`)),
-					resource.TestCheckResourceAttrPair(dataSourceName, "resource_identifier", "aws_vpclattice_service.test", "arn"),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrPolicy, regexache.MustCompile(`"Action":"*"`)),
+					resource.TestCheckResourceAttrPair(dataSourceName, "resource_identifier", "aws_vpclattice_service.test", names.AttrARN),
 				),
 			},
 		},

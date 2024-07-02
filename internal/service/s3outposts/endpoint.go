@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3outposts_endpoint")
@@ -41,15 +42,15 @@ func ResourceEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(s3outposts.EndpointAccessType_Values(), false),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,7 +65,7 @@ func ResourceEndpoint() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"network_interface_id": {
+						names.AttrNetworkInterfaceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -83,7 +84,7 @@ func ResourceEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -100,7 +101,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &s3outposts.CreateEndpointInput{
 		OutpostId:       aws.String(d.Get("outpost_id").(string)),
 		SecurityGroupId: aws.String(d.Get("security_group_id").(string)),
-		SubnetId:        aws.String(d.Get("subnet_id").(string)),
+		SubnetId:        aws.String(d.Get(names.AttrSubnetID).(string)),
 	}
 
 	if v, ok := d.GetOk("access_type"); ok {
@@ -143,10 +144,10 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("access_type", endpoint.AccessType)
-	d.Set("arn", endpoint.EndpointArn)
-	d.Set("cidr_block", endpoint.CidrBlock)
+	d.Set(names.AttrARN, endpoint.EndpointArn)
+	d.Set(names.AttrCIDRBlock, endpoint.CidrBlock)
 	if endpoint.CreationTime != nil {
-		d.Set("creation_time", aws.TimeValue(endpoint.CreationTime).Format(time.RFC3339))
+		d.Set(names.AttrCreationTime, aws.TimeValue(endpoint.CreationTime).Format(time.RFC3339))
 	}
 	d.Set("customer_owned_ipv4_pool", endpoint.CustomerOwnedIpv4Pool)
 	if err := d.Set("network_interfaces", flattenNetworkInterfaces(endpoint.NetworkInterfaces)); err != nil {
@@ -200,7 +201,7 @@ func resourceEndpointImportState(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(endpointArn)
 	d.Set("security_group_id", securityGroupId)
-	d.Set("subnet_id", subnetId)
+	d.Set(names.AttrSubnetID, subnetId)
 
 	return []*schema.ResourceData{d}, nil
 }
@@ -309,7 +310,7 @@ func flattenNetworkInterface(apiObject *s3outposts.NetworkInterface) map[string]
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
-		tfMap["network_interface_id"] = aws.StringValue(v)
+		tfMap[names.AttrNetworkInterfaceID] = aws.StringValue(v)
 	}
 
 	return tfMap

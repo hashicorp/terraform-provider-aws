@@ -56,7 +56,7 @@ func resourceReportDefinition() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[types.SchemaElement](),
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,7 +65,7 @@ func resourceReportDefinition() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.CompressionFormat](),
 			},
-			"format": {
+			names.AttrFormat: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.ReportFormat](),
@@ -91,7 +91,7 @@ func resourceReportDefinition() *schema.Resource {
 				Default:          types.ReportVersioningCreateNewReport,
 				ValidateDiagFunc: enum.Validate[types.ReportVersioning](),
 			},
-			"s3_bucket": {
+			names.AttrS3Bucket: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -122,7 +122,7 @@ func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData,
 	reportName := d.Get("report_name").(string)
 	additionalArtifacts := flex.ExpandStringyValueSet[types.AdditionalArtifact](d.Get("additional_artifacts").(*schema.Set))
 	compression := types.CompressionFormat(d.Get("compression").(string))
-	format := types.ReportFormat(d.Get("format").(string))
+	format := types.ReportFormat(d.Get(names.AttrFormat).(string))
 	prefix := d.Get("s3_prefix").(string)
 	reportVersioning := types.ReportVersioning(d.Get("report_versioning").(string))
 
@@ -145,7 +145,7 @@ func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData,
 			RefreshClosedReports:     aws.Bool(d.Get("refresh_closed_reports").(bool)),
 			ReportName:               aws.String(reportName),
 			ReportVersioning:         reportVersioning,
-			S3Bucket:                 aws.String(d.Get("s3_bucket").(string)),
+			S3Bucket:                 aws.String(d.Get(names.AttrS3Bucket).(string)),
 			S3Prefix:                 aws.String(prefix),
 			S3Region:                 types.AWSRegion(d.Get("s3_region").(string)),
 			TimeUnit:                 types.TimeUnit(d.Get("time_unit").(string)),
@@ -190,13 +190,13 @@ func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  "definition/" + reportName,
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("compression", reportDefinition.Compression)
-	d.Set("format", reportDefinition.Format)
+	d.Set(names.AttrFormat, reportDefinition.Format)
 	d.Set("refresh_closed_reports", reportDefinition.RefreshClosedReports)
 	d.Set("report_name", reportName)
 	d.Set("report_versioning", reportDefinition.ReportVersioning)
-	d.Set("s3_bucket", reportDefinition.S3Bucket)
+	d.Set(names.AttrS3Bucket, reportDefinition.S3Bucket)
 	d.Set("s3_prefix", reportDefinition.S3Prefix)
 	d.Set("s3_region", reportDefinition.S3Region)
 	d.Set("time_unit", reportDefinition.TimeUnit)
@@ -210,7 +210,7 @@ func resourceReportDefinitionUpdate(ctx context.Context, d *schema.ResourceData,
 
 	additionalArtifacts := flex.ExpandStringyValueSet[types.AdditionalArtifact](d.Get("additional_artifacts").(*schema.Set))
 	compression := types.CompressionFormat(d.Get("compression").(string))
-	format := types.ReportFormat(d.Get("format").(string))
+	format := types.ReportFormat(d.Get(names.AttrFormat).(string))
 	prefix := d.Get("s3_prefix").(string)
 	reportVersioning := types.ReportVersioning(d.Get("report_versioning").(string))
 
@@ -233,7 +233,7 @@ func resourceReportDefinitionUpdate(ctx context.Context, d *schema.ResourceData,
 			RefreshClosedReports:     aws.Bool(d.Get("refresh_closed_reports").(bool)),
 			ReportName:               aws.String(d.Id()),
 			ReportVersioning:         reportVersioning,
-			S3Bucket:                 aws.String(d.Get("s3_bucket").(string)),
+			S3Bucket:                 aws.String(d.Get(names.AttrS3Bucket).(string)),
 			S3Prefix:                 aws.String(prefix),
 			S3Region:                 types.AWSRegion(d.Get("s3_region").(string)),
 			TimeUnit:                 types.TimeUnit(d.Get("time_unit").(string)),

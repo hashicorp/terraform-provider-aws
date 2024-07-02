@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMetaDefaultTagsDataSource_basic(t *testing.T) {
@@ -23,12 +24,12 @@ func TestAccMetaDefaultTagsDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("first", "value"),
+					acctest.ConfigDefaultTags_Tags1("first", names.AttrValue),
 					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.first", "value"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.first", names.AttrValue),
 				),
 			},
 		},
@@ -48,7 +49,7 @@ func TestAccMetaDefaultTagsDataSource_empty(t *testing.T) {
 			{
 				Config: testAccDefaultTagsDataSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -71,7 +72,7 @@ func TestAccMetaDefaultTagsDataSource_multiple(t *testing.T) {
 					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.nuera", "hijo"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.escalofrios", "calambres"),
 				),
@@ -96,7 +97,7 @@ func TestAccMetaDefaultTagsDataSource_ignore(t *testing.T) {
 					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.Tabac", "Louis Chiron"),
 				),
 			},
@@ -106,7 +107,7 @@ func TestAccMetaDefaultTagsDataSource_ignore(t *testing.T) {
 					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},

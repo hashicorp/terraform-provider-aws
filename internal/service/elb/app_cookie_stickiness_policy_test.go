@@ -34,7 +34,7 @@ func TestAccELBAppCookieStickinessPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppCookieStickinessPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cookie_name", "bourbon"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -47,7 +47,7 @@ func TestAccELBAppCookieStickinessPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppCookieStickinessPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cookie_name", "custard-cream"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 		},
