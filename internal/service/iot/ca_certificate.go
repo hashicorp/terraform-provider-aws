@@ -5,7 +5,6 @@ package iot
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -31,7 +30,7 @@ import (
 
 // @SDKResource("aws_iot_ca_certificate", name="CA Certificate")
 // @Tags(identifierAttribute="arn")
-func ResourceCACertificate() *schema.Resource {
+func resourceCACertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCACertificateCreate,
 		ReadWithoutTimeout:   resourceCACertificateRead,
@@ -162,25 +161,15 @@ func resourceCACertificateCreate(ctx context.Context, d *schema.ResourceData, me
 		input.VerificationCertificate = aws.String(v.(string))
 	}
 
-	var out *iot.RegisterCACertificateOutput
-	err := tfresource.Retry(ctx, propagationTimeout, func() *retry.RetryError {
-		var err error
-		out, err = conn.RegisterCACertificate(ctx, input)
-		if err != nil {
-			var ire *awstypes.InvalidRequestException
-			if errors.As(err, &ire) {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
-		return nil
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.RegisterCACertificate(ctx, input)
 	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "registering IoT CA Certificate: %s", err)
 	}
 
-	d.SetId(aws.ToString(out.CertificateId))
+	d.SetId(aws.ToString(outputRaw.(*iot.RegisterCACertificateOutput).CertificateId))
 
 	return append(diags, resourceCACertificateRead(ctx, d, meta)...)
 }
@@ -254,17 +243,8 @@ func resourceCACertificateUpdate(ctx context.Context, d *schema.ResourceData, me
 			}
 		}
 
-		err := tfresource.Retry(ctx, propagationTimeout, func() *retry.RetryError {
-			var err error
-			_, err = conn.UpdateCACertificate(ctx, input)
-			if err != nil {
-				var ire *awstypes.InvalidRequestException
-				if errors.As(err, &ire) {
-					return retry.RetryableError(err)
-				}
-				return retry.NonRetryableError(err)
-			}
-			return nil
+		_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout, func() (interface{}, error) {
+			return conn.UpdateCACertificate(ctx, input)
 		})
 
 		if err != nil {
@@ -280,7 +260,6 @@ func resourceCACertificateDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	if d.Get("active").(bool) {
-		log.Printf("[DEBUG] Disabling IoT CA Certificate: %s", d.Id())
 		_, err := conn.UpdateCACertificate(ctx, &iot.UpdateCACertificateInput{
 			CertificateId: aws.String(d.Id()),
 			NewStatus:     awstypes.CACertificateStatusInactive,
