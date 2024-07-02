@@ -7,14 +7,16 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/emr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -44,10 +46,10 @@ func resourceStudio() *schema.Resource {
 				Computed: true,
 			},
 			"auth_mode": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(emr.AuthMode_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.AuthMode](),
 			},
 			"default_s3_location": {
 				Type:     schema.TypeString,
@@ -119,15 +121,15 @@ func resourceStudio() *schema.Resource {
 
 func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	input := &emr.CreateStudioInput{
-		AuthMode:                 aws.String(d.Get("auth_mode").(string)),
+		AuthMode:                 awstypes.AuthMode(d.Get("auth_mode").(string)),
 		DefaultS3Location:        aws.String(d.Get("default_s3_location").(string)),
 		EngineSecurityGroupId:    aws.String(d.Get("engine_security_group_id").(string)),
 		Name:                     aws.String(d.Get(names.AttrName).(string)),
 		ServiceRole:              aws.String(d.Get(names.AttrServiceRole).(string)),
-		SubnetIds:                flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+		SubnetIds:                flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		Tags:                     getTagsIn(ctx),
 		VpcId:                    aws.String(d.Get(names.AttrVPCID).(string)),
 		WorkspaceSecurityGroupId: aws.String(d.Get("workspace_security_group_id").(string)),
@@ -152,11 +154,11 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var result *emr.CreateStudioOutput
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
-		result, err = conn.CreateStudioWithContext(ctx, input)
-		if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "entity does not have permissions to assume role") {
+		result, err = conn.CreateStudio(ctx, input)
+		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "entity does not have permissions to assume role") {
 			return retry.RetryableError(err)
 		}
-		if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Service role does not have permission to access") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Service role does not have permission to access") {
 			return retry.RetryableError(err)
 		}
 		if err != nil {
@@ -165,20 +167,20 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		result, err = conn.CreateStudioWithContext(ctx, input)
+		result, err = conn.CreateStudio(ctx, input)
 	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EMR Studio: %s", err)
 	}
 
-	d.SetId(aws.StringValue(result.StudioId))
+	d.SetId(aws.ToString(result.StudioId))
 
 	return append(diags, resourceStudioRead(ctx, d, meta)...)
 }
 
 func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &emr.UpdateStudioInput{
@@ -198,10 +200,10 @@ func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange(names.AttrSubnetIDs) {
-			input.SubnetIds = flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set))
+			input.SubnetIds = flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set))
 		}
 
-		_, err := conn.UpdateStudioWithContext(ctx, input)
+		_, err := conn.UpdateStudio(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EMR Studio: %s", err)
@@ -213,7 +215,7 @@ func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	studio, err := findStudioByID(ctx, conn, d.Id())
 
@@ -240,7 +242,7 @@ func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("user_role", studio.UserRole)
 	d.Set(names.AttrVPCID, studio.VpcId)
 	d.Set("workspace_security_group_id", studio.WorkspaceSecurityGroupId)
-	d.Set(names.AttrSubnetIDs, flex.FlattenStringSet(studio.SubnetIds))
+	d.Set(names.AttrSubnetIDs, flex.FlattenStringValueSet(studio.SubnetIds))
 
 	setTagsOut(ctx, studio.Tags)
 
@@ -249,17 +251,17 @@ func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceStudioDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	request := &emr.DeleteStudioInput{
 		StudioId: aws.String(d.Id()),
 	}
 
 	log.Printf("[INFO] Deleting EMR Studio: %s", d.Id())
-	_, err := conn.DeleteStudioWithContext(ctx, request)
+	_, err := conn.DeleteStudio(ctx, request)
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, emr.ErrCodeInternalServerException) {
+		if errs.IsA[*awstypes.InternalServerException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting EMR Studio (%s): %s", d.Id(), err)
@@ -268,14 +270,14 @@ func resourceStudioDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func findStudioByID(ctx context.Context, conn *emr.EMR, id string) (*emr.Studio, error) {
+func findStudioByID(ctx context.Context, conn *emr.Client, id string) (*awstypes.Studio, error) {
 	input := &emr.DescribeStudioInput{
 		StudioId: aws.String(id),
 	}
 
-	output, err := conn.DescribeStudioWithContext(ctx, input)
+	output, err := conn.DescribeStudio(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Studio does not exist") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Studio does not exist") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/emr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccEMRStudio_sso(t *testing.T) {
 	ctx := acctest.Context(t)
-	var studio emr.Studio
+	var studio awstypes.Studio
 	resourceName := "aws_emr_studio.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -78,7 +78,7 @@ func TestAccEMRStudio_sso(t *testing.T) {
 
 func TestAccEMRStudio_iam(t *testing.T) {
 	ctx := acctest.Context(t)
-	var studio emr.Studio
+	var studio awstypes.Studio
 	resourceName := "aws_emr_studio.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -114,7 +114,7 @@ func TestAccEMRStudio_iam(t *testing.T) {
 
 func TestAccEMRStudio_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var studio emr.Studio
+	var studio awstypes.Studio
 	resourceName := "aws_emr_studio.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -139,7 +139,7 @@ func TestAccEMRStudio_disappears(t *testing.T) {
 
 func TestAccEMRStudio_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var studio emr.Studio
+	var studio awstypes.Studio
 	resourceName := "aws_emr_studio.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -183,14 +183,14 @@ func TestAccEMRStudio_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckStudioExists(ctx context.Context, resourceName string, studio *emr.Studio) resource.TestCheckFunc {
+func testAccCheckStudioExists(ctx context.Context, resourceName string, studio *awstypes.Studio) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
 		output, err := tfemr.FindStudioByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -209,7 +209,7 @@ func testAccCheckStudioExists(ctx context.Context, resourceName string, studio *
 
 func testAccCheckStudioDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emr_studio" {
