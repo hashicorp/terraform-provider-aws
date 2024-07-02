@@ -149,14 +149,13 @@ func (d *dataSourceImage) Read(ctx context.Context, req datasource.ReadRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var describeImagesInput appstream.DescribeImagesInput // camel case
+	var describeImagesInput appstream.DescribeImagesInput
 	if !data.Name.IsNull() {
 		describeImagesInput.Names = []string{data.Name.ValueString()}
 	}
 	if !data.Arn.IsNull() {
 		describeImagesInput.Arns = []string{data.Arn.ValueString()}
 	}
-	//
 	images, err := findImages(ctx, conn, &describeImagesInput)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -211,7 +210,7 @@ func (d *dataSourceImage) Read(ctx context.Context, req datasource.ReadRequest, 
 	}
 	image := filteredImages[0]
 
-	data.Type = fwtypes.StringEnum[awstypes.VisibilityType]{}.StringEnumValue(string(image.Visibility))
+	data.Type = fwtypes.StringEnumValue[awstypes.VisibilityType](image.Visibility)
 	resp.Diagnostics.Append(flex.Flatten(ctx, &image, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
