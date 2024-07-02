@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/emrcontainers"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/emrcontainers"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/emrcontainers/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
@@ -32,7 +33,7 @@ func sweepVirtualClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EMRContainersConn(ctx)
+	conn := client.EMRContainersClient(ctx)
 	input := &emrcontainers.ListVirtualClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -42,13 +43,13 @@ func sweepVirtualClusters(region string) error {
 		}
 
 		for _, v := range page.VirtualClusters {
-			if aws.StringValue(v.State) == emrcontainers.VirtualClusterStateTerminated {
+			if aws.ToString(v.State) == awstypes.VirtualClusterStateTerminated {
 				continue
 			}
 
 			r := ResourceVirtualCluster()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.Id))
+			d.SetId(aws.ToString(v.Id))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -80,7 +81,7 @@ func sweepJobTemplates(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EMRContainersConn(ctx)
+	conn := client.EMRContainersClient(ctx)
 	input := &emrcontainers.ListJobTemplatesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -92,7 +93,7 @@ func sweepJobTemplates(region string) error {
 		for _, v := range page.Templates {
 			r := ResourceJobTemplate()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.Id))
+			d.SetId(aws.ToString(v.Id))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

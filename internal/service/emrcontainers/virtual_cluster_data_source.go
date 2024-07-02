@@ -6,7 +6,7 @@ package emrcontainers
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -85,7 +85,7 @@ func DataSourceVirtualCluster() *schema.Resource {
 func dataSourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRContainersClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("virtual_cluster_id").(string)
@@ -95,7 +95,7 @@ func dataSourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading EMR Containers Virtual Cluster (%s): %s", id, err)
 	}
 
-	d.SetId(aws.StringValue(vc.Id))
+	d.SetId(aws.ToString(vc.Id))
 	d.Set(names.AttrARN, vc.Arn)
 	if vc.ContainerProvider != nil {
 		if err := d.Set("container_provider", []interface{}{flattenContainerProvider(vc.ContainerProvider)}); err != nil {

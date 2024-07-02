@@ -9,15 +9,18 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/emrcontainers"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/emrcontainers"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/emrcontainers/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -133,7 +136,7 @@ func ResourceJobTemplate() *schema.Resource {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ForceNew:     true,
-													ValidateFunc: validation.StringInSlice(emrcontainers.PersistentAppUI_Values(), false),
+													ValidateFunc: enum.Validate[awstypes.PersistentAppUI](),
 												},
 												"s3_monitoring_configuration": {
 													Type:     schema.TypeList,
@@ -260,7 +263,7 @@ func ResourceJobTemplate() *schema.Resource {
 func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRContainersClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &emrcontainers.CreateJobTemplateInput{
@@ -277,13 +280,13 @@ func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.KmsKeyArn = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateJobTemplateWithContext(ctx, input)
+	output, err := conn.CreateJobTemplate(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EMR Containers Job Template (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Id))
+	d.SetId(aws.ToString(output.Id))
 
 	return append(diags, resourceJobTemplateRead(ctx, d, meta)...)
 }
@@ -291,7 +294,7 @@ func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRContainersClient(ctx)
 
 	vc, err := FindJobTemplateByID(ctx, conn, d.Id())
 
@@ -324,19 +327,19 @@ func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceJobTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRContainersClient(ctx)
 
 	log.Printf("[INFO] Deleting EMR Containers Job Template: %s", d.Id())
-	_, err := conn.DeleteJobTemplateWithContext(ctx, &emrcontainers.DeleteJobTemplateInput{
+	_, err := conn.DeleteJobTemplate(ctx, &emrcontainers.DeleteJobTemplateInput{
 		Id: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, emrcontainers.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	// Not actually a validation exception
-	if tfawserr.ErrMessageContains(err, emrcontainers.ErrCodeValidationException, "Template does not exist") {
+	if tfawserr.ErrMessageContains(err, awstypes.ErrCodeValidationException, "Template does not exist") {
 		return diags
 	}
 
@@ -351,12 +354,12 @@ func resourceJobTemplateDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func expandJobTemplateData(tfMap map[string]interface{}) *emrcontainers.JobTemplateData {
+func expandJobTemplateData(tfMap map[string]interface{}) *awstypes.JobTemplateData {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &emrcontainers.JobTemplateData{}
+	apiObject := &awstypes.JobTemplateData{}
 
 	if v, ok := tfMap["configuration_overrides"].([]interface{}); ok && len(v) > 0 {
 		apiObject.ConfigurationOverrides = expandConfigurationOverrides(v[0].(map[string]interface{}))
@@ -381,12 +384,12 @@ func expandJobTemplateData(tfMap map[string]interface{}) *emrcontainers.JobTempl
 	return apiObject
 }
 
-func expandConfigurationOverrides(tfMap map[string]interface{}) *emrcontainers.ParametricConfigurationOverrides {
+func expandConfigurationOverrides(tfMap map[string]interface{}) *awstypes.ParametricConfigurationOverrides {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &emrcontainers.ParametricConfigurationOverrides{}
+	apiObject := &awstypes.ParametricConfigurationOverrides{}
 
 	if v, ok := tfMap["application_configuration"].([]interface{}); ok && len(v) > 0 {
 		apiObject.ApplicationConfiguration = expandConfigurations(v)
@@ -398,12 +401,12 @@ func expandConfigurationOverrides(tfMap map[string]interface{}) *emrcontainers.P
 
 	return apiObject
 }
-func expandConfigurations(tfList []interface{}) []*emrcontainers.Configuration {
+func expandConfigurations(tfList []interface{}) []*awstypes.Configuration {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*emrcontainers.Configuration
+	var apiObjects []*awstypes.Configuration
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -424,12 +427,12 @@ func expandConfigurations(tfList []interface{}) []*emrcontainers.Configuration {
 	return apiObjects
 }
 
-func expandConfiguration(tfMap map[string]interface{}) *emrcontainers.Configuration {
+func expandConfiguration(tfMap map[string]interface{}) *awstypes.Configuration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &emrcontainers.Configuration{}
+	apiObject := &awstypes.Configuration{}
 
 	if v, ok := tfMap["classification"].(string); ok && v != "" {
 		apiObject.Classification = aws.String(v)
@@ -446,19 +449,19 @@ func expandConfiguration(tfMap map[string]interface{}) *emrcontainers.Configurat
 	return apiObject
 }
 
-func expandMonitoringConfiguration(tfMap map[string]interface{}) *emrcontainers.ParametricMonitoringConfiguration {
+func expandMonitoringConfiguration(tfMap map[string]interface{}) *awstypes.ParametricMonitoringConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &emrcontainers.ParametricMonitoringConfiguration{}
+	apiObject := &awstypes.ParametricMonitoringConfiguration{}
 
 	if v, ok := tfMap["cloud_watch_monitoring_configuration"].([]interface{}); ok && len(v) > 0 {
 		apiObject.CloudWatchMonitoringConfiguration = expandCloudWatchMonitoringConfiguration(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["persistent_app_ui"].(string); ok && v != "" {
-		apiObject.PersistentAppUI = aws.String(v)
+		apiObject.PersistentAppUI = awstypes.PersistentAppUI(v)
 	}
 
 	if v, ok := tfMap["s3_monitoring_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -468,12 +471,12 @@ func expandMonitoringConfiguration(tfMap map[string]interface{}) *emrcontainers.
 	return apiObject
 }
 
-func expandCloudWatchMonitoringConfiguration(tfMap map[string]interface{}) *emrcontainers.ParametricCloudWatchMonitoringConfiguration {
+func expandCloudWatchMonitoringConfiguration(tfMap map[string]interface{}) *awstypes.ParametricCloudWatchMonitoringConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &emrcontainers.ParametricCloudWatchMonitoringConfiguration{}
+	apiObject := &awstypes.ParametricCloudWatchMonitoringConfiguration{}
 
 	if v, ok := tfMap["log_group_mame"].(string); ok && v != "" {
 		apiObject.LogGroupName = aws.String(v)
@@ -486,12 +489,12 @@ func expandCloudWatchMonitoringConfiguration(tfMap map[string]interface{}) *emrc
 	return apiObject
 }
 
-func expandS3MonitoringConfiguration(tfMap map[string]interface{}) *emrcontainers.ParametricS3MonitoringConfiguration {
+func expandS3MonitoringConfiguration(tfMap map[string]interface{}) *awstypes.ParametricS3MonitoringConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &emrcontainers.ParametricS3MonitoringConfiguration{}
+	apiObject := &awstypes.ParametricS3MonitoringConfiguration{}
 
 	if v, ok := tfMap["log_uri"].(string); ok && v != "" {
 		apiObject.LogUri = aws.String(v)
@@ -500,12 +503,12 @@ func expandS3MonitoringConfiguration(tfMap map[string]interface{}) *emrcontainer
 	return apiObject
 }
 
-func expandJobDriver(tfMap map[string]interface{}) *emrcontainers.JobDriver {
+func expandJobDriver(tfMap map[string]interface{}) *awstypes.JobDriver {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &emrcontainers.JobDriver{}
+	apiObject := &awstypes.JobDriver{}
 
 	if v, ok := tfMap["spark_sql_job_driver"].([]interface{}); ok && len(v) > 0 {
 		apiObject.SparkSqlJobDriver = expandSparkSQLJobDriver(v[0].(map[string]interface{}))
@@ -518,12 +521,12 @@ func expandJobDriver(tfMap map[string]interface{}) *emrcontainers.JobDriver {
 	return apiObject
 }
 
-func expandSparkSQLJobDriver(tfMap map[string]interface{}) *emrcontainers.SparkSqlJobDriver {
+func expandSparkSQLJobDriver(tfMap map[string]interface{}) *awstypes.SparkSqlJobDriver {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &emrcontainers.SparkSqlJobDriver{}
+	apiObject := &awstypes.SparkSqlJobDriver{}
 
 	if v, ok := tfMap["entry_point"].(string); ok && v != "" {
 		apiObject.EntryPoint = aws.String(v)
@@ -536,12 +539,12 @@ func expandSparkSQLJobDriver(tfMap map[string]interface{}) *emrcontainers.SparkS
 	return apiObject
 }
 
-func expandSparkSubmitJobDriver(tfMap map[string]interface{}) *emrcontainers.SparkSubmitJobDriver {
+func expandSparkSubmitJobDriver(tfMap map[string]interface{}) *awstypes.SparkSubmitJobDriver {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &emrcontainers.SparkSubmitJobDriver{}
+	apiObject := &awstypes.SparkSubmitJobDriver{}
 
 	if v, ok := tfMap["entry_point"].(string); ok && v != "" {
 		apiObject.EntryPoint = aws.String(v)
@@ -558,7 +561,7 @@ func expandSparkSubmitJobDriver(tfMap map[string]interface{}) *emrcontainers.Spa
 	return apiObject
 }
 
-func flattenJobTemplateData(apiObject *emrcontainers.JobTemplateData) map[string]interface{} {
+func flattenJobTemplateData(apiObject *awstypes.JobTemplateData) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -570,7 +573,7 @@ func flattenJobTemplateData(apiObject *emrcontainers.JobTemplateData) map[string
 	}
 
 	if v := apiObject.ExecutionRoleArn; v != nil {
-		tfMap[names.AttrExecutionRoleARN] = aws.StringValue(v)
+		tfMap[names.AttrExecutionRoleARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.JobDriver; v != nil {
@@ -578,17 +581,17 @@ func flattenJobTemplateData(apiObject *emrcontainers.JobTemplateData) map[string
 	}
 
 	if v := apiObject.JobTags; v != nil {
-		tfMap["job_tags"] = aws.StringValueMap(v)
+		tfMap["job_tags"] = v
 	}
 
 	if v := apiObject.ReleaseLabel; v != nil {
-		tfMap["release_label"] = aws.StringValue(v)
+		tfMap["release_label"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenConfigurationOverrides(apiObject *emrcontainers.ParametricConfigurationOverrides) map[string]interface{} {
+func flattenConfigurationOverrides(apiObject *awstypes.ParametricConfigurationOverrides) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -606,7 +609,7 @@ func flattenConfigurationOverrides(apiObject *emrcontainers.ParametricConfigurat
 	return tfMap
 }
 
-func flattenConfigurations(apiObjects []*emrcontainers.Configuration) []interface{} {
+func flattenConfigurations(apiObjects []*awstypes.Configuration) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -624,7 +627,7 @@ func flattenConfigurations(apiObjects []*emrcontainers.Configuration) []interfac
 	return tfList
 }
 
-func flattenConfiguration(apiObject *emrcontainers.Configuration) map[string]interface{} {
+func flattenConfiguration(apiObject *awstypes.Configuration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -632,17 +635,17 @@ func flattenConfiguration(apiObject *emrcontainers.Configuration) map[string]int
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Classification; v != nil {
-		tfMap["classification"] = aws.StringValue(v)
+		tfMap["classification"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Properties; v != nil {
-		tfMap[names.AttrProperties] = aws.StringValueMap(v)
+		tfMap[names.AttrProperties] = v
 	}
 
 	return tfMap
 }
 
-func flattenMonitoringConfiguration(apiObject *emrcontainers.ParametricMonitoringConfiguration) map[string]interface{} {
+func flattenMonitoringConfiguration(apiObject *awstypes.ParametricMonitoringConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -654,7 +657,7 @@ func flattenMonitoringConfiguration(apiObject *emrcontainers.ParametricMonitorin
 	}
 
 	if v := apiObject.PersistentAppUI; v != nil {
-		tfMap["persistent_app_ui"] = aws.StringValue(v)
+		tfMap["persistent_app_ui"] = aws.ToString(v)
 	}
 
 	if v := apiObject.S3MonitoringConfiguration; v != nil {
@@ -664,7 +667,7 @@ func flattenMonitoringConfiguration(apiObject *emrcontainers.ParametricMonitorin
 	return tfMap
 }
 
-func flattenCloudWatchMonitoringConfiguration(apiObject *emrcontainers.ParametricCloudWatchMonitoringConfiguration) map[string]interface{} {
+func flattenCloudWatchMonitoringConfiguration(apiObject *awstypes.ParametricCloudWatchMonitoringConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -672,17 +675,17 @@ func flattenCloudWatchMonitoringConfiguration(apiObject *emrcontainers.Parametri
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.LogGroupName; v != nil {
-		tfMap[names.AttrLogGroupName] = aws.StringValue(v)
+		tfMap[names.AttrLogGroupName] = aws.ToString(v)
 	}
 
 	if v := apiObject.LogStreamNamePrefix; v != nil {
-		tfMap["log_stream_name_prefix"] = aws.StringValue(v)
+		tfMap["log_stream_name_prefix"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenS3MonitoringConfiguration(apiObject *emrcontainers.ParametricS3MonitoringConfiguration) map[string]interface{} {
+func flattenS3MonitoringConfiguration(apiObject *awstypes.ParametricS3MonitoringConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -690,13 +693,13 @@ func flattenS3MonitoringConfiguration(apiObject *emrcontainers.ParametricS3Monit
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.LogUri; v != nil {
-		tfMap["log_uri"] = aws.StringValue(v)
+		tfMap["log_uri"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenJobDriver(apiObject *emrcontainers.JobDriver) map[string]interface{} {
+func flattenJobDriver(apiObject *awstypes.JobDriver) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -714,7 +717,7 @@ func flattenJobDriver(apiObject *emrcontainers.JobDriver) map[string]interface{}
 	return tfMap
 }
 
-func flattenSparkSQLJobDriver(apiObject *emrcontainers.SparkSqlJobDriver) map[string]interface{} {
+func flattenSparkSQLJobDriver(apiObject *awstypes.SparkSqlJobDriver) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -722,17 +725,17 @@ func flattenSparkSQLJobDriver(apiObject *emrcontainers.SparkSqlJobDriver) map[st
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.EntryPoint; v != nil {
-		tfMap["entry_point"] = aws.StringValue(v)
+		tfMap["entry_point"] = aws.ToString(v)
 	}
 
 	if v := apiObject.SparkSqlParameters; v != nil {
-		tfMap["spark_sql_parameters"] = aws.StringValue(v)
+		tfMap["spark_sql_parameters"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenSparkSubmitJobDriver(apiObject *emrcontainers.SparkSubmitJobDriver) map[string]interface{} {
+func flattenSparkSubmitJobDriver(apiObject *awstypes.SparkSubmitJobDriver) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -740,7 +743,7 @@ func flattenSparkSubmitJobDriver(apiObject *emrcontainers.SparkSubmitJobDriver) 
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.EntryPoint; v != nil {
-		tfMap["entry_point"] = aws.StringValue(v)
+		tfMap["entry_point"] = aws.ToString(v)
 	}
 
 	if v := apiObject.EntryPointArguments; v != nil {
@@ -748,16 +751,16 @@ func flattenSparkSubmitJobDriver(apiObject *emrcontainers.SparkSubmitJobDriver) 
 	}
 
 	if v := apiObject.SparkSubmitParameters; v != nil {
-		tfMap["spark_submit_parameters"] = aws.StringValue(v)
+		tfMap["spark_submit_parameters"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func findJobTemplate(ctx context.Context, conn *emrcontainers.EMRContainers, input *emrcontainers.DescribeJobTemplateInput) (*emrcontainers.JobTemplate, error) {
-	output, err := conn.DescribeJobTemplateWithContext(ctx, input)
+func findJobTemplate(ctx context.Context, conn *emrcontainers.Client, input *emrcontainers.DescribeJobTemplateInput) (*awstypes.JobTemplate, error) {
+	output, err := conn.DescribeJobTemplate(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, emrcontainers.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -775,7 +778,7 @@ func findJobTemplate(ctx context.Context, conn *emrcontainers.EMRContainers, inp
 	return output.JobTemplate, nil
 }
 
-func FindJobTemplateByID(ctx context.Context, conn *emrcontainers.EMRContainers, id string) (*emrcontainers.JobTemplate, error) {
+func FindJobTemplateByID(ctx context.Context, conn *emrcontainers.Client, id string) (*awstypes.JobTemplate, error) {
 	input := &emrcontainers.DescribeJobTemplateInput{
 		Id: aws.String(id),
 	}
