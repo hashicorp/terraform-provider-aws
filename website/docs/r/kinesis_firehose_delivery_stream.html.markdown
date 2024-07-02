@@ -793,9 +793,9 @@ The `http_endpoint_configuration` configuration block supports the following arg
 The `snowflake_configuration` configuration block supports the following arguments:
 
 * `account_url` - (Required) The URL of the Snowflake account. Format: https://[account_identifier].snowflakecomputing.com.
-* `private_key` - (Required) The private key for authentication.
-* `key_passphrase` - (Required) The passphrase for the private key.
-* `user` - (Required) The user for authentication.
+* `private_key` - (Optional) The private key for authentication. This value is required if `secrets_manager_configuration` is not provided.
+* `key_passphrase` - (Optional) The passphrase for the private key.
+* `user` - (Optional) The user for authentication. This value is required if `secrets_manager_configuration` is not provided.
 * `database` - (Required) The Snowflake database name.
 * `schema` - (Required) The Snowflake schema name.
 * `table` - (Required) The Snowflake table name.
@@ -813,6 +813,7 @@ The `snowflake_configuration` configuration block supports the following argumen
 * `retry_duration` - (Optional) After an initial failure to deliver to Snowflake, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 60s.  There will be no retry if the value is 0.
 * `s3_backup_mode` - (Optional) The S3 backup mode.
 * `s3_configuration` - (Required) The S3 configuration. See [`s3_configuration` block](#s3_configuration-block) below for details.
+* `secrets_manager_configuration` - (Optional) The SecretsManager configuration. See [`secrets_manager_configuration` block](#secrets_manager_configuration-block) below for details. This value is required if `user` and `private_key` is not provided.
 
 ### `cloudwatch_logging_options` block
 
@@ -926,6 +927,14 @@ The `s3_configuration` configuration block supports the following arguments:
 * `kms_key_arn` - (Optional) Specifies the KMS key ARN the stream will use to encrypt data. If not set, no encryption will
   be used.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. See [`cloudwatch_logging_options` block](#cloudwatch_logging_options-block) below for details.
+
+### `secrets_manager_configuration` block
+
+The `secrets_manager_configuration` configuration block supports the following arguments:
+
+* `enabled` - (Optional) Enables or disables the Secrets Manager configuration. Defaults to `false`.
+* `secret_arn` - (Optional) The ARN of the Secrets Manager secret. This value is required if `enabled` is true.
+* `role_arn` - (Optional) The ARN of the role the stream assumes.
 
 ### `input_format_configuration` block
 

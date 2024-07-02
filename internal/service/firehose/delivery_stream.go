@@ -192,6 +192,33 @@ func resourceDeliveryStream() *schema.Resource {
 					},
 				}
 			}
+			secretsManagerConfigurationSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"secret_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				}
+			}
 			requestConfigurationSchema := func() *schema.Schema {
 				return &schema.Schema{
 					Type:     schema.TypeList,
@@ -1019,7 +1046,7 @@ func resourceDeliveryStream() *schema.Resource {
 							},
 							names.AttrPrivateKey: {
 								Type:      schema.TypeString,
-								Required:  true,
+								Optional:  true,
 								Sensitive: true,
 							},
 							"processing_configuration": processingConfigurationSchema(),
@@ -1046,6 +1073,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
+							"secrets_manager_configuration": secretsManagerConfigurationSchema(),
 							"snowflake_role_configuration": {
 								Type:     schema.TypeList,
 								Optional: true,
@@ -1086,7 +1114,7 @@ func resourceDeliveryStream() *schema.Resource {
 							},
 							"user": {
 								Type:         schema.TypeString,
-								Required:     true,
+								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
 						},
@@ -2308,6 +2336,32 @@ func expandProcessorParameter(processorParameter map[string]interface{}) types.P
 	return parameter
 }
 
+func expandSecretsManagerConfiguration(tfMap map[string]interface{}) *types.SecretsManagerConfiguration {
+	config := tfMap["secrets_manager_configuration"].([]interface{})
+	if len(config) == 0 || config[0] == nil {
+		// It is possible to just pass nil here, but this seems to be the
+		// canonical form that AWS uses, and is less likely to produce diffs.
+		return &types.SecretsManagerConfiguration{
+			Enabled: aws.Bool(false),
+		}
+	}
+
+	secretsManagerConfiguration := config[0].(map[string]interface{})
+	configuration := &types.SecretsManagerConfiguration{
+		Enabled: aws.Bool(secretsManagerConfiguration[names.AttrEnabled].(bool)),
+	}
+
+	if v, ok := secretsManagerConfiguration["secret_arn"]; ok && len(v.(string)) > 0 {
+		configuration.SecretARN = aws.String(v.(string))
+	}
+
+	if v, ok := secretsManagerConfiguration[names.AttrRoleARN]; ok && len(v.(string)) > 0 {
+		configuration.RoleARN = aws.String(v.(string))
+	}
+
+	return configuration
+}
+
 func expandEncryptionConfiguration(s3 map[string]interface{}) *types.EncryptionConfiguration {
 	if key, ok := s3[names.AttrKMSKeyARN]; ok && len(key.(string)) > 0 {
 		return &types.EncryptionConfiguration{
@@ -2649,15 +2703,14 @@ func expandAmazonOpenSearchServerlessDestinationUpdate(oss map[string]interface{
 func expandSnowflakeDestinationConfiguration(tfMap map[string]interface{}) *types.SnowflakeDestinationConfiguration {
 	roleARN := tfMap[names.AttrRoleARN].(string)
 	apiObject := &types.SnowflakeDestinationConfiguration{
-		AccountUrl:      aws.String(tfMap["account_url"].(string)),
-		Database:        aws.String(tfMap[names.AttrDatabase].(string)),
-		PrivateKey:      aws.String(tfMap[names.AttrPrivateKey].(string)),
-		RetryOptions:    expandSnowflakeRetryOptions(tfMap),
-		RoleARN:         aws.String(roleARN),
-		S3Configuration: expandS3DestinationConfiguration(tfMap["s3_configuration"].([]interface{})),
-		Schema:          aws.String(tfMap[names.AttrSchema].(string)),
-		Table:           aws.String(tfMap["table"].(string)),
-		User:            aws.String(tfMap["user"].(string)),
+		AccountUrl:                aws.String(tfMap["account_url"].(string)),
+		Database:                  aws.String(tfMap[names.AttrDatabase].(string)),
+		RetryOptions:              expandSnowflakeRetryOptions(tfMap),
+		RoleARN:                   aws.String(roleARN),
+		S3Configuration:           expandS3DestinationConfiguration(tfMap["s3_configuration"].([]interface{})),
+		Schema:                    aws.String(tfMap[names.AttrSchema].(string)),
+		SnowflakeVpcConfiguration: expandSnowflakeVPCConfiguration(tfMap),
+		Table:                     aws.String(tfMap["table"].(string)),
 	}
 
 	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
@@ -2670,6 +2723,10 @@ func expandSnowflakeDestinationConfiguration(tfMap map[string]interface{}) *type
 
 	if v, ok := tfMap["data_loading_option"]; ok && v.(string) != "" {
 		apiObject.DataLoadingOption = types.SnowflakeDataLoadingOption(v.(string))
+	}
+
+	if v, ok := tfMap[names.AttrPrivateKey]; ok && v.(string) != "" {
+		apiObject.PrivateKey = aws.String(v.(string))
 	}
 
 	if v, ok := tfMap["key_passphrase"]; ok && v.(string) != "" {
@@ -2686,6 +2743,10 @@ func expandSnowflakeDestinationConfiguration(tfMap map[string]interface{}) *type
 
 	if v, ok := tfMap["s3_backup_mode"]; ok {
 		apiObject.S3BackupMode = types.SnowflakeS3BackupMode(v.(string))
+	}
+
+	if _, ok := tfMap["secrets_manager_configuration"]; ok {
+		apiObject.SecretsManagerConfiguration = expandSecretsManagerConfiguration(tfMap)
 	}
 
 	if _, ok := tfMap["snowflake_role_configuration"]; ok {
@@ -2696,6 +2757,10 @@ func expandSnowflakeDestinationConfiguration(tfMap map[string]interface{}) *type
 		apiObject.SnowflakeVpcConfiguration = expandSnowflakeVPCConfiguration(tfMap)
 	}
 
+	if v, ok := tfMap["user"]; ok && v.(string) != "" {
+		apiObject.User = aws.String(v.(string))
+	}
+
 	return apiObject
 }
 
@@ -2704,13 +2769,11 @@ func expandSnowflakeDestinationUpdate(tfMap map[string]interface{}) *types.Snowf
 	apiObject := &types.SnowflakeDestinationUpdate{
 		AccountUrl:   aws.String(tfMap["account_url"].(string)),
 		Database:     aws.String(tfMap[names.AttrDatabase].(string)),
-		PrivateKey:   aws.String(tfMap[names.AttrPrivateKey].(string)),
 		RetryOptions: expandSnowflakeRetryOptions(tfMap),
 		RoleARN:      aws.String(roleARN),
 		S3Update:     expandS3DestinationUpdate(tfMap["s3_configuration"].([]interface{})),
 		Schema:       aws.String(tfMap[names.AttrSchema].(string)),
 		Table:        aws.String(tfMap["table"].(string)),
-		User:         aws.String(tfMap["user"].(string)),
 	}
 
 	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
@@ -2723,6 +2786,10 @@ func expandSnowflakeDestinationUpdate(tfMap map[string]interface{}) *types.Snowf
 
 	if v, ok := tfMap["data_loading_option"]; ok && v.(string) != "" {
 		apiObject.DataLoadingOption = types.SnowflakeDataLoadingOption(v.(string))
+	}
+
+	if v, ok := tfMap[names.AttrPrivateKey]; ok && v.(string) != "" {
+		apiObject.PrivateKey = aws.String(v.(string))
 	}
 
 	if v, ok := tfMap["key_passphrase"]; ok && v.(string) != "" {
@@ -2741,8 +2808,16 @@ func expandSnowflakeDestinationUpdate(tfMap map[string]interface{}) *types.Snowf
 		apiObject.S3BackupMode = types.SnowflakeS3BackupMode(v.(string))
 	}
 
+	if _, ok := tfMap["secrets_manager_configuration"]; ok {
+		apiObject.SecretsManagerConfiguration = expandSecretsManagerConfiguration(tfMap)
+	}
+
 	if _, ok := tfMap["snowflake_role_configuration"]; ok {
 		apiObject.SnowflakeRoleConfiguration = expandSnowflakeRoleConfiguration(tfMap)
+	}
+
+	if v, ok := tfMap["user"]; ok && v.(string) != "" {
+		apiObject.User = aws.String(v.(string))
 	}
 
 	return apiObject
@@ -3045,16 +3120,22 @@ func expandSnowflakeRetryOptions(tfMap map[string]interface{}) *types.SnowflakeR
 }
 
 func expandSnowflakeRoleConfiguration(tfMap map[string]interface{}) *types.SnowflakeRoleConfiguration {
-	tfList := tfMap["snowflake_role_configuration"].([]interface{})
-	if len(tfList) == 0 {
-		return nil
+	config := tfMap["snowflake_role_configuration"].([]interface{})
+	if len(config) == 0 || config[0] == nil {
+		// It is possible to just pass nil here, but this seems to be the
+		// canonical form that AWS uses, and is less likely to produce diffs.
+		return &types.SnowflakeRoleConfiguration{
+			Enabled: aws.Bool(false),
+		}
 	}
 
-	tfMap = tfList[0].(map[string]interface{})
-
+	snowflakeRoleConfiguration := config[0].(map[string]interface{})
 	apiObject := &types.SnowflakeRoleConfiguration{
-		Enabled:       aws.Bool(tfMap[names.AttrEnabled].(bool)),
-		SnowflakeRole: aws.String(tfMap["snowflake_role"].(string)),
+		Enabled: aws.Bool(snowflakeRoleConfiguration[names.AttrEnabled].(bool)),
+	}
+
+	if v, ok := snowflakeRoleConfiguration["snowflake_role"]; ok && len(v.(string)) > 0 {
+		apiObject.SnowflakeRole = aws.String(v.(string))
 	}
 
 	return apiObject
@@ -3410,23 +3491,24 @@ func flattenSnowflakeDestinationDescription(apiObject *types.SnowflakeDestinatio
 
 	roleARN := aws.ToString(apiObject.RoleARN)
 	tfMap := map[string]interface{}{
-		"account_url":                  aws.ToString(apiObject.AccountUrl),
-		"cloudwatch_logging_options":   flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
-		"content_column_name":          aws.ToString(apiObject.ContentColumnName),
-		"data_loading_option":          apiObject.DataLoadingOption,
-		names.AttrDatabase:             aws.ToString(apiObject.Database),
-		"key_passphrase":               configuredKeyPassphrase,
-		"metadata_column_name":         aws.ToString(apiObject.MetaDataColumnName),
-		names.AttrPrivateKey:           configuredPrivateKey,
-		"processing_configuration":     flattenProcessingConfiguration(apiObject.ProcessingConfiguration, destinationTypeSnowflake, roleARN),
-		names.AttrRoleARN:              roleARN,
-		"s3_backup_mode":               apiObject.S3BackupMode,
-		"s3_configuration":             flattenS3DestinationDescription(apiObject.S3DestinationDescription),
-		names.AttrSchema:               aws.ToString(apiObject.Schema),
-		"snowflake_role_configuration": flattenSnowflakeRoleConfiguration(apiObject.SnowflakeRoleConfiguration),
-		"snowflake_vpc_configuration":  flattenSnowflakeVPCConfiguration(apiObject.SnowflakeVpcConfiguration),
-		"table":                        aws.ToString(apiObject.Table),
-		"user":                         aws.ToString(apiObject.User),
+		"account_url":                   aws.ToString(apiObject.AccountUrl),
+		"cloudwatch_logging_options":    flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
+		"content_column_name":           aws.ToString(apiObject.ContentColumnName),
+		"data_loading_option":           apiObject.DataLoadingOption,
+		names.AttrDatabase:              aws.ToString(apiObject.Database),
+		"key_passphrase":                configuredKeyPassphrase,
+		"metadata_column_name":          aws.ToString(apiObject.MetaDataColumnName),
+		names.AttrPrivateKey:            configuredPrivateKey,
+		"processing_configuration":      flattenProcessingConfiguration(apiObject.ProcessingConfiguration, destinationTypeSnowflake, roleARN),
+		names.AttrRoleARN:               roleARN,
+		"s3_backup_mode":                apiObject.S3BackupMode,
+		"s3_configuration":              flattenS3DestinationDescription(apiObject.S3DestinationDescription),
+		names.AttrSchema:                aws.ToString(apiObject.Schema),
+		"secrets_manager_configuration": flattenSecretsManagerConfiguration(apiObject.SecretsManagerConfiguration),
+		"snowflake_role_configuration":  flattenSnowflakeRoleConfiguration(apiObject.SnowflakeRoleConfiguration),
+		"snowflake_vpc_configuration":   flattenSnowflakeVPCConfiguration(apiObject.SnowflakeVpcConfiguration),
+		"table":                         aws.ToString(apiObject.Table),
+		"user":                          aws.ToString(apiObject.User),
 	}
 
 	if apiObject.RetryOptions != nil {
@@ -3776,6 +3858,23 @@ func flattenProcessingConfiguration(pc *types.ProcessingConfiguration, destinati
 	return processingConfiguration
 }
 
+func flattenSecretsManagerConfiguration(smc *types.SecretsManagerConfiguration) []interface{} {
+	if smc == nil {
+		return []interface{}{}
+	}
+
+	secretsManagerConfiguration := map[string]interface{}{
+		names.AttrEnabled: aws.ToBool(smc.Enabled),
+	}
+	if aws.ToBool(smc.Enabled) {
+		secretsManagerConfiguration["secret_arn"] = aws.ToString(smc.SecretARN)
+		if smc.RoleARN != nil {
+			secretsManagerConfiguration[names.AttrRoleARN] = aws.ToString(smc.RoleARN)
+		}
+	}
+	return []interface{}{secretsManagerConfiguration}
+}
+
 func flattenDynamicPartitioningConfiguration(dpc *types.DynamicPartitioningConfiguration) []map[string]interface{} {
 	if dpc == nil {
 		return []map[string]interface{}{}
@@ -3868,7 +3967,9 @@ func flattenSnowflakeRoleConfiguration(apiObject *types.SnowflakeRoleConfigurati
 
 	m := map[string]interface{}{
 		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
-		"snowflake_role":  aws.ToString(apiObject.SnowflakeRole),
+	}
+	if aws.ToBool(apiObject.Enabled) {
+		m["snowflake_role"] = aws.ToString(apiObject.SnowflakeRole)
 	}
 
 	return []map[string]interface{}{m}
