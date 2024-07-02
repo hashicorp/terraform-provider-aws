@@ -113,7 +113,7 @@ func sweepCertificates(region string) error {
 	out, err := conn.ListCertificates(ctx, input)
 
 	for _, v := range out.Certificates {
-		r := ResourceCertificate()
+		r := resourceCertificate()
 		d := r.Data(nil)
 		d.SetId(aws.ToString(v.CertificateId))
 		d.Set("active", true)
@@ -161,7 +161,7 @@ func sweepPolicyAttachments(region string) error {
 		output, err := conn.ListTargetsForPolicy(ctx, input)
 
 		for _, v := range output.Targets {
-			r := ResourcePolicyAttachment()
+			r := resourcePolicyAttachment()
 			d := r.Data(nil)
 			d.SetId(fmt.Sprintf("%s|%s", aws.ToString(policyName), v))
 			d.Set(names.AttrPolicy, policyName)
@@ -210,7 +210,7 @@ func sweepPolicies(region string) error {
 	out, err := conn.ListPolicies(ctx, input)
 
 	for _, v := range out.Policies {
-		r := ResourcePolicy()
+		r := resourcePolicy()
 		d := r.Data(nil)
 		d.SetId(aws.ToString(v.PolicyName))
 
@@ -295,7 +295,7 @@ func sweepThingPrincipalAttachments(region string) error {
 		output, err := conn.ListThingPrincipals(ctx, input)
 
 		for _, v := range output.Principals {
-			r := ResourceThingPrincipalAttachment()
+			r := resourceThingPrincipalAttachment()
 			d := r.Data(nil)
 			d.SetId(fmt.Sprintf("%s|%s", thingName, v))
 			d.Set(names.AttrPrincipal, v)
@@ -344,7 +344,7 @@ func sweepThings(region string) error {
 	out, err := conn.ListThings(ctx, input)
 
 	for _, v := range out.Things {
-		r := ResourceThing()
+		r := resourceThing()
 		d := r.Data(nil)
 		d.SetId(aws.ToString(v.ThingName))
 
@@ -382,7 +382,7 @@ func sweepThingTypes(region string) error {
 	out, err := conn.ListThingTypes(ctx, input)
 
 	for _, v := range out.ThingTypes {
-		r := ResourceThingType()
+		r := resourceThingType()
 		d := r.Data(nil)
 		d.SetId(aws.ToString(v.ThingTypeName))
 
@@ -420,7 +420,7 @@ func sweepTopicRules(region string) error {
 	out, err := conn.ListTopicRules(ctx, input)
 
 	for _, v := range out.Rules {
-		r := ResourceTopicRule()
+		r := resourceTopicRule()
 		d := r.Data(nil)
 		d.SetId(aws.ToString(v.RuleName))
 
@@ -458,7 +458,7 @@ func sweepThingGroups(region string) error {
 	out, err := conn.ListThingGroups(ctx, input)
 
 	for _, v := range out.ThingGroups {
-		r := ResourceThingGroup()
+		r := resourceThingGroup()
 		d := r.Data(nil)
 		d.SetId(aws.ToString(v.GroupName))
 
@@ -496,7 +496,7 @@ func sweepTopicRuleDestinations(region string) error {
 	out, err := conn.ListTopicRuleDestinations(ctx, input)
 
 	for _, v := range out.DestinationSummaries {
-		r := ResourceTopicRuleDestination()
+		r := resourceTopicRuleDestination()
 		d := r.Data(nil)
 		d.SetId(aws.ToString(v.Arn))
 
@@ -534,7 +534,7 @@ func sweepAuthorizers(region string) error {
 	out, err := conn.ListAuthorizers(ctx, input)
 
 	for _, v := range out.Authorizers {
-		r := ResourceAuthorizer()
+		r := resourceAuthorizer()
 		d := r.Data(nil)
 		d.SetId(aws.ToString(v.AuthorizerName))
 		d.Set(names.AttrStatus, awstypes.AuthorizerStatusActive)
@@ -595,7 +595,7 @@ func sweepDomainConfigurations(region string) error {
 			}
 		}
 
-		r := ResourceDomainConfiguration()
+		r := resourceDomainConfiguration()
 		d := r.Data(nil)
 		d.SetId(name)
 		d.Set(names.AttrStatus, output.DomainConfigurationStatus)
@@ -634,7 +634,7 @@ func sweepCACertificates(region string) error {
 	out, err := conn.ListCACertificates(ctx, input)
 
 	for _, v := range out.Certificates {
-		r := ResourceCACertificate()
+		r := resourceCACertificate()
 		d := r.Data(nil)
 		d.SetId(aws.ToString(v.CertificateId))
 		d.Set("active", true)
