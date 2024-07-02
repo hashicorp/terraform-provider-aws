@@ -9,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/emr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var studio emr.SessionMappingDetail
+	var studio awstypes.SessionMappingDetail
 	resourceName := "aws_emr_studio_session_mapping.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	updatedName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -90,7 +90,7 @@ func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
 
 func TestAccEMRStudioSessionMapping_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var studio emr.SessionMappingDetail
+	var studio awstypes.SessionMappingDetail
 	resourceName := "aws_emr_studio_session_mapping.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	uName := os.Getenv("AWS_IDENTITY_STORE_USER_ID")
@@ -128,14 +128,14 @@ func TestAccEMRStudioSessionMapping_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckStudioSessionMappingExists(ctx context.Context, resourceName string, studio *emr.SessionMappingDetail) resource.TestCheckFunc {
+func testAccCheckStudioSessionMappingExists(ctx context.Context, resourceName string, studio *awstypes.SessionMappingDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
 		output, err := tfemr.FindStudioSessionMappingByIDOrName(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -154,7 +154,7 @@ func testAccCheckStudioSessionMappingExists(ctx context.Context, resourceName st
 
 func testAccCheckStudioSessionMappingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emr_studio_session_mapping" {

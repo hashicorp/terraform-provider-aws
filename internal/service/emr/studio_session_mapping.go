@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/emr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -49,10 +50,10 @@ func resourceStudioSessionMapping() *schema.Resource {
 				ExactlyOneOf: []string{"identity_id", "identity_name"},
 			},
 			"identity_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(emr.IdentityType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.IdentityType](),
 			},
 			"session_policy_arn": {
 				Type:         schema.TypeString,
@@ -70,13 +71,13 @@ func resourceStudioSessionMapping() *schema.Resource {
 
 func resourceStudioSessionMappingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	var idOrName string
 	studioId := d.Get("studio_id").(string)
 	identityType := d.Get("identity_type").(string)
 	input := &emr.CreateStudioSessionMappingInput{
-		IdentityType:     aws.String(identityType),
+		IdentityType:     awstypes.IdentityType(identityType),
 		SessionPolicyArn: aws.String(d.Get("session_policy_arn").(string)),
 		StudioId:         aws.String(studioId),
 	}
@@ -91,7 +92,7 @@ func resourceStudioSessionMappingCreate(ctx context.Context, d *schema.ResourceD
 		idOrName = v.(string)
 	}
 
-	_, err := conn.CreateStudioSessionMappingWithContext(ctx, input)
+	_, err := conn.CreateStudioSessionMapping(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EMR Studio Session Mapping: %s", err)
 	}
@@ -103,7 +104,7 @@ func resourceStudioSessionMappingCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceStudioSessionMappingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	studioId, identityType, identityIdOrName, err := readStudioSessionMapping(d.Id())
 	if err != nil {
@@ -112,7 +113,7 @@ func resourceStudioSessionMappingUpdate(ctx context.Context, d *schema.ResourceD
 
 	input := &emr.UpdateStudioSessionMappingInput{
 		SessionPolicyArn: aws.String(d.Get("session_policy_arn").(string)),
-		IdentityType:     aws.String(identityType),
+		IdentityType:     awstypes.IdentityType(identityType),
 		StudioId:         aws.String(studioId),
 	}
 
@@ -122,7 +123,7 @@ func resourceStudioSessionMappingUpdate(ctx context.Context, d *schema.ResourceD
 		input.IdentityName = aws.String(identityIdOrName)
 	}
 
-	_, err = conn.UpdateStudioSessionMappingWithContext(ctx, input)
+	_, err = conn.UpdateStudioSessionMapping(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EMR Studio Session Mapping (%s): %s", d.Id(), err)
 	}
@@ -132,7 +133,7 @@ func resourceStudioSessionMappingUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceStudioSessionMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	mapping, err := findStudioSessionMappingByIDOrName(ctx, conn, d.Id())
 
@@ -157,7 +158,7 @@ func resourceStudioSessionMappingRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceStudioSessionMappingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	studioId, identityType, identityIdOrName, err := readStudioSessionMapping(d.Id())
 	if err != nil {
@@ -165,7 +166,7 @@ func resourceStudioSessionMappingDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	input := &emr.DeleteStudioSessionMappingInput{
-		IdentityType: aws.String(identityType),
+		IdentityType: awstypes.IdentityType(identityType),
 		StudioId:     aws.String(studioId),
 	}
 
@@ -176,10 +177,10 @@ func resourceStudioSessionMappingDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[INFO] Deleting EMR Studio Session Mapping: %s", d.Id())
-	_, err = conn.DeleteStudioSessionMappingWithContext(ctx, input)
+	_, err = conn.DeleteStudioSessionMapping(ctx, input)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Studio session mapping does not exist.") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Studio session mapping does not exist.") {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting EMR Studio Session Mapping (%s): %s", d.Id(), err)
@@ -188,7 +189,7 @@ func resourceStudioSessionMappingDelete(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func findStudioSessionMappingByIDOrName(ctx context.Context, conn *emr.EMR, id string) (*emr.SessionMappingDetail, error) {
+func findStudioSessionMappingByIDOrName(ctx context.Context, conn *emr.Client, id string) (*awstypes.SessionMappingDetail, error) {
 	studioId, identityType, identityIdOrName, err := readStudioSessionMapping(id)
 	if err != nil {
 		return nil, err
@@ -196,7 +197,7 @@ func findStudioSessionMappingByIDOrName(ctx context.Context, conn *emr.EMR, id s
 
 	input := &emr.GetStudioSessionMappingInput{
 		StudioId:     aws.String(studioId),
-		IdentityType: aws.String(identityType),
+		IdentityType: awstypes.IdentityType(identityType),
 	}
 
 	if isIdentityId(identityIdOrName) {
@@ -205,10 +206,10 @@ func findStudioSessionMappingByIDOrName(ctx context.Context, conn *emr.EMR, id s
 		input.IdentityName = aws.String(identityIdOrName)
 	}
 
-	output, err := conn.GetStudioSessionMappingWithContext(ctx, input)
+	output, err := conn.GetStudioSessionMapping(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Studio session mapping does not exist") ||
-		tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Studio does not exist") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Studio session mapping does not exist") ||
+		errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Studio does not exist") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
