@@ -120,8 +120,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceThing,
+			Factory:  resourceThing,
 			TypeName: "aws_iot_thing",
+			Name:     "Thing",
 		},
 		{
 			Factory:  resourceThingGroup,
@@ -137,8 +138,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Thing Group Membership",
 		},
 		{
-			Factory:  ResourceThingPrincipalAttachment,
+			Factory:  resourceThingPrincipalAttachment,
 			TypeName: "aws_iot_thing_principal_attachment",
+			Name:     "Thing Principal Attachment",
 		},
 		{
 			Factory:  resourceThingType,
@@ -159,6 +161,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceTopicRuleDestination,
 			TypeName: "aws_iot_topic_rule_destination",
+			Name:     "Topic Rule Destination",
 		},
 	}
 }

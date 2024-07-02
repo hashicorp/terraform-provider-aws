@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -85,20 +86,17 @@ func testAccCheckThingPrincipalAttachmentDestroy(ctx context.Context) resource.T
 				continue
 			}
 
-			principal := rs.Primary.Attributes[names.AttrPrincipal]
-			thing := rs.Primary.Attributes["thing"]
+			_, err := tfiot.FindThingPrincipalAttachmentByTwoPartKey(ctx, conn, rs.Primary.Attributes["thing"], rs.Primary.Attributes[names.AttrPrincipal])
 
-			found, err := tfiot.GetThingPricipalAttachment(ctx, conn, thing, principal)
-
-			if err != nil {
-				return fmt.Errorf("Error: Failed listing principals for thing (%s): %s", thing, err)
-			}
-
-			if !found {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
-			return fmt.Errorf("IOT Thing Principal Attachment (%s) still exists", rs.Primary.Attributes[names.AttrID])
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("IoT Thing Principal Attachment %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -112,25 +110,11 @@ func testAccCheckThingPrincipalAttachmentExists(ctx context.Context, n string) r
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No attachment")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
-		thing := rs.Primary.Attributes["thing"]
-		principal := rs.Primary.Attributes[names.AttrPrincipal]
 
-		found, err := tfiot.GetThingPricipalAttachment(ctx, conn, thing, principal)
+		_, err := tfiot.FindThingPrincipalAttachmentByTwoPartKey(ctx, conn, rs.Primary.Attributes["thing"], rs.Primary.Attributes[names.AttrPrincipal])
 
-		if err != nil {
-			return fmt.Errorf("Error: Failed listing principals for thing (%s), resource (%s): %s", thing, n, err)
-		}
-
-		if !found {
-			return fmt.Errorf("Error: Principal (%s) is not attached to thing (%s), resource (%s)", principal, thing, n)
-		}
-
-		return nil
+		return err
 	}
 }
 

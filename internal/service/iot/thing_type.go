@@ -262,7 +262,7 @@ func flattenThingTypeProperties(s *awstypes.ThingTypeProperties) []map[string]in
 	}
 
 	m[names.AttrDescription] = aws.ToString(s.ThingTypeDescription)
-	m["searchable_attributes"] = flex.FlattenStringValueSet(s.SearchableAttributes)
+	m["searchable_attributes"] = s.SearchableAttributes
 
 	return []map[string]interface{}{m}
 }

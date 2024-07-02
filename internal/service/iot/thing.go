@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_iot_thing")
-func ResourceThing() *schema.Resource {
+// @SDKResource("aws_iot_thing", name="Thing")
+func resourceThing() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThingCreate,
 		ReadWithoutTimeout:   resourceThingRead,
@@ -86,7 +86,6 @@ func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ThingTypeName = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating IoT Thing: %s", d.Id())
 	output, err := conn.CreateThing(ctx, input)
 
 	if err != nil {
@@ -152,7 +151,6 @@ func resourceThingUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	log.Printf("[DEBUG] Updating IoT Thing: %s", d.Id())
 	_, err := conn.UpdateThing(ctx, input)
 
 	if err != nil {
