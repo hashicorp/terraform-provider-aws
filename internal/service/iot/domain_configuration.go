@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_iot_domain_configuration", name="Domain Configuration")
 // @Tags(identifierAttribute="arn")
-func ResourceDomainConfiguration() *schema.Resource {
+func resourceDomainConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainConfigurationCreate,
 		ReadWithoutTimeout:   resourceDomainConfigurationRead,
@@ -256,7 +256,6 @@ func resourceDomainConfigurationDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	if d.Get(names.AttrStatus).(string) == string(awstypes.DomainConfigurationStatusEnabled) {
-		log.Printf("[DEBUG] Disabling IoT Domain Configuration: %s", d.Id())
 		_, err := conn.UpdateDomainConfiguration(ctx, &iot.UpdateDomainConfigurationInput{
 			DomainConfigurationName:   aws.String(d.Id()),
 			DomainConfigurationStatus: awstypes.DomainConfigurationStatusDisabled,

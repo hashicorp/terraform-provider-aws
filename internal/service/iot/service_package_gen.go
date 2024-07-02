@@ -68,7 +68,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Certificate",
 		},
 		{
-			Factory:  ResourceDomainConfiguration,
+			Factory:  resourceDomainConfiguration,
 			TypeName: "aws_iot_domain_configuration",
 			Name:     "Domain Configuration",
 			Tags: &types.ServicePackageResourceTags{
