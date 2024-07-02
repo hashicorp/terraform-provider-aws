@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_iot_thing_group", name="Thing Group")
 // @Tags(identifierAttribute="arn")
-func ResourceThingGroup() *schema.Resource {
+func resourceThingGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThingGroupCreate,
 		ReadWithoutTimeout:   resourceThingGroupRead,
@@ -126,10 +126,6 @@ func ResourceThingGroup() *schema.Resource {
 	}
 }
 
-const (
-	thingGroupDeleteTimeout = 1 * time.Minute
-)
-
 func resourceThingGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
@@ -227,7 +223,6 @@ func resourceThingGroupUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			}
 		}
 
-		log.Printf("[DEBUG] Updating IoT Thing Group: %s", d.Id())
 		_, err := conn.UpdateThingGroup(ctx, input)
 
 		if err != nil {
@@ -243,18 +238,14 @@ func resourceThingGroupDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	log.Printf("[DEBUG] Deleting IoT Thing Group: %s", d.Id())
-	_, err := tfresource.RetryWhen(ctx, thingGroupDeleteTimeout,
+	const (
+		timeout = 1 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, timeout,
 		func() (interface{}, error) {
 			return conn.DeleteThingGroup(ctx, &iot.DeleteThingGroupInput{
 				ThingGroupName: aws.String(d.Id()),
 			})
-		},
-		func(err error) (bool, error) {
-			if errs.IsA[*awstypes.InvalidRequestException](err) {
-				return true, err
-			}
-
-			return false, err
 		})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {

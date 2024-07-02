@@ -16,6 +16,7 @@ var (
 	ResourcePolicy                = resourcePolicy
 	ResourcePolicyAttachment      = resourcePolicyAttachment
 	ResourceProvisioningTemplate  = resourceProvisioningTemplate
+	ResourceThingGroup            = resourceThingGroup
 	ResourceThingGroupMembership  = resourceThingGroupMembership
 	ResourceThingType             = resourceThingType
 
