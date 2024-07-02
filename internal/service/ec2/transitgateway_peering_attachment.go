@@ -70,12 +70,14 @@ func resourceTransitGatewayPeeringAttachment() *schema.Resource {
 			"options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"dynamic_routing": {
 							Type:             schema.TypeString,
 							Optional:         true,
+							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.DynamicRoutingValue](),
 						},
 					},
