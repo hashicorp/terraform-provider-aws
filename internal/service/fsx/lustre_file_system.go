@@ -889,6 +889,9 @@ func waitFileSystemCreated(ctx context.Context, conn *fsx.FSx, id string, timeou
 		Refresh: statusFileSystem(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
+
+		// When the filesystem is used by another service, e.g. an M2 Environment, it is not immediately available
+		ContinuousTargetOccurence: 3,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

@@ -19,6 +19,11 @@ import (
 
 // Expand  = TF -->  AWS
 
+// Expander is implemented by types that customize their expansion
+type Expander interface {
+	Expand(ctx context.Context) (any, diag.Diagnostics)
+}
+
 // Expand "expands" a resource's "business logic" data structure,
 // implemented using Terraform Plugin Framework data types, into
 // an AWS SDK for Go v2 API data structure.
@@ -65,6 +70,11 @@ func (expander autoExpander) getOptions() AutoFlexOptions {
 // convert converts a single Plugin Framework value to its AWS API equivalent.
 func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	if fromExpander, ok := valFrom.Interface().(Expander); ok {
+		diags.Append(expandExpander(ctx, fromExpander, vTo)...)
+		return diags
+	}
 
 	vFrom, ok := valFrom.Interface().(attr.Value)
 	if !ok {
@@ -357,6 +367,15 @@ func (expander autoExpander) object(ctx context.Context, vFrom basetypes.ObjectV
 				diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tElem, vTo)...)
 				return diags
 			}
+		}
+
+	case reflect.Interface:
+		//
+		// types.Object -> interface.
+		//
+		if vFrom, ok := vFrom.(fwtypes.NestedObjectValue); ok {
+			diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tTo, vTo)...)
+			return diags
 		}
 	}
 
@@ -685,6 +704,13 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 			return diags
 		}
 
+	case reflect.Interface:
+		//
+		// types.List(OfObject) -> interface.
+		//
+		diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tTo, vTo)...)
+		return diags
+
 	case reflect.Map:
 		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Struct:
@@ -725,16 +751,9 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 			//
 			// types.List(OfObject) -> []interface.
 			//
-			// Smithy union type handling not yet implemented. Silently skip.
+			diags.Append(expander.nestedObjectToSlice(ctx, vFrom, tTo, tElem, vTo)...)
 			return diags
 		}
-
-	case reflect.Interface:
-		//
-		// types.List(OfObject) -> interface.
-		//
-		// Smithy union type handling not yet implemented. Silently skip.
-		return diags
 	}
 
 	diags.AddError("Incompatible types", fmt.Sprintf("nestedObjectCollection[%s] cannot be expanded to %s", vFrom.Type(ctx).(attr.TypeWithElementType).ElementType(), vTo.Kind()))
@@ -759,10 +778,12 @@ func (expander autoExpander) nestedObjectToStruct(ctx context.Context, vFrom fwt
 		return diags
 	}
 
-	// Set value (or pointer).
-	if vTo.Type().Kind() == reflect.Struct {
+	// Set value.
+	switch vTo.Type().Kind() {
+	case reflect.Struct, reflect.Interface:
 		vTo.Set(to.Elem())
-	} else {
+
+	default:
 		vTo.Set(to)
 	}
 
@@ -792,10 +813,12 @@ func (expander autoExpander) nestedObjectToSlice(ctx context.Context, vFrom fwty
 			return diags
 		}
 
-		// Set value (or pointer) in the target slice.
-		if vTo.Type().Elem().Kind() == reflect.Struct {
+		// Set value in the target slice.
+		switch vTo.Type().Elem().Kind() {
+		case reflect.Struct, reflect.Interface:
 			t.Index(i).Set(target.Elem())
-		} else {
+
+		default:
 			t.Index(i).Set(target)
 		}
 	}
@@ -893,4 +916,67 @@ func blockKeyMap(from any) (reflect.Value, diag.Diagnostics) {
 	diags.AddError("AutoFlEx", fmt.Sprintf("unable to find map block key (%s)", MapBlockKey))
 
 	return reflect.Zero(reflect.TypeOf("")), diags
+}
+
+func expandExpander(ctx context.Context, fromExpander Expander, toVal reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	expanded, d := fromExpander.Expand(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if expanded == nil {
+		expanderType := reflect.TypeOf(fromExpander)
+		diags.AddError(
+			"Incompatible Types",
+			"An unexpected error occurred while expanding configuration. "+
+				"This is always an error in the provider. "+
+				"Please report the following to the provider developer:\n\n"+
+				fmt.Sprintf("Expanding %q returned nil.", fullTypeName(expanderType)),
+		)
+		return diags
+	}
+
+	expandedVal := reflect.ValueOf(expanded)
+
+	targetType := toVal.Type()
+	if targetType.Kind() == reflect.Interface {
+		expandedType := reflect.TypeOf(expanded)
+		if !expandedType.Implements(targetType) {
+			diags.AddError(
+				"Incompatible Types",
+				"An unexpected error occurred while expanding configuration. "+
+					"This is always an error in the provider. "+
+					"Please report the following to the provider developer:\n\n"+
+					fmt.Sprintf("Type %q does not implement %q.", fullTypeName(expandedType), fullTypeName(targetType)),
+			)
+			return diags
+		}
+
+		toVal.Set(expandedVal)
+
+		return diags
+	}
+
+	if targetType.Kind() == reflect.Struct {
+		expandedVal = expandedVal.Elem()
+	}
+	expandedType := expandedVal.Type()
+
+	if !expandedType.AssignableTo(targetType) {
+		diags.AddError(
+			"Incompatible Types",
+			"An unexpected error occurred while expanding configuration. "+
+				"This is always an error in the provider. "+
+				"Please report the following to the provider developer:\n\n"+
+				fmt.Sprintf("Type %q cannot be assigned to %q.", fullTypeName(expandedType), fullTypeName(targetType)),
+		)
+		return diags
+	}
+
+	toVal.Set(expandedVal)
+
+	return diags
 }

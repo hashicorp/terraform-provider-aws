@@ -917,7 +917,6 @@ service "batch" {
 }
 
 service "bedrock" {
-
   sdk {
     id             = "Bedrock"
     client_version = [2]
@@ -925,11 +924,11 @@ service "bedrock" {
 
   names {
     provider_name_upper = "Bedrock"
-    human_friendly      = "Amazon Bedrock"
+    human_friendly      = "Bedrock"
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListFoundationModels"
+    endpoint_api_call = "ListFoundationModels"
   }
 
   resource_prefix {
@@ -938,11 +937,10 @@ service "bedrock" {
 
   provider_package_correct = "bedrock"
   doc_prefix               = ["bedrock_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "bedrockagent" {
-
   cli_v2_command {
     aws_cli_v2_command           = "bedrock-agent"
     aws_cli_v2_command_no_dashes = "bedrockagent"
@@ -955,11 +953,11 @@ service "bedrockagent" {
 
   names {
     provider_name_upper = "BedrockAgent"
-    human_friendly      = "Agents for Amazon Bedrock"
+    human_friendly      = "Bedrock Agents"
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListAgents"
+    endpoint_api_call = "ListAgents"
   }
 
   resource_prefix {
@@ -968,7 +966,7 @@ service "bedrockagent" {
 
   provider_package_correct = "bedrockagent"
   doc_prefix               = ["bedrockagent_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "bcmdataexports" {
