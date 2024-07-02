@@ -82,8 +82,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Event Configurations",
 		},
 		{
-			Factory:  ResourceIndexingConfiguration,
+			Factory:  resourceIndexingConfiguration,
 			TypeName: "aws_iot_indexing_configuration",
+			Name:     "Indexing Configuration",
 		},
 		{
 			Factory:  ResourceLoggingOptions,

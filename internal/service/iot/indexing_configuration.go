@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_iot_indexing_configuration")
-func ResourceIndexingConfiguration() *schema.Resource {
+// @SDKResource("aws_iot_indexing_configuration", name="Indexing Configuration")
+func resourceIndexingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIndexingConfigurationPut,
 		ReadWithoutTimeout:   resourceIndexingConfigurationRead,
@@ -200,7 +200,9 @@ func resourceIndexingConfigurationPut(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "updating IoT Indexing Configuration: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	if d.IsNewResource() {
+		d.SetId(meta.(*conns.AWSClient).Region)
+	}
 
 	return append(diags, resourceIndexingConfigurationRead(ctx, d, meta)...)
 }
@@ -213,7 +215,7 @@ func resourceIndexingConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	output, err := conn.GetIndexingConfiguration(ctx, &iot.GetIndexingConfigurationInput{})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IoT Indexing Configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading IoT Indexing Configuration (%s): %s", d.Id(), err)
 	}
 
 	if output.ThingGroupIndexingConfiguration != nil {
