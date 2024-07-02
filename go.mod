@@ -6,16 +6,16 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.3-proton
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.54.11
+	github.com/aws/aws-sdk-go v1.54.12
 	github.com/aws/aws-sdk-go-v2 v1.30.1
-	github.com/aws/aws-sdk-go-v2/config v1.27.22
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.22
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.8
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.2
+	github.com/aws/aws-sdk-go-v2/config v1.27.23
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.23
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.9
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.3
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/account v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/acm v1.28.1
-	github.com/aws/aws-sdk-go-v2/service/acmpca v1.33.0
+	github.com/aws/aws-sdk-go-v2/service/acmpca v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/amp v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.25.1
@@ -91,7 +91,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.44.1
-	github.com/aws/aws-sdk-go-v2/service/eks v1.45.1
+	github.com/aws/aws-sdk-go-v2/service/eks v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.40.1
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.33.1
@@ -195,7 +195,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/waf v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.23.1
-	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.51.1
+	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.51.2
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.21.1
