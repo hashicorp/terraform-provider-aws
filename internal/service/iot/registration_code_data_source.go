@@ -14,7 +14,7 @@ import (
 )
 
 // @SDKDataSource("aws_iot_registration_code", name="Registration Code")
-func DataSourceRegistrationCode() *schema.Resource {
+func dataSourceRegistrationCode() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRegistrationCodeRead,
 
