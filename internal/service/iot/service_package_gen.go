@@ -104,7 +104,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iot_policy_attachment",
 		},
 		{
-			Factory:  ResourceProvisioningTemplate,
+			Factory:  resourceProvisioningTemplate,
 			TypeName: "aws_iot_provisioning_template",
 			Name:     "Provisioning Template",
 			Tags: &types.ServicePackageResourceTags{

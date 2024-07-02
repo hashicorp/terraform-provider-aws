@@ -25,19 +25,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+type provisioningHookPayloadVersion string
+
 const (
-	provisioningHookPayloadVersion2020_04_01 = "2020-04-01"
+	provisioningHookPayloadVersion2020_04_01 provisioningHookPayloadVersion = "2020-04-01"
 )
 
-func provisioningHookPayloadVersion_Values() []string {
-	return []string{
+func (provisioningHookPayloadVersion) Values() []provisioningHookPayloadVersion {
+	return []provisioningHookPayloadVersion{
 		provisioningHookPayloadVersion2020_04_01,
 	}
 }
 
 // @SDKResource("aws_iot_provisioning_template", name="Provisioning Template")
 // @Tags(identifierAttribute="arn")
-func ResourceProvisioningTemplate() *schema.Resource {
+func resourceProvisioningTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisioningTemplateCreate,
 		ReadWithoutTimeout:   resourceProvisioningTemplateRead,
@@ -83,10 +85,10 @@ func ResourceProvisioningTemplate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"payload_version": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      provisioningHookPayloadVersion2020_04_01,
-							ValidateFunc: validation.StringInSlice(provisioningHookPayloadVersion_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          provisioningHookPayloadVersion2020_04_01,
+							ValidateDiagFunc: enum.Validate[provisioningHookPayloadVersion](),
 						},
 						names.AttrTargetARN: {
 							Type:         schema.TypeString,
@@ -126,7 +128,6 @@ func ResourceProvisioningTemplate() *schema.Resource {
 
 func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -172,7 +173,6 @@ func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceProvisioningTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	output, err := findProvisioningTemplateByName(ctx, conn, d.Id())
@@ -208,7 +208,6 @@ func resourceProvisioningTemplateRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	if d.HasChange("template_body") {
@@ -218,7 +217,6 @@ func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceD
 			TemplateName: aws.String(d.Id()),
 		}
 
-		log.Printf("[DEBUG] Creating IoT Provisioning Template version: %s", d.Id())
 		_, err := conn.CreateProvisioningTemplateVersion(ctx, input)
 
 		if err != nil {
@@ -238,7 +236,6 @@ func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceD
 			input.PreProvisioningHook = expandProvisioningHook(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating IoT Provisioning Template: %s", d.Id())
 		_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateProvisioningTemplate(ctx, input)

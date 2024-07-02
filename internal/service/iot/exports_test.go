@@ -15,6 +15,7 @@ var (
 	ResourceLoggingOptions        = resourceLoggingOptions
 	ResourcePolicy                = resourcePolicy
 	ResourcePolicyAttachment      = resourcePolicyAttachment
+	ResourceProvisioningTemplate  = resourceProvisioningTemplate
 	ResourceThingType             = resourceThingType
 
 	FindAttachedPolicyByTwoPartKey = findAttachedPolicyByTwoPartKey
