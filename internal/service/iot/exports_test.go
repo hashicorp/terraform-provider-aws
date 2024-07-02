@@ -5,6 +5,8 @@ package iot
 
 // Exports for use in tests only.
 var (
+	ResourceAuthorizer = resourceAuthorizer
+
 	FindAuthorizerByName           = findAuthorizerByName
 	FindBillingGroupByName         = findBillingGroupByName
 	FindCACertificateByID          = findCACertificateByID

@@ -28,9 +28,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_iot_authorizer")
+// @SDKResource("aws_iot_authorizer", name="Authorizer")
 // @Tags(identifierAttribute="arn")
-func ResourceAuthorizer() *schema.Resource {
+func resourceAuthorizer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAuthorizerCreate,
 		ReadWithoutTimeout:   resourceAuthorizerRead,
@@ -122,7 +122,6 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.TokenSigningPublicKeys = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
-	log.Printf("[INFO] Creating IoT Authorizer: %s", d.Id())
 	output, err := conn.CreateAuthorizer(ctx, input)
 
 	if err != nil {
@@ -190,7 +189,6 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		input.TokenSigningPublicKeys = flex.ExpandStringValueMap(d.Get("token_signing_public_keys").(map[string]interface{}))
 	}
 
-	log.Printf("[INFO] Updating IoT Authorizer: %s", d.Id())
 	_, err := conn.UpdateAuthorizer(ctx, &input)
 
 	if err != nil {
@@ -206,7 +204,6 @@ func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	// In order to delete an IoT Authorizer, you must set it inactive first.
 	if d.Get(names.AttrStatus).(string) == string(awstypes.AuthorizerStatusActive) {
-		log.Printf("[INFO] Deactivating IoT Authorizer: %s", d.Id())
 		_, err := conn.UpdateAuthorizer(ctx, &iot.UpdateAuthorizerInput{
 			AuthorizerName: aws.String(d.Id()),
 			Status:         awstypes.AuthorizerStatusInactive,
