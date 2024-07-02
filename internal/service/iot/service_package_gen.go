@@ -25,8 +25,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceEndpoint,
+			Factory:  dataSourceEndpoint,
 			TypeName: "aws_iot_endpoint",
+			Name:     "Endpoint",
 		},
 		{
 			Factory:  DataSourceRegistrationCode,

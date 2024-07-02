@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_iot_endpoint")
-func DataSourceEndpoint() *schema.Resource {
+// @SDKDataSource("aws_iot_endpoint", name="Endpoint")
+func dataSourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEndpointRead,
 		Schema: map[string]*schema.Schema{
@@ -42,6 +42,7 @@ func DataSourceEndpoint() *schema.Resource {
 func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
+
 	input := &iot.DescribeEndpointInput{}
 
 	if v, ok := d.GetOk(names.AttrEndpointType); ok {
@@ -49,13 +50,16 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	output, err := conn.DescribeEndpoint(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "while describing iot endpoint: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading IoT Endpoint: %s", err)
 	}
+
 	endpointAddress := aws.ToString(output.EndpointAddress)
 	d.SetId(endpointAddress)
 	if err := d.Set("endpoint_address", endpointAddress); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_address: %s", err)
 	}
+
 	return diags
 }
