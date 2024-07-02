@@ -92,6 +92,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.40.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.7.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.39.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/databrew v1.31.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.40.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.12.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dax v1.21.1 // indirect

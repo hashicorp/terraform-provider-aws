@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -75,19 +76,14 @@ func (d *dataSourceConnector) Schema(ctx context.Context, req datasource.SchemaR
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dsSftpConfig](ctx),
 				Computed:   true,
 			},
-			"tags": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dsTags](ctx),
-				Computed:   true,
-			},
-			"url": schema.StringAttribute{
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+			names.AttrURL: schema.StringAttribute{
 				Computed: true,
 			},
 		},
 	}
 }
 
-// TIP: ==== ASSIGN CRUD METHODS ====
-// Data sources only have a read method.
 func (d *dataSourceConnector) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().TransferClient(ctx)
 
@@ -116,8 +112,10 @@ func (d *dataSourceConnector) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	tags := KeyValueTags(ctx, description.Connector.Tags).IgnoreAWS().IgnoreConfig(d.Meta().IgnoreTagsConfig)
+	data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags.Map())
 
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 type dsConnectorData struct {
@@ -129,7 +127,7 @@ type dsConnectorData struct {
 	SecurityPolicyName              types.String                                  `tfsdk:"security_policy_name"`
 	ServiceManagedEgressIpAddresses fwtypes.ListValueOf[types.String]             `tfsdk:"service_managed_egress_ip_addresses"`
 	SftpConfig                      fwtypes.ListNestedObjectValueOf[dsSftpConfig] `tfsdk:"sftp_config"`
-	Tags                            fwtypes.ListNestedObjectValueOf[dsTags]       `tfsdk:"tags"`
+	Tags                            types.Map                                     `tfsdk:"tags"`
 	Url                             types.String                                  `tfsdk:"url"`
 }
 
@@ -148,9 +146,4 @@ type dsAs2Config struct {
 type dsSftpConfig struct {
 	TrustedHostKeys fwtypes.ListValueOf[types.String] `tfsdk:"trusted_host_keys"`
 	UserSecretId    types.String                      `tfsdk:"user_secret_id"`
-}
-
-type dsTags struct {
-	Key   types.String `tfsdk:"key"`
-	Value types.String `tfsdk:"value"`
 }
