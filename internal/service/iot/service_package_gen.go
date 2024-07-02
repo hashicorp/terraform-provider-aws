@@ -77,7 +77,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceEventConfigurations,
+			Factory:  resourceEventConfigurations,
 			TypeName: "aws_iot_event_configurations",
 			Name:     "Event Configurations",
 		},

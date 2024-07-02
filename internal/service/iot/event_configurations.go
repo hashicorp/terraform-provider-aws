@@ -22,7 +22,7 @@ import (
 )
 
 // @SDKResource("aws_iot_event_configurations", name="Event Configurations")
-func ResourceEventConfigurations() *schema.Resource {
+func resourceEventConfigurations() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventConfigurationsPut,
 		ReadWithoutTimeout:   resourceEventConfigurationsRead,
@@ -61,7 +61,7 @@ func resourceEventConfigurationsPut(ctx context.Context, d *schema.ResourceData,
 	_, err := conn.UpdateEventConfigurations(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating IoT Event Configurations (%s): %s", meta.(*conns.AWSClient).Region, err)
+		return sdkdiag.AppendErrorf(diags, "updating IoT Event Configurations: %s", err)
 	}
 
 	if d.IsNewResource() {
