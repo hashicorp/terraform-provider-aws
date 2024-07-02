@@ -21,7 +21,7 @@ import (
 )
 
 // @SDKResource("aws_iot_certificate", name="Certificate)
-func ResourceCertificate() *schema.Resource {
+func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
 		ReadWithoutTimeout:   resourceCertificateRead,
@@ -196,7 +196,6 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	if d.Get("active").(bool) {
-		log.Printf("[DEBUG] Disabling IoT Certificate: %s", d.Id())
 		_, err := conn.UpdateCertificate(ctx, &iot.UpdateCertificateInput{
 			CertificateId: aws.String(d.Id()),
 			NewStatus:     awstypes.CertificateStatusInactive,

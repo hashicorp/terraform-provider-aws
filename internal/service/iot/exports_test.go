@@ -8,6 +8,7 @@ var (
 	ResourceAuthorizer    = resourceAuthorizer
 	ResourceBillingGroup  = resourceBillingGroup
 	ResourceCACertificate = resourceCACertificate
+	ResourceCertificate   = resourceCertificate
 
 	FindAuthorizerByName           = findAuthorizerByName
 	FindBillingGroupByName         = findBillingGroupByName
