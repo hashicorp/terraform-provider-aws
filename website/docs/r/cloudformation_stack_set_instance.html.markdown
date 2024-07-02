@@ -102,6 +102,7 @@ The `deployment_targets` configuration block supports the following arguments:
 * `account_filter_type` - (Optional) Limit deployment targets to individual accounts or include additional accounts with provided OUs. Valid values: `INTERSECTION`, `DIFFERENCE`, `UNION`, `NONE`.
 * `accounts` - (Optional) List of accounts to deploy stack set updates.
 * `accounts_url` - (Optional) S3 URL of the file containing the list of accounts.
+
 ### `operation_preferences` Argument Reference
 
 The `operation_preferences` configuration block supports the following arguments:

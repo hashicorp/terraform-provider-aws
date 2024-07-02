@@ -817,8 +817,8 @@ resource "aws_cloudformation_stack_set_instance" "test" {
 
   deployment_targets {
     organizational_unit_ids = [data.aws_organizations_organization.test.roots[0].id]
-    account_filter_type = "INTERSECTION"
-    accounts = [data.aws_organizations_organization.test.non_master_accounts[0].id]
+    account_filter_type     = "INTERSECTION"
+    accounts                = [data.aws_organizations_organization.test.non_master_accounts[0].id]
   }
 
   stack_set_name = aws_cloudformation_stack_set.test.name

@@ -81,7 +81,7 @@ func resourceStackSetInstance() *schema.Resource {
 							Optional:      true,
 							ForceNew:      true,
 							MinItems:      1,
-							ConflictsWith: []string{"account_id"},
+							ConflictsWith: []string{names.AttrAccountID},
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32}|r-[0-9a-z]{4,32})$`), ""),
@@ -92,13 +92,13 @@ func resourceStackSetInstance() *schema.Resource {
 							Optional:      true,
 							ForceNew:      true,
 							ValidateFunc:  validation.StringInSlice(enum.Slice(awstypes.AccountFilterType.Values("")...), false),
-							ConflictsWith: []string{"account_id"},
+							ConflictsWith: []string{names.AttrAccountID},
 						},
 						"accounts": {
 							Type:          schema.TypeSet,
 							Optional:      true,
 							ForceNew:      true,
-							ConflictsWith: []string{"account_id"},
+							ConflictsWith: []string{names.AttrAccountID},
 							MinItems:      1,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
@@ -109,7 +109,7 @@ func resourceStackSetInstance() *schema.Resource {
 							Type:          schema.TypeString,
 							ForceNew:      true,
 							Optional:      true,
-							ConflictsWith: []string{"account_id"},
+							ConflictsWith: []string{names.AttrAccountID},
 							ValidateFunc:  validation.StringMatch(regexp.MustCompile(`(s3://|http(s?)://).+`), ""),
 						},
 					},
