@@ -97,12 +97,12 @@ func (d *dataSourceConnector) Read(ctx context.Context, req datasource.ReadReque
 		describeConnectorInput.ConnectorId = data.ConnectorId.ValueStringPointer()
 	}
 
-	description, findConnectorError := conn.DescribeConnector(ctx, &describeConnectorInput)
+	description, err := conn.DescribeConnector(ctx, &describeConnectorInput)
 
-	if findConnectorError != nil {
+	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Transfer, create.ErrActionReading, DSNameConnector, data.SecurityPolicyName.String(), findConnectorError),
-			findConnectorError.Error(),
+			create.ProblemStandardMessage(names.Transfer, create.ErrActionReading, DSNameConnector, data.SecurityPolicyName.String(), err),
+			err.Error(),
 		)
 		return
 	}
