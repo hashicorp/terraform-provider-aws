@@ -20,6 +20,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory: newDataSourceApplication,
 			Name:    "Application",
 		},
+		{
+			Factory: newDataSourceAttributeGroup,
+			Name:    "Attribute Group",
+		},
 	}
 }
 
@@ -28,6 +32,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newResourceApplication,
 			Name:    "Application",
+		},
+		{
+			Factory: newResourceAttributeGroup,
+			Name:    "Attribute Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 	}
 }
