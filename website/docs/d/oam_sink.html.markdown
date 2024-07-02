@@ -31,6 +31,7 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the sink.
+* `id` - ARN of the sink.
 * `name` - Name of the sink.
 * `sink_id` - Random ID string that AWS generated as part of the sink ARN.
 * `tags` - Tags assigned to the sink.

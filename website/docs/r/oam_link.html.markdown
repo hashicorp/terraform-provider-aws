@@ -42,6 +42,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the link.
+* `id` - ARN of the link.
 * `label` - Label that is assigned to this link.
 * `link_id` - ID string that AWS generated as part of the link ARN.
 * `sink_arn` - ARN of the sink that is used for this link.
