@@ -16,9 +16,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/emr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
-	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -27,8 +28,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -158,10 +162,10 @@ func resourceCluster() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"allocation_strategy": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validation.StringInSlice(emr.OnDemandProvisioningAllocationStrategy_Values(), false),
+													Type:             schema.TypeString,
+													Required:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.OnDemandProvisioningAllocationStrategy](),
 												},
 											},
 										},
@@ -174,10 +178,10 @@ func resourceCluster() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"allocation_strategy": {
-													Type:         schema.TypeString,
-													ForceNew:     true,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(emr.SpotProvisioningAllocationStrategy_Values(), false),
+													Type:             schema.TypeString,
+													ForceNew:         true,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.SpotProvisioningAllocationStrategy](),
 												},
 												"block_duration_minutes": {
 													Type:     schema.TypeInt,
@@ -186,10 +190,10 @@ func resourceCluster() *schema.Resource {
 													Default:  0,
 												},
 												"timeout_action": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validation.StringInSlice(emr.SpotProvisioningTimeoutAction_Values(), false),
+													Type:             schema.TypeString,
+													Required:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.SpotProvisioningTimeoutAction](),
 												},
 												"timeout_duration_minutes": {
 													Type:     schema.TypeInt,
@@ -528,8 +532,8 @@ func resourceCluster() *schema.Resource {
 					Type:     schema.TypeSet,
 					Optional: true,
 					Elem: &schema.Schema{
-						Type:         schema.TypeString,
-						ValidateFunc: validation.StringInSlice(emr.StepState_Values(), false),
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.StepState](),
 					},
 				},
 				"log_encryption_kms_key_id": {
@@ -650,17 +654,17 @@ func resourceCluster() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"instance_role": {
-								Type:         schema.TypeString,
-								ForceNew:     true,
-								Required:     true,
-								ValidateFunc: validation.StringInSlice(emr.InstanceRoleType_Values(), false),
+								Type:             schema.TypeString,
+								ForceNew:         true,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.InstanceRoleType](),
 							},
 							"placement_strategy": {
-								Type:         schema.TypeString,
-								ForceNew:     true,
-								Optional:     true,
-								Computed:     true,
-								ValidateFunc: validation.StringInSlice(emr.PlacementGroupStrategy_Values(), false),
+								Type:             schema.TypeString,
+								ForceNew:         true,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.PlacementGroupStrategy](),
 							},
 						},
 					},
@@ -671,11 +675,11 @@ func resourceCluster() *schema.Resource {
 					Required: true,
 				},
 				"scale_down_behavior": {
-					Type:         schema.TypeString,
-					ForceNew:     true,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringInSlice(emr.ScaleDownBehavior_Values(), false),
+					Type:             schema.TypeString,
+					ForceNew:         true,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ScaleDownBehavior](),
 				},
 				"security_configuration": {
 					Type:     schema.TypeString,
@@ -696,10 +700,10 @@ func resourceCluster() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"action_on_failure": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ForceNew:     true,
-								ValidateFunc: validation.StringInSlice(emr.ActionOnFailure_Values(), false),
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ActionOnFailure](),
 							},
 							"hadoop_jar_step": {
 								Type:       schema.TypeList,
@@ -772,7 +776,7 @@ func resourceCluster() *schema.Resource {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	applications := d.Get("applications").(*schema.Set).List()
 	keepJobFlowAliveWhenNoSteps := true
@@ -795,7 +799,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		unhealthyNodeReplacement = v.(bool)
 	}
 
-	instanceConfig := &emr.JobFlowInstancesConfig{
+	instanceConfig := &awstypes.JobFlowInstancesConfig{
 		KeepJobFlowAliveWhenNoSteps: aws.Bool(keepJobFlowAliveWhenNoSteps),
 		TerminationProtected:        aws.Bool(terminationProtection),
 		UnhealthyNodeReplacement:    aws.Bool(unhealthyNodeReplacement),
@@ -804,20 +808,20 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if l := d.Get("master_instance_group").([]interface{}); len(l) > 0 && l[0] != nil {
 		m := l[0].(map[string]interface{})
 
-		instanceGroup := &emr.InstanceGroupConfig{
-			InstanceCount: aws.Int64(int64(m[names.AttrInstanceCount].(int))),
-			InstanceRole:  aws.String(emr.InstanceRoleTypeMaster),
+		instanceGroup := awstypes.InstanceGroupConfig{
+			InstanceCount: aws.Int32(int32(m[names.AttrInstanceCount].(int))),
+			InstanceRole:  awstypes.InstanceRoleTypeMaster,
 			InstanceType:  aws.String(m[names.AttrInstanceType].(string)),
-			Market:        aws.String(emr.MarketTypeOnDemand),
+			Market:        awstypes.MarketTypeOnDemand,
 			Name:          aws.String(m[names.AttrName].(string)),
 		}
 
 		if v, ok := m["bid_price"]; ok && v.(string) != "" {
 			instanceGroup.BidPrice = aws.String(v.(string))
-			instanceGroup.Market = aws.String(emr.MarketTypeSpot)
+			instanceGroup.Market = awstypes.MarketTypeSpot
 		}
 
-		expandEBSConfig(m, instanceGroup)
+		expandEBSConfig(m, &instanceGroup)
 
 		instanceConfig.InstanceGroups = append(instanceConfig.InstanceGroups, instanceGroup)
 	}
@@ -825,16 +829,16 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if l := d.Get("core_instance_group").([]interface{}); len(l) > 0 && l[0] != nil {
 		m := l[0].(map[string]interface{})
 
-		instanceGroup := &emr.InstanceGroupConfig{
-			InstanceCount: aws.Int64(int64(m[names.AttrInstanceCount].(int))),
-			InstanceRole:  aws.String(emr.InstanceRoleTypeCore),
+		instanceGroup := awstypes.InstanceGroupConfig{
+			InstanceCount: aws.Int32(int32(m[names.AttrInstanceCount].(int))),
+			InstanceRole:  awstypes.InstanceRoleTypeCore,
 			InstanceType:  aws.String(m[names.AttrInstanceType].(string)),
-			Market:        aws.String(emr.MarketTypeOnDemand),
+			Market:        awstypes.MarketTypeOnDemand,
 			Name:          aws.String(m[names.AttrName].(string)),
 		}
 
 		if v, ok := m["autoscaling_policy"]; ok && v.(string) != "" {
-			var autoScalingPolicy *emr.AutoScalingPolicy
+			var autoScalingPolicy *awstypes.AutoScalingPolicy
 
 			if err := json.Unmarshal([]byte(v.(string)), &autoScalingPolicy); err != nil {
 				return sdkdiag.AppendErrorf(diags, "parsing core_instance_group Auto Scaling Policy JSON: %s", err)
@@ -845,22 +849,22 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := m["bid_price"]; ok && v.(string) != "" {
 			instanceGroup.BidPrice = aws.String(v.(string))
-			instanceGroup.Market = aws.String(emr.MarketTypeSpot)
+			instanceGroup.Market = awstypes.MarketTypeSpot
 		}
 
-		expandEBSConfig(m, instanceGroup)
+		expandEBSConfig(m, &instanceGroup)
 
 		instanceConfig.InstanceGroups = append(instanceConfig.InstanceGroups, instanceGroup)
 	}
 
 	if l := d.Get("master_instance_fleet").([]interface{}); len(l) > 0 && l[0] != nil {
-		instanceFleetConfig := readInstanceFleetConfig(l[0].(map[string]interface{}), emr.InstanceFleetTypeMaster)
-		instanceConfig.InstanceFleets = append(instanceConfig.InstanceFleets, instanceFleetConfig)
+		instanceFleetConfig := readInstanceFleetConfig(l[0].(map[string]interface{}), awstypes.InstanceFleetTypeMaster)
+		instanceConfig.InstanceFleets = append(instanceConfig.InstanceFleets, *instanceFleetConfig)
 	}
 
 	if l := d.Get("core_instance_fleet").([]interface{}); len(l) > 0 && l[0] != nil {
-		instanceFleetConfig := readInstanceFleetConfig(l[0].(map[string]interface{}), emr.InstanceFleetTypeCore)
-		instanceConfig.InstanceFleets = append(instanceConfig.InstanceFleets, instanceFleetConfig)
+		instanceFleetConfig := readInstanceFleetConfig(l[0].(map[string]interface{}), awstypes.InstanceFleetTypeCore)
+		instanceConfig.InstanceFleets = append(instanceConfig.InstanceFleets, *instanceFleetConfig)
 	}
 
 	var instanceProfile string
@@ -875,7 +879,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			instanceConfig.Ec2SubnetId = aws.String(v.(string))
 		}
 		if v, ok := attributes[names.AttrSubnetIDs]; ok {
-			instanceConfig.Ec2SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
+			instanceConfig.Ec2SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
 		if v, ok := attributes["additional_master_security_groups"]; ok {
@@ -883,7 +887,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			for i, s := range strSlice {
 				strSlice[i] = strings.TrimSpace(s)
 			}
-			instanceConfig.AdditionalMasterSecurityGroups = aws.StringSlice(strSlice)
+			instanceConfig.AdditionalMasterSecurityGroups = strSlice
 		}
 
 		if v, ok := attributes["additional_slave_security_groups"]; ok {
@@ -891,7 +895,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			for i, s := range strSlice {
 				strSlice[i] = strings.TrimSpace(s)
 			}
-			instanceConfig.AdditionalSlaveSecurityGroups = aws.StringSlice(strSlice)
+			instanceConfig.AdditionalSlaveSecurityGroups = strSlice
 		}
 
 		if v, ok := attributes["emr_managed_master_security_group"]; ok {
@@ -944,7 +948,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("scale_down_behavior"); ok {
-		params.ScaleDownBehavior = aws.String(v.(string))
+		params.ScaleDownBehavior = awstypes.ScaleDownBehavior(v.(string))
 	}
 
 	if v, ok := d.GetOk("security_configuration"); ok {
@@ -952,7 +956,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("ebs_root_volume_size"); ok {
-		params.EbsRootVolumeSize = aws.Int64(int64(v.(int)))
+		params.EbsRootVolumeSize = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("custom_ami_id"); ok {
@@ -960,7 +964,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("step_concurrency_level"); ok {
-		params.StepConcurrencyLevel = aws.Int64(int64(v.(int)))
+		params.StepConcurrencyLevel = aws.Int32(int32(v.(int)))
 	}
 
 	if instanceProfile != "" {
@@ -1008,7 +1012,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var resp *emr.RunJobFlowOutput
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
-		resp, err = conn.RunJobFlowWithContext(ctx, params)
+		resp, err = conn.RunJobFlow(ctx, params)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "ValidationException", "Invalid InstanceProfile:") {
 				return retry.RetryableError(err)
@@ -1021,13 +1025,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		resp, err = conn.RunJobFlowWithContext(ctx, params)
+		resp, err = conn.RunJobFlow(ctx, params)
 	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "running EMR Job Flow: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.JobFlowId))
+	d.SetId(aws.ToString(resp.JobFlowId))
 	// This value can only be obtained through a deprecated function
 	d.Set("keep_job_flow_alive_when_no_steps", params.Instances.KeepJobFlowAliveWhenNoSteps)
 
@@ -1042,13 +1046,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	// termination protection and ignores the configuration at launch.
 	// This additional handling is to potentially disable termination
 	// protection to match the desired Terraform configuration.
-	if aws.BoolValue(cluster.TerminationProtected) != terminationProtection {
+	if aws.ToBool(cluster.TerminationProtected) != terminationProtection {
 		input := &emr.SetTerminationProtectionInput{
-			JobFlowIds:           []*string{aws.String(d.Id())},
+			JobFlowIds:           []string{d.Id()},
 			TerminationProtected: aws.Bool(terminationProtection),
 		}
 
-		if _, err := conn.SetTerminationProtectionWithContext(ctx, input); err != nil {
+		if _, err := conn.SetTerminationProtection(ctx, input); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting EMR Cluster (%s) termination protection to match configuration: %s", d.Id(), err)
 		}
 	}
@@ -1058,7 +1062,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	cluster, err := findClusterByID(ctx, conn, d.Id())
 
@@ -1099,8 +1103,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	instanceFleets, err := FetchAllInstanceFleets(ctx, conn, d.Id())
 
 	if err == nil { // find instance fleets
-		coreFleet := findInstanceFleet(instanceFleets, emr.InstanceFleetTypeCore)
-		masterFleet := findInstanceFleet(instanceFleets, emr.InstanceFleetTypeMaster)
+		coreFleet := findInstanceFleet(instanceFleets, awstypes.InstanceFleetTypeCore)
+		masterFleet := findInstanceFleet(instanceFleets, awstypes.InstanceFleetTypeMaster)
 
 		flattenedCoreInstanceFleet := flattenInstanceFleet(coreFleet)
 		if err := d.Set("core_instance_fleet", flattenedCoreInstanceFleet); err != nil {
@@ -1155,7 +1159,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting kerberos_attributes: %s", err)
 	}
 
-	respBootstraps, err := conn.ListBootstrapActionsWithContext(ctx, &emr.ListBootstrapActionsInput{
+	respBootstraps, err := conn.ListBootstrapActions(ctx, &emr.ListBootstrapActionsInput{
 		ClusterId: cluster.Id,
 	})
 	if err != nil {
@@ -1166,26 +1170,25 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting Bootstrap Actions: %s", err)
 	}
 
-	var stepSummaries []*emr.StepSummary
+	var stepSummaries []awstypes.StepSummary
 	input := &emr.ListStepsInput{
 		ClusterId: aws.String(d.Id()),
 	}
 
 	if v, ok := d.GetOk("list_steps_states"); ok && v.(*schema.Set).Len() > 0 {
-		input.StepStates = flex.ExpandStringSet(v.(*schema.Set))
+		input.StepStates = flex.ExpandStringyValueSet[awstypes.StepState](v.(*schema.Set))
 	}
 
-	err = conn.ListStepsPagesWithContext(ctx, input, func(page *emr.ListStepsOutput, lastPage bool) bool {
-		// ListSteps returns steps in reverse order (newest first).
-		for _, step := range page.Steps {
-			stepSummaries = append([]*emr.StepSummary{step}, stepSummaries...)
+	pages := emr.NewListStepsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing EMR Cluster (%s) steps: %s", d.Id(), err)
 		}
 
-		return !lastPage
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing EMR Cluster (%s) steps: %s", d.Id(), err)
+		stepSummaries = append(stepSummaries, page.Steps...)
 	}
 
 	if err := d.Set("step", flattenStepSummaries(stepSummaries)); err != nil {
@@ -1201,7 +1204,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("additional_info", info)
 	}
 
-	atpOut, err := conn.GetAutoTerminationPolicyWithContext(ctx, &emr.GetAutoTerminationPolicyInput{
+	atpOut, err := conn.GetAutoTerminationPolicy(ctx, &emr.GetAutoTerminationPolicyInput{
 		ClusterId: aws.String(d.Id()),
 	})
 
@@ -1229,11 +1232,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	if d.HasChange("visible_to_all_users") {
-		_, err := conn.SetVisibleToAllUsersWithContext(ctx, &emr.SetVisibleToAllUsersInput{
-			JobFlowIds:        []*string{aws.String(d.Id())},
+		_, err := conn.SetVisibleToAllUsers(ctx, &emr.SetVisibleToAllUsersInput{
+			JobFlowIds:        []string{d.Id()},
 			VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
 		})
 		if err != nil {
@@ -1246,7 +1249,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if len(n.([]interface{})) > 0 {
 			log.Printf("[DEBUG] Putting EMR cluster Auto Termination Policy")
 
-			_, err := conn.PutAutoTerminationPolicyWithContext(ctx, &emr.PutAutoTerminationPolicyInput{
+			_, err := conn.PutAutoTerminationPolicy(ctx, &emr.PutAutoTerminationPolicyInput{
 				AutoTerminationPolicy: expandAutoTerminationPolicy(n.([]interface{})),
 				ClusterId:             aws.String(d.Id()),
 			})
@@ -1256,7 +1259,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		} else {
 			log.Printf("[DEBUG] Removing EMR cluster Auto Termination Policy")
 
-			_, err := conn.RemoveAutoTerminationPolicyWithContext(ctx, &emr.RemoveAutoTerminationPolicyInput{
+			_, err := conn.RemoveAutoTerminationPolicy(ctx, &emr.RemoveAutoTerminationPolicyInput{
 				ClusterId: aws.String(d.Id()),
 			})
 			if err != nil {
@@ -1266,8 +1269,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange("termination_protection") {
-		_, err := conn.SetTerminationProtectionWithContext(ctx, &emr.SetTerminationProtectionInput{
-			JobFlowIds:           []*string{aws.String(d.Id())},
+		_, err := conn.SetTerminationProtection(ctx, &emr.SetTerminationProtectionInput{
+			JobFlowIds:           []string{d.Id()},
 			TerminationProtected: aws.Bool(d.Get("termination_protection").(bool)),
 		})
 		if err != nil {
@@ -1276,8 +1279,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange("unhealthy_node_replacement") {
-		_, err := conn.SetUnhealthyNodeReplacementWithContext(ctx, &emr.SetUnhealthyNodeReplacementInput{
-			JobFlowIds:               []*string{aws.String(d.Id())},
+		_, err := conn.SetUnhealthyNodeReplacement(ctx, &emr.SetUnhealthyNodeReplacementInput{
+			JobFlowIds:               []string{d.Id()},
 			UnhealthyNodeReplacement: aws.Bool(d.Get("unhealthy_node_replacement").(bool)),
 		})
 		if err != nil {
@@ -1290,7 +1293,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		instanceGroupID := d.Get("core_instance_group.0.id").(string)
 
 		if autoscalingPolicyStr != "" {
-			var autoScalingPolicy *emr.AutoScalingPolicy
+			var autoScalingPolicy *awstypes.AutoScalingPolicy
 
 			if err := json.Unmarshal([]byte(autoscalingPolicyStr), &autoScalingPolicy); err != nil {
 				return sdkdiag.AppendErrorf(diags, "parsing core_instance_group Auto Scaling Policy JSON: %s", err)
@@ -1302,7 +1305,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				InstanceGroupId:   aws.String(instanceGroupID),
 			}
 
-			if _, err := conn.PutAutoScalingPolicyWithContext(ctx, input); err != nil {
+			if _, err := conn.PutAutoScalingPolicy(ctx, input); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): setting autoscaling policy: %s", d.Id(), err)
 			}
 		} else {
@@ -1311,7 +1314,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				InstanceGroupId: aws.String(instanceGroupID),
 			}
 
-			if _, err := conn.RemoveAutoScalingPolicyWithContext(ctx, input); err != nil {
+			if _, err := conn.RemoveAutoScalingPolicy(ctx, input); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): removing autoscaling policy: %s", d.Id(), err)
 			}
 
@@ -1332,7 +1335,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			})
 
 			if tfresource.TimedOut(err) {
-				var autoscalingPolicy *emr.AutoScalingPolicyDescription
+				var autoscalingPolicy *awstypes.AutoScalingPolicyDescription
 
 				autoscalingPolicy, err = getCoreInstanceGroupAutoScalingPolicy(ctx, conn, d.Id())
 
@@ -1351,26 +1354,21 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		instanceGroupID := d.Get("core_instance_group.0.id").(string)
 
 		input := &emr.ModifyInstanceGroupsInput{
-			InstanceGroups: []*emr.InstanceGroupModifyConfig{
+			InstanceGroups: []awstypes.InstanceGroupModifyConfig{
 				{
 					InstanceGroupId: aws.String(instanceGroupID),
-					InstanceCount:   aws.Int64(int64(d.Get("core_instance_group.0.instance_count").(int))),
+					InstanceCount:   aws.Int32(int32(d.Get("core_instance_group.0.instance_count").(int))),
 				},
 			},
 		}
 
-		if _, err := conn.ModifyInstanceGroupsWithContext(ctx, input); err != nil {
+		if _, err := conn.ModifyInstanceGroups(ctx, input); err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EMR Cluster (%s) Instance Group (%s): %s", d.Id(), instanceGroupID, err)
 		}
 
 		stateConf := &retry.StateChangeConf{
-			Pending: []string{
-				emr.InstanceGroupStateBootstrapping,
-				emr.InstanceGroupStateProvisioning,
-				emr.InstanceGroupStateReconfiguring,
-				emr.InstanceGroupStateResizing,
-			},
-			Target:  []string{emr.InstanceGroupStateRunning},
+			Pending: enum.Slice(awstypes.InstanceGroupStateBootstrapping, awstypes.InstanceGroupStateProvisioning, awstypes.InstanceGroupStateReconfiguring, awstypes.InstanceGroupStateResizing),
+			Target:  enum.Slice(awstypes.InstanceGroupStateRunning),
 			Refresh: instanceGroupStateRefresh(ctx, conn, d.Id(), instanceGroupID),
 			Timeout: 20 * time.Minute,
 			Delay:   10 * time.Second,
@@ -1400,7 +1398,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				}
 
 				if v, ok := nInstanceGroup["autoscaling_policy"]; ok && v.(string) != "" {
-					var autoScalingPolicy *emr.AutoScalingPolicy
+					var autoScalingPolicy *awstypes.AutoScalingPolicy
 
 					err := json.Unmarshal([]byte(v.(string)), &autoScalingPolicy)
 					if err != nil {
@@ -1413,7 +1411,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 						InstanceGroupId:   aws.String(oInstanceGroup[names.AttrID].(string)),
 					}
 
-					_, errModify := conn.PutAutoScalingPolicyWithContext(ctx, putAutoScalingPolicy)
+					_, errModify := conn.PutAutoScalingPolicy(ctx, putAutoScalingPolicy)
 					if errModify != nil {
 						return sdkdiag.AppendErrorf(diags, "updating autoscaling policy for instance group %q: %s", oInstanceGroup[names.AttrID].(string), errModify)
 					}
@@ -1425,9 +1423,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange("step_concurrency_level") {
-		_, err := conn.ModifyClusterWithContext(ctx, &emr.ModifyClusterInput{
+		_, err := conn.ModifyCluster(ctx, &emr.ModifyClusterInput{
 			ClusterId:            aws.String(d.Id()),
-			StepConcurrencyLevel: aws.Int64(int64(d.Get("step_concurrency_level").(int))),
+			StepConcurrencyLevel: aws.Int32(int32(d.Get("step_concurrency_level").(int))),
 		})
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): updating step concurrency level: %s", d.Id(), err)
@@ -1439,13 +1437,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	log.Printf("[DEBUG] Deleting EMR Cluster: %s", d.Id())
-	_, err := conn.TerminateJobFlowsWithContext(ctx, &emr.TerminateJobFlowsInput{
-		JobFlowIds: []*string{
-			aws.String(d.Id()),
-		},
+	_, err := conn.TerminateJobFlows(ctx, &emr.TerminateJobFlowsInput{
+		JobFlowIds: []string{d.Id()},
 	})
 
 	if err != nil {
@@ -1462,10 +1458,10 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func findCluster(ctx context.Context, conn *emr.EMR, input *emr.DescribeClusterInput) (*emr.Cluster, error) {
-	output, err := conn.DescribeClusterWithContext(ctx, input)
+func findCluster(ctx context.Context, conn *emr.Client, input *emr.DescribeClusterInput) (*awstypes.Cluster, error) {
+	output, err := conn.DescribeCluster(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeClusterNotFound) || tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "is not valid") {
+	if tfawserr.ErrCodeEquals(err, ErrCodeClusterNotFound) || errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -1483,7 +1479,7 @@ func findCluster(ctx context.Context, conn *emr.EMR, input *emr.DescribeClusterI
 	return output.Cluster, nil
 }
 
-func findClusterByID(ctx context.Context, conn *emr.EMR, id string) (*emr.Cluster, error) {
+func findClusterByID(ctx context.Context, conn *emr.Client, id string) (*awstypes.Cluster, error) {
 	input := &emr.DescribeClusterInput{
 		ClusterId: aws.String(id),
 	}
@@ -1495,15 +1491,15 @@ func findClusterByID(ctx context.Context, conn *emr.EMR, id string) (*emr.Cluste
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.Id) != id {
+	if aws.ToString(output.Id) != id {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
 
-	if state := aws.StringValue(output.Status.State); state == emr.ClusterStateTerminated || state == emr.ClusterStateTerminatedWithErrors {
+	if output.Status.State == awstypes.ClusterStateTerminated || output.Status.State == awstypes.ClusterStateTerminatedWithErrors {
 		return nil, &retry.NotFoundError{
-			Message:     state,
+			Message:     string(output.Status.State),
 			LastRequest: input,
 		}
 	}
@@ -1511,7 +1507,7 @@ func findClusterByID(ctx context.Context, conn *emr.EMR, id string) (*emr.Cluste
 	return output, nil
 }
 
-func statusCluster(ctx context.Context, conn *emr.EMR, id string) retry.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *emr.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &emr.DescribeClusterInput{
 			ClusterId: aws.String(id),
@@ -1527,17 +1523,17 @@ func statusCluster(ctx context.Context, conn *emr.EMR, id string) retry.StateRef
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status.State), nil
+		return output, string(output.Status.State), nil
 	}
 }
 
-func waitClusterCreated(ctx context.Context, conn *emr.EMR, id string) (*emr.Cluster, error) {
+func waitClusterCreated(ctx context.Context, conn *emr.Client, id string) (*awstypes.Cluster, error) {
 	const (
 		timeout = 75 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{emr.ClusterStateBootstrapping, emr.ClusterStateStarting},
-		Target:     []string{emr.ClusterStateRunning, emr.ClusterStateWaiting},
+		Pending:    enum.Slice(awstypes.ClusterStateBootstrapping, awstypes.ClusterStateStarting),
+		Target:     enum.Slice(awstypes.ClusterStateRunning, awstypes.ClusterStateWaiting),
 		Refresh:    statusCluster(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -1546,9 +1542,9 @@ func waitClusterCreated(ctx context.Context, conn *emr.EMR, id string) (*emr.Clu
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*emr.Cluster); ok {
+	if output, ok := outputRaw.(*awstypes.Cluster); ok {
 		if stateChangeReason := output.Status.StateChangeReason; stateChangeReason != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(stateChangeReason.Code), aws.StringValue(stateChangeReason.Message)))
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(stateChangeReason.Code), aws.ToString(stateChangeReason.Message)))
 		}
 
 		return output, err
@@ -1557,13 +1553,13 @@ func waitClusterCreated(ctx context.Context, conn *emr.EMR, id string) (*emr.Clu
 	return nil, err
 }
 
-func waitClusterDeleted(ctx context.Context, conn *emr.EMR, id string) (*emr.Cluster, error) {
+func waitClusterDeleted(ctx context.Context, conn *emr.Client, id string) (*awstypes.Cluster, error) {
 	const (
 		timeout = 20 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{emr.ClusterStateTerminating},
-		Target:     []string{emr.ClusterStateTerminated, emr.ClusterStateTerminatedWithErrors},
+		Pending:    enum.Slice(awstypes.ClusterStateTerminating),
+		Target:     enum.Slice(awstypes.ClusterStateTerminated, awstypes.ClusterStateTerminatedWithErrors),
 		Refresh:    statusCluster(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -1572,9 +1568,9 @@ func waitClusterDeleted(ctx context.Context, conn *emr.EMR, id string) (*emr.Clu
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*emr.Cluster); ok {
+	if output, ok := outputRaw.(*awstypes.Cluster); ok {
 		if stateChangeReason := output.Status.StateChangeReason; stateChangeReason != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(stateChangeReason.Code), aws.StringValue(stateChangeReason.Message)))
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(stateChangeReason.Code), aws.ToString(stateChangeReason.Message)))
 		}
 
 		return output, err
@@ -1583,11 +1579,11 @@ func waitClusterDeleted(ctx context.Context, conn *emr.EMR, id string) (*emr.Clu
 	return nil, err
 }
 
-func expandApplications(apps []interface{}) []*emr.Application {
-	appOut := make([]*emr.Application, 0, len(apps))
+func expandApplications(apps []interface{}) []awstypes.Application {
+	appOut := make([]awstypes.Application, 0, len(apps))
 
 	for _, appName := range flex.ExpandStringList(apps) {
-		app := &emr.Application{
+		app := awstypes.Application{
 			Name: appName,
 		}
 		appOut = append(appOut, app)
@@ -1595,49 +1591,47 @@ func expandApplications(apps []interface{}) []*emr.Application {
 	return appOut
 }
 
-func flattenApplications(apps []*emr.Application) []interface{} {
+func flattenApplications(apps []awstypes.Application) []interface{} {
 	appOut := make([]interface{}, 0, len(apps))
 
 	for _, app := range apps {
-		appOut = append(appOut, aws.StringValue(app.Name))
+		appOut = append(appOut, aws.ToString(app.Name))
 	}
 	return appOut
 }
 
-func flattenEC2InstanceAttributes(ia *emr.Ec2InstanceAttributes) []map[string]interface{} {
+func flattenEC2InstanceAttributes(ia *awstypes.Ec2InstanceAttributes) []map[string]interface{} {
 	attrs := map[string]interface{}{}
 	result := make([]map[string]interface{}, 0)
 
 	if ia.Ec2KeyName != nil {
-		attrs["key_name"] = aws.StringValue(ia.Ec2KeyName)
+		attrs["key_name"] = aws.ToString(ia.Ec2KeyName)
 	}
 	if ia.Ec2SubnetId != nil {
-		attrs[names.AttrSubnetID] = aws.StringValue(ia.Ec2SubnetId)
+		attrs[names.AttrSubnetID] = aws.ToString(ia.Ec2SubnetId)
 	}
 	if ia.RequestedEc2SubnetIds != nil && len(ia.RequestedEc2SubnetIds) > 0 {
-		attrs[names.AttrSubnetIDs] = flex.FlattenStringSet(ia.RequestedEc2SubnetIds)
+		attrs[names.AttrSubnetIDs] = flex.FlattenStringValueSet(ia.RequestedEc2SubnetIds)
 	}
 	if ia.IamInstanceProfile != nil {
-		attrs["instance_profile"] = aws.StringValue(ia.IamInstanceProfile)
+		attrs["instance_profile"] = aws.ToString(ia.IamInstanceProfile)
 	}
 	if ia.EmrManagedMasterSecurityGroup != nil {
-		attrs["emr_managed_master_security_group"] = aws.StringValue(ia.EmrManagedMasterSecurityGroup)
+		attrs["emr_managed_master_security_group"] = aws.ToString(ia.EmrManagedMasterSecurityGroup)
 	}
 	if ia.EmrManagedSlaveSecurityGroup != nil {
-		attrs["emr_managed_slave_security_group"] = aws.StringValue(ia.EmrManagedSlaveSecurityGroup)
+		attrs["emr_managed_slave_security_group"] = aws.ToString(ia.EmrManagedSlaveSecurityGroup)
 	}
 
 	if len(ia.AdditionalMasterSecurityGroups) > 0 {
-		strs := aws.StringValueSlice(ia.AdditionalMasterSecurityGroups)
-		attrs["additional_master_security_groups"] = strings.Join(strs, ",")
+		attrs["additional_master_security_groups"] = strings.Join(ia.AdditionalMasterSecurityGroups, ",")
 	}
 	if len(ia.AdditionalSlaveSecurityGroups) > 0 {
-		strs := aws.StringValueSlice(ia.AdditionalSlaveSecurityGroups)
-		attrs["additional_slave_security_groups"] = strings.Join(strs, ",")
+		attrs["additional_slave_security_groups"] = strings.Join(ia.AdditionalSlaveSecurityGroups, ",")
 	}
 
 	if ia.ServiceAccessSecurityGroup != nil {
-		attrs["service_access_security_group"] = aws.StringValue(ia.ServiceAccessSecurityGroup)
+		attrs["service_access_security_group"] = aws.ToString(ia.ServiceAccessSecurityGroup)
 	}
 
 	result = append(result, attrs)
@@ -1645,7 +1639,7 @@ func flattenEC2InstanceAttributes(ia *emr.Ec2InstanceAttributes) []map[string]in
 	return result
 }
 
-func flattenAutoScalingPolicyDescription(policy *emr.AutoScalingPolicyDescription) (string, error) {
+func flattenAutoScalingPolicyDescription(policy *awstypes.AutoScalingPolicyDescription) (string, error) {
 	if policy == nil {
 		return "", nil
 	}
@@ -1656,7 +1650,7 @@ func flattenAutoScalingPolicyDescription(policy *emr.AutoScalingPolicyDescriptio
 	// for the statefile.
 	for i, rule := range policy.Rules {
 		for j, dimension := range rule.Trigger.CloudWatchAlarmDefinition.Dimensions {
-			if aws.StringValue(dimension.Key) == "JobFlowId" {
+			if aws.ToString(dimension.Key) == "JobFlowId" {
 				policy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions = slices.Delete(policy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions, j, j+1)
 			}
 		}
@@ -1665,7 +1659,7 @@ func flattenAutoScalingPolicyDescription(policy *emr.AutoScalingPolicyDescriptio
 		}
 	}
 
-	tmpAutoScalingPolicy := emr.AutoScalingPolicy{
+	tmpAutoScalingPolicy := awstypes.AutoScalingPolicy{
 		Constraints: policy.Constraints,
 		Rules:       policy.Rules,
 	}
@@ -1701,7 +1695,7 @@ func flattenAutoScalingPolicyDescription(policy *emr.AutoScalingPolicyDescriptio
 	return autoscalingPolicyString, nil
 }
 
-func flattenCoreInstanceGroup(instanceGroup *emr.InstanceGroup) ([]interface{}, error) {
+func flattenCoreInstanceGroup(instanceGroup *awstypes.InstanceGroup) ([]interface{}, error) {
 	if instanceGroup == nil {
 		return []interface{}{}, nil
 	}
@@ -1714,35 +1708,35 @@ func flattenCoreInstanceGroup(instanceGroup *emr.InstanceGroup) ([]interface{}, 
 
 	m := map[string]interface{}{
 		"autoscaling_policy":    autoscalingPolicy,
-		"bid_price":             aws.StringValue(instanceGroup.BidPrice),
+		"bid_price":             aws.ToString(instanceGroup.BidPrice),
 		"ebs_config":            flattenEBSConfig(instanceGroup.EbsBlockDevices),
-		names.AttrID:            aws.StringValue(instanceGroup.Id),
-		names.AttrInstanceCount: aws.Int64Value(instanceGroup.RequestedInstanceCount),
-		names.AttrInstanceType:  aws.StringValue(instanceGroup.InstanceType),
-		names.AttrName:          aws.StringValue(instanceGroup.Name),
+		names.AttrID:            aws.ToString(instanceGroup.Id),
+		names.AttrInstanceCount: aws.ToInt32(instanceGroup.RequestedInstanceCount),
+		names.AttrInstanceType:  aws.ToString(instanceGroup.InstanceType),
+		names.AttrName:          aws.ToString(instanceGroup.Name),
 	}
 
 	return []interface{}{m}, nil
 }
 
-func flattenMasterInstanceGroup(instanceGroup *emr.InstanceGroup) []interface{} {
+func flattenMasterInstanceGroup(instanceGroup *awstypes.InstanceGroup) []interface{} {
 	if instanceGroup == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"bid_price":             aws.StringValue(instanceGroup.BidPrice),
+		"bid_price":             aws.ToString(instanceGroup.BidPrice),
 		"ebs_config":            flattenEBSConfig(instanceGroup.EbsBlockDevices),
-		names.AttrID:            aws.StringValue(instanceGroup.Id),
-		names.AttrInstanceCount: aws.Int64Value(instanceGroup.RequestedInstanceCount),
-		names.AttrInstanceType:  aws.StringValue(instanceGroup.InstanceType),
-		names.AttrName:          aws.StringValue(instanceGroup.Name),
+		names.AttrID:            aws.ToString(instanceGroup.Id),
+		names.AttrInstanceCount: aws.ToInt32(instanceGroup.RequestedInstanceCount),
+		names.AttrInstanceType:  aws.ToString(instanceGroup.InstanceType),
+		names.AttrName:          aws.ToString(instanceGroup.Name),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenKerberosAttributes(d *schema.ResourceData, kerberosAttributes *emr.KerberosAttributes) []map[string]interface{} {
+func flattenKerberosAttributes(d *schema.ResourceData, kerberosAttributes *awstypes.KerberosAttributes) []map[string]interface{} {
 	l := make([]map[string]interface{}, 0)
 
 	if kerberosAttributes == nil || kerberosAttributes.Realm == nil {
@@ -1757,7 +1751,7 @@ func flattenKerberosAttributes(d *schema.ResourceData, kerberosAttributes *emr.K
 
 	m := map[string]interface{}{
 		"kdc_admin_password": d.Get("kerberos_attributes.0.kdc_admin_password").(string),
-		"realm":              aws.StringValue(kerberosAttributes.Realm),
+		"realm":              aws.ToString(kerberosAttributes.Realm),
 	}
 
 	if v, ok := d.GetOk("kerberos_attributes.0.ad_domain_join_password"); ok {
@@ -1777,22 +1771,22 @@ func flattenKerberosAttributes(d *schema.ResourceData, kerberosAttributes *emr.K
 	return l
 }
 
-func flattenHadoopStepConfig(config *emr.HadoopStepConfig) map[string]interface{} {
+func flattenHadoopStepConfig(config *awstypes.HadoopStepConfig) map[string]interface{} {
 	if config == nil {
 		return nil
 	}
 
 	m := map[string]interface{}{
-		"args":               aws.StringValueSlice(config.Args),
-		"jar":                aws.StringValue(config.Jar),
-		"main_class":         aws.StringValue(config.MainClass),
-		names.AttrProperties: aws.StringValueMap(config.Properties),
+		"args":               config.Args,
+		"jar":                aws.ToString(config.Jar),
+		"main_class":         aws.ToString(config.MainClass),
+		names.AttrProperties: config.Properties,
 	}
 
 	return m
 }
 
-func flattenStepSummaries(stepSummaries []*emr.StepSummary) []map[string]interface{} {
+func flattenStepSummaries(stepSummaries []awstypes.StepSummary) []map[string]interface{} {
 	l := make([]map[string]interface{}, 0)
 
 	if len(stepSummaries) == 0 {
@@ -1806,36 +1800,32 @@ func flattenStepSummaries(stepSummaries []*emr.StepSummary) []map[string]interfa
 	return l
 }
 
-func flattenStepSummary(stepSummary *emr.StepSummary) map[string]interface{} {
-	if stepSummary == nil {
-		return nil
-	}
-
+func flattenStepSummary(stepSummary awstypes.StepSummary) map[string]interface{} {
 	m := map[string]interface{}{
-		"action_on_failure": aws.StringValue(stepSummary.ActionOnFailure),
+		"action_on_failure": string(stepSummary.ActionOnFailure),
 		"hadoop_jar_step":   []map[string]interface{}{flattenHadoopStepConfig(stepSummary.Config)},
-		names.AttrName:      aws.StringValue(stepSummary.Name),
+		names.AttrName:      aws.ToString(stepSummary.Name),
 	}
 
 	return m
 }
 
-func flattenEBSConfig(ebsBlockDevices []*emr.EbsBlockDevice) *schema.Set {
+func flattenEBSConfig(ebsBlockDevices []awstypes.EbsBlockDevice) *schema.Set {
 	uniqueEBS := make(map[int]int)
 	ebsConfig := make([]interface{}, 0)
 	for _, ebs := range ebsBlockDevices {
 		ebsAttrs := make(map[string]interface{})
 		if ebs.VolumeSpecification.Iops != nil {
-			ebsAttrs[names.AttrIOPS] = int(aws.Int64Value(ebs.VolumeSpecification.Iops))
+			ebsAttrs[names.AttrIOPS] = int(aws.ToInt32(ebs.VolumeSpecification.Iops))
 		}
 		if ebs.VolumeSpecification.SizeInGB != nil {
-			ebsAttrs[names.AttrSize] = int(aws.Int64Value(ebs.VolumeSpecification.SizeInGB))
+			ebsAttrs[names.AttrSize] = int(aws.ToInt32(ebs.VolumeSpecification.SizeInGB))
 		}
 		if ebs.VolumeSpecification.Throughput != nil {
-			ebsAttrs[names.AttrThroughput] = aws.Int64Value(ebs.VolumeSpecification.Throughput)
+			ebsAttrs[names.AttrThroughput] = aws.ToInt32(ebs.VolumeSpecification.Throughput)
 		}
 		if ebs.VolumeSpecification.VolumeType != nil {
-			ebsAttrs[names.AttrType] = aws.StringValue(ebs.VolumeSpecification.VolumeType)
+			ebsAttrs[names.AttrType] = aws.ToString(ebs.VolumeSpecification.VolumeType)
 		}
 		ebsAttrs["volumes_per_instance"] = 1
 		uniqueEBS[resourceClusterEBSHashConfig(ebsAttrs)] += 1
@@ -1848,31 +1838,31 @@ func flattenEBSConfig(ebsBlockDevices []*emr.EbsBlockDevice) *schema.Set {
 	return schema.NewSet(resourceClusterEBSHashConfig, ebsConfig)
 }
 
-func flattenBootstrapArguments(actions []*emr.Command) []map[string]interface{} {
+func flattenBootstrapArguments(actions []awstypes.Command) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 
 	for _, b := range actions {
 		attrs := make(map[string]interface{})
-		attrs[names.AttrName] = aws.StringValue(b.Name)
-		attrs[names.AttrPath] = aws.StringValue(b.ScriptPath)
-		attrs["args"] = flex.FlattenStringList(b.Args)
+		attrs[names.AttrName] = aws.ToString(b.Name)
+		attrs[names.AttrPath] = aws.ToString(b.ScriptPath)
+		attrs["args"] = flex.FlattenStringValueList(b.Args)
 		result = append(result, attrs)
 	}
 
 	return result
 }
 
-func coreInstanceGroup(grps []*emr.InstanceGroup) *emr.InstanceGroup {
+func coreInstanceGroup(grps []*awstypes.InstanceGroup) *awstypes.InstanceGroup {
 	for _, grp := range grps {
-		if aws.StringValue(grp.InstanceGroupType) == emr.InstanceGroupTypeCore {
+		if grp.InstanceGroupType == awstypes.InstanceGroupTypeCore {
 			return grp
 		}
 	}
 	return nil
 }
 
-func expandBootstrapActions(bootstrapActions []interface{}) []*emr.BootstrapActionConfig {
-	actionsOut := []*emr.BootstrapActionConfig{}
+func expandBootstrapActions(bootstrapActions []interface{}) []awstypes.BootstrapActionConfig {
+	actionsOut := []awstypes.BootstrapActionConfig{}
 
 	for _, raw := range bootstrapActions {
 		actionAttributes := raw.(map[string]interface{})
@@ -1880,11 +1870,11 @@ func expandBootstrapActions(bootstrapActions []interface{}) []*emr.BootstrapActi
 		actionPath := actionAttributes[names.AttrPath].(string)
 		actionArgs := actionAttributes["args"].([]interface{})
 
-		action := &emr.BootstrapActionConfig{
+		action := awstypes.BootstrapActionConfig{
 			Name: aws.String(actionName),
-			ScriptBootstrapAction: &emr.ScriptBootstrapActionConfig{
+			ScriptBootstrapAction: &awstypes.ScriptBootstrapActionConfig{
 				Path: aws.String(actionPath),
-				Args: flex.ExpandStringListEmpty(actionArgs),
+				Args: flex.ExpandStringValueListEmpty(actionArgs),
 			},
 		}
 		actionsOut = append(actionsOut, action)
@@ -1893,13 +1883,13 @@ func expandBootstrapActions(bootstrapActions []interface{}) []*emr.BootstrapActi
 	return actionsOut
 }
 
-func expandHadoopJarStepConfig(m map[string]interface{}) *emr.HadoopJarStepConfig {
-	hadoopJarStepConfig := &emr.HadoopJarStepConfig{
+func expandHadoopJarStepConfig(m map[string]interface{}) *awstypes.HadoopJarStepConfig {
+	hadoopJarStepConfig := &awstypes.HadoopJarStepConfig{
 		Jar: aws.String(m["jar"].(string)),
 	}
 
 	if v, ok := m["args"]; ok {
-		hadoopJarStepConfig.Args = flex.ExpandStringList(v.([]interface{}))
+		hadoopJarStepConfig.Args = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := m["main_class"]; ok {
@@ -1913,11 +1903,11 @@ func expandHadoopJarStepConfig(m map[string]interface{}) *emr.HadoopJarStepConfi
 	return hadoopJarStepConfig
 }
 
-func expandKeyValues(m map[string]interface{}) []*emr.KeyValue {
-	keyValues := make([]*emr.KeyValue, 0)
+func expandKeyValues(m map[string]interface{}) []awstypes.KeyValue {
+	keyValues := make([]awstypes.KeyValue, 0)
 
 	for k, v := range m {
-		keyValue := &emr.KeyValue{
+		keyValue := awstypes.KeyValue{
 			Key:   aws.String(k),
 			Value: aws.String(v.(string)),
 		}
@@ -1927,8 +1917,8 @@ func expandKeyValues(m map[string]interface{}) []*emr.KeyValue {
 	return keyValues
 }
 
-func expandKerberosAttributes(m map[string]interface{}) *emr.KerberosAttributes {
-	kerberosAttributes := &emr.KerberosAttributes{
+func expandKerberosAttributes(m map[string]interface{}) *awstypes.KerberosAttributes {
+	kerberosAttributes := &awstypes.KerberosAttributes{
 		KdcAdminPassword: aws.String(m["kdc_admin_password"].(string)),
 		Realm:            aws.String(m["realm"].(string)),
 	}
@@ -1944,12 +1934,12 @@ func expandKerberosAttributes(m map[string]interface{}) *emr.KerberosAttributes 
 	return kerberosAttributes
 }
 
-func expandStepConfig(m map[string]interface{}) *emr.StepConfig {
+func expandStepConfig(m map[string]interface{}) awstypes.StepConfig {
 	hadoopJarStepList := m["hadoop_jar_step"].([]interface{})
 	hadoopJarStepMap := hadoopJarStepList[0].(map[string]interface{})
 
-	stepConfig := &emr.StepConfig{
-		ActionOnFailure: aws.String(m["action_on_failure"].(string)),
+	stepConfig := awstypes.StepConfig{
+		ActionOnFailure: awstypes.ActionOnFailure(m["action_on_failure"].(string)),
 		HadoopJarStep:   expandHadoopJarStepConfig(hadoopJarStepMap),
 		Name:            aws.String(m[names.AttrName].(string)),
 	}
@@ -1957,8 +1947,8 @@ func expandStepConfig(m map[string]interface{}) *emr.StepConfig {
 	return stepConfig
 }
 
-func expandStepConfigs(l []interface{}) []*emr.StepConfig {
-	stepConfigs := []*emr.StepConfig{}
+func expandStepConfigs(l []interface{}) []awstypes.StepConfig {
+	stepConfigs := []awstypes.StepConfig{}
 
 	for _, raw := range l {
 		m := raw.(map[string]interface{})
@@ -1968,25 +1958,25 @@ func expandStepConfigs(l []interface{}) []*emr.StepConfig {
 	return stepConfigs
 }
 
-func expandEBSConfig(configAttributes map[string]interface{}, config *emr.InstanceGroupConfig) {
+func expandEBSConfig(configAttributes map[string]interface{}, config *awstypes.InstanceGroupConfig) {
 	if rawEbsConfigs, ok := configAttributes["ebs_config"]; ok {
-		ebsConfig := &emr.EbsConfiguration{}
+		ebsConfig := &awstypes.EbsConfiguration{}
 
-		ebsBlockDeviceConfigs := make([]*emr.EbsBlockDeviceConfig, 0)
+		ebsBlockDeviceConfigs := make([]awstypes.EbsBlockDeviceConfig, 0)
 		for _, rawEbsConfig := range rawEbsConfigs.(*schema.Set).List() {
 			rawEbsConfig := rawEbsConfig.(map[string]interface{})
-			ebsBlockDeviceConfig := &emr.EbsBlockDeviceConfig{
-				VolumesPerInstance: aws.Int64(int64(rawEbsConfig["volumes_per_instance"].(int))),
-				VolumeSpecification: &emr.VolumeSpecification{
-					SizeInGB:   aws.Int64(int64(rawEbsConfig[names.AttrSize].(int))),
+			ebsBlockDeviceConfig := awstypes.EbsBlockDeviceConfig{
+				VolumesPerInstance: aws.Int32(int32(rawEbsConfig["volumes_per_instance"].(int))),
+				VolumeSpecification: &awstypes.VolumeSpecification{
+					SizeInGB:   aws.Int32(int32(rawEbsConfig[names.AttrSize].(int))),
 					VolumeType: aws.String(rawEbsConfig[names.AttrType].(string)),
 				},
 			}
 			if v, ok := rawEbsConfig[names.AttrThroughput].(int); ok && v != 0 {
-				ebsBlockDeviceConfig.VolumeSpecification.Throughput = aws.Int64(int64(v))
+				ebsBlockDeviceConfig.VolumeSpecification.Throughput = aws.Int32(int32(v))
 			}
 			if v, ok := rawEbsConfig[names.AttrIOPS].(int); ok && v != 0 {
-				ebsBlockDeviceConfig.VolumeSpecification.Iops = aws.Int64(int64(v))
+				ebsBlockDeviceConfig.VolumeSpecification.Iops = aws.Int32(int32(v))
 			}
 			ebsBlockDeviceConfigs = append(ebsBlockDeviceConfigs, ebsBlockDeviceConfig)
 		}
@@ -1996,18 +1986,18 @@ func expandEBSConfig(configAttributes map[string]interface{}, config *emr.Instan
 	}
 }
 
-func expandConfigurationJSON(input string) ([]*emr.Configuration, error) {
-	configsOut := []*emr.Configuration{}
+func expandConfigurationJSON(input string) ([]awstypes.Configuration, error) {
+	configsOut := []awstypes.Configuration{}
 	err := json.Unmarshal([]byte(input), &configsOut)
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[DEBUG] Expanded EMR Configurations %s", configsOut)
+	log.Printf("[DEBUG] Expanded EMR Configurations %+v", configsOut)
 
 	return configsOut, nil
 }
 
-func flattenConfigurationJSON(config []*emr.Configuration) (string, error) {
+func flattenConfigurationJSON(config []awstypes.Configuration) (string, error) {
 	out, err := jsonutil.BuildJSON(config)
 	if err != nil {
 		return "", err
@@ -2015,8 +2005,8 @@ func flattenConfigurationJSON(config []*emr.Configuration) (string, error) {
 	return string(out), nil
 }
 
-func expandConfigures(input string) []*emr.Configuration {
-	configsOut := []*emr.Configuration{}
+func expandConfigures(input string) []awstypes.Configuration {
+	configsOut := []awstypes.Configuration{}
 	if strings.HasPrefix(input, "http") {
 		if err := readHTTPJSON(input, &configsOut); err != nil {
 			log.Printf("[ERR] Error reading HTTP JSON: %s", err)
@@ -2030,7 +2020,7 @@ func expandConfigures(input string) []*emr.Configuration {
 			log.Printf("[ERR] Error reading body JSON: %s", err)
 		}
 	}
-	log.Printf("[DEBUG] Expanded EMR Configurations %s", configsOut)
+	log.Printf("[DEBUG] Expanded EMR Configurations %+v", configsOut)
 
 	return configsOut
 }
@@ -2065,9 +2055,9 @@ func readBodyJSON(body string, target interface{}) error {
 	return nil
 }
 
-func findMasterGroup(instanceGroups []*emr.InstanceGroup) *emr.InstanceGroup {
+func findMasterGroup(instanceGroups []*awstypes.InstanceGroup) *awstypes.InstanceGroup {
 	for _, group := range instanceGroups {
-		if aws.StringValue(group.InstanceGroupType) == emr.InstanceRoleTypeMaster {
+		if string(group.InstanceGroupType) == string(awstypes.InstanceRoleTypeMaster) {
 			return group
 		}
 	}
@@ -2089,7 +2079,7 @@ func resourceClusterEBSHashConfig(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func getCoreInstanceGroupAutoScalingPolicy(ctx context.Context, conn *emr.EMR, clusterID string) (*emr.AutoScalingPolicyDescription, error) {
+func getCoreInstanceGroupAutoScalingPolicy(ctx context.Context, conn *emr.Client, clusterID string) (*awstypes.AutoScalingPolicyDescription, error) {
 	instanceGroups, err := fetchAllInstanceGroups(ctx, conn, clusterID)
 
 	if err != nil {
@@ -2105,27 +2095,33 @@ func getCoreInstanceGroupAutoScalingPolicy(ctx context.Context, conn *emr.EMR, c
 	return coreGroup.AutoScalingPolicy, nil
 }
 
-func fetchAllInstanceGroups(ctx context.Context, conn *emr.EMR, clusterID string) ([]*emr.InstanceGroup, error) {
+func fetchAllInstanceGroups(ctx context.Context, conn *emr.Client, clusterID string) ([]*awstypes.InstanceGroup, error) {
 	input := &emr.ListInstanceGroupsInput{
 		ClusterId: aws.String(clusterID),
 	}
-	var groups []*emr.InstanceGroup
+	var groups []awstypes.InstanceGroup
 
-	err := conn.ListInstanceGroupsPagesWithContext(ctx, input, func(page *emr.ListInstanceGroupsOutput, lastPage bool) bool {
+	pages := emr.NewListInstanceGroupsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
 		groups = append(groups, page.InstanceGroups...)
+	}
 
-		return !lastPage
-	})
-
-	return groups, err
+	return tfslices.ToPointers(groups), nil
 }
 
-func readInstanceFleetConfig(data map[string]interface{}, InstanceFleetType string) *emr.InstanceFleetConfig {
-	config := &emr.InstanceFleetConfig{
-		InstanceFleetType:      &InstanceFleetType,
+func readInstanceFleetConfig(data map[string]interface{}, InstanceFleetType awstypes.InstanceFleetType) *awstypes.InstanceFleetConfig {
+	config := &awstypes.InstanceFleetConfig{
+		InstanceFleetType:      InstanceFleetType,
 		Name:                   aws.String(data[names.AttrName].(string)),
-		TargetOnDemandCapacity: aws.Int64(int64(data["target_on_demand_capacity"].(int))),
-		TargetSpotCapacity:     aws.Int64(int64(data["target_spot_capacity"].(int))),
+		TargetOnDemandCapacity: aws.Int32(int32(data["target_on_demand_capacity"].(int))),
+		TargetSpotCapacity:     aws.Int32(int32(data["target_spot_capacity"].(int))),
 	}
 
 	if v, ok := data["instance_type_configs"].(*schema.Set); ok && v.Len() > 0 {
@@ -2139,44 +2135,48 @@ func readInstanceFleetConfig(data map[string]interface{}, InstanceFleetType stri
 	return config
 }
 
-func FetchAllInstanceFleets(ctx context.Context, conn *emr.EMR, clusterID string) ([]*emr.InstanceFleet, error) {
+func FetchAllInstanceFleets(ctx context.Context, conn *emr.Client, clusterID string) ([]*awstypes.InstanceFleet, error) {
 	input := &emr.ListInstanceFleetsInput{
 		ClusterId: aws.String(clusterID),
 	}
-	var fleets []*emr.InstanceFleet
+	var fleets []awstypes.InstanceFleet
 
-	err := conn.ListInstanceFleetsPagesWithContext(ctx, input, func(page *emr.ListInstanceFleetsOutput, lastPage bool) bool {
+	pages := emr.NewListInstanceFleetsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
 		fleets = append(fleets, page.InstanceFleets...)
+	}
 
-		return !lastPage
-	})
-
-	return fleets, err
+	return tfslices.ToPointers(fleets), nil
 }
 
-func findInstanceFleet(instanceFleets []*emr.InstanceFleet, instanceRoleType string) *emr.InstanceFleet {
+func findInstanceFleet(instanceFleets []*awstypes.InstanceFleet, instanceRoleType awstypes.InstanceFleetType) *awstypes.InstanceFleet {
 	for _, instanceFleet := range instanceFleets {
-		if instanceFleet.InstanceFleetType != nil {
-			if aws.StringValue(instanceFleet.InstanceFleetType) == instanceRoleType {
-				return instanceFleet
-			}
+		if instanceFleet.InstanceFleetType == instanceRoleType {
+			return instanceFleet
 		}
 	}
 	return nil
 }
 
-func flattenInstanceFleet(instanceFleet *emr.InstanceFleet) []interface{} {
+func flattenInstanceFleet(instanceFleet *awstypes.InstanceFleet) []interface{} {
 	if instanceFleet == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		names.AttrID:                     aws.StringValue(instanceFleet.Id),
-		names.AttrName:                   aws.StringValue(instanceFleet.Name),
-		"target_on_demand_capacity":      aws.Int64Value(instanceFleet.TargetOnDemandCapacity),
-		"target_spot_capacity":           aws.Int64Value(instanceFleet.TargetSpotCapacity),
-		"provisioned_on_demand_capacity": aws.Int64Value(instanceFleet.ProvisionedOnDemandCapacity),
-		"provisioned_spot_capacity":      aws.Int64Value(instanceFleet.ProvisionedSpotCapacity),
+		names.AttrID:                     aws.ToString(instanceFleet.Id),
+		names.AttrName:                   aws.ToString(instanceFleet.Name),
+		"target_on_demand_capacity":      aws.ToInt32(instanceFleet.TargetOnDemandCapacity),
+		"target_spot_capacity":           aws.ToInt32(instanceFleet.TargetSpotCapacity),
+		"provisioned_on_demand_capacity": aws.ToInt32(instanceFleet.ProvisionedOnDemandCapacity),
+		"provisioned_spot_capacity":      aws.ToInt32(instanceFleet.ProvisionedSpotCapacity),
 		"instance_type_configs":          flatteninstanceTypeConfigs(instanceFleet.InstanceTypeSpecifications),
 		"launch_specifications":          flattenLaunchSpecifications(instanceFleet.LaunchSpecifications),
 	}
@@ -2184,22 +2184,22 @@ func flattenInstanceFleet(instanceFleet *emr.InstanceFleet) []interface{} {
 	return []interface{}{m}
 }
 
-func flatteninstanceTypeConfigs(instanceTypeSpecifications []*emr.InstanceTypeSpecification) *schema.Set {
+func flatteninstanceTypeConfigs(instanceTypeSpecifications []awstypes.InstanceTypeSpecification) *schema.Set {
 	instanceTypeConfigs := make([]interface{}, 0)
 
 	for _, itc := range instanceTypeSpecifications {
 		flattenTypeConfig := make(map[string]interface{})
 
 		if itc.BidPrice != nil {
-			flattenTypeConfig["bid_price"] = aws.StringValue(itc.BidPrice)
+			flattenTypeConfig["bid_price"] = aws.ToString(itc.BidPrice)
 		}
 
 		if itc.BidPriceAsPercentageOfOnDemandPrice != nil {
-			flattenTypeConfig["bid_price_as_percentage_of_on_demand_price"] = aws.Float64Value(itc.BidPriceAsPercentageOfOnDemandPrice)
+			flattenTypeConfig["bid_price_as_percentage_of_on_demand_price"] = aws.ToFloat64(itc.BidPriceAsPercentageOfOnDemandPrice)
 		}
 
-		flattenTypeConfig[names.AttrInstanceType] = aws.StringValue(itc.InstanceType)
-		flattenTypeConfig["weighted_capacity"] = int(aws.Int64Value(itc.WeightedCapacity))
+		flattenTypeConfig[names.AttrInstanceType] = aws.ToString(itc.InstanceType)
+		flattenTypeConfig["weighted_capacity"] = int(aws.ToInt32(itc.WeightedCapacity))
 
 		flattenTypeConfig["ebs_config"] = flattenEBSConfig(itc.EbsBlockDevices)
 
@@ -2209,7 +2209,7 @@ func flatteninstanceTypeConfigs(instanceTypeSpecifications []*emr.InstanceTypeSp
 	return schema.NewSet(resourceInstanceTypeHashConfig, instanceTypeConfigs)
 }
 
-func flattenLaunchSpecifications(launchSpecifications *emr.InstanceFleetProvisioningSpecifications) []interface{} {
+func flattenLaunchSpecifications(launchSpecifications *awstypes.InstanceFleetProvisioningSpecifications) []interface{} {
 	if launchSpecifications == nil {
 		return []interface{}{}
 	}
@@ -2221,55 +2221,54 @@ func flattenLaunchSpecifications(launchSpecifications *emr.InstanceFleetProvisio
 	return []interface{}{m}
 }
 
-func flattenOnDemandSpecification(onDemandSpecification *emr.OnDemandProvisioningSpecification) []interface{} {
+func flattenOnDemandSpecification(onDemandSpecification *awstypes.OnDemandProvisioningSpecification) []interface{} {
 	if onDemandSpecification == nil {
 		return []interface{}{}
 	}
 	m := map[string]interface{}{
 		// The return value from api is wrong. it return the value with uppercase letters and '_' vs. '-'
 		// The value needs to be normalized to avoid perpetual difference in the Terraform plan
-		"allocation_strategy": strings.Replace(strings.ToLower(aws.StringValue(onDemandSpecification.AllocationStrategy)), "_", "-", -1),
+		"allocation_strategy": strings.Replace(strings.ToLower(string(onDemandSpecification.AllocationStrategy)), "_", "-", -1),
 	}
 	return []interface{}{m}
 }
 
-func flattenSpotSpecification(spotSpecification *emr.SpotProvisioningSpecification) []interface{} {
+func flattenSpotSpecification(spotSpecification *awstypes.SpotProvisioningSpecification) []interface{} {
 	if spotSpecification == nil {
 		return []interface{}{}
 	}
 	m := map[string]interface{}{
-		"timeout_action":           aws.StringValue(spotSpecification.TimeoutAction),
-		"timeout_duration_minutes": aws.Int64Value(spotSpecification.TimeoutDurationMinutes),
+		"timeout_action":           string(spotSpecification.TimeoutAction),
+		"timeout_duration_minutes": aws.ToInt32(spotSpecification.TimeoutDurationMinutes),
 	}
 	if spotSpecification.BlockDurationMinutes != nil {
-		m["block_duration_minutes"] = aws.Int64Value(spotSpecification.BlockDurationMinutes)
+		m["block_duration_minutes"] = aws.ToInt32(spotSpecification.BlockDurationMinutes)
 	}
-	if spotSpecification.AllocationStrategy != nil {
-		// The return value from api is wrong. it return the value with uppercase letters and '_' vs. '-'
-		// The value needs to be normalized to avoid perpetual difference in the Terraform plan
-		m["allocation_strategy"] = strings.Replace(strings.ToLower(aws.StringValue(spotSpecification.AllocationStrategy)), "_", "-", -1)
-	}
+
+	// The return value from api is wrong. it return the value with uppercase letters and '_' vs. '-'
+	// The value needs to be normalized to avoid perpetual difference in the Terraform plan
+	m["allocation_strategy"] = strings.Replace(strings.ToLower(string(spotSpecification.AllocationStrategy)), "_", "-", -1)
 
 	return []interface{}{m}
 }
 
-func expandEBSConfiguration(ebsConfigurations []interface{}) *emr.EbsConfiguration {
-	ebsConfig := &emr.EbsConfiguration{}
-	ebsConfigs := make([]*emr.EbsBlockDeviceConfig, 0)
+func expandEBSConfiguration(ebsConfigurations []interface{}) *awstypes.EbsConfiguration {
+	ebsConfig := &awstypes.EbsConfiguration{}
+	ebsConfigs := make([]awstypes.EbsBlockDeviceConfig, 0)
 	for _, ebsConfiguration := range ebsConfigurations {
 		cfg := ebsConfiguration.(map[string]interface{})
-		ebsBlockDeviceConfig := &emr.EbsBlockDeviceConfig{
-			VolumesPerInstance: aws.Int64(int64(cfg["volumes_per_instance"].(int))),
-			VolumeSpecification: &emr.VolumeSpecification{
-				SizeInGB:   aws.Int64(int64(cfg[names.AttrSize].(int))),
+		ebsBlockDeviceConfig := awstypes.EbsBlockDeviceConfig{
+			VolumesPerInstance: aws.Int32(int32(cfg["volumes_per_instance"].(int))),
+			VolumeSpecification: &awstypes.VolumeSpecification{
+				SizeInGB:   aws.Int32(int32(cfg[names.AttrSize].(int))),
 				VolumeType: aws.String(cfg[names.AttrType].(string)),
 			},
 		}
 		if v, ok := cfg[names.AttrThroughput].(int); ok && v != 0 {
-			ebsBlockDeviceConfig.VolumeSpecification.Throughput = aws.Int64(int64(v))
+			ebsBlockDeviceConfig.VolumeSpecification.Throughput = aws.Int32(int32(v))
 		}
 		if v, ok := cfg[names.AttrIOPS].(int); ok && v != 0 {
-			ebsBlockDeviceConfig.VolumeSpecification.Iops = aws.Int64(int64(v))
+			ebsBlockDeviceConfig.VolumeSpecification.Iops = aws.Int32(int32(v))
 		}
 		ebsConfigs = append(ebsConfigs, ebsBlockDeviceConfig)
 	}
@@ -2277,13 +2276,13 @@ func expandEBSConfiguration(ebsConfigurations []interface{}) *emr.EbsConfigurati
 	return ebsConfig
 }
 
-func expandInstanceTypeConfigs(instanceTypeConfigs []interface{}) []*emr.InstanceTypeConfig {
-	configsOut := []*emr.InstanceTypeConfig{}
+func expandInstanceTypeConfigs(instanceTypeConfigs []interface{}) []awstypes.InstanceTypeConfig {
+	configsOut := []awstypes.InstanceTypeConfig{}
 
 	for _, raw := range instanceTypeConfigs {
 		configAttributes := raw.(map[string]interface{})
 
-		config := &emr.InstanceTypeConfig{
+		config := awstypes.InstanceTypeConfig{
 			InstanceType: aws.String(configAttributes[names.AttrInstanceType].(string)),
 		}
 
@@ -2298,7 +2297,7 @@ func expandInstanceTypeConfigs(instanceTypeConfigs []interface{}) []*emr.Instanc
 		}
 
 		if v, ok := configAttributes["weighted_capacity"].(int); ok {
-			config.WeightedCapacity = aws.Int64(int64(v))
+			config.WeightedCapacity = aws.Int32(int32(v))
 		}
 
 		if v, ok := configAttributes["configurations"].(*schema.Set); ok && v.Len() > 0 {
@@ -2315,29 +2314,29 @@ func expandInstanceTypeConfigs(instanceTypeConfigs []interface{}) []*emr.Instanc
 	return configsOut
 }
 
-func expandLaunchSpecification(launchSpecification map[string]interface{}) *emr.InstanceFleetProvisioningSpecifications {
+func expandLaunchSpecification(launchSpecification map[string]interface{}) *awstypes.InstanceFleetProvisioningSpecifications {
 	onDemandSpecification := launchSpecification["on_demand_specification"].([]interface{})
 	spotSpecification := launchSpecification["spot_specification"].([]interface{})
 
-	fleetSpecification := &emr.InstanceFleetProvisioningSpecifications{}
+	fleetSpecification := &awstypes.InstanceFleetProvisioningSpecifications{}
 
 	if len(onDemandSpecification) > 0 {
-		fleetSpecification.OnDemandSpecification = &emr.OnDemandProvisioningSpecification{
-			AllocationStrategy: aws.String(onDemandSpecification[0].(map[string]interface{})["allocation_strategy"].(string)),
+		fleetSpecification.OnDemandSpecification = &awstypes.OnDemandProvisioningSpecification{
+			AllocationStrategy: awstypes.OnDemandProvisioningAllocationStrategy(onDemandSpecification[0].(map[string]interface{})["allocation_strategy"].(string)),
 		}
 	}
 
 	if len(spotSpecification) > 0 {
 		configAttributes := spotSpecification[0].(map[string]interface{})
-		spotProvisioning := &emr.SpotProvisioningSpecification{
-			TimeoutAction:          aws.String(configAttributes["timeout_action"].(string)),
-			TimeoutDurationMinutes: aws.Int64(int64(configAttributes["timeout_duration_minutes"].(int))),
+		spotProvisioning := &awstypes.SpotProvisioningSpecification{
+			TimeoutAction:          awstypes.SpotProvisioningTimeoutAction(configAttributes["timeout_action"].(string)),
+			TimeoutDurationMinutes: aws.Int32(int32(configAttributes["timeout_duration_minutes"].(int))),
 		}
 		if v, ok := configAttributes["block_duration_minutes"]; ok && v != 0 {
-			spotProvisioning.BlockDurationMinutes = aws.Int64(int64(v.(int)))
+			spotProvisioning.BlockDurationMinutes = aws.Int32(int32(v.(int)))
 		}
 		if v, ok := configAttributes["allocation_strategy"]; ok {
-			spotProvisioning.AllocationStrategy = aws.String(v.(string))
+			spotProvisioning.AllocationStrategy = awstypes.SpotProvisioningAllocationStrategy(v.(string))
 		}
 
 		fleetSpecification.SpotSpecification = spotProvisioning
@@ -2346,13 +2345,13 @@ func expandLaunchSpecification(launchSpecification map[string]interface{}) *emr.
 	return fleetSpecification
 }
 
-func expandConfigurations(configurations []interface{}) []*emr.Configuration {
-	configsOut := []*emr.Configuration{}
+func expandConfigurations(configurations []interface{}) []awstypes.Configuration {
+	configsOut := []awstypes.Configuration{}
 
 	for _, raw := range configurations {
 		configAttributes := raw.(map[string]interface{})
 
-		config := &emr.Configuration{}
+		config := awstypes.Configuration{}
 
 		if v, ok := configAttributes["classification"].(string); ok {
 			config.Classification = aws.String(v)
@@ -2367,7 +2366,7 @@ func expandConfigurations(configurations []interface{}) []*emr.Configuration {
 			for k, pv := range v {
 				properties[k] = pv.(string)
 			}
-			config.Properties = aws.StringMap(properties)
+			config.Properties = properties
 		}
 
 		configsOut = append(configsOut, config)
@@ -2411,13 +2410,13 @@ func removeNil(data map[string]interface{}) map[string]interface{} {
 	return withoutNil
 }
 
-func expandAutoTerminationPolicy(policy []interface{}) *emr.AutoTerminationPolicy {
+func expandAutoTerminationPolicy(policy []interface{}) *awstypes.AutoTerminationPolicy {
 	if len(policy) == 0 || policy[0] == nil {
 		return nil
 	}
 
 	m := policy[0].(map[string]interface{})
-	app := &emr.AutoTerminationPolicy{}
+	app := &awstypes.AutoTerminationPolicy{}
 
 	if v, ok := m["idle_timeout"].(int); ok && v > 0 {
 		app.IdleTimeout = aws.Int64(int64(v))
@@ -2426,7 +2425,7 @@ func expandAutoTerminationPolicy(policy []interface{}) *emr.AutoTerminationPolic
 	return app
 }
 
-func flattenAutoTerminationPolicy(atp *emr.AutoTerminationPolicy) []map[string]interface{} {
+func flattenAutoTerminationPolicy(atp *awstypes.AutoTerminationPolicy) []map[string]interface{} {
 	attrs := map[string]interface{}{}
 	result := make([]map[string]interface{}, 0)
 
@@ -2435,7 +2434,7 @@ func flattenAutoTerminationPolicy(atp *emr.AutoTerminationPolicy) []map[string]i
 	}
 
 	if atp.IdleTimeout != nil {
-		attrs["idle_timeout"] = aws.Int64Value(atp.IdleTimeout)
+		attrs["idle_timeout"] = aws.ToInt64(atp.IdleTimeout)
 	}
 
 	result = append(result, attrs)
@@ -2443,18 +2442,18 @@ func flattenAutoTerminationPolicy(atp *emr.AutoTerminationPolicy) []map[string]i
 	return result
 }
 
-func expandPlacementGroupConfigs(placementGroupConfigs []interface{}) []*emr.PlacementGroupConfig {
-	placementGroupConfigsOut := []*emr.PlacementGroupConfig{}
+func expandPlacementGroupConfigs(placementGroupConfigs []interface{}) []awstypes.PlacementGroupConfig {
+	placementGroupConfigsOut := []awstypes.PlacementGroupConfig{}
 
 	for _, raw := range placementGroupConfigs {
 		placementGroupAttributes := raw.(map[string]interface{})
 		instanceRole := placementGroupAttributes["instance_role"].(string)
 
-		placementGroupConfig := &emr.PlacementGroupConfig{
-			InstanceRole: aws.String(instanceRole),
+		placementGroupConfig := awstypes.PlacementGroupConfig{
+			InstanceRole: awstypes.InstanceRoleType(instanceRole),
 		}
 		if v, ok := placementGroupAttributes["placement_strategy"]; ok && v.(string) != "" {
-			placementGroupConfig.PlacementStrategy = aws.String(v.(string))
+			placementGroupConfig.PlacementStrategy = awstypes.PlacementGroupStrategy(v.(string))
 		}
 		placementGroupConfigsOut = append(placementGroupConfigsOut, placementGroupConfig)
 	}
@@ -2462,7 +2461,7 @@ func expandPlacementGroupConfigs(placementGroupConfigs []interface{}) []*emr.Pla
 	return placementGroupConfigsOut
 }
 
-func flattenPlacementGroupConfigs(placementGroupSpecifications []*emr.PlacementGroupConfig) []interface{} {
+func flattenPlacementGroupConfigs(placementGroupSpecifications []awstypes.PlacementGroupConfig) []interface{} {
 	if placementGroupSpecifications == nil {
 		return []interface{}{}
 	}
@@ -2472,11 +2471,9 @@ func flattenPlacementGroupConfigs(placementGroupSpecifications []*emr.PlacementG
 	for _, pgc := range placementGroupSpecifications {
 		placementGroupConfig := make(map[string]interface{})
 
-		placementGroupConfig["instance_role"] = aws.StringValue(pgc.InstanceRole)
+		placementGroupConfig["instance_role"] = string(pgc.InstanceRole)
 
-		if pgc.PlacementStrategy != nil {
-			placementGroupConfig["placement_strategy"] = aws.StringValue(pgc.PlacementStrategy)
-		}
+		placementGroupConfig["placement_strategy"] = string(pgc.PlacementStrategy)
 		placementGroupConfigs = append(placementGroupConfigs, placementGroupConfig)
 	}
 
