@@ -92,8 +92,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Logging Options",
 		},
 		{
-			Factory:  ResourcePolicy,
+			Factory:  resourcePolicy,
 			TypeName: "aws_iot_policy",
+			Name:     "Policy",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

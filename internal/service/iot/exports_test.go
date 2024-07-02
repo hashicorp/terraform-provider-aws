@@ -13,6 +13,7 @@ var (
 	ResourceEventConfigurations   = resourceEventConfigurations
 	ResourceIndexingConfiguration = resourceIndexingConfiguration
 	ResourceLoggingOptions        = resourceLoggingOptions
+	ResourcePolicy                = resourcePolicy
 	ResourcePolicyAttachment      = resourcePolicyAttachment
 	ResourceThingType             = resourceThingType
 

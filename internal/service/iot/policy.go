@@ -28,9 +28,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_iot_policy")
+// @SDKResource("aws_iot_policy", name="Policy")
 // @Tags(identifierAttribute="arn")
-func ResourcePolicy() *schema.Resource {
+func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
 		ReadWithoutTimeout:   resourcePolicyRead,
@@ -85,7 +85,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	name := d.Get(names.AttrName).(string)
@@ -143,7 +143,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &iot.CreatePolicyVersionInput{
@@ -188,10 +188,6 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "waiting for IoT Policy (%s) version (%s) delete: %s", d.Id(), versionID, err)
-				}
-
 				_, errCreate = conn.CreatePolicyVersion(ctx, input)
 			}
 		}
@@ -200,6 +196,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "updating IoT Policy (%s): %s", d.Id(), errCreate)
 		}
 	}
+
 	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
