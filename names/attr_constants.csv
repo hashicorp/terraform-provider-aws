@@ -8,6 +8,7 @@ allocated_storage,AllocatedStorage
 allow_major_version_upgrade,AllowMajorVersionUpgrade
 application_id,ApplicationID
 apply_immediately,ApplyImmediately
+approximate_creation_date_time_precision,ApproximateCreationDateTimePrecision
 arn,ARN
 arns,ARNs
 association_id,AssociationID

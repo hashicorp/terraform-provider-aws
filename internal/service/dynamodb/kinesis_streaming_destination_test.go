@@ -87,6 +87,7 @@ func TestAccDynamoDBKinesisStreamingDestination_Disappears_dynamoDBTable(t *test
 				Config: testAccKinesisStreamingDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamingDestinationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrApproximateCreationDateTimePrecision, "MICROSECOND"),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceTable(), tableResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -115,8 +116,9 @@ resource "aws_kinesis_stream" "test" {
 }
 
 resource "aws_dynamodb_kinesis_streaming_destination" "test" {
-  table_name = aws_dynamodb_table.test.name
-  stream_arn = aws_kinesis_stream.test.arn
+  table_name                               = aws_dynamodb_table.test.name
+  stream_arn                               = aws_kinesis_stream.test.arn
+  approximate_creation_date_time_precision = "MICROSECOND"
 }
 `, rName)
 }
