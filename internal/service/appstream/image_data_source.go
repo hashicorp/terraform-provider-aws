@@ -8,6 +8,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -158,7 +159,7 @@ func (d *dataSourceImage) Read(ctx context.Context, req datasource.ReadRequest, 
 	if !data.Arn.IsNull() {
 		describeImagesInput.Arns = []string{data.Arn.ValueString()}
 	}
-
+	//
 	images, findImagesError := findImages(ctx, conn, &describeImagesInput)
 	if findImagesError != nil {
 		resp.Diagnostics.AddError(
@@ -167,14 +168,31 @@ func (d *dataSourceImage) Read(ctx context.Context, req datasource.ReadRequest, 
 		)
 		return
 	}
-	if len(images) < 1 {
+	// if name.regex is != nil then do a regex filtering of the images
+	// ec2 ami datasource in ec2
+	var filteredImages []awstypes.Image
+	if !data.NameRegex.IsNull() {
+		r := regexache.MustCompile(data.NameRegex.String())
+		for _, img := range images {
+			if r.MatchString(*img.Name) {
+				filteredImages = append(filteredImages, img)
+			}
+
+		}
+	} else {
+		filteredImages = images[:]
+
+	}
+
+	if len(filteredImages) < 1 {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.AppStream, create.ErrActionReading, DSNameImage, data.Arn.String(), findImagesError),
 			"Your query returned no results. Please change your search criteria and try again.",
 		)
 		return
 	}
-	if len(images) > 1 {
+
+	if len(filteredImages) > 1 {
 		if !data.MostRecent.ValueBool() {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.AppStream, create.ErrActionReading, DSNameImage, data.Arn.String(), findImagesError),
@@ -182,13 +200,13 @@ func (d *dataSourceImage) Read(ctx context.Context, req datasource.ReadRequest, 
 			)
 			return
 		}
-		sort.Slice(images, func(i, j int) bool {
+		sort.Slice(filteredImages, func(i, j int) bool {
 			itime, _ := time.Parse(time.RFC3339, images[i].CreatedTime.Month().String())
 			jtime, _ := time.Parse(time.RFC3339, images[j].CreatedTime.Month().String())
 			return itime.Unix() > jtime.Unix()
 		})
 	}
-	image := images[0]
+	image := filteredImages[0]
 
 	data.Type = fwtypes.StringEnum[awstypes.VisibilityType]{}.StringEnumValue(string(image.Visibility))
 	resp.Diagnostics.Append(flex.Flatten(ctx, &image, &data)...)
