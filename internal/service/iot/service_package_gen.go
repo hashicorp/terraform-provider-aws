@@ -136,7 +136,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iot_thing_principal_attachment",
 		},
 		{
-			Factory:  ResourceThingType,
+			Factory:  resourceThingType,
 			TypeName: "aws_iot_thing_type",
 			Name:     "Thing Type",
 			Tags: &types.ServicePackageResourceTags{

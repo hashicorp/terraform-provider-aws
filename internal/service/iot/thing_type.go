@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -24,7 +25,7 @@ import (
 
 // @SDKResource("aws_iot_thing_type", name="Thing Type")
 // @Tags(identifierAttribute="arn")
-func ResourceThingType() *schema.Resource {
+func resourceThingType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThingTypeCreate,
 		ReadWithoutTimeout:   resourceThingTypeRead,
@@ -236,4 +237,32 @@ func findThingTypeByName(ctx context.Context, conn *iot.Client, name string) (*i
 	}
 
 	return output, nil
+}
+
+func expandThingTypeProperties(config map[string]interface{}) *awstypes.ThingTypeProperties {
+	properties := &awstypes.ThingTypeProperties{
+		SearchableAttributes: flex.ExpandStringValueSet(config["searchable_attributes"].(*schema.Set)),
+	}
+
+	if v, ok := config[names.AttrDescription]; ok && v.(string) != "" {
+		properties.ThingTypeDescription = aws.String(v.(string))
+	}
+
+	return properties
+}
+
+func flattenThingTypeProperties(s *awstypes.ThingTypeProperties) []map[string]interface{} {
+	m := map[string]interface{}{
+		names.AttrDescription:   "",
+		"searchable_attributes": flex.FlattenStringSet(nil),
+	}
+
+	if s == nil {
+		return []map[string]interface{}{m}
+	}
+
+	m[names.AttrDescription] = aws.ToString(s.ThingTypeDescription)
+	m["searchable_attributes"] = flex.FlattenStringValueSet(s.SearchableAttributes)
+
+	return []map[string]interface{}{m}
 }

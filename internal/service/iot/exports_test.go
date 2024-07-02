@@ -11,6 +11,7 @@ var (
 	ResourceCertificate         = resourceCertificate
 	ResourceDomainConfiguration = resourceDomainConfiguration
 	ResourceEventConfigurations = resourceEventConfigurations
+	ResourceThingType           = resourceThingType
 
 	FindAuthorizerByName           = findAuthorizerByName
 	FindBillingGroupByName         = findBillingGroupByName
