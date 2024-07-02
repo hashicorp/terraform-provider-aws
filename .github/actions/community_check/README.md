@@ -31,6 +31,7 @@ steps:
       sparse-checkout: .github/actions/community_check
 
   - name: Community Check
+    id: community_check
     uses: ./.github/actions/community_check
     with:
       user_login: ${{ github.event.issue.user.login }}
