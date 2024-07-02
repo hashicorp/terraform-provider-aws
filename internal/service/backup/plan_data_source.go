@@ -6,8 +6,8 @@ package backup
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -131,19 +131,19 @@ func DataSourcePlan() *schema.Resource {
 
 func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("plan_id").(string)
 
-	resp, err := conn.GetBackupPlanWithContext(ctx, &backup.GetBackupPlanInput{
+	resp, err := conn.GetBackupPlan(ctx, &backup.GetBackupPlanInput{
 		BackupPlanId: aws.String(id),
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Backup Plan: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.BackupPlanId))
+	d.SetId(aws.ToString(resp.BackupPlanId))
 	d.Set(names.AttrARN, resp.BackupPlanArn)
 	d.Set(names.AttrName, resp.BackupPlan.BackupPlanName)
 	d.Set(names.AttrVersion, resp.VersionId)
@@ -151,7 +151,7 @@ func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 
-	tags, err := listTags(ctx, conn, aws.StringValue(resp.BackupPlanArn))
+	tags, err := listTags(ctx, conn, aws.ToString(resp.BackupPlanArn))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Plan (%s): %s", id, err)
 	}

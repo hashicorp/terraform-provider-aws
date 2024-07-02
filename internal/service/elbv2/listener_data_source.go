@@ -25,6 +25,7 @@ import (
 
 // @SDKDataSource("aws_alb_listener")
 // @SDKDataSource("aws_lb_listener")
+// @Testing(tagsTest=true)
 func DataSourceListener() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceListenerRead,

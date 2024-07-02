@@ -42,8 +42,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Environment")
+// @FrameworkResource("aws_m2_environment", name="Environment")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/m2;m2.GetEnvironmentOutput")
 func newEnvironmentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &environmentResource{}
 
@@ -567,10 +568,12 @@ func waitEnvironmentUpdated(ctx context.Context, conn *m2.Client, id string, tim
 
 func waitEnvironmentDeleted(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.EnvironmentLifecycleAvailable, awstypes.EnvironmentLifecycleCreating, awstypes.EnvironmentLifecycleDeleting),
-		Target:  []string{},
-		Refresh: statusEnvironment(ctx, conn, id),
-		Timeout: timeout,
+		Pending:    enum.Slice(awstypes.EnvironmentLifecycleAvailable, awstypes.EnvironmentLifecycleCreating, awstypes.EnvironmentLifecycleDeleting),
+		Target:     []string{},
+		Refresh:    statusEnvironment(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      4 * time.Minute,
+		MinTimeout: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

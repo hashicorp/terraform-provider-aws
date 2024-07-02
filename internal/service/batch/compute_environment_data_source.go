@@ -16,7 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_batch_compute_environment")
+// @SDKDataSource("aws_batch_compute_environment", name="Compute Environment")
+// @Tags
 func DataSourceComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceComputeEnvironmentRead,
@@ -86,7 +87,6 @@ func DataSourceComputeEnvironment() *schema.Resource {
 func dataSourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &batch.DescribeComputeEnvironmentsInput{
 		ComputeEnvironments: []*string{aws.String(d.Get("compute_environment_name").(string))},
@@ -118,9 +118,7 @@ func dataSourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "setting update_policy: %s", err)
 	}
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, computeEnvironment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, computeEnvironment.Tags)
 
 	return diags
 }

@@ -15,16 +15,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ebs_encryption_by_default")
-func ResourceEBSEncryptionByDefault() *schema.Resource {
+// @SDKResource("aws_ebs_encryption_by_default", name="EBS Encryption By Default")
+func resourceEBSEncryptionByDefault() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSEncryptionByDefaultCreate,
 		ReadWithoutTimeout:   resourceEBSEncryptionByDefaultRead,
 		UpdateWithoutTimeout: resourceEBSEncryptionByDefaultUpdate,
 		DeleteWithoutTimeout: resourceEBSEncryptionByDefaultDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrEnabled: {
 				Type:     schema.TypeBool,

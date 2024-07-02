@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -66,6 +67,22 @@ func resourceTransitGatewayPeeringAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"dynamic_routing": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.DynamicRoutingValue](),
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -86,7 +103,10 @@ func resourceTransitGatewayPeeringAttachmentCreate(ctx context.Context, d *schem
 		TransitGatewayId:     aws.String(d.Get(names.AttrTransitGatewayID).(string)),
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Transit Gateway Peering Attachment: %+v", input)
+	if v, ok := d.GetOk("options"); ok {
+		input.Options = expandCreateTransitGatewayPeeringAttachmentRequestOptions(v.([]interface{}))
+	}
+
 	output, err := conn.CreateTransitGatewayPeeringAttachment(ctx, input)
 
 	if err != nil {
@@ -124,6 +144,10 @@ func resourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schema.
 	d.Set(names.AttrState, transitGatewayPeeringAttachment.State)
 	d.Set(names.AttrTransitGatewayID, transitGatewayPeeringAttachment.RequesterTgwInfo.TransitGatewayId)
 
+	if err := d.Set("options", flattenTransitGatewayPeeringAttachmentOptions(transitGatewayPeeringAttachment.Options)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting options: %s", err)
+	}
+
 	setTagsOutV2(ctx, transitGatewayPeeringAttachment.Tags)
 
 	return diags
@@ -159,4 +183,30 @@ func resourceTransitGatewayPeeringAttachmentDelete(ctx context.Context, d *schem
 	}
 
 	return diags
+}
+
+func expandCreateTransitGatewayPeeringAttachmentRequestOptions(tfMap []interface{}) *awstypes.CreateTransitGatewayPeeringAttachmentRequestOptions {
+	if len(tfMap) == 0 || tfMap[0] == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.CreateTransitGatewayPeeringAttachmentRequestOptions{}
+
+	m := tfMap[0].(map[string]interface{})
+
+	if v, ok := m["dynamic_routing"].(string); ok {
+		apiObject.DynamicRouting = awstypes.DynamicRoutingValue(v)
+	}
+
+	return apiObject
+}
+
+func flattenTransitGatewayPeeringAttachmentOptions(apiObject *awstypes.TransitGatewayPeeringAttachmentOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	return []interface{}{map[string]interface{}{
+		"dynamic_routing": apiObject.DynamicRouting,
+	}}
 }
