@@ -12,7 +12,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emrcontainers/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -37,13 +37,22 @@ func sweepVirtualClusters(region string) error {
 	input := &emrcontainers.ListVirtualClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListVirtualClustersPagesWithContext(ctx, input, func(page *emrcontainers.ListVirtualClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := emrcontainers.NewListVirtualClustersPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EMR Containers Virtual Cluster sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EMR Containers Virtual Clusters (%s): %w", region, err)
 		}
 
 		for _, v := range page.VirtualClusters {
-			if aws.ToString(v.State) == awstypes.VirtualClusterStateTerminated {
+			if v.State == awstypes.VirtualClusterStateTerminated {
 				continue
 			}
 
@@ -54,16 +63,6 @@ func sweepVirtualClusters(region string) error {
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EMR Containers Virtual Cluster sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EMR Containers Virtual Clusters (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -85,9 +84,18 @@ func sweepJobTemplates(region string) error {
 	input := &emrcontainers.ListJobTemplatesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListJobTemplatesPagesWithContext(ctx, input, func(page *emrcontainers.ListJobTemplatesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := emrcontainers.NewListJobTemplatesPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EMR Containers Job Template sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EMR Containers Job Templates (%s): %w", region, err)
 		}
 
 		for _, v := range page.Templates {
@@ -97,17 +105,6 @@ func sweepJobTemplates(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EMR Containers Job Template sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EMR Containers Job Templates (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
