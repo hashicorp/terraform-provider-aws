@@ -182,11 +182,9 @@ func (d *dataSourceImage) Read(ctx context.Context, req datasource.ReadRequest, 
 			if r.MatchString(name) {
 				filteredImages = append(filteredImages, img)
 			}
-
 		}
 	} else {
 		filteredImages = images[:]
-
 	}
 
 	if len(filteredImages) < 1 {
