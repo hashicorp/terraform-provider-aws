@@ -5,10 +5,8 @@ package iotanalytics
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	iotanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/iotanalytics"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	iotanalytics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iotanalytics"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -40,18 +38,10 @@ func (p *servicePackage) ServicePackageName() string {
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*iotanalytics_sdkv2.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return iotanalytics_sdkv1.New(sess.Copy(&cfg)), nil
+	return iotanalytics_sdkv2.NewFromConfig(cfg,
+		iotanalytics_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

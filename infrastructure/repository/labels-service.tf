@@ -141,6 +141,7 @@ variable "service_labels" {
     "glue",
     "grafana",
     "greengrass",
+    "greengrassv2",
     "groundstation",
     "guardduty",
     "health",

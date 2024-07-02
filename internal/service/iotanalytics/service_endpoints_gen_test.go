@@ -7,14 +7,17 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"net"
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	iotanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/iotanalytics"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
+	iotanalytics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iotanalytics"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -240,30 +243,11 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 	}
 }
 
-func defaultEndpoint(region string) string {
-	r := endpoints.DefaultResolver()
+func defaultEndpoint(region string) (url.URL, error) {
+	r := iotanalytics_sdkv2.NewDefaultEndpointResolverV2()
 
 	ep, err := r.ResolveEndpoint(context.Background(), iotanalytics_sdkv2.EndpointParameters{
 		Region: aws_sdkv2.String(region),
-	})
-	if err != nil {
-		return url.URL{}, err
-	}
-
-	url, _ := url.Parse(ep.URL)
-
-	if url.Path == "" {
-		url.Path = "/"
-	}
-
-	return *url, nil
-}
-
-func defaultFIPSEndpoint(region string) (url.URL, error) {
-	r := endpoints.DefaultResolver()
-
-	ep, err := r.EndpointFor(iotanalytics_sdkv1.EndpointsID, region, func(opt *endpoints.Options) {
-		opt.UseFIPSEndpoint = endpoints.FIPSEndpointStateEnabled
 	})
 	if err != nil {
 		return url.URL{}, err
@@ -273,23 +257,50 @@ func defaultFIPSEndpoint(region string) (url.URL, error) {
 		ep.URI.Path = "/"
 	}
 
-	return url.String()
+	return ep.URI, nil
+}
+
+func defaultFIPSEndpoint(region string) (url.URL, error) {
+	r := iotanalytics_sdkv2.NewDefaultEndpointResolverV2()
+
+	ep, err := r.ResolveEndpoint(context.Background(), iotanalytics_sdkv2.EndpointParameters{
+		Region:  aws_sdkv2.String(region),
+		UseFIPS: aws_sdkv2.Bool(true),
+	})
+	if err != nil {
+		return url.URL{}, err
+	}
+
+	if ep.URI.Path == "" {
+		ep.URI.Path = "/"
+	}
+
+	return ep.URI, nil
 }
 
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
-	var endpoint string
-
 	client := meta.IoTAnalyticsClient(ctx)
 
-	req, _ := client.ListChannelsRequest(&iotanalytics_sdkv1.ListChannelsInput{})
+	var result apiCallParams
 
-	req.HTTPRequest.URL.Path = "/"
+	_, err := client.ListChannels(ctx, &iotanalytics_sdkv2.ListChannelsInput{},
+		func(opts *iotanalytics_sdkv2.Options) {
+			opts.APIOptions = append(opts.APIOptions,
+				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
+				addRetrieveRegionMiddleware(&result.region),
+				addCancelRequestMiddleware(),
+			)
+		},
+	)
+	if err == nil {
+		t.Fatal("Expected an error, got none")
+	} else if !errors.Is(err, errCancelOperation) {
+		t.Fatalf("Unexpected error: %s", err)
+	}
 
-	endpoint := req.HTTPRequest.URL.String()
-
-	return endpoint
+	return result
 }
 
 func withNoConfig(_ *caseSetup) {
@@ -466,6 +477,89 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	if e, a := testcase.expected.region, callParams.region; e != a {
 		t.Errorf("expected region %q, got %q", e, a)
 	}
+}
+
+func addRetrieveEndpointURLMiddleware(t *testing.T, endpoint *string) func(*middleware.Stack) error {
+	return func(stack *middleware.Stack) error {
+		return stack.Finalize.Add(
+			retrieveEndpointURLMiddleware(t, endpoint),
+			middleware.After,
+		)
+	}
+}
+
+func retrieveEndpointURLMiddleware(t *testing.T, endpoint *string) middleware.FinalizeMiddleware {
+	return middleware.FinalizeMiddlewareFunc(
+		"Test: Retrieve Endpoint",
+		func(ctx context.Context, in middleware.FinalizeInput, next middleware.FinalizeHandler) (middleware.FinalizeOutput, middleware.Metadata, error) {
+			t.Helper()
+
+			request, ok := in.Request.(*smithyhttp.Request)
+			if !ok {
+				t.Fatalf("Expected *github.com/aws/smithy-go/transport/http.Request, got %s", fullTypeName(in.Request))
+			}
+
+			url := request.URL
+			url.RawQuery = ""
+			url.Path = "/"
+
+			*endpoint = url.String()
+
+			return next.HandleFinalize(ctx, in)
+		})
+}
+
+func addRetrieveRegionMiddleware(region *string) func(*middleware.Stack) error {
+	return func(stack *middleware.Stack) error {
+		return stack.Serialize.Add(
+			retrieveRegionMiddleware(region),
+			middleware.After,
+		)
+	}
+}
+
+func retrieveRegionMiddleware(region *string) middleware.SerializeMiddleware {
+	return middleware.SerializeMiddlewareFunc(
+		"Test: Retrieve Region",
+		func(ctx context.Context, in middleware.SerializeInput, next middleware.SerializeHandler) (middleware.SerializeOutput, middleware.Metadata, error) {
+			*region = awsmiddleware.GetRegion(ctx)
+
+			return next.HandleSerialize(ctx, in)
+		},
+	)
+}
+
+var errCancelOperation = fmt.Errorf("Test: Canceling request")
+
+func addCancelRequestMiddleware() func(*middleware.Stack) error {
+	return func(stack *middleware.Stack) error {
+		return stack.Finalize.Add(
+			cancelRequestMiddleware(),
+			middleware.After,
+		)
+	}
+}
+
+// cancelRequestMiddleware creates a Smithy middleware that intercepts the request before sending and cancels it
+func cancelRequestMiddleware() middleware.FinalizeMiddleware {
+	return middleware.FinalizeMiddlewareFunc(
+		"Test: Cancel Requests",
+		func(_ context.Context, in middleware.FinalizeInput, next middleware.FinalizeHandler) (middleware.FinalizeOutput, middleware.Metadata, error) {
+			return middleware.FinalizeOutput{}, middleware.Metadata{}, errCancelOperation
+		})
+}
+
+func fullTypeName(i interface{}) string {
+	return fullValueTypeName(reflect.ValueOf(i))
+}
+
+func fullValueTypeName(v reflect.Value) string {
+	if v.Kind() == reflect.Ptr {
+		return "*" + fullValueTypeName(reflect.Indirect(v))
+	}
+
+	requestType := v.Type()
+	return fmt.Sprintf("%s.%s", requestType.PkgPath(), requestType.Name())
 }
 
 func generateSharedConfigFile(config configFile) string {

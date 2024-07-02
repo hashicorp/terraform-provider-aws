@@ -5,9 +5,8 @@ package iotevents
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	iotevents_sdkv1 "github.com/aws/aws-sdk-go/service/iotevents"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	iotevents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iotevents"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,7 +38,10 @@ func (p *servicePackage) ServicePackageName() string {
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*iotevents_sdkv2.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	return iotevents_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
+	return iotevents_sdkv2.NewFromConfig(cfg,
+		iotevents_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {
