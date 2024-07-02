@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -89,10 +90,6 @@ func (d *dataSourceImage) Schema(ctx context.Context, req datasource.SchemaReque
 				"image_builder_supported": schema.BoolAttribute{
 					Computed: true,
 				},
-				"image_errors": schema.ListAttribute{
-					CustomType: fwtypes.NewListNestedObjectTypeOf[dsImageErrors](ctx),
-					Computed:   true,
-				},
 				"image_permissions": schema.ListAttribute{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[dsImagePermissions](ctx),
 					Computed:   true,
@@ -160,21 +157,29 @@ func (d *dataSourceImage) Read(ctx context.Context, req datasource.ReadRequest, 
 		describeImagesInput.Arns = []string{data.Arn.ValueString()}
 	}
 	//
-	images, findImagesError := findImages(ctx, conn, &describeImagesInput)
-	if findImagesError != nil {
+	images, err := findImages(ctx, conn, &describeImagesInput)
+	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppStream, create.ErrActionReading, DSNameImage, data.Arn.String(), findImagesError),
-			findImagesError.Error(),
+			create.ProblemStandardMessage(names.AppStream, create.ErrActionReading, DSNameImage, data.Arn.String(), err),
+			err.Error(),
 		)
 		return
 	}
-	// if name.regex is != nil then do a regex filtering of the images
-	// ec2 ami datasource in ec2
+
 	var filteredImages []awstypes.Image
 	if !data.NameRegex.IsNull() {
-		r := regexache.MustCompile(data.NameRegex.String())
+		r := regexache.MustCompile(data.NameRegex.ValueString())
 		for _, img := range images {
-			if r.MatchString(*img.Name) {
+			name := aws.ToString(img.Name)
+
+			// Check for a very rare case where the response would include no
+			// image name. No name means nothing to attempt a match against,
+			// therefore we are skipping such image.
+			if name == "" {
+				continue
+			}
+
+			if r.MatchString(name) {
 				filteredImages = append(filteredImages, img)
 			}
 
@@ -186,7 +191,7 @@ func (d *dataSourceImage) Read(ctx context.Context, req datasource.ReadRequest, 
 
 	if len(filteredImages) < 1 {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppStream, create.ErrActionReading, DSNameImage, data.Arn.String(), findImagesError),
+			create.ProblemStandardMessage(names.AppStream, create.ErrActionReading, DSNameImage, data.Arn.String(), err),
 			"Your query returned no results. Please change your search criteria and try again.",
 		)
 		return
@@ -195,7 +200,7 @@ func (d *dataSourceImage) Read(ctx context.Context, req datasource.ReadRequest, 
 	if len(filteredImages) > 1 {
 		if !data.MostRecent.ValueBool() {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AppStream, create.ErrActionReading, DSNameImage, data.Arn.String(), findImagesError),
+				create.ProblemStandardMessage(names.AppStream, create.ErrActionReading, DSNameImage, data.Arn.String(), err),
 				"Your query returned more than one result. Please try a more specific search criteria, or set `most_recent` attribute to true.",
 			)
 			return
@@ -244,12 +249,6 @@ type dsIconS3 struct {
 	S3Key    types.String `tfsdk:"s3_key"`
 }
 
-type dsImageErrors struct {
-	ErrorCode      types.String      `tfsdk:"error_code"`
-	ErrorMessage   types.String      `tfsdk:"error_message"`
-	ErrorTimestamp timetypes.RFC3339 `tfsdk:"error_timestamp"`
-}
-
 type dsStateChange struct {
 	Code    types.String `tfsdk:"code"`
 	Message types.String `tfsdk:"message"`
@@ -265,7 +264,6 @@ type dsImage struct {
 	DisplayName                 types.String                                        `tfsdk:"display_name"`
 	ImageBuilderName            types.String                                        `tfsdk:"image_builder_name"`
 	ImageBuilderSupported       types.Bool                                          `tfsdk:"image_builder_supported"`
-	ImageErrors                 fwtypes.ListNestedObjectValueOf[dsImageErrors]      `tfsdk:"image_errors"`
 	ImagePermissions            fwtypes.ListNestedObjectValueOf[dsImagePermissions] `tfsdk:"image_permissions"`
 	MostRecent                  types.Bool                                          `tfsdk:"most_recent"`
 	Name                        types.String                                        `tfsdk:"name"`

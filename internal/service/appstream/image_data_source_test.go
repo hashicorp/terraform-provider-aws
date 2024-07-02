@@ -37,7 +37,6 @@ func TestAccAppStreamImageDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrDisplayName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "image_builder_supported"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "image_errors.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "name_regex"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "platform"),
@@ -49,12 +48,11 @@ func TestAccAppStreamImageDataSource_basic(t *testing.T) {
 	})
 }
 
-//  name        = "AppStream-WinServer2019-06-17-2024"
-
+// name        = "AppStream-WinServer2019-06-17-2024"
 func testAccImageDataSourceConfig_basic() string {
 	return (`
 data "aws_appstream_image" "test" {
-  name_regex        = "^AppStream-WinServer2019-06-17-\\d{4}$"
+  name_regex  = "^AppStream-WinServer.*$"
   type        = "PUBLIC"
   most_recent = true
 }
