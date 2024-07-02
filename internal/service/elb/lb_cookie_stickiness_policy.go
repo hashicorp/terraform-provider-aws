@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -56,14 +56,14 @@ func ResourceCookieStickinessPolicy() *schema.Resource {
 
 func resourceCookieStickinessPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn(ctx)
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
 	lbName := d.Get("load_balancer").(string)
 	lbPort := d.Get("lb_port").(int)
 	policyName := d.Get(names.AttrName).(string)
 	id := LBCookieStickinessPolicyCreateResourceID(lbName, lbPort, policyName)
 	{
-		input := &elb.CreateLBCookieStickinessPolicyInput{
+		input := &elasticloadbalancing.CreateLBCookieStickinessPolicyInput{
 			LoadBalancerName: aws.String(lbName),
 			PolicyName:       aws.String(policyName),
 		}
@@ -72,7 +72,7 @@ func resourceCookieStickinessPolicyCreate(ctx context.Context, d *schema.Resourc
 			input.CookieExpirationPeriod = aws.Int64(int64(v.(int)))
 		}
 
-		_, err := conn.CreateLBCookieStickinessPolicyWithContext(ctx, input)
+		_, err := conn.CreateLBCookieStickinessPolicy(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating ELB Classic LB Cookie Stickiness Policy (%s): %s", id, err)
@@ -80,13 +80,13 @@ func resourceCookieStickinessPolicyCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	{
-		input := &elb.SetLoadBalancerPoliciesOfListenerInput{
+		input := &elasticloadbalancing.SetLoadBalancerPoliciesOfListenerInput{
 			LoadBalancerName: aws.String(lbName),
-			LoadBalancerPort: aws.Int64(int64(lbPort)),
-			PolicyNames:      aws.StringSlice([]string{policyName}),
+			LoadBalancerPort: int32(lbPort),
+			PolicyNames:      []string{policyName},
 		}
 
-		_, err := conn.SetLoadBalancerPoliciesOfListenerWithContext(ctx, input)
+		_, err := conn.SetLoadBalancerPoliciesOfListener(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting ELB Classic LB Cookie Stickiness Policy (%s): %s", id, err)
@@ -100,7 +100,7 @@ func resourceCookieStickinessPolicyCreate(ctx context.Context, d *schema.Resourc
 
 func resourceCookieStickinessPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn(ctx)
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
 	lbName, lbPort, policyName, err := LBCookieStickinessPolicyParseResourceID(d.Id())
 
@@ -120,10 +120,10 @@ func resourceCookieStickinessPolicyRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading ELB Classic LB Cookie Stickiness Policy (%s): %s", d.Id(), err)
 	}
 
-	if len(policy.PolicyAttributeDescriptions) != 1 || aws.StringValue(policy.PolicyAttributeDescriptions[0].AttributeName) != "CookieExpirationPeriod" {
+	if len(policy.PolicyAttributeDescriptions) != 1 || aws.ToString(policy.PolicyAttributeDescriptions[0].AttributeName) != "CookieExpirationPeriod" {
 		return sdkdiag.AppendErrorf(diags, "cookie expiration period not found")
 	}
-	if v, err := strconv.Atoi(aws.StringValue(policy.PolicyAttributeDescriptions[0].AttributeValue)); err != nil {
+	if v, err := strconv.Atoi(aws.ToString(policy.PolicyAttributeDescriptions[0].AttributeValue)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing cookie expiration period: %s", err)
 	} else {
 		d.Set("cookie_expiration_period", v)
@@ -137,7 +137,7 @@ func resourceCookieStickinessPolicyRead(ctx context.Context, d *schema.ResourceD
 
 func resourceCookieStickinessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn(ctx)
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
 	lbName, lbPort, policyName, err := LBCookieStickinessPolicyParseResourceID(d.Id())
 
@@ -148,20 +148,20 @@ func resourceCookieStickinessPolicyDelete(ctx context.Context, d *schema.Resourc
 	// Perversely, if we Set an empty list of PolicyNames, we detach the
 	// policies attached to a listener, which is required to delete the
 	// policy itself.
-	input := &elb.SetLoadBalancerPoliciesOfListenerInput{
+	input := &elasticloadbalancing.SetLoadBalancerPoliciesOfListenerInput{
 		LoadBalancerName: aws.String(lbName),
-		LoadBalancerPort: aws.Int64(int64(lbPort)),
-		PolicyNames:      aws.StringSlice([]string{}),
+		LoadBalancerPort: int32(lbPort),
+		PolicyNames:      []string{},
 	}
 
-	_, err = conn.SetLoadBalancerPoliciesOfListenerWithContext(ctx, input)
+	_, err = conn.SetLoadBalancerPoliciesOfListener(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ELB Classic LB Cookie Stickiness Policy (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting ELB Classic LB Cookie Stickiness Policy: %s", d.Id())
-	_, err = conn.DeleteLoadBalancerPolicyWithContext(ctx, &elb.DeleteLoadBalancerPolicyInput{
+	_, err = conn.DeleteLoadBalancerPolicy(ctx, &elasticloadbalancing.DeleteLoadBalancerPolicyInput{
 		LoadBalancerName: aws.String(lbName),
 		PolicyName:       aws.String(policyName),
 	})

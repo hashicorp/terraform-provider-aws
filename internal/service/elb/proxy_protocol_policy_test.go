@@ -8,14 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -53,21 +53,21 @@ func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
 
 func testAccCheckProxyProtocolPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_placement_group" {
 				continue
 			}
 
-			req := &elb.DescribeLoadBalancersInput{
-				LoadBalancerNames: []*string{
-					aws.String(rs.Primary.Attributes["load_balancer"])},
+			req := &elasticloadbalancing.DescribeLoadBalancersInput{
+				LoadBalancerNames: []string{
+					rs.Primary.Attributes["load_balancer"]},
 			}
-			_, err := conn.DescribeLoadBalancersWithContext(ctx, req)
+			_, err := conn.DescribeLoadBalancers(ctx, req)
 			if err != nil {
 				// Verify the error is what we want
-				if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+				if errs.IsA[*awstypes.AccessPointNotFoundException](err) {
 					continue
 				}
 				return err

@@ -8,7 +8,8 @@ import (
 	"log"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -18,8 +19,8 @@ import (
 
 func TestAccELBAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elb.LoadBalancerDescription
-	resourceName := "aws_elb.test"
+	var conf awstypes.LoadBalancerDescription
+	resourceName := "aws_elasticloadbalancing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -62,20 +63,20 @@ func TestAccELBAttachment_basic(t *testing.T) {
 // remove and instance and check that it's correctly re-attached.
 func TestAccELBAttachment_drift(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elb.LoadBalancerDescription
-	resourceName := "aws_elb.test"
+	var conf awstypes.LoadBalancerDescription
+	resourceName := "aws_elasticloadbalancing.test"
 
 	testAccAttachmentConfig_deregInstance := func() {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
-		deRegisterInstancesOpts := elb.DeregisterInstancesFromLoadBalancerInput{
+		deRegisterInstancesOpts := elasticloadbalancing.DeregisterInstancesFromLoadBalancerInput{
 			LoadBalancerName: conf.LoadBalancerName,
 			Instances:        conf.Instances,
 		}
 
 		log.Printf("[DEBUG] deregistering instance %v from ELB", *conf.Instances[0].InstanceId)
 
-		_, err := conn.DeregisterInstancesFromLoadBalancerWithContext(ctx, &deRegisterInstancesOpts)
+		_, err := conn.DeregisterInstancesFromLoadBalancer(ctx, &deRegisterInstancesOpts)
 		if err != nil {
 			t.Fatalf("Failure deregistering instances from ELB: %s", err)
 		}
@@ -107,7 +108,7 @@ func TestAccELBAttachment_drift(t *testing.T) {
 	})
 }
 
-func testAccAttachmentCheckInstanceCount(conf *elb.LoadBalancerDescription, expected int) resource.TestCheckFunc {
+func testAccAttachmentCheckInstanceCount(conf *awstypes.LoadBalancerDescription, expected int) resource.TestCheckFunc {
 	return func(*terraform.State) error {
 		if actual := len(conf.Instances); actual != expected {
 			return fmt.Errorf("instance count does not match: expected %d, got %d", expected, actual)
@@ -145,7 +146,7 @@ resource "aws_instance" "foo1" {
 }
 
 resource "aws_elb_attachment" "foo1" {
-  elb      = aws_elb.test.id
+  elb      = aws_elasticloadbalancing.test.id
   instance = aws_instance.foo1.id
 }
 `)
@@ -185,12 +186,12 @@ resource "aws_instance" "foo2" {
 }
 
 resource "aws_elb_attachment" "foo1" {
-  elb      = aws_elb.test.id
+  elb      = aws_elasticloadbalancing.test.id
   instance = aws_instance.foo1.id
 }
 
 resource "aws_elb_attachment" "foo2" {
-  elb      = aws_elb.test.id
+  elb      = aws_elasticloadbalancing.test.id
   instance = aws_instance.foo2.id
 }
 `)
@@ -230,12 +231,12 @@ resource "aws_instance" "foo2" {
 }
 
 resource "aws_elb_attachment" "foo1" {
-  elb      = aws_elb.test.id
+  elb      = aws_elasticloadbalancing.test.id
   instance = aws_instance.foo2.id
 }
 
 resource "aws_elb_attachment" "foo2" {
-  elb      = aws_elb.test.id
+  elb      = aws_elasticloadbalancing.test.id
   instance = aws_instance.foo1.id
 }
 `)

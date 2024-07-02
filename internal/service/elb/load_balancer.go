@@ -14,11 +14,11 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -26,6 +26,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -270,7 +271,7 @@ func ResourceLoadBalancer() *schema.Resource {
 
 func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn(ctx)
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
 	listeners, err := ExpandListeners(d.Get("listener").(*schema.Set).List())
 	if err != nil {
@@ -282,14 +283,14 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-lb-"),
 	).Generate()
-	input := &elb.CreateLoadBalancerInput{
+	input := &elasticloadbalancing.CreateLoadBalancerInput{
 		Listeners:        listeners,
 		LoadBalancerName: aws.String(elbName),
 		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
-		input.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
+		input.AvailabilityZones = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if _, ok := d.GetOk("internal"); ok {
@@ -297,16 +298,16 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroups); ok && v.(*schema.Set).Len() > 0 {
-		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
+		input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk(names.AttrSubnets); ok && v.(*schema.Set).Len() > 0 {
-		input.Subnets = flex.ExpandStringSet(v.(*schema.Set))
+		input.Subnets = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		return conn.CreateLoadBalancerWithContext(ctx, input)
-	}, elb.ErrCodeCertificateNotFoundException)
+	_, err = tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return conn.CreateLoadBalancer(ctx, input)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ELB Classic Load Balancer (%s): %s", elbName, err)
@@ -319,7 +320,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn(ctx)
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
 	lb, err := FindLoadBalancerByName(ctx, conn, d.Id())
 
@@ -347,7 +348,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 		Resource:  fmt.Sprintf("loadbalancer/%s", d.Id()),
 	}
 	d.Set(names.AttrARN, arn.String())
-	d.Set(names.AttrAvailabilityZones, flex.FlattenStringList(lb.AvailabilityZones))
+	d.Set(names.AttrAvailabilityZones, flex.FlattenStringValueList(lb.AvailabilityZones))
 	d.Set("connection_draining", lbAttrs.ConnectionDraining.Enabled)
 	d.Set("connection_draining_timeout", lbAttrs.ConnectionDraining.Timeout)
 	d.Set("cross_zone_load_balancing", lbAttrs.CrossZoneLoadBalancing.Enabled)
@@ -358,26 +359,26 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("instances", flattenInstances(lb.Instances))
 	var scheme bool
 	if lb.Scheme != nil {
-		scheme = aws.StringValue(lb.Scheme) == "internal"
+		scheme = aws.ToString(lb.Scheme) == "internal"
 	}
 	d.Set("internal", scheme)
 	d.Set("listener", flattenListeners(lb.ListenerDescriptions))
 	d.Set(names.AttrName, lb.LoadBalancerName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(lb.LoadBalancerName)))
-	d.Set(names.AttrSecurityGroups, flex.FlattenStringList(lb.SecurityGroups))
-	d.Set(names.AttrSubnets, flex.FlattenStringList(lb.Subnets))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lb.LoadBalancerName)))
+	d.Set(names.AttrSecurityGroups, flex.FlattenStringValueList(lb.SecurityGroups))
+	d.Set(names.AttrSubnets, flex.FlattenStringValueList(lb.Subnets))
 	d.Set("zone_id", lb.CanonicalHostedZoneNameID)
 
 	if lb.SourceSecurityGroup != nil {
 		group := lb.SourceSecurityGroup.GroupName
-		if v := aws.StringValue(lb.SourceSecurityGroup.OwnerAlias); v != "" {
-			group = aws.String(v + "/" + aws.StringValue(lb.SourceSecurityGroup.GroupName))
+		if v := aws.ToString(lb.SourceSecurityGroup.OwnerAlias); v != "" {
+			group = aws.String(v + "/" + aws.ToString(lb.SourceSecurityGroup.GroupName))
 		}
 		d.Set("source_security_group", group)
 
 		// Manually look up the ELB Security Group ID, since it's not provided
 		if lb.VPCId != nil {
-			sg, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), aws.StringValue(lb.SourceSecurityGroup.GroupName), aws.StringValue(lb.VPCId), aws.StringValue(lb.SourceSecurityGroup.OwnerAlias))
+			sg, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), aws.ToString(lb.SourceSecurityGroup.GroupName), aws.ToString(lb.VPCId), aws.ToString(lb.SourceSecurityGroup.OwnerAlias))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer (%s) security group: %s", d.Id(), err)
 			} else {
@@ -403,7 +404,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 		_, n := d.GetChange("access_logs")
 		elbal := lbAttrs.AccessLog
 		nl := n.([]interface{})
-		if len(nl) == 0 && !aws.BoolValue(elbal.Enabled) {
+		if len(nl) == 0 && !elbal.Enabled {
 			elbal = nil
 		}
 		if err := d.Set("access_logs", flattenAccessLog(elbal)); err != nil {
@@ -412,15 +413,15 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	for _, attr := range lbAttrs.AdditionalAttributes {
-		switch aws.StringValue(attr.Key) {
-		case "elb.http.desyncmitigationmode":
+		switch aws.ToString(attr.Key) {
+		case "elasticloadbalancing.http.desyncmitigationmode":
 			d.Set("desync_mitigation_mode", attr.Value)
 		}
 	}
 
 	// There's only one health check, so save that to state as we
 	// currently can
-	if aws.StringValue(lb.HealthCheck.Target) != "" {
+	if aws.ToString(lb.HealthCheck.Target) != "" {
 		if err := d.Set(names.AttrHealthCheck, FlattenHealthCheck(lb.HealthCheck)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
 		}
@@ -431,7 +432,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn(ctx)
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
 	if d.HasChange("listener") {
 		o, n := d.GetChange("listener")
@@ -446,17 +447,17 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if len(remove) > 0 {
-			ports := make([]*int64, 0, len(remove))
+			ports := make([]int32, 0, len(remove))
 			for _, listener := range remove {
 				ports = append(ports, listener.LoadBalancerPort)
 			}
 
-			input := &elb.DeleteLoadBalancerListenersInput{
+			input := &elasticloadbalancing.DeleteLoadBalancerListenersInput{
 				LoadBalancerName:  aws.String(d.Id()),
 				LoadBalancerPorts: ports,
 			}
 
-			_, err := conn.DeleteLoadBalancerListenersWithContext(ctx, input)
+			_, err := conn.DeleteLoadBalancerListeners(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "deleting ELB Classic Load Balancer (%s) listeners: %s", d.Id(), err)
@@ -464,7 +465,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if len(add) > 0 {
-			input := &elb.CreateLoadBalancerListenersInput{
+			input := &elasticloadbalancing.CreateLoadBalancerListenersInput{
 				Listeners:        add,
 				LoadBalancerName: aws.String(d.Id()),
 			}
@@ -473,13 +474,13 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			// other listeners on the ELB. Retry here to eliminate that.
 			_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
 				func() (interface{}, error) {
-					return conn.CreateLoadBalancerListenersWithContext(ctx, input)
+					return conn.CreateLoadBalancerListeners(ctx, input)
 				},
 				func(err error) (bool, error) {
-					if tfawserr.ErrCodeEquals(err, elb.ErrCodeDuplicateListenerException) {
+					if errs.IsA[*awstypes.DuplicateListenerException](err) {
 						return true, err
 					}
-					if tfawserr.ErrMessageContains(err, elb.ErrCodeCertificateNotFoundException, "Server Certificate not found for the key: arn") {
+					if errs.IsAErrorMessageContains[*awstypes.CertificateNotFoundException](err, "Server Certificate not found for the key: arn") {
 						return true, err
 					}
 
@@ -503,12 +504,12 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		add := ExpandInstanceString(ns.Difference(os).List())
 
 		if len(add) > 0 {
-			input := &elb.RegisterInstancesWithLoadBalancerInput{
+			input := &elasticloadbalancing.RegisterInstancesWithLoadBalancerInput{
 				Instances:        add,
 				LoadBalancerName: aws.String(d.Id()),
 			}
 
-			_, err := conn.RegisterInstancesWithLoadBalancerWithContext(ctx, input)
+			_, err := conn.RegisterInstancesWithLoadBalancer(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "registering ELB Classic Load Balancer (%s) instances: %s", d.Id(), err)
@@ -516,12 +517,12 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if len(remove) > 0 {
-			input := &elb.DeregisterInstancesFromLoadBalancerInput{
+			input := &elasticloadbalancing.DeregisterInstancesFromLoadBalancerInput{
 				Instances:        remove,
 				LoadBalancerName: aws.String(d.Id()),
 			}
 
-			_, err := conn.DeregisterInstancesFromLoadBalancerWithContext(ctx, input)
+			_, err := conn.DeregisterInstancesFromLoadBalancer(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "deregistering ELB Classic Load Balancer (%s) instances: %s", d.Id(), err)
@@ -530,19 +531,19 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChanges("cross_zone_load_balancing", "idle_timeout", "access_logs", "desync_mitigation_mode") {
-		input := &elb.ModifyLoadBalancerAttributesInput{
-			LoadBalancerAttributes: &elb.LoadBalancerAttributes{
-				AdditionalAttributes: []*elb.AdditionalAttribute{
+		input := &elasticloadbalancing.ModifyLoadBalancerAttributesInput{
+			LoadBalancerAttributes: &awstypes.LoadBalancerAttributes{
+				AdditionalAttributes: []awstypes.AdditionalAttribute{
 					{
-						Key:   aws.String("elb.http.desyncmitigationmode"),
+						Key:   aws.String("elasticloadbalancing.http.desyncmitigationmode"),
 						Value: aws.String(d.Get("desync_mitigation_mode").(string)),
 					},
 				},
-				CrossZoneLoadBalancing: &elb.CrossZoneLoadBalancing{
-					Enabled: aws.Bool(d.Get("cross_zone_load_balancing").(bool)),
+				CrossZoneLoadBalancing: &awstypes.CrossZoneLoadBalancing{
+					Enabled: d.Get("cross_zone_load_balancing").(bool),
 				},
-				ConnectionSettings: &elb.ConnectionSettings{
-					IdleTimeout: aws.Int64(int64(d.Get("idle_timeout").(int))),
+				ConnectionSettings: &awstypes.ConnectionSettings{
+					IdleTimeout: aws.Int32(int32(d.Get("idle_timeout").(int))),
 				},
 			},
 			LoadBalancerName: aws.String(d.Id()),
@@ -550,20 +551,20 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if logs := d.Get("access_logs").([]interface{}); len(logs) == 1 {
 			l := logs[0].(map[string]interface{})
-			input.LoadBalancerAttributes.AccessLog = &elb.AccessLog{
-				Enabled:        aws.Bool(l[names.AttrEnabled].(bool)),
-				EmitInterval:   aws.Int64(int64(l[names.AttrInterval].(int))),
+			input.LoadBalancerAttributes.AccessLog = &awstypes.AccessLog{
+				Enabled:        l[names.AttrEnabled].(bool),
+				EmitInterval:   aws.Int32(int32(l[names.AttrInterval].(int))),
 				S3BucketName:   aws.String(l[names.AttrBucket].(string)),
 				S3BucketPrefix: aws.String(l[names.AttrBucketPrefix].(string)),
 			}
 		} else if len(logs) == 0 {
 			// disable access logs
-			input.LoadBalancerAttributes.AccessLog = &elb.AccessLog{
-				Enabled: aws.Bool(false),
+			input.LoadBalancerAttributes.AccessLog = &awstypes.AccessLog{
+				Enabled: false,
 			}
 		}
 
-		_, err := conn.ModifyLoadBalancerAttributesWithContext(ctx, input)
+		_, err := conn.ModifyLoadBalancerAttributes(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying ELB Classic Load Balancer (%s) attributes: %s", d.Id(), err)
@@ -578,17 +579,17 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		// We do timeout changes first since they require us to set draining
 		// to true for a hot second.
 		if d.HasChange("connection_draining_timeout") {
-			input := &elb.ModifyLoadBalancerAttributesInput{
-				LoadBalancerAttributes: &elb.LoadBalancerAttributes{
-					ConnectionDraining: &elb.ConnectionDraining{
-						Enabled: aws.Bool(true),
-						Timeout: aws.Int64(int64(d.Get("connection_draining_timeout").(int))),
+			input := &elasticloadbalancing.ModifyLoadBalancerAttributesInput{
+				LoadBalancerAttributes: &awstypes.LoadBalancerAttributes{
+					ConnectionDraining: &awstypes.ConnectionDraining{
+						Enabled: true,
+						Timeout: aws.Int32(int32(d.Get("connection_draining_timeout").(int))),
 					},
 				},
 				LoadBalancerName: aws.String(d.Id()),
 			}
 
-			_, err := conn.ModifyLoadBalancerAttributesWithContext(ctx, input)
+			_, err := conn.ModifyLoadBalancerAttributes(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "modifying ELB Classic Load Balancer (%s) attributes: %s", d.Id(), err)
@@ -598,16 +599,16 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		// Then we always set connection draining even if there is no change.
 		// This lets us reset to "false" if requested even with a timeout
 		// change.
-		input := &elb.ModifyLoadBalancerAttributesInput{
-			LoadBalancerAttributes: &elb.LoadBalancerAttributes{
-				ConnectionDraining: &elb.ConnectionDraining{
-					Enabled: aws.Bool(d.Get("connection_draining").(bool)),
+		input := &elasticloadbalancing.ModifyLoadBalancerAttributesInput{
+			LoadBalancerAttributes: &awstypes.LoadBalancerAttributes{
+				ConnectionDraining: &awstypes.ConnectionDraining{
+					Enabled: d.Get("connection_draining").(bool),
 				},
 			},
 			LoadBalancerName: aws.String(d.Id()),
 		}
 
-		_, err := conn.ModifyLoadBalancerAttributesWithContext(ctx, input)
+		_, err := conn.ModifyLoadBalancerAttributes(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying ELB Classic Load Balancer (%s) attributes: %s", d.Id(), err)
@@ -617,17 +618,17 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChange(names.AttrHealthCheck) {
 		if hc := d.Get(names.AttrHealthCheck).([]interface{}); len(hc) > 0 {
 			check := hc[0].(map[string]interface{})
-			input := &elb.ConfigureHealthCheckInput{
-				HealthCheck: &elb.HealthCheck{
-					HealthyThreshold:   aws.Int64(int64(check["healthy_threshold"].(int))),
-					Interval:           aws.Int64(int64(check[names.AttrInterval].(int))),
+			input := &elasticloadbalancing.ConfigureHealthCheckInput{
+				HealthCheck: &awstypes.HealthCheck{
+					HealthyThreshold:   aws.Int32(int32(check["healthy_threshold"].(int))),
+					Interval:           aws.Int32(int32(check[names.AttrInterval].(int))),
 					Target:             aws.String(check[names.AttrTarget].(string)),
-					Timeout:            aws.Int64(int64(check[names.AttrTimeout].(int))),
-					UnhealthyThreshold: aws.Int64(int64(check["unhealthy_threshold"].(int))),
+					Timeout:            aws.Int32(int32(check[names.AttrTimeout].(int))),
+					UnhealthyThreshold: aws.Int32(int32(check["unhealthy_threshold"].(int))),
 				},
 				LoadBalancerName: aws.String(d.Id()),
 			}
-			_, err := conn.ConfigureHealthCheckWithContext(ctx, input)
+			_, err := conn.ConfigureHealthCheck(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "configuring ELB Classic Load Balancer (%s) health check: %s", d.Id(), err)
@@ -636,12 +637,12 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChange(names.AttrSecurityGroups) {
-		input := &elb.ApplySecurityGroupsToLoadBalancerInput{
+		input := &elasticloadbalancing.ApplySecurityGroupsToLoadBalancerInput{
 			LoadBalancerName: aws.String(d.Id()),
-			SecurityGroups:   flex.ExpandStringSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
+			SecurityGroups:   flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		}
 
-		_, err := conn.ApplySecurityGroupsToLoadBalancerWithContext(ctx, input)
+		_, err := conn.ApplySecurityGroupsToLoadBalancer(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "applying ELB Classic Load Balancer (%s) security groups: %s", d.Id(), err)
@@ -653,16 +654,16 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		removed := flex.ExpandStringSet(os.Difference(ns))
-		added := flex.ExpandStringSet(ns.Difference(os))
+		removed := flex.ExpandStringValueSet(os.Difference(ns))
+		added := flex.ExpandStringValueSet(ns.Difference(os))
 
 		if len(added) > 0 {
-			input := &elb.EnableAvailabilityZonesForLoadBalancerInput{
+			input := &elasticloadbalancing.EnableAvailabilityZonesForLoadBalancerInput{
 				AvailabilityZones: added,
 				LoadBalancerName:  aws.String(d.Id()),
 			}
 
-			_, err := conn.EnableAvailabilityZonesForLoadBalancerWithContext(ctx, input)
+			_, err := conn.EnableAvailabilityZonesForLoadBalancer(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "enabling ELB Classic Load Balancer (%s) Availability Zones: %s", d.Id(), err)
@@ -670,12 +671,12 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if len(removed) > 0 {
-			input := &elb.DisableAvailabilityZonesForLoadBalancerInput{
+			input := &elasticloadbalancing.DisableAvailabilityZonesForLoadBalancerInput{
 				AvailabilityZones: removed,
 				LoadBalancerName:  aws.String(d.Id()),
 			}
 
-			_, err := conn.DisableAvailabilityZonesForLoadBalancerWithContext(ctx, input)
+			_, err := conn.DisableAvailabilityZonesForLoadBalancer(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "enabling ELB Classic Load Balancer (%s) Availability Zones: %s", d.Id(), err)
@@ -688,16 +689,16 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		removed := flex.ExpandStringSet(os.Difference(ns))
-		added := flex.ExpandStringSet(ns.Difference(os))
+		removed := flex.ExpandStringValueSet(os.Difference(ns))
+		added := flex.ExpandStringValueSet(ns.Difference(os))
 
 		if len(removed) > 0 {
-			input := &elb.DetachLoadBalancerFromSubnetsInput{
+			input := &elasticloadbalancing.DetachLoadBalancerFromSubnetsInput{
 				LoadBalancerName: aws.String(d.Id()),
 				Subnets:          removed,
 			}
 
-			_, err := conn.DetachLoadBalancerFromSubnetsWithContext(ctx, input)
+			_, err := conn.DetachLoadBalancerFromSubnets(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "detaching ELB Classic Load Balancer (%s) from subnets: %s", d.Id(), err)
@@ -705,14 +706,14 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if len(added) > 0 {
-			input := &elb.AttachLoadBalancerToSubnetsInput{
+			input := &elasticloadbalancing.AttachLoadBalancerToSubnetsInput{
 				LoadBalancerName: aws.String(d.Id()),
 				Subnets:          added,
 			}
 
-			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
-				return conn.AttachLoadBalancerToSubnetsWithContext(ctx, input)
-			}, elb.ErrCodeInvalidConfigurationRequestException, "cannot be attached to multiple subnets in the same AZ")
+			_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidConfigurationRequestException](ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+				return conn.AttachLoadBalancerToSubnets(ctx, input)
+			}, "cannot be attached to multiple subnets in the same AZ")
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "attaching ELB Classic Load Balancer (%s) to subnets: %s", d.Id(), err)
@@ -725,10 +726,10 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn(ctx)
+	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
 	log.Printf("[INFO] Deleting ELB Classic Load Balancer: %s", d.Id())
-	_, err := conn.DeleteLoadBalancerWithContext(ctx, &elb.DeleteLoadBalancerInput{
+	_, err := conn.DeleteLoadBalancer(ctx, &elasticloadbalancing.DeleteLoadBalancerInput{
 		LoadBalancerName: aws.String(d.Id()),
 	})
 
@@ -745,14 +746,14 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func FindLoadBalancerByName(ctx context.Context, conn *elb.ELB, name string) (*elb.LoadBalancerDescription, error) {
-	input := &elb.DescribeLoadBalancersInput{
-		LoadBalancerNames: aws.StringSlice([]string{name}),
+func FindLoadBalancerByName(ctx context.Context, conn *elasticloadbalancing.Client, name string) (*awstypes.LoadBalancerDescription, error) {
+	input := &elasticloadbalancing.DescribeLoadBalancersInput{
+		LoadBalancerNames: []string{name},
 	}
 
-	output, err := conn.DescribeLoadBalancersWithContext(ctx, input)
+	output, err := conn.DescribeLoadBalancers(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+	if errs.IsA[*awstypes.AccessPointNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -763,7 +764,7 @@ func FindLoadBalancerByName(ctx context.Context, conn *elb.ELB, name string) (*e
 		return nil, err
 	}
 
-	if output == nil || len(output.LoadBalancerDescriptions) == 0 || output.LoadBalancerDescriptions[0] == nil {
+	if output == nil || len(output.LoadBalancerDescriptions) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -772,23 +773,23 @@ func FindLoadBalancerByName(ctx context.Context, conn *elb.ELB, name string) (*e
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.LoadBalancerDescriptions[0].LoadBalancerName) != name {
+	if aws.ToString(output.LoadBalancerDescriptions[0].LoadBalancerName) != name {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
 
-	return output.LoadBalancerDescriptions[0], nil
+	return tfresource.AssertSingleValueResult(output.LoadBalancerDescriptions)
 }
 
-func findLoadBalancerAttributesByName(ctx context.Context, conn *elb.ELB, name string) (*elb.LoadBalancerAttributes, error) {
-	input := &elb.DescribeLoadBalancerAttributesInput{
+func findLoadBalancerAttributesByName(ctx context.Context, conn *elasticloadbalancing.Client, name string) (*awstypes.LoadBalancerAttributes, error) {
+	input := &elasticloadbalancing.DescribeLoadBalancerAttributesInput{
 		LoadBalancerName: aws.String(name),
 	}
 
-	output, err := conn.DescribeLoadBalancerAttributesWithContext(ctx, input)
+	output, err := conn.DescribeLoadBalancerAttributes(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+	if errs.IsA[*awstypes.AccessPointNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -945,8 +946,8 @@ func deleteNetworkInterfaces(ctx context.Context, conn *ec2.Client, name string)
 			continue
 		}
 
-		attachmentID := aws.StringValue(networkInterface.Attachment.AttachmentId)
-		networkInterfaceID := aws.StringValue(networkInterface.NetworkInterfaceId)
+		attachmentID := aws.ToString(networkInterface.Attachment.AttachmentId)
+		networkInterfaceID := aws.ToString(networkInterface.NetworkInterfaceId)
 
 		if err := tfec2.DetachNetworkInterface(ctx, conn, networkInterfaceID, attachmentID, tfec2.NetworkInterfaceDetachedTimeout); err != nil {
 			errs = append(errs, err)

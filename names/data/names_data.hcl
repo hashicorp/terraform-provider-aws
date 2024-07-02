@@ -3535,7 +3535,7 @@ service "elb" {
 
   sdk {
     id             = "Elastic Load Balancing"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {

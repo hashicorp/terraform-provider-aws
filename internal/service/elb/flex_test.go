@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,9 +38,9 @@ func TestExpandListeners(t *testing.T) {
 		t.Fatalf("bad: %#v", err)
 	}
 
-	expected := &elb.Listener{
-		InstancePort:     aws.Int64(8000),
-		LoadBalancerPort: aws.Int64(80),
+	expected := &awstypes.Listener{
+		InstancePort:     aws.Int32(8000),
+		LoadBalancerPort: int32(80),
 		InstanceProtocol: aws.String("http"),
 		Protocol:         aws.String("http"),
 	}
@@ -84,16 +84,16 @@ func TestFlattenHealthCheck(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		Input  *elb.HealthCheck
+		Input  *awstypes.HealthCheck
 		Output []map[string]interface{}
 	}{
 		{
-			Input: &elb.HealthCheck{
-				UnhealthyThreshold: aws.Int64(10),
-				HealthyThreshold:   aws.Int64(10),
+			Input: &awstypes.HealthCheck{
+				UnhealthyThreshold: aws.Int32(10),
+				HealthyThreshold:   aws.Int32(10),
 				Target:             aws.String("HTTP:80/"),
-				Timeout:            aws.Int64(30),
-				Interval:           aws.Int64(30),
+				Timeout:            aws.Int32(30),
+				Interval:           aws.Int32(30),
 			},
 			Output: []map[string]interface{}{
 				{
@@ -118,7 +118,7 @@ func TestFlattenHealthCheck(t *testing.T) {
 func TestExpandInstanceString(t *testing.T) {
 	t.Parallel()
 
-	expected := []*elb.Instance{
+	expected := []*awstypes.Instance{
 		{InstanceId: aws.String("test-one")},
 		{InstanceId: aws.String("test-two")},
 	}
@@ -158,7 +158,7 @@ func TestExpandPolicyAttributes(t *testing.T) {
 		t.Fatalf("expected number of attributes to be 3, but got %d", len(attributes))
 	}
 
-	expected := &elb.PolicyAttribute{
+	expected := &awstypes.PolicyAttribute{
 		AttributeName:  aws.String("Protocol-TLSv1.2"),
 		AttributeValue: aws.String(acctest.CtTrue),
 	}
@@ -194,7 +194,7 @@ func TestExpandPolicyAttributes_invalid(t *testing.T) {
 	}
 	attributes := tfelb.ExpandPolicyAttributes(expanded)
 
-	expected := &elb.PolicyAttribute{
+	expected := &awstypes.PolicyAttribute{
 		AttributeName:  aws.String("Protocol-TLSv1.2"),
 		AttributeValue: aws.String(acctest.CtFalse),
 	}
@@ -211,11 +211,11 @@ func TestFlattenPolicyAttributes(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		Input  []*elb.PolicyAttributeDescription
+		Input  []awstypes.PolicyAttributeDescription
 		Output []interface{}
 	}{
 		{
-			Input: []*elb.PolicyAttributeDescription{
+			Input: []awstypes.PolicyAttributeDescription{
 				{
 					AttributeName:  aws.String("Protocol-TLSv1.2"),
 					AttributeValue: aws.String(acctest.CtTrue),
