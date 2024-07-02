@@ -42,7 +42,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the Connector.
 * `as2_config` - Structure containing the parameters for an AS2 connector object. Contains the following attributes:
     * `basic_auth_secret_id` -  Basic authentication for AS2 connector API. Returns a null value if not set.
-    * `Compression` - Specifies whether AS2 file is compressed. Will be ZLIB or DISABLED
+    * `compression` - Specifies whether AS2 file is compressed. Will be ZLIB or DISABLED
     * `encryption_algorithm` - Algorithm used to encrypt file. Will be AES128_CBC or AES192_CBC or AES256_CBC or DES_EDE3_CBC or NONE.
     * `local_profile_id` - Unique identifier for AS2 local profile.
     * `mdn_response` - Used for outbound requests to tell if response is asynchronous or not. Will be either SYNC or NONE.
