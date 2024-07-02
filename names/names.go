@@ -320,7 +320,7 @@ func init() {
 }
 
 func readHCLIntoServiceData() error {
-	// names_data.HCL is dynamically embedded so changes, additions should be made
+	// names_data.hcl is dynamically embedded so changes, additions should be made
 	// there also
 
 	d, err := data.ReadAllServiceData()
