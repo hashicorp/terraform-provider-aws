@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/aws/aws-sdk-go/service/emr/emriface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/emr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -19,11 +19,11 @@ import (
 // []*SERVICE.Tag handling
 
 // Tags returns emr service tags.
-func Tags(tags tftags.KeyValueTags) []*emr.Tag {
-	result := make([]*emr.Tag, 0, len(tags))
+func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &emr.Tag{
+		tag := awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -35,11 +35,11 @@ func Tags(tags tftags.KeyValueTags) []*emr.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from emr service tags.
-func KeyValueTags(ctx context.Context, tags []*emr.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(ctx, m)
@@ -47,7 +47,7 @@ func KeyValueTags(ctx context.Context, tags []*emr.Tag) tftags.KeyValueTags {
 
 // getTagsIn returns emr service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) []*emr.Tag {
+func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -58,7 +58,7 @@ func getTagsIn(ctx context.Context) []*emr.Tag {
 }
 
 // setTagsOut sets emr service tags in Context.
-func setTagsOut(ctx context.Context, tags []*emr.Tag) {
+func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
@@ -67,7 +67,7 @@ func setTagsOut(ctx context.Context, tags []*emr.Tag) {
 // updateTags updates emr service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn emriface.EMRAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *emr.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*emr.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -78,10 +78,10 @@ func updateTags(ctx context.Context, conn emriface.EMRAPI, identifier string, ol
 	if len(removedTags) > 0 {
 		input := &emr.RemoveTagsInput{
 			ResourceId: aws.String(identifier),
-			TagKeys:    aws.StringSlice(removedTags.Keys()),
+			TagKeys:    removedTags.Keys(),
 		}
 
-		_, err := conn.RemoveTagsWithContext(ctx, input)
+		_, err := conn.RemoveTags(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -96,7 +96,7 @@ func updateTags(ctx context.Context, conn emriface.EMRAPI, identifier string, ol
 			Tags:       Tags(updatedTags),
 		}
 
-		_, err := conn.AddTagsWithContext(ctx, input)
+		_, err := conn.AddTags(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -109,5 +109,5 @@ func updateTags(ctx context.Context, conn emriface.EMRAPI, identifier string, ol
 // UpdateTags updates emr service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).EMRConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).EMRClient(ctx), identifier, oldTags, newTags)
 }
