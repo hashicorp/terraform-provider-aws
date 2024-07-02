@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/emrcontainers"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emrcontainers/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -133,10 +132,10 @@ func ResourceJobTemplate() *schema.Resource {
 													},
 												},
 												"persistent_app_ui": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ForceNew:     true,
-													ValidateFunc: enum.Validate[awstypes.PersistentAppUI](),
+													Type:             schema.TypeString,
+													Optional:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.PersistentAppUI](),
 												},
 												"s3_monitoring_configuration": {
 													Type:     schema.TypeList,
@@ -339,7 +338,7 @@ func resourceJobTemplateDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// Not actually a validation exception
-	if tfawserr.ErrMessageContains(err, awstypes.ErrCodeValidationException, "Template does not exist") {
+	if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Template does not exist") {
 		return diags
 	}
 
@@ -374,7 +373,7 @@ func expandJobTemplateData(tfMap map[string]interface{}) *awstypes.JobTemplateDa
 	}
 
 	if v, ok := tfMap["job_tags"].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.JobTags = flex.ExpandStringMap(v)
+		apiObject.JobTags = flex.ExpandStringValueMap(v)
 	}
 
 	if v, ok := tfMap["release_label"].(string); ok && v != "" {
@@ -401,12 +400,12 @@ func expandConfigurationOverrides(tfMap map[string]interface{}) *awstypes.Parame
 
 	return apiObject
 }
-func expandConfigurations(tfList []interface{}) []*awstypes.Configuration {
+func expandConfigurations(tfList []interface{}) []awstypes.Configuration {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*awstypes.Configuration
+	var apiObjects []awstypes.Configuration
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -417,22 +416,14 @@ func expandConfigurations(tfList []interface{}) []*awstypes.Configuration {
 
 		apiObject := expandConfiguration(tfMap)
 
-		if apiObject == nil {
-			continue
-		}
-
 		apiObjects = append(apiObjects, apiObject)
 	}
 
 	return apiObjects
 }
 
-func expandConfiguration(tfMap map[string]interface{}) *awstypes.Configuration {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &awstypes.Configuration{}
+func expandConfiguration(tfMap map[string]interface{}) awstypes.Configuration {
+	apiObject := awstypes.Configuration{}
 
 	if v, ok := tfMap["classification"].(string); ok && v != "" {
 		apiObject.Classification = aws.String(v)
@@ -443,7 +434,7 @@ func expandConfiguration(tfMap map[string]interface{}) *awstypes.Configuration {
 	}
 
 	if v, ok := tfMap[names.AttrProperties].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.Properties = flex.ExpandStringMap(v)
+		apiObject.Properties = flex.ExpandStringValueMap(v)
 	}
 
 	return apiObject
@@ -461,7 +452,7 @@ func expandMonitoringConfiguration(tfMap map[string]interface{}) *awstypes.Param
 	}
 
 	if v, ok := tfMap["persistent_app_ui"].(string); ok && v != "" {
-		apiObject.PersistentAppUI = awstypes.PersistentAppUI(v)
+		apiObject.PersistentAppUI = aws.String(v)
 	}
 
 	if v, ok := tfMap["s3_monitoring_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -551,7 +542,7 @@ func expandSparkSubmitJobDriver(tfMap map[string]interface{}) *awstypes.SparkSub
 	}
 
 	if v, ok := tfMap["entry_point_arguments"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.EntryPointArguments = flex.ExpandStringSet(v)
+		apiObject.EntryPointArguments = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap["spark_submit_parameters"].(string); ok && v != "" {
@@ -609,7 +600,7 @@ func flattenConfigurationOverrides(apiObject *awstypes.ParametricConfigurationOv
 	return tfMap
 }
 
-func flattenConfigurations(apiObjects []*awstypes.Configuration) []interface{} {
+func flattenConfigurations(apiObjects []awstypes.Configuration) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -617,21 +608,13 @@ func flattenConfigurations(apiObjects []*awstypes.Configuration) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenConfiguration(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenConfiguration(apiObject *awstypes.Configuration) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenConfiguration(apiObject awstypes.Configuration) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Classification; v != nil {
@@ -747,7 +730,7 @@ func flattenSparkSubmitJobDriver(apiObject *awstypes.SparkSubmitJobDriver) map[s
 	}
 
 	if v := apiObject.EntryPointArguments; v != nil {
-		tfMap["entry_point_arguments"] = flex.FlattenStringSet(v)
+		tfMap["entry_point_arguments"] = flex.FlattenStringValueSet(v)
 	}
 
 	if v := apiObject.SparkSubmitParameters; v != nil {

@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/emrcontainers"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emrcontainers/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
