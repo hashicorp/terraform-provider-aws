@@ -5,6 +5,7 @@ package servicecatalogappregistry
 
 import (
 	"context"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -16,7 +17,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_servicecatalogappregistry_application", name="Application")
-// @Testing(tagsTest=false)
+// @Tags(identifierAttribute="arn")
 func newDataSourceApplication(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceApplication{}, nil
 }
@@ -50,6 +51,7 @@ func (d *dataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 				ElementType: types.StringType,
 				Computed:    true,
 			},
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
@@ -72,6 +74,7 @@ func (d *dataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 	}
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	setTagsOut(ctx, out.Tags)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -81,4 +84,5 @@ type dataSourceApplicationData struct {
 	ID             types.String `tfsdk:"id"`
 	Name           types.String `tfsdk:"name"`
 	ApplicationTag types.Map    `tfsdk:"application_tag"`
+	Tags           types.Map    `tfsdk:"tags"`
 }
