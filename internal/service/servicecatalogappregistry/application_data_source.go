@@ -57,6 +57,7 @@ func (d *dataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 }
 func (d *dataSourceApplication) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ServiceCatalogAppRegistryClient(ctx)
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
 
 	var data dataSourceApplicationData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -74,7 +75,10 @@ func (d *dataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 	}
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
-	setTagsOut(ctx, out.Tags)
+
+	// Transparent tagging doesn't work for DataSource yet
+	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
