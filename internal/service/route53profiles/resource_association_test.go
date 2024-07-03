@@ -241,7 +241,7 @@ resource "aws_route53profiles_resource_association" "test" {
   name                = %[1]q
   profile_id          = aws_route53profiles_profile.test.id
   resource_arn        = aws_route53_resolver_firewall_rule_group.test.arn
-  resource_properties = "{\"priority\":102}"
+  resource_properties = jsonencode({ "priority" = 102 })
 }
 `, rName)
 }
