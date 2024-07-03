@@ -781,6 +781,7 @@ The `http_endpoint_configuration` configuration block supports the following arg
 * `role_arn` - (Required) Kinesis Data Firehose uses this IAM role for all the permissions that the delivery stream needs. The pattern needs to be `arn:.*`.
 * `s3_configuration` - (Required) The S3 Configuration. See [`s3_configuration` block](#s3_configuration-block) below for details.
 * `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDataOnly` and `AllData`.  Default value is `FailedDataOnly`.
+* `secret_manager_configuration` - (Optional) The Secret Manager Configuration. See [`secret_manager_configuration` block](#secret_manager_configuration-block) below for details.
 * `buffering_size` - (Optional) Buffer incoming data to the specified size, in MBs, before delivering it to the destination. The default value is 5.
 * `buffering_interval` - (Optional) Buffer incoming data for the specified period of time, in seconds, before delivering it to the destination. The default value is 300 (5 minutes).
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. See [`cloudwatch_logging_options` block](#cloudwatch_logging_options-block) below for details.
@@ -926,6 +927,14 @@ The `s3_configuration` configuration block supports the following arguments:
 * `kms_key_arn` - (Optional) Specifies the KMS key ARN the stream will use to encrypt data. If not set, no encryption will
   be used.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. See [`cloudwatch_logging_options` block](#cloudwatch_logging_options-block) below for details.
+
+### `secret_manager_configuration` block
+
+The `secret_manager_configuration` configuration block supports the following arguments:
+
+* `enabled` - (Required) Enables or disables secrets manager feature.
+* `role_arn` - (Optional) The role that Firehose assumes when calling the Secrets Manager API operation.
+* `secret_arn` - (Optional) The ARN of the secret that stores your credentials.
 
 ### `input_format_configuration` block
 
