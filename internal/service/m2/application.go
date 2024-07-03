@@ -36,8 +36,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Application")
+// @FrameworkResource("aws_m2_application", name="Application")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/m2;m2.GetApplicationOutput")
 func newApplicationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &applicationResource{}
 

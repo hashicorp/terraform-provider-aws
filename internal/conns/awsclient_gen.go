@@ -57,6 +57,7 @@ import (
 	codestarconnections_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarconnections"
 	codestarnotifications_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarnotifications"
 	cognitoidentity_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
+	cognitoidentityprovider_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	comprehend_sdkv2 "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	computeoptimizer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	configservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/configservice"
@@ -66,6 +67,7 @@ import (
 	costexplorer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	costoptimizationhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	customerprofiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/customerprofiles"
+	databrew_sdkv2 "github.com/aws/aws-sdk-go-v2/service/databrew"
 	datasync_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datasync"
 	datazone_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datazone"
 	dax_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dax"
@@ -95,6 +97,8 @@ import (
 	fms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fms"
 	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
 	globalaccelerator_sdkv2 "github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
+	grafana_sdkv2 "github.com/aws/aws-sdk-go-v2/service/grafana"
+	greengrass_sdkv2 "github.com/aws/aws-sdk-go-v2/service/greengrass"
 	groundstation_sdkv2 "github.com/aws/aws-sdk-go-v2/service/groundstation"
 	guardduty_sdkv2 "github.com/aws/aws-sdk-go-v2/service/guardduty"
 	healthlake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/healthlake"
@@ -102,6 +106,9 @@ import (
 	identitystore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/identitystore"
 	inspector2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector2"
 	internetmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/internetmonitor"
+	iot_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iot"
+	iotanalytics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iotanalytics"
+	iotevents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iotevents"
 	ivschat_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ivschat"
 	kafka_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kafka"
 	kendra_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kendra"
@@ -192,7 +199,6 @@ import (
 	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
-	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
 	databasemigrationservice_sdkv1 "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	dataexchange_sdkv1 "github.com/aws/aws-sdk-go/service/dataexchange"
@@ -213,13 +219,9 @@ import (
 	fsx_sdkv1 "github.com/aws/aws-sdk-go/service/fsx"
 	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
 	glue_sdkv1 "github.com/aws/aws-sdk-go/service/glue"
-	greengrass_sdkv1 "github.com/aws/aws-sdk-go/service/greengrass"
 	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	inspector_sdkv1 "github.com/aws/aws-sdk-go/service/inspector"
-	iot_sdkv1 "github.com/aws/aws-sdk-go/service/iot"
-	iotanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/iotanalytics"
-	iotevents_sdkv1 "github.com/aws/aws-sdk-go/service/iotevents"
 	ivs_sdkv1 "github.com/aws/aws-sdk-go/service/ivs"
 	kafkaconnect_sdkv1 "github.com/aws/aws-sdk-go/service/kafkaconnect"
 	kinesisanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalytics"
@@ -229,7 +231,6 @@ import (
 	licensemanager_sdkv1 "github.com/aws/aws-sdk-go/service/licensemanager"
 	locationservice_sdkv1 "github.com/aws/aws-sdk-go/service/locationservice"
 	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
-	managedgrafana_sdkv1 "github.com/aws/aws-sdk-go/service/managedgrafana"
 	memorydb_sdkv1 "github.com/aws/aws-sdk-go/service/memorydb"
 	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
 	networkmanager_sdkv1 "github.com/aws/aws-sdk-go/service/networkmanager"
@@ -477,8 +478,8 @@ func (c *AWSClient) CodeStarNotificationsClient(ctx context.Context) *codestarno
 	return errs.Must(client[*codestarnotifications_sdkv2.Client](ctx, c, names.CodeStarNotifications, make(map[string]any)))
 }
 
-func (c *AWSClient) CognitoIDPConn(ctx context.Context) *cognitoidentityprovider_sdkv1.CognitoIdentityProvider {
-	return errs.Must(conn[*cognitoidentityprovider_sdkv1.CognitoIdentityProvider](ctx, c, names.CognitoIDP, make(map[string]any)))
+func (c *AWSClient) CognitoIDPClient(ctx context.Context) *cognitoidentityprovider_sdkv2.Client {
+	return errs.Must(client[*cognitoidentityprovider_sdkv2.Client](ctx, c, names.CognitoIDP, make(map[string]any)))
 }
 
 func (c *AWSClient) CognitoIdentityClient(ctx context.Context) *cognitoidentity_sdkv2.Client {
@@ -539,6 +540,10 @@ func (c *AWSClient) DSConn(ctx context.Context) *directoryservice_sdkv1.Director
 
 func (c *AWSClient) DSClient(ctx context.Context) *directoryservice_sdkv2.Client {
 	return errs.Must(client[*directoryservice_sdkv2.Client](ctx, c, names.DS, make(map[string]any)))
+}
+
+func (c *AWSClient) DataBrewClient(ctx context.Context) *databrew_sdkv2.Client {
+	return errs.Must(client[*databrew_sdkv2.Client](ctx, c, names.DataBrew, make(map[string]any)))
 }
 
 func (c *AWSClient) DataExchangeConn(ctx context.Context) *dataexchange_sdkv1.DataExchange {
@@ -713,12 +718,12 @@ func (c *AWSClient) GlueConn(ctx context.Context) *glue_sdkv1.Glue {
 	return errs.Must(conn[*glue_sdkv1.Glue](ctx, c, names.Glue, make(map[string]any)))
 }
 
-func (c *AWSClient) GrafanaConn(ctx context.Context) *managedgrafana_sdkv1.ManagedGrafana {
-	return errs.Must(conn[*managedgrafana_sdkv1.ManagedGrafana](ctx, c, names.Grafana, make(map[string]any)))
+func (c *AWSClient) GrafanaClient(ctx context.Context) *grafana_sdkv2.Client {
+	return errs.Must(client[*grafana_sdkv2.Client](ctx, c, names.Grafana, make(map[string]any)))
 }
 
-func (c *AWSClient) GreengrassConn(ctx context.Context) *greengrass_sdkv1.Greengrass {
-	return errs.Must(conn[*greengrass_sdkv1.Greengrass](ctx, c, names.Greengrass, make(map[string]any)))
+func (c *AWSClient) GreengrassClient(ctx context.Context) *greengrass_sdkv2.Client {
+	return errs.Must(client[*greengrass_sdkv2.Client](ctx, c, names.Greengrass, make(map[string]any)))
 }
 
 func (c *AWSClient) GroundStationClient(ctx context.Context) *groundstation_sdkv2.Client {
@@ -769,16 +774,16 @@ func (c *AWSClient) InternetMonitorClient(ctx context.Context) *internetmonitor_
 	return errs.Must(client[*internetmonitor_sdkv2.Client](ctx, c, names.InternetMonitor, make(map[string]any)))
 }
 
-func (c *AWSClient) IoTConn(ctx context.Context) *iot_sdkv1.IoT {
-	return errs.Must(conn[*iot_sdkv1.IoT](ctx, c, names.IoT, make(map[string]any)))
+func (c *AWSClient) IoTClient(ctx context.Context) *iot_sdkv2.Client {
+	return errs.Must(client[*iot_sdkv2.Client](ctx, c, names.IoT, make(map[string]any)))
 }
 
-func (c *AWSClient) IoTAnalyticsConn(ctx context.Context) *iotanalytics_sdkv1.IoTAnalytics {
-	return errs.Must(conn[*iotanalytics_sdkv1.IoTAnalytics](ctx, c, names.IoTAnalytics, make(map[string]any)))
+func (c *AWSClient) IoTAnalyticsClient(ctx context.Context) *iotanalytics_sdkv2.Client {
+	return errs.Must(client[*iotanalytics_sdkv2.Client](ctx, c, names.IoTAnalytics, make(map[string]any)))
 }
 
-func (c *AWSClient) IoTEventsConn(ctx context.Context) *iotevents_sdkv1.IoTEvents {
-	return errs.Must(conn[*iotevents_sdkv1.IoTEvents](ctx, c, names.IoTEvents, make(map[string]any)))
+func (c *AWSClient) IoTEventsClient(ctx context.Context) *iotevents_sdkv2.Client {
+	return errs.Must(client[*iotevents_sdkv2.Client](ctx, c, names.IoTEvents, make(map[string]any)))
 }
 
 func (c *AWSClient) KMSClient(ctx context.Context) *kms_sdkv2.Client {
