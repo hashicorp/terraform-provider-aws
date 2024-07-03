@@ -54,7 +54,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroupDataSource_basic(t *testing.T
 func testAccAttributeGroupDataSourceConfig_basic(rName, description string) string {
 	return fmt.Sprintf(`
 data "aws_servicecatalogappregistry_attribute_group" "test" {
-	name = aws_servicecatalogappregistry_attribute_group.test.name
+  name = aws_servicecatalogappregistry_attribute_group.test.name
 }
 
 resource "aws_servicecatalogappregistry_attribute_group" "test" {
