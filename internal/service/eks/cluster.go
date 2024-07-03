@@ -43,6 +43,15 @@ func resourceCluster() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceClusterV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: clusterStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
 			customdiff.ForceNewIfChange("encryption_config", func(_ context.Context, old, new, meta interface{}) bool {
@@ -85,8 +94,9 @@ func resourceCluster() *schema.Resource {
 			},
 			"bootstrap_self_managed_addons": {
 				Type:     schema.TypeBool,
-				ForceNew: true,
 				Optional: true,
+				ForceNew: true,
+				Default:  true,
 			},
 			"certificate_authority": {
 				Type:     schema.TypeList,
