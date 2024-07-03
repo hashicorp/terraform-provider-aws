@@ -16,33 +16,37 @@ import (
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*route53.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return route53.NewFromConfig(cfg, func(o *route53.Options) {
-		// Always override the service region
-		switch config["partition"].(string) {
-		case names.StandardPartitionID:
-			// https://docs.aws.amazon.com/general/latest/gr/r53.html Setting default to us-east-1.
-			o.Region = names.USEast1RegionID
-		case names.ChinaPartitionID:
-			// The AWS Go SDK is missing endpoint information for Route 53 in the AWS China partition.
-			// This can likely be removed in the future.
-			if aws.ToString(o.BaseEndpoint) == "" {
-				o.BaseEndpoint = aws.String("https://api.route53.cn")
+	return route53.NewFromConfig(cfg,
+		route53.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *route53.Options) {
+			// Always override the service region
+			switch config["partition"].(string) {
+			case names.StandardPartitionID:
+				// https://docs.aws.amazon.com/general/latest/gr/r53.html Setting default to us-east-1.
+				if cfg.Region != names.USEast1RegionID {
+					tflog.Info(ctx, "overriding region", map[string]any{
+						"original_region": cfg.Region,
+						"override_region": names.USEast1RegionID,
+					})
+				}
+				o.Region = names.USEast1RegionID
+			case names.ChinaPartitionID:
+				// The AWS Go SDK is missing endpoint information for Route 53 in the AWS China partition.
+				// This can likely be removed in the future.
+				if aws.ToString(o.BaseEndpoint) == "" {
+					o.BaseEndpoint = aws.String("https://api.route53.cn")
+				}
+				o.Region = names.CNNorthwest1RegionID
+			case names.USGovCloudPartitionID:
+				if cfg.Region != names.USGovWest1RegionID {
+					tflog.Info(ctx, "overriding region", map[string]any{
+						"original_region": cfg.Region,
+						"override_region": names.USGovWest1RegionID,
+					})
+				}
+				o.Region = names.USGovWest1RegionID
 			}
-			o.Region = names.CNNorthwest1RegionID
-		case names.USGovCloudPartitionID:
-			o.Region = names.USGovWest1RegionID
-		}
-
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			tflog.Debug(ctx, "setting endpoint", map[string]any{
-				"tf_aws.endpoint": endpoint,
-			})
-			o.BaseEndpoint = aws.String(endpoint)
-
-			if o.EndpointOptions.UseFIPSEndpoint == aws.FIPSEndpointStateEnabled {
-				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
-				o.EndpointOptions.UseFIPSEndpoint = aws.FIPSEndpointStateDisabled
-			}
-		}
-	}), nil
+		},
+	), nil
 }

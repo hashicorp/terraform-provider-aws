@@ -24,6 +24,7 @@ import (
 	accounttypes "github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	acmpcatypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
@@ -40,6 +41,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/outposts"
+	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -652,23 +654,13 @@ func CheckResourceAttrRFC3339(resourceName, attributeName string) resource.TestC
 	return resource.TestMatchResourceAttr(resourceName, attributeName, regexache.MustCompile(RFC3339RegexPattern))
 }
 
-// CheckResourceAttrEquivalentJSON is a TestCheckFunc that compares a JSON value with an expected value. Both JSON
-// values are normalized before being compared.
-func CheckResourceAttrEquivalentJSON(resourceName, attributeName, expectedJSON string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		is, err := PrimaryInstanceState(s, resourceName)
+// CheckResourceAttrEquivalentJSON is a TestCheckFunc that compares a JSON value with an expected value.
+// Both JSON values are normalized before being compared.
+func CheckResourceAttrEquivalentJSON(n, key, expectedJSON string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(n, key, func(value string) error {
+		vNormal, err := structure.NormalizeJsonString(value)
 		if err != nil {
-			return err
-		}
-
-		v, ok := is.Attributes[attributeName]
-		if !ok {
-			return fmt.Errorf("%s: No attribute %q found", resourceName, attributeName)
-		}
-
-		vNormal, err := structure.NormalizeJsonString(v)
-		if err != nil {
-			return fmt.Errorf("%s: Error normalizing JSON in %q: %w", resourceName, attributeName, err)
+			return fmt.Errorf("%s: Error normalizing JSON in %q: %w", n, key, err)
 		}
 
 		expectedNormal, err := structure.NormalizeJsonString(expectedJSON)
@@ -677,10 +669,10 @@ func CheckResourceAttrEquivalentJSON(resourceName, attributeName, expectedJSON s
 		}
 
 		if vNormal != expectedNormal {
-			return fmt.Errorf("%s: Attribute %q expected\n%s\ngot\n%s", resourceName, attributeName, expectedJSON, v)
+			return fmt.Errorf("%s: Attribute %q expected\n%s\ngot\n%s", n, key, expectedJSON, value)
 		}
 		return nil
-	}
+	})
 }
 
 func CheckResourceAttrJMES(name, key, jmesPath, value string) resource.TestCheckFunc {
@@ -989,6 +981,26 @@ func PreCheckPartitionNot(t *testing.T, partitions ...string) {
 	}
 }
 
+func PreCheckCognitoIdentityProvider(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
+
+	input := &cognitoidentityprovider.ListUserPoolsInput{
+		MaxResults: aws.Int32(1),
+	}
+
+	_, err := conn.ListUserPools(ctx, input)
+
+	if PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func PreCheckInspector2(ctx context.Context, t *testing.T) {
 	t.Helper()
 
@@ -1084,6 +1096,22 @@ func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testi
 
 	if aws.StringValue(organization.MasterAccountId) == aws.StringValue(callerIdentity.Account) {
 		t.Skip("this AWS account must not be the management account of an AWS Organization")
+	}
+}
+
+func PreCheckPinpointApp(ctx context.Context, t *testing.T) {
+	conn := Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
+
+	input := &pinpoint.GetAppsInput{}
+
+	_, err := conn.GetAppsWithContext(ctx, input)
+
+	if PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
