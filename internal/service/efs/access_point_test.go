@@ -9,16 +9,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -260,54 +258,39 @@ func testAccCheckAccessPointDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			resp, err := conn.DescribeAccessPoints(ctx, &efs.DescribeAccessPointsInput{
-				AccessPointId: aws.String(rs.Primary.ID),
-			})
+			_, err := tfefs.FindAccessPointByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				if errs.IsA[*awstypes.AccessPointNotFound](err) {
-					continue
-				}
-				return fmt.Errorf("Error describing EFS access point in tests: %s", err)
+				return err
 			}
-			if len(resp.AccessPoints) > 0 {
-				return fmt.Errorf("EFS access point %q still exists", rs.Primary.ID)
-			}
+
+			return fmt.Errorf("EFS Access Point %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAccessPointExists(ctx context.Context, resourceID string, mount *awstypes.AccessPointDescription) resource.TestCheckFunc {
+func testAccCheckAccessPointExists(ctx context.Context, n string, v *awstypes.AccessPointDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceID]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceID)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		fs, ok := s.RootModule().Resources[resourceID]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceID)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSClient(ctx)
-		mt, err := conn.DescribeAccessPoints(ctx, &efs.DescribeAccessPointsInput{
-			AccessPointId: aws.String(fs.Primary.ID),
-		})
+
+		output, err := tfefs.FindAccessPointByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		apId := aws.ToString(mt.AccessPoints[0].AccessPointId)
-		if apId != fs.Primary.ID {
-			return fmt.Errorf("access point ID mismatch: %q != %q", apId, fs.Primary.ID)
-		}
-
-		*mount = mt.AccessPoints[0]
+		*v = *output
 
 		return nil
 	}
