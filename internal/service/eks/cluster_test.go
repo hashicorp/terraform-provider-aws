@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -47,6 +48,7 @@ func TestAccEKSCluster_basic(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "access_config.#", acctest.Ct1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("cluster/%s$", rName))),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_authority.0.data"),
 					resource.TestCheckNoResourceAttr(resourceName, "cluster_id"),
@@ -188,7 +190,7 @@ func TestAccEKSCluster_AccessConfig_update(t *testing.T) {
 
 func TestAccEKSCluster_BootstrapSelfManagedAddons_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 types.Cluster
+	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
@@ -199,30 +201,61 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_update(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_bootstrapSelfManagedAddons(rName, true),
+				Config: testAccClusterConfig_bootstrapSelfManagedAddons(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtFalse),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"bootstrap_self_managed_addons",
+			},
+			{
+				Config: testAccClusterConfig_bootstrapSelfManagedAddons(rName, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
 				},
-			},
-			{
-				Config:             testAccClusterConfig_bootstrapSelfManagedAddons(rName, false),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				Config: testAccClusterConfig_bootstrapSelfManagedAddons(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
-					testAccCheckClusterRecreated(&cluster1, &cluster2),
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtFalse),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEKSCluster_BootstrapSelfManagedAddons_migrate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster types.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EKSServiceID),
+		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.56.1",
+					},
+				},
+				Config: testAccClusterConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckNoResourceAttr(resourceName, "bootstrap_self_managed_addons"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccClusterConfig_basic(rName),
+				PlanOnly:                 true,
 			},
 		},
 	})
