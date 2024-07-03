@@ -109,7 +109,7 @@ resource "aws_cloudwatch_log_group" "example" {
 
 ### Enabling IAM Roles for Service Accounts
 
-Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019. For more information about this feature, see the [EKS User Guide](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html).
+For more information about this feature, see the [EKS User Guide](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html).
 
 ```terraform
 resource "aws_eks_cluster" "example" {

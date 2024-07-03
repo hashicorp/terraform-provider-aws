@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccAPIGatewayUsagePlanKey_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.UsagePlanKey
+	var conf apigateway.GetUsagePlanKeyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	apiGatewayApiKeyResourceName := "aws_api_gateway_api_key.test"
 	apiGatewayUsagePlanResourceName := "aws_api_gateway_usage_plan.test"
@@ -37,11 +37,11 @@ func TestAccAPIGatewayUsagePlanKey_basic(t *testing.T) {
 				Config: testAccUsagePlanKeyConfig_typeAPI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "key_id", apiGatewayApiKeyResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKeyID, apiGatewayApiKeyResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "key_type", "API_KEY"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "usage_plan_id", apiGatewayUsagePlanResourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "value"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "usage_plan_id", apiGatewayUsagePlanResourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrValue),
 				),
 			},
 			{
@@ -56,7 +56,7 @@ func TestAccAPIGatewayUsagePlanKey_basic(t *testing.T) {
 
 func TestAccAPIGatewayUsagePlanKey_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.UsagePlanKey
+	var conf apigateway.GetUsagePlanKeyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan_key.test"
 
@@ -80,7 +80,7 @@ func TestAccAPIGatewayUsagePlanKey_disappears(t *testing.T) {
 
 func TestAccAPIGatewayUsagePlanKey_KeyID_concurrency(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.UsagePlanKey
+	var conf apigateway.GetUsagePlanKeyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -108,20 +108,16 @@ func TestAccAPIGatewayUsagePlanKey_KeyID_concurrency(t *testing.T) {
 	})
 }
 
-func testAccCheckUsagePlanKeyExists(ctx context.Context, n string, v *apigateway.UsagePlanKey) resource.TestCheckFunc {
+func testAccCheckUsagePlanKeyExists(ctx context.Context, n string, v *apigateway.GetUsagePlanKeyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway Usage Plan Key ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
-
-		output, err := tfapigateway.FindUsagePlanKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["usage_plan_id"], rs.Primary.Attributes["key_id"])
+		output, err := tfapigateway.FindUsagePlanKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["usage_plan_id"], rs.Primary.Attributes[names.AttrKeyID])
 
 		if err != nil {
 			return err
@@ -135,14 +131,14 @@ func testAccCheckUsagePlanKeyExists(ctx context.Context, n string, v *apigateway
 
 func testAccCheckUsagePlanKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_usage_plan_key" {
 				continue
 			}
 
-			_, err := tfapigateway.FindUsagePlanKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["usage_plan_id"], rs.Primary.Attributes["key_id"])
+			_, err := tfapigateway.FindUsagePlanKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["usage_plan_id"], rs.Primary.Attributes[names.AttrKeyID])
 
 			if tfresource.NotFound(err) {
 				continue

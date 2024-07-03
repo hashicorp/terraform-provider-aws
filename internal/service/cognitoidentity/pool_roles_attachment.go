@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cognito_identity_pool_roles_attachment")
-func ResourcePoolRolesAttachment() *schema.Resource {
+// @SDKResource("aws_cognito_identity_pool_roles_attachment", name="Pool Roles Association")
+func resourcePoolRolesAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePoolRolesAttachmentCreate,
 		ReadWithoutTimeout:   resourcePoolRolesAttachmentRead,
@@ -71,12 +71,12 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.MappingRuleMatchType](),
 									},
-									"role_arn": {
+									names.AttrRoleARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
@@ -84,7 +84,7 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 								},
 							},
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.RoleMappingType](),

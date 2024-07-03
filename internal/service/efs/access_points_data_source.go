@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_efs_access_points")
@@ -21,17 +22,17 @@ func DataSourceAccessPoints() *schema.Resource {
 		ReadWithoutTimeout: dataSourceAccessPointsRead,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -44,7 +45,7 @@ func dataSourceAccessPointsRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
-	fileSystemID := d.Get("file_system_id").(string)
+	fileSystemID := d.Get(names.AttrFileSystemID).(string)
 	input := &efs.DescribeAccessPointsInput{
 		FileSystemId: aws.String(fileSystemID),
 	}
@@ -63,8 +64,8 @@ func dataSourceAccessPointsRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(fileSystemID)
-	d.Set("arns", arns)
-	d.Set("ids", accessPointIDs)
+	d.Set(names.AttrARNs, arns)
+	d.Set(names.AttrIDs, accessPointIDs)
 
 	return diags
 }

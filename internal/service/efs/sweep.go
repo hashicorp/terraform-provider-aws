@@ -27,6 +27,7 @@ func RegisterSweepers() {
 		Dependencies: []string{
 			"aws_efs_mount_target",
 			"aws_efs_access_point",
+			"aws_m2_environment",
 		},
 	})
 
