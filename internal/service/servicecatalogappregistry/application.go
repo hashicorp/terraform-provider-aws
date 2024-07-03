@@ -6,6 +6,8 @@ package servicecatalogappregistry
 import (
 	"context"
 	"errors"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
@@ -26,7 +28,7 @@ import (
 )
 
 // @FrameworkResource("aws_servicecatalogappregistry_application", name="Application")
-// @Testing(tagsTest=false)
+// @Tags(identifierAttribute="arn")
 func newResourceApplication(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceApplication{}, nil
 }
@@ -63,7 +65,12 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 			"application_tag": schema.MapAttribute{
 				ElementType: types.StringType,
 				Computed:    true,
+				PlanModifiers: []planmodifier.Map{
+					mapplanmodifier.UseStateForUnknown(),
+				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
@@ -82,6 +89,8 @@ func (r *resourceApplication) Create(ctx context.Context, req resource.CreateReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	in.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateApplication(ctx, in)
 	if err != nil {
@@ -199,6 +208,10 @@ func (r *resourceApplication) ImportState(ctx context.Context, req resource.Impo
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
+func (r *resourceApplication) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
+
 func findApplicationByID(ctx context.Context, conn *servicecatalogappregistry.Client, id string) (*servicecatalogappregistry.GetApplicationOutput, error) {
 	in := &servicecatalogappregistry.GetApplicationInput{
 		Application: aws.String(id),
@@ -229,4 +242,6 @@ type resourceApplicationData struct {
 	ID             types.String `tfsdk:"id"`
 	Name           types.String `tfsdk:"name"`
 	ApplicationTag types.Map    `tfsdk:"application_tag"`
+	Tags           types.Map    `tfsdk:"tags"`
+	TagsAll        types.Map    `tfsdk:"tags_all"`
 }
