@@ -290,6 +290,32 @@ func resourceDeliveryStream() *schema.Resource {
 					Elem:     s3ConfigurationElem(),
 				}
 			}
+			secretsManagerConfigurationSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"secret_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				}
+			}
 
 			return map[string]*schema.Schema{
 				names.AttrARN: {
@@ -780,7 +806,8 @@ func resourceDeliveryStream() *schema.Resource {
 								Default:          types.HttpEndpointS3BackupModeFailedDataOnly,
 								ValidateDiagFunc: enum.Validate[types.HttpEndpointS3BackupMode](),
 							},
-							"s3_configuration": s3ConfigurationSchema(),
+							"s3_configuration":             s3ConfigurationSchema(),
+							"secret_manager_configuration": secretsManagerConfigurationSchema(),
 							names.AttrURL: {
 								Type:     schema.TypeString,
 								Required: true,
@@ -2851,6 +2878,10 @@ func expandHTTPEndpointDestinationConfiguration(httpEndpoint map[string]interfac
 		configuration.S3BackupMode = types.HttpEndpointS3BackupMode(s3BackupMode.(string))
 	}
 
+	if _, ok := httpEndpoint["secret_manager_configuration"]; ok {
+		configuration.SecretsManagerConfiguration = expandSecretsManagerConfiguration(httpEndpoint)
+	}
+
 	return configuration
 }
 
@@ -2888,6 +2919,10 @@ func expandHTTPEndpointDestinationUpdate(httpEndpoint map[string]interface{}) *t
 
 	if s3BackupMode, ok := httpEndpoint["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = types.HttpEndpointS3BackupMode(s3BackupMode.(string))
+	}
+
+	if _, ok := httpEndpoint["secret_manager_configuration"]; ok {
+		configuration.SecretsManagerConfiguration = expandSecretsManagerConfiguration(httpEndpoint)
 	}
 
 	return configuration
@@ -3073,6 +3108,28 @@ func expandSnowflakeVPCConfiguration(tfMap map[string]interface{}) *types.Snowfl
 	}
 
 	return apiObject
+}
+
+func expandSecretsManagerConfiguration(sc map[string]interface{}) *types.SecretsManagerConfiguration {
+	config := sc["secret_manager_configuration"].([]interface{})
+	if len(config) == 0 {
+		return nil
+	}
+
+	SecretsManagerConfig := config[0].(map[string]interface{})
+	SecretsManagerOptions := &types.SecretsManagerConfiguration{
+		Enabled: aws.Bool(SecretsManagerConfig[names.AttrEnabled].(bool)),
+	}
+
+	if v, ok := SecretsManagerConfig[names.AttrRoleARN]; ok {
+		SecretsManagerOptions.RoleARN = aws.String(v.(string))
+	}
+
+	if v, ok := SecretsManagerConfig["secret_arn"]; ok {
+		SecretsManagerOptions.SecretARN = aws.String(v.(string))
+	}
+
+	return SecretsManagerOptions
 }
 
 func expandSplunkRetryOptions(splunk map[string]interface{}) *types.SplunkRetryOptions {
@@ -3812,15 +3869,16 @@ func flattenHTTPEndpointDestinationDescription(description *types.HttpEndpointDe
 		return []map[string]interface{}{}
 	}
 	m := map[string]interface{}{
-		names.AttrAccessKey:          configuredAccessKey,
-		names.AttrURL:                aws.ToString(description.EndpointConfiguration.Url),
-		names.AttrName:               aws.ToString(description.EndpointConfiguration.Name),
-		names.AttrRoleARN:            aws.ToString(description.RoleARN),
-		"s3_backup_mode":             description.S3BackupMode,
-		"s3_configuration":           flattenS3DestinationDescription(description.S3DestinationDescription),
-		"request_configuration":      flattenHTTPEndpointRequestConfiguration(description.RequestConfiguration),
-		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
-		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeHTTPEndpoint, aws.ToString(description.RoleARN)),
+		names.AttrAccessKey:            configuredAccessKey,
+		names.AttrURL:                  aws.ToString(description.EndpointConfiguration.Url),
+		names.AttrName:                 aws.ToString(description.EndpointConfiguration.Name),
+		names.AttrRoleARN:              aws.ToString(description.RoleARN),
+		"s3_backup_mode":               description.S3BackupMode,
+		"s3_configuration":             flattenS3DestinationDescription(description.S3DestinationDescription),
+		"request_configuration":        flattenHTTPEndpointRequestConfiguration(description.RequestConfiguration),
+		"cloudwatch_logging_options":   flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
+		"processing_configuration":     flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeHTTPEndpoint, aws.ToString(description.RoleARN)),
+		"secret_manager_configuration": flattenSecretsManagerConfiguration(description.SecretsManagerConfiguration),
 	}
 
 	if description.RetryOptions != nil {
@@ -3859,6 +3917,21 @@ func flattenDocumentIDOptions(apiObject *types.DocumentIdOptions) map[string]int
 	}
 
 	return tfMap
+}
+
+func flattenSecretsManagerConfiguration(sc *types.SecretsManagerConfiguration) []interface{} {
+	if sc == nil {
+		return []interface{}{}
+	}
+
+	secretsManagerOptions := map[string]interface{}{
+		names.AttrEnabled: aws.ToBool(sc.Enabled),
+	}
+	if aws.ToBool(sc.Enabled) {
+		secretsManagerOptions[names.AttrRoleARN] = aws.ToString(sc.RoleARN)
+		secretsManagerOptions["secret_arn"] = aws.ToString(sc.SecretARN)
+	}
+	return []interface{}{secretsManagerOptions}
 }
 
 func flattenSnowflakeRoleConfiguration(apiObject *types.SnowflakeRoleConfiguration) []map[string]interface{} {

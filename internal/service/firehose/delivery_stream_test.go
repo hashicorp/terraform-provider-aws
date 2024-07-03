@@ -1469,6 +1469,36 @@ func TestAccFirehoseDeliveryStream_HTTPEndpoint_retryDuration(t *testing.T) {
 	})
 }
 
+func TestAccFirehoseDeliveryStream_HTTPEndpoint_SecretsManagerConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream types.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_httpEndpointSecretsManager(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.secret_manager_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.secret_manager_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "http_endpoint_configuration.0.secret_manager_configuration.0.secret_arn", "aws_secretsmanager_secret.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccFirehoseDeliveryStream_elasticSearchUpdates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stream types.DeliveryStreamDescription
@@ -4004,6 +4034,37 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
           parameter_value = "70"
         }
       }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStreamConfig_httpEndpointSecretsManager(rName string) string {
+	return acctest.ConfigCompose(testAccDeliveryStreamConfig_base(rName), fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "http_endpoint"
+
+  http_endpoint_configuration {
+    url      = "https://input-test.com:443"
+    name     = "HTTP_test"
+    role_arn = aws_iam_role.firehose.arn
+
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
+
+    secret_manager_configuration {
+      enabled    = true
+      role_arn   = aws_iam_role.firehose.arn
+      secret_arn = aws_secretsmanager_secret.test.arn
     }
   }
 }
