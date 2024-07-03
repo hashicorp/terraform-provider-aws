@@ -9,3 +9,7 @@ aws_route53profiles_association
 ```release-note:new-resource
 aws_route53profiles_resource_association
 ```
+
+```release-note:new-data-source
+aws_route53profiles_profiles
+```
