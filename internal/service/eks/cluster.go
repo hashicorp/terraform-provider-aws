@@ -326,12 +326,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	name := d.Get(names.AttrName).(string)
 	input := &eks.CreateClusterInput{
-		EncryptionConfig:   expandEncryptionConfig(d.Get("encryption_config").([]interface{})),
-		Logging:            expandLogging(d.Get("enabled_cluster_log_types").(*schema.Set)),
-		Name:               aws.String(name),
-		ResourcesVpcConfig: expandVpcConfigRequest(d.Get(names.AttrVPCConfig).([]interface{})),
-		RoleArn:            aws.String(d.Get(names.AttrRoleARN).(string)),
-		Tags:               getTagsIn(ctx),
+		BootstrapSelfManagedAddons: aws.Bool(d.Get("bootstrap_self_managed_addons").(bool)),
+		EncryptionConfig:           expandEncryptionConfig(d.Get("encryption_config").([]interface{})),
+		Logging:                    expandLogging(d.Get("enabled_cluster_log_types").(*schema.Set)),
+		Name:                       aws.String(name),
+		ResourcesVpcConfig:         expandVpcConfigRequest(d.Get(names.AttrVPCConfig).([]interface{})),
+		RoleArn:                    aws.String(d.Get(names.AttrRoleARN).(string)),
+		Tags:                       getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_config"); ok {
@@ -423,6 +424,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting access_config: %s", err)
 	}
 	d.Set(names.AttrARN, cluster.Arn)
+	d.Set("bootstrap_self_managed_addons", d.Get("bootstrap_self_managed_addons"))
 	if err := d.Set("certificate_authority", flattenCertificate(cluster.CertificateAuthority)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting certificate_authority: %s", err)
 	}
