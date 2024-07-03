@@ -4564,7 +4564,7 @@ service "iotanalytics" {
 
   sdk {
     id             = "IoTAnalytics"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4656,7 +4656,7 @@ service "iotevents" {
 
   sdk {
     id             = "IoT Events"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4742,7 +4742,7 @@ service "greengrass" {
 
   sdk {
     id             = "Greengrass"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -9779,7 +9779,7 @@ service "iot" {
 
   sdk {
     id             = "IoT"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
