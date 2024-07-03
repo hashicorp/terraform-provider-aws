@@ -25,8 +25,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceAccessPoint,
+			Factory:  dataSourceAccessPoint,
 			TypeName: "aws_efs_access_point",
+			Name:     "Access Point",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceAccessPoints,
