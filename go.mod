@@ -6,12 +6,12 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.3-proton
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.54.12
+	github.com/aws/aws-sdk-go v1.54.13
 	github.com/aws/aws-sdk-go-v2 v1.30.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.23
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.23
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.9
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.3
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.4
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/account v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/acm v1.28.1
@@ -87,7 +87,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.11.1
 	github.com/aws/aws-sdk-go-v2/service/drs v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.167.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.168.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.44.1
@@ -167,7 +167,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.2.1
 	github.com/aws/aws-sdk-go-v2/service/rum v1.19.1
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.57.1
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.26.1
