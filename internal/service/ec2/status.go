@@ -378,22 +378,6 @@ func StatusManagedPrefixListState(ctx context.Context, conn *ec2.EC2, id string)
 	}
 }
 
-func StatusNetworkInsightsAnalysis(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindNetworkInsightsAnalysisByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Status), nil
-	}
-}
-
 func StatusNetworkInterfaceStatus(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindNetworkInterfaceByID(ctx, conn, id)
