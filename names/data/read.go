@@ -61,6 +61,14 @@ func (sr ServiceRecord) ProviderNameUpper() string {
 	return sr[colProviderNameUpper]
 }
 
+func (sr ServiceRecord) ClientTypeName(version int) (s string) {
+	switch version {
+	case 1:
+		return sr.GoV1ClientTypeName()
+	}
+	return "Client"
+}
+
 func (sr ServiceRecord) GoV1ClientTypeName() string {
 	return sr[colGoV1ClientTypeName]
 }
