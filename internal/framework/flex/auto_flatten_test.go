@@ -1179,6 +1179,220 @@ func TestFlattenOptions(t *testing.T) {
 	runAutoFlattenTestCases(t, testCases)
 }
 
+func TestFlattenInterface(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		{
+			TestName: "nil interface Source and list Target",
+			Source: testFlexAWSInterfaceSingle{
+				Field1: nil,
+			},
+			Target: &testFlexTFInterfaceListNestedObject{},
+			WantTarget: &testFlexTFInterfaceListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfNull[testFlexTFInterfaceFlexer](ctx),
+			},
+		},
+		{
+			TestName: "single interface Source and single list Target",
+			Source: testFlexAWSInterfaceSingle{
+				Field1: &testFlexAWSInterfaceInterfaceImpl{
+					AWSField: "value1",
+				},
+			},
+			Target: &testFlexTFInterfaceListNestedObject{},
+			WantTarget: &testFlexTFInterfaceListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
+					{
+						Field1: types.StringValue("value1"),
+					},
+				}),
+			},
+		},
+		{
+			TestName: "nil interface Source and non-Flattener list Target",
+			Source: testFlexAWSInterfaceSingle{
+				Field1: nil,
+			},
+			Target: &testFlexTFInterfaceListNestedObjectNonFlexer{},
+			WantTarget: &testFlexTFInterfaceListNestedObjectNonFlexer{
+				Field1: fwtypes.NewListNestedObjectValueOfNull[TestFlexTF01](ctx),
+			},
+		},
+		{
+			TestName: "single interface Source and non-Flattener list Target",
+			Source: testFlexAWSInterfaceSingle{
+				Field1: &testFlexAWSInterfaceInterfaceImpl{
+					AWSField: "value1",
+				},
+			},
+			Target: &testFlexTFInterfaceListNestedObjectNonFlexer{},
+			WantTarget: &testFlexTFInterfaceListNestedObjectNonFlexer{
+				Field1: fwtypes.NewListNestedObjectValueOfNull[TestFlexTF01](ctx),
+			},
+			expectedLogLines: []map[string]any{
+				{
+					"@level":   "info",
+					"@module":  "provider",
+					"@message": "AutoFlex Flatten; incompatible types",
+					"from":     float64(reflect.Interface),
+					"to": map[string]any{
+						"ElemType": map[string]any{
+							"AttrTypes": map[string]any{
+								"field1": map[string]any{},
+							},
+						},
+					},
+				},
+			},
+		},
+
+		{
+			TestName: "nil interface Source and set Target",
+			Source: testFlexAWSInterfaceSingle{
+				Field1: nil,
+			},
+			Target: &testFlexTFInterfaceSetNestedObject{},
+			WantTarget: &testFlexTFInterfaceSetNestedObject{
+				Field1: fwtypes.NewSetNestedObjectValueOfNull[testFlexTFInterfaceFlexer](ctx),
+			},
+		},
+		{
+			TestName: "single interface Source and single set Target",
+			Source: testFlexAWSInterfaceSingle{
+				Field1: &testFlexAWSInterfaceInterfaceImpl{
+					AWSField: "value1",
+				},
+			},
+			Target: &testFlexTFInterfaceSetNestedObject{},
+			WantTarget: &testFlexTFInterfaceSetNestedObject{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
+					{
+						Field1: types.StringValue("value1"),
+					},
+				}),
+			},
+		},
+
+		{
+			TestName: "nil interface list Source and empty list Target",
+			Source: testFlexAWSInterfaceSlice{
+				Field1: nil,
+			},
+			Target: &testFlexTFInterfaceListNestedObject{},
+			WantTarget: &testFlexTFInterfaceListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfNull[testFlexTFInterfaceFlexer](ctx),
+			},
+		},
+		{
+			TestName: "empty interface list Source and empty list Target",
+			Source: testFlexAWSInterfaceSlice{
+				Field1: []testFlexAWSInterfaceInterface{},
+			},
+			Target: &testFlexTFInterfaceListNestedObject{},
+			WantTarget: &testFlexTFInterfaceListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{}),
+			},
+		},
+		{
+			TestName: "non-empty interface list Source and non-empty list Target",
+			Source: testFlexAWSInterfaceSlice{
+				Field1: []testFlexAWSInterfaceInterface{
+					&testFlexAWSInterfaceInterfaceImpl{
+						AWSField: "value1",
+					},
+					&testFlexAWSInterfaceInterfaceImpl{
+						AWSField: "value2",
+					},
+				},
+			},
+			Target: &testFlexTFInterfaceListNestedObject{},
+			WantTarget: &testFlexTFInterfaceListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
+					{
+						Field1: types.StringValue("value1"),
+					},
+					{
+						Field1: types.StringValue("value2"),
+					},
+				}),
+			},
+		},
+
+		{
+			TestName: "nil interface list Source and empty set Target",
+			Source: testFlexAWSInterfaceSlice{
+				Field1: nil,
+			},
+			Target: &testFlexTFInterfaceSetNestedObject{},
+			WantTarget: &testFlexTFInterfaceSetNestedObject{
+				Field1: fwtypes.NewSetNestedObjectValueOfNull[testFlexTFInterfaceFlexer](ctx),
+			},
+		},
+		{
+			TestName: "empty interface list Source and empty set Target",
+			Source: testFlexAWSInterfaceSlice{
+				Field1: []testFlexAWSInterfaceInterface{},
+			},
+			Target: &testFlexTFInterfaceSetNestedObject{},
+			WantTarget: &testFlexTFInterfaceSetNestedObject{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{}),
+			},
+		},
+		{
+			TestName: "non-empty interface list Source and non-empty set Target",
+			Source: testFlexAWSInterfaceSlice{
+				Field1: []testFlexAWSInterfaceInterface{
+					&testFlexAWSInterfaceInterfaceImpl{
+						AWSField: "value1",
+					},
+					&testFlexAWSInterfaceInterfaceImpl{
+						AWSField: "value2",
+					},
+				},
+			},
+			Target: &testFlexTFInterfaceListNestedObject{},
+			WantTarget: &testFlexTFInterfaceListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
+					{
+						Field1: types.StringValue("value1"),
+					},
+					{
+						Field1: types.StringValue("value2"),
+					},
+				}),
+			},
+		},
+		{
+			TestName: "nil interface Source and nested object Target",
+			Source: testFlexAWSInterfaceSingle{
+				Field1: nil,
+			},
+			Target: &testFlexTFInterfaceObjectValue{},
+			WantTarget: &testFlexTFInterfaceObjectValue{
+				Field1: fwtypes.NewObjectValueOfNull[testFlexTFInterfaceFlexer](ctx),
+			},
+		},
+		{
+			TestName: "interface Source and nested object Target",
+			Source: testFlexAWSInterfaceSingle{
+				Field1: &testFlexAWSInterfaceInterfaceImpl{
+					AWSField: "value1",
+				},
+			},
+			Target: &testFlexTFInterfaceObjectValue{},
+			WantTarget: &testFlexTFInterfaceObjectValue{
+				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFInterfaceFlexer{
+					Field1: types.StringValue("value1"),
+				}),
+			},
+		},
+	}
+	runAutoFlattenTestCases(t, testCases)
+}
+
 func TestFlattenFlattener(t *testing.T) {
 	t.Parallel()
 

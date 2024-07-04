@@ -361,6 +361,13 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 
 		vTo.Set(reflect.ValueOf(v))
 		return diags
+
+	case fwtypes.NestedObjectType:
+		//
+		// interface -> types.List(OfObject) or types.Object.
+		//
+		diags.Append(flattener.interfaceToNestedObject(ctx, vFrom, vFrom.IsNil(), tTo, vTo)...)
+		return diags
 	}
 
 	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
@@ -829,6 +836,67 @@ func (flattener autoFlattener) structToNestedObject(ctx context.Context, vFrom r
 
 	// Set the target structure as a mapped Object.
 	val, d := tTo.ValueFromObjectPtr(ctx, to)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	vTo.Set(reflect.ValueOf(val))
+	return diags
+}
+
+// interfaceToNestedObject copies an AWS API interface value to a compatible Plugin Framework NestedObjectValue value.
+func (flattener autoFlattener) interfaceToNestedObject(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if isNullFrom {
+		val, d := tTo.NullValue(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(val))
+		return diags
+	}
+
+	to, d := tTo.NewObjectPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	toFlattener, ok := to.(Flattener)
+	if !ok {
+		val, d := tTo.NullValue(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(val))
+
+		tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]any{
+			"from": vFrom.Kind(),
+			"to":   tTo,
+		})
+		return diags
+	}
+
+	// Dereference interface
+	vFrom = vFrom.Elem()
+	// If it's a pointer, dereference again to get the underlying type
+	if vFrom.Kind() == reflect.Pointer {
+		vFrom = vFrom.Elem()
+	}
+
+	diags.Append(flattenFlattener(ctx, vFrom, toFlattener)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Set the target structure as a mapped Object.
+	val, d := tTo.ValueFromObjectPtr(ctx, toFlattener)
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags

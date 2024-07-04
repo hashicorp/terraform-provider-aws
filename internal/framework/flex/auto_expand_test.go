@@ -1211,7 +1211,7 @@ func TestExpandInterface(t *testing.T) {
 	testCases := autoFlexTestCases{
 		{
 			TestName: "top level",
-			Source: testFlexTFInterfaceExpander{
+			Source: testFlexTFInterfaceFlexer{
 				Field1: types.StringValue("value1"),
 			},
 			Target: &targetInterface,
@@ -1233,7 +1233,7 @@ func TestExpandInterface(t *testing.T) {
 		{
 			TestName: "single list Source and single interface Target",
 			Source: testFlexTFInterfaceListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceExpander{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -1248,7 +1248,7 @@ func TestExpandInterface(t *testing.T) {
 		},
 		{
 			TestName: "single list non-Expander Source and single interface Target",
-			Source: testFlexTFInterfaceListNestedObjectNonExpander{
+			Source: testFlexTFInterfaceListNestedObjectNonFlexer{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
 					{
 						Field1: types.StringValue("value1"),
@@ -1272,7 +1272,7 @@ func TestExpandInterface(t *testing.T) {
 		{
 			TestName: "single set Source and single interface Target",
 			Source: testFlexTFInterfaceSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceExpander{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -1288,7 +1288,7 @@ func TestExpandInterface(t *testing.T) {
 		{
 			TestName: "empty list Source and empty interface Target",
 			Source: testFlexTFInterfaceListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceExpander{}),
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{}),
 			},
 			Target: &testFlexAWSInterfaceSlice{},
 			WantTarget: &testFlexAWSInterfaceSlice{
@@ -1298,7 +1298,7 @@ func TestExpandInterface(t *testing.T) {
 		{
 			TestName: "non-empty list Source and non-empty interface Target",
 			Source: testFlexTFInterfaceListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceExpander{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -1322,7 +1322,7 @@ func TestExpandInterface(t *testing.T) {
 		{
 			TestName: "empty set Source and empty interface Target",
 			Source: testFlexTFInterfaceSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceExpander{}),
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{}),
 			},
 			Target: &testFlexAWSInterfaceSlice{},
 			WantTarget: &testFlexAWSInterfaceSlice{
@@ -1332,7 +1332,7 @@ func TestExpandInterface(t *testing.T) {
 		{
 			TestName: "non-empty set Source and non-empty interface Target",
 			Source: testFlexTFInterfaceListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceExpander{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -1356,7 +1356,7 @@ func TestExpandInterface(t *testing.T) {
 		{
 			TestName: "object value Source and struct Target",
 			Source: testFlexTFInterfaceObjectValue{
-				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFInterfaceExpander{
+				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFInterfaceFlexer{
 					Field1: types.StringValue("value1"),
 				}),
 			},
