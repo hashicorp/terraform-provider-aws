@@ -55,15 +55,13 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
-			"format": schema.StringAttribute{
+			names.AttrFormat: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.InputFormat](),
 				Optional:   true,
 			},
-			// TODO: Put tags back
-			// names.AttrTags:    tftags.TagsAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"format_options": schema.ListNestedBlock{
@@ -102,7 +100,7 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 								},
 							},
 						},
-						"json": schema.SetNestedBlock{
+						names.AttrJSON: schema.SetNestedBlock{
 							CustomType: fwtypes.NewSetNestedObjectTypeOf[jsonFormatOptionsModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -151,7 +149,7 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 										CustomType: fwtypes.NewSetNestedObjectTypeOf[s3LocationModel](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"bucket": schema.StringAttribute{
+												names.AttrBucket: schema.StringAttribute{
 													Required: true,
 												},
 												"bucket_owner": schema.StringAttribute{
@@ -169,13 +167,13 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 						"data_catalog_input_definition": schema.SetNestedBlock{
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"catalog_id": schema.StringAttribute{
+									names.AttrCatalogID: schema.StringAttribute{
 										Optional: true,
 									},
-									"database_name": schema.StringAttribute{
+									names.AttrDatabaseName: schema.StringAttribute{
 										Required: true,
 									},
-									"table_name": schema.StringAttribute{
+									names.AttrTableName: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -184,13 +182,13 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 										CustomType: fwtypes.NewSetNestedObjectTypeOf[s3LocationModel](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"bucket": schema.StringAttribute{
+												names.AttrBucket: schema.StringAttribute{
 													Required: true,
 												},
 												"bucket_owner": schema.StringAttribute{
 													Optional: true,
 												},
-												"key": schema.StringAttribute{
+												names.AttrKey: schema.StringAttribute{
 													Optional: true,
 												},
 											},
