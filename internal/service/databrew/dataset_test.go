@@ -24,13 +24,13 @@ import (
 )
 
 // Acceptance test access AWS and cost money to run.
-func TestAccDataBrewDataset_s3Input(t *testing.T) {
+func TestAccDataBrewDataset_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dataset databrew.DescribeDatasetOutput
+	var dataset1, dataset2 databrew.DescribeDatasetOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_databrew_dataset.test"
 
@@ -45,17 +45,16 @@ func TestAccDataBrewDataset_s3Input(t *testing.T) {
 		CheckDestroy:             testAccCheckDatasetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatasetConfig_s3Input(rName),
+				Config: testAccDatasetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatasetExists(ctx, resourceName, &dataset),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtName, rName),
-					resource.TestCheckResourceAttr(resourceName, "input.0.s3_input_definition.0.bucket", rName),
-					resource.TestCheckResourceAttr(resourceName, "input.0.s3_input_definition.0.key", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrFormat, "JSON"),
-					resource.TestCheckResourceAttr(resourceName, "path_options.0.files_limit.0.max_files", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "path_options.0.files_limit.0.order", "ASCENDING"),
-					resource.TestCheckResourceAttr(resourceName, "path_options.0.files_limit.0.ordered_by", "LAST_MODIFIED_DATE"),
-					resource.TestCheckResourceAttr(resourceName, "format_options.0.json.0.multi_line", acctest.CtTrue),
+					testAccCheckDatasetExists(ctx, resourceName, &dataset1),
+				),
+			},
+			{
+				Config: testAccDatasetConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatasetExists(ctx, resourceName, &dataset2),
+					testAccCheckDatasetNotRecreated(&dataset1, &dataset2),
 				),
 			},
 			{
@@ -135,7 +134,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func TestAccCheckDatasetNotRecreated(before, after *databrew.DescribeDatasetOutput) resource.TestCheckFunc {
+func testAccCheckDatasetNotRecreated(before, after *databrew.DescribeDatasetOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.Name), aws.ToString(after.Name); before != after {
 			return create.Error(names.DataBrew, create.ErrActionCheckingNotRecreated, tfdatabrew.ResNameDataset, before, errors.New("recreated"))
@@ -145,7 +144,7 @@ func TestAccCheckDatasetNotRecreated(before, after *databrew.DescribeDatasetOutp
 	}
 }
 
-func testAccDatasetConfig_s3Input(rName string) string {
+func testAccDatasetConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
