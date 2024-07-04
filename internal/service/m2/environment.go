@@ -640,6 +640,9 @@ func (m storageConfigurationModel) Expand(ctx context.Context) (result any, diag
 }
 
 func (m *storageConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	m.EFS = fwtypes.NewListNestedObjectValueOfNull[efsStorageConfigurationModel](ctx)
+	m.FSX = fwtypes.NewListNestedObjectValueOfNull[fsxStorageConfigurationModel](ctx)
+
 	switch t := v.(type) {
 	case awstypes.StorageConfigurationMemberEfs:
 		var model efsStorageConfigurationModel
@@ -650,7 +653,6 @@ func (m *storageConfigurationModel) Flatten(ctx context.Context, v any) (diags d
 		}
 
 		m.EFS = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
-		m.FSX = fwtypes.NewListNestedObjectValueOfNull[fsxStorageConfigurationModel](ctx)
 
 		return diags
 
@@ -662,7 +664,6 @@ func (m *storageConfigurationModel) Flatten(ctx context.Context, v any) (diags d
 			return diags
 		}
 
-		m.EFS = fwtypes.NewListNestedObjectValueOfNull[efsStorageConfigurationModel](ctx)
 		m.FSX = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 		return diags
