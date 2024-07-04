@@ -58,7 +58,7 @@ class MyConvertedCode(TerraformStack):
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-instance.html).
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `apply_immediately` - (Optional) Specifies whether any database modifications
      are applied immediately, or during the next maintenance window. Default is`false`.
@@ -157,4 +157,4 @@ Using `terraform import`, import DocumentDB Cluster Instances using the `identif
 % terraform import aws_docdb_cluster_instance.prod_instance_1 aurora-cluster-instance-1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e8d89d21c6911a60e45e06db2155166ee488cb5008b9e5bea9b41aa9fdc0932a -->
+<!-- cache-key: cdktf-0.20.1 input-63bf015ceca69751ce0c69520c5fbab34edfda79b9aefb2a15fbd2a786edef10 -->
