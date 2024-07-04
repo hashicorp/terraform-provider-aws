@@ -151,7 +151,7 @@ func testAccDatasetConfig_s3Input(rName string) string {
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
+  bucket = %[1]q
 }
 
 resource "aws_s3_object" "test" {
@@ -173,8 +173,8 @@ resource "aws_databrew_dataset" "test" {
 
   path_options {
     files_limit {
-      max_files = 1
-      order = "ASCENDING"
+      max_files  = 1
+      order      = "ASCENDING"
       ordered_by = "LAST_MODIFIED_DATE"
     }
   }
