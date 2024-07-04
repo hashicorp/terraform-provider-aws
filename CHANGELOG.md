@@ -1,4 +1,67 @@
-## 5.56.0 (Unreleased)
+## 5.58.0 (Unreleased)
+## 5.57.0 (July  4, 2024)
+
+FEATURES:
+
+* **New Data Source:** `aws_appstream_image` ([#38225](https://github.com/hashicorp/terraform-provider-aws/issues/38225))
+* **New Data Source:** `aws_cognito_user_pool` ([#37399](https://github.com/hashicorp/terraform-provider-aws/issues/37399))
+* **New Data Source:** `aws_ec2_transit_gateway_peering_attachments` ([#25743](https://github.com/hashicorp/terraform-provider-aws/issues/25743))
+* **New Data Source:** `aws_transfer_connector` ([#38213](https://github.com/hashicorp/terraform-provider-aws/issues/38213))
+
+ENHANCEMENTS:
+
+* data-source/aws_backup_plan: Add `rule` attribute ([#37890](https://github.com/hashicorp/terraform-provider-aws/issues/37890))
+* resource/aws_amplify_domain_association: Add `certificate_settings` argument ([#37105](https://github.com/hashicorp/terraform-provider-aws/issues/37105))
+* resource/aws_ec2_transit_gateway_peering_attachment: Add `options` argument ([#36902](https://github.com/hashicorp/terraform-provider-aws/issues/36902))
+* resource/aws_iot_authorizer: Add `tags` argument ([#37152](https://github.com/hashicorp/terraform-provider-aws/issues/37152))
+* resource/aws_iot_topic_rule: Add `cloudwatch_logs.batch_mode` and `error_action.cloudwatch_logs.batch_mode` arguments ([#36772](https://github.com/hashicorp/terraform-provider-aws/issues/36772))
+* resource/aws_sagemaker_endpoint_configuration: Add support for `InputAndOutput` in `capture_mode` ([#37726](https://github.com/hashicorp/terraform-provider-aws/issues/37726))
+
+BUG FIXES:
+
+* resource/aws_iot_provisioning_template: Fix `pre_provisioning_hook` update operation ([#37152](https://github.com/hashicorp/terraform-provider-aws/issues/37152))
+* resource/aws_iot_topic_rule: Retry IAM eventual consistency errors on Update ([#36286](https://github.com/hashicorp/terraform-provider-aws/issues/36286))
+
+## 5.56.1 (June 28, 2024)
+
+BUG FIXES:
+
+* data-source/aws_cognito_user_pool_client: Fix `InvalidParameterException: 2 validation errors detected` errors on Read ([#38168](https://github.com/hashicorp/terraform-provider-aws/issues/38168))
+* resource/aws_cognito_user: Fix a bug that caused resource recreation for resources imported with certain [import ID](https://developer.hashicorp.com/terraform/language/import#import-id) formats ([#38182](https://github.com/hashicorp/terraform-provider-aws/issues/38182))
+* resource/aws_cognito_user_pool: Fix `runtime error: index out of range [0] with length 0` panic when adding `lambda_config` ([#38184](https://github.com/hashicorp/terraform-provider-aws/issues/38184))
+
+## 5.56.0 (June 27, 2024)
+
+FEATURES:
+
+* **New Resource:** `aws_appfabric_app_authorization_connection` ([#38084](https://github.com/hashicorp/terraform-provider-aws/issues/38084))
+* **New Resource:** `aws_appfabric_ingestion` ([#37291](https://github.com/hashicorp/terraform-provider-aws/issues/37291))
+* **New Resource:** `aws_appfabric_ingestion_destination` ([#37627](https://github.com/hashicorp/terraform-provider-aws/issues/37627))
+* **New Resource:** `aws_networkfirewall_tls_inspection_configuration` ([#35168](https://github.com/hashicorp/terraform-provider-aws/issues/35168))
+* **New Resource:** `aws_networkmonitor_monitor` ([#35722](https://github.com/hashicorp/terraform-provider-aws/issues/35722))
+* **New Resource:** `aws_networkmonitor_probe` ([#35722](https://github.com/hashicorp/terraform-provider-aws/issues/35722))
+
+ENHANCEMENTS:
+
+* resource/aws_controltower_control: Add `parameters` argument and `arn` attribute ([#38071](https://github.com/hashicorp/terraform-provider-aws/issues/38071))
+* resource/aws_networkfirewall_logging_configuration: Add plan-time validation of `firewall_arn` ([#35168](https://github.com/hashicorp/terraform-provider-aws/issues/35168))
+* resource/aws_quicksight_account_subscription: Add `iam_identity_center_instance_arn` attribute ([#36830](https://github.com/hashicorp/terraform-provider-aws/issues/36830))
+* resource/aws_route53_resolver_firewall_rule: Add `firewall_domain_redirection_action` argument ([#37242](https://github.com/hashicorp/terraform-provider-aws/issues/37242))
+* resource/aws_route53_resolver_firewall_rule: Add `q_type` argument ([#38074](https://github.com/hashicorp/terraform-provider-aws/issues/38074))
+* resource/aws_sagemaker_domain: Add `default_user_settings.canvas_app_settings.generative_ai_settings` configuration block ([#37139](https://github.com/hashicorp/terraform-provider-aws/issues/37139))
+* resource/aws_sagemaker_domain: Add `default_user_settings.code_editor_app_settings.custom_image` configuration block ([#37153](https://github.com/hashicorp/terraform-provider-aws/issues/37153))
+* resource/aws_sagemaker_endpoint_configuration: Add `production_variants.inference_ami_version` and `shadow_production_variants.inference_ami_version` arguments ([#38085](https://github.com/hashicorp/terraform-provider-aws/issues/38085))
+* resource/aws_sagemaker_user_profile: Add `user_settings.canvas_app_settings.generative_ai_settings` configuration block ([#37139](https://github.com/hashicorp/terraform-provider-aws/issues/37139))
+* resource/aws_sagemaker_user_profile: Add `user_settings.code_editor_app_settings.custom_image` configuration block ([#37153](https://github.com/hashicorp/terraform-provider-aws/issues/37153))
+* resource/aws_sagemaker_workforce: add `oidc_config.authentication_request_extra_params` and `oidc_config.scope` arguments ([#38078](https://github.com/hashicorp/terraform-provider-aws/issues/38078))
+* resource/aws_sagemaker_workteam: Add `worker_access_configuration` attribute ([#38087](https://github.com/hashicorp/terraform-provider-aws/issues/38087))
+* resource/aws_wafv2_web_acl: Add `sensitivity_level` argument to `sqli_match_statement` configuration block ([#38077](https://github.com/hashicorp/terraform-provider-aws/issues/38077))
+
+BUG FIXES:
+
+* data-source/aws_ecs_service: Correctly set `tags` ([#38067](https://github.com/hashicorp/terraform-provider-aws/issues/38067))
+* resource/aws_drs_replication_configuration_template: Fix issues preventing creation and deletion ([#38143](https://github.com/hashicorp/terraform-provider-aws/issues/38143))
+
 ## 5.55.0 (June 20, 2024)
 
 FEATURES:

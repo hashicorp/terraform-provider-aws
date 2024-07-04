@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"net"
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -20,6 +22,7 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -66,6 +69,8 @@ const (
 	baseEnvvarEndpoint        = "https://base-envvar.endpoint.test/"
 	serviceConfigFileEndpoint = "https://service-configfile.endpoint.test/"
 	baseConfigFileEndpoint    = "https://base-configfile.endpoint.test/"
+
+	aliasName0ConfigEndpoint = "https://aliasname0-config.endpoint.test/"
 )
 
 const (
@@ -73,6 +78,8 @@ const (
 	awsEnvVar   = "AWS_ENDPOINT_URL_DATABREW"
 	baseEnvVar  = "AWS_ENDPOINT_URL"
 	configParam = "databrew"
+
+	aliasName0 = "gluedatabrew"
 )
 
 const (
@@ -86,7 +93,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 	testcases := map[string]endpointTestCase{
 		"no config": {
 			with:     []setupFunc{withNoConfig},
-			expected: expectDefaultEndpoint(expectedEndpointRegion),
+			expected: expectDefaultEndpoint(t, expectedEndpointRegion),
 		},
 
 		// Package name endpoint on Config
@@ -96,6 +103,14 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 				withPackageNameEndpointInConfig,
 			},
 			expected: expectPackageNameConfigEndpoint(),
+		},
+
+		"package name endpoint config overrides alias name 0 config": {
+			with: []setupFunc{
+				withPackageNameEndpointInConfig,
+				withAliasName0EndpointInConfig,
+			},
+			expected: conflictsWith(expectPackageNameConfigEndpoint()),
 		},
 
 		"package name endpoint config overrides aws service envvar": {
@@ -128,6 +143,47 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 				withBaseEndpointInConfigFile,
 			},
 			expected: expectPackageNameConfigEndpoint(),
+		},
+
+		// Alias name 0 endpoint on Config
+
+		"alias name 0 endpoint config": {
+			with: []setupFunc{
+				withAliasName0EndpointInConfig,
+			},
+			expected: expectAliasName0ConfigEndpoint(),
+		},
+
+		"alias name 0 endpoint config overrides aws service envvar": {
+			with: []setupFunc{
+				withAliasName0EndpointInConfig,
+				withAwsEnvVar,
+			},
+			expected: expectAliasName0ConfigEndpoint(),
+		},
+
+		"alias name 0 endpoint config overrides base envvar": {
+			with: []setupFunc{
+				withAliasName0EndpointInConfig,
+				withBaseEnvVar,
+			},
+			expected: expectAliasName0ConfigEndpoint(),
+		},
+
+		"alias name 0 endpoint config overrides service config file": {
+			with: []setupFunc{
+				withAliasName0EndpointInConfig,
+				withServiceEndpointInConfigFile,
+			},
+			expected: expectAliasName0ConfigEndpoint(),
+		},
+
+		"alias name 0 endpoint config overrides base config file": {
+			with: []setupFunc{
+				withAliasName0EndpointInConfig,
+				withBaseEndpointInConfigFile,
+			},
+			expected: expectAliasName0ConfigEndpoint(),
 		},
 
 		// Service endpoint in AWS envvar
@@ -220,7 +276,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			with: []setupFunc{
 				withUseFIPSInConfig,
 			},
-			expected: expectDefaultFIPSEndpoint(expectedEndpointRegion),
+			expected: expectDefaultFIPSEndpoint(t, expectedEndpointRegion),
 		},
 
 		"use fips config with package name endpoint config": {
@@ -241,24 +297,24 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 	}
 }
 
-func defaultEndpoint(region string) string {
+func defaultEndpoint(region string) (url.URL, error) {
 	r := databrew_sdkv2.NewDefaultEndpointResolverV2()
 
 	ep, err := r.ResolveEndpoint(context.Background(), databrew_sdkv2.EndpointParameters{
 		Region: aws_sdkv2.String(region),
 	})
 	if err != nil {
-		return err.Error()
+		return url.URL{}, err
 	}
 
 	if ep.URI.Path == "" {
 		ep.URI.Path = "/"
 	}
 
-	return ep.URI.String()
+	return ep.URI, nil
 }
 
-func defaultFIPSEndpoint(region string) string {
+func defaultFIPSEndpoint(region string) (url.URL, error) {
 	r := databrew_sdkv2.NewDefaultEndpointResolverV2()
 
 	ep, err := r.ResolveEndpoint(context.Background(), databrew_sdkv2.EndpointParameters{
@@ -266,14 +322,14 @@ func defaultFIPSEndpoint(region string) string {
 		UseFIPS: aws_sdkv2.Bool(true),
 	})
 	if err != nil {
-		return err.Error()
+		return url.URL{}, err
 	}
 
 	if ep.URI.Path == "" {
 		ep.URI.Path = "/"
 	}
 
-	return ep.URI.String()
+	return ep.URI, nil
 }
 
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
@@ -315,6 +371,25 @@ func withPackageNameEndpointInConfig(setup *caseSetup) {
 	endpoints[packageName] = packageNameConfigEndpoint
 }
 
+func withAliasName0EndpointInConfig(setup *caseSetup) {
+	if _, ok := setup.config[names.AttrEndpoints]; !ok {
+		setup.config[names.AttrEndpoints] = []any{
+			map[string]any{},
+		}
+	}
+	endpoints := setup.config[names.AttrEndpoints].([]any)[0].(map[string]any)
+	endpoints[aliasName0] = aliasName0ConfigEndpoint
+}
+
+func conflictsWith(e caseExpectations) caseExpectations {
+	e.diags = append(e.diags, provider.ConflictingEndpointsWarningDiag(
+		cty.GetAttrPath(names.AttrEndpoints).IndexInt(0),
+		packageName,
+		aliasName0,
+	))
+	return e
+}
+
 func withAwsEnvVar(setup *caseSetup) {
 	setup.environmentVariables[awsEnvVar] = awsServiceEnvvarEndpoint
 }
@@ -335,16 +410,38 @@ func withUseFIPSInConfig(setup *caseSetup) {
 	setup.config["use_fips_endpoint"] = true
 }
 
-func expectDefaultEndpoint(region string) caseExpectations {
+func expectDefaultEndpoint(t *testing.T, region string) caseExpectations {
+	t.Helper()
+
+	endpoint, err := defaultEndpoint(region)
+	if err != nil {
+		t.Fatalf("resolving accessanalyzer default endpoint: %s", err)
+	}
+
 	return caseExpectations{
-		endpoint: defaultEndpoint(region),
+		endpoint: endpoint.String(),
 		region:   expectedCallRegion,
 	}
 }
 
-func expectDefaultFIPSEndpoint(region string) caseExpectations {
+func expectDefaultFIPSEndpoint(t *testing.T, region string) caseExpectations {
+	t.Helper()
+
+	endpoint, err := defaultFIPSEndpoint(region)
+	if err != nil {
+		t.Fatalf("resolving accessanalyzer FIPS endpoint: %s", err)
+	}
+
+	hostname := endpoint.Hostname()
+	_, err = net.LookupHost(hostname)
+	if dnsErr, ok := errs.As[*net.DNSError](err); ok && dnsErr.IsNotFound {
+		return expectDefaultEndpoint(t, region)
+	} else if err != nil {
+		t.Fatalf("looking up accessanalyzer endpoint %q: %s", hostname, err)
+	}
+
 	return caseExpectations{
-		endpoint: defaultFIPSEndpoint(region),
+		endpoint: endpoint.String(),
 		region:   expectedCallRegion,
 	}
 }
@@ -352,6 +449,13 @@ func expectDefaultFIPSEndpoint(region string) caseExpectations {
 func expectPackageNameConfigEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: packageNameConfigEndpoint,
+		region:   expectedCallRegion,
+	}
+}
+
+func expectAliasName0ConfigEndpoint() caseExpectations {
+	return caseExpectations{
+		endpoint: aliasName0ConfigEndpoint,
 		region:   expectedCallRegion,
 	}
 }

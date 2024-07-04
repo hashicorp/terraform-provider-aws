@@ -25,7 +25,7 @@ jobs:
   terraform-provider-release:
     name: 'Terraform Provider Release'
     needs: [release-notes]
-    uses: hashicorp/ghaction-terraform-provider-release/.github/workflows/hashicorp.yml@v4
+    uses: hashicorp/ghaction-terraform-provider-release/.github/workflows/hashicorp.yml@v5
     secrets:
       hc-releases-key-prod: '${{ secrets.HC_RELEASES_KEY_PROD }}'
       hc-releases-key-staging: '${{ secrets.HC_RELEASES_KEY_STAGING }}'
@@ -66,7 +66,7 @@ jobs:
     if: github.ref_name == needs.highest-version-tag.outputs.tag
     runs-on: macos-latest
     steps:
-      - uses: actions/create-github-app-token@c8f55efbd427e7465d6da1106e7979bc8aaee856 # v1.10.1
+      - uses: actions/create-github-app-token@31c86eb3b33c9b601a1f60f98dcbfd1d70f379b4 # v1.10.3
         id: app-token
         with:
           app-id: ${{ secrets.APP_ID }}

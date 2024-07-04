@@ -197,8 +197,6 @@ service/customerprofiles:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_customerprofiles_'
 service/databrew:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_databrew_'
-service/databrew:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_databrew_'
 service/dataexchange:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dataexchange_'
 service/datapipeline:
@@ -489,6 +487,8 @@ service/networkfirewall:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkfirewall_'
 service/networkmanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkmanager_'
+service/networkmonitor:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkmonitor_'
 service/nimble:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_nimble_'
 service/oam:

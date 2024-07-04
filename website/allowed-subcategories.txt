@@ -46,6 +46,7 @@ CloudWatch Application Insights
 CloudWatch Evidently
 CloudWatch Internet Monitor
 CloudWatch Logs
+CloudWatch Network Monitor
 CloudWatch Observability Access Manager
 CloudWatch RUM
 CloudWatch Synthetics
@@ -75,7 +76,6 @@ DMS (Database Migration)
 DRS (Elastic Disaster Recovery)
 Data Exchange
 Data Pipeline
-DataBrew
 DataSync
 DataZone
 Detective
@@ -121,6 +121,7 @@ FinSpace
 GameLift
 Global Accelerator
 Glue
+Glue DataBrew
 Ground Station
 GuardDuty
 HealthLake
