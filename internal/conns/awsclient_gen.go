@@ -170,6 +170,7 @@ import (
 	servicediscovery_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	servicequotas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
+	sfn_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sfn"
 	shield_sdkv2 "github.com/aws/aws-sdk-go-v2/service/shield"
 	signer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/signer"
 	sns_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sns"
@@ -250,7 +251,6 @@ import (
 	serverlessapplicationrepository_sdkv1 "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	servicecatalog_sdkv1 "github.com/aws/aws-sdk-go/service/servicecatalog"
 	ses_sdkv1 "github.com/aws/aws-sdk-go/service/ses"
-	sfn_sdkv1 "github.com/aws/aws-sdk-go/service/sfn"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
@@ -1094,8 +1094,8 @@ func (c *AWSClient) SESV2Client(ctx context.Context) *sesv2_sdkv2.Client {
 	return errs.Must(client[*sesv2_sdkv2.Client](ctx, c, names.SESV2, make(map[string]any)))
 }
 
-func (c *AWSClient) SFNConn(ctx context.Context) *sfn_sdkv1.SFN {
-	return errs.Must(conn[*sfn_sdkv1.SFN](ctx, c, names.SFN, make(map[string]any)))
+func (c *AWSClient) SFNClient(ctx context.Context) *sfn_sdkv2.Client {
+	return errs.Must(client[*sfn_sdkv2.Client](ctx, c, names.SFN, make(map[string]any)))
 }
 
 func (c *AWSClient) SNSClient(ctx context.Context) *sns_sdkv2.Client {
