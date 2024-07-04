@@ -340,7 +340,7 @@ func ResourceJobDefinition() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"containers": {
+									"container": {
 										Type:     schema.TypeList,
 										Required: true,
 										Elem: &schema.Resource{

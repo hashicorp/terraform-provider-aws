@@ -307,7 +307,7 @@ The following arguments are optional:
 * `task_role_arn` - The Amazon Resource Name (ARN) of the IAM role that the Amazon ECS task..
 * `volumes` - (Optional) The volumes to mount on the container in the task. See [volumes](#volumes) below.
 
-### `containers`
+### `container`
 
 * `image` - The image used to start the container.
 * `command` - (Optional) The command that's passed to the container.

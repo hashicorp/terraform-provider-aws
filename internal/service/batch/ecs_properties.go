@@ -66,7 +66,7 @@ func NetworkConfigurationAssignPublicIp_Values() []string {
 func expandECSTaskProperties(taskPropsMap map[string]interface{}) *batch.EcsTaskProperties {
 	taskProps := &batch.EcsTaskProperties{}
 
-	if v, ok := taskPropsMap["containers"]; ok {
+	if v, ok := taskPropsMap["container"]; ok {
 		containers := v.([]interface{})
 		taskProps.Containers = expandEcsTaskContainers(containers)
 	}
@@ -191,7 +191,7 @@ func flattenECSTaskProperties(taskProperties *batch.EcsTaskProperties) (tfList [
 	tfMap := make(map[string]interface{}, 0)
 
 	if v := taskProperties.Containers; v != nil {
-		tfMap["containers"] = flattenEcsTaskContainers(v)
+		tfMap["container"] = flattenEcsTaskContainers(v)
 	}
 
 	if v := taskProperties.EphemeralStorage; v != nil {
