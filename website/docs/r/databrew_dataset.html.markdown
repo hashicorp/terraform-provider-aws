@@ -6,7 +6,7 @@ description: |-
   Terraform resource for managing an AWS DataBrew Dataset.
 ---
 
-# Resource: aws_databrew_project
+# Resource: aws_databrew_dataset
 
 Terraform resource for managing an AWS DataBrew Dataset.
 
