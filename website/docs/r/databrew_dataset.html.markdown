@@ -16,12 +16,12 @@ Terraform resource for managing an AWS DataBrew Dataset.
 
 ```terraform
 resource "aws_databrew_dataset" "example" {
-    name = "test"
-    input {
-        s3_input_definition {
-            bucket = "bucket-name"
-        }
+  name = "test"
+  input {
+    s3_input_definition {
+      bucket = "bucket-name"
     }
+  }
 }
 ```
 
