@@ -501,44 +501,6 @@ func HumanFriendly(service string) (string, error) {
 	return "", fmt.Errorf("no service data found for %s", service)
 }
 
-func AWSGoPackage(providerPackage string, version int) (string, error) {
-	switch version {
-	case 1:
-		return AWSGoV1Package(providerPackage)
-	case 2:
-		return AWSGoV2Package(providerPackage)
-	default:
-		return "", fmt.Errorf("unsupported AWS SDK Go version: %d", version)
-	}
-}
-
-func AWSGoV1Package(providerPackage string) (string, error) {
-	if v, ok := serviceData[providerPackage]; ok {
-		return v.GoV1Package, nil
-	}
-
-	return "", fmt.Errorf("getting AWS SDK Go v1 package, %s not found", providerPackage)
-}
-
-func AWSGoV2Package(providerPackage string) (string, error) {
-	if v, ok := serviceData[providerPackage]; ok {
-		return v.GoV2Package, nil
-	}
-
-	return "", fmt.Errorf("getting AWS SDK Go v2 package, %s not found", providerPackage)
-}
-
-func AWSGoClientTypeName(providerPackage string, version int) (string, error) {
-	switch version {
-	case 1:
-		return AWSGoV1ClientTypeName(providerPackage)
-	case 2:
-		return "Client", nil
-	default:
-		return "", fmt.Errorf("unsupported AWS SDK Go version: %d", version)
-	}
-}
-
 func AWSGoV1ClientTypeName(providerPackage string) (string, error) {
 	if v, ok := serviceData[providerPackage]; ok {
 		return v.GoV1ClientTypeName, nil
