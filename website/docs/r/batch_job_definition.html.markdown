@@ -134,7 +134,7 @@ resource "aws_batch_job_definition" "test" {
 }
 ```
 
-### Job Definition of type container using `ecs_properties`
+### Job Definition of type container using `ecs_properties` with single container
 
 ```terraform
 resource "aws_batch_job_definition" "test" {
@@ -146,6 +146,7 @@ resource "aws_batch_job_definition" "test" {
       containers {
         essential = true
         image = "public.ecr.aws/amazonlinux/amazonlinux:1"
+        name = "container_a"
         command = [
           "sleep",
           "60"
@@ -161,6 +162,57 @@ resource "aws_batch_job_definition" "test" {
         environment {
 		  name = "test"
 		  value = "Environment Variable"
+        }
+      }
+    }
+  }
+}
+```
+### Job Definition of type container using `ecs_properties` with multiple containers
+
+```terraform
+resource "aws_batch_job_definition" "test" {
+  name = " tf_test_batch_job_definition_ecs"
+  type = "container"
+  ecs_properties {
+    task_properties {
+      host_network = true
+      containers {
+        essential = true
+        image = "public.ecr.aws/amazonlinux/amazonlinux:1"
+        name = "container_a"
+        command = [
+          "sleep",
+          "60"
+        ]
+        resource_requirements {
+          value = "1.0"
+          type = "VCPU"
+        }
+        resource_requirements {
+          value = "2048"
+          type = "MEMORY"
+        }
+        environment {
+		  name = "test"
+		  value = "Environment Variable"
+        }
+      }
+
+      container {
+        image = "public.ecr.aws/amazonlinux/amazonlinux:1"
+        name = "container_b"
+        command = [
+          "sleep",
+          "60"
+        ]
+        resource_requirements {
+          value = "1.0"
+          type = "VCPU"
+        }
+        resource_requirements {
+          value = "2048"
+          type = "MEMORY"
         }
       }
     }
