@@ -94,6 +94,12 @@ Supported nested arguments for the `path_options` configuration block:
     * `order` (Optional) - A criteria to use for Amazon S3 files sorting before their selection. By default uses DESCENDING order, i.e. most recent files are selected first. Another possible value is ASCENDING.
     * `ordered_by` (Optional) - A criteria to use for Amazon S3 files sorting before their selection. By default uses LAST_MODIFIED_DATE as a sorting criteria. Currently it's the only allowed value.
 
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `id` - The identifier of the Dataset (same as name).
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataBrew Project using the `example_id_arg`. For example:
