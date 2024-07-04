@@ -22,6 +22,14 @@ func (sr ServiceRecord) AWSCLIV2CommandNoDashes() string {
 	return sr[colAWSCLIV2CommandNoDashes]
 }
 
+func (sr ServiceRecord) GoPackageName(version int) string {
+	switch version {
+	case 1:
+		return sr.GoV1Package()
+	}
+	return sr.GoV2Package()
+}
+
 func (sr ServiceRecord) GoV1Package() string {
 	return sr[colGoV1Package]
 }
