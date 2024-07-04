@@ -135,7 +135,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckDatasetNotRecreated(before, after *databrew.DescribeDatasetOutput) resource.TestCheckFunc {
+func TestAccCheckDatasetNotRecreated(before, after *databrew.DescribeDatasetOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.Name), aws.ToString(after.Name); before != after {
 			return create.Error(names.DataBrew, create.ErrActionCheckingNotRecreated, tfdatabrew.ResNameDataset, before, errors.New("recreated"))

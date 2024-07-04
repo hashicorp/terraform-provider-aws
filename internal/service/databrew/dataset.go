@@ -375,15 +375,8 @@ func (r *resourceDataset) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func (r *resourceDataset) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), req, resp)
 }
-
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
 
 func findDatasetByName(ctx context.Context, conn *databrew.Client, name string) (*awstypes.Dataset, error) {
 	in := &databrew.DescribeDatasetInput{
