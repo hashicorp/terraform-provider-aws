@@ -117,7 +117,6 @@ func findActivityByName(ctx context.Context, conn *sfn.Client, name string) ([]a
 				output = append(output, v)
 			}
 		}
-
 	}
 
 	return output, nil

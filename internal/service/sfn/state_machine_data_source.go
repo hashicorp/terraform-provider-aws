@@ -120,7 +120,6 @@ func findStateByARN(ctx context.Context, conn *sfn.Client, name string) ([]awsty
 				output = append(output, v)
 			}
 		}
-
 	}
 
 	return output, nil
