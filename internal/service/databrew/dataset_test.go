@@ -19,9 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfdatabrew "github.com/hashicorp/terraform-provider-aws/internal/service/databrew"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Acceptance test access AWS and cost money to run.
