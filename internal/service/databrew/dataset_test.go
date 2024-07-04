@@ -161,13 +161,13 @@ resource "aws_s3_object" "test" {
 }
 
 resource "aws_databrew_dataset" "test" {
-  name         = %[1]q
+  name   = %[1]q
   format = "JSON"
   input {
     s3_input_definition {
-      bucket = aws_s3_bucket.test.id
-      bucket_owner  = data.aws_caller_identity.current.account_id
-      key    = %[1]q
+      bucket       = aws_s3_bucket.test.id
+      bucket_owner = data.aws_caller_identity.current.account_id
+      key          = %[1]q
     }
   }
 
@@ -179,7 +179,7 @@ resource "aws_databrew_dataset" "test" {
     }
   }
 
-	format_options {
+  format_options {
     json {
       multi_line = true
     }
