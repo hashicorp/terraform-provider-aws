@@ -8,17 +8,13 @@ import (
 	"errors"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	// "github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	// tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/databrew"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databrew/types"
-	// "github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	// tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
