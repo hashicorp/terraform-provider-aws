@@ -1,5 +1,5 @@
 ---
-subcategory: "DataBrew"
+subcategory: "Glue DataBrew"
 layout: "aws"
 page_title: "AWS: aws_databrew_dataset"
 description: |-
