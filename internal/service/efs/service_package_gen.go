@@ -42,8 +42,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceMountTarget,
+			Factory:  dataSourceMountTarget,
 			TypeName: "aws_efs_mount_target",
+			Name:     "Mount Target",
 		},
 	}
 }
