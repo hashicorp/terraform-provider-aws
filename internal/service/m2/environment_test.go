@@ -231,8 +231,8 @@ func TestAccM2Environment_efs(t *testing.T) {
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"efs": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"file_system_id": knownvalue.NotNull(), // TODO: should be Pair, depends on https://github.com/hashicorp/terraform-plugin-testing/pull/330
-									"mount_point":    knownvalue.StringExact("/m2/mount/efsexample"),
+									names.AttrFileSystemID: knownvalue.NotNull(), // TODO: should be Pair, depends on https://github.com/hashicorp/terraform-plugin-testing/pull/330
+									"mount_point":          knownvalue.StringExact("/m2/mount/efsexample"),
 								}),
 							}),
 							"fsx": knownvalue.ListExact([]knownvalue.Check{}),
@@ -279,8 +279,8 @@ func TestAccM2Environment_fsx(t *testing.T) {
 							"efs": knownvalue.ListExact([]knownvalue.Check{}),
 							"fsx": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"file_system_id": knownvalue.NotNull(), // TODO: should be Pair, depends on https://github.com/hashicorp/terraform-plugin-testing/pull/330
-									"mount_point":    knownvalue.StringExact("/m2/mount/fsxexample"),
+									names.AttrFileSystemID: knownvalue.NotNull(), // TODO: should be Pair, depends on https://github.com/hashicorp/terraform-plugin-testing/pull/330
+									"mount_point":          knownvalue.StringExact("/m2/mount/fsxexample"),
 								}),
 							}),
 						}),
