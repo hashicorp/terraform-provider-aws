@@ -38,7 +38,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	"github.com/aws/aws-sdk-go-v2/service/datazone/types"
@@ -66,39 +65,45 @@ func TestAccDataZoneProject_basic(t *testing.T) {
 	}
 
 	var project datazone.GetProjectOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) // Name for project
+	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) // Name for domain
 	resourceName := "aws_datazone_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			//acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
-			testAccPreCheck(ctx, t)
+			//testAccPreCheckProject(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_basic(rName),
+				Config: testAccProjectConfig_basic(rName, dName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datazone", regexache.MustCompile(`project:+.`)),
+					// inputed
+					resource.TestCheckResourceAttr(resourceName, "domain_identifier", dName), // find a domain identifier
+					resource.TestCheckResourceAttrSet(resourceName, "glossary_terms.#"),
+					resource.TestCheckResourceAttr(resourceName, "description", "sample description"),
+					resource.TestCheckResourceAttr(resourceName, "name", resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "skip_deletion_check"),
+					// computed
+					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "failure_reasons.0.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "project_status"),
+					resource.TestCheckResourceAttrSet(resourceName, "result_metadata"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				//ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
 			},
 		},
 	})
@@ -110,22 +115,23 @@ func TestAccDataZoneProject_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var project datazone.DescribeProjectResponse
+	var project datazone.GetProjectOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) // Name for domain
 	resourceName := "aws_datazone_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AttrDomainName)
+			testAccPreCheckProject(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_basic(rName, testAccProjectVersionNewer),
+				Config: testAccProjectConfig_basic(rName, dName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
@@ -151,12 +157,11 @@ func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &datazone.DescribeProjectInput{
-				ProjectId: aws.String(rs.Primary.ID),
+			input := &datazone.GetProjectInput{
+				DomainIdentifier: aws.String(rs.Primary.Attributes["${aws_datazone_domain.test.id}"]), // can this be hardcoded in?
+				Identifier:       aws.String(rs.Primary.ID),
 			}
-			_, err := conn.DescribeProject(ctx, &datazone.DescribeProjectInput{
-				ProjectId: aws.String(rs.Primary.ID),
-			})
+			_, err := conn.GetProject(ctx, input)
 			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
 			}
@@ -167,8 +172,34 @@ func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 			return create.Error(names.DataZone, create.ErrActionCheckingDestroyed, tfdatazone.ResNameProject, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		return nil
+		return testAccCheckProjectDomainDestroy(ctx, s)
 	}
+}
+func testAccCheckProjectDomainDestroy(ctx context.Context, s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_datazone_domain" {
+			continue
+		}
+
+		_, err := conn.GetDomain(ctx, &datazone.GetDomainInput{
+			Identifier: aws.String(rs.Primary.ID),
+		})
+
+		if tfdatazone.IsResourceMissing(err) {
+			return nil
+		}
+
+		if err != nil {
+			return create.Error(names.DataZone, create.ErrActionCheckingDestroyed, tfdatazone.ResNameDomain, rs.Primary.ID, err)
+		}
+
+		return create.Error(names.DataZone, create.ErrActionCheckingDestroyed, tfdatazone.ResNameDomain, rs.Primary.ID, errors.New("not destroyed"))
+	}
+
+	return nil
+
 }
 
 func testAccCheckProjectExists(ctx context.Context, name string, project *datazone.GetProjectOutput) resource.TestCheckFunc {
@@ -198,7 +229,7 @@ func testAccCheckProjectExists(ctx context.Context, name string, project *datazo
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
+func testAccPreCheckProject(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
 
 	input := &datazone.ListProjectsInput{}
@@ -212,27 +243,29 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckProjectNotRecreated(before, after *datazone.DescribeProjectResponse) resource.TestCheckFunc {
+func testAccCheckProjectNotRecreated(before, after *datazone.GetProjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.ProjectId), aws.ToString(after.ProjectId); before != after {
-			return create.Error(names.DataZone, create.ErrActionCheckingNotRecreated, tfdatazone.ResNameProject, aws.ToString(before.ProjectId), errors.New("recreated"))
+		if before, after := aws.ToString(before.Id), aws.ToString(after.Id); before != after {
+			return create.Error(names.DataZone, create.ErrActionCheckingNotRecreated, tfdatazone.ResNameProject, before, errors.New("recreated"))
 		}
 
 		return nil
 	}
 }
 
-func testAccProjectConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+func testAccProjectConfig_basic(rName, dName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_basic(dName), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
 }
 
 resource "aws_datazone_project" "test" {  
-  domain_identifier = "identifier"
+  domain_identifier = aws_datazone_domain.test.id
   name              = %[1]q
   description       = ""
-  glossary_terms    = ["glossary","terms"]
+  skip_deletion_check = true
 }
-`, rName)
+`, rName))
 }
+
+//   glossary_terms    = ["abababab]"]

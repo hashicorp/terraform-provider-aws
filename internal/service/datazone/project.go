@@ -35,20 +35,26 @@ import (
 	// awstypes.<Type Name>.
 	"context"
 	"errors"
+	//"regexp"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+
+	//"github.com/aws/smithy-go/middleware"
+
 	//"github.com/aws/aws-sdk-go-v2/aws/middleware"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
+
 	//"github.com/aws/smithy-go/middleware"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+
+	//"github.com/hashicorp/terraform-plugin-framework/attr"
+	//"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -59,7 +65,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+
 	//"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	//awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -168,19 +178,29 @@ func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(`^dzd[-_][a-zA-Z0-9_-]{1,36}$`), "must conform to: ^dzd[-_][a-zA-Z0-9_-]{1,36}$ "),
 				},
-			},
-			"glossary_terms": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[types.String](ctx),
-				Validators: []validator.List{
-					listvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 20)),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
+
+			"glossary_terms": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
+				ElementType: fwtypes.RegexpType.StringType,
+
+				Validators: []validator.List{
+					listvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 20)),
+					listvalidator.ValueStringsAre(stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_-]{1,36}]$`), "must conform to: ^[a-zA-Z0-9_-]{1,36}]$ ")),
+				},
+				Optional: true,
+			},
+
 			names.AttrName: schema.StringAttribute{
 				CustomType: fwtypes.RegexpType,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[\w -]+$`), "must conform to: ^[\\w -]+$ "),
 					stringvalidator.LengthBetween(1, 64),
 				},
+				Required: true,
 			},
 			"created_by": schema.StringAttribute{
 				Computed: true,
@@ -192,21 +212,41 @@ func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
+
 			"failure_reasons": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[awstypes.ProjectDeletionError](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[dsProjectDeletionError](ctx),
 				Computed:   true,
 			},
+
 			"last_updated_at": schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 			"project_status": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ProjectStatus](),
 				Computed:   true,
 			},
-			"result_metadata": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[middleware.Metadata](ctx),
+			/*
+				"result_metadata": schema.ListAttribute{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[middleware.Metadata](ctx),
+					Computed:   true,
+				},
+			*/
+			"domain_id": schema.StringAttribute{
+				CustomType: fwtypes.RegexpType,
 				Computed:   true,
 			},
+
+			"skip_deletion_check": schema.BoolAttribute{
+				Required: true,
+			},
+		},
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -214,7 +254,7 @@ func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest
 func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// TIP: ==== RESOURCE CREATE ====
 	// Generally, the Create function should do the following things. Make
-	// sure there is a good reason if you don't do one of these. 
+	// sure there is a good reason if you don't do one of these.
 	//
 	// 1. Get a client connection to the relevant service
 	// 2. Fetch the plan
@@ -235,6 +275,17 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	// validate that domain exists
+	var validateDomain datazone.GetDomainInput
+	validateDomain.Identifier = plan.DomainIdentifier.ValueStringPointer()
+	_, err := conn.GetDomain(ctx, &validateDomain)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameProject, plan.Name.String(), err),
+			err.Error(),
+		)
+		return
+	}
 
 	// TIP: -- 3. Populate a create input structure
 	in := &datazone.CreateProjectInput{
@@ -245,9 +296,6 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 	}
 	if !plan.DomainIdentifier.IsNull() {
 		in.DomainIdentifier = aws.String(plan.DomainIdentifier.ValueString())
-	}
-	if !plan.GlossaryTerms.IsNull() {
-		// do later
 	}
 
 	// TIP: -- 4. Call the AWS create function
@@ -270,14 +318,17 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 	// TIP: -- 5. Using the output from the create function, set the minimum attributes
 
 	// can i autoflex this?
+
 	resp.Diagnostics.Append(flex.Flatten(ctx, &out, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	//plan.ResultMetadata = out.ResultMetadata.Clone()
+
 	// TIP: -- 6. Use a waiter to wait for create to complete
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitProjectCreated(ctx, conn, plan.DomainIdentifier.ValueString(),plan.ID.ValueString(),createTimeout)
+	_, err = waitProjectCreated(ctx, conn, plan.DomainIdentifier.ValueString(), plan.ID.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForCreation, ResNameProject, plan.Name.String(), err),
@@ -311,17 +362,16 @@ func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
 	// type function, or, better yet, using a finder.
 	var input datazone.GetProjectInput
-	if !state.DomainIdentifier.IsNull(){
+	if !state.DomainIdentifier.IsNull() {
 		input.DomainIdentifier = state.DomainIdentifier.ValueStringPointer()
 	}
-	if !state.ID.IsNull(){
+	if !state.ID.IsNull() {
 		input.Identifier = state.ID.ValueStringPointer()
 	}
-	out, err := conn.GetProject(ctx,&input)
+	out, err := conn.GetProject(ctx, &input)
 	// TIP: -- 4. Remove resource from state if it is not found
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
@@ -339,6 +389,7 @@ func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	//state.ResultMetadata = out.ResultMetadata.Clone()
 
 	// TIP: -- 6. Set the state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -370,13 +421,13 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 
 	// TIP: -- 2. Fetch the plan
 	var plan, state resourceProjectData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...) /// get the plan
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)   /// get the plan
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...) // get the state
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if plan.DomainIdentifier != state.DomainIdentifier { // Do i have to error check this
+	if plan.DomainIdentifier != state.DomainIdentifier { // I should error check this
 		return // add error here
 	}
 
@@ -386,26 +437,20 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 		!plan.Description.Equal(state.Description) ||
 		!plan.ComplexArgument.Equal(state.ComplexArgument) ||
 		!plan.Type.Equal(state.Type) {
-*/
+	*/
 
 	in := &datazone.UpdateProjectInput{
 		DomainIdentifier: aws.String(plan.DomainIdentifier.ValueString()), // This can't change
-		Identifier: aws.String(plan.ID.ValueString()),
+		Identifier:       aws.String(plan.ID.ValueString()),
 	}
 
 	if !plan.Description.IsNull() {
 		in.Description = aws.String(plan.Description.ValueString())
 	}
 
-	if !plan.GlossaryTerms.IsNull() {
-		in.GlossaryTerms = aws.String(plan.Description.ValueString()) // don't know how to do 
-	}
-
 	if !plan.Name.IsNull() {
 		in.Name = aws.String(plan.Name.ValueString())
 	}
-
-
 
 	// TIP: -- 4. Call the AWS modify/update function
 	out, err := conn.UpdateProject(ctx, in)
@@ -428,10 +473,10 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
+	//state.ResultMetadata = out.ResultMetadata.Clone()
 	// TIP: -- 5. Use a waiter to wait for update to complete
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err = waitProjectUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	_, err = waitProjectUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout.String(), r.ReadTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForUpdate, ResNameProject, plan.ID.String(), err),
@@ -475,7 +520,7 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 		DomainIdentifier: aws.String((state.DomainIdentifier.ValueString())),
 		Identifier:       aws.String((state.ID.ValueString())),
 	}
-	if !state.SkipDeletionCheck.IsNull() {
+	if !state.SkipDeletionCheck.IsNull() { // N
 		in.SkipDeletionCheck = state.SkipDeletionCheck.ValueBoolPointer()
 	}
 
@@ -495,7 +540,7 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitProjectDeleted(ctx, conn,state.DomainIdentifier.ValueString(),state.ID.ValueString(), deleteTimeout)
+	_, err = waitProjectDeleted(ctx, conn, state.DomainIdentifier.ValueString(), state.ID.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForDeletion, ResNameProject, state.ID.String(), err),
@@ -542,7 +587,7 @@ func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain strin
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{string(awstypes.ProjectStatusActive)},
-		Refresh:                   statusProject(ctx, conn, domain,identifier),
+		Refresh:                   statusProject(ctx, conn, domain, identifier),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -564,7 +609,7 @@ func waitProjectUpdated(ctx context.Context, conn *datazone.Client, domain strin
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
-		Refresh:                   statusProject(ctx, conn, domain,identifier),
+		Refresh:                   statusProject(ctx, conn, domain, identifier),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -584,7 +629,7 @@ func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain strin
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{string(awstypes.ProjectStatusDeleting), string(awstypes.ProjectStatusActive)},
 		Target:  []string{},
-		Refresh: statusProject(ctx, conn, domain,identifier),
+		Refresh: statusProject(ctx, conn, domain, identifier),
 		Timeout: timeout,
 	}
 
@@ -598,7 +643,7 @@ func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain strin
 
 func statusProject(ctx context.Context, conn *datazone.Client, domain string, identifier string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findProjectByID(ctx, conn, domain,identifier)
+		out, err := findProjectByID(ctx, conn, domain, identifier)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -615,7 +660,7 @@ func statusProject(ctx context.Context, conn *datazone.Client, domain string, id
 func findProjectByID(ctx context.Context, conn *datazone.Client, domain string, identifier string) (*datazone.GetProjectOutput, error) {
 	in := &datazone.GetProjectInput{
 		DomainIdentifier: aws.String(domain),
-		Identifier: aws.String(identifier),
+		Identifier:       aws.String(identifier),
 	}
 
 	out, err := conn.GetProject(ctx, in) // add finder here later
@@ -648,6 +693,7 @@ func findProjectByID(ctx context.Context, conn *datazone.Client, domain string, 
 //
 // See more:
 // https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
+/*
 func flattenComplexArgument(ctx context.Context, apiObject *awstypes.ComplexArgument) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: complexArgumentAttrTypes}
@@ -668,6 +714,7 @@ func flattenComplexArgument(ctx context.Context, apiObject *awstypes.ComplexArgu
 
 	return listVal, diags
 }
+*/
 
 // TIP: Often the AWS API will return a slice of structures in response to a
 // request for information. Sometimes you will have set criteria (e.g., the ID)
@@ -717,28 +764,32 @@ func flattenComplexArguments(ctx context.Context, apiObjects []*awstypes.Complex
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type resourceProjectData struct {
-	Description       types.String                                                   `tfsdk:"description"`
-	DomainIdentifier  types.String                                                   `tfsdk:"domain_identifier"`
-	GlossaryTerms     fwtypes.ListNestedObjectValueOf[types.String]                  `tfsdk:"glossary_terms"`
-	Name              types.String                                                   `tfsdk:"name"`
-	CreatedBy         types.String                                                   `tfsdk:"created_by"`
-	ID                types.String                                                   `tfsdk:"id"`
-	CreatedAt         timetypes.RFC3339                                              `tfsdk:"created_at"`
-	FailureReasons    fwtypes.ListNestedObjectValueOf[awstypes.ProjectDeletionError] `tfsdk:"failure_reasons"`
-	ProjectStatus     fwtypes.StringEnum[awstypes.ProjectStatus]                     `tfsdk:"project_status"`
-	ResultMetadata    middleware.Metadata                                            `tfsdk:"result_metadata"`
-	Timeouts          timeouts.Value                                                 `tfsdk:"timeouts"`
-	SkipDeletionCheck types.Bool                                                     `tfsdk:"skip_deletion_check"`
+	Description       types.String                                            `tfsdk:"description"`
+	DomainIdentifier  fwtypes.Regexp                                          `tfsdk:"domain_identifier"`
+	DomainId          fwtypes.Regexp                                          `tfsdk:"domain_id"`
+	Name              fwtypes.Regexp                                          `tfsdk:"name"`
+	CreatedBy         types.String                                            `tfsdk:"created_by"`
+	ID                types.String                                            `tfsdk:"id"`
+	CreatedAt         timetypes.RFC3339                                       `tfsdk:"created_at"`
+	FailureReasons    fwtypes.ListNestedObjectValueOf[dsProjectDeletionError] `tfsdk:"failure_reasons"`
+	LastUpdatedAt     timetypes.RFC3339                                       `tfsdk:"last_updated_at"`
+	ProjectStatus     fwtypes.StringEnum[awstypes.ProjectStatus]              `tfsdk:"project_status"`
+	Timeouts          timeouts.Value                                          `tfsdk:"timeouts"`
+	SkipDeletionCheck types.Bool                                              `tfsdk:"skip_deletion_check"`
+	GlossaryTerms     fwtypes.ListValueOf[types.String]                       `tfsdk:"glossary_terms"`
 }
 
 // DomainId             types.String                                  `tfsdk:"domain_id"` // is this the same thing as domainIdent
 
-type complexArgumentData struct {
-	NestedRequired types.String `tfsdk:"nested_required"`
-	NestedOptional types.String `tfsdk:"nested_optional"`
+type dsProjectDeletionError struct {
+	Code    types.String `tfsdk:"code"`
+	Message types.String `tfsdk:"message"`
 }
 
-var complexArgumentAttrTypes = map[string]attr.Type{
-	"nested_required": types.StringType,
-	"nested_optional": types.StringType,
+/*
+type Metadata struct {
+	values map[interface{}]interface{} `tfsdk:"metadata"`
 }
+
+ResultMetadata    types.MapType    `tfsdk:"result_metadata"`
+*/
