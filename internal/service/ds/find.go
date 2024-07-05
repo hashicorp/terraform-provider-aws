@@ -44,10 +44,6 @@ func FindDirectoryByID(ctx context.Context, conn *directoryservice.Client, id st
 
 	directory, err := tfresource.AssertSingleValueResult(output)
 
-	if err != nil {
-		return nil, err
-	}
-
 	if directory.Stage == awstypes.DirectoryStageDeleted {
 		return nil, &retry.NotFoundError{
 			Message:     string(directory.Stage),
@@ -158,10 +154,6 @@ func FindRegion(ctx context.Context, conn *directoryservice.Client, directoryID,
 	}
 
 	region, err := tfresource.AssertSingleValueResult(output)
-
-	if err != nil {
-		return nil, err
-	}
 
 	if region.Status == awstypes.DirectoryStageDeleted {
 		return nil, &retry.NotFoundError{
