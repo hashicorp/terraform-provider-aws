@@ -57,7 +57,7 @@ func waitAvailabilityZoneGroupNotOptedIn(ctx context.Context, conn *ec2.Client, 
 	return nil, err
 }
 
-func waitCapacityReservationActive(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.CapacityReservation, error) {
+func waitCapacityReservationActive(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.CapacityReservation, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityReservationStatePending),
 		Target:  enum.Slice(awstypes.CapacityReservationStateActive),
