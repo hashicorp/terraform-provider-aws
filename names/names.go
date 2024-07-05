@@ -65,6 +65,7 @@ const (
 	DevOpsGuruEndpointID                 = "devops-guru"
 	DeviceFarmEndpointID                 = "devicefarm"
 	ECREndpointID                        = "api.ecr"
+	EFSEndpointID                        = "elasticfilesystem"
 	EKSEndpointID                        = "eks"
 	EMREndpointID                        = "elasticmapreduce"
 	EventsEndpointID                     = "events"

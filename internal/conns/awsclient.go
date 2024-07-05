@@ -19,7 +19,6 @@ import (
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
-	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
 	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
@@ -72,16 +71,6 @@ func (c *AWSClient) DSConnForRegion(ctx context.Context, region string) *directo
 		return c.DSConn(ctx)
 	}
 	return directoryservice_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
-}
-
-// EFSConnForRegion returns an AWS SDK For Go v1 EFS API client for the specified AWS Region.
-// If the specified region is not the default a new "simple" client is created.
-// This new client does not use any configured endpoint override.
-func (c *AWSClient) EFSConnForRegion(ctx context.Context, region string) *efs_sdkv1.EFS {
-	if region == c.Region {
-		return c.EFSConn(ctx)
-	}
-	return efs_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
 }
 
 // OpsWorksConnForRegion returns an AWS SDK For Go v1 OpsWorks API client for the specified AWS Region.
