@@ -787,6 +787,9 @@ func waitClusterDeleted(ctx context.Context, conn *eks.Client, name string, time
 		Target:  []string{},
 		Refresh: statusCluster(ctx, conn, name),
 		Timeout: timeout,
+		// An attempt to avoid "ResourceInUseException: Cluster already exists with name: ..." errors
+		// in acceptance tests when recreating a cluster with the same randomly generated name.
+		ContinuousTargetOccurence: 3,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
