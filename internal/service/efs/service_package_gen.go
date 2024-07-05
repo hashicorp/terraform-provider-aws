@@ -60,7 +60,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_efs_backup_policy",
 		},
 		{
-			Factory:  ResourceFileSystem,
+			Factory:  resourceFileSystem,
 			TypeName: "aws_efs_file_system",
 			Name:     "File System",
 			Tags: &types.ServicePackageResourceTags{

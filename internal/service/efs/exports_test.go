@@ -6,6 +6,8 @@ package efs
 // Exports for use in tests only.
 var (
 	ResourceAccessPoint = resourceAccessPoint
+	ResourceFileSystem  = resourceFileSystem
 
 	FindAccessPointByID = findAccessPointByID
+	FindFileSystemByID  = findFileSystemByID
 )

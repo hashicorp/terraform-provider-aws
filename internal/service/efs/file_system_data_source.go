@@ -159,7 +159,7 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrKMSKeyID, fs.KmsKeyId)
 	d.Set(names.AttrName, fs.Name)
 	d.Set("performance_mode", fs.PerformanceMode)
-	if err := d.Set("protection", flattenFileSystemProtection(fs.FileSystemProtection)); err != nil {
+	if err := d.Set("protection", flattenFileSystemProtectionDescription(fs.FileSystemProtection)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting protection: %s", err)
 	}
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
@@ -180,7 +180,7 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 			aws.ToString(fs.FileSystemId), err)
 	}
 
-	if err := d.Set("lifecycle_policy", flattenFileSystemLifecyclePolicies(res.LifecyclePolicies)); err != nil {
+	if err := d.Set("lifecycle_policy", flattenLifecyclePolicies(res.LifecyclePolicies)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lifecycle_policy: %s", err)
 	}
 
