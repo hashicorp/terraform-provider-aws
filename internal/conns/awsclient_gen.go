@@ -206,7 +206,6 @@ import (
 	datapipeline_sdkv1 "github.com/aws/aws-sdk-go/service/datapipeline"
 	detective_sdkv1 "github.com/aws/aws-sdk-go/service/detective"
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
-	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
 	elasticache_sdkv1 "github.com/aws/aws-sdk-go/service/elasticache"
@@ -532,10 +531,6 @@ func (c *AWSClient) DMSConn(ctx context.Context) *databasemigrationservice_sdkv1
 
 func (c *AWSClient) DRSClient(ctx context.Context) *drs_sdkv2.Client {
 	return errs.Must(client[*drs_sdkv2.Client](ctx, c, names.DRS, make(map[string]any)))
-}
-
-func (c *AWSClient) DSConn(ctx context.Context) *directoryservice_sdkv1.DirectoryService {
-	return errs.Must(conn[*directoryservice_sdkv1.DirectoryService](ctx, c, names.DS, make(map[string]any)))
 }
 
 func (c *AWSClient) DSClient(ctx context.Context) *directoryservice_sdkv2.Client {
