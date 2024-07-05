@@ -1,4 +1,9 @@
 ## 5.58.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_eks_cluster: Add `bootstrap_self_managed_addons` argument ([#38162](https://github.com/hashicorp/terraform-provider-aws/issues/38162))
+
 ## 5.57.0 (July  4, 2024)
 
 FEATURES:
