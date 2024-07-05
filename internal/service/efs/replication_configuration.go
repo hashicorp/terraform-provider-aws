@@ -19,13 +19,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_efs_replication_configuration", name="Replication Configuration")
-func ResourceReplicationConfiguration() *schema.Resource {
+func resourceReplicationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationConfigurationCreate,
 		ReadWithoutTimeout:   resourceReplicationConfigurationRead,
@@ -137,7 +138,7 @@ func resourceReplicationConfigurationRead(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
-	replication, err := FindReplicationConfigurationByID(ctx, conn, d.Id())
+	replication, err := findReplicationConfigurationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EFS Replication Configuration (%s) not found, removing from state", d.Id())
@@ -179,10 +180,12 @@ func resourceReplicationConfigurationDelete(ctx context.Context, d *schema.Resou
 
 	// Deletion of the replication configuration must be done from the Region in which the destination file system is located.
 	destination := expandDestinationsToCreate(d.Get(names.AttrDestination).([]interface{}))[0]
-	regionConn := meta.(*conns.AWSClient).EFSClientForRegion(ctx, aws.ToString(destination.Region))
+	optFn := func(o *efs.Options) {
+		o.Region = aws.ToString(destination.Region)
+	}
 
 	log.Printf("[DEBUG] Deleting EFS Replication Configuration: %s", d.Id())
-	if err := deleteReplicationConfiguration(ctx, regionConn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := deleteReplicationConfiguration(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete), optFn); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -194,10 +197,10 @@ func resourceReplicationConfigurationDelete(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func deleteReplicationConfiguration(ctx context.Context, conn *efs.Client, fsID string, timeout time.Duration) error {
+func deleteReplicationConfiguration(ctx context.Context, conn *efs.Client, fsID string, timeout time.Duration, optFns ...func(*efs.Options)) error {
 	_, err := conn.DeleteReplicationConfiguration(ctx, &efs.DeleteReplicationConfigurationInput{
 		SourceFileSystemId: aws.String(fsID),
-	})
+	}, optFns...)
 
 	if errs.IsA[*awstypes.FileSystemNotFound](err) || errs.IsA[*awstypes.ReplicationNotFound](err) {
 		return nil
@@ -214,8 +217,8 @@ func deleteReplicationConfiguration(ctx context.Context, conn *efs.Client, fsID 
 	return nil
 }
 
-func findReplicationConfiguration(ctx context.Context, conn *efs.Client, input *efs.DescribeReplicationConfigurationsInput) (*awstypes.ReplicationConfigurationDescription, error) {
-	output, err := findReplicationConfigurations(ctx, conn, input)
+func findReplicationConfiguration(ctx context.Context, conn *efs.Client, input *efs.DescribeReplicationConfigurationsInput, filter tfslices.Predicate[*awstypes.ReplicationConfigurationDescription]) (*awstypes.ReplicationConfigurationDescription, error) {
+	output, err := findReplicationConfigurations(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
@@ -224,11 +227,10 @@ func findReplicationConfiguration(ctx context.Context, conn *efs.Client, input *
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findReplicationConfigurations(ctx context.Context, conn *efs.Client, input *efs.DescribeReplicationConfigurationsInput) ([]awstypes.ReplicationConfigurationDescription, error) {
+func findReplicationConfigurations(ctx context.Context, conn *efs.Client, input *efs.DescribeReplicationConfigurationsInput, filter tfslices.Predicate[*awstypes.ReplicationConfigurationDescription]) ([]awstypes.ReplicationConfigurationDescription, error) {
 	var output []awstypes.ReplicationConfigurationDescription
 
 	pages := efs.NewDescribeReplicationConfigurationsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -243,18 +245,22 @@ func findReplicationConfigurations(ctx context.Context, conn *efs.Client, input 
 			return nil, err
 		}
 
-		output = append(output, page.Replications...)
+		for _, v := range page.Replications {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
 }
 
-func FindReplicationConfigurationByID(ctx context.Context, conn *efs.Client, id string) (*awstypes.ReplicationConfigurationDescription, error) {
+func findReplicationConfigurationByID(ctx context.Context, conn *efs.Client, id string) (*awstypes.ReplicationConfigurationDescription, error) {
 	input := &efs.DescribeReplicationConfigurationsInput{
 		FileSystemId: aws.String(id),
 	}
 
-	output, err := findReplicationConfiguration(ctx, conn, input)
+	output, err := findReplicationConfiguration(ctx, conn, input, tfslices.PredicateTrue[*awstypes.ReplicationConfigurationDescription]())
 
 	if err != nil {
 		return nil, err
@@ -269,7 +275,7 @@ func FindReplicationConfigurationByID(ctx context.Context, conn *efs.Client, id 
 
 func statusReplicationConfiguration(ctx context.Context, conn *efs.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindReplicationConfigurationByID(ctx, conn, id)
+		output, err := findReplicationConfigurationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -318,11 +324,15 @@ func waitReplicationConfigurationDeleted(ctx context.Context, conn *efs.Client, 
 	return nil, err
 }
 
-func expandDestinationToCreate(tfMap map[string]interface{}) awstypes.DestinationToCreate {
-	apiObject := awstypes.DestinationToCreate{}
+func expandDestinationToCreate(tfMap map[string]interface{}) *awstypes.DestinationToCreate {
+	apiObject := &awstypes.DestinationToCreate{}
 
 	if v, ok := tfMap["availability_zone_name"].(string); ok && v != "" {
 		apiObject.AvailabilityZoneName = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrFileSystemID].(string); ok && v != "" {
+		apiObject.FileSystemId = aws.String(v)
 	}
 
 	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
@@ -331,10 +341,6 @@ func expandDestinationToCreate(tfMap map[string]interface{}) awstypes.Destinatio
 
 	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
 		apiObject.Region = aws.String(v)
-	}
-
-	if v, ok := tfMap[names.AttrFileSystemID].(string); ok && v != "" {
-		apiObject.FileSystemId = aws.String(v)
 	}
 
 	return apiObject
@@ -349,14 +355,13 @@ func expandDestinationsToCreate(tfList []interface{}) []awstypes.DestinationToCr
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
-
 		if !ok {
 			continue
 		}
 
 		apiObject := expandDestinationToCreate(tfMap)
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
