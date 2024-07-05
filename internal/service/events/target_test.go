@@ -414,6 +414,47 @@ func TestAccEventsTarget_RetryPolicy_deadLetter(t *testing.T) {
 	})
 }
 
+func TestAccEventsTarget_RetryPolicy_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.Target
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_target.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetConfig_retryPolicyUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRule, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
+					resource.TestCheckResourceAttr(resourceName, "retry_policy.0.maximum_retry_attempts", "5"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				Config: testAccTargetConfig_retryPolicyUpdate1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRule, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
+					resource.TestCheckResourceAttr(resourceName, "retry_policy.0.maximum_event_age_in_seconds", "60"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEventsTarget_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Target
@@ -1487,6 +1528,52 @@ resource "aws_kinesis_stream" "test" {
 }
 
 data "aws_partition" "current" {}
+`, rName)
+}
+
+func testAccTargetConfig_retryPolicyUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_rule" "test" {
+  name                = %[1]q
+  schedule_expression = "rate(1 hour)"
+}
+
+resource "aws_cloudwatch_event_target" "test" {
+  rule      = aws_cloudwatch_event_rule.test.name
+  target_id = %[1]q
+  arn       = aws_sns_topic.test.arn
+
+  retry_policy {
+    maximum_retry_attempts = 5
+  }
+}
+
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+`, rName)
+}
+
+func testAccTargetConfig_retryPolicyUpdate1(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_rule" "test" {
+  name                = %[1]q
+  schedule_expression = "rate(1 hour)"
+}
+
+resource "aws_cloudwatch_event_target" "test" {
+  rule      = aws_cloudwatch_event_rule.test.name
+  target_id = %[1]q
+  arn       = aws_sns_topic.test.arn
+
+  retry_policy {
+    maximum_event_age_in_seconds = 60
+  }
+}
+
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
