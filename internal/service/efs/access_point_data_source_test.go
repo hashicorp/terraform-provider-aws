@@ -42,6 +42,10 @@ func testAccAccessPointDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_efs_access_point" "test" {

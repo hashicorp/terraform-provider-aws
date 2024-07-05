@@ -299,7 +299,11 @@ func testAccCheckAccessPointExists(ctx context.Context, n string, v *awstypes.Ac
 func testAccAccessPointConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
-  creation_token = "%s"
+  creation_token = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_efs_access_point" "test" {
@@ -312,6 +316,10 @@ func testAccAccessPointConfig_rootDirectory(rName, dir string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_efs_access_point" "test" {
@@ -327,6 +335,10 @@ func testAccAccessPointConfig_rootDirectoryCreationInfo(rName, dir string) strin
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_efs_access_point" "test" {
@@ -346,7 +358,11 @@ resource "aws_efs_access_point" "test" {
 func testAccAccessPointConfig_posixUser(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
-  creation_token = "%s"
+  creation_token = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_efs_access_point" "test" {
@@ -362,7 +378,11 @@ resource "aws_efs_access_point" "test" {
 func testAccAccessPointConfig_posixUserSecondaryGids(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
-  creation_token = "%s"
+  creation_token = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_efs_access_point" "test" {
@@ -380,6 +400,10 @@ func testAccAccessPointConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_efs_access_point" "test" {
@@ -396,6 +420,10 @@ func testAccAccessPointConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_efs_access_point" "test" {
