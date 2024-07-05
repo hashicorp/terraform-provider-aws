@@ -10,14 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -94,7 +93,7 @@ func ResourceRegion() *schema.Resource {
 func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DSClient(ctx)
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryID := d.Get("directory_id").(string)
 	regionName := d.Get("region_name").(string)
@@ -108,7 +107,7 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.VPCSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	_, err := conn.AddRegion(ctx, input)
+	_, err := conn.AddRegionWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Directory Service Region (%s): %s", id, err)
@@ -120,7 +119,7 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "waiting for Directory Service Region (%s) create: %s", d.Id(), err)
 	}
 
-	regionConn := meta.(*conns.AWSClient).DSClientForRegion(ctx, regionName)
+	regionConn := meta.(*conns.AWSClient).DSConnForRegion(ctx, regionName)
 
 	if tags := getTagsIn(ctx); len(tags) > 0 {
 		if err := createTags(ctx, regionConn, directoryID, tags); err != nil {
@@ -140,7 +139,7 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DSClient(ctx)
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryID, regionName, err := RegionParseResourceID(d.Id())
 
@@ -171,7 +170,7 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("vpc_settings", nil)
 	}
 
-	regionConn := meta.(*conns.AWSClient).DSClientForRegion(ctx, regionName)
+	regionConn := meta.(*conns.AWSClient).DSConnForRegion(ctx, regionName)
 
 	tags, err := listTags(ctx, regionConn, directoryID)
 
@@ -193,7 +192,7 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	conn := meta.(*conns.AWSClient).DSClientForRegion(ctx, regionName)
+	conn := meta.(*conns.AWSClient).DSConnForRegion(ctx, regionName)
 
 	if d.HasChange("desired_number_of_domain_controllers") {
 		if err := updateNumberOfDomainControllers(ctx, conn, directoryID, d.Get("desired_number_of_domain_controllers").(int), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -222,13 +221,13 @@ func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	// The Region must be removed using a client in the region.
-	conn := meta.(*conns.AWSClient).DSClientForRegion(ctx, regionName)
+	conn := meta.(*conns.AWSClient).DSConnForRegion(ctx, regionName)
 
-	_, err = conn.RemoveRegion(ctx, &directoryservice.RemoveRegionInput{
+	_, err = conn.RemoveRegionWithContext(ctx, &directoryservice.RemoveRegionInput{
 		DirectoryId: aws.String(directoryID),
 	})
 
-	if errs.IsA[*awstypes.DirectoryDoesNotExistException](err) {
+	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeDirectoryDoesNotExistException) {
 		return diags
 	}
 

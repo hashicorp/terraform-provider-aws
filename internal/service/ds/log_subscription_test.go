@@ -8,15 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -54,18 +53,18 @@ func TestAccDSLogSubscription_basic(t *testing.T) {
 
 func testAccCheckLogSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_directory_service_log_subscription" {
 				continue
 			}
 
-			res, err := conn.ListLogSubscriptions(ctx, &directoryservice.ListLogSubscriptionsInput{
+			res, err := conn.ListLogSubscriptionsWithContext(ctx, &directoryservice.ListLogSubscriptionsInput{
 				DirectoryId: aws.String(rs.Primary.ID),
 			})
 
-			if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
+			if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
 				continue
 			}
 
@@ -93,9 +92,9 @@ func testAccCheckLogSubscriptionExists(ctx context.Context, name string, logGrou
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 
-		res, err := conn.ListLogSubscriptions(ctx, &directoryservice.ListLogSubscriptionsInput{
+		res, err := conn.ListLogSubscriptionsWithContext(ctx, &directoryservice.ListLogSubscriptionsInput{
 			DirectoryId: aws.String(rs.Primary.ID),
 		})
 

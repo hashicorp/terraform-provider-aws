@@ -24,8 +24,6 @@ import (
 	accounttypes "github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	acmpcatypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
-	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
-	directoryservicetypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
@@ -39,6 +37,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -1186,10 +1185,10 @@ func PreCheckIAMServiceLinkedRoleWithProvider(ctx context.Context, t *testing.T,
 func PreCheckDirectoryService(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	conn := Provider.Meta().(*conns.AWSClient).DSClient(ctx)
+	conn := Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 	input := &directoryservice.DescribeDirectoriesInput{}
 
-	_, err := conn.DescribeDirectories(ctx, input)
+	_, err := conn.DescribeDirectoriesWithContext(ctx, input)
 
 	if PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -1206,20 +1205,20 @@ func PreCheckDirectoryService(ctx context.Context, t *testing.T) {
 func PreCheckDirectoryServiceSimpleDirectory(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	conn := Provider.Meta().(*conns.AWSClient).DSClient(ctx)
+	conn := Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 	input := &directoryservice.CreateDirectoryInput{
 		Name:     aws.String("corp.example.com"),
 		Password: aws.String("PreCheck123"),
-		Size:     directoryservicetypes.DirectorySizeSmall,
+		Size:     aws.String(directoryservice.DirectorySizeSmall),
 	}
 
-	_, err := conn.CreateDirectory(ctx, input)
+	_, err := conn.CreateDirectoryWithContext(ctx, input)
 
-	if errs.IsAErrorMessageContains[*directoryservicetypes.ClientException](err, "Simple AD directory creation is currently not supported in this region") {
+	if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeClientException, "Simple AD directory creation is currently not supported in this region") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if err != nil && !errs.IsAErrorMessageContains[*directoryservicetypes.InvalidParameterException](err, "VpcSettings must be specified") {
+	if err != nil && !tfawserr.ErrMessageContains(err, directoryservice.ErrCodeInvalidParameterException, "VpcSettings must be specified") {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }

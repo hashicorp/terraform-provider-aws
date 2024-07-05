@@ -6,8 +6,8 @@ package ds
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -174,7 +174,7 @@ func DataSourceDirectory() *schema.Resource {
 
 func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSClient(ctx)
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	dir, err := FindDirectoryByID(ctx, conn, d.Get("directory_id").(string))
@@ -183,7 +183,7 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Directory Service Directory", err))
 	}
 
-	d.SetId(aws.ToString(dir.DirectoryId))
+	d.SetId(aws.StringValue(dir.DirectoryId))
 	d.Set("access_url", dir.AccessUrl)
 	d.Set(names.AttrAlias, dir.Alias)
 	if dir.ConnectSettings != nil {
@@ -194,12 +194,12 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("connect_settings", nil)
 	}
 	d.Set(names.AttrDescription, dir.Description)
-	if dir.Type == awstypes.DirectoryTypeAdConnector {
-		d.Set("dns_ip_addresses", dir.ConnectSettings.ConnectIps)
-	} else if dir.Type == awstypes.DirectoryTypeSharedMicrosoftAd {
-		d.Set("dns_ip_addresses", dir.OwnerDirectoryDescription.DnsIpAddrs)
+	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
+		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.ConnectSettings.ConnectIps))
+	} else if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeSharedMicrosoftAd {
+		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.OwnerDirectoryDescription.DnsIpAddrs))
 	} else {
-		d.Set("dns_ip_addresses", dir.DnsIpAddrs)
+		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.DnsIpAddrs))
 	}
 	d.Set("edition", dir.Edition)
 	d.Set("enable_sso", dir.SsoEnabled)
@@ -211,7 +211,7 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("radius_settings", nil)
 	}
-	if dir.Type == awstypes.DirectoryTypeAdConnector {
+	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
 		d.Set("security_group_id", dir.ConnectSettings.SecurityGroupId)
 	} else if dir.VpcSettings != nil {
 		d.Set("security_group_id", dir.VpcSettings.SecurityGroupId)
@@ -242,34 +242,40 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func flattenRadiusSettings(apiObject *awstypes.RadiusSettings) map[string]interface{} {
+func flattenRadiusSettings(apiObject *directoryservice.RadiusSettings) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["authentication_protocol"] = string(apiObject.AuthenticationProtocol)
+	if v := apiObject.AuthenticationProtocol; v != nil {
+		tfMap["authentication_protocol"] = aws.StringValue(v)
+	}
 
 	if v := apiObject.DisplayLabel; v != nil {
-		tfMap["display_label"] = aws.ToString(v)
+		tfMap["display_label"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.RadiusPort; v != nil {
-		tfMap["radius_port"] = aws.ToInt32(v)
+		tfMap["radius_port"] = aws.Int64Value(v)
 	}
 
-	tfMap["radius_retries"] = apiObject.RadiusRetries
+	if v := apiObject.RadiusRetries; v != nil {
+		tfMap["radius_retries"] = aws.Int64Value(v)
+	}
 
 	if v := apiObject.RadiusServers; v != nil {
-		tfMap["radius_servers"] = v
+		tfMap["radius_servers"] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.RadiusTimeout; v != nil {
-		tfMap["radius_timeout"] = aws.ToInt32(v)
+		tfMap["radius_timeout"] = aws.Int64Value(v)
 	}
 
-	tfMap["use_same_username"] = apiObject.UseSameUsername
+	if v := apiObject.UseSameUsername; v != nil {
+		tfMap["use_same_username"] = aws.BoolValue(v)
+	}
 
 	return tfMap
 }

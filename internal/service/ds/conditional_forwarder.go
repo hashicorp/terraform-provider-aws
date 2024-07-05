@@ -9,13 +9,12 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
@@ -61,14 +60,14 @@ func ResourceConditionalForwarder() *schema.Resource {
 
 func resourceConditionalForwarderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSClient(ctx)
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
-	dnsIps := flex.ExpandStringValueList(d.Get("dns_ips").([]interface{}))
+	dnsIps := flex.ExpandStringList(d.Get("dns_ips").([]interface{}))
 
 	directoryId := d.Get("directory_id").(string)
 	domainName := d.Get("remote_domain_name").(string)
 
-	_, err := conn.CreateConditionalForwarder(ctx, &directoryservice.CreateConditionalForwarderInput{
+	_, err := conn.CreateConditionalForwarderWithContext(ctx, &directoryservice.CreateConditionalForwarderInput{
 		DirectoryId:      aws.String(directoryId),
 		DnsIpAddrs:       dnsIps,
 		RemoteDomainName: aws.String(domainName),
@@ -85,20 +84,20 @@ func resourceConditionalForwarderCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceConditionalForwarderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSClient(ctx)
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryId, domainName, err := ParseConditionalForwarderID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Directory Service Conditional Forwarder (%s): %s", d.Id(), err)
 	}
 
-	res, err := conn.DescribeConditionalForwarders(ctx, &directoryservice.DescribeConditionalForwardersInput{
+	res, err := conn.DescribeConditionalForwardersWithContext(ctx, &directoryservice.DescribeConditionalForwardersInput{
 		DirectoryId:       aws.String(directoryId),
-		RemoteDomainNames: []string{domainName},
+		RemoteDomainNames: []*string{aws.String(domainName)},
 	})
 
 	if err != nil {
-		if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
+		if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
 			log.Printf("[WARN] Directory Service Conditional Forwarder (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -114,7 +113,7 @@ func resourceConditionalForwarderRead(ctx context.Context, d *schema.ResourceDat
 
 	cfd := res.ConditionalForwarders[0]
 
-	d.Set("dns_ips", flex.FlattenStringValueList(cfd.DnsIpAddrs))
+	d.Set("dns_ips", flex.FlattenStringList(cfd.DnsIpAddrs))
 	d.Set("directory_id", directoryId)
 	d.Set("remote_domain_name", cfd.RemoteDomainName)
 
@@ -123,16 +122,16 @@ func resourceConditionalForwarderRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceConditionalForwarderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSClient(ctx)
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryId, domainName, err := ParseConditionalForwarderID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Directory Service Conditional Forwarder (%s): %s", d.Id(), err)
 	}
 
-	dnsIps := flex.ExpandStringValueList(d.Get("dns_ips").([]interface{}))
+	dnsIps := flex.ExpandStringList(d.Get("dns_ips").([]interface{}))
 
-	_, err = conn.UpdateConditionalForwarder(ctx, &directoryservice.UpdateConditionalForwarderInput{
+	_, err = conn.UpdateConditionalForwarderWithContext(ctx, &directoryservice.UpdateConditionalForwarderInput{
 		DirectoryId:      aws.String(directoryId),
 		DnsIpAddrs:       dnsIps,
 		RemoteDomainName: aws.String(domainName),
@@ -147,19 +146,19 @@ func resourceConditionalForwarderUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceConditionalForwarderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSClient(ctx)
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryId, domainName, err := ParseConditionalForwarderID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Directory Service Conditional Forwarder (%s): %s", d.Id(), err)
 	}
 
-	_, err = conn.DeleteConditionalForwarder(ctx, &directoryservice.DeleteConditionalForwarderInput{
+	_, err = conn.DeleteConditionalForwarderWithContext(ctx, &directoryservice.DeleteConditionalForwarderInput{
 		DirectoryId:      aws.String(directoryId),
 		RemoteDomainName: aws.String(domainName),
 	})
 
-	if err != nil && !errs.IsA[*awstypes.EntityDoesNotExistException](err) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
 		return sdkdiag.AppendErrorf(diags, "deleting Directory Service Conditional Forwarder (%s): %s", d.Id(), err)
 	}
 

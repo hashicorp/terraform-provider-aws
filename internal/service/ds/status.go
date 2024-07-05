@@ -6,12 +6,13 @@ package ds
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusDirectoryStage(ctx context.Context, conn *directoryservice.Client, id string) retry.StateRefreshFunc {
+func statusDirectoryStage(ctx context.Context, conn *directoryservice.DirectoryService, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDirectoryByID(ctx, conn, id)
 
@@ -23,11 +24,11 @@ func statusDirectoryStage(ctx context.Context, conn *directoryservice.Client, id
 			return nil, "", err
 		}
 
-		return output, string(output.Stage), nil
+		return output, aws.StringValue(output.Stage), nil
 	}
 }
 
-func statusDirectoryShareStatus(ctx context.Context, conn *directoryservice.Client, id string) retry.StateRefreshFunc {
+func statusDirectoryShareStatus(ctx context.Context, conn *directoryservice.DirectoryService, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDirectoryByID(ctx, conn, id)
 
@@ -39,11 +40,11 @@ func statusDirectoryShareStatus(ctx context.Context, conn *directoryservice.Clie
 			return nil, "", err
 		}
 
-		return output, string(output.ShareStatus), nil
+		return output, aws.StringValue(output.ShareStatus), nil
 	}
 }
 
-func statusDomainController(ctx context.Context, conn *directoryservice.Client, directoryID, domainControllerID string) retry.StateRefreshFunc {
+func statusDomainController(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, domainControllerID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDomainController(ctx, conn, directoryID, domainControllerID)
 
@@ -55,11 +56,11 @@ func statusDomainController(ctx context.Context, conn *directoryservice.Client, 
 			return nil, "", err
 		}
 
-		return output, string(output.Status), nil
+		return output, aws.StringValue(output.Status), nil
 	}
 }
 
-func statusRadius(ctx context.Context, conn *directoryservice.Client, directoryID string) retry.StateRefreshFunc {
+func statusRadius(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDirectoryByID(ctx, conn, directoryID)
 
@@ -71,11 +72,11 @@ func statusRadius(ctx context.Context, conn *directoryservice.Client, directoryI
 			return nil, "", err
 		}
 
-		return output, string(output.RadiusStatus), nil
+		return output, aws.StringValue(output.RadiusStatus), nil
 	}
 }
 
-func statusRegion(ctx context.Context, conn *directoryservice.Client, directoryID, regionName string) retry.StateRefreshFunc {
+func statusRegion(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindRegion(ctx, conn, directoryID, regionName)
 
@@ -87,11 +88,11 @@ func statusRegion(ctx context.Context, conn *directoryservice.Client, directoryI
 			return nil, "", err
 		}
 
-		return output, string(output.Status), nil
+		return output, aws.StringValue(output.Status), nil
 	}
 }
 
-func statusSharedDirectory(ctx context.Context, conn *directoryservice.Client, ownerDirectoryID, sharedDirectoryID string) retry.StateRefreshFunc {
+func statusSharedDirectory(ctx context.Context, conn *directoryservice.DirectoryService, ownerDirectoryID, sharedDirectoryID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSharedDirectory(ctx, conn, ownerDirectoryID, sharedDirectoryID)
 
@@ -103,6 +104,6 @@ func statusSharedDirectory(ctx context.Context, conn *directoryservice.Client, o
 			return nil, "", err
 		}
 
-		return output, string(output.ShareStatus), nil
+		return output, aws.StringValue(output.ShareStatus), nil
 	}
 }

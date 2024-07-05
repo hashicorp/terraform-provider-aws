@@ -16,6 +16,8 @@ import (
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -286,13 +288,25 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 		},
 	}
 
-	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-		testcase := testcase
+	t.Run("v1", func(t *testing.T) {
+		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
+			testcase := testcase
 
-		t.Run(name, func(t *testing.T) {
-			testEndpointCase(t, providerRegion, testcase, callService)
-		})
-	}
+			t.Run(name, func(t *testing.T) {
+				testEndpointCase(t, providerRegion, testcase, callServiceV1)
+			})
+		}
+	})
+
+	t.Run("v2", func(t *testing.T) {
+		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
+			testcase := testcase
+
+			t.Run(name, func(t *testing.T) {
+				testEndpointCase(t, providerRegion, testcase, callServiceV2)
+			})
+		}
+	})
 }
 
 func defaultEndpoint(region string) string {
@@ -330,7 +344,7 @@ func defaultFIPSEndpoint(region string) string {
 	return ep.URI.String()
 }
 
-func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
+func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
 	client := meta.DSClient(ctx)
@@ -353,6 +367,21 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 	}
 
 	return result
+}
+
+func callServiceV1(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
+	t.Helper()
+
+	client := meta.DSConn(ctx)
+
+	req, _ := client.DescribeDirectoriesRequest(&directoryservice_sdkv1.DescribeDirectoriesInput{})
+
+	req.HTTPRequest.URL.Path = "/"
+
+	return apiCallParams{
+		endpoint: req.HTTPRequest.URL.String(),
+		region:   aws_sdkv1.StringValue(client.Config.Region),
+	}
 }
 
 func withNoConfig(_ *caseSetup) {

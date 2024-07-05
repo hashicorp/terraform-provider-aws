@@ -15,10 +15,10 @@ import (
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	config_sdkv2 "github.com/aws/aws-sdk-go-v2/config"
 	apigatewayv2_types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
-	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
 	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
@@ -64,14 +64,14 @@ func (c *AWSClient) AwsConfig(context.Context) aws_sdkv2.Config { // nosemgrep:c
 	return c.awsConfig.Copy()
 }
 
-// DSClientForRegion returns an AWS SDK For Go v2 DS API client for the specified AWS Region.
+// DSConnForRegion returns an AWS SDK For Go v1 DS API client for the specified AWS Region.
 // If the specified region is not the default a new "simple" client is created.
 // This new client does not use any configured endpoint override.
-func (c *AWSClient) DSClientForRegion(ctx context.Context, region string) *directoryservice_sdkv2.Client {
+func (c *AWSClient) DSConnForRegion(ctx context.Context, region string) *directoryservice_sdkv1.DirectoryService {
 	if region == c.Region {
-		return c.DSClient(ctx)
+		return c.DSConn(ctx)
 	}
-	return directoryservice_sdkv2.New(directoryservice_sdkv2.Options{Region: region})
+	return directoryservice_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
 }
 
 // EFSConnForRegion returns an AWS SDK For Go v1 EFS API client for the specified AWS Region.
