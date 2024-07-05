@@ -673,6 +673,10 @@ func dataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"primary_ipv6": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"private_ip_address": {
 							Type:     schema.TypeString,
 							Computed: true,
