@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -85,11 +86,7 @@ func ResourceEnabler() *schema.Resource {
 	}
 }
 
-type resourceGetter interface {
-	Get(key string) any
-}
-
-func getAccountIDs(d resourceGetter) []string {
+func getAccountIDs(d sdkv2.ResourceDiffer) []string {
 	return flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set))
 }
 
@@ -128,11 +125,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 			return nil
 		}
 
-		var errs []error
-		for _, acct := range out.FailedAccounts {
-			errs = append(errs, newFailedAccountError(acct))
-		}
-		err = errors.Join(errs...)
+		err = errors.Join(tfslices.ApplyToAll(out.FailedAccounts, newFailedAccountError)...)
 
 		if tfslices.All(out.FailedAccounts, func(acct types.FailedAccount) bool {
 			switch acct.ErrorCode {
