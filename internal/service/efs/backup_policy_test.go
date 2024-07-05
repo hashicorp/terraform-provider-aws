@@ -118,15 +118,11 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 	})
 }
 
-func testAccCheckBackupPolicyExists(ctx context.Context, name string, v *awstypes.BackupPolicy) resource.TestCheckFunc {
+func testAccCheckBackupPolicyExists(ctx context.Context, n string, v *awstypes.BackupPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSClient(ctx)
@@ -166,7 +162,7 @@ func testAccCheckBackupPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			return fmt.Errorf("Transfer Server %s still exists", rs.Primary.ID)
+			return fmt.Errorf("EFS Backup Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil

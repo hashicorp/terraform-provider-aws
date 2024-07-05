@@ -500,7 +500,7 @@ func testAccCheckFileSystemDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("EFS file system %s still exists", rs.Primary.ID)
+			return fmt.Errorf("EFS File System %s still exists", rs.Primary.ID)
 		}
 
 		return nil

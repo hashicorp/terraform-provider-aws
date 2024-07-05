@@ -204,10 +204,6 @@ func testAccCheckFileSystemPolicyExists(ctx context.Context, n string, v *efs.De
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EFS File System Policy ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSClient(ctx)
 
 		output, err := tfefs.FindFileSystemPolicyByID(ctx, conn, rs.Primary.ID)
