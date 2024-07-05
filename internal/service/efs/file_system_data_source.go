@@ -20,8 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_efs_file_system")
-func DataSourceFileSystem() *schema.Resource {
+// @SDKDataSource("aws_efs_file_system", name="File System")
+// @Tags
+func dataSourceFileSystem() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFileSystemRead,
 
@@ -133,10 +134,10 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.FileSystemId = aws.String(v.(string))
 	}
 
-	filter := tfslices.PredicateTrue[awstypes.FileSystemDescription]()
+	filter := tfslices.PredicateTrue[*awstypes.FileSystemDescription]()
 
 	if tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig); len(tagsToMatch) > 0 {
-		filter = func(v awstypes.FileSystemDescription) bool {
+		filter = func(v *awstypes.FileSystemDescription) bool {
 			return KeyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch)
 		}
 	}
@@ -144,7 +145,7 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 	fs, err := findFileSystem(ctx, conn, input, filter)
 
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EFS file system", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EFS File System", err))
 	}
 
 	fsID := aws.ToString(fs.FileSystemId)
@@ -168,19 +169,17 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("throughput_mode", fs.ThroughputMode)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, fs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, fs.Tags)
 
-	res, err := conn.DescribeLifecycleConfiguration(ctx, &efs.DescribeLifecycleConfigurationInput{
-		FileSystemId: fs.FileSystemId,
+	output, err := conn.DescribeLifecycleConfiguration(ctx, &efs.DescribeLifecycleConfigurationInput{
+		FileSystemId: aws.String(d.Id()),
 	})
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing lifecycle configuration for EFS file system (%s): %s",
-			aws.ToString(fs.FileSystemId), err)
+		return sdkdiag.AppendErrorf(diags, "reading EFS File System (%s) lifecycle configuration: %s", d.Id(), err)
 	}
 
-	if err := d.Set("lifecycle_policy", flattenLifecyclePolicies(res.LifecyclePolicies)); err != nil {
+	if err := d.Set("lifecycle_policy", flattenLifecyclePolicies(output.LifecyclePolicies)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lifecycle_policy: %s", err)
 	}
 

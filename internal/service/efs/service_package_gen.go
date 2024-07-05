@@ -35,8 +35,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_efs_access_points",
 		},
 		{
-			Factory:  DataSourceFileSystem,
+			Factory:  dataSourceFileSystem,
 			TypeName: "aws_efs_file_system",
+			Name:     "File System",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceMountTarget,

@@ -213,16 +213,7 @@ data "aws_efs_file_system" "test" {
 }
 `
 
-const testAccFileSystemDataSourceConfig_availabilityZone = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccFileSystemDataSourceConfig_availabilityZone = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_efs_file_system" "test" {
   availability_zone_name = data.aws_availability_zones.available.names[0]
 }
@@ -230,4 +221,4 @@ resource "aws_efs_file_system" "test" {
 data "aws_efs_file_system" "test" {
   file_system_id = aws_efs_file_system.test.id
 }
-`
+`)
