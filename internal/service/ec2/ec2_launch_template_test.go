@@ -1394,7 +1394,7 @@ func TestAccEC2LaunchTemplate_instanceMarketOptions(t *testing.T) {
 
 func TestAccEC2LaunchTemplate_primaryIPv6(t *testing.T) {
 	ctx := acctest.Context(t)
-	var template ec2.LaunchTemplate
+	var template awstypes.LaunchTemplate
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_template.test"
 
