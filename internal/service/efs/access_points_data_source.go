@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_efs_access_points")
-func DataSourceAccessPoints() *schema.Resource {
+// @SDKDataSource("aws_efs_access_points", name="Access Point")
+func dataSourceAccessPoints() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccessPointsRead,
 
