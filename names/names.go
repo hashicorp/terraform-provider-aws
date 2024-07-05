@@ -297,10 +297,7 @@ type ServiceDatum struct {
 	Brand              string
 	ClientSDKV1        bool
 	DeprecatedEnvVar   string
-	EndpointOnly       bool
 	GoV1ClientTypeName string
-	GoV1Package        string
-	GoV2Package        string
 	HumanFriendly      string
 	ProviderNameUpper  string
 	SDKID              string
@@ -344,10 +341,7 @@ func readCSVIntoServiceData() error {
 			Brand:              l.Brand(),
 			ClientSDKV1:        l.ClientSDKV1(),
 			DeprecatedEnvVar:   l.DeprecatedEnvVar(),
-			EndpointOnly:       l.EndpointOnly(),
 			GoV1ClientTypeName: l.GoV1ClientTypeName(),
-			GoV1Package:        l.GoV1Package(),
-			GoV2Package:        l.GoV2Package(),
 			HumanFriendly:      l.HumanFriendly(),
 			ProviderNameUpper:  l.ProviderNameUpper(),
 			SDKID:              l.SDKID(),
