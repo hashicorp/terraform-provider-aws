@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflogtest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
@@ -1737,4 +1738,70 @@ func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases) {
 			}
 		})
 	}
+}
+
+func TestFlattenPrePopulate(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	testCases := map[string]struct {
+		target   any
+		expected any
+	}{
+		"string": {
+			target: &rootStringModel{},
+			expected: &rootStringModel{
+				Field1: types.StringNull(),
+			},
+		},
+
+		"nested list": {
+			target: &rootListNestedObjectModel{},
+			expected: &rootListNestedObjectModel{
+				Field1: fwtypes.NewListNestedObjectValueOfNull[nestedModel](ctx),
+			},
+		},
+
+		"nested set": {
+			target: &rootSetNestedObjectModel{},
+			expected: &rootSetNestedObjectModel{
+				Field1: fwtypes.NewSetNestedObjectValueOfNull[nestedModel](ctx),
+			},
+		},
+	}
+
+	for name, testCase := range testCases {
+		testCase := testCase
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			valTo := reflect.ValueOf(testCase.target)
+
+			diags := flattenPrePopulate(ctx, valTo)
+
+			if l := len(diags); l > 0 {
+				t.Fatalf("expected 0 diags, got %s", fwdiag.DiagnosticsString(diags))
+			}
+
+			if diff := cmp.Diff(testCase.target, testCase.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+type rootStringModel struct {
+	Field1 types.String `tfsdk:"field1"`
+}
+
+type rootListNestedObjectModel struct {
+	Field1 fwtypes.ListNestedObjectValueOf[nestedModel] `tfsdk:"field1"`
+}
+
+type rootSetNestedObjectModel struct {
+	Field1 fwtypes.SetNestedObjectValueOf[nestedModel] `tfsdk:"field1"`
+}
+
+type nestedModel struct {
+	Field1 types.String `tfsdk:"field1"`
 }

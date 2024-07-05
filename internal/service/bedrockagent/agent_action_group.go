@@ -460,8 +460,6 @@ func (m actionGroupExecutorModel) Expand(ctx context.Context) (result any, diags
 }
 
 func (m *actionGroupExecutorModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
-	m.Lambda = fwtypes.ARNNull()
-
 	switch t := v.(type) {
 	case awstypes.ActionGroupExecutorMemberCustomControl:
 		m.CustomControl = fwtypes.StringEnumValue(t.Value)
@@ -507,9 +505,6 @@ func (m apiSchemaModel) Expand(ctx context.Context) (result any, diags diag.Diag
 }
 
 func (m *apiSchemaModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
-	m.Payload = types.StringNull()
-	m.S3 = fwtypes.NewListNestedObjectValueOfNull[s3IdentifierModel](ctx)
-
 	switch t := v.(type) {
 	case awstypes.APISchemaMemberPayload:
 		m.Payload = fwflex.StringToFramework(ctx, &t.Value)

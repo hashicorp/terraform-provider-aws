@@ -1102,9 +1102,64 @@ func newStringValueFromReflectPointerValue(v reflect.Value) attr.Value {
 func flattenFlattener(ctx context.Context, fromVal reflect.Value, toFlattener Flattener) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	valTo := reflect.ValueOf(toFlattener)
+
+	diags.Append(flattenPrePopulate(ctx, valTo)...)
+	if diags.HasError() {
+		return diags
+	}
+
 	from := fromVal.Interface()
 
 	diags.Append(toFlattener.Flatten(ctx, from)...)
 
 	return diags
+}
+
+func flattenPrePopulate(ctx context.Context, toVal reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if toVal.Kind() == reflect.Ptr {
+		toVal = toVal.Elem()
+	}
+
+	typeTo := toVal.Type()
+	for i := 0; i < typeTo.NumField(); i++ {
+		field := typeTo.Field(i)
+		if !field.IsExported() {
+			continue // Skip unexported fields.
+		}
+
+		fieldVal := toVal.Field(i)
+		if !fieldVal.CanSet() {
+			diags.AddError(
+				"Not Sure",
+				"An unexpected error occurred while flattening configuration. "+
+					"This is always an error in the provider. "+
+					"Please report the following to the provider developer:\n\n"+
+					fmt.Sprintf("Field %q in %q is not settable.", field.Name, fullTypeName(fieldVal.Type())),
+			)
+		}
+
+		fieldTo, ok := fieldVal.Interface().(attr.Value)
+		if !ok {
+			continue // Skip non-attr.Type fields.
+		}
+		tTo := fieldTo.Type(ctx)
+		switch tTo := tTo.(type) {
+		// The zero values of primitive types are Null.
+
+		// Aggregate types.
+		case fwtypes.NestedObjectType:
+			v, d := tTo.NullValue(ctx)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+			fieldVal.Set(reflect.ValueOf(v))
+		}
+	}
+
+	return diags
+
 }
