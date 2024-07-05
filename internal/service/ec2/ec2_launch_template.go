@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -1040,7 +1039,7 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s): %s", d.Id(), err)
 	}
 
-	version := strconv.FormatInt(aws.ToInt64(lt.LatestVersionNumber), 10)
+	version := flex.Int64ToStringValue(lt.LatestVersionNumber)
 	ltv, err := findLaunchTemplateVersionByTwoPartKey(ctx, conn, d.Id(), version)
 
 	if err != nil {
@@ -1140,9 +1139,9 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if d.Get("update_default_version").(bool) {
-			input.DefaultVersion = aws.String(strconv.FormatInt(latestVersion, 10))
+			input.DefaultVersion = flex.Int64ValueToString(latestVersion)
 		} else if d.HasChange("default_version") {
-			input.DefaultVersion = aws.String(strconv.Itoa(d.Get("default_version").(int)))
+			input.DefaultVersion = flex.IntValueToString(d.Get("default_version").(int))
 		}
 
 		_, err := conn.ModifyLaunchTemplate(ctx, input)
@@ -2193,7 +2192,7 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 	d.Set("disable_api_stop", apiObject.DisableApiStop)
 	d.Set("disable_api_termination", apiObject.DisableApiTermination)
 	if apiObject.EbsOptimized != nil {
-		d.Set("ebs_optimized", strconv.FormatBool(aws.ToBool(apiObject.EbsOptimized)))
+		d.Set("ebs_optimized", flex.BoolToStringValue(apiObject.EbsOptimized))
 	} else {
 		d.Set("ebs_optimized", "")
 	}
@@ -2351,11 +2350,11 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *awstypes.LaunchTemplateEbsBl
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeleteOnTermination; v != nil {
-		tfMap[names.AttrDeleteOnTermination] = strconv.FormatBool(aws.ToBool(v))
+		tfMap[names.AttrDeleteOnTermination] = flex.BoolToStringValue(v)
 	}
 
 	if v := apiObject.Encrypted; v != nil {
-		tfMap[names.AttrEncrypted] = strconv.FormatBool(aws.ToBool(v))
+		tfMap[names.AttrEncrypted] = flex.BoolToStringValue(v)
 	}
 
 	if v := apiObject.Iops; v != nil {
@@ -2889,15 +2888,15 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AssociateCarrierIpAddress; v != nil {
-		tfMap["associate_carrier_ip_address"] = strconv.FormatBool(aws.ToBool(v))
+		tfMap["associate_carrier_ip_address"] = flex.BoolToStringValue(v)
 	}
 
 	if v := apiObject.AssociatePublicIpAddress; v != nil {
-		tfMap["associate_public_ip_address"] = strconv.FormatBool(aws.ToBool(v))
+		tfMap["associate_public_ip_address"] = flex.BoolToStringValue(v)
 	}
 
 	if v := apiObject.DeleteOnTermination; v != nil {
-		tfMap[names.AttrDeleteOnTermination] = strconv.FormatBool(aws.ToBool(v))
+		tfMap[names.AttrDeleteOnTermination] = flex.BoolToStringValue(v)
 	}
 
 	if v := apiObject.Description; v != nil {
