@@ -57,7 +57,7 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"collection_id": schema.StringAttribute{
 				Description: "The name of the Rekognition collection",
 				Required:    true,
@@ -69,7 +69,7 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"face_model_version": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -84,7 +84,7 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 	if s.Blocks == nil {
 		s.Blocks = make(map[string]schema.Block)
 	}
-	s.Blocks["timeouts"] = timeouts.Block(ctx, timeouts.Opts{
+	s.Blocks[names.AttrTimeouts] = timeouts.Block(ctx, timeouts.Opts{
 		Create: true,
 	})
 

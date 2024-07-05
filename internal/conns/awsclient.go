@@ -9,21 +9,20 @@ import (
 	"maps"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	config_sdkv2 "github.com/aws/aws-sdk-go-v2/config"
+	apigatewayv2_types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
 	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
-	dynamodb_sdkv1 "github.com/aws/aws-sdk-go/service/dynamodb"
-	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
-	kms_sdkv1 "github.com/aws/aws-sdk-go/service/kms"
 	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -64,16 +63,6 @@ func (c *AWSClient) AwsConfig(context.Context) aws_sdkv2.Config { // nosemgrep:c
 	return c.awsConfig.Copy()
 }
 
-// DynamoDBConnForRegion returns an AWS SDK For Go v1 DynamoDB API client for the specified AWS Region.
-// If the specified region is not the default a new "simple" client is created.
-// This new client does not use any configured endpoint override.
-func (c *AWSClient) DynamoDBConnForRegion(ctx context.Context, region string) *dynamodb_sdkv1.DynamoDB {
-	if region == c.Region {
-		return c.DynamoDBConn(ctx)
-	}
-	return dynamodb_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
-}
-
 // DSConnForRegion returns an AWS SDK For Go v1 DS API client for the specified AWS Region.
 // If the specified region is not the default a new "simple" client is created.
 // This new client does not use any configured endpoint override.
@@ -84,27 +73,7 @@ func (c *AWSClient) DSConnForRegion(ctx context.Context, region string) *directo
 	return directoryservice_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
 }
 
-// EFSConnForRegion returns an AWS SDK For Go v1 EFS API client for the specified AWS Region.
-// If the specified region is not the default a new "simple" client is created.
-// This new client does not use any configured endpoint override.
-func (c *AWSClient) EFSConnForRegion(ctx context.Context, region string) *efs_sdkv1.EFS {
-	if region == c.Region {
-		return c.EFSConn(ctx)
-	}
-	return efs_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
-}
-
-// KMSConnForRegion returns an AWS SDK For Go v1 KMS API client for the specified AWS Region.
-// If the specified region is not the default a new "simple" client is created.
-// This new client does not use any configured endpoint override.
-func (c *AWSClient) KMSConnForRegion(ctx context.Context, region string) *kms_sdkv1.KMS {
-	if region == c.Region {
-		return c.KMSConn(ctx)
-	}
-	return kms_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
-}
-
-// KMSConnForRegion returns an AWS SDK For Go v1 OpsWorks API client for the specified AWS Region.
+// OpsWorksConnForRegion returns an AWS SDK For Go v1 OpsWorks API client for the specified AWS Region.
 // If the specified region is not the default a new "simple" client is created.
 // This new client does not use any configured endpoint override.
 func (c *AWSClient) OpsWorksConnForRegion(ctx context.Context, region string) *opsworks_sdkv1.OpsWorks {
@@ -192,8 +161,8 @@ func (c *AWSClient) APIGatewayInvokeURL(ctx context.Context, restAPIID, stageNam
 // APIGatewayV2InvokeURL returns the Amazon API Gateway v2 (WebSocket & HTTP APIs) invoke URL for the configured AWS Region.
 // See https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-publish.html and
 // https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-set-up-websocket-deployment.html.
-func (c *AWSClient) APIGatewayV2InvokeURL(ctx context.Context, protocolType, apiID, stageName string) string {
-	if protocolType == apigatewayv2_sdkv1.ProtocolTypeWebsocket {
+func (c *AWSClient) APIGatewayV2InvokeURL(ctx context.Context, protocolType apigatewayv2_types.ProtocolType, apiID, stageName string) string {
+	if protocolType == apigatewayv2_types.ProtocolTypeWebsocket {
 		return fmt.Sprintf("wss://%s/%s", c.RegionalHostname(ctx, fmt.Sprintf("%s.execute-api", apiID)), stageName)
 	}
 
@@ -250,6 +219,40 @@ func (c *AWSClient) ReverseDNSPrefix(ctx context.Context) string {
 	return names.ReverseDNS(c.DNSSuffix(ctx))
 }
 
+// EC2RegionalPrivateDNSSuffix returns the EC2 private DNS suffix for the configured AWS Region.
+func (c *AWSClient) EC2RegionalPrivateDNSSuffix(context.Context) string {
+	region := c.Region
+	if region == names.USEast1RegionID {
+		return "ec2.internal"
+	}
+
+	return fmt.Sprintf("%s.compute.internal", region)
+}
+
+// EC2RegionalPublicDNSSuffix returns the EC2 public DNS suffix for the configured AWS Region.
+func (c *AWSClient) EC2RegionalPublicDNSSuffix(context.Context) string {
+	region := c.Region
+	if region == names.USEast1RegionID {
+		return "compute-1"
+	}
+
+	return fmt.Sprintf("%s.compute", region)
+}
+
+// EC2PrivateDNSNameForIP returns a EC2 private DNS name in the configured AWS Region.
+func (c *AWSClient) EC2PrivateDNSNameForIP(ctx context.Context, ip string) string {
+	return fmt.Sprintf("ip-%s.%s", convertIPToDashIP(ip), c.EC2RegionalPrivateDNSSuffix(ctx))
+}
+
+// EC2PublicDNSNameForIP returns a EC2 public DNS name in the configured AWS Region.
+func (c *AWSClient) EC2PublicDNSNameForIP(ctx context.Context, ip string) string {
+	return c.PartitionHostname(ctx, fmt.Sprintf("ec2-%s.%s", convertIPToDashIP(ip), c.EC2RegionalPublicDNSSuffix(ctx)))
+}
+
+func convertIPToDashIP(ip string) string {
+	return strings.Replace(ip, ".", "-", -1)
+}
+
 // apiClientConfig returns the AWS API client configuration parameters for the specified service.
 func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName string) map[string]any {
 	m := map[string]any{
@@ -284,7 +287,7 @@ func (c *AWSClient) resolveEndpoint(ctx context.Context, servicePackageName stri
 	if names.ClientSDKV1(servicePackageName) {
 		endpoint = aws_sdkv2.ToString(c.awsConfig.BaseEndpoint)
 
-		envvar := names.AwsServiceEnvVar(servicePackageName)
+		envvar := names.AWSServiceEnvVar(servicePackageName)
 		svc := os.Getenv(envvar)
 		if svc != "" {
 			return svc
@@ -294,7 +297,7 @@ func (c *AWSClient) resolveEndpoint(ctx context.Context, servicePackageName stri
 			return base
 		}
 
-		sdkId := names.SdkId(servicePackageName)
+		sdkId := names.SDKID(servicePackageName)
 		endpoint, found, err := resolveServiceBaseEndpoint(ctx, sdkId, c.awsConfig.ConfigSources)
 		if found && err == nil {
 			return endpoint
@@ -331,6 +334,8 @@ func resolveServiceBaseEndpoint(ctx context.Context, sdkID string, configs []any
 // The default service client (`extra` is empty) is cached. In this case the AWSClient lock is held.
 // This function is not a method on `AWSClient` as methods can't be parameterized (https://go.googlesource.com/proposal/+/refs/heads/master/design/43651-type-parameters.md#no-parameterized-methods).
 func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, extra map[string]any) (T, error) {
+	ctx = tflog.SetField(ctx, "tf_aws.service_package", servicePackageName)
+
 	isDefault := len(extra) == 0
 	// Default service client is cached.
 	if isDefault {
@@ -391,6 +396,8 @@ func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, e
 // The default service client (`extra` is empty) is cached. In this case the AWSClient lock is held.
 // This function is not a method on `AWSClient` as methods can't be parameterized (https://go.googlesource.com/proposal/+/refs/heads/master/design/43651-type-parameters.md#no-parameterized-methods).
 func client[T any](ctx context.Context, c *AWSClient, servicePackageName string, extra map[string]any) (T, error) {
+	ctx = tflog.SetField(ctx, "tf_aws.service_package", servicePackageName)
+
 	isDefault := len(extra) == 0
 	// Default service client is cached.
 	if isDefault {

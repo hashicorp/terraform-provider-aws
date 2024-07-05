@@ -31,6 +31,7 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the link.
+* `id` - ARN of the link.
 * `label` - Label that is assigned to this link.
 * `label_template` - Human-readable name used to identify this source account when you are viewing data from it in the monitoring account.
 * `link_id` - ID string that AWS generated as part of the link ARN.

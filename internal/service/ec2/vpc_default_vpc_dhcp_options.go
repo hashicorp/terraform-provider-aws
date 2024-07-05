@@ -5,10 +5,8 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,6 +19,7 @@ import (
 
 // @SDKResource("aws_default_vpc_dhcp_options", name="DHCP Options")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -38,20 +37,25 @@ func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 		// Keep in sync with aws_vpc_dhcp_options' schema with the following changes:
 		//   - domain_name is Computed-only
 		//   - domain_name_servers is Computed-only and is TypeString
+		//   - ipv6_address_preferred_lease_time is Computed-only and is TypeString
 		//   - netbios_name_servers is Computed-only and is TypeString
 		//   - netbios_node_type is Computed-only
 		//   - ntp_servers is Computed-only and is TypeString
 		//   - owner_id is Optional/Computed
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"domain_name_servers": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ipv6_address_preferred_lease_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +71,7 @@ func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -85,13 +89,13 @@ func resourceDefaultVPCDHCPOptionsCreate(ctx context.Context, d *schema.Resource
 	input := &ec2.DescribeDhcpOptionsInput{}
 
 	input.Filters = append(input.Filters,
-		newFilter("key", []string{"domain-name"}),
-		newFilter("value", []string{RegionalPrivateDNSSuffix(meta.(*conns.AWSClient).Region)}),
-		newFilter("key", []string{"domain-name-servers"}),
-		newFilter("value", []string{"AmazonProvidedDNS"}),
+		newFilter(names.AttrKey, []string{"domain-name"}),
+		newFilter(names.AttrValue, []string{meta.(*conns.AWSClient).EC2RegionalPrivateDNSSuffix(ctx)}),
+		newFilter(names.AttrKey, []string{"domain-name-servers"}),
+		newFilter(names.AttrValue, []string{"AmazonProvidedDNS"}),
 	)
 
-	if v, ok := d.GetOk("owner_id"); ok {
+	if v, ok := d.GetOk(names.AttrOwnerID); ok {
 		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"owner-id": v.(string),
 		})...)
@@ -106,20 +110,4 @@ func resourceDefaultVPCDHCPOptionsCreate(ctx context.Context, d *schema.Resource
 	d.SetId(aws.StringValue(dhcpOptions.DhcpOptionsId))
 
 	return append(diags, resourceVPCDHCPOptionsUpdate(ctx, d, meta)...)
-}
-
-func RegionalPrivateDNSSuffix(region string) string {
-	if region == endpoints.UsEast1RegionID {
-		return "ec2.internal"
-	}
-
-	return fmt.Sprintf("%s.compute.internal", region)
-}
-
-func RegionalPublicDNSSuffix(region string) string {
-	if region == endpoints.UsEast1RegionID {
-		return "compute-1"
-	}
-
-	return fmt.Sprintf("%s.compute", region)
 }

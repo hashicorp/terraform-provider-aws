@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_directory_service_log_subscription")
@@ -31,7 +32,7 @@ func ResourceLogSubscription() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"log_group_name": {
+			names.AttrLogGroupName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -45,7 +46,7 @@ func resourceLogSubscriptionCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	directoryId := d.Get("directory_id")
-	logGroupName := d.Get("log_group_name")
+	logGroupName := d.Get(names.AttrLogGroupName)
 
 	input := directoryservice.CreateLogSubscriptionInput{
 		DirectoryId:  aws.String(directoryId.(string)),
@@ -85,7 +86,7 @@ func resourceLogSubscriptionRead(ctx context.Context, d *schema.ResourceData, me
 
 	logSubscription := out.LogSubscriptions[0]
 	d.Set("directory_id", logSubscription.DirectoryId)
-	d.Set("log_group_name", logSubscription.LogGroupName)
+	d.Set(names.AttrLogGroupName, logSubscription.LogGroupName)
 
 	return diags
 }

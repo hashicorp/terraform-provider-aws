@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testPlanDataSource_basic(t *testing.T) {
+func testAccPlanDataSource_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -80,7 +80,7 @@ func testPlanDataSource_basic(t *testing.T) {
 	})
 }
 
-func testPlanDataSource_channelTargetInfo(t *testing.T) {
+func testAccPlanDataSource_channelTargetInfo(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}

@@ -18,13 +18,16 @@ AppIntegrations
 AppStream 2.0
 AppSync
 Application Auto Scaling
+Application Signals
 Athena
 Audit Manager
 Auto Scaling
 Auto Scaling Plans
+BCM Data Exports
 Backup
 Batch
 CE (Cost Explorer)
+Chatbot
 Chime
 Chime SDK Media Pipelines
 Chime SDK Voice
@@ -43,6 +46,7 @@ CloudWatch Application Insights
 CloudWatch Evidently
 CloudWatch Internet Monitor
 CloudWatch Logs
+CloudWatch Network Monitor
 CloudWatch Observability Access Manager
 CloudWatch RUM
 CloudWatch Synthetics
@@ -69,6 +73,7 @@ Cost Optimization Hub
 Cost and Usage Report
 DLM (Data Lifecycle Manager)
 DMS (Database Migration)
+DRS (Elastic Disaster Recovery)
 Data Exchange
 Data Pipeline
 DataSync
@@ -116,6 +121,7 @@ FinSpace
 GameLift
 Global Accelerator
 Glue
+Glue DataBrew
 Ground Station
 GuardDuty
 HealthLake
@@ -156,6 +162,7 @@ Managed Streaming for Kafka Connect
 MemoryDB for Redis
 Meta Data Sources
 Neptune
+Neptune Analytics
 Network Firewall
 Network Manager
 OpenSearch
@@ -185,6 +192,7 @@ Resource Groups Tagging
 Roles Anywhere
 Route 53
 Route 53 Domains
+Route 53 Profiles
 Route 53 Recovery Control Config
 Route 53 Recovery Readiness
 Route 53 Resolver
@@ -218,6 +226,7 @@ Signer
 Storage Gateway
 Systems Manager for SAP
 Timestream Write
+Timestream for InfluxDB
 Transcribe
 Transfer Family
 Transit Gateway
@@ -236,4 +245,5 @@ Web Services Budgets
 Well-Architected Tool
 WorkLink
 WorkSpaces
+WorkSpaces Web
 X-Ray

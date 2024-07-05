@@ -50,6 +50,7 @@ This resource supports the following arguments:
 * `container_startup_health_check_timeout_in_seconds` - (Optional) The timeout value, in seconds, for your inference container to pass health check by SageMaker Hosting. For more information about health check, see [How Your Container Should Respond to Health Check (Ping) Requests](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-inference-code.html#your-algorithms-inference-algo-ping-requests). Valid values between `60` and `3600`.
 * `core_dump_config` - (Optional) Specifies configuration for a core dump from the model container when the process crashes. Fields are documented below.
 * `enable_ssm_access` - (Optional) You can use this parameter to turn on native Amazon Web Services Systems Manager (SSM) access for a production variant behind an endpoint. By default, SSM access is disabled for all production variants behind an endpoints.
+* `inference_ami_version` - (Optional) Specifies an option from a collection of preconfigured Amazon Machine Image (AMI) images. Each image is configured by Amazon Web Services with a set of software and driver versions. Amazon Web Services optimizes these configurations for different machine learning workloads.
 * `initial_instance_count` - (Optional) Initial number of instances used for auto-scaling.
 * `instance_type` - (Optional)  The type of instance to start.
 * `initial_variant_weight` - (Optional) Determines initial traffic distribution among all of the models that you specify in the endpoint configuration. If unspecified, it defaults to `1.0`.
@@ -86,7 +87,7 @@ This resource supports the following arguments:
 
 #### capture_options
 
-* `capture_mode` - (Required) Specifies the data to be captured. Should be one of `Input` or `Output`.
+* `capture_mode` - (Required) Specifies the data to be captured. Should be one of `Input`, `Output` or `InputAndOutput`.
 
 #### capture_content_type_header
 
