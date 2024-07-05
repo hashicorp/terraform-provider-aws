@@ -97,7 +97,7 @@ func dataSourceAccessPoint() *schema.Resource {
 					},
 				},
 			},
-			names.AttrTags: tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
