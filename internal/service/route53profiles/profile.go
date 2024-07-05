@@ -131,18 +131,18 @@ func (r *resourceProfile) Create(ctx context.Context, req resource.CreateRequest
 
 	data.ID = fwflex.StringToFramework(ctx, output.Profile.Id)
 
-	profileOutput, err := waitProfileCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	profile, err := waitProfileCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("waiting for route53 profile (%s) created", name), err.Error())
 		return
 	}
 
-	if profileOutput != nil {
-		data.ARN = fwflex.StringToFramework(ctx, profileOutput.Arn)
-		data.OwnerId = fwflex.StringToFramework(ctx, profileOutput.OwnerId)
-		data.ShareStatus = fwtypes.StringEnumValue(profileOutput.ShareStatus)
-		data.Status = fwtypes.StringEnumValue(profileOutput.Status)
-		data.StatusMessage = fwflex.StringToFramework(ctx, profileOutput.StatusMessage)
+	if profile != nil {
+		data.ARN = fwflex.StringToFramework(ctx, profile.Arn)
+		data.OwnerId = fwflex.StringToFramework(ctx, profile.OwnerId)
+		data.ShareStatus = fwtypes.StringEnumValue(profile.ShareStatus)
+		data.Status = fwtypes.StringEnumValue(profile.Status)
+		data.StatusMessage = fwflex.StringToFramework(ctx, profile.StatusMessage)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

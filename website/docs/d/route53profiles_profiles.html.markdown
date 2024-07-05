@@ -26,7 +26,6 @@ There are no arguments available for this data source.
 
 This data source exports the following attributes:
 
-
 * `profiles` - List of Profiles.
     * `arn` - The ARN of the Profile.
     * `id` - The ID of the Profile.

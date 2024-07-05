@@ -11,13 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53profiles"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53profiles/types"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -83,10 +82,8 @@ func (r *resourceResourceAssociation) Schema(ctx context.Context, req resource.S
 				},
 			},
 			"resource_properties": schema.StringAttribute{
-				Optional: true,
-				Validators: []validator.String{
-					fwvalidators.JSON(),
-				},
+				CustomType: jsontypes.NormalizedType{},
+				Optional:   true,
 			},
 			names.AttrResourceType: schema.StringAttribute{
 				Computed: true,
@@ -112,51 +109,49 @@ func (r *resourceResourceAssociation) Schema(ctx context.Context, req resource.S
 func (r *resourceResourceAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
-	var plan resourceAssociationResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	var state resourceAssociationResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	input := &route53profiles.AssociateResourceToProfileInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+	resp.Diagnostics.Append(flex.Expand(ctx, state, input)...)
 
 	out, err := conn.AssociateResourceToProfile(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionCreating, ResNameResourceAssociation, plan.Name.String(), err),
+			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionCreating, ResNameResourceAssociation, state.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.ProfileResourceAssociation == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionCreating, ResNameResourceAssociation, plan.Name.String(), nil),
+			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionCreating, ResNameResourceAssociation, state.Name.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	plan.ID = flex.StringToFramework(ctx, out.ProfileResourceAssociation.Id)
+	state.ID = flex.StringToFramework(ctx, out.ProfileResourceAssociation.Id)
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	resourceAssociation, err := waitResourceAssociationCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	createTimeout := r.CreateTimeout(ctx, state.Timeouts)
+	resourceAssociation, err := waitResourceAssociationCreated(ctx, conn, state.ID.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionWaitingForCreation, ResNameResourceAssociation, plan.Name.String(), err),
+			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionWaitingForCreation, ResNameResourceAssociation, state.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
-	if resourceAssociation != nil {
-		plan.OwnerId = flex.StringToFramework(ctx, resourceAssociation.OwnerId)
-		plan.ResourceProperties = flex.StringToFramework(ctx, resourceAssociation.ResourceProperties)
-		plan.ResourceType = flex.StringToFramework(ctx, resourceAssociation.ResourceType)
-		plan.Status = fwtypes.StringEnumValue[awstypes.ProfileStatus](resourceAssociation.Status)
-		plan.StatusMessage = flex.StringToFramework(ctx, resourceAssociation.StatusMessage)
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, resourceAssociation, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
 func (r *resourceResourceAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -309,7 +304,7 @@ type resourceAssociationResourceModel struct {
 	OwnerId            types.String                               `tfsdk:"owner_id"`
 	ProfileID          types.String                               `tfsdk:"profile_id"`
 	ResourceArn        types.String                               `tfsdk:"resource_arn"`
-	ResourceProperties types.String                               `tfsdk:"resource_properties"`
+	ResourceProperties jsontypes.Normalized                       `tfsdk:"resource_properties"`
 	ResourceType       types.String                               `tfsdk:"resource_type"`
 	Status             fwtypes.StringEnum[awstypes.ProfileStatus] `tfsdk:"status"`
 	StatusMessage      types.String                               `tfsdk:"status_message"`

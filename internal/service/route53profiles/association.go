@@ -101,49 +101,49 @@ func (r *resourceAssociation) Schema(ctx context.Context, req resource.SchemaReq
 func (r *resourceAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
-	var plan associationResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	var state associationResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	input := &route53profiles.AssociateProfileInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+	resp.Diagnostics.Append(flex.Expand(ctx, state, input)...)
 
 	out, err := conn.AssociateProfile(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionCreating, ResNameAssociation, plan.Name.String(), err),
+			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionCreating, ResNameAssociation, state.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.ProfileAssociation == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionCreating, ResNameAssociation, plan.Name.String(), nil),
+			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionCreating, ResNameAssociation, state.Name.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	plan.ID = flex.StringToFramework(ctx, out.ProfileAssociation.Id)
+	state.ID = flex.StringToFramework(ctx, out.ProfileAssociation.Id)
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	profileAssociation, err := waitAssociationCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	createTimeout := r.CreateTimeout(ctx, state.Timeouts)
+	profileAssociation, err := waitAssociationCreated(ctx, conn, state.ID.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionWaitingForCreation, ResNameAssociation, plan.Name.String(), err),
+			create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionWaitingForCreation, ResNameAssociation, state.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
-	if profileAssociation != nil {
-		plan.OwnerId = flex.StringToFramework(ctx, profileAssociation.OwnerId)
-		plan.Status = fwtypes.StringEnumValue[awstypes.ProfileStatus](profileAssociation.Status)
-		plan.StatusMessage = flex.StringToFramework(ctx, profileAssociation.StatusMessage)
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, profileAssociation, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
 func (r *resourceAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {

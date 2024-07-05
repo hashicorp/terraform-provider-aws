@@ -116,7 +116,7 @@ func TestAccRoute53ProfilesProfile_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProfileConfig_tags1(rName, acctest.CtTagsKey2, acctest.CtValue2),
+				Config: testAccProfileConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
