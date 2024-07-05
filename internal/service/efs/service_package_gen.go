@@ -77,7 +77,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "File System Policy",
 		},
 		{
-			Factory:  ResourceMountTarget,
+			Factory:  resourceMountTarget,
 			TypeName: "aws_efs_mount_target",
 			Name:     "Mount Target",
 		},

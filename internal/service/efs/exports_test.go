@@ -9,9 +9,11 @@ var (
 	ResourceBackupPolicy     = resourceBackupPolicy
 	ResourceFileSystem       = resourceFileSystem
 	ResourceFileSystemPolicy = resourceFileSystemPolicy
+	ResourceMountTarget      = resourceMountTarget
 
 	FindAccessPointByID      = findAccessPointByID
 	FindBackupPolicyByID     = findBackupPolicyByID
 	FindFileSystemByID       = findFileSystemByID
 	FindFileSystemPolicyByID = findFileSystemPolicyByID
+	FindMountTargetByID      = findMountTargetByID
 )

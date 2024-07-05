@@ -24,12 +24,13 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_efs_mount_target", name="Mount Target")
-func ResourceMountTarget() *schema.Resource {
+func resourceMountTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMountTargetCreate,
 		ReadWithoutTimeout:   resourceMountTargetRead,
@@ -46,11 +47,11 @@ func ResourceMountTarget() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"availability_zone_name": {
+			"availability_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zone_id": {
+			"availability_zone_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -153,7 +154,7 @@ func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
-	mt, err := FindMountTargetByID(ctx, conn, d.Id())
+	mt, err := findMountTargetByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EFS Mount Target (%s) not found, removing from state", d.Id())
@@ -251,8 +252,8 @@ func getAZFromSubnetID(ctx context.Context, conn *ec2.EC2, subnetID string) (str
 	return aws.ToString(subnet.AvailabilityZone), nil
 }
 
-func findMountTarget(ctx context.Context, conn *efs.Client, input *efs.DescribeMountTargetsInput) (*awstypes.MountTargetDescription, error) {
-	output, err := findMountTargets(ctx, conn, input)
+func findMountTarget(ctx context.Context, conn *efs.Client, input *efs.DescribeMountTargetsInput, filter tfslices.Predicate[*awstypes.MountTargetDescription]) (*awstypes.MountTargetDescription, error) {
+	output, err := findMountTargets(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
@@ -261,11 +262,10 @@ func findMountTarget(ctx context.Context, conn *efs.Client, input *efs.DescribeM
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findMountTargets(ctx context.Context, conn *efs.Client, input *efs.DescribeMountTargetsInput) ([]awstypes.MountTargetDescription, error) {
+func findMountTargets(ctx context.Context, conn *efs.Client, input *efs.DescribeMountTargetsInput, filter tfslices.Predicate[*awstypes.MountTargetDescription]) ([]awstypes.MountTargetDescription, error) {
 	var output []awstypes.MountTargetDescription
 
 	pages := efs.NewDescribeMountTargetsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -280,23 +280,40 @@ func findMountTargets(ctx context.Context, conn *efs.Client, input *efs.Describe
 			return nil, err
 		}
 
-		output = append(output, page.MountTargets...)
+		for _, v := range page.MountTargets {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
 }
 
-func FindMountTargetByID(ctx context.Context, conn *efs.Client, id string) (*awstypes.MountTargetDescription, error) {
+func findMountTargetByID(ctx context.Context, conn *efs.Client, id string) (*awstypes.MountTargetDescription, error) {
 	input := &efs.DescribeMountTargetsInput{
 		MountTargetId: aws.String(id),
 	}
 
-	return findMountTarget(ctx, conn, input)
+	output, err := findMountTarget(ctx, conn, input, tfslices.PredicateTrue[*awstypes.MountTargetDescription]())
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.LifeCycleState; state == awstypes.LifeCycleStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
 func statusMountTargetLifeCycleState(ctx context.Context, conn *efs.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindMountTargetByID(ctx, conn, id)
+		output, err := findMountTargetByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
