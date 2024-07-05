@@ -562,7 +562,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 ### retry_policy
 
-* `maximum_event_age_in_seconds` - (Optional) The age in seconds to continue to make retry attempts.
+* `maximum_event_age_in_seconds` - (Optional) The age in seconds to continue to make retry attempts. Default value is `86400`
 * `maximum_retry_attempts` - (Optional) maximum number of retry attempts to make before the request fails
 
 ### run_command_targets
