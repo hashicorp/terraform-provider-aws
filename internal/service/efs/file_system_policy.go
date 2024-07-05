@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_efs_file_system_policy")
-func ResourceFileSystemPolicy() *schema.Resource {
+// @SDKResource("aws_efs_file_system_policy", name="File System Policy")
+func resourceFileSystemPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFileSystemPolicyPut,
 		ReadWithoutTimeout:   resourceFileSystemPolicyRead,
@@ -95,7 +96,7 @@ func resourceFileSystemPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
-	output, err := FindFileSystemPolicyByID(ctx, conn, d.Id())
+	output, err := findFileSystemPolicyByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EFS File System Policy (%s) not found, removing from state", d.Id())
@@ -142,4 +143,29 @@ func resourceFileSystemPolicyDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return diags
+}
+
+func findFileSystemPolicyByID(ctx context.Context, conn *efs.Client, id string) (*efs.DescribeFileSystemPolicyOutput, error) {
+	input := &efs.DescribeFileSystemPolicyInput{
+		FileSystemId: aws.String(id),
+	}
+
+	output, err := conn.DescribeFileSystemPolicy(ctx, input)
+
+	if errs.IsA[*awstypes.FileSystemNotFound](err) || errs.IsA[*awstypes.PolicyNotFound](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

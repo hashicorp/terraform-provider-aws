@@ -38,28 +38,3 @@ func FindBackupPolicyByID(ctx context.Context, conn *efs.Client, id string) (*aw
 
 	return output.BackupPolicy, nil
 }
-
-func FindFileSystemPolicyByID(ctx context.Context, conn *efs.Client, id string) (*efs.DescribeFileSystemPolicyOutput, error) {
-	input := &efs.DescribeFileSystemPolicyInput{
-		FileSystemId: aws.String(id),
-	}
-
-	output, err := conn.DescribeFileSystemPolicy(ctx, input)
-
-	if errs.IsA[*awstypes.FileSystemNotFound](err) || errs.IsA[*awstypes.PolicyNotFound](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}

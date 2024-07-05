@@ -70,8 +70,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceFileSystemPolicy,
+			Factory:  resourceFileSystemPolicy,
 			TypeName: "aws_efs_file_system_policy",
+			Name:     "File System Policy",
 		},
 		{
 			Factory:  ResourceMountTarget,
