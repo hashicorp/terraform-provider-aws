@@ -210,15 +210,15 @@ func deleteReplicationConfiguration(ctx context.Context, conn *efs.Client, fsID 
 		return fmt.Errorf("deleting EFS Replication Configuration (%s): %w", fsID, err)
 	}
 
-	if _, err := waitReplicationConfigurationDeleted(ctx, conn, fsID, timeout); err != nil {
+	if _, err := waitReplicationConfigurationDeleted(ctx, conn, fsID, timeout, optFns...); err != nil {
 		return fmt.Errorf("waiting for EFS Replication Configuration (%s) delete: %w", fsID, err)
 	}
 
 	return nil
 }
 
-func findReplicationConfiguration(ctx context.Context, conn *efs.Client, input *efs.DescribeReplicationConfigurationsInput, filter tfslices.Predicate[*awstypes.ReplicationConfigurationDescription]) (*awstypes.ReplicationConfigurationDescription, error) {
-	output, err := findReplicationConfigurations(ctx, conn, input, filter)
+func findReplicationConfiguration(ctx context.Context, conn *efs.Client, input *efs.DescribeReplicationConfigurationsInput, filter tfslices.Predicate[*awstypes.ReplicationConfigurationDescription], optFns ...func(*efs.Options)) (*awstypes.ReplicationConfigurationDescription, error) {
+	output, err := findReplicationConfigurations(ctx, conn, input, filter, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -227,12 +227,12 @@ func findReplicationConfiguration(ctx context.Context, conn *efs.Client, input *
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findReplicationConfigurations(ctx context.Context, conn *efs.Client, input *efs.DescribeReplicationConfigurationsInput, filter tfslices.Predicate[*awstypes.ReplicationConfigurationDescription]) ([]awstypes.ReplicationConfigurationDescription, error) {
+func findReplicationConfigurations(ctx context.Context, conn *efs.Client, input *efs.DescribeReplicationConfigurationsInput, filter tfslices.Predicate[*awstypes.ReplicationConfigurationDescription], optFns ...func(*efs.Options)) ([]awstypes.ReplicationConfigurationDescription, error) {
 	var output []awstypes.ReplicationConfigurationDescription
 
 	pages := efs.NewDescribeReplicationConfigurationsPaginator(conn, input)
 	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+		page, err := pages.NextPage(ctx, optFns...)
 
 		if errs.IsA[*awstypes.FileSystemNotFound](err) || errs.IsA[*awstypes.ReplicationNotFound](err) {
 			return nil, &retry.NotFoundError{
@@ -255,12 +255,12 @@ func findReplicationConfigurations(ctx context.Context, conn *efs.Client, input 
 	return output, nil
 }
 
-func findReplicationConfigurationByID(ctx context.Context, conn *efs.Client, id string) (*awstypes.ReplicationConfigurationDescription, error) {
+func findReplicationConfigurationByID(ctx context.Context, conn *efs.Client, id string, optFns ...func(*efs.Options)) (*awstypes.ReplicationConfigurationDescription, error) {
 	input := &efs.DescribeReplicationConfigurationsInput{
 		FileSystemId: aws.String(id),
 	}
 
-	output, err := findReplicationConfiguration(ctx, conn, input, tfslices.PredicateTrue[*awstypes.ReplicationConfigurationDescription]())
+	output, err := findReplicationConfiguration(ctx, conn, input, tfslices.PredicateTrue[*awstypes.ReplicationConfigurationDescription](), optFns...)
 
 	if err != nil {
 		return nil, err
@@ -273,9 +273,9 @@ func findReplicationConfigurationByID(ctx context.Context, conn *efs.Client, id 
 	return output, nil
 }
 
-func statusReplicationConfiguration(ctx context.Context, conn *efs.Client, id string) retry.StateRefreshFunc {
+func statusReplicationConfiguration(ctx context.Context, conn *efs.Client, id string, optFns ...func(*efs.Options)) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findReplicationConfigurationByID(ctx, conn, id)
+		output, err := findReplicationConfigurationByID(ctx, conn, id, optFns...)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -289,11 +289,11 @@ func statusReplicationConfiguration(ctx context.Context, conn *efs.Client, id st
 	}
 }
 
-func waitReplicationConfigurationCreated(ctx context.Context, conn *efs.Client, id string, timeout time.Duration) (*awstypes.ReplicationConfigurationDescription, error) {
+func waitReplicationConfigurationCreated(ctx context.Context, conn *efs.Client, id string, timeout time.Duration, optFns ...func(*efs.Options)) (*awstypes.ReplicationConfigurationDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ReplicationStatusEnabling),
 		Target:  enum.Slice(awstypes.ReplicationStatusEnabled),
-		Refresh: statusReplicationConfiguration(ctx, conn, id),
+		Refresh: statusReplicationConfiguration(ctx, conn, id, optFns...),
 		Timeout: timeout,
 	}
 
@@ -306,11 +306,11 @@ func waitReplicationConfigurationCreated(ctx context.Context, conn *efs.Client, 
 	return nil, err
 }
 
-func waitReplicationConfigurationDeleted(ctx context.Context, conn *efs.Client, id string, timeout time.Duration) (*awstypes.ReplicationConfigurationDescription, error) {
+func waitReplicationConfigurationDeleted(ctx context.Context, conn *efs.Client, id string, timeout time.Duration, optFns ...func(*efs.Options)) (*awstypes.ReplicationConfigurationDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ReplicationStatusDeleting),
 		Target:                    []string{},
-		Refresh:                   statusReplicationConfiguration(ctx, conn, id),
+		Refresh:                   statusReplicationConfiguration(ctx, conn, id, optFns...),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
