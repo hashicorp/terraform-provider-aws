@@ -289,9 +289,9 @@ func ReverseDNS(hostname string) string {
 	return strings.Join(parts, ".")
 }
 
-// Type ServiceDatum corresponds closely to columns in `data/names_data.csv` and are
+// Type serviceDatum corresponds closely to columns in `data/names_data.csv` and are
 // described in detail in README.md.
-type ServiceDatum struct {
+type serviceDatum struct {
 	Aliases            []string
 	AWSServiceEnvVar   string
 	Brand              string
@@ -305,10 +305,10 @@ type ServiceDatum struct {
 }
 
 // serviceData key is the AWS provider service package
-var serviceData map[string]*ServiceDatum
+var serviceData map[string]serviceDatum
 
 func init() {
-	serviceData = make(map[string]*ServiceDatum)
+	serviceData = make(map[string]serviceDatum)
 
 	// Data from names_data.csv
 	if err := readCSVIntoServiceData(); err != nil {
@@ -336,7 +336,7 @@ func readCSVIntoServiceData() error {
 
 		p := l.ProviderPackage()
 
-		serviceData[p] = &ServiceDatum{
+		sd := serviceDatum{
 			AWSServiceEnvVar:   l.AWSServiceEnvVar(),
 			Brand:              l.Brand(),
 			ClientSDKV1:        l.ClientSDKV1(),
@@ -354,7 +354,9 @@ func readCSVIntoServiceData() error {
 			a = append(a, l.Aliases()...)
 		}
 
-		serviceData[p].Aliases = a
+		sd.Aliases = a
+
+		serviceData[p] = sd
 	}
 
 	return nil
