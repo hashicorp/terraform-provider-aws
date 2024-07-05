@@ -1405,12 +1405,12 @@ func TestAccEC2LaunchTemplate_primaryIPv6(t *testing.T) {
 		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchTemplateConfig_primaryIPv6(rName, "true"),
+				Config: testAccLaunchTemplateConfig_primaryIPv6(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.primary_ipv6", "true"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.primary_ipv6", acctest.CtTrue),
 				),
 			},
 			{
@@ -1419,19 +1419,19 @@ func TestAccEC2LaunchTemplate_primaryIPv6(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLaunchTemplateConfig_primaryIPv6(rName, "false"),
+				Config: testAccLaunchTemplateConfig_primaryIPv6(rName, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.primary_ipv6", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.primary_ipv6", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccLaunchTemplateConfig_primaryIPv6(rName, "null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.primary_ipv6", ""),
 				),
