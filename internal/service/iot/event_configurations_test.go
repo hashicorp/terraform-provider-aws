@@ -15,7 +15,7 @@ func TestAccIoTEventConfigurations_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic": testAccEventConfigurations_basic,
+		acctest.CtBasic: testAccEventConfigurations_basic,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -35,17 +35,17 @@ func testAccEventConfigurations_basic(t *testing.T) {
 				Config: testAccEventConfigurationsConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "event_configurations.%", "11"),
-					resource.TestCheckResourceAttr(resourceName, "event_configurations.THING", "true"),
-					resource.TestCheckResourceAttr(resourceName, "event_configurations.THING_GROUP", "false"),
-					resource.TestCheckResourceAttr(resourceName, "event_configurations.THING_TYPE", "false"),
-					resource.TestCheckResourceAttr(resourceName, "event_configurations.THING_GROUP_MEMBERSHIP", "false"),
-					resource.TestCheckResourceAttr(resourceName, "event_configurations.THING_GROUP_HIERARCHY", "false"),
-					resource.TestCheckResourceAttr(resourceName, "event_configurations.THING_TYPE_ASSOCIATION", "false"),
-					resource.TestCheckResourceAttr(resourceName, "event_configurations.JOB", "false"),
-					resource.TestCheckResourceAttr(resourceName, "event_configurations.JOB_EXECUTION", "false"),
-					resource.TestCheckResourceAttr(resourceName, "event_configurations.POLICY", "false"),
-					resource.TestCheckResourceAttr(resourceName, "event_configurations.CERTIFICATE", "true"),
-					resource.TestCheckResourceAttr(resourceName, "event_configurations.CA_CERTIFICATE", "true"),
+					resource.TestCheckResourceAttr(resourceName, "event_configurations.THING", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "event_configurations.THING_GROUP", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "event_configurations.THING_TYPE", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "event_configurations.THING_GROUP_MEMBERSHIP", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "event_configurations.THING_GROUP_HIERARCHY", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "event_configurations.THING_TYPE_ASSOCIATION", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "event_configurations.JOB", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "event_configurations.JOB_EXECUTION", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "event_configurations.POLICY", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "event_configurations.CERTIFICATE", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "event_configurations.CA_CERTIFICATE", acctest.CtTrue),
 				),
 			},
 			{

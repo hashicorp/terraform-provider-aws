@@ -11,6 +11,8 @@ import (
 	"path"
 	"strings"
 	"text/template"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/hashicorp/cli"
 	"golang.org/x/text/cases"
@@ -57,6 +59,7 @@ type Destination interface {
 	Write() error
 	WriteBytes(body []byte) error
 	WriteTemplate(templateName, templateBody string, templateData any) error
+	WriteTemplateSet(templates *template.Template, templateData any) error
 }
 
 func (g *Generator) NewGoFileDestination(filename string) Destination {
@@ -99,7 +102,7 @@ func (d *fileDestination) Write() error {
 	} else {
 		flags = os.O_TRUNC | os.O_CREATE | os.O_WRONLY
 	}
-	f, err := os.OpenFile(d.filename, flags, 0644) //nolint:gomnd
+	f, err := os.OpenFile(d.filename, flags, 0644) //nolint:mnd // good protection for new files
 
 	if err != nil {
 		return fmt.Errorf("opening file (%s): %w", d.filename, err)
@@ -133,21 +136,25 @@ func (d *baseDestination) WriteTemplate(templateName, templateBody string, templ
 		return err
 	}
 
-	if d.formatter != nil {
-		unformattedBody := body
-		body, err = d.formatter(unformattedBody)
-
-		if err != nil {
-			return fmt.Errorf("formatting parsed template:\n%s\n%w", unformattedBody, err)
-		}
+	body, err = d.format(body)
+	if err != nil {
+		return err
 	}
 
-	_, err = d.buffer.Write(body)
-	return err
+	return d.WriteBytes(body)
 }
 
 func parseTemplate(templateName, templateBody string, templateData any) ([]byte, error) {
 	funcMap := template.FuncMap{
+		// FirstUpper returns a string with the first character as upper case.
+		"FirstUpper": func(s string) string {
+			if s == "" {
+				return ""
+			}
+			r, n := utf8.DecodeRuneInString(s)
+			return string(unicode.ToUpper(r)) + s[n:]
+		},
+		// Title returns a string with the first character of each word as upper case.
 		"Title": cases.Title(language.Und, cases.NoLower).String,
 	}
 	tmpl, err := template.New(templateName).Funcs(funcMap).Parse(templateBody)
@@ -156,12 +163,44 @@ func parseTemplate(templateName, templateBody string, templateData any) ([]byte,
 		return nil, fmt.Errorf("parsing function template: %w", err)
 	}
 
+	return executeTemplate(tmpl, templateData)
+}
+
+func executeTemplate(tmpl *template.Template, templateData any) ([]byte, error) {
 	var buffer bytes.Buffer
-	err = tmpl.Execute(&buffer, templateData)
+	err := tmpl.Execute(&buffer, templateData)
 
 	if err != nil {
 		return nil, fmt.Errorf("executing template: %w", err)
 	}
 
 	return buffer.Bytes(), nil
+}
+
+func (d *baseDestination) WriteTemplateSet(templates *template.Template, templateData any) error {
+	body, err := executeTemplate(templates, templateData)
+	if err != nil {
+		return err
+	}
+
+	body, err = d.format(body)
+	if err != nil {
+		return err
+	}
+
+	return d.WriteBytes(body)
+}
+
+func (d *baseDestination) format(body []byte) ([]byte, error) {
+	if d.formatter == nil {
+		return body, nil
+	}
+
+	unformattedBody := body
+	body, err := d.formatter(unformattedBody)
+	if err != nil {
+		return nil, fmt.Errorf("formatting parsed template:\n%s\n%w", unformattedBody, err)
+	}
+
+	return body, nil
 }

@@ -8,9 +8,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -19,10 +21,10 @@ const (
 	propagationTimeout = 2 * time.Minute
 )
 
-func WaitJobCompleted(ctx context.Context, conn *backup.Backup, id string, timeout time.Duration) (*backup.DescribeBackupJobOutput, error) {
+func WaitJobCompleted(ctx context.Context, conn *backup.Client, id string, timeout time.Duration) (*backup.DescribeBackupJobOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{backup.JobStateCreated, backup.JobStatePending, backup.JobStateRunning, backup.JobStateAborting},
-		Target:  []string{backup.JobStateCompleted},
+		Pending: enum.Slice(awstypes.BackupJobStateCreated, awstypes.BackupJobStatePending, awstypes.BackupJobStateRunning, awstypes.BackupJobStateAborting),
+		Target:  enum.Slice(awstypes.BackupJobStateCompleted),
 		Refresh: statusJobState(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -30,7 +32,7 @@ func WaitJobCompleted(ctx context.Context, conn *backup.Backup, id string, timeo
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*backup.DescribeBackupJobOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -38,7 +40,7 @@ func WaitJobCompleted(ctx context.Context, conn *backup.Backup, id string, timeo
 	return nil, err
 }
 
-func waitFrameworkCreated(ctx context.Context, conn *backup.Backup, id string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
+func waitFrameworkCreated(ctx context.Context, conn *backup.Client, id string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{frameworkStatusCreationInProgress},
 		Target:  []string{frameworkStatusCompleted, frameworkStatusFailed},
@@ -55,7 +57,7 @@ func waitFrameworkCreated(ctx context.Context, conn *backup.Backup, id string, t
 	return nil, err
 }
 
-func waitFrameworkUpdated(ctx context.Context, conn *backup.Backup, id string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
+func waitFrameworkUpdated(ctx context.Context, conn *backup.Client, id string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{frameworkStatusUpdateInProgress},
 		Target:  []string{frameworkStatusCompleted, frameworkStatusFailed},
@@ -72,10 +74,10 @@ func waitFrameworkUpdated(ctx context.Context, conn *backup.Backup, id string, t
 	return nil, err
 }
 
-func waitFrameworkDeleted(ctx context.Context, conn *backup.Backup, id string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
+func waitFrameworkDeleted(ctx context.Context, conn *backup.Client, id string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{frameworkStatusDeletionInProgress},
-		Target:  []string{backup.ErrCodeResourceNotFoundException},
+		Target:  []string{},
 		Refresh: statusFramework(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -89,9 +91,9 @@ func waitFrameworkDeleted(ctx context.Context, conn *backup.Backup, id string, t
 	return nil, err
 }
 
-func waitRecoveryPointDeleted(ctx context.Context, conn *backup.Backup, backupVaultName, recoveryPointARN string, timeout time.Duration) (*backup.DescribeRecoveryPointOutput, error) {
+func waitRecoveryPointDeleted(ctx context.Context, conn *backup.Client, backupVaultName, recoveryPointARN string, timeout time.Duration) (*backup.DescribeRecoveryPointOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{backup.RecoveryPointStatusDeleting},
+		Pending: enum.Slice(awstypes.RecoveryPointStatusDeleting),
 		Target:  []string{},
 		Refresh: statusRecoveryPoint(ctx, conn, backupVaultName, recoveryPointARN),
 		Timeout: timeout,
@@ -100,7 +102,7 @@ func waitRecoveryPointDeleted(ctx context.Context, conn *backup.Backup, backupVa
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*backup.DescribeRecoveryPointOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}

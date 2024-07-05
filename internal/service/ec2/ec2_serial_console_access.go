@@ -6,15 +6,16 @@ package ec2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_serial_console_access")
-func ResourceSerialConsoleAccess() *schema.Resource {
+// @SDKResource("aws_ec2_serial_console_access", name="Serial Console Access")
+func resourceSerialConsoleAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSerialConsoleAccessCreate,
 		ReadWithoutTimeout:   resourceSerialConsoleAccessRead,
@@ -26,7 +27,7 @@ func ResourceSerialConsoleAccess() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -38,9 +39,9 @@ func ResourceSerialConsoleAccess() *schema.Resource {
 func resourceSerialConsoleAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	enabled := d.Get("enabled").(bool)
+	enabled := d.Get(names.AttrEnabled).(bool)
 	if err := setSerialConsoleAccess(ctx, conn, enabled); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting EC2 Serial Console Access (%t): %s", enabled, err)
 	}
@@ -53,15 +54,15 @@ func resourceSerialConsoleAccessCreate(ctx context.Context, d *schema.ResourceDa
 func resourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	output, err := conn.GetSerialConsoleAccessStatusWithContext(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
+	output, err := conn.GetSerialConsoleAccessStatus(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Serial Console Access: %s", err)
 	}
 
-	d.Set("enabled", output.SerialConsoleAccessEnabled)
+	d.Set(names.AttrEnabled, output.SerialConsoleAccessEnabled)
 
 	return diags
 }
@@ -69,9 +70,9 @@ func resourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceData
 func resourceSerialConsoleAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	enabled := d.Get("enabled").(bool)
+	enabled := d.Get(names.AttrEnabled).(bool)
 	if err := setSerialConsoleAccess(ctx, conn, enabled); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EC2 Serial Console Access (%t): %s", enabled, err)
 	}
@@ -82,7 +83,7 @@ func resourceSerialConsoleAccessUpdate(ctx context.Context, d *schema.ResourceDa
 func resourceSerialConsoleAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	// Removing the resource disables serial console access.
 	if err := setSerialConsoleAccess(ctx, conn, false); err != nil {
@@ -92,13 +93,13 @@ func resourceSerialConsoleAccessDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func setSerialConsoleAccess(ctx context.Context, conn *ec2.EC2, enabled bool) error {
+func setSerialConsoleAccess(ctx context.Context, conn *ec2.Client, enabled bool) error {
 	var err error
 
 	if enabled {
-		_, err = conn.EnableSerialConsoleAccessWithContext(ctx, &ec2.EnableSerialConsoleAccessInput{})
+		_, err = conn.EnableSerialConsoleAccess(ctx, &ec2.EnableSerialConsoleAccessInput{})
 	} else {
-		_, err = conn.DisableSerialConsoleAccessWithContext(ctx, &ec2.DisableSerialConsoleAccessInput{})
+		_, err = conn.DisableSerialConsoleAccess(ctx, &ec2.DisableSerialConsoleAccessInput{})
 	}
 
 	return err

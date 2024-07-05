@@ -45,7 +45,7 @@ func (r *resourceServiceIntegration) Metadata(_ context.Context, req resource.Me
 func (r *resourceServiceIntegration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"kms_server_side_encryption": schema.ListNestedBlock{
@@ -59,7 +59,7 @@ func (r *resourceServiceIntegration) Schema(ctx context.Context, req resource.Sc
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"kms_key_id": schema.StringAttribute{
+						names.AttrKMSKeyID: schema.StringAttribute{
 							Optional: true,
 							Computed: true,
 							PlanModifiers: []planmodifier.String{
@@ -74,7 +74,7 @@ func (r *resourceServiceIntegration) Schema(ctx context.Context, req resource.Sc
 								stringplanmodifier.UseStateForUnknown(),
 							},
 						},
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.ServerSideEncryptionType](),
 							Optional:   true,
 							Computed:   true,
@@ -256,7 +256,7 @@ func (r *resourceServiceIntegration) Delete(ctx context.Context, req resource.De
 }
 
 func (r *resourceServiceIntegration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *resourceServiceIntegration) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {

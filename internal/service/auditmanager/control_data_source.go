@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource
@@ -46,19 +47,19 @@ func (d *dataSourceControl) Schema(ctx context.Context, req datasource.SchemaReq
 			"action_plan_title": schema.StringAttribute{
 				Computed: true,
 			},
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
-			"tags": tftags.TagsAttributeComputedOnly(),
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			"testing_information": schema.StringAttribute{
 				Computed: true,
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.ControlType](),
@@ -85,7 +86,7 @@ func (d *dataSourceControl) Schema(ctx context.Context, req datasource.SchemaReq
 						"source_set_up_option": schema.StringAttribute{
 							Computed: true,
 						},
-						"source_type": schema.StringAttribute{
+						names.AttrSourceType: schema.StringAttribute{
 							Computed: true,
 						},
 						"troubleshooting_text": schema.StringAttribute{

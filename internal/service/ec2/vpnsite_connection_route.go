@@ -9,9 +9,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -43,7 +43,7 @@ func resourceVPNConnectionRoute() *schema.Resource {
 
 func resourceVPNConnectionRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	cidrBlock := d.Get("destination_cidr_block").(string)
 	vpnConnectionID := d.Get("vpn_connection_id").(string)
@@ -53,8 +53,8 @@ func resourceVPNConnectionRouteCreate(ctx context.Context, d *schema.ResourceDat
 		VpnConnectionId:      aws.String(vpnConnectionID),
 	}
 
-	log.Printf("[DEBUG] Creating EC2 VPN Connection Route: %s", input)
-	_, err := conn.CreateVpnConnectionRouteWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating EC2 VPN Connection Route: %s", id)
+	_, err := conn.CreateVpnConnectionRoute(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Connection Route (%s): %s", id, err)
@@ -62,7 +62,7 @@ func resourceVPNConnectionRouteCreate(ctx context.Context, d *schema.ResourceDat
 
 	d.SetId(id)
 
-	if _, err := WaitVPNConnectionRouteCreated(ctx, conn, vpnConnectionID, cidrBlock); err != nil {
+	if _, err := waitVPNConnectionRouteCreated(ctx, conn, vpnConnectionID, cidrBlock); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Connection Route (%s) create: %s", d.Id(), err)
 	}
 
@@ -71,7 +71,7 @@ func resourceVPNConnectionRouteCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceVPNConnectionRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	cidrBlock, vpnConnectionID, err := VPNConnectionRouteParseResourceID(d.Id())
 
@@ -79,7 +79,7 @@ func resourceVPNConnectionRouteRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPN Connection Route (%s): %s", d.Id(), err)
 	}
 
-	_, err = FindVPNConnectionRouteByVPNConnectionIDAndCIDR(ctx, conn, vpnConnectionID, cidrBlock)
+	_, err = findVPNConnectionRouteByTwoPartKey(ctx, conn, vpnConnectionID, cidrBlock)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VPN Connection Route (%s) not found, removing from state", d.Id())
@@ -99,7 +99,7 @@ func resourceVPNConnectionRouteRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceVPNConnectionRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	cidrBlock, vpnConnectionID, err := VPNConnectionRouteParseResourceID(d.Id())
 
@@ -108,7 +108,7 @@ func resourceVPNConnectionRouteDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	log.Printf("[INFO] Deleting EC2 VPN Connection Route: %s", d.Id())
-	_, err = conn.DeleteVpnConnectionRouteWithContext(ctx, &ec2.DeleteVpnConnectionRouteInput{
+	_, err = conn.DeleteVpnConnectionRoute(ctx, &ec2.DeleteVpnConnectionRouteInput{
 		DestinationCidrBlock: aws.String(cidrBlock),
 		VpnConnectionId:      aws.String(vpnConnectionID),
 	})
@@ -121,7 +121,7 @@ func resourceVPNConnectionRouteDelete(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPN Connection Route (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitVPNConnectionRouteDeleted(ctx, conn, vpnConnectionID, cidrBlock); err != nil {
+	if _, err := waitVPNConnectionRouteDeleted(ctx, conn, vpnConnectionID, cidrBlock); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPN Connection Route (%s): waiting for completion: %s", d.Id(), err)
 	}
 

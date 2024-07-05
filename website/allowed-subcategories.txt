@@ -18,6 +18,7 @@ AppIntegrations
 AppStream 2.0
 AppSync
 Application Auto Scaling
+Application Signals
 Athena
 Audit Manager
 Auto Scaling
@@ -45,6 +46,7 @@ CloudWatch Application Insights
 CloudWatch Evidently
 CloudWatch Internet Monitor
 CloudWatch Logs
+CloudWatch Network Monitor
 CloudWatch Observability Access Manager
 CloudWatch RUM
 CloudWatch Synthetics
@@ -71,6 +73,7 @@ Cost Optimization Hub
 Cost and Usage Report
 DLM (Data Lifecycle Manager)
 DMS (Database Migration)
+DRS (Elastic Disaster Recovery)
 Data Exchange
 Data Pipeline
 DataSync
@@ -118,6 +121,7 @@ FinSpace
 GameLift
 Global Accelerator
 Glue
+Glue DataBrew
 Ground Station
 GuardDuty
 HealthLake
@@ -222,6 +226,7 @@ Signer
 Storage Gateway
 Systems Manager for SAP
 Timestream Write
+Timestream for InfluxDB
 Transcribe
 Transfer Family
 Transit Gateway
@@ -240,4 +245,5 @@ Web Services Budgets
 Well-Architected Tool
 WorkLink
 WorkSpaces
+WorkSpaces Web
 X-Ray
