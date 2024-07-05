@@ -118,7 +118,7 @@ func resourceBackupPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	err := putBackupPolicy(ctx, conn, d.Id(), map[string]interface{}{
-		names.AttrStatus: awstypes.StatusDisabled,
+		names.AttrStatus: string(awstypes.StatusDisabled),
 	})
 
 	if errs.IsA[*awstypes.FileSystemNotFound](err) {
