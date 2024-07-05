@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,12 +28,12 @@ func DataSourceFramework() *schema.Resource {
 				Computed: true,
 			},
 			"control": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"input_parameter": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -58,14 +58,14 @@ func DataSourceFramework() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"compliance_resource_ids": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Computed: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
 									},
 									"compliance_resource_types": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Computed: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
@@ -105,19 +105,19 @@ func DataSourceFramework() *schema.Resource {
 
 func dataSourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
 
-	resp, err := conn.DescribeFrameworkWithContext(ctx, &backup.DescribeFrameworkInput{
+	resp, err := conn.DescribeFramework(ctx, &backup.DescribeFrameworkInput{
 		FrameworkName: aws.String(name),
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Backup Framework: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.FrameworkName))
+	d.SetId(aws.ToString(resp.FrameworkName))
 
 	d.Set(names.AttrARN, resp.FrameworkArn)
 	d.Set("deployment_status", resp.DeploymentStatus)
@@ -133,7 +133,7 @@ func dataSourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting control: %s", err)
 	}
 
-	tags, err := listTags(ctx, conn, aws.StringValue(resp.FrameworkArn))
+	tags, err := listTags(ctx, conn, aws.ToString(resp.FrameworkArn))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Framework (%s): %s", d.Id(), err)

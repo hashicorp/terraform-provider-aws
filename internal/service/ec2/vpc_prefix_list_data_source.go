@@ -66,7 +66,7 @@ func dataSourcePrefixListRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
-	pl, err := findPrefixListV2(ctx, conn, input)
+	pl, err := findPrefixList(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Prefix List", err))

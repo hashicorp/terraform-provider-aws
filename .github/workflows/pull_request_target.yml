@@ -63,12 +63,6 @@ jobs:
           GH_TOKEN: ${{ steps.token.outputs.token }}
         run: gh pr edit ${{ env.PR_URL }} --add-label external-maintainer
 
-      - name: 'Add prioritized to regressions'
-        if: github.event.label.name == 'regression'
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: gh pr edit ${{ env.PR_URL }} --add-label prioritized
-
       - name: 'Remove unnecessary labels on closure'
         if: github.event.action == 'closed'
         env:
@@ -81,7 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout Repo'
-        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: 'Apply Labels'
         uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9 # v5.0.0
@@ -157,21 +151,6 @@ jobs:
           PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
 
-      - name: 'Labeled Regression'
-        if: github.event.label.name == 'regression'
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: |
-          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
-          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
-
-          gh api graphql -F itemId="$PROJECT_ITEM_ID" -F projectId=${{ env.PROJECT_ID }} -f query='
-          mutation($itemId:ID!, $projectId:ID!) {
-            updateProjectV2ItemPosition(input:{itemId:$itemId, projectId:$projectId}) {
-              clientMutationId
-            }
-          }'
-
       - name: 'Labeled Engineering Initiative'
         if: github.event.label.name == 'engineering-initiative'
         env:
@@ -186,7 +165,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout'
-        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: 'Get Current Milestone Name'
         id: get-current-milestone

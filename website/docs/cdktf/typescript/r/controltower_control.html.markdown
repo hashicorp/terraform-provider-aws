@@ -46,6 +46,12 @@ class MyConvertedCode extends TerraformStack {
           "arn:aws:controltower:${" +
           current.name +
           "}::control/AWS-GR_EC2_VOLUME_INUSE_CHECK",
+        parameters: [
+          {
+            key: "AllowedRegions",
+            value: Token.asString(Fn.jsonencode(["us-east-1"])),
+          },
+        ],
         targetIdentifier: Token.asString(
           Fn.lookupNested(
             "${[ for x in ${" +
@@ -65,15 +71,25 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+This following arguments are required:
 
 * `controlIdentifier` - (Required) The ARN of the control. Only Strongly recommended and Elective controls are permitted, with the exception of the Region deny guardrail.
 * `targetIdentifier` - (Required) The ARN of the organizational unit.
+
+The following arguments are optional:
+
+* `parameters` - (Optional) Parameter values which are specified to configure the control when you enable it. See [Parameters](#parameters) for more details.
+
+### Parameters
+
+* `key` - (Required) The name of the parameter.
+* `value` - (Required) The value of the parameter.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The ARN of the EnabledControl resource.
 * `id` - The ARN of the organizational unit.
 
 ## Import
@@ -108,4 +124,4 @@ Using `terraform import`, import Control Tower Controls using their `organizatio
 % terraform import aws_controltower_control.example arn:aws:organizations::123456789101:ou/o-qqaejywet/ou-qg5o-ufbhdtv3,arn:aws:controltower:us-east-1::control/WTDSMKDKDNLE
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-542aa41221af63c248afa6f1f14005c7167d5839e1e53ee461a2747d1b0be787 -->
+<!-- cache-key: cdktf-0.20.1 input-5f1cc75964a9bab80576b7038263cd126393a7d6d85ad5f6f57aad1a6e199a91 -->

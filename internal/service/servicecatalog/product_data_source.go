@@ -18,6 +18,7 @@ import (
 )
 
 // @SDKDataSource("aws_servicecatalog_product")
+// @Tags
 func DataSourceProduct() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceProductRead,
@@ -123,11 +124,7 @@ func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(pvs.ProductId))
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
