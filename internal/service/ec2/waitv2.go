@@ -57,30 +57,29 @@ func waitAvailabilityZoneGroupNotOptedIn(ctx context.Context, conn *ec2.Client, 
 	return nil, err
 }
 
-const (
-	CapacityReservationActiveTimeout  = 2 * time.Minute
-	CapacityReservationDeletedTimeout = 2 * time.Minute
-)
-
-func waitCapacityReservationActive(ctx context.Context, conn *ec2.Client, id string) error {
+func waitCapacityReservationActive(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.CapacityReservation, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityReservationStatePending),
 		Target:  enum.Slice(awstypes.CapacityReservationStateActive),
 		Refresh: statusCapacityReservation(ctx, conn, id),
-		Timeout: CapacityReservationActiveTimeout,
+		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*awstypes.CapacityReservation); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
-func waitCapacityReservationDeleted(ctx context.Context, conn *ec2.Client, id string) (*awstypes.CapacityReservation, error) {
+func waitCapacityReservationDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.CapacityReservation, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityReservationStateActive),
 		Target:  []string{},
 		Refresh: statusCapacityReservation(ctx, conn, id),
-		Timeout: CapacityReservationDeletedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
