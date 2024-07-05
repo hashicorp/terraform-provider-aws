@@ -365,12 +365,16 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if d.HasChanges("protection") {
 		if v, ok := d.GetOk("protection"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input := expandUpdateFileSystemProtectionInput(d.Id(), v.([]interface{})[0].(map[string]interface{}))
+			// Prevent the following error during update:
+			// ReplicationAlreadyExists: ReplicationOverwriteProtection
+			if d.Get("replication_overwrite").(string) != efs.ReplicationOverwriteProtectionReplicating {
+				input := expandUpdateFileSystemProtectionInput(d.Id(), v.([]interface{})[0].(map[string]interface{}))
 
-			_, err := conn.UpdateFileSystemProtectionWithContext(ctx, input)
+				_, err := conn.UpdateFileSystemProtectionWithContext(ctx, input)
 
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating EFS file system (%s) protection: %s", d.Id(), err)
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "updating EFS file system (%s) protection: %s", d.Id(), err)
+				}
 			}
 		}
 	}
