@@ -8,8 +8,10 @@ var (
 	ResourceConditionalForwarder = resourceConditionalForwarder
 	ResourceDirectory            = resourceDirectory
 	ResourceLogSubscription      = resourceLogSubscription
+	ResourceRadiusSettings       = resourceRadiusSettings
 
 	FindConditionalForwarderByTwoPartKey = findConditionalForwarderByTwoPartKey
 	FindDirectoryByID                    = findDirectoryByID
 	FindLogSubscriptionByID              = findLogSubscriptionByID
+	FindRadiusSettingsByID               = findRadiusSettingsByID
 )

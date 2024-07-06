@@ -28,22 +28,6 @@ func statusDirectoryShareStatus(ctx context.Context, conn *directoryservice.Dire
 	}
 }
 
-func statusRadius(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindDirectoryByID(ctx, conn, directoryID)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.RadiusStatus), nil
-	}
-}
-
 func statusRegion(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindRegion(ctx, conn, directoryID, regionName)

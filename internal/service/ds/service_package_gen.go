@@ -57,8 +57,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Log Subscription",
 		},
 		{
-			Factory:  ResourceRadiusSettings,
+			Factory:  resourceRadiusSettings,
 			TypeName: "aws_directory_service_radius_settings",
+			Name:     "RADIUS Settings",
 		},
 		{
 			Factory:  ResourceRegion,

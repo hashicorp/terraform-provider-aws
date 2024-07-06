@@ -11,23 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-func waitRadiusCompleted(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string, timeout time.Duration) (*directoryservice.DirectoryDescription, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{directoryservice.RadiusStatusCreating},
-		Target:  []string{directoryservice.RadiusStatusCompleted},
-		Refresh: statusRadius(ctx, conn, directoryID),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*directoryservice.DirectoryDescription); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 func waitRegionCreated(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string, timeout time.Duration) (*directoryservice.RegionDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{directoryservice.DirectoryStageRequested, directoryservice.DirectoryStageCreating, directoryservice.DirectoryStageCreated},
