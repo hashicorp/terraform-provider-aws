@@ -39,8 +39,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceConditionalForwarder,
+			Factory:  resourceConditionalForwarder,
 			TypeName: "aws_directory_service_conditional_forwarder",
+			Name:     "Conditional Forwarder",
 		},
 		{
 			Factory:  resourceDirectory,

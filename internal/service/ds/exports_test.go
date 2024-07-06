@@ -5,10 +5,12 @@ package ds
 
 // Exports for use in tests only.
 var (
-	ResourceDirectory = resourceDirectory
+	ResourceConditionalForwarder = resourceConditionalForwarder
+	ResourceDirectory            = resourceDirectory
 
-	DirectoryIDValidator           = directoryIDValidator
-	DomainWithTrailingDotValidator = domainWithTrailingDotValidator
-	FindDirectoryByID              = findDirectoryByID
-	TrustPasswordValidator         = trustPasswordValidator
+	DirectoryIDValidator                 = directoryIDValidator
+	DomainWithTrailingDotValidator       = domainWithTrailingDotValidator
+	FindConditionalForwarderByTwoPartKey = findConditionalForwarderByTwoPartKey
+	FindDirectoryByID                    = findDirectoryByID
+	TrustPasswordValidator               = trustPasswordValidator
 )

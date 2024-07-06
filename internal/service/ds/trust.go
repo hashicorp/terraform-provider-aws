@@ -635,33 +635,3 @@ func statusTrust(ctx context.Context, conn directoryservice.DescribeTrustsAPICli
 		return output, string(output.TrustState), nil
 	}
 }
-
-func findConditionalForwarder(ctx context.Context, conn *directoryservice.Client, directoryID, remoteDomainName string) (*awstypes.ConditionalForwarder, error) {
-	// Directory Trust optionally accepts a remote domain name with a trailing period.
-	// Conditional Forwarders
-	remoteDomainName = strings.TrimRight(remoteDomainName, ".")
-
-	input := &directoryservice.DescribeConditionalForwardersInput{
-		DirectoryId:       aws.String(directoryID),
-		RemoteDomainNames: []string{remoteDomainName},
-	}
-
-	output, err := conn.DescribeConditionalForwarders(ctx, input)
-	if isConditionalForwarderNotFoundErr(err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	forwarder, err := tfresource.AssertSingleValueResult(output.ConditionalForwarders)
-	if err != nil {
-		return nil, err
-	}
-
-	return forwarder, nil
-}
