@@ -8,9 +8,6 @@ var (
 	ResourceConditionalForwarder = resourceConditionalForwarder
 	ResourceDirectory            = resourceDirectory
 
-	DirectoryIDValidator                 = directoryIDValidator
-	DomainWithTrailingDotValidator       = domainWithTrailingDotValidator
 	FindConditionalForwarderByTwoPartKey = findConditionalForwarderByTwoPartKey
 	FindDirectoryByID                    = findDirectoryByID
-	TrustPasswordValidator               = trustPasswordValidator
 )
