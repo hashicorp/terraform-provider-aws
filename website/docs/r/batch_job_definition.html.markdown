@@ -143,7 +143,7 @@ resource "aws_batch_job_definition" "test" {
   ecs_properties {
     task_properties {
       host_network = true
-      containers {
+      container {
         essential = true
         image = "public.ecr.aws/amazonlinux/amazonlinux:1"
         name = "container_a"
@@ -177,7 +177,7 @@ resource "aws_batch_job_definition" "test" {
   ecs_properties {
     task_properties {
       host_network = true
-      containers {
+      container {
         essential = true
         image = "public.ecr.aws/amazonlinux/amazonlinux:1"
         name = "container_a"
