@@ -7,7 +7,9 @@ package ds
 var (
 	ResourceConditionalForwarder = resourceConditionalForwarder
 	ResourceDirectory            = resourceDirectory
+	ResourceLogSubscription      = resourceLogSubscription
 
 	FindConditionalForwarderByTwoPartKey = findConditionalForwarderByTwoPartKey
 	FindDirectoryByID                    = findDirectoryByID
+	FindLogSubscriptionByID              = findLogSubscriptionByID
 )
