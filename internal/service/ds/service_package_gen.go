@@ -29,8 +29,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceDirectory,
+			Factory:  dataSourceDirectory,
 			TypeName: "aws_directory_service_directory",
+			Name:     "Directory",
 		},
 	}
 }
