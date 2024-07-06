@@ -42,7 +42,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_directory_service_conditional_forwarder",
 		},
 		{
-			Factory:  ResourceDirectory,
+			Factory:  resourceDirectory,
 			TypeName: "aws_directory_service_directory",
 			Name:     "Directory",
 			Tags: &types.ServicePackageResourceTags{

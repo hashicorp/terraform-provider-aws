@@ -5,52 +5,11 @@ package ds
 
 import (
 	"context"
-	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-func waitDomainControllerCreated(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, domainControllerID string, timeout time.Duration) (*directoryservice.DomainController, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{directoryservice.DomainControllerStatusCreating},
-		Target:  []string{directoryservice.DomainControllerStatusActive},
-		Refresh: statusDomainController(ctx, conn, directoryID, domainControllerID),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*directoryservice.DomainController); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusReason)))
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitDomainControllerDeleted(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, domainControllerID string, timeout time.Duration) (*directoryservice.DomainController, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{directoryservice.DomainControllerStatusDeleting},
-		Target:  []string{},
-		Refresh: statusDomainController(ctx, conn, directoryID, domainControllerID),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*directoryservice.DomainController); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusReason)))
-
-		return output, err
-	}
-
-	return nil, err
-}
 
 func waitRadiusCompleted(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string, timeout time.Duration) (*directoryservice.DirectoryDescription, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{

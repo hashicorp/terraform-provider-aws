@@ -12,22 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusDirectoryStage(ctx context.Context, conn *directoryservice.DirectoryService, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindDirectoryByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Stage), nil
-	}
-}
-
 func statusDirectoryShareStatus(ctx context.Context, conn *directoryservice.DirectoryService, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDirectoryByID(ctx, conn, id)
@@ -41,22 +25,6 @@ func statusDirectoryShareStatus(ctx context.Context, conn *directoryservice.Dire
 		}
 
 		return output, aws.StringValue(output.ShareStatus), nil
-	}
-}
-
-func statusDomainController(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, domainControllerID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindDomainController(ctx, conn, directoryID, domainControllerID)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Status), nil
 	}
 }
 
