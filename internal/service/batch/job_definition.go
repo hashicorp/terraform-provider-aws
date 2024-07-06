@@ -343,6 +343,7 @@ func ResourceJobDefinition() *schema.Resource {
 									"container": {
 										Type:     schema.TypeList,
 										Required: true,
+										MaxItems: 10,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"image": {
