@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDSConditionalForwarder_Condition_basic(t *testing.T) {
+func TestAccDSConditionalForwarder_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_directory_service_conditional_forwarder.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -53,6 +53,31 @@ func TestAccDSConditionalForwarder_Condition_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDSConditionalForwarder_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_directory_service_conditional_forwarder.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
+	ip1, ip2 := "8.8.8.8", "1.1.1.1"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConditionalForwarderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConditionalForwarderConfig_basic(rName, domainName, ip1, ip2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConditionalForwarderExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfds.ResourceConditionalForwarder(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
