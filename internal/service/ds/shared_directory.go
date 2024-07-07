@@ -194,7 +194,7 @@ func sharedDirectoryParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected OWNER_DIRECTORY_ID%[2]sSHARED_DIRECTORY_ID", id, sharedDirectoryResourceIDSeparator)
 }
 
-func findSharedDirectory(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeSharedDirectoriesInput) (*awstypes.SharedDirectory, error) {
+func findSharedDirectory(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeSharedDirectoriesInput) (*awstypes.SharedDirectory, error) { // nosemgrep:ci.ds-in-func-name
 	output, err := findSharedDirectories(ctx, conn, input)
 
 	if err != nil {
@@ -204,7 +204,7 @@ func findSharedDirectory(ctx context.Context, conn *directoryservice.Client, inp
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findSharedDirectories(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeSharedDirectoriesInput) ([]awstypes.SharedDirectory, error) {
+func findSharedDirectories(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeSharedDirectoriesInput) ([]awstypes.SharedDirectory, error) { // nosemgrep:ci.ds-in-func-name
 	var output []awstypes.SharedDirectory
 
 	pages := directoryservice.NewDescribeSharedDirectoriesPaginator(conn, input)

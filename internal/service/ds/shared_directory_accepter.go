@@ -139,7 +139,7 @@ func resourceSharedDirectoryAccepterDelete(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func findSharedDirectoryAccepterByID(ctx context.Context, conn *directoryservice.Client, id string) (*awstypes.DirectoryDescription, error) {
+func findSharedDirectoryAccepterByID(ctx context.Context, conn *directoryservice.Client, id string) (*awstypes.DirectoryDescription, error) { // nosemgrep:ci.ds-in-func-name
 	output, err := findDirectoryByID(ctx, conn, id)
 
 	if err != nil {
