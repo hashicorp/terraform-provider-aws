@@ -251,7 +251,7 @@ func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-const regionResourceIDSeparator = ","
+const regionResourceIDSeparator = "," // nosemgrep:ci.ds-in-const-name,ci.ds-in-var-name
 
 func regionCreateResourceID(directoryID, regionName string) string {
 	parts := []string{directoryID, regionName}

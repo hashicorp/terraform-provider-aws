@@ -161,7 +161,7 @@ func resourceConditionalForwarderDelete(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-const conditionalForwarderResourceIDSeparator = ":"
+const conditionalForwarderResourceIDSeparator = ":" // nosemgrep:ci.ds-in-const-name,ci.ds-in-var-name
 
 func conditionalForwarderCreateResourceID(directoryID, domainName string) string {
 	parts := []string{directoryID, domainName}

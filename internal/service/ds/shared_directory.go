@@ -175,7 +175,7 @@ func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-const sharedDirectoryResourceIDSeparator = "/"
+const sharedDirectoryResourceIDSeparator = "/" // nosemgrep:ci.ds-in-const-name,ci.ds-in-var-name
 
 func sharedDirectoryCreateResourceID(ownerDirectoryID, sharedDirectoryID string) string {
 	parts := []string{ownerDirectoryID, sharedDirectoryID}
