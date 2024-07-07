@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_appstream_fleet: Fix a bug that caused error when passing 0 to `idle_disconnect_timeout_in_seconds` argument.
+```
