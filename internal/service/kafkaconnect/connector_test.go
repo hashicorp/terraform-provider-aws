@@ -68,6 +68,8 @@ func TestAccKafkaConnectConnector_basic(t *testing.T) {
 						"custom_plugin.#": acctest.Ct1,
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "service_execution_role_arn"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 					resource.TestCheckResourceAttr(resourceName, "worker_configuration.#", acctest.Ct0),
 				),
@@ -223,6 +225,51 @@ func TestAccKafkaConnectConnector_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "worker_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "worker_configuration.0.arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "worker_configuration.0.revision"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccKafkaConnectConnector_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mskconnect_connector.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kafkaconnect.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
+		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectorExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccConnectorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectorExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccConnectorConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectorExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -396,7 +443,7 @@ EOF
 
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.2.1"
+  kafka_version          = "2.7.1"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -464,6 +511,10 @@ resource "aws_mskconnect_connector" "test" {
   }
 
   service_execution_role_arn = aws_iam_role.test.arn
+
+  tags = {
+    key1 = "value1"
+  }
 
   depends_on = [aws_iam_role_policy.test, aws_vpc_endpoint.test]
 }
@@ -642,4 +693,125 @@ resource "aws_mskconnect_connector" "test" {
   depends_on = [aws_iam_role_policy.test, aws_vpc_endpoint.test]
 }
 `, rName))
+}
+
+func testAccConnectorConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccCustomPluginConfig_basic(rName),
+		testAccConnectorBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_mskconnect_connector" "test" {
+  name = %[1]q
+
+  kafkaconnect_version = "2.7.1"
+
+  capacity {
+    autoscaling {
+      min_worker_count = 1
+      max_worker_count = 2
+    }
+  }
+
+  connector_configuration = {
+    "connector.class" = "com.github.jcustenborder.kafka.connect.simulator.SimulatorSinkConnector"
+    "tasks.max"       = "1"
+    "topics"          = "t1"
+  }
+
+  kafka_cluster {
+    apache_kafka_cluster {
+      bootstrap_servers = aws_msk_cluster.test.bootstrap_brokers_tls
+
+      vpc {
+        security_groups = [aws_security_group.test.id]
+        subnets         = [aws_subnet.test1.id, aws_subnet.test2.id, aws_subnet.test3.id]
+      }
+    }
+  }
+
+  kafka_cluster_client_authentication {
+    authentication_type = "NONE"
+  }
+
+  kafka_cluster_encryption_in_transit {
+    encryption_type = "TLS"
+  }
+
+  plugin {
+    custom_plugin {
+      arn      = aws_mskconnect_custom_plugin.test.arn
+      revision = aws_mskconnect_custom_plugin.test.latest_revision
+    }
+  }
+
+  service_execution_role_arn = aws_iam_role.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+  }
+
+  depends_on = [aws_iam_role_policy.test, aws_vpc_endpoint.test]
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccConnectorConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccCustomPluginConfig_basic(rName),
+		testAccConnectorBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_mskconnect_connector" "test" {
+  name = %[1]q
+
+  kafkaconnect_version = "2.7.1"
+
+  capacity {
+    autoscaling {
+      min_worker_count = 1
+      max_worker_count = 2
+    }
+  }
+
+  connector_configuration = {
+    "connector.class" = "com.github.jcustenborder.kafka.connect.simulator.SimulatorSinkConnector"
+    "tasks.max"       = "1"
+    "topics"          = "t1"
+  }
+
+  kafka_cluster {
+    apache_kafka_cluster {
+      bootstrap_servers = aws_msk_cluster.test.bootstrap_brokers_tls
+
+      vpc {
+        security_groups = [aws_security_group.test.id]
+        subnets         = [aws_subnet.test1.id, aws_subnet.test2.id, aws_subnet.test3.id]
+      }
+    }
+  }
+
+  kafka_cluster_client_authentication {
+    authentication_type = "NONE"
+  }
+
+  kafka_cluster_encryption_in_transit {
+    encryption_type = "TLS"
+  }
+
+  plugin {
+    custom_plugin {
+      arn      = aws_mskconnect_custom_plugin.test.arn
+      revision = aws_mskconnect_custom_plugin.test.latest_revision
+    }
+  }
+
+  service_execution_role_arn = aws_iam_role.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+
+  depends_on = [aws_iam_role_policy.test, aws_vpc_endpoint.test]
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

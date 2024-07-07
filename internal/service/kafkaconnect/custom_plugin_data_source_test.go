@@ -34,6 +34,7 @@ func TestAccKafkaConnectCustomPluginDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "latest_revision", dataSourceName, "latest_revision"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrState, dataSourceName, names.AttrState),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
 				),
 			},
 		},
@@ -51,6 +52,10 @@ resource "aws_mskconnect_custom_plugin" "test" {
       bucket_arn = aws_s3_bucket.test.arn
       file_key   = aws_s3_object.test.key
     }
+  }
+
+  tags = {
+    key1 = "value1"
   }
 }
 

@@ -6,28 +6,38 @@ package kafkaconnect
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_mskconnect_worker_configuration")
+// @Tags(identifierAttribute="arn")
 func ResourceWorkerConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkerConfigurationCreate,
 		ReadWithoutTimeout:   resourceWorkerConfigurationRead,
-		DeleteWithoutTimeout: schema.NoopContext,
+		UpdateWithoutTimeout: resourceWorkerConfigurationUpdate,
+		DeleteWithoutTimeout: resourceWorkerConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -62,7 +72,11 @@ func ResourceWorkerConfiguration() *schema.Resource {
 					}
 				},
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -75,6 +89,7 @@ func resourceWorkerConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	input := &kafkaconnect.CreateWorkerConfigurationInput{
 		Name:                  aws.String(name),
 		PropertiesFileContent: flex.StringValueToBase64String(d.Get("properties_file_content").(string)),
+		Tags:                  getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -125,6 +140,14 @@ func resourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
+func resourceWorkerConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// This update function is for updating tags only - there is no update action for this resource
+
+	return append(diags, resourceWorkerConfigurationRead(ctx, d, meta)...)
+}
+
 func decodePropertiesFileContent(content string) string {
 	v, err := itypes.Base64Decode(content)
 	if err != nil {
@@ -132,4 +155,31 @@ func decodePropertiesFileContent(content string) string {
 	}
 
 	return string(v)
+}
+
+func resourceWorkerConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
+
+	log.Printf("[DEBUG] Deleting MSK Connect Worker Configuration: %s", d.Id())
+	_, err := conn.DeleteWorkerConfigurationWithContext(ctx, &kafkaconnect.DeleteWorkerConfigurationInput{
+		WorkerConfigurationArn: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, kafkaconnect.ErrCodeNotFoundException) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting MSK Connect Worker Configuration (%s): %s", d.Id(), err)
+	}
+
+	_, err = waitWorkerConfigurationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for MSK Connect Worker Configuration (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
 }

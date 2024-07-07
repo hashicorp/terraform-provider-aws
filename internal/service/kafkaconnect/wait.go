@@ -114,3 +114,20 @@ func waitCustomPluginDeleted(ctx context.Context, conn *kafkaconnect.KafkaConnec
 
 	return nil, err
 }
+
+func waitWorkerConfigurationDeleted(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.DescribeWorkerConfigurationOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{kafkaconnect.WorkerConfigurationStateDeleting},
+		Target:  []string{},
+		Refresh: statusWorkerConfigurationState(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*kafkaconnect.DescribeWorkerConfigurationOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}

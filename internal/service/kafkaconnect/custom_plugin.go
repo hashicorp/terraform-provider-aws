@@ -16,16 +16,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_mskconnect_custom_plugin")
+// @Tags(identifierAttribute="arn")
 func ResourceCustomPlugin() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomPluginCreate,
 		ReadWithoutTimeout:   resourceCustomPluginRead,
+		UpdateWithoutTimeout: resourceCustomPluginUpdate,
 		DeleteWithoutTimeout: resourceCustomPluginDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -102,7 +105,11 @@ func ResourceCustomPlugin() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -116,6 +123,7 @@ func resourceCustomPluginCreate(ctx context.Context, d *schema.ResourceData, met
 		ContentType: aws.String(d.Get(names.AttrContentType).(string)),
 		Location:    expandCustomPluginLocation(d.Get(names.AttrLocation).([]interface{})[0].(map[string]interface{})),
 		Name:        aws.String(name),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -179,6 +187,14 @@ func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	return diags
+}
+
+func resourceCustomPluginUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// This update function is for updating tags only - there is no update action for this resource
+
+	return append(diags, resourceCustomPluginRead(ctx, d, meta)...)
 }
 
 func resourceCustomPluginDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

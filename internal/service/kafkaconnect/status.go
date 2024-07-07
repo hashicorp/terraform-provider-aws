@@ -43,3 +43,19 @@ func statusCustomPluginState(ctx context.Context, conn *kafkaconnect.KafkaConnec
 		return output, aws.StringValue(output.CustomPluginState), nil
 	}
 }
+
+func statusWorkerConfigurationState(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindWorkerConfigurationByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.WorkerConfigurationState), nil
+	}
+}

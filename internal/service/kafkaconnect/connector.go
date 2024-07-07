@@ -17,12 +17,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_mskconnect_connector")
+// @Tags(identifierAttribute="arn")
 func ResourceConnector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectorCreate,
@@ -358,6 +360,8 @@ func ResourceConnector() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -384,6 +388,8 @@ func ResourceConnector() *schema.Resource {
 				},
 			},
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -403,6 +409,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 		KafkaConnectVersion:              aws.String(d.Get("kafkaconnect_version").(string)),
 		Plugins:                          expandPlugins(d.Get("plugin").(*schema.Set).List()),
 		ServiceExecutionRoleArn:          aws.String(d.Get("service_execution_role_arn").(string)),
+		Tags:                             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -513,23 +520,25 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
-	input := &kafkaconnect.UpdateConnectorInput{
-		Capacity:       expandCapacityUpdate(d.Get("capacity").([]interface{})[0].(map[string]interface{})),
-		ConnectorArn:   aws.String(d.Id()),
-		CurrentVersion: aws.String(d.Get(names.AttrVersion).(string)),
-	}
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &kafkaconnect.UpdateConnectorInput{
+			Capacity:       expandCapacityUpdate(d.Get("capacity").([]interface{})[0].(map[string]interface{})),
+			ConnectorArn:   aws.String(d.Id()),
+			CurrentVersion: aws.String(d.Get(names.AttrVersion).(string)),
+		}
 
-	log.Printf("[DEBUG] Updating MSK Connect Connector: %s", input)
-	_, err := conn.UpdateConnectorWithContext(ctx, input)
+		log.Printf("[DEBUG] Updating MSK Connect Connector: %s", input)
+		_, err := conn.UpdateConnectorWithContext(ctx, input)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating MSK Connect Connector (%s): %s", d.Id(), err)
-	}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MSK Connect Connector (%s): %s", d.Id(), err)
+		}
 
-	_, err = waitConnectorUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		_, err = waitConnectorUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for MSK Connect Connector (%s) update: %s", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Connect Connector (%s) update: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceConnectorRead(ctx, d, meta)...)
