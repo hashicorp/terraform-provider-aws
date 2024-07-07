@@ -12,6 +12,7 @@ var (
 	ResourceRegion                  = resourceRegion
 	ResourceSharedDirectory         = resourceSharedDirectory
 	ResourceSharedDirectoryAccepter = resourceSharedDirectoryAccepter
+	ResourceTrust                   = newTrustResource
 
 	FindConditionalForwarderByTwoPartKey = findConditionalForwarderByTwoPartKey
 	FindDirectoryByID                    = findDirectoryByID
@@ -19,4 +20,5 @@ var (
 	FindRadiusSettingsByID               = findRadiusSettingsByID
 	FindRegionByTwoPartKey               = findRegionByTwoPartKey
 	FindSharedDirectoryByTwoPartKey      = findSharedDirectoryByTwoPartKey
+	FindTrustByTwoPartKey                = findTrustByTwoPartKey
 )
