@@ -60,6 +60,42 @@ func TestAccCloudTrailEventDataStore_basic(t *testing.T) {
 	})
 }
 
+func TestAccCloudTrailEventDataStore_billingMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudtrail_event_data_store.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationManagementAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventDataStoreConfig_billingMode(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventDataStoreExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", "EXTENDABLE_RETENTION_PRICING"),
+					resource.TestCheckResourceAttr(resourceName, "termination_protection_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEventDataStoreConfig_billingModeUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventDataStoreExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", "FIXED_RETENTION_PRICING"),
+					resource.TestCheckResourceAttr(resourceName, "termination_protection_enabled", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCloudTrailEventDataStore_kmsKeyId(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -175,7 +211,6 @@ func TestAccCloudTrailEventDataStore_options(t *testing.T) {
 				Config: testAccEventDataStoreConfig_options(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventDataStoreExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "billing_mode", "EXTENDABLE_RETENTION_PRICING"),
 					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "organization_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "365"),
@@ -191,7 +226,6 @@ func TestAccCloudTrailEventDataStore_options(t *testing.T) {
 				Config: testAccEventDataStoreConfig_optionsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventDataStoreExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "billing_mode", "FIXED_RETENTION_PRICING"),
 					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "organization_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "90"),
@@ -348,6 +382,27 @@ resource "aws_cloudtrail_event_data_store" "test" {
 `, rName)
 }
 
+func testAccEventDataStoreConfig_billingMode(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudtrail_event_data_store" "test" {
+  name = %[1]q
+
+  termination_protection_enabled = false # For ease of deletion.
+}
+`, rName)
+}
+
+func testAccEventDataStoreConfig_billingModeUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudtrail_event_data_store" "test" {
+  name = %[1]q
+
+  billing_mode                   = "FIXED_RETENTION_PRICING"
+  termination_protection_enabled = false # For ease of deletion.
+}
+`, rName)
+}
+
 func testAccEventDataStoreConfig_kmsKeyId(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
@@ -421,7 +476,6 @@ func testAccEventDataStoreConfig_optionsUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail_event_data_store" "test" {
   name                 = %[1]q
-  billing_mode         = "FIXED_RETENTION_PRICING"
   multi_region_enabled = true
   organization_enabled = false
   retention_period     = 90
