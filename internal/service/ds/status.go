@@ -43,19 +43,3 @@ func statusRegion(ctx context.Context, conn *directoryservice.DirectoryService, 
 		return output, aws.StringValue(output.Status), nil
 	}
 }
-
-func statusSharedDirectory(ctx context.Context, conn *directoryservice.DirectoryService, ownerDirectoryID, sharedDirectoryID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindSharedDirectory(ctx, conn, ownerDirectoryID, sharedDirectoryID)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.ShareStatus), nil
-	}
-}

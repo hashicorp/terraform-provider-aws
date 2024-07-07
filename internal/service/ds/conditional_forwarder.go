@@ -80,7 +80,7 @@ func resourceConditionalForwarderCreate(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(id)
 
-	return diags
+	return append(diags, resourceConditionalForwarderRead(ctx, d, meta)...)
 }
 
 func resourceConditionalForwarderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

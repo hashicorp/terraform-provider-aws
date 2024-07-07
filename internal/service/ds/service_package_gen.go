@@ -68,8 +68,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  ResourceSharedDirectory,
+			Factory:  resourceSharedDirectory,
 			TypeName: "aws_directory_service_shared_directory",
+			Name:     "Shared Directory",
 		},
 		{
 			Factory:  ResourceSharedDirectoryAccepter,

@@ -9,9 +9,11 @@ var (
 	ResourceDirectory            = resourceDirectory
 	ResourceLogSubscription      = resourceLogSubscription
 	ResourceRadiusSettings       = resourceRadiusSettings
+	ResourceSharedDirectory      = resourceSharedDirectory
 
 	FindConditionalForwarderByTwoPartKey = findConditionalForwarderByTwoPartKey
 	FindDirectoryByID                    = findDirectoryByID
 	FindLogSubscriptionByID              = findLogSubscriptionByID
 	FindRadiusSettingsByID               = findRadiusSettingsByID
+	FindSharedDirectoryByTwoPartKey      = findSharedDirectoryByTwoPartKey
 )

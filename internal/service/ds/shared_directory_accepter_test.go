@@ -70,7 +70,7 @@ func testAccCheckSharedDirectoryAccepterExists(ctx context.Context, n string) re
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 
-		_, err := tfds.FindSharedDirectory(ctx, conn, rs.Primary.Attributes["owner_directory_id"], rs.Primary.Attributes["shared_directory_id"])
+		_, err := tfds.FindSharedDirectoryByTwoPartKey(ctx, conn, rs.Primary.Attributes["owner_directory_id"], rs.Primary.Attributes["shared_directory_id"])
 
 		return err
 	}
