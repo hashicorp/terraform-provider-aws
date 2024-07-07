@@ -564,10 +564,10 @@ func enableSSO(ctx context.Context, conn *directoryservice.Client, directoryID s
 	return nil
 }
 
-func updateNumberOfDomainControllers(ctx context.Context, conn *directoryservice.Client, directoryID string, desiredNumber int, timeout time.Duration) error {
+func updateNumberOfDomainControllers(ctx context.Context, conn *directoryservice.Client, directoryID string, desiredNumber int, timeout time.Duration, optFns ...func(*directoryservice.Options)) error {
 	oldDomainControllers, err := findDomainControllers(ctx, conn, &directoryservice.DescribeDomainControllersInput{
 		DirectoryId: aws.String(directoryID),
-	})
+	}, optFns...)
 
 	if err != nil {
 		return fmt.Errorf("reading Directory Service Directory (%s) domain controllers: %w", directoryID, err)
@@ -578,7 +578,7 @@ func updateNumberOfDomainControllers(ctx context.Context, conn *directoryservice
 		DirectoryId:   aws.String(directoryID),
 	}
 
-	_, err = conn.UpdateNumberOfDomainControllers(ctx, input)
+	_, err = conn.UpdateNumberOfDomainControllers(ctx, input, optFns...)
 
 	if err != nil {
 		return fmt.Errorf("updating Directory Service Directory (%s) number of domain controllers (%d): %w", directoryID, desiredNumber, err)
@@ -586,7 +586,7 @@ func updateNumberOfDomainControllers(ctx context.Context, conn *directoryservice
 
 	newDomainControllers, err := findDomainControllers(ctx, conn, &directoryservice.DescribeDomainControllersInput{
 		DirectoryId: aws.String(directoryID),
-	})
+	}, optFns...)
 
 	if err != nil {
 		return fmt.Errorf("reading Directory Service Directory (%s) domain controllers: %w", directoryID, err)
@@ -615,11 +615,11 @@ func updateNumberOfDomainControllers(ctx context.Context, conn *directoryservice
 
 	for _, v := range wait {
 		if len(newDomainControllers) > len(oldDomainControllers) {
-			if _, err = waitDomainControllerCreated(ctx, conn, directoryID, v, timeout); err != nil {
+			if _, err = waitDomainControllerCreated(ctx, conn, directoryID, v, timeout, optFns...); err != nil {
 				return fmt.Errorf("waiting for Directory Service Directory (%s) Domain Controller (%s) create: %w", directoryID, v, err)
 			}
 		} else {
-			if _, err := waitDomainControllerDeleted(ctx, conn, directoryID, v, timeout); err != nil {
+			if _, err := waitDomainControllerDeleted(ctx, conn, directoryID, v, timeout, optFns...); err != nil {
 				return fmt.Errorf("waiting for Directory Service Directory (%s) Domain Controller (%s) delete: %w", directoryID, v, err)
 			}
 		}
@@ -751,8 +751,8 @@ func waitDirectoryDeleted(ctx context.Context, conn *directoryservice.Client, id
 	return nil, err
 }
 
-func findDomainController(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeDomainControllersInput) (*awstypes.DomainController, error) {
-	output, err := findDomainControllers(ctx, conn, input)
+func findDomainController(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeDomainControllersInput, optFns ...func(*directoryservice.Options)) (*awstypes.DomainController, error) {
+	output, err := findDomainControllers(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -761,12 +761,12 @@ func findDomainController(ctx context.Context, conn *directoryservice.Client, in
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDomainControllers(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeDomainControllersInput) ([]awstypes.DomainController, error) {
+func findDomainControllers(ctx context.Context, conn *directoryservice.Client, input *directoryservice.DescribeDomainControllersInput, optFns ...func(*directoryservice.Options)) ([]awstypes.DomainController, error) {
 	var output []awstypes.DomainController
 
 	pages := directoryservice.NewDescribeDomainControllersPaginator(conn, input)
 	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+		page, err := pages.NextPage(ctx, optFns...)
 
 		if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
 			return nil, &retry.NotFoundError{
@@ -785,13 +785,13 @@ func findDomainControllers(ctx context.Context, conn *directoryservice.Client, i
 	return output, nil
 }
 
-func findDomainControllerByTwoPartKey(ctx context.Context, conn *directoryservice.Client, directoryID, domainControllerID string) (*awstypes.DomainController, error) {
+func findDomainControllerByTwoPartKey(ctx context.Context, conn *directoryservice.Client, directoryID, domainControllerID string, optFns ...func(*directoryservice.Options)) (*awstypes.DomainController, error) {
 	input := &directoryservice.DescribeDomainControllersInput{
 		DirectoryId:         aws.String(directoryID),
 		DomainControllerIds: []string{domainControllerID},
 	}
 
-	output, err := findDomainController(ctx, conn, input)
+	output, err := findDomainController(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -807,9 +807,9 @@ func findDomainControllerByTwoPartKey(ctx context.Context, conn *directoryservic
 	return output, nil
 }
 
-func statusDomainController(ctx context.Context, conn *directoryservice.Client, directoryID, domainControllerID string) retry.StateRefreshFunc {
+func statusDomainController(ctx context.Context, conn *directoryservice.Client, directoryID, domainControllerID string, optFns ...func(*directoryservice.Options)) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findDomainControllerByTwoPartKey(ctx, conn, directoryID, domainControllerID)
+		output, err := findDomainControllerByTwoPartKey(ctx, conn, directoryID, domainControllerID, optFns...)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -823,11 +823,11 @@ func statusDomainController(ctx context.Context, conn *directoryservice.Client, 
 	}
 }
 
-func waitDomainControllerCreated(ctx context.Context, conn *directoryservice.Client, directoryID, domainControllerID string, timeout time.Duration) (*awstypes.DomainController, error) {
+func waitDomainControllerCreated(ctx context.Context, conn *directoryservice.Client, directoryID, domainControllerID string, timeout time.Duration, optFns ...func(*directoryservice.Options)) (*awstypes.DomainController, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainControllerStatusCreating),
 		Target:  enum.Slice(awstypes.DomainControllerStatusActive),
-		Refresh: statusDomainController(ctx, conn, directoryID, domainControllerID),
+		Refresh: statusDomainController(ctx, conn, directoryID, domainControllerID, optFns...),
 		Timeout: timeout,
 	}
 
@@ -842,11 +842,11 @@ func waitDomainControllerCreated(ctx context.Context, conn *directoryservice.Cli
 	return nil, err
 }
 
-func waitDomainControllerDeleted(ctx context.Context, conn *directoryservice.Client, directoryID, domainControllerID string, timeout time.Duration) (*awstypes.DomainController, error) {
+func waitDomainControllerDeleted(ctx context.Context, conn *directoryservice.Client, directoryID, domainControllerID string, timeout time.Duration, optFns ...func(*directoryservice.Options)) (*awstypes.DomainController, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainControllerStatusDeleting),
 		Target:  []string{},
-		Refresh: statusDomainController(ctx, conn, directoryID, domainControllerID),
+		Refresh: statusDomainController(ctx, conn, directoryID, domainControllerID, optFns...),
 		Timeout: timeout,
 	}
 

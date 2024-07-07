@@ -196,7 +196,7 @@ func resourceRadiusSettingsDelete(ctx context.Context, d *schema.ResourceData, m
 		DirectoryId: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
+	if errs.IsA[*awstypes.DirectoryDoesNotExistException](err) {
 		return diags
 	}
 

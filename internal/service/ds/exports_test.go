@@ -9,6 +9,7 @@ var (
 	ResourceDirectory               = resourceDirectory
 	ResourceLogSubscription         = resourceLogSubscription
 	ResourceRadiusSettings          = resourceRadiusSettings
+	ResourceRegion                  = resourceRegion
 	ResourceSharedDirectory         = resourceSharedDirectory
 	ResourceSharedDirectoryAccepter = resourceSharedDirectoryAccepter
 
@@ -16,5 +17,6 @@ var (
 	FindDirectoryByID                    = findDirectoryByID
 	FindLogSubscriptionByID              = findLogSubscriptionByID
 	FindRadiusSettingsByID               = findRadiusSettingsByID
+	FindRegionByTwoPartKey               = findRegionByTwoPartKey
 	FindSharedDirectoryByTwoPartKey      = findSharedDirectoryByTwoPartKey
 )

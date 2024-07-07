@@ -62,7 +62,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "RADIUS Settings",
 		},
 		{
-			Factory:  ResourceRegion,
+			Factory:  resourceRegion,
 			TypeName: "aws_directory_service_region",
 			Name:     "Region",
 			Tags:     &types.ServicePackageResourceTags{},
