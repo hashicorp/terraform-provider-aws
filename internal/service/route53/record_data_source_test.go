@@ -20,7 +20,7 @@ import (
 func TestAccRoute53RecordDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	// resourceName := "aws_route53_record.test"
-	dataSourceName := "data.aws_route53_record.test"
+	dataSourceName := "data.aws_route53_records.test"
 	zoneName := acctest.RandomDomain()
 	recordName := zoneName.RandomSubdomain()
 
@@ -47,7 +47,7 @@ func TestAccRoute53RecordDataSource_basic(t *testing.T) {
 func TestAccRoute53RecordDataSource_weightedPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	// resourceName := "aws_route53_record.test"
-	dataSourceName := "data.aws_route53_record.test"
+	dataSourceName := "data.aws_route53_records.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -81,7 +81,7 @@ ttl     = "30"
 records = ["127.0.0.1"]
 }
 
-data "aws_route53_record" "test" {
+data "aws_route53_records" "test" {
   zone_id = aws_route53_zone.test.zone_id
   filter_record = aws_route53_record.test.name
 }
@@ -135,7 +135,7 @@ resource "aws_route53_record" "www-off" {
   records        = ["dev.domain.test"]
 }
 
-data "aws_route53_record" "test" {
+data "aws_route53_records" "test" {
 	zone_id = aws_route53_zone.main.zone_id
 	filter_record = "^www"
 	depends_on = [aws_route53_record.www-dev, aws_route53_record.www-live, aws_route53_record.www-off]

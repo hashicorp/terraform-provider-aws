@@ -36,7 +36,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		},
 		{
 			Factory:  DataSourceRecords,
-			TypeName: "aws_route53_record",
+			TypeName: "aws_route53_records",
 			Name:     "Record",
 		},
 		{

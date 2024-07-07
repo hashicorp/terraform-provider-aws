@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_route53_record", name="Record")
+// @SDKDataSource("aws_route53_records", name="Record")
 func DataSourceRecords() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRecordRead,
