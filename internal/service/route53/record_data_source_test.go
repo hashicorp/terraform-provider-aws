@@ -19,7 +19,6 @@ import (
 
 func TestAccRoute53RecordDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// resourceName := "aws_route53_record.test"
 	dataSourceName := "data.aws_route53_records.test"
 	zoneName := acctest.RandomDomain()
 	recordName := zoneName.RandomSubdomain()
@@ -46,7 +45,6 @@ func TestAccRoute53RecordDataSource_basic(t *testing.T) {
 
 func TestAccRoute53RecordDataSource_weightedPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	// resourceName := "aws_route53_record.test"
 	dataSourceName := "data.aws_route53_records.test"
 
 	resource.ParallelTest(t, resource.TestCase{
