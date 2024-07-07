@@ -175,6 +175,7 @@ func TestAccCloudTrailEventDataStore_options(t *testing.T) {
 				Config: testAccEventDataStoreConfig_options(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventDataStoreExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", "EXTENDABLE_RETENTION_PRICING"),
 					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "organization_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "365"),
@@ -190,6 +191,7 @@ func TestAccCloudTrailEventDataStore_options(t *testing.T) {
 				Config: testAccEventDataStoreConfig_optionsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventDataStoreExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", "FIXED_RETENTION_PRICING"),
 					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "organization_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "90"),
@@ -419,6 +421,7 @@ func testAccEventDataStoreConfig_optionsUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail_event_data_store" "test" {
   name                 = %[1]q
+  billing_mode         = "FIXED_RETENTION_PRICING"
   multi_region_enabled = true
   organization_enabled = false
   retention_period     = 90
