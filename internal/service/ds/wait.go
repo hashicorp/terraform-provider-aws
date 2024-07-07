@@ -44,21 +44,3 @@ func waitRegionDeleted(ctx context.Context, conn *directoryservice.DirectoryServ
 
 	return nil, err
 }
-
-func waitDirectoryShared(ctx context.Context, conn *directoryservice.DirectoryService, id string, timeout time.Duration) (*directoryservice.SharedDirectory, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{directoryservice.ShareStatusPendingAcceptance, directoryservice.ShareStatusSharing},
-		Target:                    []string{directoryservice.ShareStatusShared},
-		Refresh:                   statusDirectoryShareStatus(ctx, conn, id),
-		Timeout:                   timeout,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*directoryservice.SharedDirectory); ok {
-		return output, err
-	}
-
-	return nil, err
-}

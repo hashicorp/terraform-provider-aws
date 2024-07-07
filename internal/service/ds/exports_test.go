@@ -5,11 +5,12 @@ package ds
 
 // Exports for use in tests only.
 var (
-	ResourceConditionalForwarder = resourceConditionalForwarder
-	ResourceDirectory            = resourceDirectory
-	ResourceLogSubscription      = resourceLogSubscription
-	ResourceRadiusSettings       = resourceRadiusSettings
-	ResourceSharedDirectory      = resourceSharedDirectory
+	ResourceConditionalForwarder    = resourceConditionalForwarder
+	ResourceDirectory               = resourceDirectory
+	ResourceLogSubscription         = resourceLogSubscription
+	ResourceRadiusSettings          = resourceRadiusSettings
+	ResourceSharedDirectory         = resourceSharedDirectory
+	ResourceSharedDirectoryAccepter = resourceSharedDirectoryAccepter
 
 	FindConditionalForwarderByTwoPartKey = findConditionalForwarderByTwoPartKey
 	FindDirectoryByID                    = findDirectoryByID
