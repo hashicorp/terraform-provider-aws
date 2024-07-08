@@ -53,7 +53,7 @@ class MyConvertedCode(TerraformStack):
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-cluster.html).
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `allow_major_version_upgrade` - (Optional) A value that indicates whether major version upgrades are allowed. Constraints: You must allow major version upgrades when specifying a value for the EngineVersion parameter that is a different major version than the DB cluster's current version.
 * `apply_immediately` - (Optional) Specifies whether any cluster modifications
@@ -148,4 +148,4 @@ Using `terraform import`, import DocumentDB Clusters using the `cluster_identifi
 % terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-664459fa40a41971bd2a2712b5b349cfbdeadd5787580fa2e5e09af6d1ad7029 -->
+<!-- cache-key: cdktf-0.20.1 input-663517f2c94d383c5c6340e7bc94780228f41033c4e27faf9243377cc8649901 -->

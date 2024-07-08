@@ -22,6 +22,14 @@ func (sr ServiceRecord) AWSCLIV2CommandNoDashes() string {
 	return sr[colAWSCLIV2CommandNoDashes]
 }
 
+func (sr ServiceRecord) GoPackageName(version int) string {
+	switch version {
+	case 1:
+		return sr.GoV1Package()
+	}
+	return sr.GoV2Package()
+}
+
 func (sr ServiceRecord) GoV1Package() string {
 	return sr[colGoV1Package]
 }
@@ -59,6 +67,14 @@ func (sr ServiceRecord) Aliases() []string {
 
 func (sr ServiceRecord) ProviderNameUpper() string {
 	return sr[colProviderNameUpper]
+}
+
+func (sr ServiceRecord) ClientTypeName(version int) (s string) {
+	switch version {
+	case 1:
+		return sr.GoV1ClientTypeName()
+	}
+	return "Client"
 }
 
 func (sr ServiceRecord) GoV1ClientTypeName() string {

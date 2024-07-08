@@ -131,7 +131,7 @@ class MyConvertedCode(TerraformStack):
 container service. For more information, see
 [Enabling and managing custom domains for your Amazon Lightsail container services](https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-creating-container-services-certificates).
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `name` - (Required) The name for the container service. Names must be of length 1 to 63, and be
   unique within each AWS Region in your Lightsail account.
@@ -218,4 +218,4 @@ Using `terraform import`, import Lightsail Container Service using the `name`. F
 % terraform import aws_lightsail_container_service.my_container_service container-service-1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-eef0293160dc60814435bd446789ad7ccd72e962911a916b4335840d4e295d4d -->
+<!-- cache-key: cdktf-0.20.1 input-92e24fd20983c20060c9484d150c907c0945c149f4871db95aec5158fbc7239f -->

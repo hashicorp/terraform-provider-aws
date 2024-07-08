@@ -108,6 +108,7 @@ The `cloudwatch_alarm` object takes the following arguments:
 
 The `cloudwatch_logs` object takes the following arguments:
 
+* `batch_mode` - (Optional) The payload that contains a JSON array of records will be sent to CloudWatch via a batch call.
 * `log_group_name` - (Required) The CloudWatch log group name.
 * `role_arn` - (Required) The IAM role ARN that allows access to the CloudWatch alarm.
 
@@ -275,4 +276,4 @@ Using `terraform import`, import IoT Topic Rules using the `name`. For example:
 % terraform import aws_iot_topic_rule.rule <name>
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b205624c029d2d94d7075b9c9db60430a43913be043604027026ace9f2ae039e -->
+<!-- cache-key: cdktf-0.20.1 input-ee820e8d0c64a28bff215e3aea3a653758f560996e79bc2b74ed2938a5d291c8 -->
