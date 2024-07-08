@@ -48,8 +48,8 @@ github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.32.1 h1:UlnzbXKREuUBbfiaz
 github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.32.1/go.mod h1:rzwfckqHB3D6OX8s9NNnQ+3Ue9g093uLus91qvw2waQ=
 github.com/aws/aws-sdk-go-v2/service/account v1.19.1 h1:zrQ4xJWzZvtpk82yTNUa1epainAQKY+vd/VBT9bjUQw=
 github.com/aws/aws-sdk-go-v2/service/account v1.19.1/go.mod h1:MM1yOaj4b9dKTV559gAznF1cxwH25q9coIs72FOyok8=
-github.com/aws/aws-sdk-go-v2/service/acm v1.28.1 h1:fwsAC87QCkj4eQ3/q6qqBux9s0sdBb8HRsUEK9Lpf1Q=
-github.com/aws/aws-sdk-go-v2/service/acm v1.28.1/go.mod h1:PlzT5RdIk5yPjDQu9q+SB3UhMY2XIvGhol8vBhZFc0M=
+github.com/aws/aws-sdk-go-v2/service/acm v1.28.2 h1:PLrhpvPPOCDViTLv8yihBGudiV+Hub6K6G0WsaYeR+Y=
+github.com/aws/aws-sdk-go-v2/service/acm v1.28.2/go.mod h1:PlzT5RdIk5yPjDQu9q+SB3UhMY2XIvGhol8vBhZFc0M=
 github.com/aws/aws-sdk-go-v2/service/acmpca v1.33.1 h1:kyHfl1VRBejUolTBJ0YIp6rPxAKYyjIms6bQRILrXC8=
 github.com/aws/aws-sdk-go-v2/service/acmpca v1.33.1/go.mod h1:2a/l5Gz15HVSg1nyQauzh+WmZ5bIWjpigz5k/Z8GqNo=
 github.com/aws/aws-sdk-go-v2/service/amp v1.27.1 h1:va9j7MGA8jBlQs9KujMlkSdnC26TuEJXv7ywnFjmTZ8=
@@ -148,10 +148,10 @@ github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.27.1 h1:U8XnTJY8BRWB
 github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.27.1/go.mod h1:HwL5LK+96aciqaQGy9R952m6A1wJVv+28WVAICwUcoU=
 github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.24.1 h1:Hlq6tNUpVg2QL8jpmyHqd9JQxclxi8LhHijpnKy+2j0=
 github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.24.1/go.mod h1:NFFY3krqG9XpxFUJX4cK7H7JQUd6ZJZtOxhwr3IvTbw=
-github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.25.1 h1:w7k+lTipHwSzdikhf+8YkRFnq+Fx3RNb8sZKC519lQM=
-github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.25.1/go.mod h1:9B6D4KgCOGxUy70whXp0TMIwc5v0J1doUwqL7d5hbQc=
-github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.41.1 h1:8cdo17dADrMJER+tT3y6SbGw0/Hrv9m3BeZQSbbGYFY=
-github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.41.1/go.mod h1:wqqFjEnVtltlQXbpYgqfGcDkuml+2it3ikxbWmQ5ypA=
+github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.25.2 h1:18ZIYgWnkWVZdmcmbdLEdyHToLR8khoYzcT94KM8AXk=
+github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.25.2/go.mod h1:9B6D4KgCOGxUy70whXp0TMIwc5v0J1doUwqL7d5hbQc=
+github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.41.2 h1:xwPwJ//Dt+AxuHsabV52hBPgw3+4356w1o6wMAzXtes=
+github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.41.2/go.mod h1:wqqFjEnVtltlQXbpYgqfGcDkuml+2it3ikxbWmQ5ypA=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.33.1 h1:K/sfA9c5qjXi6LedevzfQABo11oqCPI1ScVrhTbR+q4=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.33.1/go.mod h1:vOz/b8JUWaHtt9utuOQcazrXDfHb41f+zKd+b3pBRcg=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.37.1 h1:bCeXSnZn4FKtyoE+B6cuXul8EQOsiCwr6tMTMKdIqu8=
@@ -332,8 +332,8 @@ github.com/aws/aws-sdk-go-v2/service/polly v1.42.1 h1:D/hvXnzmOZmEU+neCUVf07An80
 github.com/aws/aws-sdk-go-v2/service/polly v1.42.1/go.mod h1:jVJ3U2lGiKfs4Clt8wsbaf4JfO4BQz962iDPiHtlyqo=
 github.com/aws/aws-sdk-go-v2/service/pricing v1.30.1 h1:NxMNBOH4xO/MKFxdT2Taw4vIP0biQfnQIzaqnwpOIgw=
 github.com/aws/aws-sdk-go-v2/service/pricing v1.30.1/go.mod h1:NKVImK3sKfX5U6FcHw5q89j4JlNBtP8E4lI5q4JmAaA=
-github.com/aws/aws-sdk-go-v2/service/qbusiness v1.9.1 h1:sbJEqJyK3QQRBo/9+0dB1p4VRgvGFRFGkp/iFag5KQg=
-github.com/aws/aws-sdk-go-v2/service/qbusiness v1.9.1/go.mod h1:ryZvrvKgKwER3XGY+2uYvJhj79wCSbqRDagmPpAdN5s=
+github.com/aws/aws-sdk-go-v2/service/qbusiness v1.10.0 h1:VE4+A36g5S1wvzTPSNxW4rgtdKlVKqfIGgf5NAM+h6s=
+github.com/aws/aws-sdk-go-v2/service/qbusiness v1.10.0/go.mod h1:ryZvrvKgKwER3XGY+2uYvJhj79wCSbqRDagmPpAdN5s=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.23.1 h1:+Cn7bN/yDM+FV+VZCObhvVryGNTP5Yj1cg2vzxcJdqA=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.23.1/go.mod h1:vFNiqeuQiwtsbnKCKCIutgYnZQRlXV7wIIgN3xOSKkk=
 github.com/aws/aws-sdk-go-v2/service/ram v1.27.1 h1:L9OVMWPmtzOaKsIDX+c3Cg8aQ1PGMDVGGo8PX604Edo=
