@@ -13,31 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindCustomPluginByARN(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string) (*kafkaconnect.DescribeCustomPluginOutput, error) {
-	input := &kafkaconnect.DescribeCustomPluginInput{
-		CustomPluginArn: aws.String(arn),
-	}
-
-	output, err := conn.DescribeCustomPluginWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, kafkaconnect.ErrCodeNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func FindWorkerConfigurationByARN(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string) (*kafkaconnect.DescribeWorkerConfigurationOutput, error) {
 	input := &kafkaconnect.DescribeWorkerConfigurationInput{
 		WorkerConfigurationArn: aws.String(arn),

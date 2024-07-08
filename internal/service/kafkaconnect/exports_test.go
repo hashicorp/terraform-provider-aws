@@ -5,7 +5,9 @@ package kafkaconnect
 
 // Exports for use in tests only.
 var (
-	ResourceConnector = resourceConnector
+	ResourceConnector    = resourceConnector
+	ResourceCustomPlugin = resourceCustomPlugin
 
-	FindConnectorByARN = findConnectorByARN
+	FindConnectorByARN    = findConnectorByARN
+	FindCustomPluginByARN = findCustomPluginByARN
 )

@@ -60,8 +60,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceCustomPlugin,
+			Factory:  resourceCustomPlugin,
 			TypeName: "aws_mskconnect_custom_plugin",
+			Name:     "Custom Plugin",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
