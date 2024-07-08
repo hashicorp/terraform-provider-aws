@@ -14,7 +14,23 @@ Terraform resource for managing an AWS Service Catalog AppRegistry Application A
 ### Basic Usage
 
 ```terraform
+resource "aws_servicecatalogappregistry_application" "example" {
+  name = "example-app"
+}
+
+resource "aws_servicecatalogappregistry_attribute_group" "example" {
+  name        = "example"
+  description = "example description"
+
+  attributes = jsonencode({
+    app   = "exampleapp"
+    group = "examplegroup"
+  })
+}
+
 resource "aws_servicecatalogappregistry_application_attribute_group_association" "example" {
+  application_id     = aws_servicecatalogappregistry_application.example.id
+  attribute_group_id = aws_servicecatalogappregistry_attribute_group.example.id
 }
 ```
 
@@ -22,28 +38,16 @@ resource "aws_servicecatalogappregistry_application_attribute_group_association"
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `application_id` - (Required) ID of the Application to associate
+* `attribute_group_id` - (Required) ID of the Attribute Group to associate
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `tags` - (Optional) A map of tags assigned to the WorkSpaces Connection Alias. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Application Attribute Group Association. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
 
 ## Import
 
@@ -52,12 +56,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_servicecatalogappregistry_application_attribute_group_association.example
-  id = "application_attribute_group_association-id-12345678"
+  id = "12456778723424sdffsdfsdq34,12234t3564dsfsdf34asff4ww3"
 }
 ```
 
-Using `terraform import`, import Service Catalog AppRegistry Application Attribute Group Association using the `example_id_arg`. For example:
+Using `terraform import`, import Service Catalog AppRegistry Application Attribute Group Association using the `12456778723424sdffsdfsdq34,12234t3564dsfsdf34asff4ww3`. For example:
 
 ```console
-% terraform import aws_servicecatalogappregistry_application_attribute_group_association.example application_attribute_group_association-id-12345678
+% terraform import aws_servicecatalogappregistry_application_attribute_group_association.example 12456778723424sdffsdfsdq34,12234t3564dsfsdf34asff4ww3
 ```
