@@ -1220,6 +1220,17 @@ func TestExpandInterface(t *testing.T) {
 			}),
 		},
 		{
+			TestName: "top level return value does not implement target interface",
+			Source: testFlexTFInterfaceIncompatibleExpander{
+				Field1: types.StringValue("value1"),
+			},
+			Target: &targetInterface,
+			expectedDiags: diag.Diagnostics{
+				diagExpandedTypeDoesNotImplement(reflect.TypeFor[*testFlexAWSInterfaceIncompatibleImpl](), reflect.TypeFor[testFlexAWSInterfaceInterface]()),
+				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.testFlexTFInterfaceIncompatibleExpander, *flex.testFlexAWSInterfaceInterface]"),
+			},
+		},
+		{
 			TestName: "single list Source and single interface Target",
 			Source: testFlexTFInterfaceListNestedObject{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceExpander{

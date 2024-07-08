@@ -392,6 +392,22 @@ func (t testFlexTFInterfaceExpander) Expand(ctx context.Context) (any, diag.Diag
 	}, nil
 }
 
+type testFlexTFInterfaceIncompatibleExpander struct {
+	Field1 types.String `tfsdk:"field1"`
+}
+
+var _ Expander = testFlexTFInterfaceIncompatibleExpander{}
+
+func (t testFlexTFInterfaceIncompatibleExpander) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	return &testFlexAWSInterfaceIncompatibleImpl{
+		AWSField: t.Field1.ValueString(),
+	}, nil
+}
+
+type testFlexAWSInterfaceIncompatibleImpl struct {
+	AWSField string
+}
+
 type testFlexAWSInterfaceSingle struct {
 	Field1 testFlexAWSInterfaceInterface
 }
