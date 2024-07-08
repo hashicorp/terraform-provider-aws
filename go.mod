@@ -14,7 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.5
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/account v1.19.1
-	github.com/aws/aws-sdk-go-v2/service/acm v1.28.1
+	github.com/aws/aws-sdk-go-v2/service/acm v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/amp v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.23.1
@@ -64,8 +64,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.24.1
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.25.1
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.41.1
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.25.2
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.41.2
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.48.1
@@ -151,7 +151,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.14.1
 	github.com/aws/aws-sdk-go-v2/service/polly v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.30.1
-	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.9.1
+	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/ram v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.18.1
