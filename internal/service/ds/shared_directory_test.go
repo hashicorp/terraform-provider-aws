@@ -53,6 +53,34 @@ func TestAccDSSharedDirectory_basic(t *testing.T) {
 	})
 }
 
+func TestAccDSSharedDirectory_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.SharedDirectory
+	resourceName := "aws_directory_service_shared_directory.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckSharedDirectoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSharedDirectoryConfig_basic(rName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSharedDirectoryExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfds.ResourceSharedDirectory(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckSharedDirectoryExists(ctx context.Context, n string, v *awstypes.SharedDirectory) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
