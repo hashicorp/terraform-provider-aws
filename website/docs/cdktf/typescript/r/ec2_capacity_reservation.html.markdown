@@ -64,6 +64,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the Capacity Reservation.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Capacity Reservations using the `id`. For example:
@@ -96,4 +104,4 @@ Using `terraform import`, import Capacity Reservations using the `id`. For examp
 % terraform import aws_ec2_capacity_reservation.web cr-0123456789abcdef0
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-93a356c14077d7db2f6957607bc33725d67bfe6e53d726dbffcc5d0f5f8dea86 -->
+<!-- cache-key: cdktf-0.20.1 input-d8d155d1fbf589001a2914f71470265f6494458dcf1f80c3767248486e8a4776 -->
