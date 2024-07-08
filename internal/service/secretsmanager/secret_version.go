@@ -41,7 +41,7 @@ func resourceSecretVersion() *schema.Resource {
 		DeleteWithoutTimeout: resourceSecretVersionDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceIntegrationImport,
+			StateContext: resourceSecretVersionImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -304,7 +304,7 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceIntegrationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceSecretVersionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	secretID, versionID, err := secretVersionParseResourceID(d.Id())
 	if err != nil {
 		return []*schema.ResourceData{}, err
