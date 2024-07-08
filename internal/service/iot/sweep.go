@@ -53,26 +53,32 @@ func RegisterSweepers() {
 	})
 
 	resource.AddTestSweepers("aws_iot_thing", &resource.Sweeper{
-		Name:         "aws_iot_thing",
-		F:            sweepThings,
-		Dependencies: []string{"aws_iot_thing_principal_attachment"},
+		Name: "aws_iot_thing",
+		F:    sweepThings,
+		Dependencies: []string{
+			"aws_iot_thing_principal_attachment",
+		},
 	})
 
 	resource.AddTestSweepers("aws_iot_thing_group", &resource.Sweeper{
-		Name: "aws_iot_policy_attachment",
+		Name: "aws_iot_thing_group",
 		F:    sweepThingGroups,
 	})
 
 	resource.AddTestSweepers("aws_iot_thing_type", &resource.Sweeper{
-		Name:         "aws_iot_thing_type",
-		F:            sweepThingTypes,
-		Dependencies: []string{"aws_iot_thing"},
+		Name: "aws_iot_thing_type",
+		F:    sweepThingTypes,
+		Dependencies: []string{
+			"aws_iot_thing",
+		},
 	})
 
 	resource.AddTestSweepers("aws_iot_topic_rule", &resource.Sweeper{
-		Name:         "aws_iot_topic_rule",
-		F:            sweepTopicRules,
-		Dependencies: []string{"aws_iot_topic_rule_destination"},
+		Name: "aws_iot_topic_rule",
+		F:    sweepTopicRules,
+		Dependencies: []string{
+			"aws_iot_topic_rule_destination",
+		},
 	})
 
 	resource.AddTestSweepers("aws_iot_topic_rule_destination", &resource.Sweeper{
@@ -81,9 +87,11 @@ func RegisterSweepers() {
 	})
 
 	resource.AddTestSweepers("aws_iot_authorizer", &resource.Sweeper{
-		Name:         "aws_iot_authorizer",
-		F:            sweepAuthorizers,
-		Dependencies: []string{"aws_iot_domain_configuration"},
+		Name: "aws_iot_authorizer",
+		F:    sweepAuthorizers,
+		Dependencies: []string{
+			"aws_iot_domain_configuration",
+		},
 	})
 
 	resource.AddTestSweepers("aws_iot_domain_configuration", &resource.Sweeper{
