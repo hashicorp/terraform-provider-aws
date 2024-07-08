@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/kafkaconnect"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,7 +24,7 @@ func TestAccKafkaConnectConnector_basic(t *testing.T) {
 	resourceName := "aws_mskconnect_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kafkaconnect.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.KafkaConnectEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -89,7 +88,7 @@ func TestAccKafkaConnectConnector_disappears(t *testing.T) {
 	resourceName := "aws_mskconnect_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kafkaconnect.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.KafkaConnectEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -112,7 +111,7 @@ func TestAccKafkaConnectConnector_update(t *testing.T) {
 	resourceName := "aws_mskconnect_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kafkaconnect.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.KafkaConnectEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -237,7 +236,7 @@ func TestAccKafkaConnectConnector_tags(t *testing.T) {
 	resourceName := "aws_mskconnect_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kafkaconnect.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.KafkaConnectEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -283,11 +282,7 @@ func testAccCheckConnectorExists(ctx context.Context, n string) resource.TestChe
 			return fmt.Errorf("not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No MSK Connect Connector ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectClient(ctx)
 
 		_, err := tfkafkaconnect.FindConnectorByARN(ctx, conn, rs.Primary.ID)
 
@@ -297,7 +292,7 @@ func testAccCheckConnectorExists(ctx context.Context, n string) resource.TestChe
 
 func testAccCheckConnectorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_mskconnect_connector" {
@@ -321,46 +316,8 @@ func testAccCheckConnectorDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccConnectorBaseConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.10.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.10.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test3" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.10.3.0/24"
-  availability_zone = data.aws_availability_zones.available.names[2]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccConnectorConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
   name   = %[1]q
@@ -447,7 +404,7 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.test1.id, aws_subnet.test2.id, aws_subnet.test3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.test.id]
 
@@ -464,7 +421,7 @@ resource "aws_msk_cluster" "test" {
 func testAccConnectorConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCustomPluginConfig_basic(rName),
-		testAccConnectorBaseConfig(rName),
+		testAccConnectorConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_mskconnect_connector" "test" {
   name = %[1]q
@@ -490,7 +447,7 @@ resource "aws_mskconnect_connector" "test" {
 
       vpc {
         security_groups = [aws_security_group.test.id]
-        subnets         = [aws_subnet.test1.id, aws_subnet.test2.id, aws_subnet.test3.id]
+        subnets         = aws_subnet.test[*].id
       }
     }
   }
@@ -525,7 +482,7 @@ func testAccConnectorConfig_allAttributes(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCustomPluginConfig_basic(rName),
 		testAccWorkerConfigurationConfig_basic(rName),
-		testAccConnectorBaseConfig(rName),
+		testAccConnectorConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -564,7 +521,7 @@ resource "aws_mskconnect_connector" "test" {
 
       vpc {
         security_groups = [aws_security_group.test.id]
-        subnets         = [aws_subnet.test1.id, aws_subnet.test2.id, aws_subnet.test3.id]
+        subnets         = aws_subnet.test[*].id
       }
     }
   }
@@ -617,7 +574,7 @@ func testAccConnectorConfig_allAttributesCapacityUpdated(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCustomPluginConfig_basic(rName),
 		testAccWorkerConfigurationConfig_basic(rName),
-		testAccConnectorBaseConfig(rName),
+		testAccConnectorConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -646,7 +603,7 @@ resource "aws_mskconnect_connector" "test" {
 
       vpc {
         security_groups = [aws_security_group.test.id]
-        subnets         = [aws_subnet.test1.id, aws_subnet.test2.id, aws_subnet.test3.id]
+        subnets         = aws_subnet.test[*].id
       }
     }
   }
@@ -698,7 +655,7 @@ resource "aws_mskconnect_connector" "test" {
 func testAccConnectorConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccCustomPluginConfig_basic(rName),
-		testAccConnectorBaseConfig(rName),
+		testAccConnectorConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_mskconnect_connector" "test" {
   name = %[1]q
@@ -724,7 +681,7 @@ resource "aws_mskconnect_connector" "test" {
 
       vpc {
         security_groups = [aws_security_group.test.id]
-        subnets         = [aws_subnet.test1.id, aws_subnet.test2.id, aws_subnet.test3.id]
+        subnets         = aws_subnet.test[*].id
       }
     }
   }
@@ -758,7 +715,7 @@ resource "aws_mskconnect_connector" "test" {
 func testAccConnectorConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
 		testAccCustomPluginConfig_basic(rName),
-		testAccConnectorBaseConfig(rName),
+		testAccConnectorConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_mskconnect_connector" "test" {
   name = %[1]q
@@ -784,7 +741,7 @@ resource "aws_mskconnect_connector" "test" {
 
       vpc {
         security_groups = [aws_security_group.test.id]
-        subnets         = [aws_subnet.test1.id, aws_subnet.test2.id, aws_subnet.test3.id]
+        subnets         = aws_subnet.test[*].id
       }
     }
   }
