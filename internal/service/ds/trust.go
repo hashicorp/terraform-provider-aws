@@ -210,7 +210,9 @@ func (r *trustResource) Read(ctx context.Context, request resource.ReadRequest, 
 
 	conn := r.Meta().DSClient(ctx)
 
-	trust, err := findTrustByTwoPartKey(ctx, conn, data.DirectoryID.ValueString(), data.ID.ValueString())
+	directoryID := data.DirectoryID.ValueString()
+	trustID := data.ID.ValueString()
+	trust, err := findTrustByTwoPartKey(ctx, conn, directoryID, trustID)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -220,7 +222,7 @@ func (r *trustResource) Read(ctx context.Context, request resource.ReadRequest, 
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Directory Service Trust (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Directory Service Trust (%s)", trustID), err.Error())
 
 		return
 	}
@@ -231,10 +233,12 @@ func (r *trustResource) Read(ctx context.Context, request resource.ReadRequest, 
 		return
 	}
 
-	forwarder, err := findConditionalForwarderByTwoPartKey(ctx, conn, data.DirectoryID.ValueString(), data.RemoteDomainName.ValueString())
+	// Directory Trust optionally accepts a remote domain name with a trailing period.
+	domainName := strings.TrimRight(data.RemoteDomainName.ValueString(), ".")
+	forwarder, err := findConditionalForwarderByTwoPartKey(ctx, conn, directoryID, domainName)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Directory Service Conditional Forwarder (%s)", conditionalForwarderCreateResourceID(data.DirectoryID.ValueString(), data.RemoteDomainName.ValueString())), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Directory Service Conditional Forwarder (%s)", conditionalForwarderCreateResourceID(directoryID, domainName)), err.Error())
 
 		return
 	}
@@ -257,16 +261,19 @@ func (r *trustResource) Update(ctx context.Context, request resource.UpdateReque
 
 	conn := r.Meta().DSClient(ctx)
 
+	directoryID := new.DirectoryID.ValueString()
+	trustID := new.ID.ValueString()
+
 	if !new.SelectiveAuth.IsUnknown() && !old.SelectiveAuth.Equal(new.SelectiveAuth) {
 		input := &directoryservice.UpdateTrustInput{
 			SelectiveAuth: new.SelectiveAuth.ValueEnum(),
-			TrustId:       fwflex.StringFromFramework(ctx, new.ID),
+			TrustId:       aws.String(trustID),
 		}
 
 		_, err := conn.UpdateTrust(ctx, input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating Directory Service Trust (%s)", new.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating Directory Service Trust (%s)", trustID), err.Error())
 
 			return
 		}
@@ -274,10 +281,10 @@ func (r *trustResource) Update(ctx context.Context, request resource.UpdateReque
 		const (
 			timeout = 10 * time.Minute
 		)
-		trust, err := waitTrustUpdated(ctx, conn, old.DirectoryID.ValueString(), old.ID.ValueString(), timeout)
+		trust, err := waitTrustUpdated(ctx, conn, directoryID, trustID, timeout)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for Directory Service Trust (%s) update", new.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Directory Service Trust (%s) update", trustID), err.Error())
 
 			return
 		}
@@ -297,7 +304,7 @@ func (r *trustResource) Update(ctx context.Context, request resource.UpdateReque
 
 	if !new.ConditionalForwarderIPAddrs.IsUnknown() && !old.ConditionalForwarderIPAddrs.Equal(new.ConditionalForwarderIPAddrs) {
 		input := &directoryservice.UpdateConditionalForwarderInput{
-			DirectoryId:      fwflex.StringFromFramework(ctx, new.DirectoryID),
+			DirectoryId:      aws.String(directoryID),
 			DnsIpAddrs:       fwflex.ExpandFrameworkStringValueSet(ctx, new.ConditionalForwarderIPAddrs),
 			RemoteDomainName: fwflex.StringFromFramework(ctx, new.RemoteDomainName),
 		}
@@ -310,7 +317,9 @@ func (r *trustResource) Update(ctx context.Context, request resource.UpdateReque
 			return
 		}
 
-		forwarder, err := findConditionalForwarderByTwoPartKey(ctx, conn, new.DirectoryID.ValueString(), new.RemoteDomainName.ValueString())
+		// Directory Trust optionally accepts a remote domain name with a trailing period.
+		domainName := strings.TrimRight(new.RemoteDomainName.ValueString(), ".")
+		forwarder, err := findConditionalForwarderByTwoPartKey(ctx, conn, directoryID, domainName)
 
 		if err != nil {
 			// Outputting a NotFoundError does not include the original error.
@@ -321,7 +330,7 @@ func (r *trustResource) Update(ctx context.Context, request resource.UpdateReque
 				}
 			}
 
-			response.Diagnostics.AddError(fmt.Sprintf("reading Directory Service Conditional Forwarder (%s)", conditionalForwarderCreateResourceID(new.DirectoryID.ValueString(), new.RemoteDomainName.ValueString())), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("reading Directory Service Conditional Forwarder (%s)", conditionalForwarderCreateResourceID(directoryID, domainName)), err.Error())
 
 			return
 		}
