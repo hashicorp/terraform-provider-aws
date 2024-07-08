@@ -41,8 +41,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			},
 		},
 		{
-			Factory:  DataSourceWorkerConfiguration,
+			Factory:  dataSourceWorkerConfiguration,
 			TypeName: "aws_mskconnect_worker_configuration",
+			Name:     "Worker Configuration",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
