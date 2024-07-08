@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kafkaconnect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kafkaconnect"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -35,33 +35,30 @@ func sweepConnectors(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.KafkaConnectConn(ctx)
+	conn := client.KafkaConnectClient(ctx)
 	input := &kafkaconnect.ListConnectorsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListConnectorsPagesWithContext(ctx, input, func(page *kafkaconnect.ListConnectorsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := kafkaconnect.NewListConnectorsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping MSK Connect Connector sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing MSK Connect Connectors (%s): %w", region, err)
 		}
 
 		for _, v := range page.Connectors {
-			r := ResourceConnector()
+			r := resourceConnector()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ConnectorArn))
+			d.SetId(aws.ToString(v.ConnectorArn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MSK Connect Connector sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing MSK Connect Connectors (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -79,33 +76,30 @@ func sweepCustomPlugins(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.KafkaConnectConn(ctx)
+	conn := client.KafkaConnectClient(ctx)
 	input := &kafkaconnect.ListCustomPluginsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListCustomPluginsPagesWithContext(ctx, input, func(page *kafkaconnect.ListCustomPluginsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := kafkaconnect.NewListCustomPluginsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping MSK Connect Custom Plugin sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing MSK Connect Custom Plugins (%s): %w", region, err)
 		}
 
 		for _, v := range page.CustomPlugins {
-			r := ResourceCustomPlugin()
+			r := resourceCustomPlugin()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.CustomPluginArn))
+			d.SetId(aws.ToString(v.CustomPluginArn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping MSK Connect Custom Plugin sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing MSK Connect Custom Plugins (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
