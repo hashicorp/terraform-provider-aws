@@ -69,8 +69,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceWorkerConfiguration,
+			Factory:  resourceWorkerConfiguration,
 			TypeName: "aws_mskconnect_worker_configuration",
+			Name:     "Worker Configuration",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
