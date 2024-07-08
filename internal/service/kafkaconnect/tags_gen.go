@@ -5,9 +5,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kafkaconnect"
-	"github.com/aws/aws-sdk-go/service/kafkaconnect/kafkaconnectiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kafkaconnect"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -19,12 +18,12 @@ import (
 // listTags lists kafkaconnect service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn kafkaconnectiface.KafkaConnectAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *kafkaconnect.Client, identifier string, optFns ...func(*kafkaconnect.Options)) (tftags.KeyValueTags, error) {
 	input := &kafkaconnect.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResourceWithContext(ctx, input)
+	output, err := conn.ListTagsForResource(ctx, input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -36,7 +35,7 @@ func listTags(ctx context.Context, conn kafkaconnectiface.KafkaConnectAPI, ident
 // ListTags lists kafkaconnect service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).KafkaConnectConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).KafkaConnectClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -83,7 +82,7 @@ func setTagsOut(ctx context.Context, tags map[string]*string) {
 // updateTags updates kafkaconnect service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn kafkaconnectiface.KafkaConnectAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *kafkaconnect.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*kafkaconnect.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -94,10 +93,10 @@ func updateTags(ctx context.Context, conn kafkaconnectiface.KafkaConnectAPI, ide
 	if len(removedTags) > 0 {
 		input := &kafkaconnect.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResourceWithContext(ctx, input)
+		_, err := conn.UntagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -112,7 +111,7 @@ func updateTags(ctx context.Context, conn kafkaconnectiface.KafkaConnectAPI, ide
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResourceWithContext(ctx, input)
+		_, err := conn.TagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -125,5 +124,5 @@ func updateTags(ctx context.Context, conn kafkaconnectiface.KafkaConnectAPI, ide
 // UpdateTags updates kafkaconnect service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).KafkaConnectConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).KafkaConnectClient(ctx), identifier, oldTags, newTags)
 }
