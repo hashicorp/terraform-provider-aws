@@ -3032,7 +3032,7 @@ service "ds" {
 
   sdk {
     id             = "Directory Service"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -3284,16 +3284,12 @@ service "efs" {
 
   sdk {
     id             = "EFS"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
     provider_name_upper = "EFS"
     human_friendly      = "EFS (Elastic File System)"
-  }
-
-  client {
-    go_v1_client_typename = "EFS"
   }
 
   endpoint_info {
