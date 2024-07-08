@@ -150,12 +150,15 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceCoIPPool,
+			Factory:  dataSourceCoIPPool,
 			TypeName: "aws_ec2_coip_pool",
+			Name:     "COIP Pool",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceCoIPPools,
+			Factory:  dataSourceCoIPPools,
 			TypeName: "aws_ec2_coip_pools",
+			Name:     "COIP Pools",
 		},
 		{
 			Factory:  dataSourceHost,
@@ -184,32 +187,43 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Instance Types",
 		},
 		{
-			Factory:  DataSourceLocalGateway,
+			Factory:  dataSourceLocalGateway,
 			TypeName: "aws_ec2_local_gateway",
+			Name:     "Local Gateway",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceLocalGatewayRouteTable,
+			Factory:  dataSourceLocalGatewayRouteTable,
 			TypeName: "aws_ec2_local_gateway_route_table",
+			Name:     "Local Gateway Route Table",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceLocalGatewayRouteTables,
+			Factory:  dataSourceLocalGatewayRouteTables,
 			TypeName: "aws_ec2_local_gateway_route_tables",
+			Name:     "Local Gateway Route Table",
 		},
 		{
-			Factory:  DataSourceLocalGatewayVirtualInterface,
+			Factory:  dataSourceLocalGatewayVirtualInterface,
 			TypeName: "aws_ec2_local_gateway_virtual_interface",
+			Name:     "Local Gateway Virtual Interface",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceLocalGatewayVirtualInterfaceGroup,
+			Factory:  dataSourceLocalGatewayVirtualInterfaceGroup,
 			TypeName: "aws_ec2_local_gateway_virtual_interface_group",
+			Name:     "Local Gateway Virtual Interface Group",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceLocalGatewayVirtualInterfaceGroups,
+			Factory:  dataSourceLocalGatewayVirtualInterfaceGroups,
 			TypeName: "aws_ec2_local_gateway_virtual_interface_groups",
+			Name:     "Local Gateway Virtual Interface Groups",
 		},
 		{
-			Factory:  DataSourceLocalGateways,
+			Factory:  dataSourceLocalGateways,
 			TypeName: "aws_ec2_local_gateways",
+			Name:     "Local Gateways",
 		},
 		{
 			Factory:  DataSourceManagedPrefixList,
@@ -699,11 +713,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Instance State",
 		},
 		{
-			Factory:  ResourceLocalGatewayRoute,
+			Factory:  resourceLocalGatewayRoute,
 			TypeName: "aws_ec2_local_gateway_route",
 		},
 		{
-			Factory:  ResourceLocalGatewayRouteTableVPCAssociation,
+			Factory:  resourceLocalGatewayRouteTableVPCAssociation,
 			TypeName: "aws_ec2_local_gateway_route_table_vpc_association",
 			Name:     "Local Gateway Route Table VPC Association",
 			Tags: &types.ServicePackageResourceTags{
