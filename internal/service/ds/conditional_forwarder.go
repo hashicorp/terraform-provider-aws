@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
@@ -79,6 +80,17 @@ func resourceConditionalForwarderCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.SetId(id)
+
+	const (
+		timeout = 1 * time.Minute
+	)
+	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func() (interface{}, error) {
+		return findConditionalForwarderByTwoPartKey(ctx, conn, directoryID, domainName)
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Directory Service Conditional Forwarder (%s) create: %s", d.Id(), err)
+	}
 
 	return append(diags, resourceConditionalForwarderRead(ctx, d, meta)...)
 }
