@@ -5,6 +5,7 @@ package servicecatalogappregistry
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -43,7 +44,8 @@ func (d *dataSourceAttributeGroup) Schema(ctx context.Context, req datasource.Sc
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrAttributes: schema.StringAttribute{
-				Computed: true,
+				Computed:   true,
+				CustomType: jsontypes.NormalizedType{},
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
@@ -105,10 +107,10 @@ func (d *dataSourceAttributeGroup) Read(ctx context.Context, req datasource.Read
 }
 
 type dataSourceAttributeGroupData struct {
-	ARN         types.String `tfsdk:"arn"`
-	Attributes  types.String `tfsdk:"attributes"`
-	Description types.String `tfsdk:"description"`
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	Tags        types.Map    `tfsdk:"tags"`
+	ARN         types.String         `tfsdk:"arn"`
+	Attributes  jsontypes.Normalized `tfsdk:"attributes"`
+	Description types.String         `tfsdk:"description"`
+	ID          types.String         `tfsdk:"id"`
+	Name        types.String         `tfsdk:"name"`
+	Tags        types.Map            `tfsdk:"tags"`
 }
