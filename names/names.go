@@ -76,6 +76,7 @@ const (
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
 	KMSEndpointID                        = "kms"
+	KafkaConnectEndpointID               = "kafkaconnect"
 	KendraEndpointID                     = "kendra"
 	LambdaEndpointID                     = "lambda"
 	LexV2ModelsEndpointID                = "models-v2-lex"
