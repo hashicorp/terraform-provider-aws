@@ -11,6 +11,7 @@ ENHANCEMENTS:
 * resource/aws_eks_cluster: Add `bootstrap_self_managed_addons` argument ([#38162](https://github.com/hashicorp/terraform-provider-aws/issues/38162))
 * resource/aws_launch_template: Add `network_interfaces.primary_ipv6` argument ([#37142](https://github.com/hashicorp/terraform-provider-aws/issues/37142))
 * resource/aws_oam_link: Add `link_configuration` argument ([#38277](https://github.com/hashicorp/terraform-provider-aws/issues/38277))
+* resource/aws_ssm_association: Add `tags` argument and `tags_all` attribute ([#38271](https://github.com/hashicorp/terraform-provider-aws/issues/38271))
 
 BUG FIXES:
 
