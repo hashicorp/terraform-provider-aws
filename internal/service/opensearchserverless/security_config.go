@@ -152,7 +152,7 @@ func (r *resourceSecurityConfig) Create(ctx context.Context, req resource.Create
 	if out == nil || out.SecurityConfigDetail == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, ResNameSecurityConfig, plan.Name.String(), nil),
-			err.Error(),
+			"Empty response.",
 		)
 		return
 	}
