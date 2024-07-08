@@ -98,6 +98,10 @@ func resourceLogSubscriptionDelete(ctx context.Context, d *schema.ResourceData, 
 		DirectoryId: aws.String(d.Id()),
 	})
 
+	if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Directory Service Log Subscription (%s): %s", d.Id(), err)
 	}
