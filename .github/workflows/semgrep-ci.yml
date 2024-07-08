@@ -33,6 +33,7 @@ jobs:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - run: |
           semgrep $SEMGREP_ARGS \
+          --exclude .ci/semgrep/**/*.go \
           --config .ci/.semgrep.yml \
           --config .ci/.semgrep-constants.yml \
           --config .ci/.semgrep-test-constants.yml \
