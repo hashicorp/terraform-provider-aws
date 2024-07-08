@@ -164,6 +164,10 @@ func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, 
 		UnshareTarget: expandUnshareTarget(d.Get(names.AttrTarget).([]interface{})[0].(map[string]interface{})),
 	})
 
+	if errs.IsA[*awstypes.DirectoryNotSharedException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Directory Service Shared Directory (%s): %s", d.Id(), err)
 	}
