@@ -21,7 +21,6 @@ import (
 func TestAccDSLogSubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_directory_service_log_subscription.test"
-	logGroupName := "ad-service-log-subscription-test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
@@ -32,10 +31,10 @@ func TestAccDSLogSubscription_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckLogSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogSubscriptionConfig_basic(rName, domainName, logGroupName),
+				Config: testAccLogSubscriptionConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogSubscriptionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrLogGroupName, logGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLogGroupName, rName),
 				),
 			},
 			{
@@ -50,7 +49,6 @@ func TestAccDSLogSubscription_basic(t *testing.T) {
 func TestAccDSLogSubscription_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_directory_service_log_subscription.test"
-	logGroupName := "ad-service-log-subscription-test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
@@ -61,7 +59,7 @@ func TestAccDSLogSubscription_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckLogSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogSubscriptionConfig_basic(rName, domainName, logGroupName),
+				Config: testAccLogSubscriptionConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogSubscriptionExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfds.ResourceLogSubscription(), resourceName),
@@ -113,7 +111,7 @@ func testAccCheckLogSubscriptionExists(ctx context.Context, n string) resource.T
 	}
 }
 
-func testAccLogSubscriptionConfig_basic(rName, domain, logGroupName string) string {
+func testAccLogSubscriptionConfig_basic(rName, domain string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_directory_service_log_subscription" "test" {
   directory_id   = aws_directory_service_directory.test.id
@@ -137,11 +135,11 @@ resource "aws_directory_service_directory" "test" {
 }
 
 resource "aws_cloudwatch_log_group" "test" {
-  name              = %[3]q
+  name              = %[1]q
   retention_in_days = 1
 }
 
-data "aws_iam_policy_document" "ad-log-policy" {
+data "aws_iam_policy_document" "test" {
   statement {
     actions = [
       "logs:CreateLogStream",
@@ -159,9 +157,9 @@ data "aws_iam_policy_document" "ad-log-policy" {
   }
 }
 
-resource "aws_cloudwatch_log_resource_policy" "ad-log-policy" {
-  policy_document = data.aws_iam_policy_document.ad-log-policy.json
-  policy_name     = "ad-log-policy"
+resource "aws_cloudwatch_log_resource_policy" "test" {
+  policy_document = data.aws_iam_policy_document.test.json
+  policy_name     = %[1]q
 }
-`, rName, domain, logGroupName))
+`, rName, domain))
 }
