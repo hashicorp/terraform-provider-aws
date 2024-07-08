@@ -149,7 +149,10 @@ func (r *resourceApplicationAttributeGroupAssociation) Delete(ctx context.Contex
 		return
 	}
 
-	in := &servicecatalogappregistry.DisassociateAttributeGroupInput{}
+	in := &servicecatalogappregistry.DisassociateAttributeGroupInput{
+		Application:    aws.String(state.Application.ValueString()),
+		AttributeGroup: aws.String(state.AttributeGroup.ValueString()),
+	}
 
 	_, err := conn.DisassociateAttributeGroup(ctx, in)
 	if err != nil {
@@ -167,9 +170,6 @@ func (r *resourceApplicationAttributeGroupAssociation) Delete(ctx context.Contex
 
 func (r *resourceApplicationAttributeGroupAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-func (r *resourceApplicationAttributeGroupAssociation) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findApplicationAttributeGroupAssociationByID(ctx context.Context, conn *servicecatalogappregistry.Client, applicationId string, attributeGroupId string) (*bool, error) {
