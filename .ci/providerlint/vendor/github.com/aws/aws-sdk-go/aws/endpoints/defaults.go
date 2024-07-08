@@ -7087,6 +7087,9 @@ var awsPartition = partition{
 					Region: "ca-central-1",
 				}: endpoint{},
 				endpointKey{
+					Region: "ca-west-1",
+				}: endpoint{},
+				endpointKey{
 					Region: "eu-central-1",
 				}: endpoint{},
 				endpointKey{
@@ -7202,6 +7205,9 @@ var awsPartition = partition{
 					Region: "af-south-1",
 				}: endpoint{},
 				endpointKey{
+					Region: "ap-east-1",
+				}: endpoint{},
+				endpointKey{
 					Region: "ap-northeast-1",
 				}: endpoint{},
 				endpointKey{
@@ -7230,6 +7236,9 @@ var awsPartition = partition{
 				}: endpoint{},
 				endpointKey{
 					Region: "ca-central-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "ca-west-1",
 				}: endpoint{},
 				endpointKey{
 					Region: "eu-central-1",
@@ -30430,6 +30439,9 @@ var awsPartition = partition{
 				}: endpoint{
 					Hostname: "sms-voice-fips.ca-central-1.amazonaws.com",
 				},
+				endpointKey{
+					Region: "ca-west-1",
+				}: endpoint{},
 				endpointKey{
 					Region: "eu-central-1",
 				}: endpoint{},
