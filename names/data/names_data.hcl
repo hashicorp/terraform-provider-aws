@@ -3032,7 +3032,7 @@ service "ds" {
 
   sdk {
     id             = "Directory Service"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
