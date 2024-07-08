@@ -674,11 +674,11 @@ func expandCapacity(tfMap map[string]interface{}) *awstypes.Capacity {
 
 	apiObject := &awstypes.Capacity{}
 
-	if v, ok := tfMap["autoscaling"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["autoscaling"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AutoScaling = expandAutoScaling(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["provisioned_capacity"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["provisioned_capacity"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.ProvisionedCapacity = expandProvisionedCapacity(v[0].(map[string]interface{}))
 	}
 
@@ -704,11 +704,11 @@ func expandAutoScaling(tfMap map[string]interface{}) *awstypes.AutoScaling {
 		apiObject.MinWorkerCount = int32(v)
 	}
 
-	if v, ok := tfMap["scale_in_policy"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["scale_in_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.ScaleInPolicy = expandScaleInPolicy(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["scale_out_policy"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["scale_out_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.ScaleOutPolicy = expandScaleOutPolicy(v[0].(map[string]interface{}))
 	}
 
@@ -768,11 +768,11 @@ func expandCapacityUpdate(tfMap map[string]interface{}) *awstypes.CapacityUpdate
 
 	apiObject := &awstypes.CapacityUpdate{}
 
-	if v, ok := tfMap["autoscaling"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["autoscaling"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AutoScaling = expandAutoScalingUpdate(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["provisioned_capacity"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["provisioned_capacity"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.ProvisionedCapacity = expandProvisionedCapacityUpdate(v[0].(map[string]interface{}))
 	}
 
@@ -798,11 +798,11 @@ func expandAutoScalingUpdate(tfMap map[string]interface{}) *awstypes.AutoScaling
 		apiObject.MinWorkerCount = int32(v)
 	}
 
-	if v, ok := tfMap["scale_in_policy"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["scale_in_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.ScaleInPolicy = expandScaleInPolicyUpdate(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["scale_out_policy"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["scale_out_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.ScaleOutPolicy = expandScaleOutPolicyUpdate(v[0].(map[string]interface{}))
 	}
 
@@ -862,7 +862,7 @@ func expandCluster(tfMap map[string]interface{}) *awstypes.KafkaCluster {
 
 	apiObject := &awstypes.KafkaCluster{}
 
-	if v, ok := tfMap["apache_kafka_cluster"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["apache_kafka_cluster"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.ApacheKafkaCluster = expandApacheCluster(v[0].(map[string]interface{}))
 	}
 
@@ -880,7 +880,7 @@ func expandApacheCluster(tfMap map[string]interface{}) *awstypes.ApacheKafkaClus
 		apiObject.BootstrapServers = aws.String(v)
 	}
 
-	if v, ok := tfMap["vpc"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["vpc"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Vpc = expandVPC(v[0].(map[string]interface{}))
 	}
 
@@ -940,7 +940,7 @@ func expandPlugin(tfMap map[string]interface{}) *awstypes.Plugin {
 
 	apiObject := &awstypes.Plugin{}
 
-	if v, ok := tfMap["custom_plugin"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["custom_plugin"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CustomPlugin = expandCustomPlugin(v[0].(map[string]interface{}))
 	}
 
@@ -997,7 +997,7 @@ func expandLogDelivery(tfMap map[string]interface{}) *awstypes.LogDelivery {
 
 	apiObject := &awstypes.LogDelivery{}
 
-	if v, ok := tfMap["worker_log_delivery"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["worker_log_delivery"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.WorkerLogDelivery = expandWorkerLogDelivery(v[0].(map[string]interface{}))
 	}
 
@@ -1011,15 +1011,15 @@ func expandWorkerLogDelivery(tfMap map[string]interface{}) *awstypes.WorkerLogDe
 
 	apiObject := &awstypes.WorkerLogDelivery{}
 
-	if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CloudWatchLogs = expandCloudWatchLogsLogDelivery(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["firehose"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["firehose"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Firehose = expandFirehoseLogDelivery(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.S3 = expandS3LogDelivery(v[0].(map[string]interface{}))
 	}
 
