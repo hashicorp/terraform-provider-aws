@@ -286,6 +286,13 @@ func (r *trustResource) Update(ctx context.Context, request resource.UpdateReque
 		if response.Diagnostics.HasError() {
 			return
 		}
+	} else {
+		// Set values for unknowns.
+		new.LastUpdatedDateTime = old.LastUpdatedDateTime
+		new.SelectiveAuth = old.SelectiveAuth
+		new.StateLastUpdatedDateTime = old.StateLastUpdatedDateTime
+		new.TrustState = old.TrustState
+		new.TrustStateReason = old.TrustStateReason
 	}
 
 	if !new.ConditionalForwarderIPAddrs.IsUnknown() && !old.ConditionalForwarderIPAddrs.Equal(new.ConditionalForwarderIPAddrs) {
