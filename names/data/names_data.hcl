@@ -5941,7 +5941,7 @@ service "kafkaconnect" {
 
   sdk {
     id             = "KafkaConnect"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
