@@ -451,10 +451,6 @@ func testAccCheckExists(ctx context.Context, n string, v *sfn.DescribeStateMachi
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Step Functions State Machine ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNClient(ctx)
 
 		output, err := tfsfn.FindStateMachineByARN(ctx, conn, rs.Primary.ID)

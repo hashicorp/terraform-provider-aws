@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_sfn_activity")
+// @SDKDataSource("aws_sfn_activity", name="Activity")
 func dataSourceActivity() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceActivityRead,

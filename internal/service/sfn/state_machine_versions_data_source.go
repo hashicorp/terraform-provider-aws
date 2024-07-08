@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKDataSource("aws_sfn_state_machine_versions")
+// @SDKDataSource("aws_sfn_state_machine_versions", name="State Machine Versions")
 func dataSourceStateMachineVersions() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStateMachineVersionsRead,

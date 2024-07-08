@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_sfn_alias")
+// @SDKDataSource("aws_sfn_alias", name="Alias")
 func dataSourceAlias() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAliasRead,

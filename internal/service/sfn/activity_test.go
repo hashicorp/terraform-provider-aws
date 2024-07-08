@@ -124,10 +124,6 @@ func testAccCheckActivityExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Step Functions Activity ID set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNClient(ctx)
 
 		_, err := tfsfn.FindActivityByARN(ctx, conn, rs.Primary.ID)

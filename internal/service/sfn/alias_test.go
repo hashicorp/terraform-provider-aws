@@ -134,10 +134,6 @@ func testAccCheckAliasExists(ctx context.Context, name string, v *sfn.DescribeSt
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Step Functions State Machine Alias ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNClient(ctx)
 
 		output, err := tfsfn.FindAliasByARN(ctx, conn, rs.Primary.ID)

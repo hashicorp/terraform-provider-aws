@@ -27,18 +27,22 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceActivity,
 			TypeName: "aws_sfn_activity",
+			Name:     "Activity",
 		},
 		{
 			Factory:  dataSourceAlias,
 			TypeName: "aws_sfn_alias",
+			Name:     "Alias",
 		},
 		{
 			Factory:  dataSourceStateMachine,
 			TypeName: "aws_sfn_state_machine",
+			Name:     "State Machine",
 		},
 		{
 			Factory:  dataSourceStateMachineVersions,
 			TypeName: "aws_sfn_state_machine_versions",
+			Name:     "State Machine Versions",
 		},
 	}
 }
@@ -56,6 +60,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceAlias,
 			TypeName: "aws_sfn_alias",
+			Name:     "Alias",
 		},
 		{
 			Factory:  resourceStateMachine,

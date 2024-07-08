@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_sfn_state_machine")
+// @SDKDataSource("aws_sfn_state_machine", name="State Machine")
 func dataSourceStateMachine() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStateMachineRead,
