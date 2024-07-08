@@ -33,8 +33,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			},
 		},
 		{
-			Factory:  DataSourceCustomPlugin,
+			Factory:  dataSourceCustomPlugin,
 			TypeName: "aws_mskconnect_custom_plugin",
+			Name:     "Custom Plugin",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
