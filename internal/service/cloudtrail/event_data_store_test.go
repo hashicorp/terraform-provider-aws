@@ -76,7 +76,7 @@ func TestAccCloudTrailEventDataStore_billingMode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventDataStoreExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", "EXTENDABLE_RETENTION_PRICING"),
-					resource.TestCheckResourceAttr(resourceName, "termination_protection_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "termination_protection_enabled", acctest.CtFalse),
 				),
 			},
 			{
