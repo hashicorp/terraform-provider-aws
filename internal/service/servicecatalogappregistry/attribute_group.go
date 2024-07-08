@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry/types"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,7 +56,8 @@ func (r *resourceAttributeGroup) Schema(ctx context.Context, req resource.Schema
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrAttributes: schema.StringAttribute{
-				Required: true,
+				Required:   true,
+				CustomType: jsontypes.NormalizedType{},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 8000),
 				},
@@ -261,11 +263,11 @@ func findAttributeGroupByID(ctx context.Context, conn *servicecatalogappregistry
 }
 
 type resourceAttributeGroupData struct {
-	ARN         types.String `tfsdk:"arn"`
-	Attributes  types.String `tfsdk:"attributes"`
-	Description types.String `tfsdk:"description"`
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	Tags        types.Map    `tfsdk:"tags"`
-	TagsAll     types.Map    `tfsdk:"tags_all"`
+	ARN         types.String         `tfsdk:"arn"`
+	Attributes  jsontypes.Normalized `tfsdk:"attributes"`
+	Description types.String         `tfsdk:"description"`
+	ID          types.String         `tfsdk:"id"`
+	Name        types.String         `tfsdk:"name"`
+	Tags        types.Map            `tfsdk:"tags"`
+	TagsAll     types.Map            `tfsdk:"tags_all"`
 }
