@@ -34,8 +34,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Hosted Zone ID",
 		},
 		{
-			Factory:  DataSourceServiceAccount,
+			Factory:  dataSourceServiceAccount,
 			TypeName: "aws_elb_service_account",
+			Name:     "Service Account",
 		},
 	}
 }

@@ -67,15 +67,16 @@ func dataSourceHostedZoneID() *schema.Resource {
 
 func dataSourceHostedZoneIDRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
 
-	if zoneId, ok := hostedZoneIDPerRegionMap[region]; ok {
-		d.SetId(zoneId)
+	if v, ok := hostedZoneIDPerRegionMap[region]; ok {
+		d.SetId(v)
 		return diags
 	}
 
-	return sdkdiag.AppendErrorf(diags, "Unknown region (%s)", region)
+	return sdkdiag.AppendErrorf(diags, "Unknown Region (%s)", region)
 }

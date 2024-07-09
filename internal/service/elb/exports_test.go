@@ -13,6 +13,7 @@ var (
 	ResourcePolicy                    = resourcePolicy
 	ResourceSSLNegotiationPolicy      = resourceSSLNegotiationPolicy
 
+	AccountIDPerRegionMap                           = accountIDPerRegionMap
 	AppCookieStickinessPolicyParseResourceID        = appCookieStickinessPolicyParseResourceID
 	BackendServerPolicyParseResourceID              = backendServerPolicyParseResourceID
 	FindLoadBalancerAttachmentByTwoPartKey          = findLoadBalancerAttachmentByTwoPartKey
