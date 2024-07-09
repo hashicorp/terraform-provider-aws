@@ -141,7 +141,7 @@ resource "aws_elb" "test" {
     lb_protocol       = "http"
   }
 }
-`))
+`, rName))
 }
 
 func testAccAttachmentConfig_1(rName string) string {
