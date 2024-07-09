@@ -14,9 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// See https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region
-
-var HostedZoneIdPerRegionMap = map[string]string{
+// See https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region.
+var hostedZoneIDPerRegionMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "Z268VQBMOI5EKX",
 	endpoints.ApEast1RegionID:      "Z3DQVH9N71FHZ0",
 	endpoints.ApNortheast1RegionID: "Z14GRHDCWA56QT",
@@ -52,8 +51,8 @@ var HostedZoneIdPerRegionMap = map[string]string{
 	endpoints.UsWest2RegionID:      "Z1H1FL5HABSF5",
 }
 
-// @SDKDataSource("aws_elb_hosted_zone_id")
-func DataSourceHostedZoneID() *schema.Resource {
+// @SDKDataSource("aws_elb_hosted_zone_id", name="Hosted Zone ID")
+func dataSourceHostedZoneID() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHostedZoneIDRead,
 
@@ -73,10 +72,10 @@ func dataSourceHostedZoneIDRead(ctx context.Context, d *schema.ResourceData, met
 		region = v.(string)
 	}
 
-	if zoneId, ok := HostedZoneIdPerRegionMap[region]; ok {
+	if zoneId, ok := hostedZoneIDPerRegionMap[region]; ok {
 		d.SetId(zoneId)
 		return diags
 	}
 
-	return sdkdiag.AppendErrorf(diags, "Unknown region (%q)", region)
+	return sdkdiag.AppendErrorf(diags, "Unknown region (%s)", region)
 }

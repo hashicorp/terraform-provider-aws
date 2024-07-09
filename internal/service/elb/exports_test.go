@@ -16,4 +16,5 @@ var (
 	FindLoadBalancerByName                          = findLoadBalancerByName
 	FindLoadBalancerListenerPolicyByThreePartKey    = findLoadBalancerListenerPolicyByThreePartKey
 	FindLoadBalancerPolicyByTwoPartKey              = findLoadBalancerPolicyByTwoPartKey
+	HostedZoneIDPerRegionMap                        = hostedZoneIDPerRegionMap
 )
