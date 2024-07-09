@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_load_balancer_listener_policy")
-func ResourceListenerPolicy() *schema.Resource {
+// @SDKResource("aws_load_balancer_listener_policy", name="Listener Policy")
+func resourceListenerPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerPolicySet,
 		ReadWithoutTimeout:   resourceListenerPolicyRead,
@@ -58,7 +58,7 @@ func resourceListenerPolicySet(ctx context.Context, d *schema.ResourceData, meta
 
 	lbName := d.Get("load_balancer_name").(string)
 	lbPort := d.Get("load_balancer_port").(int)
-	id := ListenerPolicyCreateResourceID(lbName, lbPort)
+	id := listenerPolicyCreateResourceID(lbName, lbPort)
 	input := &elasticloadbalancing.SetLoadBalancerPoliciesOfListenerInput{
 		LoadBalancerName: aws.String(lbName),
 		LoadBalancerPort: int32(lbPort),
@@ -74,7 +74,9 @@ func resourceListenerPolicySet(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting ELB Classic Listener Policy (%s): %s", id, err)
 	}
 
-	d.SetId(id)
+	if d.IsNewResource() {
+		d.SetId(id)
+	}
 
 	return append(diags, resourceListenerPolicyRead(ctx, d, meta)...)
 }
@@ -83,13 +85,12 @@ func resourceListenerPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
-	lbName, lbPort, err := ListenerPolicyParseResourceID(d.Id())
-
+	lbName, lbPort, err := listenerPolicyParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyNames, err := FindLoadBalancerListenerPolicyByTwoPartKey(ctx, conn, lbName, lbPort)
+	policyNames, err := findLoadBalancerListenerPolicyByTwoPartKey(ctx, conn, lbName, lbPort)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ELB Classic Listener Policy (%s) not found, removing from state", d.Id())
@@ -112,10 +113,9 @@ func resourceListenerPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
-	lbName, lbPort, err := ListenerPolicyParseResourceID(d.Id())
-
+	lbName, lbPort, err := listenerPolicyParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &elasticloadbalancing.SetLoadBalancerPoliciesOfListenerInput{
@@ -134,7 +134,7 @@ func resourceListenerPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func FindLoadBalancerListenerPolicyByTwoPartKey(ctx context.Context, conn *elasticloadbalancing.Client, lbName string, lbPort int) ([]string, error) {
+func findLoadBalancerListenerPolicyByTwoPartKey(ctx context.Context, conn *elasticloadbalancing.Client, lbName string, lbPort int) ([]string, error) {
 	lb, err := findLoadBalancerByName(ctx, conn, lbName)
 
 	if err != nil {
@@ -156,14 +156,14 @@ func FindLoadBalancerListenerPolicyByTwoPartKey(ctx context.Context, conn *elast
 
 const listenerPolicyResourceIDSeparator = ":"
 
-func ListenerPolicyCreateResourceID(lbName string, lbPort int) string {
+func listenerPolicyCreateResourceID(lbName string, lbPort int) string {
 	parts := []string{lbName, strconv.Itoa(lbPort)}
 	id := strings.Join(parts, listenerPolicyResourceIDSeparator)
 
 	return id
 }
 
-func ListenerPolicyParseResourceID(id string) (string, int, error) {
+func listenerPolicyParseResourceID(id string) (string, int, error) {
 	parts := strings.Split(id, listenerPolicyResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {

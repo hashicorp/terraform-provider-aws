@@ -68,7 +68,9 @@ func resourceBackendServerPolicySet(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "setting ELB Classic Backend Server Policy (%s): %s", id, err)
 	}
 
-	d.SetId(id)
+	if d.IsNewResource() {
+		d.SetId(id)
+	}
 
 	return append(diags, resourceBackendServerPolicyRead(ctx, d, meta)...)
 }
