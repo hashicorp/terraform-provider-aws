@@ -1,14 +1,47 @@
-## 5.57.0 (Unreleased)
-
-FEATURES:
-
-* **New Data Source:** `aws_cognito_user_pool` ([#37399](https://github.com/hashicorp/terraform-provider-aws/issues/37399))
-* **New Data Source:** `aws_ec2_transit_gateway_peering_attachments` ([#25743](https://github.com/hashicorp/terraform-provider-aws/issues/25743))
+## 5.58.0 (Unreleased)
 
 ENHANCEMENTS:
 
+* data-source/aws_launch_template: Add `network_interfaces.primary_ipv6` attribute ([#37142](https://github.com/hashicorp/terraform-provider-aws/issues/37142))
+* data-source/aws_oam_link: Add `link_configuration` attribute ([#38277](https://github.com/hashicorp/terraform-provider-aws/issues/38277))
+* resource/aws_cloudformation_stack_set_instance: Extend `deployment_targets` argument. ([#37898](https://github.com/hashicorp/terraform-provider-aws/issues/37898))
+* resource/aws_cloudtrail_event_data_store: Add `billing_mode` argument ([#38273](https://github.com/hashicorp/terraform-provider-aws/issues/38273))
+* resource/aws_ec2_capacity_reservation: Add configurable timeouts ([#36754](https://github.com/hashicorp/terraform-provider-aws/issues/36754))
+* resource/aws_ec2_capacity_reservation: Retry `InsufficientInstanceCapacity` errors ([#36754](https://github.com/hashicorp/terraform-provider-aws/issues/36754))
+* resource/aws_eks_cluster: Add `bootstrap_self_managed_addons` argument ([#38162](https://github.com/hashicorp/terraform-provider-aws/issues/38162))
+* resource/aws_launch_template: Add `network_interfaces.primary_ipv6` argument ([#37142](https://github.com/hashicorp/terraform-provider-aws/issues/37142))
+* resource/aws_oam_link: Add `link_configuration` argument ([#38277](https://github.com/hashicorp/terraform-provider-aws/issues/38277))
+* resource/aws_ssm_association: Add `tags` argument and `tags_all` attribute ([#38271](https://github.com/hashicorp/terraform-provider-aws/issues/38271))
+
+BUG FIXES:
+
+* data-source/aws_ecr_repository: Fix issue where the `tags` attribute is not set ([#38272](https://github.com/hashicorp/terraform-provider-aws/issues/38272))
+* resource/aws_appstream_fleet: Support `0` as a valid value for `idle_disconnect_timeout_in_seconds` ([#38274](https://github.com/hashicorp/terraform-provider-aws/issues/38274))
+* resource/aws_cloudformation_stack_set_instance: Add `ForceNew` to deployment_targets attributes to ensure a new resource is recreated when the deployment_targets argument is changed, which was not the case previously. ([#37898](https://github.com/hashicorp/terraform-provider-aws/issues/37898))
+* resource/aws_elasticache_serverless_cache: Allow `cache_usage_limits.data_storage.maximum`, `cache_usage_limits.data_storage.minimum`, `cache_usage_limits.ecpu_per_second.maximum` and `cache_usage_limits.ecpu_per_second.minimum` to be updated in-place ([#38269](https://github.com/hashicorp/terraform-provider-aws/issues/38269))
+
+## 5.57.0 (July  4, 2024)
+
+FEATURES:
+
+* **New Data Source:** `aws_appstream_image` ([#38225](https://github.com/hashicorp/terraform-provider-aws/issues/38225))
+* **New Data Source:** `aws_cognito_user_pool` ([#37399](https://github.com/hashicorp/terraform-provider-aws/issues/37399))
+* **New Data Source:** `aws_ec2_transit_gateway_peering_attachments` ([#25743](https://github.com/hashicorp/terraform-provider-aws/issues/25743))
+* **New Data Source:** `aws_transfer_connector` ([#38213](https://github.com/hashicorp/terraform-provider-aws/issues/38213))
+
+ENHANCEMENTS:
+
+* data-source/aws_backup_plan: Add `rule` attribute ([#37890](https://github.com/hashicorp/terraform-provider-aws/issues/37890))
 * resource/aws_amplify_domain_association: Add `certificate_settings` argument ([#37105](https://github.com/hashicorp/terraform-provider-aws/issues/37105))
+* resource/aws_ec2_transit_gateway_peering_attachment: Add `options` argument ([#36902](https://github.com/hashicorp/terraform-provider-aws/issues/36902))
+* resource/aws_iot_authorizer: Add `tags` argument ([#37152](https://github.com/hashicorp/terraform-provider-aws/issues/37152))
+* resource/aws_iot_topic_rule: Add `cloudwatch_logs.batch_mode` and `error_action.cloudwatch_logs.batch_mode` arguments ([#36772](https://github.com/hashicorp/terraform-provider-aws/issues/36772))
 * resource/aws_sagemaker_endpoint_configuration: Add support for `InputAndOutput` in `capture_mode` ([#37726](https://github.com/hashicorp/terraform-provider-aws/issues/37726))
+
+BUG FIXES:
+
+* resource/aws_iot_provisioning_template: Fix `pre_provisioning_hook` update operation ([#37152](https://github.com/hashicorp/terraform-provider-aws/issues/37152))
+* resource/aws_iot_topic_rule: Retry IAM eventual consistency errors on Update ([#36286](https://github.com/hashicorp/terraform-provider-aws/issues/36286))
 
 ## 5.56.1 (June 28, 2024)
 

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -150,21 +151,10 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 	conn := r.Meta().M2Client(ctx)
 
 	name := data.Name.ValueString()
-	input := &m2.CreateApplicationInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := m2.CreateApplicationInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
-	}
-
-	// AutoFlEx doesn't yet handle union types.
-	if !data.Definition.IsNull() {
-		definitionData, diags := data.Definition.ToPtr(ctx)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		input.Definition = expandDefinition(definitionData)
 	}
 
 	// Additional fields.
@@ -172,7 +162,7 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 	input.Tags = getTagsIn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.AccessDeniedException](ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.CreateApplication(ctx, input)
+		return conn.CreateApplication(ctx, &input)
 	}, "does not have proper Trust Policy for M2 service")
 
 	if err != nil {
@@ -280,15 +270,10 @@ func (r *applicationResource) Update(ctx context.Context, request resource.Updat
 		}
 
 		if !new.Definition.Equal(old.Definition) {
-			// AutoFlEx doesn't yet handle union types.
-			if !new.Definition.IsNull() {
-				definitionData, diags := new.Definition.ToPtr(ctx)
-				response.Diagnostics.Append(diags...)
-				if response.Diagnostics.HasError() {
-					return
-				}
-
-				input.Definition = expandDefinition(definitionData)
+			d := fwflex.Expand(ctx, new.Definition, &input.Definition)
+			response.Diagnostics.Append(d...)
+			if response.Diagnostics.HasError() {
+				return
 			}
 		}
 
@@ -397,11 +382,11 @@ func stopApplicationIfRunning(ctx context.Context, conn *m2.Client, id string, f
 }
 
 func findApplicationByID(ctx context.Context, conn *m2.Client, id string) (*m2.GetApplicationOutput, error) {
-	input := &m2.GetApplicationInput{
+	input := m2.GetApplicationInput{
 		ApplicationId: aws.String(id),
 	}
 
-	output, err := conn.GetApplication(ctx, input)
+	output, err := conn.GetApplication(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -422,12 +407,12 @@ func findApplicationByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 }
 
 func findApplicationVersionByTwoPartKey(ctx context.Context, conn *m2.Client, id string, version int32) (*m2.GetApplicationVersionOutput, error) {
-	input := &m2.GetApplicationVersionInput{
+	input := m2.GetApplicationVersionInput{
 		ApplicationId:      aws.String(id),
 		ApplicationVersion: aws.Int32(version),
 	}
 
-	output, err := conn.GetApplicationVersion(ctx, input)
+	output, err := conn.GetApplicationVersion(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -626,18 +611,22 @@ type definitionModel struct {
 	S3Location types.String `tfsdk:"s3_location"`
 }
 
-func expandDefinition(definitionData *definitionModel) awstypes.Definition {
-	if !definitionData.Content.IsNull() {
-		return &awstypes.DefinitionMemberContent{
-			Value: definitionData.Content.ValueString(),
+var (
+	_ fwflex.Expander = definitionModel{}
+)
+
+func (m definitionModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.Content.IsNull():
+		result = &awstypes.DefinitionMemberContent{
+			Value: m.Content.ValueString(),
+		}
+
+	case !m.S3Location.IsNull():
+		result = &awstypes.DefinitionMemberS3Location{
+			Value: m.S3Location.ValueString(),
 		}
 	}
 
-	if !definitionData.S3Location.IsNull() {
-		return &awstypes.DefinitionMemberS3Location{
-			Value: definitionData.S3Location.ValueString(),
-		}
-	}
-
-	return nil
+	return result, diags
 }
