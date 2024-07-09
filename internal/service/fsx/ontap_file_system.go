@@ -156,7 +156,6 @@ func resourceONTAPFileSystem() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(1, 12),
 			},
 			names.AttrKMSKeyID: {
@@ -222,14 +221,14 @@ func resourceONTAPFileSystem() *schema.Resource {
 				Type:         schema.TypeInt,
 				Computed:     true,
 				Optional:     true,
-				ValidateFunc: validation.IntInSlice([]int{128, 256, 512, 1024, 2048, 4096}),
+				ValidateFunc: validation.IntInSlice([]int{128, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096, 6144}),
 				ExactlyOneOf: []string{"throughput_capacity", "throughput_capacity_per_ha_pair"},
 			},
 			"throughput_capacity_per_ha_pair": {
 				Type:         schema.TypeInt,
 				Computed:     true,
 				Optional:     true,
-				ValidateFunc: validation.IntInSlice([]int{128, 256, 512, 1024, 2048, 3072, 4096, 6144}),
+				ValidateFunc: validation.IntInSlice([]int{128, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096, 6144}),
 				ExactlyOneOf: []string{"throughput_capacity", "throughput_capacity_per_ha_pair"},
 			},
 			names.AttrVPCID: {
@@ -249,15 +248,38 @@ func resourceONTAPFileSystem() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
-			customdiff.ForceNewIfChange("throughput_capacity_per_ha_pair", func(ctx context.Context, old, new, meta any) bool {
-				if new != nil && new != 0 {
-					return new.(int) != old.(int)
-				} else {
-					return false
-				}
-			}),
+			resourceONTAPFileSystemThroughputCapacityperHAPairCustomizeDiff,
+			resourceONTAPFileSystemrHAPairsCustomizeDiff,
 		),
 	}
+}
+
+func resourceONTAPFileSystemThroughputCapacityperHAPairCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
+	// we want to force a new resource if the throughput_capacity_per_ha_pair is increased for Gen1 file systems
+	if d.HasChange("throughput_capacity_per_ha_pair") {
+		o, n := d.GetChange("throughput_capacity_per_ha_pair")
+		if n != nil && n.(int) != 0 && n.(int) > o.(int) && (d.Get("deployment_type").(string) == fsx.OntapDeploymentTypeSingleAz1 || d.Get("deployment_type").(string) == fsx.OntapDeploymentTypeMultiAz1) {
+			if err := d.ForceNew("throughput_capacity_per_ha_pair"); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func resourceONTAPFileSystemrHAPairsCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
+	// we want to force a new resource if the ha_pairs is increased for Gen1 single AZ file systems. multiple ha_pairs is not supported on Multi AZ.
+	if d.HasChange("ha_pairs") {
+		o, n := d.GetChange("ha_pairs")
+		if n != nil && n.(int) != 0 && n.(int) > o.(int) && (d.Get("deployment_type").(string) == fsx.OntapDeploymentTypeSingleAz1) {
+			if err := d.ForceNew("ha_pairs"); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func resourceONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -423,6 +445,12 @@ func resourceONTAPFileSystemUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.OntapConfiguration.FsxAdminPassword = aws.String(d.Get("fsx_admin_password").(string))
 		}
 
+		if d.HasChange("ha_pairs") {
+			input.OntapConfiguration.HAPairs = aws.Int64(int64(d.Get("ha_pairs").(int)))
+			//for the ONTAP update API the ThroughputCapacityPerHAPair must explicitly be passed when adding ha_pairs even if it hasn't changed.
+			input.OntapConfiguration.ThroughputCapacityPerHAPair = aws.Int64(int64(d.Get("throughput_capacity_per_ha_pair").(int)))
+		}
+
 		if d.HasChange("route_table_ids") {
 			o, n := d.GetChange("route_table_ids")
 			os, ns := o.(*schema.Set), n.(*schema.Set)
@@ -443,6 +471,10 @@ func resourceONTAPFileSystemUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if d.HasChange("throughput_capacity") {
 			input.OntapConfiguration.ThroughputCapacity = aws.Int64(int64(d.Get("throughput_capacity").(int)))
+		}
+
+		if d.HasChange("throughput_capacity_per_ha_pair") {
+			input.OntapConfiguration.ThroughputCapacityPerHAPair = aws.Int64(int64(d.Get("throughput_capacity_per_ha_pair").(int)))
 		}
 
 		if d.HasChange("weekly_maintenance_start_time") {
