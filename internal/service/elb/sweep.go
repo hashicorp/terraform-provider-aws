@@ -32,7 +32,6 @@ func sweepLoadBalancers(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := elasticloadbalancing.NewDescribeLoadBalancersPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -46,7 +45,7 @@ func sweepLoadBalancers(region string) error {
 		}
 
 		for _, v := range page.LoadBalancerDescriptions {
-			r := ResourceLoadBalancer()
+			r := resourceLoadBalancer()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.LoadBalancerName))
 
