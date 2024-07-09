@@ -34,11 +34,12 @@ import (
 )
 
 type OperationTypeCtxKey string
+type OperationTypeCtxValue string
 
 const (
-	OperationType   OperationTypeCtxKey = "OPERATION_KEY"
-	ReadOperation                       = "READ"
-	UpdateOperation                     = "UPDATE"
+	OperationType   OperationTypeCtxKey   = "OPERATION_KEY"
+	ReadOperation   OperationTypeCtxValue = "READ"
+	UpdateOperation OperationTypeCtxValue = "UPDATE"
 )
 
 // @FrameworkResource(name="Identity Source")
@@ -539,7 +540,7 @@ var (
 )
 
 func (m configuration) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
-	operation := ctx.Value(OperationType).(string)
+	operation := ctx.Value(OperationType).(OperationTypeCtxValue)
 
 	switch {
 	case !m.CognitoUserPoolConfiguration.IsNull():
@@ -599,7 +600,7 @@ var (
 )
 
 func (m openIDConnectTokenSelection) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
-	operation := ctx.Value(OperationType).(string)
+	operation := ctx.Value(OperationType).(OperationTypeCtxValue)
 
 	switch {
 	case !m.AccessTokenOnly.IsNull():
