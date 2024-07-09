@@ -242,12 +242,7 @@ func testAccCheckPolicyExists(ctx context.Context, n string, v *awstypes.PolicyD
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ELB Classic Load Balancer Policy is set")
-		}
-
 		lbName, policyName, err := tfelb.PolicyParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -276,7 +271,6 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			lbName, policyName, err := tfelb.PolicyParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}

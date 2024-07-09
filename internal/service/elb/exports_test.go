@@ -10,6 +10,7 @@ var (
 	ResourceBackendServerPolicy       = resourceBackendServerPolicy
 	ResourceCookieStickinessPolicy    = resourceCookieStickinessPolicy
 	ResourceListenerPolicy            = resourceListenerPolicy
+	ResourcePolicy                    = resourcePolicy
 	ResourceSSLNegotiationPolicy      = resourceSSLNegotiationPolicy
 
 	AppCookieStickinessPolicyParseResourceID        = appCookieStickinessPolicyParseResourceID
@@ -23,5 +24,6 @@ var (
 	HostedZoneIDPerRegionMap                        = hostedZoneIDPerRegionMap
 	LBCookieStickinessPolicyParseResourceID         = lbCookieStickinessPolicyParseResourceID
 	ListenerPolicyParseResourceID                   = listenerPolicyParseResourceID
+	PolicyParseResourceID                           = policyParseResourceID
 	SSLNegotiationPolicyParseResourceID             = sslNegotiationPolicyParseResourceID
 )

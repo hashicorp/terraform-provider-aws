@@ -81,8 +81,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Listener Policy",
 		},
 		{
-			Factory:  ResourcePolicy,
+			Factory:  resourcePolicy,
 			TypeName: "aws_load_balancer_policy",
+			Name:     "Load Balancer Policy",
 		},
 		{
 			Factory:  ResourceProxyProtocolPolicy,
