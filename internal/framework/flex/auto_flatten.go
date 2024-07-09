@@ -77,6 +77,12 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 
 	valTo, ok := vTo.Interface().(attr.Value)
 	if !ok {
+		// Check for `nil` (i.e. Kind == Invalid) here, because primitive types can be `nil`
+		if vFrom.Kind() == reflect.Invalid {
+			diags.AddError("AutoFlEx", "Cannot flatten nil source")
+			return diags
+		}
+
 		diags.AddError("AutoFlEx", fmt.Sprintf("does not implement attr.Value: %s", vTo.Kind()))
 		return diags
 	}

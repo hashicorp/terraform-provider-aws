@@ -30,6 +30,10 @@ func TestFlatten(t *testing.T) {
 
 	ctx := context.Background()
 
+	var (
+		typedNilSource *TestFlex00
+	)
+
 	testString := "test"
 
 	testARN := "arn:aws:securityhub:us-west-2:1234567890:control/cis-aws-foundations-benchmark/v/1.2.0/1.1" //lintignore:AWSAT003,AWSAT005
@@ -43,8 +47,17 @@ func TestFlatten(t *testing.T) {
 			TestName: "nil Source",
 			Target:   &TestFlex00{},
 			expectedDiags: diag.Diagnostics{
-				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: struct"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Cannot flatten nil source"),
 				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[<nil>, *flex.TestFlex00]"),
+			},
+		},
+		{
+			TestName: "typed nil Source",
+			Source:   typedNilSource,
+			Target:   &TestFlex00{},
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "Cannot flatten nil source"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[*flex.TestFlex00, *flex.TestFlex00]"),
 			},
 		},
 		{
