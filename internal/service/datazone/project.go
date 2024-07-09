@@ -35,7 +35,9 @@ import (
 	// awstypes.<Type Name>.
 	"context"
 	"errors"
+
 	//"regexp"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -171,7 +173,7 @@ func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest
 					stringvalidator.LengthAtMost(2048),
 				},
 			},
-			"domain_identifier": schema.StringAttribute{
+			"domain_id": schema.StringAttribute{
 				CustomType: fwtypes.RegexpType,
 				Optional:   true,
 				Computed:   true,
@@ -189,7 +191,7 @@ func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest
 
 				Validators: []validator.List{
 					listvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 20)),
-					listvalidator.ValueStringsAre(stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_-]{1,36}]$`), "must conform to: ^[a-zA-Z0-9_-]{1,36}]$ ")),
+					listvalidator.ValueStringsAre(stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_-]{1,36}$`), "must conform to: ^[a-zA-Z0-9_-]{1,36}$ ")),
 				},
 				Optional: true,
 			},
@@ -227,15 +229,17 @@ func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest
 				Computed:   true,
 			},
 			/*
-				"result_metadata": schema.ListAttribute{
-					CustomType: fwtypes.NewListNestedObjectTypeOf[middleware.Metadata](ctx),
+					"result_metadata": schema.ListAttribute{
+						CustomType: fwtypes.NewListNestedObjectTypeOf[middleware.Metadata](ctx),
+						Computed:   true,
+					},
+
+
+				"domain_id": schema.StringAttribute{
+					CustomType: fwtypes.RegexpType,
 					Computed:   true,
 				},
 			*/
-			"domain_id": schema.StringAttribute{
-				CustomType: fwtypes.RegexpType,
-				Computed:   true,
-			},
 
 			"skip_deletion_check": schema.BoolAttribute{
 				Required: true,
@@ -252,6 +256,7 @@ func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest
 }
 
 func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	fmt.Println("create")
 	// TIP: ==== RESOURCE CREATE ====
 	// Generally, the Create function should do the following things. Make
 	// sure there is a good reason if you don't do one of these.
@@ -277,7 +282,7 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 	}
 	// validate that domain exists
 	var validateDomain datazone.GetDomainInput
-	validateDomain.Identifier = plan.DomainIdentifier.ValueStringPointer()
+	validateDomain.Identifier = plan.DomainId.ValueStringPointer()
 	_, err := conn.GetDomain(ctx, &validateDomain)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -288,14 +293,18 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	// TIP: -- 3. Populate a create input structure
+	// we probably want to error here if there is null but not rn
 	in := &datazone.CreateProjectInput{
 		Name: aws.String(plan.Name.ValueString()),
 	}
 	if !plan.Description.IsNull() {
 		in.Description = aws.String(plan.Description.ValueString())
 	}
-	if !plan.DomainIdentifier.IsNull() {
-		in.DomainIdentifier = aws.String(plan.DomainIdentifier.ValueString())
+	if !plan.DomainId.IsNull() {
+		in.DomainIdentifier = aws.String(plan.DomainId.ValueString())
+	}
+	if !plan.GlossaryTerms.IsNull() {
+		in.GlossaryTerms = aws.ToStringSlice(flex.ExpandFrameworkStringList(ctx, plan.GlossaryTerms))
 	}
 
 	// TIP: -- 4. Call the AWS create function
@@ -319,16 +328,18 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 
 	// can i autoflex this?
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, &out, &plan)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	// 	data.Type = fwtypes.StringEnumValue[awstypes.VisibilityType](image.Visibility)
+	plan.ProjectStatus = fwtypes.StringEnumValue[awstypes.ProjectStatus](out.ProjectStatus)
 
 	//plan.ResultMetadata = out.ResultMetadata.Clone()
 
 	// TIP: -- 6. Use a waiter to wait for create to complete
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitProjectCreated(ctx, conn, plan.DomainIdentifier.ValueString(), plan.ID.ValueString(), createTimeout)
+	_, err = waitProjectCreated(ctx, conn, plan.DomainId.ValueString(), plan.ID.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForCreation, ResNameProject, plan.Name.String(), err),
@@ -338,42 +349,25 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	// TIP: -- 7. Save the request plan to response state
+	fmt.Println("create di: ", plan.DomainId)
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
 func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// TIP: ==== RESOURCE READ ====
-	// Generally, the Read function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the state
-	// 3. Get the resource from AWS
-	// 4. Remove resource from state if it is not found
-	// 5. Set the arguments and attributes
-	// 6. Set the state
-
-	// TIP: -- 1. Get a client connection to the relevant service
+	fmt.Println("read")
 	conn := r.Meta().DataZoneClient(ctx)
-
-	// TIP: -- 2. Fetch the state
 	var state resourceProjectData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
-	// type function, or, better yet, using a finder.
-	var input datazone.GetProjectInput
-	if !state.DomainIdentifier.IsNull() {
-		input.DomainIdentifier = state.DomainIdentifier.ValueStringPointer()
+	in := &datazone.GetProjectInput{
+		DomainIdentifier: state.DomainId.ValueStringPointer(),
+		Identifier:       state.ID.ValueStringPointer(),
 	}
-	if !state.ID.IsNull() {
-		input.Identifier = state.ID.ValueStringPointer()
-	}
-	out, err := conn.GetProject(ctx, &input)
-	// TIP: -- 4. Remove resource from state if it is not found
+	out, err := conn.GetProject(ctx, in)
 	if tfresource.NotFound(err) {
+		fmt.Println("error")
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -384,18 +378,26 @@ func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, re
 		)
 		return
 	}
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, &out, &state)...)
+	fmt.Println(state.Description)
+	var stateNew resourceProjectData
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &stateNew)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	//state.ResultMetadata = out.ResultMetadata.Clone()
+	if state.DomainId.ValueString() != "" {
+		fmt.Println(state.DomainId.ValueString())
+		out.DomainId = state.DomainId.ValueStringPointer()
+	}
+	fmt.Println("Statenew: ", stateNew.DomainId)
 
 	// TIP: -- 6. Set the state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	stateNew.Timeouts = state.Timeouts
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &stateNew)...)
 }
 
 func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	fmt.Println("update")
 	// TIP: ==== RESOURCE UPDATE ====
 	// Not all resources have Update functions. There are a few reasons:
 	// a. The AWS API does not support changing a resource
@@ -427,21 +429,22 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	if plan.DomainIdentifier != state.DomainIdentifier { // I should error check this
+	if plan.DomainId != state.DomainId { // I should error check this
 		return // add error here
 	}
 
 	// TIP: -- 3. Populate a modify input structure and check for changes
 	/*/
-	if !plan.Name.Equal(state.Name) ||
+	if !plan.Name.Equal(state.Nam||e)
 		!plan.Description.Equal(state.Description) ||
 		!plan.ComplexArgument.Equal(state.ComplexArgument) ||
 		!plan.Type.Equal(state.Type) {
 	*/
 
 	in := &datazone.UpdateProjectInput{
-		DomainIdentifier: aws.String(plan.DomainIdentifier.ValueString()), // This can't change
+		DomainIdentifier: aws.String(plan.DomainId.ValueString()), // This can't change
 		Identifier:       aws.String(plan.ID.ValueString()),
+		GlossaryTerms:    aws.ToStringSlice(flex.ExpandFrameworkStringList(ctx, plan.GlossaryTerms)),
 	}
 
 	if !plan.Description.IsNull() {
@@ -455,38 +458,41 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 	// TIP: -- 4. Call the AWS modify/update function
 	out, err := conn.UpdateProject(ctx, in)
 	if err != nil {
+		fmt.Println("first update error")
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameProject, plan.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
-	if out == nil || !(out.FailureReasons == nil) {
+	if out == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameProject, plan.ID.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, &out, &state)...)
+	var stateNew resourceProjectData
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &stateNew)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	//state.ResultMetadata = out.ResultMetadata.Clone()
 	// TIP: -- 5. Use a waiter to wait for update to complete
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err = waitProjectUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout.String(), r.ReadTimeout(ctx, plan.Timeouts))
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForUpdate, ResNameProject, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
+	//updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	/*
+		_, err = waitProjectUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout.String(), r.ReadTimeout(ctx, plan.Timeouts))
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForUpdate, ResNameProject, plan.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+	*/
 
 	// TIP: -- 6. Save the request plan to response state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &stateNew)...)
 }
 
 func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -516,31 +522,42 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	// TIP: -- 3. Populate a delete input structure
+	fmt.Println("hello")
+	fmt.Println(state.DomainId.ValueString())
+	fmt.Println(state.ID.ValueString())
+
 	in := &datazone.DeleteProjectInput{
-		DomainIdentifier: aws.String((state.DomainIdentifier.ValueString())),
-		Identifier:       aws.String((state.ID.ValueString())),
+		DomainIdentifier: aws.String((*state.DomainId.ValueStringPointer())),
+		Identifier:       aws.String((*state.ID.ValueStringPointer())),
 	}
-	if !state.SkipDeletionCheck.IsNull() { // N
+	if !state.SkipDeletionCheck.IsNull() {
 		in.SkipDeletionCheck = state.SkipDeletionCheck.ValueBoolPointer()
 	}
+	fmt.Println("-----")
+	fmt.Println(state.SkipDeletionCheck)
+	fmt.Println(*in.SkipDeletionCheck)
 
 	// TIP: -- 4. Call the AWS delete function
 	_, err := conn.DeleteProject(ctx, in)
 	// TIP: On rare occassions, the API returns a not found error after deleting a
 	// resource. If that happens, we don't want it to show up as an error.
 	if err != nil {
+		fmt.Println("error at deleting")
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			fmt.Println(err)
 			return
 		}
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionDeleting, ResNameProject, state.ID.String(), err),
 			err.Error(),
 		)
+		fmt.Println("2nd deleting error")
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitProjectDeleted(ctx, conn, state.DomainIdentifier.ValueString(), state.ID.ValueString(), deleteTimeout)
+	//var t time.Duration = (1000000000 * 100)
+	_, err = waitProjectDeleted(ctx, conn, state.DomainId.ValueString(), state.ID.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForDeletion, ResNameProject, state.ID.String(), err),
@@ -605,6 +622,7 @@ func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain strin
 // resources than others. The best case is a status flag that tells you when
 // the update has been fully realized. Other times, you can check to see if a
 // key resource argument is updated to a new value or not.
+/*
 func waitProjectUpdated(ctx context.Context, conn *datazone.Client, domain string, identifier string, timeout time.Duration) (*datazone.GetProjectOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
@@ -622,6 +640,7 @@ func waitProjectUpdated(ctx context.Context, conn *datazone.Client, domain strin
 
 	return nil, err
 }
+*/
 
 // TIP: A deleted waiter is almost like a backwards created waiter. There may
 // be additional pending states, however.
@@ -765,7 +784,6 @@ func flattenComplexArguments(ctx context.Context, apiObjects []*awstypes.Complex
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type resourceProjectData struct {
 	Description       types.String                                            `tfsdk:"description"`
-	DomainIdentifier  fwtypes.Regexp                                          `tfsdk:"domain_identifier"`
 	DomainId          fwtypes.Regexp                                          `tfsdk:"domain_id"`
 	Name              fwtypes.Regexp                                          `tfsdk:"name"`
 	CreatedBy         types.String                                            `tfsdk:"created_by"`
