@@ -33,6 +33,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+type OperationTypeCtxKey string
+
+const (
+	OperationType   OperationTypeCtxKey = "OPERATION_KEY"
+	ReadOperation                       = "READ"
+	UpdateOperation                     = "UPDATE"
+)
+
 // @FrameworkResource(name="Identity Source")
 func newResourceIdentitySource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIdentitySource{}
@@ -214,29 +222,13 @@ func (r *resourceIdentitySource) Create(ctx context.Context, request resource.Cr
 	}
 
 	input := &verifiedpermissions.CreateIdentitySourceInput{}
-	response.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+	response.Diagnostics.Append(flex.Expand(context.WithValue(ctx, OperationType, ReadOperation), plan, input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	clientToken := id.UniqueId()
 	input.ClientToken = aws.String(clientToken)
-
-	// Manually set as Union types are not supported by AutoFlex yet.
-	if !plan.Configuration.IsNull() {
-		var tfList []configuration
-		response.Diagnostics.Append(plan.Configuration.ElementsAs(ctx, &tfList, false)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		configuration, d := expandConfiguration(ctx, tfList)
-		response.Diagnostics.Append(d...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		input.Configuration = configuration
-	}
 
 	output, err := conn.CreateIdentitySource(ctx, input)
 
@@ -313,7 +305,7 @@ func (r *resourceIdentitySource) Read(ctx context.Context, request resource.Read
 
 func (r *resourceIdentitySource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var state, plan resourceIdentitySourceData
+	var state, plan resourceIdentitySourceUpdateData
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
@@ -325,30 +317,14 @@ func (r *resourceIdentitySource) Update(ctx context.Context, request resource.Up
 		return
 	}
 
-	if !plan.Configuration.Equal(state.Configuration) || !plan.PolicyStoreID.Equal(state.PolicyStoreID) || !plan.PrincipalEntityType.Equal(state.PrincipalEntityType) {
+	if !plan.UpdateConfiguration.Equal(state.UpdateConfiguration) || !plan.PolicyStoreID.Equal(state.PolicyStoreID) || !plan.PrincipalEntityType.Equal(state.PrincipalEntityType) {
 		input := &verifiedpermissions.UpdateIdentitySourceInput{
 			IdentitySourceId: flex.StringFromFramework(ctx, plan.ID),
 		}
 
-		response.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+		response.Diagnostics.Append(flex.Expand(context.WithValue(ctx, OperationType, UpdateOperation), plan, input)...)
 		if response.Diagnostics.HasError() {
 			return
-		}
-
-		// Manually set as Union types are not supported by AutoFlex yet.
-		if !plan.Configuration.IsNull() {
-			var tfList []configuration
-			response.Diagnostics.Append(plan.Configuration.ElementsAs(ctx, &tfList, false)...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-
-			configuration, d := expandUpdateConfiguration(ctx, tfList)
-			response.Diagnostics.Append(d...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-			input.UpdateConfiguration = configuration
 		}
 
 		output, err := conn.UpdateIdentitySource(ctx, input)
@@ -370,7 +346,6 @@ func (r *resourceIdentitySource) Update(ctx context.Context, request resource.Up
 func (r *resourceIdentitySource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
 	var state resourceIdentitySourceData
-
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -410,192 +385,6 @@ func (r *resourceIdentitySource) ImportState(ctx context.Context, request resour
 	identitySourceID := parts[1]
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), identitySourceID)...)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("policy_store_id"), policyStoreID)...)
-}
-
-func expandConfiguration(ctx context.Context, tfList []configuration) (awstypes.Configuration, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if len(tfList) == 0 {
-		return nil, diags
-	}
-	tfObj := tfList[0]
-
-	if !tfObj.CognitoUserPoolConfiguration.IsNull() {
-		cognitoUserPoolConfigurationData, d := tfObj.CognitoUserPoolConfiguration.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		input := &awstypes.ConfigurationMemberCognitoUserPoolConfiguration{}
-		diags.Append(flex.Expand(ctx, cognitoUserPoolConfigurationData, &input.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		return input, diags
-	}
-
-	if !tfObj.OpenIDConnectConfiguration.IsNull() {
-		openIDConnectConfigurationData, d := tfObj.OpenIDConnectConfiguration.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		input := &awstypes.ConfigurationMemberOpenIdConnectConfiguration{}
-		diags.Append(flex.Expand(ctx, openIDConnectConfigurationData, &input.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		// Manually set TokenSelection as Union types are not supported by AutoFlex yet.
-		var openIDConnectTokenSelectionData []openIDConnectTokenSelection
-		diags.Append(openIDConnectConfigurationData.TokenSelection.ElementsAs(ctx, &openIDConnectTokenSelectionData, false)...)
-
-		tokenSelection, d := expandTokenSelection(ctx, openIDConnectTokenSelectionData)
-		diags.Append(d...)
-
-		input.Value.TokenSelection = tokenSelection
-
-		return input, diags
-	}
-
-	return nil, diags
-}
-
-func expandTokenSelection(ctx context.Context, tfList []openIDConnectTokenSelection) (awstypes.OpenIdConnectTokenSelection, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if len(tfList) == 0 {
-		return nil, diags
-	}
-	tfObj := tfList[0]
-
-	if !tfObj.AccessTokenOnly.IsNull() {
-		openIDConnectAccessTokenConfigurationData, d := tfObj.AccessTokenOnly.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		input := &awstypes.OpenIdConnectTokenSelectionMemberAccessTokenOnly{}
-		diags.Append(flex.Expand(ctx, openIDConnectAccessTokenConfigurationData, &input.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		return input, diags
-	}
-
-	if !tfObj.IdentityTokenOnly.IsNull() {
-		openIDConnectIdentityTokenConfigurationData, d := tfObj.IdentityTokenOnly.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		input := &awstypes.OpenIdConnectTokenSelectionMemberIdentityTokenOnly{}
-		diags.Append(flex.Expand(ctx, openIDConnectIdentityTokenConfigurationData, &input.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		return input, diags
-	}
-
-	return nil, diags
-}
-
-func expandUpdateConfiguration(ctx context.Context, tfList []configuration) (awstypes.UpdateConfiguration, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if len(tfList) == 0 {
-		return nil, diags
-	}
-	tfObj := tfList[0]
-
-	if !tfObj.CognitoUserPoolConfiguration.IsNull() {
-		cognitoUserPoolConfigurationData, d := tfObj.CognitoUserPoolConfiguration.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		input := &awstypes.UpdateConfigurationMemberCognitoUserPoolConfiguration{}
-		diags.Append(flex.Expand(ctx, cognitoUserPoolConfigurationData, &input.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		return input, diags
-	}
-
-	if !tfObj.OpenIDConnectConfiguration.IsNull() {
-		openIDConnectConfigurationData, d := tfObj.OpenIDConnectConfiguration.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		input := &awstypes.UpdateConfigurationMemberOpenIdConnectConfiguration{}
-		diags.Append(flex.Expand(ctx, openIDConnectConfigurationData, &input.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		// Manually set TokenSelection as Union types are not supported by AutoFlex yet.
-		var openIDConnectTokenSelectionData []openIDConnectTokenSelection
-		diags.Append(openIDConnectConfigurationData.TokenSelection.ElementsAs(ctx, &openIDConnectTokenSelectionData, false)...)
-
-		tokenSelection, d := expandUpdateTokenSelection(ctx, openIDConnectTokenSelectionData)
-		diags.Append(d...)
-
-		input.Value.TokenSelection = tokenSelection
-
-		return input, diags
-	}
-
-	return nil, diags
-}
-
-func expandUpdateTokenSelection(ctx context.Context, tfList []openIDConnectTokenSelection) (awstypes.UpdateOpenIdConnectTokenSelection, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if len(tfList) == 0 {
-		return nil, diags
-	}
-	tfObj := tfList[0]
-
-	if !tfObj.AccessTokenOnly.IsNull() {
-		openIDConnectAccessTokenConfigurationData, d := tfObj.AccessTokenOnly.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		input := &awstypes.UpdateOpenIdConnectTokenSelectionMemberAccessTokenOnly{}
-		diags.Append(flex.Expand(ctx, openIDConnectAccessTokenConfigurationData, &input.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		return input, diags
-	}
-
-	if !tfObj.IdentityTokenOnly.IsNull() {
-		openIDConnectIdentityTokenConfigurationData, d := tfObj.IdentityTokenOnly.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		input := &awstypes.UpdateOpenIdConnectTokenSelectionMemberIdentityTokenOnly{}
-		diags.Append(flex.Expand(ctx, openIDConnectIdentityTokenConfigurationData, &input.Value)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		return input, diags
-	}
-
-	return nil, diags
 }
 
 func flattenConfiguration(ctx context.Context, apiObject awstypes.ConfigurationDetail) (fwtypes.ListNestedObjectValueOf[configuration], diag.Diagnostics) {
@@ -672,6 +461,13 @@ type resourceIdentitySourceData struct {
 	PrincipalEntityType types.String                                   `tfsdk:"principal_entity_type"`
 }
 
+type resourceIdentitySourceUpdateData struct {
+	UpdateConfiguration fwtypes.ListNestedObjectValueOf[configuration] `tfsdk:"configuration"`
+	ID                  types.String                                   `tfsdk:"id"`
+	PolicyStoreID       types.String                                   `tfsdk:"policy_store_id"`
+	PrincipalEntityType types.String                                   `tfsdk:"principal_entity_type"`
+}
+
 type configuration struct {
 	CognitoUserPoolConfiguration fwtypes.ListNestedObjectValueOf[cognitoUserPoolConfiguration] `tfsdk:"cognito_user_pool_configuration"`
 	OpenIDConnectConfiguration   fwtypes.ListNestedObjectValueOf[openIDConnectConfiguration]   `tfsdk:"open_id_connect_configuration"`
@@ -736,4 +532,127 @@ func findIdentitySourceByIDAndPolicyStoreID(ctx context.Context, conn *verifiedp
 	}
 
 	return out, nil
+}
+
+var (
+	_ flex.Expander = configuration{}
+)
+
+func (m configuration) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	operation := ctx.Value(OperationType).(string)
+
+	switch {
+	case !m.CognitoUserPoolConfiguration.IsNull():
+		cognitoUserPoolConfigurationData, d := m.CognitoUserPoolConfiguration.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		switch operation {
+		case ReadOperation:
+			var result awstypes.ConfigurationMemberCognitoUserPoolConfiguration
+			diags.Append(flex.Expand(ctx, cognitoUserPoolConfigurationData, &result.Value)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			return &result, diags
+		case UpdateOperation:
+			var result awstypes.UpdateConfigurationMemberCognitoUserPoolConfiguration
+			diags.Append(flex.Expand(ctx, cognitoUserPoolConfigurationData, &result.Value)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			return &result, diags
+		}
+		return nil, diags
+
+	case !m.OpenIDConnectConfiguration.IsNull():
+		openIDConnectConfigurationData, d := m.OpenIDConnectConfiguration.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		switch operation {
+		case ReadOperation:
+			var result awstypes.ConfigurationMemberOpenIdConnectConfiguration
+			diags.Append(flex.Expand(ctx, openIDConnectConfigurationData, &result.Value)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			return &result, diags
+		case UpdateOperation:
+			var result awstypes.UpdateConfigurationMemberOpenIdConnectConfiguration
+			diags.Append(flex.Expand(ctx, openIDConnectConfigurationData, &result.Value)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			return &result, diags
+		}
+	}
+	return nil, diags
+}
+
+var (
+	_ flex.Expander = openIDConnectTokenSelection{}
+)
+
+func (m openIDConnectTokenSelection) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	operation := ctx.Value(OperationType).(string)
+
+	switch {
+	case !m.AccessTokenOnly.IsNull():
+		openIDConnectAccessTokenConfigurationData, d := m.AccessTokenOnly.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		switch operation {
+		case ReadOperation:
+			var result awstypes.OpenIdConnectTokenSelectionMemberAccessTokenOnly
+			diags.Append(flex.Expand(ctx, openIDConnectAccessTokenConfigurationData, &result.Value)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			return &result, diags
+
+		case UpdateOperation:
+			var result awstypes.UpdateOpenIdConnectTokenSelectionMemberAccessTokenOnly
+			diags.Append(flex.Expand(ctx, openIDConnectAccessTokenConfigurationData, &result.Value)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			return &result, diags
+		}
+		return nil, diags
+
+	case !m.IdentityTokenOnly.IsNull():
+		openIDConnectIdentityTokenConfigurationData, d := m.IdentityTokenOnly.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		switch operation {
+		case ReadOperation:
+			var result awstypes.OpenIdConnectTokenSelectionMemberIdentityTokenOnly
+			diags.Append(flex.Expand(ctx, openIDConnectIdentityTokenConfigurationData, &result.Value)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			return &result, diags
+
+		case UpdateOperation:
+			var result awstypes.UpdateOpenIdConnectTokenSelectionMemberIdentityTokenOnly
+			diags.Append(flex.Expand(ctx, openIDConnectIdentityTokenConfigurationData, &result.Value)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			return &result, diags
+		}
+		return nil, diags
+	}
+	return nil, diags
 }
