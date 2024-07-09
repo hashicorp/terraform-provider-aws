@@ -24,6 +24,16 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* aws_dx_lag: Checks for errors other than NotFound when reading. ([#38292](https://github.com/hashicorp/terraform-provider-aws/issues/38292))
+* aws_dynamodb_kinesis_streaming_destination: Checks for errors other than NotFound when reading. ([#38292](https://github.com/hashicorp/terraform-provider-aws/issues/38292))
+* aws_ec2_capacity_block_reservation: Checks for errors other than NotFound when reading. ([#38292](https://github.com/hashicorp/terraform-provider-aws/issues/38292))
+* aws_opensearchserverless_access_policy: Checks for errors other than NotFound when reading. ([#38292](https://github.com/hashicorp/terraform-provider-aws/issues/38292))
+* aws_opensearchserverless_collection: Checks for errors other than NotFound when reading. ([#38292](https://github.com/hashicorp/terraform-provider-aws/issues/38292))
+* aws_opensearchserverless_security_config: Checks for errors other than NotFound when reading. ([#38292](https://github.com/hashicorp/terraform-provider-aws/issues/38292))
+* aws_opensearchserverless_security_policy: Checks for errors other than NotFound when reading. ([#38292](https://github.com/hashicorp/terraform-provider-aws/issues/38292))
+* aws_opensearchserverless_vpc_endpoint: Checks for errors other than NotFound when reading. ([#38292](https://github.com/hashicorp/terraform-provider-aws/issues/38292))
+* aws_ram_principal_association: Checks for errors other than NotFound when reading. ([#38292](https://github.com/hashicorp/terraform-provider-aws/issues/38292))
+* aws_route_table: Checks for errors other than NotFound when reading. ([#38292](https://github.com/hashicorp/terraform-provider-aws/issues/38292))
 * data-source/aws_ecr_repository: Fix issue where the `tags` attribute is not set ([#38272](https://github.com/hashicorp/terraform-provider-aws/issues/38272))
 * resource/aws_appstream_fleet: Support `0` as a valid value for `idle_disconnect_timeout_in_seconds` ([#38274](https://github.com/hashicorp/terraform-provider-aws/issues/38274))
 * resource/aws_cloudformation_stack_set_instance: Add `ForceNew` to deployment_targets attributes to ensure a new resource is recreated when the deployment_targets argument is changed, which was not the case previously. ([#37898](https://github.com/hashicorp/terraform-provider-aws/issues/37898))
