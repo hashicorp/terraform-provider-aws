@@ -35,10 +35,18 @@ func TestExpand(t *testing.T) {
 
 	testCases := autoFlexTestCases{
 		{
-			TestName: "nil Source and Target",
+			TestName: "nil Source",
+			Target:   &TestFlex00{},
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "Cannot expand nil source"),
+			},
+		},
+		{
+			TestName: "nil Target",
+			Source:   TestFlex00{},
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "target (<nil>): invalid, want pointer"),
-				diag.NewErrorDiagnostic("AutoFlEx", "Expand[<nil>, <nil>]"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.TestFlex00, <nil>]"),
 			},
 		},
 		{

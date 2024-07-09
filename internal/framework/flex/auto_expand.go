@@ -34,6 +34,11 @@ func Expand(ctx context.Context, tfObject, apiObject any, optFns ...AutoFlexOpti
 	var diags diag.Diagnostics
 	expander := newAutoExpander(optFns)
 
+	if tfObject == nil {
+		diags.AddError("AutoFlEx", "Cannot expand nil source")
+		return diags
+	}
+
 	diags.Append(autoFlexConvert(ctx, tfObject, apiObject, expander)...)
 	if diags.HasError() {
 		diags.AddError("AutoFlEx", fmt.Sprintf("Expand[%T, %T]", tfObject, apiObject))

@@ -40,10 +40,19 @@ func TestFlatten(t *testing.T) {
 
 	testCases := autoFlexTestCases{
 		{
-			TestName: "nil Source and Target",
+			TestName: "nil Source",
+			Target:   &TestFlex00{},
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: struct"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[<nil>, *flex.TestFlex00]"),
+			},
+		},
+		{
+			TestName: "nil Target",
+			Source:   TestFlex00{},
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "target (<nil>): invalid, want pointer"),
-				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[<nil>, <nil>]"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[flex.TestFlex00, <nil>]"),
 			},
 		},
 		{
