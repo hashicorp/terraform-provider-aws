@@ -273,7 +273,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
-	listeners, err := ExpandListeners(d.Get("listener").(*schema.Set).List())
+	listeners, err := expandListeners(d.Get("listener").(*schema.Set).List())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -362,7 +362,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 		scheme = aws.ToString(lb.Scheme) == "internal"
 	}
 	d.Set("internal", scheme)
-	d.Set("listener", flattenListeners(lb.ListenerDescriptions))
+	d.Set("listener", flattenListenerDescriptions(lb.ListenerDescriptions))
 	d.Set(names.AttrName, lb.LoadBalancerName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lb.LoadBalancerName)))
 	d.Set(names.AttrSecurityGroups, flex.FlattenStringValueList(lb.SecurityGroups))
@@ -422,7 +422,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	// There's only one health check, so save that to state as we
 	// currently can
 	if aws.ToString(lb.HealthCheck.Target) != "" {
-		if err := d.Set(names.AttrHealthCheck, FlattenHealthCheck(lb.HealthCheck)); err != nil {
+		if err := d.Set(names.AttrHealthCheck, flattenHealthCheck(lb.HealthCheck)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
 		}
 	}
@@ -439,8 +439,8 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		remove, _ := ExpandListeners(os.Difference(ns).List())
-		add, err := ExpandListeners(ns.Difference(os).List())
+		remove, _ := expandListeners(os.Difference(ns).List())
+		add, err := expandListeners(ns.Difference(os).List())
 
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -500,8 +500,8 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		o, n := d.GetChange("instances")
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
-		remove := ExpandInstanceString(os.Difference(ns).List())
-		add := ExpandInstanceString(ns.Difference(os).List())
+		remove := expandInstances(os.Difference(ns).List())
+		add := expandInstances(ns.Difference(os).List())
 
 		if len(add) > 0 {
 			input := &elasticloadbalancing.RegisterInstancesWithLoadBalancerInput{

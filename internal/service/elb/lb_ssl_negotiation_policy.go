@@ -87,7 +87,7 @@ func resourceSSLNegotiationPolicyCreate(ctx context.Context, d *schema.ResourceD
 		}
 
 		if v, ok := d.GetOk("attribute"); ok && v.(*schema.Set).Len() > 0 {
-			input.PolicyAttributes = ExpandPolicyAttributes(v.(*schema.Set).List())
+			input.PolicyAttributes = expandPolicyAttributes(v.(*schema.Set).List())
 		}
 
 		_, err := conn.CreateLoadBalancerPolicy(ctx, input)

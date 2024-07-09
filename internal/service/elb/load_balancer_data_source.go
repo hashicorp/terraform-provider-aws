@@ -252,7 +252,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("internal", scheme)
 	d.Set(names.AttrAvailabilityZones, flex.FlattenStringValueList(lb.AvailabilityZones))
 	d.Set("instances", flattenInstances(lb.Instances))
-	d.Set("listener", flattenListeners(lb.ListenerDescriptions))
+	d.Set("listener", flattenListenerDescriptions(lb.ListenerDescriptions))
 	d.Set(names.AttrSecurityGroups, flex.FlattenStringValueList(lb.SecurityGroups))
 	if lb.SourceSecurityGroup != nil {
 		group := lb.SourceSecurityGroup.GroupName
@@ -325,7 +325,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	// There's only one health check, so save that to state as we
 	// currently can
 	if aws.ToString(lb.HealthCheck.Target) != "" {
-		d.Set(names.AttrHealthCheck, FlattenHealthCheck(lb.HealthCheck))
+		d.Set(names.AttrHealthCheck, flattenHealthCheck(lb.HealthCheck))
 	}
 
 	return diags

@@ -87,7 +87,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("policy_attribute"); ok && v.(*schema.Set).Len() > 0 {
-		input.PolicyAttributes = ExpandPolicyAttributes(v.(*schema.Set).List())
+		input.PolicyAttributes = expandPolicyAttributes(v.(*schema.Set).List())
 	}
 
 	_, err := conn.CreateLoadBalancerPolicy(ctx, input)
@@ -124,7 +124,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("load_balancer_name", lbName)
-	if err := d.Set("policy_attribute", FlattenPolicyAttributes(policy.PolicyAttributeDescriptions)); err != nil {
+	if err := d.Set("policy_attribute", flattenPolicyAttributeDescriptions(policy.PolicyAttributeDescriptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting policy_attribute: %s", err)
 	}
 	d.Set("policy_name", policyName)
