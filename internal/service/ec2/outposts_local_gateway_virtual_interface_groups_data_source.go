@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_local_gateway_virtual_interface_groups")
-func DataSourceLocalGatewayVirtualInterfaceGroups() *schema.Resource {
+// @SDKDataSource("aws_ec2_local_gateway_virtual_interface_groups", name="Local Gateway Virtual Interface Groups")
+func dataSourceLocalGatewayVirtualInterfaceGroups() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLocalGatewayVirtualInterfaceGroupsRead,
 
@@ -38,22 +38,22 @@ func DataSourceLocalGatewayVirtualInterfaceGroups() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchema(),
 		},
 	}
 }
 
 func dataSourceLocalGatewayVirtualInterfaceGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput{}
 
-	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterListV2(
+		TagsV2(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, newCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterListV2(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -61,7 +61,7 @@ func dataSourceLocalGatewayVirtualInterfaceGroupsRead(ctx context.Context, d *sc
 		input.Filters = nil
 	}
 
-	output, err := FindLocalGatewayVirtualInterfaceGroups(ctx, conn, input)
+	output, err := findLocalGatewayVirtualInterfaceGroups(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Local Gateway Virtual Interface Groups: %s", err)
@@ -70,8 +70,8 @@ func dataSourceLocalGatewayVirtualInterfaceGroupsRead(ctx context.Context, d *sc
 	var groupIDs, interfaceIDs []string
 
 	for _, v := range output {
-		groupIDs = append(groupIDs, aws.StringValue(v.LocalGatewayVirtualInterfaceGroupId))
-		interfaceIDs = append(interfaceIDs, aws.StringValueSlice(v.LocalGatewayVirtualInterfaceIds)...)
+		groupIDs = append(groupIDs, aws.ToString(v.LocalGatewayVirtualInterfaceGroupId))
+		interfaceIDs = append(interfaceIDs, v.LocalGatewayVirtualInterfaceIds...)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

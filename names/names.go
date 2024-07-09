@@ -76,6 +76,7 @@ const (
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
 	KMSEndpointID                        = "kms"
+	KafkaConnectEndpointID               = "kafkaconnect"
 	KendraEndpointID                     = "kendra"
 	LambdaEndpointID                     = "lambda"
 	LexV2ModelsEndpointID                = "models-v2-lex"
@@ -290,18 +291,15 @@ func ReverseDNS(hostname string) string {
 	return strings.Join(parts, ".")
 }
 
-// Type ServiceDatum corresponds closely to columns in `data/names_data.csv` and are
+// Type serviceDatum corresponds closely to columns in `data/names_data.csv` and are
 // described in detail in README.md.
-type ServiceDatum struct {
+type serviceDatum struct {
 	Aliases            []string
 	AWSServiceEnvVar   string
 	Brand              string
 	ClientSDKV1        bool
 	DeprecatedEnvVar   string
-	EndpointOnly       bool
 	GoV1ClientTypeName string
-	GoV1Package        string
-	GoV2Package        string
 	HumanFriendly      string
 	ProviderNameUpper  string
 	SDKID              string
@@ -309,10 +307,10 @@ type ServiceDatum struct {
 }
 
 // serviceData key is the AWS provider service package
-var serviceData map[string]*ServiceDatum
+var serviceData map[string]serviceDatum
 
 func init() {
-	serviceData = make(map[string]*ServiceDatum)
+	serviceData = make(map[string]serviceDatum)
 
 	// Data from names_data.csv
 	if err := readCSVIntoServiceData(); err != nil {
@@ -340,15 +338,12 @@ func readCSVIntoServiceData() error {
 
 		p := l.ProviderPackage()
 
-		serviceData[p] = &ServiceDatum{
+		sd := serviceDatum{
 			AWSServiceEnvVar:   l.AWSServiceEnvVar(),
 			Brand:              l.Brand(),
 			ClientSDKV1:        l.ClientSDKV1(),
 			DeprecatedEnvVar:   l.DeprecatedEnvVar(),
-			EndpointOnly:       l.EndpointOnly(),
 			GoV1ClientTypeName: l.GoV1ClientTypeName(),
-			GoV1Package:        l.GoV1Package(),
-			GoV2Package:        l.GoV2Package(),
 			HumanFriendly:      l.HumanFriendly(),
 			ProviderNameUpper:  l.ProviderNameUpper(),
 			SDKID:              l.SDKID(),
@@ -361,7 +356,9 @@ func readCSVIntoServiceData() error {
 			a = append(a, l.Aliases()...)
 		}
 
-		serviceData[p].Aliases = a
+		sd.Aliases = a
+
+		serviceData[p] = sd
 	}
 
 	return nil
@@ -420,27 +417,6 @@ func Endpoints() []Endpoint {
 	}
 
 	return endpoints
-}
-
-type ServiceNameUpper struct {
-	ProviderPackage   string
-	ProviderNameUpper string
-	SDKID             string
-}
-
-func ServiceNamesUpper() []ServiceNameUpper {
-	serviceNames := make([]ServiceNameUpper, 0, len(serviceData))
-
-	for k, v := range serviceData {
-		sn := ServiceNameUpper{
-			ProviderPackage:   k,
-			ProviderNameUpper: v.ProviderNameUpper,
-			SDKID:             v.SDKID,
-		}
-		serviceNames = append(serviceNames, sn)
-	}
-
-	return serviceNames
 }
 
 func ProviderNameUpper(service string) (string, error) {
@@ -521,44 +497,6 @@ func HumanFriendly(service string) (string, error) {
 	}
 
 	return "", fmt.Errorf("no service data found for %s", service)
-}
-
-func AWSGoPackage(providerPackage string, version int) (string, error) {
-	switch version {
-	case 1:
-		return AWSGoV1Package(providerPackage)
-	case 2:
-		return AWSGoV2Package(providerPackage)
-	default:
-		return "", fmt.Errorf("unsupported AWS SDK Go version: %d", version)
-	}
-}
-
-func AWSGoV1Package(providerPackage string) (string, error) {
-	if v, ok := serviceData[providerPackage]; ok {
-		return v.GoV1Package, nil
-	}
-
-	return "", fmt.Errorf("getting AWS SDK Go v1 package, %s not found", providerPackage)
-}
-
-func AWSGoV2Package(providerPackage string) (string, error) {
-	if v, ok := serviceData[providerPackage]; ok {
-		return v.GoV2Package, nil
-	}
-
-	return "", fmt.Errorf("getting AWS SDK Go v2 package, %s not found", providerPackage)
-}
-
-func AWSGoClientTypeName(providerPackage string, version int) (string, error) {
-	switch version {
-	case 1:
-		return AWSGoV1ClientTypeName(providerPackage)
-	case 2:
-		return "Client", nil
-	default:
-		return "", fmt.Errorf("unsupported AWS SDK Go version: %d", version)
-	}
 }
 
 func AWSGoV1ClientTypeName(providerPackage string) (string, error) {

@@ -81,12 +81,12 @@ func setTagsOutV2(ctx context.Context, tags []awstypes.Tag) {
 }
 
 // createTagsV2 creates elbv2 service tags for new resources.
-func createTagsV2(ctx context.Context, conn *elasticloadbalancingv2.Client, identifier string, tags []awstypes.Tag) error {
+func createTagsV2(ctx context.Context, conn *elasticloadbalancingv2.Client, identifier string, tags []awstypes.Tag, optFns ...func(*elasticloadbalancingv2.Options)) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return updateTagsV2(ctx, conn, identifier, nil, keyValueTagsV2(ctx, tags))
+	return updateTagsV2(ctx, conn, identifier, nil, keyValueTagsV2(ctx, tags), optFns...)
 }
 
 // updateTagsV2 updates elbv2 service tags.
