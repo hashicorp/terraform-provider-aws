@@ -1,3 +1,6 @@
 ```release-note:bug
 resource/aws_eks_cluster: Fix issue where setting value for bootstrap_cluster_creator_admin_permissions on an existing cluster recreating the cluster.
 ```
+```release-note:bug
+data-source/aws_eks_cluster: Fix issue where the `bootstrap_cluster_creator_admin_permissions` attribute is not set
+```
