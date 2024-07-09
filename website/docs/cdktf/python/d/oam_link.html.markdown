@@ -44,10 +44,11 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the link.
+* `id` - ARN of the link.
 * `label` - Label that is assigned to this link.
 * `label_template` - Human-readable name used to identify this source account when you are viewing data from it in the monitoring account.
 * `link_id` - ID string that AWS generated as part of the link ARN.
 * `resource_types` - Types of data that the source account shares with the monitoring account.
 * `sink_arn` - ARN of the sink that is used for this link.
 
-<!-- cache-key: cdktf-0.20.1 input-26fcd6d6196bf524f0cfb96d5f07e971f686ef152091f112f43b672b61693a13 -->
+<!-- cache-key: cdktf-0.20.1 input-939e99dcdae2633617c92153ba17ae464e5b8bc7ffb9ad55b2deadc8e09f9fb4 -->

@@ -5,8 +5,6 @@ AMP (Managed Prometheus)
 API Gateway
 API Gateway V2
 Account Management
-Agents for Amazon Bedrock
-Amazon Bedrock
 Amazon Q Business
 Amplify
 App Mesh
@@ -26,6 +24,8 @@ Auto Scaling Plans
 BCM Data Exports
 Backup
 Batch
+Bedrock
+Bedrock Agents
 CE (Cost Explorer)
 Chatbot
 Chime
