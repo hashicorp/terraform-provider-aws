@@ -51,7 +51,7 @@ This resource supports the following arguments:
 * `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
 * `object_lock_enabled` - (Optional, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled. Defaults to `Enabled`. Valid values: `Enabled`.
 * `rule` - (Optional) Configuration block for specifying the Object Lock rule for the specified object. [See below](#rule).
-* `token` - (Optional,Deprecated) This argument is deprecated and no longer needed to enable Object Lock. 
+* `token` - (Optional,Deprecated) This argument is deprecated and no longer needed to enable Object Lock.
 To enable Object Lock for an existing bucket, you must first enable versioning on the bucket and then enable Object Lock. For more details on versioning, see the [`aws_s3_bucket_versioning` resource](s3_bucket_versioning.html.markdown).
 
 ### rule
