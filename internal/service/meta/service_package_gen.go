@@ -38,6 +38,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 		{
 			Factory: newDataSourceService,
 		},
+		{
+			Factory: newDataSourceServicePrincipal,
+		},
 	}
 }
 

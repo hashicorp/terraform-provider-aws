@@ -242,6 +242,52 @@ func DNSSuffixForPartition(partition string) string {
 	}
 }
 
+func ServicePrincipalSuffixForPartition(partition string) string {
+	switch partition {
+	case ChinaPartitionID:
+		return "amazonaws.com.cn"
+	case ISOPartitionID:
+		return "c2s.ic.gov"
+	case ISOBPartitionID:
+		return "sc2s.sgov.gov"
+	default:
+		return "amazonaws.com"
+	}
+}
+
+// SPN region unique taken from
+// https://github.com/aws/aws-cdk/blob/main/packages/aws-cdk-lib/region-info/lib/default.ts
+func ServicePrincipalNameForPartition(service string, partition string) string {
+	if service != "" && partition != StandardPartitionID {
+		switch partition {
+		case ISOPartitionID:
+			switch service {
+			case "cloudhsm",
+				"config",
+				"logs",
+				"states",
+				"workspaces":
+				return DNSSuffixForPartition(partition)
+			}
+		case ISOBPartitionID:
+			switch service {
+			case "dms",
+				"logs":
+				return DNSSuffixForPartition(partition)
+			}
+		case ChinaPartitionID:
+			switch service {
+			case "codedeploy",
+				"elasticmapreduce",
+				"logs":
+				return DNSSuffixForPartition(partition)
+			}
+		}
+	}
+
+	return "amazonaws.com"
+}
+
 func IsOptInRegion(region string) bool {
 	switch region {
 	case AFSouth1RegionID,
