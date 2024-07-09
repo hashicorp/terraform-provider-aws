@@ -43,11 +43,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
-
 
 ## Import
 
