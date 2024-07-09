@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -167,7 +167,7 @@ func TestAccIoTProvisioningTemplate_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "For testing"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "pre_provisioning_hook.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "pre_provisioning_hook.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_role_arn"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "template_body"),
@@ -188,7 +188,7 @@ func testAccCheckProvisioningTemplateExists(ctx context.Context, n string) resou
 			return fmt.Errorf("No IoT Provisioning Template ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		_, err := tfiot.FindProvisioningTemplateByName(ctx, conn, rs.Primary.ID)
 
@@ -198,7 +198,7 @@ func testAccCheckProvisioningTemplateExists(ctx context.Context, n string) resou
 
 func testAccCheckProvisioningTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_provisioning_template" {
@@ -224,25 +224,16 @@ func testAccCheckProvisioningTemplateDestroy(ctx context.Context) resource.TestC
 
 func testAccCheckProvisioningTemplateNumVersions(ctx context.Context, name string, want int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		var got int
-		err := conn.ListProvisioningTemplateVersionsPagesWithContext(ctx, &iot.ListProvisioningTemplateVersionsInput{TemplateName: aws.String(name)},
-			func(page *iot.ListProvisioningTemplateVersionsOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				got += len(page.Versions)
-
-				return !lastPage
-			})
+		out, err := conn.ListProvisioningTemplateVersions(ctx, &iot.ListProvisioningTemplateVersionsInput{TemplateName: aws.String(name)})
 
 		if err != nil {
 			return err
 		}
 
-		if got != want {
+		if len(out.Versions) != want {
 			return fmt.Errorf("Incorrect version count for IoT Provisioning Template %s; got: %d, want: %d", name, got, want)
 		}
 
@@ -396,12 +387,19 @@ resource "aws_iot_provisioning_template" "test" {
 }
 
 func testAccProvisioningTemplateConfig_updated(rName string) string {
-	return acctest.ConfigCompose(testAccProvisioningTemplateBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccProvisioningTemplateBaseConfig(rName),
+		testAccProvisioningTemplateConfig_preProvisioningHook(rName),
+		fmt.Sprintf(`
 resource "aws_iot_provisioning_template" "test" {
   name                  = %[1]q
   provisioning_role_arn = aws_iam_role.test.arn
   description           = "For testing"
   enabled               = true
+
+  pre_provisioning_hook {
+    target_arn = aws_lambda_function.test.arn
+  }
 
   template_body = jsonencode({
     Parameters = {
@@ -427,4 +425,44 @@ resource "aws_iot_provisioning_template" "test" {
   })
 }
 `, rName))
+}
+
+func testAccProvisioningTemplateConfig_preProvisioningHook(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test2" {
+  name = "%[1]s-2"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_lambda_permission" "test" {
+  statement_id  = "AllowExecutionFromIot"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.test.arn
+  principal     = "iot.amazonaws.com"
+}
+
+resource "aws_lambda_function" "test" {
+  filename         = "test-fixtures/lambda-preprovisioninghook.zip"
+  source_code_hash = filebase64sha256("test-fixtures/lambda-preprovisioninghook.zip")
+  function_name    = %[1]q
+  role             = aws_iam_role.test2.arn
+  handler          = "lambda-preprovisioninghook.handler"
+  runtime          = "nodejs20.x"
+}
+`, rName)
 }

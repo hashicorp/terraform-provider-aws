@@ -10,7 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/aws/aws-sdk-go-v2/service/sfn"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -40,7 +41,7 @@ func TestAccSFNStateMachine_createUpdate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "states", fmt.Sprintf("stateMachine:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, sfn.StateMachineStatusActive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
@@ -70,7 +71,7 @@ func TestAccSFNStateMachine_createUpdate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "states", fmt.Sprintf("stateMachine:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, sfn.StateMachineStatusActive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 10.*`)),
@@ -107,7 +108,7 @@ func TestAccSFNStateMachine_expressUpdate(t *testing.T) {
 				Config: testAccStateMachineConfig_typed(rName, "EXPRESS", 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, sfn.StateMachineStatusActive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrSet(resourceName, "definition"),
@@ -128,7 +129,7 @@ func TestAccSFNStateMachine_expressUpdate(t *testing.T) {
 				Config: testAccStateMachineConfig_typed(rName, "EXPRESS", 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, sfn.StateMachineStatusActive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 10.*`)),
@@ -163,7 +164,7 @@ func TestAccSFNStateMachine_standardUpdate(t *testing.T) {
 				Config: testAccStateMachineConfig_typed(rName, "STANDARD", 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, sfn.StateMachineStatusActive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrSet(resourceName, "definition"),
@@ -185,7 +186,7 @@ func TestAccSFNStateMachine_standardUpdate(t *testing.T) {
 				Config: testAccStateMachineConfig_typed(rName, "STANDARD", 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, sfn.StateMachineStatusActive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 10.*`)),
@@ -413,30 +414,30 @@ func TestAccSFNStateMachine_expressLogging(t *testing.T) {
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStateMachineConfig_expressLogConfiguration(rName, sfn.LogLevelError),
+				Config: testAccStateMachineConfig_expressLogConfiguration(rName, string(awstypes.LogLevelError)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, sfn.StateMachineStatusActive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrSet(resourceName, "definition"),
 					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", sfn.LogLevelError),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", string(awstypes.LogLevelError)),
 				),
 			},
 			{
-				Config: testAccStateMachineConfig_expressLogConfiguration(rName, sfn.LogLevelAll),
+				Config: testAccStateMachineConfig_expressLogConfiguration(rName, string(awstypes.LogLevelAll)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, sfn.StateMachineStatusActive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", sfn.LogLevelAll),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", string(awstypes.LogLevelAll)),
 				),
 			},
 		},
@@ -450,11 +451,7 @@ func testAccCheckExists(ctx context.Context, n string, v *sfn.DescribeStateMachi
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Step Functions State Machine ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNClient(ctx)
 
 		output, err := tfsfn.FindStateMachineByARN(ctx, conn, rs.Primary.ID)
 
@@ -470,7 +467,7 @@ func testAccCheckExists(ctx context.Context, n string, v *sfn.DescribeStateMachi
 
 func testAccCheckStateMachineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sfn_state_machine" {

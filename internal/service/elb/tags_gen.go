@@ -52,11 +52,11 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 // []*SERVICE.Tag handling
 
 // TagKeys returns elb service tag keys.
-func TagKeys(tags tftags.KeyValueTags) []*elasticloadbalancing.TagKeyOnly {
-	result := make([]*elasticloadbalancing.TagKeyOnly, 0, len(tags))
+func TagKeys(tags tftags.KeyValueTags) []awstypes.TagKeyOnly {
+	result := make([]awstypes.TagKeyOnly, 0, len(tags))
 
 	for k := range tags.Map() {
-		tagKey := &elasticloadbalancing.TagKeyOnly{
+		tagKey := awstypes.TagKeyOnly{
 			Key: aws.String(k),
 		}
 
