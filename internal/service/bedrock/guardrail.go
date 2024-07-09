@@ -6,14 +6,14 @@ package bedrock
 import (
 	"context"
 	"errors"
-	"time"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -21,16 +21,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/fwflex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -41,7 +41,7 @@ import (
 // @FrameworkResource(name="Guardrail")
 func newResourceGuardrail(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceGuardrail{}
-	
+
 	// TIP: ==== CONFIGURABLE TIMEOUTS ====
 	// Users can configure timeout lengths but you need to use the times they
 	// provide. Access the timeout they configure (or the defaults) using,
@@ -71,79 +71,79 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
-			"blocked_input_messaging": schema.StringAttribute{ 
+			"blocked_input_messaging": schema.StringAttribute{
 				Description: "Messaging for when violations are detected in text",
 				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 500),
-				}, 
+				},
 			},
-			"blocked_outputs_messaging": schema.StringAttribute{ 
+			"blocked_outputs_messaging": schema.StringAttribute{
 				Description: "Messaging for when violations are detected in text",
 				Required:    true,
-				Validators: []validator.String{ 
+				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 500),
-				}, 
+				},
 			},
-			"created_at": schema.StringAttribute{ 
+			"created_at": schema.StringAttribute{
 				CustomType:  timetypes.RFC3339Type{},
 				Description: "Time Stamp",
 				Computed:    true,
-				PlanModifiers: []planmodifier.String{ 
+				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-				}, 
+				},
 			},
-			"description": schema.StringAttribute{ 
+			"description": schema.StringAttribute{
 				Description: "Description of the guardrail or its version",
 				Optional:    true,
 				Computed:    true,
-				Validators: []validator.String{ 
+				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 200),
-				}, 
-				PlanModifiers: []planmodifier.String{ 
+				},
+				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-				}, 
+				},
 			},
 			"id": framework.IDAttribute(),
-			"kms_key_arn": schema.StringAttribute{ 
+			"kms_key_arn": schema.StringAttribute{
 				Description: "The KMS key with which the guardrail was encrypted at rest",
 				Optional:    true,
-				Validators: []validator.String{ 
+				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 2048),
 					stringvalidator.RegexMatches(regexp.MustCompile("^arn:aws(-[^:]+)?:kms:[a-zA-Z0-9-]*:[0-9]{12}:key/[a-zA-Z0-9-]{36}$"), ""),
-				}, 
-				PlanModifiers: []planmodifier.String{ 
+				},
+				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-				}, 
+				},
 			},
-			"name": schema.StringAttribute{ 
+			"name": schema.StringAttribute{
 				Description: "Name of the guardrail",
 				Required:    true,
-				Validators: []validator.String{ 
+				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 50),
 					stringvalidator.RegexMatches(regexp.MustCompile("^[0-9a-zA-Z-_]+$"), ""),
-				}, 
+				},
 			},
-			"status": schema.StringAttribute{ 
+			"status": schema.StringAttribute{
 				Description: "Status of the guardrail",
 				Computed:    true,
-				PlanModifiers: []planmodifier.String{ 
+				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-				}, 
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"version": schema.StringAttribute{ 
+			"version": schema.StringAttribute{
 				Description: "Guardrail version",
 				Computed:    true,
-				PlanModifiers: []planmodifier.String{ 
+				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-				}, 
-			}, 
+				},
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"content_policy_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[contentPolicyConfig](ctx),
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[contentPolicyConfig](ctx),
 				Description: "Word policy config for a guardrail.",
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
@@ -151,7 +151,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"filters_config": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[filtersConfig](ctx),
+							CustomType:  fwtypes.NewListNestedObjectTypeOf[filtersConfig](ctx),
 							Description: "List of content filter configs in content policy.",
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -194,7 +194,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 												"PROMPT_ATTACK",
 											),
 										}, /*END VALIDATORS*/
-									}, 
+									},
 								},
 							},
 						},
@@ -202,7 +202,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 				},
 			},
 			"sensitive_information_policy_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[sensitiveInformationPolicyConfig](ctx),
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[sensitiveInformationPolicyConfig](ctx),
 				Description: "Sensitive information policy config for a guardrail.",
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
@@ -210,7 +210,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"pii_entities_config": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[piiEntitiesConfig](ctx),
+							CustomType:  fwtypes.NewListNestedObjectTypeOf[piiEntitiesConfig](ctx),
 							Description: "List of entities.",
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -263,12 +263,12 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 												"VEHICLE_IDENTIFICATION_NUMBER",
 											),
 										}, /*END VALIDATORS*/
-									}, 
+									},
 								},
 							},
 						},
 						"regexes_config": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[regexesConfig](ctx),
+							CustomType:  fwtypes.NewListNestedObjectTypeOf[regexesConfig](ctx),
 							Description: "List of regex.",
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -317,7 +317,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 				},
 			},
 			"topic_policy_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[topicPolicyConfig](ctx),
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[topicPolicyConfig](ctx),
 				Description: "Topic policy config for a guardrail.",
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
@@ -325,21 +325,21 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"topics_config": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[topicsConfig](ctx),
+							CustomType:  fwtypes.NewListNestedObjectTypeOf[topicsConfig](ctx),
 							Description: "List of topic configs in topic policy.",
 							Validators: []validator.List{
 								listvalidator.SizeAtLeast(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"definition": schema.StringAttribute{ 
+									"definition": schema.StringAttribute{
 										Description: "Definition of topic in topic policy",
 										Required:    true,
 										Validators: []validator.String{ /*START VALIDATORS*/
 											stringvalidator.LengthBetween(1, 200),
 										}, /*END VALIDATORS*/
-									}, 
-									"examples": schema.ListAttribute{ 
+									},
+									"examples": schema.ListAttribute{
 										ElementType: types.StringType,
 										Description: "List of text examples",
 										Optional:    true,
@@ -355,7 +355,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 										}, /*END PLAN MODIFIERS*/
 									}, /*END ATTRIBUTE*/
 									// Property: Name
-									"name": schema.StringAttribute{ 
+									"name": schema.StringAttribute{
 										Description: "Name of topic in topic policy",
 										Required:    true,
 										Validators: []validator.String{ /*START VALIDATORS*/
@@ -364,7 +364,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 										}, /*END VALIDATORS*/
 									}, /*END ATTRIBUTE*/
 									// Property: Type
-									"type": schema.StringAttribute{ 
+									"type": schema.StringAttribute{
 										Description: "Type of topic in a policy",
 										Required:    true,
 										Validators: []validator.String{ /*START VALIDATORS*/
@@ -380,7 +380,7 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 				},
 			},
 			"word_policy_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[wordPolicyConfig](ctx),
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[wordPolicyConfig](ctx),
 				Description: "Word policy config for a guardrail.",
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
@@ -388,34 +388,34 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"managed_word_lists_config": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[managedWordListsConfig](ctx),
+							CustomType:  fwtypes.NewListNestedObjectTypeOf[managedWordListsConfig](ctx),
 							Description: "A config for the list of managed words.",
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"type": schema.StringAttribute{ 
+									"type": schema.StringAttribute{
 										Description: "Options for managed words.",
 										Required:    true,
-										Validators: []validator.String{ 
+										Validators: []validator.String{
 											stringvalidator.OneOf(
 												"PROFANITY",
 											),
-										}, 
-									}, 
+										},
+									},
 								},
 							},
 						},
 						"words_config": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[wordsConfig](ctx),
+							CustomType:  fwtypes.NewListNestedObjectTypeOf[wordsConfig](ctx),
 							Description: "List of custom word configs.",
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"text": schema.StringAttribute{ 
+									"text": schema.StringAttribute{
 										Description: "The custom word text.",
 										Required:    true,
-										Validators: []validator.String{ 
+										Validators: []validator.String{
 											stringvalidator.LengthAtLeast(1),
-										}, 
-									}, 
+										},
+									},
 								},
 							},
 						},
@@ -433,21 +433,21 @@ func (r *resourceGuardrail) Schema(ctx context.Context, req resource.SchemaReque
 
 func (r *resourceGuardrail) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().BedrockClient(ctx)
-	
+
 	var plan resourceGuardrailData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 3. Populate a create input structure
 	in := &bedrock.CreateGuardrailInput{
 		// TIP: Mandatory or fields that will always be present can be set when
 		// you create the Input structure. (Replace these with real fields.)
-		Name: aws.String(plan.Name.ValueString()),
-		BlockedInputMessaging: aws.String(plan.BlockedInputMessaging.ValueString()),
+		Name:                    aws.String(plan.Name.ValueString()),
+		BlockedInputMessaging:   aws.String(plan.BlockedInputMessaging.ValueString()),
 		BlockedOutputsMessaging: aws.String(plan.BlockedOutputsMessaging.ValueString()),
-		Tags:                         getTagsIn(ctx),
+		Tags:                    getTagsIn(ctx),
 	}
 	if !plan.Description.IsNull() {
 		in.Description = aws.String(plan.Description.ValueString())
@@ -514,7 +514,6 @@ func (r *resourceGuardrail) Create(ctx context.Context, req resource.CreateReque
 		in.WordPolicyConfig = wordPolicyConfigInput
 	}
 
-	
 	// TIP: -- 4. Call the AWS create function
 	out, err := conn.CreateGuardrail(ctx, in)
 	if err != nil {
@@ -526,16 +525,15 @@ func (r *resourceGuardrail) Create(ctx context.Context, req resource.CreateReque
 		)
 		return
 	}
-	
+
 	// TIP: -- 5. Using the output from the create function, set the minimum attributes
-	plan.ARN = flex.StringToFramework(ctx, out.GuardrailArn)
-	plan.ID = flex.StringToFramework(ctx, out.GuardrailId)
-	plan.CreatedAt = fwflex.TimeToFramework(ctx, out.CreatedAt)
-	plan.Version = flex.StringToFramework(ctx, out.Version)
-	
+	plan.ARN = fwflex.StringToFramework(ctx, out.GuardrailArn)
+	plan.ID = fwflex.StringToFramework(ctx, out.GuardrailId)
+	plan.Version = fwflex.StringToFramework(ctx, out.Version)
+
 	// TIP: -- 6. Use a waiter to wait for create to complete
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitGuardrailCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	_, err = waitGuardrailCreated(ctx, conn, plan.ID.ValueString(), plan.Version.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Bedrock, create.ErrActionWaitingForCreation, ResNameGuardrail, plan.Name.String(), err),
@@ -543,7 +541,7 @@ func (r *resourceGuardrail) Create(ctx context.Context, req resource.CreateReque
 		)
 		return
 	}
-	
+
 	// TIP: -- 7. Save the request plan to response state
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -562,14 +560,14 @@ func (r *resourceGuardrail) Read(ctx context.Context, req resource.ReadRequest, 
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().BedrockClient(ctx)
-	
+
 	// TIP: -- 2. Fetch the state
 	var state resourceGuardrailData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
 	// type function, or, better yet, using a finder.
 	out, err := findGuardrailByID(ctx, conn, state.ID.ValueString(), state.Version.ValueString())
@@ -585,34 +583,38 @@ func (r *resourceGuardrail) Read(ctx context.Context, req resource.ReadRequest, 
 		)
 		return
 	}
-	
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// TIP: -- 5. Set the arguments and attributes
 	//
 	// For simple data types (i.e., schema.StringAttribute, schema.BoolAttribute,
-	// schema.Int64Attribute, and schema.Float64Attribue), simply setting the  
+	// schema.Int64Attribute, and schema.Float64Attribue), simply setting the
 	// appropriate data struct field is sufficient. The flex package implements
-	// helpers for converting between Go and Plugin-Framework types seamlessly. No 
+	// helpers for converting between Go and Plugin-Framework types seamlessly. No
 	// error or nil checking is necessary.
 	//
 	// However, there are some situations where more handling is needed such as
-	// complex data types (e.g., schema.ListAttribute, schema.SetAttribute). In 
+	// complex data types (e.g., schema.ListAttribute, schema.SetAttribute). In
 	// these cases the flatten function may have a diagnostics return value, which
 	// should be appended to resp.Diagnostics.
-	state.ARN = flex.StringToFramework(ctx, out.GuardrailArn)
-	state.ID = flex.StringToFramework(ctx, out.GuardrailId)
+	// state.ARN = flex.StringToFramework(ctx, out.GuardrailArn)
+	// state.ID = flex.StringToFramework(ctx, out.GuardrailId)
 
-	state.BlockedInputMessaging = flex.StringToFramework(ctx, out.BlockedInputMessaging)
-	state.BlockedOutputsMessaging = flex.StringToFramework(ctx, out.BlockedOutputsMessaging)
+	// state.BlockedInputMessaging = flex.StringToFramework(ctx, out.BlockedInputMessaging)
+	// state.BlockedOutputsMessaging = flex.StringToFramework(ctx, out.BlockedOutputsMessaging)
 
-	contentPolicyConfig, d := flattenContentPolicyConfig(ctx, out.ContentPolicy)
-	resp.Diagnostics.Append(d...)
-	state.ContentPolicyConfig = contentPolicyConfig
-	
-	// TIP: Setting a complex type.
-	complexArgument, d := flattenComplexArgument(ctx, out.ComplexArgument)
-	resp.Diagnostics.Append(d...)
-	state.ComplexArgument = complexArgument
-	
+	// contentPolicyConfig, d := flattenContentPolicyConfig(ctx, out.ContentPolicy)
+	// resp.Diagnostics.Append(d...)
+	// state.ContentPolicyConfig = contentPolicyConfig
+
+	// // TIP: Setting a complex type.
+	// complexArgument, d := flattenComplexArgument(ctx, out.ComplexArgument)
+	// resp.Diagnostics.Append(d...)
+	// state.ComplexArgument = complexArgument
+
 	// TIP: -- 6. Set the state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -640,7 +642,7 @@ func (r *resourceGuardrail) Update(ctx context.Context, req resource.UpdateReque
 	// 6. Save the request plan to response state
 	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().BedrockClient(ctx)
-	
+
 	// TIP: -- 2. Fetch the plan
 	var plan, state resourceGuardrailData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -648,38 +650,91 @@ func (r *resourceGuardrail) Update(ctx context.Context, req resource.UpdateReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 3. Populate a modify input structure and check for changes
-	if !plan.Name.Equal(state.Name) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.ComplexArgument.Equal(state.ComplexArgument) ||
-		!plan.Type.Equal(state.Type) {
+	if !plan.BlockedInputMessaging.Equal(state.BlockedInputMessaging) ||
+		!plan.BlockedOutputsMessaging.Equal(state.BlockedOutputsMessaging) ||
+		!plan.KMSKeyArn.Equal(state.KMSKeyArn) ||
+		!plan.ContentPolicyConfig.Equal(state.ContentPolicyConfig) ||
+		!plan.SensitiveInformationPolicyConfig.Equal(state.SensitiveInformationPolicyConfig) ||
+		!plan.TopicPolicyConfig.Equal(state.TopicPolicyConfig) ||
+		!plan.WordPolicyConfig.Equal(state.WordPolicyConfig) ||
+		!plan.Name.Equal(state.Name) ||
+		!plan.Description.Equal(state.Description) {
 
 		in := &bedrock.UpdateGuardrailInput{
 			// TIP: Mandatory or fields that will always be present can be set when
 			// you create the Input structure. (Replace these with real fields.)
-			GuardrailId:   aws.String(plan.ID.ValueString()),
-			GuardrailName: aws.String(plan.Name.ValueString()),
-			GuardrailType: aws.String(plan.Type.ValueString()),
+			Name:                    aws.String(plan.Name.ValueString()),
+			BlockedInputMessaging:   aws.String(plan.BlockedInputMessaging.ValueString()),
+			BlockedOutputsMessaging: aws.String(plan.BlockedOutputsMessaging.ValueString()),
 		}
 
 		if !plan.Description.IsNull() {
-			// TIP: Optional fields should be set based on whether or not they are
-			// used.
 			in.Description = aws.String(plan.Description.ValueString())
 		}
-		if !plan.ComplexArgument.IsNull() {
-			// TIP: Use an expander to assign a complex argument. The elements must be
-			// deserialized into the appropriate struct before being passed to the expander.
-			var tfList []complexArgumentData
-			resp.Diagnostics.Append(plan.ComplexArgument.ElementsAs(ctx, &tfList, false)...)
+		if !plan.KMSKeyArn.IsNull() {
+			in.KmsKeyId = aws.String(plan.KMSKeyArn.ValueString())
+		}
+
+		if !plan.ContentPolicyConfig.IsNull() {
+			var contentPolicyConfig []contentPolicyConfig
+			resp.Diagnostics.Append(plan.ContentPolicyConfig.ElementsAs(ctx, &contentPolicyConfig, false)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			policyConfigInput, d := expandContentPolicyConfig(ctx, contentPolicyConfig)
+			resp.Diagnostics.Append(d...)
 			if resp.Diagnostics.HasError() {
 				return
 			}
 
-			in.ComplexArgument = expandComplexArgument(tfList)
+			in.ContentPolicyConfig = policyConfigInput
 		}
-		
+
+		if !plan.SensitiveInformationPolicyConfig.IsNull() {
+			var sensitiveInformationPolicyConfig []sensitiveInformationPolicyConfig
+			resp.Diagnostics.Append(plan.SensitiveInformationPolicyConfig.ElementsAs(ctx, &sensitiveInformationPolicyConfig, false)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			sensitiveInformationPolicyConfigInput, d := expandSensitiveInformationPolicyConfig(ctx, sensitiveInformationPolicyConfig)
+			resp.Diagnostics.Append(d...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			in.SensitiveInformationPolicyConfig = sensitiveInformationPolicyConfigInput
+		}
+		if !plan.TopicPolicyConfig.IsNull() {
+			var topicPolicyConfigData []topicPolicyConfig
+			resp.Diagnostics.Append(plan.TopicPolicyConfig.ElementsAs(ctx, &topicPolicyConfigData, false)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			topicPolicyConfigInput, d := expandTopicPolicyConfig(ctx, topicPolicyConfigData)
+			resp.Diagnostics.Append(d...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			in.TopicPolicyConfig = topicPolicyConfigInput
+		}
+		if !plan.WordPolicyConfig.IsNull() {
+			var wordPolicyConfigData []wordPolicyConfig
+			resp.Diagnostics.Append(plan.WordPolicyConfig.ElementsAs(ctx, &wordPolicyConfigData, false)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			wordPolicyConfigInput, d := expandWordPolicyConfig(ctx, wordPolicyConfigData)
+			resp.Diagnostics.Append(d...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			in.WordPolicyConfig = wordPolicyConfigInput
+		}
+
 		// TIP: -- 4. Call the AWS modify/update function
 		out, err := conn.UpdateGuardrail(ctx, in)
 		if err != nil {
@@ -689,23 +744,22 @@ func (r *resourceGuardrail) Update(ctx context.Context, req resource.UpdateReque
 			)
 			return
 		}
-		if out == nil || out.Guardrail == nil {
+		if out == nil || out.GuardrailArn == nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.Bedrock, create.ErrActionUpdating, ResNameGuardrail, plan.ID.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
 		}
-		
+
 		// TIP: Using the output from the update function, re-set any computed attributes
-		plan.ARN = flex.StringToFramework(ctx, out.Guardrail.Arn)
-		plan.ID = flex.StringToFramework(ctx, out.Guardrail.GuardrailId)
+		plan.ARN = fwflex.StringToFramework(ctx, out.GuardrailArn)
+		plan.ID = fwflex.StringToFramework(ctx, out.GuardrailId)
 	}
 
-	
 	// TIP: -- 5. Use a waiter to wait for update to complete
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitGuardrailUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	_, err := waitGuardrailUpdated(ctx, conn, plan.ID.ValueString(), state.Version.ValueString(), updateTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Bedrock, create.ErrActionWaitingForUpdate, ResNameGuardrail, plan.ID.String(), err),
@@ -714,7 +768,6 @@ func (r *resourceGuardrail) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	
 	// TIP: -- 6. Save the request plan to response state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -737,19 +790,20 @@ func (r *resourceGuardrail) Delete(ctx context.Context, req resource.DeleteReque
 	// 5. Use a waiter to wait for delete to complete
 	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().BedrockClient(ctx)
-	
+
 	// TIP: -- 2. Fetch the state
 	var state resourceGuardrailData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 3. Populate a delete input structure
 	in := &bedrock.DeleteGuardrailInput{
-		GuardrailId: aws.String(state.ID.ValueString()),
+		GuardrailIdentifier: aws.String(state.ID.ValueString()),
+		GuardrailVersion:    aws.String(state.Version.ValueString()),
 	}
-	
+
 	// TIP: -- 4. Call the AWS delete function
 	_, err := conn.DeleteGuardrail(ctx, in)
 	// TIP: On rare occassions, the API returns a not found error after deleting a
@@ -765,10 +819,10 @@ func (r *resourceGuardrail) Delete(ctx context.Context, req resource.DeleteReque
 		)
 		return
 	}
-	
+
 	// TIP: -- 5. Use a waiter to wait for delete to complete
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitGuardrailDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	_, err = waitGuardrailDeleted(ctx, conn, state.ID.ValueString(), state.Version.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Bedrock, create.ErrActionWaitingForDeletion, ResNameGuardrail, state.ID.String(), err),
@@ -788,7 +842,6 @@ func (r *resourceGuardrail) Delete(ctx context.Context, req resource.DeleteReque
 func (r *resourceGuardrail) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
-
 
 // TIP: ==== STATUS CONSTANTS ====
 // Create constants for states and statuses if the service does not
@@ -814,18 +867,18 @@ const (
 // exported (i.e., capitalized).
 //
 // You will need to adjust the parameters and names to fit the service.
-func waitGuardrailCreated(ctx context.Context, conn *bedrock.Client, id string, timeout time.Duration) (*bedrock.Guardrail, error) {
+func waitGuardrailCreated(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusGuardrail(ctx, conn, id),
+		Pending:                   enum.Slice(awstypes.GuardrailStatusCreating),
+		Target:                    enum.Slice(awstypes.GuardrailStatusReady),
+		Refresh:                   statusGuardrail(ctx, conn, id, version),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*bedrock.Guardrail); ok {
+	if out, ok := outputRaw.(*bedrock.GetGuardrailOutput); ok {
 		return out, err
 	}
 
@@ -836,18 +889,18 @@ func waitGuardrailCreated(ctx context.Context, conn *bedrock.Client, id string, 
 // resources than others. The best case is a status flag that tells you when
 // the update has been fully realized. Other times, you can check to see if a
 // key resource argument is updated to a new value or not.
-func waitGuardrailUpdated(ctx context.Context, conn *bedrock.Client, id string, timeout time.Duration) (*bedrock.Guardrail, error) {
+func waitGuardrailUpdated(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
-		Refresh:                   statusGuardrail(ctx, conn, id),
+		Pending:                   enum.Slice(awstypes.GuardrailStatusUpdating),
+		Target:                    enum.Slice(awstypes.GuardrailStatusReady),
+		Refresh:                   statusGuardrail(ctx, conn, id, version),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*bedrock.Guardrail); ok {
+	if out, ok := outputRaw.(*bedrock.GetGuardrailOutput); ok {
 		return out, err
 	}
 
@@ -856,16 +909,16 @@ func waitGuardrailUpdated(ctx context.Context, conn *bedrock.Client, id string, 
 
 // TIP: A deleted waiter is almost like a backwards created waiter. There may
 // be additional pending states, however.
-func waitGuardrailDeleted(ctx context.Context, conn *bedrock.Client, id string, timeout time.Duration) (*bedrock.Guardrail, error) {
+func waitGuardrailDeleted(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusDeleting, statusNormal},
-		Target:                    []string{},
-		Refresh:                   statusGuardrail(ctx, conn, id),
-		Timeout:                   timeout,
+		Pending: enum.Slice(awstypes.GuardrailStatusDeleting, awstypes.GuardrailStatusReady),
+		Target:  []string{},
+		Refresh: statusGuardrail(ctx, conn, id, version),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*bedrock.Guardrail); ok {
+	if out, ok := outputRaw.(*bedrock.GetGuardrailOutput); ok {
 		return out, err
 	}
 
@@ -879,9 +932,9 @@ func waitGuardrailDeleted(ctx context.Context, conn *bedrock.Client, id string, 
 //
 // Waiters consume the values returned by status functions. Design status so
 // that it can be reused by a create, update, and delete waiter, if possible.
-func statusGuardrail(ctx context.Context, conn *bedrock.Client, id string) retry.StateRefreshFunc {
+func statusGuardrail(ctx context.Context, conn *bedrock.Client, id string, version string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findGuardrailByID(ctx, conn, id)
+		out, err := findGuardrailByID(ctx, conn, id, version)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -890,7 +943,7 @@ func statusGuardrail(ctx context.Context, conn *bedrock.Client, id string) retry
 			return nil, "", err
 		}
 
-		return out, aws.ToString(out.Status), nil
+		return out, string(out.Status), nil
 	}
 }
 
@@ -902,9 +955,9 @@ func statusGuardrail(ctx context.Context, conn *bedrock.Client, id string) retry
 func findGuardrailByID(ctx context.Context, conn *bedrock.Client, id string, version string) (*bedrock.GetGuardrailOutput, error) {
 	in := &bedrock.GetGuardrailInput{
 		GuardrailIdentifier: aws.String(id),
-		GuardrailVersion: aws.String(version),
+		GuardrailVersion:    aws.String(version),
 	}
-	
+
 	out, err := conn.GetGuardrail(ctx, in)
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
@@ -927,7 +980,7 @@ func findGuardrailByID(ctx context.Context, conn *bedrock.Client, id string, ver
 
 // TIP: ==== FLEX ====
 // Flatteners and expanders ("flex" functions) help handle complex data
-// types. Flatteners take an API data type and return the equivalent Plugin-Framework 
+// types. Flatteners take an API data type and return the equivalent Plugin-Framework
 // type. In other words, flatteners translate from AWS -> Terraform.
 //
 // On the other hand, expanders take a Terraform data structure and return
@@ -936,123 +989,123 @@ func findGuardrailByID(ctx context.Context, conn *bedrock.Client, id string, ver
 //
 // See more:
 // https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
-func flattenComplexArgument(ctx context.Context, apiObject *bedrock.ComplexArgument) (types.List, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: complexArgumentAttrTypes}
+// func flattenComplexArgument(ctx context.Context, apiObject *bedrock.ComplexArgument) (types.List, diag.Diagnostics) {
+// 	var diags diag.Diagnostics
+// 	elemType := types.ObjectType{AttrTypes: complexArgumentAttrTypes}
 
-	if apiObject == nil {
-		return types.ListNull(elemType), diags
-	}
+// 	if apiObject == nil {
+// 		return types.ListNull(elemType), diags
+// 	}
 
-	obj := map[string]attr.Value{
-		"nested_required": flex.StringValueToFramework(ctx, apiObject.NestedRequired),
-		"nested_optional": flex.StringValueToFramework(ctx, apiObject.NestedOptional),
-	}
-	objVal, d := types.ObjectValue(complexArgumentAttrTypes, obj)
-	diags.Append(d...)
+// 	obj := map[string]attr.Value{
+// 		"nested_required": flex.StringValueToFramework(ctx, apiObject.NestedRequired),
+// 		"nested_optional": flex.StringValueToFramework(ctx, apiObject.NestedOptional),
+// 	}
+// 	objVal, d := types.ObjectValue(complexArgumentAttrTypes, obj)
+// 	diags.Append(d...)
 
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
+// 	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+// 	diags.Append(d...)
 
-	return listVal, diags
-}
+// 	return listVal, diags
+// }
 
 // TIP: Often the AWS API will return a slice of structures in response to a
 // request for information. Sometimes you will have set criteria (e.g., the ID)
 // that means you'll get back a one-length slice. This plural function works
 // brilliantly for that situation too.
-func flattenComplexArguments(ctx context.Context, apiObjects []*bedrock.ComplexArgument) (types.List, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: complexArgumentAttrTypes}
+// func flattenComplexArguments(ctx context.Context, apiObjects []*bedrock.ComplexArgument) (types.List, diag.Diagnostics) {
+// 	var diags diag.Diagnostics
+// 	elemType := types.ObjectType{AttrTypes: complexArgumentAttrTypes}
 
-	if len(apiObjects) == 0 {
-		return types.ListNull(elemType), diags
-	}
+// 	if len(apiObjects) == 0 {
+// 		return types.ListNull(elemType), diags
+// 	}
 
-	elems := []attr.Value{}
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
+// 	elems := []attr.Value{}
+// 	for _, apiObject := range apiObjects {
+// 		if apiObject == nil {
+// 			continue
+// 		}
 
-		obj := map[string]attr.Value{
-			"nested_required": flex.StringValueToFramework(ctx, apiObject.NestedRequired),
-			"nested_optional": flex.StringValueToFramework(ctx, apiObject.NestedOptional),
-		}
-		objVal, d := types.ObjectValue(complexArgumentAttrTypes, obj)
-		diags.Append(d...)
+// 		obj := map[string]attr.Value{
+// 			"nested_required": fwflex.StringValueToFramework(ctx, apiObject.NestedRequired),
+// 			"nested_optional": fwflex.StringValueToFramework(ctx, apiObject.NestedOptional),
+// 		}
+// 		objVal, d := types.ObjectValue(complexArgumentAttrTypes, obj)
+// 		diags.Append(d...)
 
-		elems = append(elems, objVal)
-	}
+// 		elems = append(elems, objVal)
+// 	}
 
-	listVal, d := types.ListValue(elemType, elems)
-	diags.Append(d...)
+// 	listVal, d := types.ListValue(elemType, elems)
+// 	diags.Append(d...)
 
-	return listVal, diags
-}
+// 	return listVal, diags
+// }
 
-func flattenContentPolicyConfig(ctx context.Context, apiObject *awstypes.GuardrailContentPolicy) (types.List, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	var filtersConfigAttrTypes = map[string]attr.Type{ 
-		"input_strength": types.StringType,
-		"output_strength": types.StringType,
-		"type": types.StringType,
-	}
-	var contentPolicyConfigAttrTypes = map[string]attr.Type{
-		"filters_config": types.SetType{ElemType: types.ObjectType{AttrTypes: filtersConfigAttrTypes}},
-	}
+// func flattenContentPolicyConfig(ctx context.Context, apiObject *awstypes.GuardrailContentPolicy) (types.List, diag.Diagnostics) {
+// 	var diags diag.Diagnostics
+// 	var filtersConfigAttrTypes = map[string]attr.Type{
+// 		"input_strength":  types.StringType,
+// 		"output_strength": types.StringType,
+// 		"type":            types.StringType,
+// 	}
+// 	var contentPolicyConfigAttrTypes = map[string]attr.Type{
+// 		"filters_config": types.SetType{ElemType: types.ObjectType{AttrTypes: filtersConfigAttrTypes}},
+// 	}
 
-	elemType := types.ObjectType{AttrTypes: contentPolicyConfigAttrTypes}
+// 	elemType := types.ObjectType{AttrTypes: contentPolicyConfigAttrTypes}
 
-	if apiObject == nil {
-		return types.ListValueMust(elemType, []attr.Value{}), diags
-	}
+// 	if apiObject == nil {
+// 		return types.ListValueMust(elemType, []attr.Value{}), diags
+// 	}
 
-	filtersConfig, d := flattenFilters(ctx, apiObject.Filters)
-	diags.Append(d...)
+// 	filtersConfig, d := flattenFilters(ctx, apiObject.Filters)
+// 	diags.Append(d...)
 
-	obj := map[string]attr.Value{
-		"filters_config": filtersConfig,
-	}
-	objVal, d := types.ObjectValue(contentPolicyConfigAttrTypes, obj)
-	diags.Append(d...)
+// 	obj := map[string]attr.Value{
+// 		"filters_config": filtersConfig,
+// 	}
+// 	objVal, d := types.ObjectValue(contentPolicyConfigAttrTypes, obj)
+// 	diags.Append(d...)
 
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
+// 	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+// 	diags.Append(d...)
 
-	return listVal, diags
-}
+// 	return listVal, diags
+// }
 
-func flattenFilters(ctx context.Context, apiObject []awstypes.GuardrailContentFilter) (types.Set, diag.Diagnostics) { // nosemgrep:ci.aws-in-func-name
-	var diags diag.Diagnostics
-	var filtersConfigAttrTypes = map[string]attr.Type{ 
-		"input_strength": types.StringType,
-		"output_strength": types.StringType,
-		"type": types.StringType,
-	}
-	elemType := types.ObjectType{AttrTypes: filtersConfigAttrTypes}
+// func flattenFilters(ctx context.Context, apiObject []awstypes.GuardrailContentFilter) (types.Set, diag.Diagnostics) { // nosemgrep:ci.aws-in-func-name
+// 	var diags diag.Diagnostics
+// 	var filtersConfigAttrTypes = map[string]attr.Type{
+// 		"input_strength":  types.StringType,
+// 		"output_strength": types.StringType,
+// 		"type":            types.StringType,
+// 	}
+// 	elemType := types.ObjectType{AttrTypes: filtersConfigAttrTypes}
 
-	if apiObject == nil {
-		return types.SetValueMust(elemType, []attr.Value{}), diags
-	}
+// 	if apiObject == nil {
+// 		return types.SetValueMust(elemType, []attr.Value{}), diags
+// 	}
 
-	elems := []attr.Value{}
-	for _, filterConfig := range apiObject {
-		obj := map[string]attr.Value{
-			"input_strength": flex.StringToFramework(ctx, (*string)(&filterConfig.InputStrength)),
-			"output_strength": flex.StringToFramework(ctx, (*string)(&filterConfig.OutputStrength)),
-			"type": flex.StringToFramework(ctx, (*string)(&filterConfig.Type)),
-		}
-		objVal, d := types.ObjectValue(filtersConfigAttrTypes, obj)
-		diags.Append(d...)
+// 	elems := []attr.Value{}
+// 	for _, filterConfig := range apiObject {
+// 		obj := map[string]attr.Value{
+// 			"input_strength":  flex.StringToFramework(ctx, (*string)(&filterConfig.InputStrength)),
+// 			"output_strength": flex.StringToFramework(ctx, (*string)(&filterConfig.OutputStrength)),
+// 			"type":            flex.StringToFramework(ctx, (*string)(&filterConfig.Type)),
+// 		}
+// 		objVal, d := types.ObjectValue(filtersConfigAttrTypes, obj)
+// 		diags.Append(d...)
 
-		elems = append(elems, objVal)
-	}
-	setVal, d := types.SetValue(elemType, elems)
-	diags.Append(d...)
+// 		elems = append(elems, objVal)
+// 	}
+// 	setVal, d := types.SetValue(elemType, elems)
+// 	diags.Append(d...)
 
-	return setVal, diags
-}
+// 	return setVal, diags
+// }
 
 func expandContentPolicyConfig(ctx context.Context, tfList []contentPolicyConfig) (*awstypes.GuardrailContentPolicyConfig, diag.Diagnostics) {
 	var diags diag.Diagnostics
@@ -1074,9 +1127,9 @@ func expandFiltersConfig(tfList []filtersConfig) []awstypes.GuardrailContentFilt
 	var filtersConfig []awstypes.GuardrailContentFilterConfig
 	for _, item := range tfList {
 		new := awstypes.GuardrailContentFilterConfig{
-			InputStrength: awstypes.GuardrailFilterStrength(item.InputStrength.ValueString()),
+			InputStrength:  awstypes.GuardrailFilterStrength(item.InputStrength.ValueString()),
 			OutputStrength: awstypes.GuardrailFilterStrength(item.OutputStrength.ValueString()),
-			Type: awstypes.GuardrailContentFilterType(item.Type.ValueString()),
+			Type:           awstypes.GuardrailContentFilterType(item.Type.ValueString()),
 		}
 		filtersConfig = append(filtersConfig, new)
 	}
@@ -1098,7 +1151,7 @@ func expandSensitiveInformationPolicyConfig(ctx context.Context, tfList []sensit
 
 	return &awstypes.GuardrailSensitiveInformationPolicyConfig{
 		PiiEntitiesConfig: expandPIIEntitiesConfig(piiEntitiesConfigData),
-		RegexesConfig: expandRegexesConfig(regexesConfigData),
+		RegexesConfig:     expandRegexesConfig(regexesConfigData),
 	}, diags
 }
 
@@ -1107,7 +1160,7 @@ func expandPIIEntitiesConfig(tfList []piiEntitiesConfig) []awstypes.GuardrailPii
 	for _, item := range tfList {
 		new := awstypes.GuardrailPiiEntityConfig{
 			Action: awstypes.GuardrailSensitiveInformationAction(item.Action.ValueString()),
-			Type: awstypes.GuardrailPiiEntityType(item.Type.ValueString()),
+			Type:   awstypes.GuardrailPiiEntityType(item.Type.ValueString()),
 		}
 		piiEntitiesConfig = append(piiEntitiesConfig, new)
 	}
@@ -1118,9 +1171,9 @@ func expandRegexesConfig(tfList []regexesConfig) []awstypes.GuardrailRegexConfig
 	var regexesConfig []awstypes.GuardrailRegexConfig
 	for _, item := range tfList {
 		new := awstypes.GuardrailRegexConfig{
-			Action: awstypes.GuardrailSensitiveInformationAction(item.Action.ValueString()),
-			Name: aws.String(item.Name.ValueString()),
-			Pattern: aws.String(item.Pattern.ValueString()),
+			Action:      awstypes.GuardrailSensitiveInformationAction(item.Action.ValueString()),
+			Name:        aws.String(item.Name.ValueString()),
+			Pattern:     aws.String(item.Pattern.ValueString()),
 			Description: aws.String(item.Description.ValueString()),
 		}
 		regexesConfig = append(regexesConfig, new)
@@ -1144,15 +1197,15 @@ func expandTopicPolicyConfig(ctx context.Context, tfList []topicPolicyConfig) (*
 	}, diags
 }
 
-
 func expandTopicsConfig(tfList []topicsConfig) []awstypes.GuardrailTopicConfig { // nosemgrep:ci.aws-in-func-name
 	var topicsConfig []awstypes.GuardrailTopicConfig
 	for _, item := range tfList {
 		new := awstypes.GuardrailTopicConfig{
 			Definition: aws.String(item.Definition.ValueString()),
-			Type: awstypes.GuardrailTopicType(item.Type.ValueString()),
-			Name: aws.String(item.Name.ValueString()),
-			Examples: item.Examples,
+			Type:       awstypes.GuardrailTopicType(item.Type.ValueString()),
+			Name:       aws.String(item.Name.ValueString()),
+			//TODO SASI CHECK THIS BEFORE MERGE
+			// Examples:   item.Examples,
 		}
 		topicsConfig = append(topicsConfig, new)
 	}
@@ -1174,7 +1227,7 @@ func expandWordPolicyConfig(ctx context.Context, tfList []wordPolicyConfig) (*aw
 
 	return &awstypes.GuardrailWordPolicyConfig{
 		ManagedWordListsConfig: expandManagedWordListsConfig(managedWordListsConfigData),
-		WordsConfig: expandsWordsConfig(wordsConfigData),
+		WordsConfig:            expandsWordsConfig(wordsConfigData),
 	}, diags
 }
 
@@ -1201,23 +1254,23 @@ func expandsWordsConfig(tfList []wordsConfig) []awstypes.GuardrailWordConfig { /
 }
 
 type resourceGuardrailData struct {
-	ARN             types.String   `tfsdk:"arn"`
-	BlockedInputMessaging types.String   `tfsdk:"blocked_input_messaging"`
-	BlockedOutputsMessaging types.String   `tfsdk:"blocked_outputs_messaging"`
-	ContentPolicyConfig         fwtypes.ListNestedObjectValueOf[contentPolicyConfig] `tfsdk:"content_policy_config"`
-	CreatedAt	types.String   `tfsdk:"created_at"`
-	Description     types.String   `tfsdk:"description"`
-	ID              types.String   `tfsdk:"id"`
-	KMSKeyArn 	types.String   `tfsdk:"kms_key_arn"`
-	Name            types.String   `tfsdk:"name"`
-	SensitiveInformationPolicyConfig         fwtypes.ListNestedObjectValueOf[sensitiveInformationPolicyConfig] `tfsdk:"sensitive_information_policy_config"`
-	Status	types.String   `tfsdk:"status"`
-	Tags                types.Map                                                `tfsdk:"tags"`
-	Timeouts        timeouts.Value `tfsdk:"timeouts"`
-	TopicPolicyConfig	fwtypes.ListNestedObjectValueOf[topicPolicyConfig] `tfsdk:"topic_policy_config"`
-	UpdatedAt 	types.String   `tfsdk:"updated_at"`
-	Version     types.String   `tfsdk:"version"`
-	WordPolicyConfig	fwtypes.ListNestedObjectValueOf[wordPolicyConfig] `tfsdk:"word_policy_config"`
+	ARN                              types.String                                                      `tfsdk:"arn"`
+	BlockedInputMessaging            types.String                                                      `tfsdk:"blocked_input_messaging"`
+	BlockedOutputsMessaging          types.String                                                      `tfsdk:"blocked_outputs_messaging"`
+	ContentPolicyConfig              fwtypes.ListNestedObjectValueOf[contentPolicyConfig]              `tfsdk:"content_policy_config"`
+	CreatedAt                        types.String                                                      `tfsdk:"created_at"`
+	Description                      types.String                                                      `tfsdk:"description"`
+	ID                               types.String                                                      `tfsdk:"id"`
+	KMSKeyArn                        types.String                                                      `tfsdk:"kms_key_arn"`
+	Name                             types.String                                                      `tfsdk:"name"`
+	SensitiveInformationPolicyConfig fwtypes.ListNestedObjectValueOf[sensitiveInformationPolicyConfig] `tfsdk:"sensitive_information_policy_config"`
+	Status                           types.String                                                      `tfsdk:"status"`
+	Tags                             types.Map                                                         `tfsdk:"tags"`
+	Timeouts                         timeouts.Value                                                    `tfsdk:"timeouts"`
+	TopicPolicyConfig                fwtypes.ListNestedObjectValueOf[topicPolicyConfig]                `tfsdk:"topic_policy_config"`
+	UpdatedAt                        types.String                                                      `tfsdk:"updated_at"`
+	Version                          types.String                                                      `tfsdk:"version"`
+	WordPolicyConfig                 fwtypes.ListNestedObjectValueOf[wordPolicyConfig]                 `tfsdk:"word_policy_config"`
 }
 
 type contentPolicyConfig struct {
@@ -1225,26 +1278,26 @@ type contentPolicyConfig struct {
 }
 
 type filtersConfig struct {
-	InputStrength types.String `tfsdk:"input_strength"`
+	InputStrength  types.String `tfsdk:"input_strength"`
 	OutputStrength types.String `tfsdk:"output_strength"`
-	Type		 types.String `tfsdk:"type"`
+	Type           types.String `tfsdk:"type"`
 }
 
 type sensitiveInformationPolicyConfig struct {
 	PIIEntitiesConfig fwtypes.ListNestedObjectValueOf[piiEntitiesConfig] `tfsdk:"pii_entities_config"`
-	RegexesConfig fwtypes.ListNestedObjectValueOf[regexesConfig] `tfsdk:"regexes_config"`
+	RegexesConfig     fwtypes.ListNestedObjectValueOf[regexesConfig]     `tfsdk:"regexes_config"`
 }
 
 type piiEntitiesConfig struct {
 	Action types.String `tfsdk:"action"`
-	Type		 types.String `tfsdk:"type"`
+	Type   types.String `tfsdk:"type"`
 }
 
 type regexesConfig struct {
-	Action types.String `tfsdk:"action"`
+	Action      types.String `tfsdk:"action"`
 	Description types.String `tfsdk:"description"`
-	Name types.String `tfsdk:"name"`
-	Pattern types.String `tfsdk:"pattern"`
+	Name        types.String `tfsdk:"name"`
+	Pattern     types.String `tfsdk:"pattern"`
 }
 
 type topicPolicyConfig struct {
@@ -1252,23 +1305,23 @@ type topicPolicyConfig struct {
 }
 
 type topicsConfig struct {
-	Definition types.String `tfsdk:"definition"`
-	Examples fwtypes.ListValueOf[types.String] `tfsdk:"examples"`
-	Name types.String `tfsdk:"name"`
-	Type		 types.String `tfsdk:"type"`
+	Definition types.String                      `tfsdk:"definition"`
+	Examples   fwtypes.ListValueOf[types.String] `tfsdk:"examples"`
+	Name       types.String                      `tfsdk:"name"`
+	Type       types.String                      `tfsdk:"type"`
 }
 
 type wordPolicyConfig struct {
 	ManagedWordListsConfig fwtypes.ListNestedObjectValueOf[managedWordListsConfig] `tfsdk:"managed_word_lists_config"`
-	WordsConfig fwtypes.ListNestedObjectValueOf[wordsConfig] `tfsdk:"words_config"`
+	WordsConfig            fwtypes.ListNestedObjectValueOf[wordsConfig]            `tfsdk:"words_config"`
 }
 
 type managedWordListsConfig struct {
-	Type		 types.String `tfsdk:"type"`
+	Type types.String `tfsdk:"type"`
 }
 
 type wordsConfig struct {
-	Text		 types.String `tfsdk:"text"`
+	Text types.String `tfsdk:"text"`
 }
 
 type complexArgumentData struct {
