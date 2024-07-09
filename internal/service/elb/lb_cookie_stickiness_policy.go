@@ -17,12 +17,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lb_cookie_stickiness_policy")
-func ResourceCookieStickinessPolicy() *schema.Resource {
+// @SDKResource("aws_lb_cookie_stickiness_policy", name="LB Cookie Stickiness Policy")
+func resourceCookieStickinessPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCookieStickinessPolicyCreate,
 		ReadWithoutTimeout:   resourceCookieStickinessPolicyRead,
@@ -61,7 +62,7 @@ func resourceCookieStickinessPolicyCreate(ctx context.Context, d *schema.Resourc
 	lbName := d.Get("load_balancer").(string)
 	lbPort := d.Get("lb_port").(int)
 	policyName := d.Get(names.AttrName).(string)
-	id := LBCookieStickinessPolicyCreateResourceID(lbName, lbPort, policyName)
+	id := lbCookieStickinessPolicyCreateResourceID(lbName, lbPort, policyName)
 	{
 		input := &elasticloadbalancing.CreateLBCookieStickinessPolicyInput{
 			LoadBalancerName: aws.String(lbName),
@@ -102,10 +103,9 @@ func resourceCookieStickinessPolicyRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
-	lbName, lbPort, policyName, err := LBCookieStickinessPolicyParseResourceID(d.Id())
-
+	lbName, lbPort, policyName, err := lbCookieStickinessPolicyParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	policy, err := findLoadBalancerListenerPolicyByThreePartKey(ctx, conn, lbName, lbPort, policyName)
@@ -123,11 +123,8 @@ func resourceCookieStickinessPolicyRead(ctx context.Context, d *schema.ResourceD
 	if len(policy.PolicyAttributeDescriptions) != 1 || aws.ToString(policy.PolicyAttributeDescriptions[0].AttributeName) != "CookieExpirationPeriod" {
 		return sdkdiag.AppendErrorf(diags, "cookie expiration period not found")
 	}
-	if v, err := strconv.Atoi(aws.ToString(policy.PolicyAttributeDescriptions[0].AttributeValue)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing cookie expiration period: %s", err)
-	} else {
-		d.Set("cookie_expiration_period", v)
-	}
+
+	d.Set("cookie_expiration_period", flex.StringToIntValue(policy.PolicyAttributeDescriptions[0].AttributeValue))
 	d.Set("lb_port", lbPort)
 	d.Set("load_balancer", lbName)
 	d.Set(names.AttrName, policyName)
@@ -139,10 +136,9 @@ func resourceCookieStickinessPolicyDelete(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
-	lbName, lbPort, policyName, err := LBCookieStickinessPolicyParseResourceID(d.Id())
-
+	lbName, lbPort, policyName, err := lbCookieStickinessPolicyParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// Perversely, if we Set an empty list of PolicyNames, we detach the
@@ -175,14 +171,14 @@ func resourceCookieStickinessPolicyDelete(ctx context.Context, d *schema.Resourc
 
 const lbCookieStickinessPolicyResourceIDSeparator = ":"
 
-func LBCookieStickinessPolicyCreateResourceID(lbName string, lbPort int, policyName string) string {
+func lbCookieStickinessPolicyCreateResourceID(lbName string, lbPort int, policyName string) string {
 	parts := []string{lbName, strconv.Itoa(lbPort), policyName}
 	id := strings.Join(parts, lbCookieStickinessPolicyResourceIDSeparator)
 
 	return id
 }
 
-func LBCookieStickinessPolicyParseResourceID(id string) (string, int, string, error) {
+func lbCookieStickinessPolicyParseResourceID(id string) (string, int, string, error) {
 	parts := strings.Split(id, lbCookieStickinessPolicyResourceIDSeparator)
 
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {

@@ -61,8 +61,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Attachment",
 		},
 		{
-			Factory:  ResourceCookieStickinessPolicy,
+			Factory:  resourceCookieStickinessPolicy,
 			TypeName: "aws_lb_cookie_stickiness_policy",
+			Name:     "LB Cookie Stickiness Policy",
 		},
 		{
 			Factory:  ResourceSSLNegotiationPolicy,

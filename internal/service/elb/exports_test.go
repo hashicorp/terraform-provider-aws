@@ -8,6 +8,7 @@ var (
 	ResourceAppCookieStickinessPolicy = resourceAppCookieStickinessPolicy
 	ResourceAttachment                = resourceAttachment
 	ResourceBackendServerPolicy       = resourceBackendServerPolicy
+	ResourceCookieStickinessPolicy    = resourceCookieStickinessPolicy
 
 	AppCookieStickinessPolicyParseResourceID        = appCookieStickinessPolicyParseResourceID
 	BackendServerPolicyParseResourceID              = backendServerPolicyParseResourceID
@@ -17,4 +18,5 @@ var (
 	FindLoadBalancerListenerPolicyByThreePartKey    = findLoadBalancerListenerPolicyByThreePartKey
 	FindLoadBalancerPolicyByTwoPartKey              = findLoadBalancerPolicyByTwoPartKey
 	HostedZoneIDPerRegionMap                        = hostedZoneIDPerRegionMap
+	LBCookieStickinessPolicyParseResourceID         = lbCookieStickinessPolicyParseResourceID
 )
