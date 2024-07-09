@@ -102,17 +102,25 @@ func autoFlexValues(_ context.Context, from, to any) (reflect.Value, reflect.Val
 	if kind := valFrom.Kind(); kind == reflect.Ptr {
 		valFrom = valFrom.Elem()
 	}
-	if kind := valTo.Kind(); kind != reflect.Ptr {
+
+	kind := valTo.Kind()
+	switch kind {
+	case reflect.Ptr:
+		if valTo.IsNil() {
+			diags.AddError("AutoFlEx", "Target cannot be nil")
+			return reflect.Value{}, reflect.Value{}, diags
+		}
+		valTo = valTo.Elem()
+		return valFrom, valTo, diags
+
+	case reflect.Invalid:
+		diags.AddError("AutoFlEx", "Target cannot be nil")
+		return reflect.Value{}, reflect.Value{}, diags
+
+	default:
 		diags.AddError("AutoFlEx", fmt.Sprintf("target (%T): %s, want pointer", to, kind))
 		return reflect.Value{}, reflect.Value{}, diags
 	}
-	if valTo.IsNil() {
-		diags.AddError("AutoFlEx", "Target cannot be nil")
-		return reflect.Value{}, reflect.Value{}, diags
-	}
-	valTo = valTo.Elem()
-
-	return valFrom, valTo, diags
 }
 
 var (
