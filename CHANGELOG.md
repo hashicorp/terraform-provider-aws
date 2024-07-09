@@ -9,6 +9,7 @@ ENHANCEMENTS:
 * data-source/aws_oam_link: Add `link_configuration` attribute ([#38277](https://github.com/hashicorp/terraform-provider-aws/issues/38277))
 * resource/aws_cloudformation_stack_set_instance: Extend `deployment_targets` argument. ([#37898](https://github.com/hashicorp/terraform-provider-aws/issues/37898))
 * resource/aws_cloudtrail_event_data_store: Add `billing_mode` argument ([#38273](https://github.com/hashicorp/terraform-provider-aws/issues/38273))
+* resource/aws_db_instance: Fix `InvalidParameterCombination: A parameter group can't be specified during Read Replica creation for the following DB engine: postgres` errors ([#38227](https://github.com/hashicorp/terraform-provider-aws/issues/38227))
 * resource/aws_ec2_capacity_reservation: Add configurable timeouts ([#36754](https://github.com/hashicorp/terraform-provider-aws/issues/36754))
 * resource/aws_ec2_capacity_reservation: Retry `InsufficientInstanceCapacity` errors ([#36754](https://github.com/hashicorp/terraform-provider-aws/issues/36754))
 * resource/aws_eks_cluster: Add `bootstrap_self_managed_addons` argument ([#38162](https://github.com/hashicorp/terraform-provider-aws/issues/38162))
