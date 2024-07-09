@@ -34,11 +34,6 @@ func Expand(ctx context.Context, tfObject, apiObject any, optFns ...AutoFlexOpti
 	var diags diag.Diagnostics
 	expander := newAutoExpander(optFns)
 
-	if tfObject == nil {
-		diags.AddError("AutoFlEx", "Cannot expand nil source")
-		return diags
-	}
-
 	diags.Append(autoFlexConvert(ctx, tfObject, apiObject, expander)...)
 	if diags.HasError() {
 		diags.AddError("AutoFlEx", fmt.Sprintf("Expand[%T, %T]", tfObject, apiObject))
@@ -75,6 +70,11 @@ func (expander autoExpander) getOptions() AutoFlexOptions {
 // convert converts a single Plugin Framework value to its AWS API equivalent.
 func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	if valFrom.Kind() == reflect.Invalid {
+		diags.AddError("AutoFlEx", "Cannot expand nil source")
+		return diags
+	}
 
 	if fromExpander, ok := valFrom.Interface().(Expander); ok {
 		diags.Append(expandExpander(ctx, fromExpander, vTo)...)

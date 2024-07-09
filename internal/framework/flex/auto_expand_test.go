@@ -28,6 +28,10 @@ func TestExpand(t *testing.T) {
 	testString := "test"
 	testStringResult := "a"
 
+	var (
+		typedNilSource *TestFlex00
+	)
+
 	testARN := "arn:aws:securityhub:us-west-2:1234567890:control/cis-aws-foundations-benchmark/v/1.2.0/1.1" //lintignore:AWSAT003,AWSAT005
 
 	testTimeStr := "2013-09-25T09:34:01Z"
@@ -39,6 +43,16 @@ func TestExpand(t *testing.T) {
 			Target:   &TestFlex00{},
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "Cannot expand nil source"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Expand[<nil>, *flex.TestFlex00]"),
+			},
+		},
+		{
+			TestName: "typed nil Source",
+			Source:   typedNilSource,
+			Target:   &TestFlex00{},
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "Cannot expand nil source"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Expand[*flex.TestFlex00, *flex.TestFlex00]"),
 			},
 		},
 		{
