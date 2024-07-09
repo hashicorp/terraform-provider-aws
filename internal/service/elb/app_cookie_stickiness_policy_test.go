@@ -111,7 +111,6 @@ func testAccCheckAppCookieStickinessPolicyDestroy(ctx context.Context) resource.
 			}
 
 			lbName, lbPort, policyName, err := tfelb.AppCookieStickinessPolicyParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -140,12 +139,7 @@ func testAccCheckAppCookieStickinessPolicyExists(ctx context.Context, n string) 
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ELB Classic App Cookie Stickiness Policy ID is set")
-		}
-
 		lbName, lbPort, policyName, err := tfelb.AppCookieStickinessPolicyParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

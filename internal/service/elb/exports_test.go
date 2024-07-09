@@ -6,8 +6,10 @@ package elb
 // Exports for use in tests only.
 var (
 	ResourceAppCookieStickinessPolicy = resourceAppCookieStickinessPolicy
+	ResourceAttachment                = resourceAttachment
 
 	AppCookieStickinessPolicyParseResourceID     = appCookieStickinessPolicyParseResourceID
+	FindLoadBalancerAttachmentByTwoPartKey       = findLoadBalancerAttachmentByTwoPartKey
 	FindLoadBalancerByName                       = findLoadBalancerByName
 	FindLoadBalancerListenerPolicyByThreePartKey = findLoadBalancerListenerPolicyByThreePartKey
 	FindLoadBalancerPolicyByTwoPartKey           = findLoadBalancerPolicyByTwoPartKey

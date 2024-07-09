@@ -55,8 +55,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceAttachment,
+			Factory:  resourceAttachment,
 			TypeName: "aws_elb_attachment",
+			Name:     "Attachment",
 		},
 		{
 			Factory:  ResourceCookieStickinessPolicy,
