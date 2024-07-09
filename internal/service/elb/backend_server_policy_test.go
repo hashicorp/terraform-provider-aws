@@ -123,7 +123,6 @@ func testAccCheckBackendServerPolicyDestroy(ctx context.Context) resource.TestCh
 			}
 
 			lbName, instancePort, err := tfelb.BackendServerPolicyParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -152,12 +151,7 @@ func testAccCheckBackendServerPolicyExists(ctx context.Context, n string) resour
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ELB Classic Backend Server Policy ID is set")
-		}
-
 		lbName, instancePort, err := tfelb.BackendServerPolicyParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

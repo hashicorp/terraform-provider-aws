@@ -68,8 +68,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_lb_ssl_negotiation_policy",
 		},
 		{
-			Factory:  ResourceBackendServerPolicy,
+			Factory:  resourceBackendServerPolicy,
 			TypeName: "aws_load_balancer_backend_server_policy",
+			Name:     "Backend Server Policy",
 		},
 		{
 			Factory:  ResourceListenerPolicy,

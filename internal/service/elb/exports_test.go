@@ -7,10 +7,13 @@ package elb
 var (
 	ResourceAppCookieStickinessPolicy = resourceAppCookieStickinessPolicy
 	ResourceAttachment                = resourceAttachment
+	ResourceBackendServerPolicy       = resourceBackendServerPolicy
 
-	AppCookieStickinessPolicyParseResourceID     = appCookieStickinessPolicyParseResourceID
-	FindLoadBalancerAttachmentByTwoPartKey       = findLoadBalancerAttachmentByTwoPartKey
-	FindLoadBalancerByName                       = findLoadBalancerByName
-	FindLoadBalancerListenerPolicyByThreePartKey = findLoadBalancerListenerPolicyByThreePartKey
-	FindLoadBalancerPolicyByTwoPartKey           = findLoadBalancerPolicyByTwoPartKey
+	AppCookieStickinessPolicyParseResourceID        = appCookieStickinessPolicyParseResourceID
+	BackendServerPolicyParseResourceID              = backendServerPolicyParseResourceID
+	FindLoadBalancerAttachmentByTwoPartKey          = findLoadBalancerAttachmentByTwoPartKey
+	FindLoadBalancerBackendServerPolicyByTwoPartKey = findLoadBalancerBackendServerPolicyByTwoPartKey
+	FindLoadBalancerByName                          = findLoadBalancerByName
+	FindLoadBalancerListenerPolicyByThreePartKey    = findLoadBalancerListenerPolicyByThreePartKey
+	FindLoadBalancerPolicyByTwoPartKey              = findLoadBalancerPolicyByTwoPartKey
 )
