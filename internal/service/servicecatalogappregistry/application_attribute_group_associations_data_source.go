@@ -5,24 +5,24 @@ package servicecatalogappregistry
 
 import (
 	"context"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @FrameworkDataSource(name="Application Attribute Group Associations")
+// @FrameworkDataSource("aws_servicecatalogappregistry_application_attribute_group_associations", name="Application Attribute Group Associations")
 func newDataSourceApplicationAttributeGroupAssociations(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceApplicationAttributeGroupAssociations{}, nil
 }
@@ -42,30 +42,12 @@ func (d *dataSourceApplicationAttributeGroupAssociations) Metadata(_ context.Con
 func (d *dataSourceApplicationAttributeGroupAssociations) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
-				Computed: true,
-			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			"id": schema.StringAttribute{
 				Required: true,
 			},
-			"type": schema.StringAttribute{
-				Computed: true,
-			},
-		},
-		Blocks: map[string]schema.Block{
-			"complex_argument": schema.ListNestedBlock{
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"nested_required": schema.StringAttribute{
-							Computed: true,
-						},
-						"nested_computed": schema.StringAttribute{
-							Computed: true,
-						},
-					},
-				},
+			"attribute_group_ids": schema.SetAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
 			},
 		},
 	}
@@ -79,16 +61,16 @@ func (d *dataSourceApplicationAttributeGroupAssociations) Read(ctx context.Conte
 		return
 	}
 
-	out, err := findApplicationAttributeGroupAssociationsByName(ctx, conn, data.Name.ValueString())
+	out, err := findApplicationAttributeGroupAssociationsByID(ctx, conn, data.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionReading, DSNameApplicationAttributeGroupAssociations, data.Name.String(), err),
+			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionReading, DSNameApplicationAttributeGroupAssociations, data.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	data.ID = flex.StringToFramework(ctx, out.ApplicationAttributeGroupAssociationsId)
+	data.AttributeGroups = flex.FlattenFrameworkStringValueSet(ctx, out.AttributeGroups)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -119,5 +101,5 @@ func findApplicationAttributeGroupAssociationsByID(ctx context.Context, conn *se
 
 type dataSourceApplicationAttributeGroupAssociationsData struct {
 	ID              types.String `tfsdk:"id"`
-	AttributeGroups types.List   `tfsdl:"attribute_group_ids"`
+	AttributeGroups types.Set    `tfsdk:"attribute_group_ids"`
 }
