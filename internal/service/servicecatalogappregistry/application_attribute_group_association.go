@@ -166,7 +166,6 @@ func (r *resourceApplicationAttributeGroupAssociation) Delete(ctx context.Contex
 		)
 		return
 	}
-
 }
 
 func (r *resourceApplicationAttributeGroupAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -220,5 +219,4 @@ func (data *resourceApplicationAttributeGroupAssociationData) parseId() error {
 	data.AttributeGroup = types.StringValue(parts[1])
 
 	return nil
-
 }

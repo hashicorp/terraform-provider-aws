@@ -6,7 +6,6 @@ package servicecatalogappregistry_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -173,10 +172,10 @@ func testAccApplicationAttributeGroupAssociationConfig_basic(rName, description 
 	return acctest.ConfigCompose(
 		testAccAttributeGroupConfig_basic(rName, description),
 		testAccApplicationConfig_description(rName, description),
-		fmt.Sprintf(`
+		`
 resource "aws_servicecatalogappregistry_application_attribute_group_association" "test" {
   application_id     = aws_servicecatalogappregistry_application.test.id
   attribute_group_id = aws_servicecatalogappregistry_attribute_group.test.id
 }
-`))
+`)
 }
