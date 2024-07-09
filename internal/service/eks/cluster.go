@@ -1068,6 +1068,9 @@ func flattenAccessConfigResponse(apiObject *types.AccessConfigResponse, bootstra
 
 	if bootstrapClusterCreatorAdminPermissions != nil {
 		tfMap["bootstrap_cluster_creator_admin_permissions"] = aws.ToBool(bootstrapClusterCreatorAdminPermissions)
+	} else {
+		// Setting default value to true for backward compatibility
+		tfMap["bootstrap_cluster_creator_admin_permissions"] = true
 	}
 
 	return []interface{}{tfMap}
