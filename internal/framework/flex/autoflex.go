@@ -107,7 +107,7 @@ func autoFlexValues(_ context.Context, from, to any) (reflect.Value, reflect.Val
 		return reflect.Value{}, reflect.Value{}, diags
 	}
 	if valTo.IsNil() {
-		diags.AddError("AutoFlEx", "Cannot expand into nil target")
+		diags.AddError("AutoFlEx", "Target cannot be nil")
 		return reflect.Value{}, reflect.Value{}, diags
 	}
 	valTo = valTo.Elem()

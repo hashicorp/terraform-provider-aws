@@ -69,7 +69,7 @@ func TestExpand(t *testing.T) {
 			Source:   TestFlex00{},
 			Target:   typedNilTarget,
 			expectedDiags: diag.Diagnostics{
-				diag.NewErrorDiagnostic("AutoFlEx", "Cannot expand into nil target"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Target cannot be nil"),
 				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.TestFlex00, *flex.TestFlex00]"),
 			},
 		},

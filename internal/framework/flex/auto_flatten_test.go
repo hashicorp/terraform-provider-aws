@@ -32,6 +32,7 @@ func TestFlatten(t *testing.T) {
 
 	var (
 		typedNilSource *TestFlex00
+		typedNilTarget *TestFlex00
 	)
 
 	testString := "test"
@@ -66,6 +67,15 @@ func TestFlatten(t *testing.T) {
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "target (<nil>): invalid, want pointer"),
 				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[flex.TestFlex00, <nil>]"),
+			},
+		},
+		{
+			TestName: "typed nil Target",
+			Source:   TestFlex00{},
+			Target:   typedNilTarget,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "Target cannot be nil"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[flex.TestFlex00, *flex.TestFlex00]"),
 			},
 		},
 		{
