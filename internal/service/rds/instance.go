@@ -878,6 +878,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		output := outputRaw.(*rds.CreateDBInstanceReadReplicaOutput)
 
 		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 
 		if v, ok := d.GetOk(names.AttrAllowMajorVersionUpgrade); ok {
 			// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
@@ -1106,10 +1107,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore from S3) (%s): %s", identifier, err)
 		}
 
-		if outputRaw != nil {
-			output := outputRaw.(*rds.RestoreDBInstanceFromS3Output)
-			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
-		}
+		output := outputRaw.(*rds.RestoreDBInstanceFromS3Output)
+
+		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 	} else if v, ok := d.GetOk("snapshot_identifier"); ok {
 		input := &rds.RestoreDBInstanceFromDBSnapshotInput{
 			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
@@ -1339,6 +1340,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			},
 		)
 
+		var output *rds.RestoreDBInstanceFromDBSnapshotOutput
+
+		if err == nil {
+			output = outputRaw.(*rds.RestoreDBInstanceFromDBSnapshotOutput)
+		}
+
 		// When using SQL Server engine with MultiAZ enabled, its not
 		// possible to immediately enable mirroring since
 		// BackupRetentionPeriod is not available as a parameter to
@@ -1351,17 +1358,15 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.MultiAZ = aws.Bool(false)
 			modifyDbInstanceInput.MultiAZ = aws.Bool(true)
 			requiresModifyDbInstance = true
-			_, err = conn.RestoreDBInstanceFromDBSnapshotWithContext(ctx, input)
+			output, err = conn.RestoreDBInstanceFromDBSnapshotWithContext(ctx, input)
 		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore from snapshot) (%s): %s", identifier, err)
 		}
 
-		if outputRaw != nil {
-			output := outputRaw.(*rds.RestoreDBInstanceFromDBSnapshotOutput)
-			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
-		}
+		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &rds.RestoreDBInstanceToPointInTimeInput{
@@ -1541,14 +1546,15 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				return false, err
 			},
 		)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore to point-in-time) (%s): %s", identifier, err)
 		}
 
-		if outputRaw != nil {
-			output := outputRaw.(*rds.RestoreDBInstanceToPointInTimeOutput)
-			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
-		}
+		output := outputRaw.(*rds.RestoreDBInstanceToPointInTimeOutput)
+
+		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 	} else {
 		if _, ok := d.GetOk(names.AttrAllocatedStorage); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"allocated_storage": required field is not set`)
@@ -1751,12 +1757,15 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				return false, err
 			},
 		)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (%s): %s", identifier, err)
 		}
 
 		output := outputRaw.(*rds.CreateDBInstanceOutput)
+
 		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 
 		// This is added here to avoid unnecessary modification when ca_cert_identifier is the default one
 		if v, ok := d.GetOk("ca_cert_identifier"); ok && v.(string) != aws.StringValue(output.DBInstance.CACertificateIdentifier) {
@@ -1775,7 +1784,9 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		resourceID = aws.StringValue(instance.DbiResourceId)
 	}
 
-	d.SetId(resourceID)
+	if d.Id() == "" {
+		d.SetId(resourceID)
+	}
 
 	if requiresModifyDbInstance {
 		modifyDbInstanceInput.DBInstanceIdentifier = aws.String(identifier)
