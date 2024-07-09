@@ -265,7 +265,6 @@ func ServicePrincipalNameForPartition(service string, partition string) string {
 			case "cloudhsm",
 				"config",
 				"logs",
-				"states",
 				"workspaces":
 				return DNSSuffixForPartition(partition)
 			}
