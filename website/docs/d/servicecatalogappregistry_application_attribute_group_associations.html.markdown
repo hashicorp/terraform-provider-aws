@@ -16,6 +16,7 @@ Terraform data source for managing an AWS Service Catalog AppRegistry Applicatio
 
 ```terraform
 data "aws_servicecatalogappregistry_application_attribute_group_associations" "example" {
+  id = "12456778723424sdffsdfsdq34,12234t3564dsfsdf34asff4ww3"
 }
 ```
 
@@ -23,15 +24,12 @@ data "aws_servicecatalogappregistry_application_attribute_group_associations" "e
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `id` - (Required) The Id of the Application to read Associations for.
 
 The following arguments are optional:
-
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Application Attribute Group Associations. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `attribute_group_ids` - Set of Ids ot the Attribute Groups this Application is associated with.
