@@ -46,11 +46,7 @@ func flattenBackendServerDescriptionPolicies(apiObjects []awstypes.BackendServer
 
 	for _, apiObject := range apiObjects {
 		k := aws.ToInt32(apiObject.InstancePort)
-
-		for _, v := range apiObject.PolicyNames {
-			tfMap[k] = append(tfMap[k], v)
-		}
-
+		tfMap[k] = append(tfMap[k], apiObject.PolicyNames...)
 		sort.Strings(tfMap[k])
 	}
 
