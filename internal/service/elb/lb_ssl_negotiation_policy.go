@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lb_ssl_negotiation_policy")
-func ResourceSSLNegotiationPolicy() *schema.Resource {
+// @SDKResource("aws_lb_ssl_negotiation_policy", name="SSL Negotiation Policy")
+func resourceSSLNegotiationPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSSLNegotiationPolicyCreate,
 		ReadWithoutTimeout:   resourceSSLNegotiationPolicyRead,
@@ -77,7 +77,7 @@ func resourceSSLNegotiationPolicyCreate(ctx context.Context, d *schema.ResourceD
 	lbName := d.Get("load_balancer").(string)
 	lbPort := d.Get("lb_port").(int)
 	policyName := d.Get(names.AttrName).(string)
-	id := SSLNegotiationPolicyCreateResourceID(lbName, lbPort, policyName)
+	id := sslNegotiationPolicyCreateResourceID(lbName, lbPort, policyName)
 
 	{
 		input := &elasticloadbalancing.CreateLoadBalancerPolicyInput{
@@ -120,10 +120,9 @@ func resourceSSLNegotiationPolicyRead(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
-	lbName, lbPort, policyName, err := SSLNegotiationPolicyParseResourceID(d.Id())
-
+	lbName, lbPort, policyName, err := sslNegotiationPolicyParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = findLoadBalancerListenerPolicyByThreePartKey(ctx, conn, lbName, lbPort, policyName)
@@ -164,10 +163,9 @@ func resourceSSLNegotiationPolicyDelete(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
-	lbName, lbPort, policyName, err := SSLNegotiationPolicyParseResourceID(d.Id())
-
+	lbName, lbPort, policyName, err := sslNegotiationPolicyParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// Perversely, if we Set an empty list of PolicyNames, we detach the
@@ -199,14 +197,14 @@ func resourceSSLNegotiationPolicyDelete(ctx context.Context, d *schema.ResourceD
 
 const sslNegotiationPolicyResourceIDSeparator = ":"
 
-func SSLNegotiationPolicyCreateResourceID(lbName string, lbPort int, policyName string) string {
+func sslNegotiationPolicyCreateResourceID(lbName string, lbPort int, policyName string) string {
 	parts := []string{lbName, strconv.Itoa(lbPort), policyName}
 	id := strings.Join(parts, sslNegotiationPolicyResourceIDSeparator)
 
 	return id
 }
 
-func SSLNegotiationPolicyParseResourceID(id string) (string, int, string, error) {
+func sslNegotiationPolicyParseResourceID(id string) (string, int, string, error) {
 	parts := strings.Split(id, sslNegotiationPolicyResourceIDSeparator)
 
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {

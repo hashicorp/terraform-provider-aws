@@ -112,7 +112,6 @@ func testAccCheckLBSSLNegotiationPolicyDestroy(ctx context.Context) resource.Tes
 			}
 
 			lbName, lbPort, policyName, err := tfelb.SSLNegotiationPolicyParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -141,12 +140,7 @@ func testAccCheckLBSSLNegotiationPolicy(ctx context.Context, n string) resource.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ELB Classic SSL Negotiation Policy ID is set")
-		}
-
 		lbName, lbPort, policyName, err := tfelb.SSLNegotiationPolicyParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

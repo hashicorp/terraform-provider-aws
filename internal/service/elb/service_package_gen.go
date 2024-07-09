@@ -66,8 +66,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "LB Cookie Stickiness Policy",
 		},
 		{
-			Factory:  ResourceSSLNegotiationPolicy,
+			Factory:  resourceSSLNegotiationPolicy,
 			TypeName: "aws_lb_ssl_negotiation_policy",
+			Name:     "SSL Negotiation Policy",
 		},
 		{
 			Factory:  resourceBackendServerPolicy,
