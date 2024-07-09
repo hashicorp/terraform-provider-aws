@@ -1833,9 +1833,10 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Id())
 	} else {
 		v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Id())
-		if tfresource.NotFound(err) {
+		if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
+			// Retry with `identifier`
 			v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Get(names.AttrIdentifier).(string))
-			if tfresource.NotFound(err) {
+			if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 				log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", d.Get(names.AttrIdentifier).(string))
 				d.SetId("")
 				return diags
