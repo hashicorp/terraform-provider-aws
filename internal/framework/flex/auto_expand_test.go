@@ -30,6 +30,7 @@ func TestExpand(t *testing.T) {
 
 	var (
 		typedNilSource *TestFlex00
+		typedNilTarget *TestFlex00
 	)
 
 	testARN := "arn:aws:securityhub:us-west-2:1234567890:control/cis-aws-foundations-benchmark/v/1.2.0/1.1" //lintignore:AWSAT003,AWSAT005
@@ -61,6 +62,15 @@ func TestExpand(t *testing.T) {
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "target (<nil>): invalid, want pointer"),
 				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.TestFlex00, <nil>]"),
+			},
+		},
+		{
+			TestName: "typed nil Target",
+			Source:   TestFlex00{},
+			Target:   typedNilTarget,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "Cannot expand into nil target"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.TestFlex00, *flex.TestFlex00]"),
 			},
 		},
 		{

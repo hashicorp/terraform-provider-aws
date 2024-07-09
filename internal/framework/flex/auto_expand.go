@@ -76,6 +76,11 @@ func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.V
 		return diags
 	}
 
+	if vTo.Kind() == reflect.Invalid {
+		diags.AddError("AutoFlEx", "Cannot expand into nil target")
+		return diags
+	}
+
 	if fromExpander, ok := valFrom.Interface().(Expander); ok {
 		diags.Append(expandExpander(ctx, fromExpander, vTo)...)
 		return diags

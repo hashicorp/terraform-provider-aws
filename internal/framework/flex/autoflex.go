@@ -106,6 +106,10 @@ func autoFlexValues(_ context.Context, from, to any) (reflect.Value, reflect.Val
 		diags.AddError("AutoFlEx", fmt.Sprintf("target (%T): %s, want pointer", to, kind))
 		return reflect.Value{}, reflect.Value{}, diags
 	}
+	if valTo.IsNil() {
+		diags.AddError("AutoFlEx", "Cannot expand into nil target")
+		return reflect.Value{}, reflect.Value{}, diags
+	}
 	valTo = valTo.Elem()
 
 	return valFrom, valTo, diags
