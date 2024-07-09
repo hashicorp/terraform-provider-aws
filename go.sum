@@ -22,8 +22,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.54.15 h1:ErgCEVbzuSfuZl9nR+g8FFnzjgeJ/AqAGOEWn6tgAHo=
-github.com/aws/aws-sdk-go v1.54.15/go.mod h1:eRwEWoyTWFMVYVQzKMNHWP5/RV4xIUGMQfXQHfHkpNU=
+github.com/aws/aws-sdk-go v1.54.16 h1:+B9zGaVwOUU6AO9Sy99VjTMDPthWx10HjB08hjaBHIc=
+github.com/aws/aws-sdk-go v1.54.16/go.mod h1:eRwEWoyTWFMVYVQzKMNHWP5/RV4xIUGMQfXQHfHkpNU=
 github.com/aws/aws-sdk-go-v2 v1.30.1 h1:4y/5Dvfrhd1MxRDD77SrfsDaj8kUkkljU7XE83NPV+o=
 github.com/aws/aws-sdk-go-v2 v1.30.1/go.mod h1:nIQjQVp5sfpQcTc9mPSr1B0PaWK5ByX9MOoDadSN4lc=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.3 h1:tW1/Rkad38LA15X4UQtjXZXNKsCgkshC3EbmcUmghTg=
@@ -148,8 +148,8 @@ github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.27.1 h1:U8XnTJY8BRWB
 github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.27.1/go.mod h1:HwL5LK+96aciqaQGy9R952m6A1wJVv+28WVAICwUcoU=
 github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.24.1 h1:Hlq6tNUpVg2QL8jpmyHqd9JQxclxi8LhHijpnKy+2j0=
 github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.24.1/go.mod h1:NFFY3krqG9XpxFUJX4cK7H7JQUd6ZJZtOxhwr3IvTbw=
-github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.25.2 h1:18ZIYgWnkWVZdmcmbdLEdyHToLR8khoYzcT94KM8AXk=
-github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.25.2/go.mod h1:9B6D4KgCOGxUy70whXp0TMIwc5v0J1doUwqL7d5hbQc=
+github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.25.3 h1:UHf0sE/ssy2FBmT0W20+OR5PH/w/jhPEaViacHDJwik=
+github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.25.3/go.mod h1:9B6D4KgCOGxUy70whXp0TMIwc5v0J1doUwqL7d5hbQc=
 github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.41.2 h1:xwPwJ//Dt+AxuHsabV52hBPgw3+4356w1o6wMAzXtes=
 github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.41.2/go.mod h1:wqqFjEnVtltlQXbpYgqfGcDkuml+2it3ikxbWmQ5ypA=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.33.1 h1:K/sfA9c5qjXi6LedevzfQABo11oqCPI1ScVrhTbR+q4=
@@ -178,8 +178,8 @@ github.com/aws/aws-sdk-go-v2/service/datazone v1.12.1 h1:wro8aemBaIJtyqM8jYMN72Z
 github.com/aws/aws-sdk-go-v2/service/datazone v1.12.1/go.mod h1:Lh7Pn/2GA5nwXg/pT5YufMDCH47B4m4/J9aXsOzYUlM=
 github.com/aws/aws-sdk-go-v2/service/dax v1.21.1 h1:lGIBbKVTTUveeE0ZtR7qiNf+WB/w+yS7mv2wrIxFrnc=
 github.com/aws/aws-sdk-go-v2/service/dax v1.21.1/go.mod h1:q1IQsaE9JEPkoF5pB54KJQj2nNNs5Epn/7IzbdGMMNI=
-github.com/aws/aws-sdk-go-v2/service/devicefarm v1.24.1 h1:P+hW3WvvZ22MNMpCeMCgdx+7Kg8MynYKYvfKWgH3K68=
-github.com/aws/aws-sdk-go-v2/service/devicefarm v1.24.1/go.mod h1:hYmcErsprdwy0wN6BFw7a6cnoWBH3TvVOhTvk4oq90k=
+github.com/aws/aws-sdk-go-v2/service/devicefarm v1.25.0 h1:24Zt55ZaUGMrN4XaFSFfT8xNPUFvUtjrWNpAhLnQmG8=
+github.com/aws/aws-sdk-go-v2/service/devicefarm v1.25.0/go.mod h1:hYmcErsprdwy0wN6BFw7a6cnoWBH3TvVOhTvk4oq90k=
 github.com/aws/aws-sdk-go-v2/service/devopsguru v1.32.1 h1:JN2w0v4Bt/sBcidrprwmymXZyfg3D/dwJ4azSgMnUfQ=
 github.com/aws/aws-sdk-go-v2/service/devopsguru v1.32.1/go.mod h1:twfqPLl38iWhkUTYnsKupGxzn1sSQEWtffrx6TrdVX4=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.27.1 h1:1bJ0BnWfZTcd2fcLlff4z+OcS2b0v4xDkRbigduFNFo=
@@ -208,8 +208,8 @@ github.com/aws/aws-sdk-go-v2/service/eks v1.46.0 h1:ZPhHHZtAjVohIGIVjXECPfljcPOQ
 github.com/aws/aws-sdk-go-v2/service/eks v1.46.0/go.mod h1:p4Yk0zfWEoLvvQ4V6XZrTmAAPzcevNnEsbUR82NAY0w=
 github.com/aws/aws-sdk-go-v2/service/elasticache v1.40.1 h1:yJMmaQ3jTpCrsXl0lxQUsvlMZA4/B8ia+99eSbIBjAA=
 github.com/aws/aws-sdk-go-v2/service/elasticache v1.40.1/go.mod h1:HfavnpYheVa3TXRxHNZYIM/BMI8hmSbtiSbYxqdri/4=
-github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.25.1 h1:T1lEDcxMSuHOIeY6CrmTCpRa1lOy9GMi03OZCa9H31g=
-github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.25.1/go.mod h1:H8YbT18eu4O03RiBqdDderRdpnHe2Pv439zdO5mmbfU=
+github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.26.0 h1:HKN6OvyM2N4mCME+1MgkBemV1Mle3VSuag4Q5+jaPM0=
+github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.26.0/go.mod h1:H8YbT18eu4O03RiBqdDderRdpnHe2Pv439zdO5mmbfU=
 github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.33.1 h1:XuwjSEGfLxo6UJtpJVy/E80GpE1gNclDBv5k1nTQcCs=
 github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.33.1/go.mod h1:74D8OQ00uEvvpuG5e4VX+/2v3MC2pltRtzNyXJnEjrI=
 github.com/aws/aws-sdk-go-v2/service/emr v1.42.0 h1:n3e3/X7ixZrQja0ot3l6M19nw8EarUo1yR0rH4e8aec=
