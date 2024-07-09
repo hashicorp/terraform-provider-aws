@@ -4,7 +4,6 @@
 package servicecatalogappregistry_test
 
 import (
-	"fmt"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -48,11 +47,11 @@ func TestAccServiceCatalogAppRegistryApplicationAttributeGroupAssociationsDataSo
 func testAccApplicationAttributeGroupAssociationsDataSourceConfig_basic(rName, description string) string {
 	return acctest.ConfigCompose(
 		testAccApplicationAttributeGroupAssociationConfig_basic(rName, description),
-		fmt.Sprintf(`
+		`
 data "aws_servicecatalogappregistry_application_attribute_group_associations" "test" {
   id = aws_servicecatalogappregistry_application.test.id
 
   depends_on = [aws_servicecatalogappregistry_application_attribute_group_association.test]
 }
-`))
+`)
 }
