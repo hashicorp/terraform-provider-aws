@@ -11,6 +11,7 @@ var (
 	ResourceCookieStickinessPolicy    = resourceCookieStickinessPolicy
 	ResourceListenerPolicy            = resourceListenerPolicy
 	ResourcePolicy                    = resourcePolicy
+	ResourceProxyProtocolPolicy       = resourceProxyProtocolPolicy
 	ResourceSSLNegotiationPolicy      = resourceSSLNegotiationPolicy
 
 	AccountIDPerRegionMap                           = accountIDPerRegionMap
@@ -26,5 +27,6 @@ var (
 	LBCookieStickinessPolicyParseResourceID         = lbCookieStickinessPolicyParseResourceID
 	ListenerPolicyParseResourceID                   = listenerPolicyParseResourceID
 	PolicyParseResourceID                           = policyParseResourceID
+	ProxyProtocolPolicyParseResourceID              = proxyProtocolPolicyParseResourceID
 	SSLNegotiationPolicyParseResourceID             = sslNegotiationPolicyParseResourceID
 )

@@ -41,7 +41,7 @@ func flattenAccessLog(apiObject *awstypes.AccessLog) []interface{} {
 	return tfList
 }
 
-func flattenBackendPolicies(apiObjects []awstypes.BackendServerDescription) map[int32][]string {
+func flattenBackendServerDescriptionPolicies(apiObjects []awstypes.BackendServerDescription) map[int32][]string {
 	tfMap := make(map[int32][]string)
 
 	for _, apiObject := range apiObjects {
