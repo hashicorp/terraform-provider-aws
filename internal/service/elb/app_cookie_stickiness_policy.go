@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_app_cookie_stickiness_policy")
-func ResourceAppCookieStickinessPolicy() *schema.Resource {
+// @SDKResource("aws_app_cookie_stickiness_policy", name="App Cookie Stickiness Policy")
+func resourceAppCookieStickinessPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAppCookieStickinessPolicyCreate,
 		ReadWithoutTimeout:   resourceAppCookieStickinessPolicyRead,
@@ -75,7 +75,7 @@ func resourceAppCookieStickinessPolicyCreate(ctx context.Context, d *schema.Reso
 	lbName := d.Get("load_balancer").(string)
 	lbPort := d.Get("lb_port").(int)
 	policyName := d.Get(names.AttrName).(string)
-	id := AppCookieStickinessPolicyCreateResourceID(lbName, lbPort, policyName)
+	id := appCookieStickinessPolicyCreateResourceID(lbName, lbPort, policyName)
 	{
 		input := &elasticloadbalancing.CreateAppCookieStickinessPolicyInput{
 			CookieName:       aws.String(d.Get("cookie_name").(string)),
@@ -83,10 +83,14 @@ func resourceAppCookieStickinessPolicyCreate(ctx context.Context, d *schema.Reso
 			PolicyName:       aws.String(policyName),
 		}
 
-		if _, err := conn.CreateAppCookieStickinessPolicy(ctx, input); err != nil {
+		_, err := conn.CreateAppCookieStickinessPolicy(ctx, input)
+
+		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating ELB Classic App Cookie Stickiness Policy (%s): %s", id, err)
 		}
 	}
+
+	d.SetId(id)
 
 	{
 		input := &elasticloadbalancing.SetLoadBalancerPoliciesOfListenerInput{
@@ -95,12 +99,12 @@ func resourceAppCookieStickinessPolicyCreate(ctx context.Context, d *schema.Reso
 			PolicyNames:      []string{policyName},
 		}
 
-		if _, err := conn.SetLoadBalancerPoliciesOfListener(ctx, input); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting ELB Classic App Cookie Stickiness Policy (%s): %s", id, err)
+		_, err := conn.SetLoadBalancerPoliciesOfListener(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting ELB Classic App Cookie Stickiness Policy (%s): %s", d.Id(), err)
 		}
 	}
-
-	d.SetId(id)
 
 	return append(diags, resourceAppCookieStickinessPolicyRead(ctx, d, meta)...)
 }
@@ -109,13 +113,12 @@ func resourceAppCookieStickinessPolicyRead(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
-	lbName, lbPort, policyName, err := AppCookieStickinessPolicyParseResourceID(d.Id())
-
+	lbName, lbPort, policyName, err := appCookieStickinessPolicyParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policy, err := FindLoadBalancerListenerPolicyByThreePartKey(ctx, conn, lbName, lbPort, policyName)
+	policy, err := findLoadBalancerListenerPolicyByThreePartKey(ctx, conn, lbName, lbPort, policyName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ELB Classic App Cookie Stickiness Policy (%s) not found, removing from state", d.Id())
@@ -130,6 +133,7 @@ func resourceAppCookieStickinessPolicyRead(ctx context.Context, d *schema.Resour
 	if len(policy.PolicyAttributeDescriptions) != 1 || aws.ToString(policy.PolicyAttributeDescriptions[0].AttributeName) != "CookieName" {
 		return sdkdiag.AppendErrorf(diags, "cookie not found")
 	}
+
 	cookieAttr := policy.PolicyAttributeDescriptions[0]
 	d.Set("cookie_name", cookieAttr.AttributeValue)
 	d.Set("lb_port", lbPort)
@@ -143,10 +147,9 @@ func resourceAppCookieStickinessPolicyDelete(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
-	lbName, lbPort, policyName, err := AppCookieStickinessPolicyParseResourceID(d.Id())
-
+	lbName, lbPort, policyName, err := appCookieStickinessPolicyParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// Perversely, if we Set an empty list of PolicyNames, we detach the
@@ -177,7 +180,7 @@ func resourceAppCookieStickinessPolicyDelete(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func FindLoadBalancerPolicyByTwoPartKey(ctx context.Context, conn *elasticloadbalancing.Client, lbName, policyName string) (*awstypes.PolicyDescription, error) {
+func findLoadBalancerPolicyByTwoPartKey(ctx context.Context, conn *elasticloadbalancing.Client, lbName, policyName string) (*awstypes.PolicyDescription, error) {
 	input := &elasticloadbalancing.DescribeLoadBalancerPoliciesInput{
 		LoadBalancerName: aws.String(lbName),
 		PolicyNames:      []string{policyName},
@@ -199,14 +202,14 @@ func FindLoadBalancerPolicyByTwoPartKey(ctx context.Context, conn *elasticloadba
 	return tfresource.AssertSingleValueResult(output.PolicyDescriptions)
 }
 
-func FindLoadBalancerListenerPolicyByThreePartKey(ctx context.Context, conn *elasticloadbalancing.Client, lbName string, lbPort int, policyName string) (*awstypes.PolicyDescription, error) {
-	policy, err := FindLoadBalancerPolicyByTwoPartKey(ctx, conn, lbName, policyName)
+func findLoadBalancerListenerPolicyByThreePartKey(ctx context.Context, conn *elasticloadbalancing.Client, lbName string, lbPort int, policyName string) (*awstypes.PolicyDescription, error) {
+	policy, err := findLoadBalancerPolicyByTwoPartKey(ctx, conn, lbName, policyName)
 
 	if err != nil {
 		return nil, err
 	}
 
-	lb, err := FindLoadBalancerByName(ctx, conn, lbName)
+	lb, err := findLoadBalancerByName(ctx, conn, lbName)
 
 	if err != nil {
 		return nil, err
@@ -233,14 +236,14 @@ func FindLoadBalancerListenerPolicyByThreePartKey(ctx context.Context, conn *ela
 
 const appCookieStickinessPolicyResourceIDSeparator = ":"
 
-func AppCookieStickinessPolicyCreateResourceID(lbName string, lbPort int, policyName string) string {
+func appCookieStickinessPolicyCreateResourceID(lbName string, lbPort int, policyName string) string {
 	parts := []string{lbName, strconv.Itoa(lbPort), policyName}
 	id := strings.Join(parts, appCookieStickinessPolicyResourceIDSeparator)
 
 	return id
 }
 
-func AppCookieStickinessPolicyParseResourceID(id string) (string, int, string, error) {
+func appCookieStickinessPolicyParseResourceID(id string) (string, int, string, error) {
 	parts := strings.Split(id, appCookieStickinessPolicyResourceIDSeparator)
 
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {

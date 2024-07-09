@@ -135,7 +135,7 @@ func resourceListenerPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func FindLoadBalancerListenerPolicyByTwoPartKey(ctx context.Context, conn *elasticloadbalancing.Client, lbName string, lbPort int) ([]string, error) {
-	lb, err := FindLoadBalancerByName(ctx, conn, lbName)
+	lb, err := findLoadBalancerByName(ctx, conn, lbName)
 
 	if err != nil {
 		return nil, err

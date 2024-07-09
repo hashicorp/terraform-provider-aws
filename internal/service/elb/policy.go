@@ -111,7 +111,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
 	}
 
-	policy, err := FindLoadBalancerPolicyByTwoPartKey(ctx, conn, lbName, policyName)
+	policy, err := findLoadBalancerPolicyByTwoPartKey(ctx, conn, lbName, policyName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ELB Classic Load Balancer Policy (%s) not found, removing from state", d.Id())

@@ -126,7 +126,7 @@ func resourceSSLNegotiationPolicyRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
 	}
 
-	_, err = FindLoadBalancerListenerPolicyByThreePartKey(ctx, conn, lbName, lbPort, policyName)
+	_, err = findLoadBalancerListenerPolicyByThreePartKey(ctx, conn, lbName, lbPort, policyName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ELB Classic SSL Negotiation Policy (%s) not found, removing from state", d.Id())

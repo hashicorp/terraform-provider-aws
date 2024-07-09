@@ -108,7 +108,7 @@ func resourceCookieStickinessPolicyRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
 	}
 
-	policy, err := FindLoadBalancerListenerPolicyByThreePartKey(ctx, conn, lbName, lbPort, policyName)
+	policy, err := findLoadBalancerListenerPolicyByThreePartKey(ctx, conn, lbName, lbPort, policyName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ELB Classic LB Cookie Stickiness Policy (%s) not found, removing from state", d.Id())

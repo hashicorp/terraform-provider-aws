@@ -322,7 +322,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
-	lb, err := FindLoadBalancerByName(ctx, conn, d.Id())
+	lb, err := findLoadBalancerByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ELB Classic Load Balancer (%s) not found, removing from state", d.Id())
@@ -746,7 +746,7 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func FindLoadBalancerByName(ctx context.Context, conn *elasticloadbalancing.Client, name string) (*awstypes.LoadBalancerDescription, error) {
+func findLoadBalancerByName(ctx context.Context, conn *elasticloadbalancing.Client, name string) (*awstypes.LoadBalancerDescription, error) {
 	input := &elasticloadbalancing.DescribeLoadBalancersInput{
 		LoadBalancerNames: []string{name},
 	}
@@ -762,21 +762,6 @@ func FindLoadBalancerByName(ctx context.Context, conn *elasticloadbalancing.Clie
 
 	if err != nil {
 		return nil, err
-	}
-
-	if output == nil || len(output.LoadBalancerDescriptions) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.LoadBalancerDescriptions); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	// Eventual consistency check.
-	if aws.ToString(output.LoadBalancerDescriptions[0].LoadBalancerName) != name {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
 	}
 
 	return tfresource.AssertSingleValueResult(output.LoadBalancerDescriptions)

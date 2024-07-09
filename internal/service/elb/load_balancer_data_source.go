@@ -213,7 +213,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	lbName := d.Get(names.AttrName).(string)
-	lb, err := FindLoadBalancerByName(ctx, conn, lbName)
+	lb, err := findLoadBalancerByName(ctx, conn, lbName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer (%s): %s", lbName, err)

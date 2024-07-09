@@ -42,8 +42,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAppCookieStickinessPolicy,
+			Factory:  resourceAppCookieStickinessPolicy,
 			TypeName: "aws_app_cookie_stickiness_policy",
+			Name:     "App Cookie Stickiness Policy",
 		},
 		{
 			Factory:  ResourceLoadBalancer,
