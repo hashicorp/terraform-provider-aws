@@ -422,7 +422,7 @@ func TestAccVPCNetworkInterface_sourceDestCheck(t *testing.T) {
 	})
 }
 
-func TestAccVPCNetworkInterface_associatePublicIpAddress(t *testing.T) {
+func TestAccVPCNetworkInterface_associatePublicIPAddress(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf types.NetworkInterface
 	resourceName := "aws_network_interface.test"
@@ -435,7 +435,7 @@ func TestAccVPCNetworkInterface_associatePublicIpAddress(t *testing.T) {
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCNetworkInterfaceConfig_associatePublicIpAddress(rName, false),
+				Config: testAccVPCNetworkInterfaceConfig_associatePublicIPAddress(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtFalse),
@@ -448,14 +448,14 @@ func TestAccVPCNetworkInterface_associatePublicIpAddress(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"private_ip_list_enabled", "ipv6_address_list_enabled"},
 			},
 			{
-				Config: testAccVPCNetworkInterfaceConfig_associatePublicIpAddress(rName, true),
+				Config: testAccVPCNetworkInterfaceConfig_associatePublicIPAddress(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtTrue),
 				),
 			},
 			{
-				Config: testAccVPCNetworkInterfaceConfig_associatePublicIpAddress(rName, false),
+				Config: testAccVPCNetworkInterfaceConfig_associatePublicIPAddress(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtFalse),
@@ -1336,7 +1336,7 @@ resource "aws_network_interface" "test" {
 `, rName, sourceDestCheck))
 }
 
-func testAccVPCNetworkInterfaceConfig_associatePublicIpAddress(rName string, associatePublicIpAddress bool) string {
+func testAccVPCNetworkInterfaceConfig_associatePublicIPAddress(rName string, associatePublicIpAddress bool) string {
 	return acctest.ConfigCompose(testAccVPCNetworkInterfaceConfig_baseIPV6(rName), fmt.Sprintf(`
 resource "aws_network_interface" "test" {
   subnet_id                   = aws_subnet.test.id

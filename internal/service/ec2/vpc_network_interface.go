@@ -581,7 +581,7 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Interface (%s) AssociatePublicIpAddress: %s", d.Id(), err)
 	}
-	d.Set("associate_public_ip_address", aws.ToBool(attribute.AssociatePublicIpAddress))
+	d.Set("associate_public_ip_address", attribute.AssociatePublicIpAddress)
 	d.Set(names.AttrSubnetID, eni.SubnetId)
 
 	setTagsOutV2(ctx, eni.TagSet)
