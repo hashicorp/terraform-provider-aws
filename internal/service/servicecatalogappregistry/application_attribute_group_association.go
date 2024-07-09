@@ -50,8 +50,8 @@ func (r *resourceApplicationAttributeGroupAssociation) Metadata(_ context.Contex
 func (r *resourceApplicationAttributeGroupAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
-			"application_id": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrApplicationID: schema.StringAttribute{
 				Description: "ID of the application to associate with",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
@@ -170,7 +170,7 @@ func (r *resourceApplicationAttributeGroupAssociation) Delete(ctx context.Contex
 }
 
 func (r *resourceApplicationAttributeGroupAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findApplicationAttributeGroupAssociationByID(ctx context.Context, conn *servicecatalogappregistry.Client, applicationId string, attributeGroupId string) (*bool, error) {
