@@ -38,7 +38,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 // @SDKResource("aws_elb", name="Classic Load Balancer")
 // @Tags(identifierAttribute="id")
-func ResourceLoadBalancer() *schema.Resource {
+func resourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCreate,
 		ReadWithoutTimeout:   resourceLoadBalancerRead,
@@ -91,7 +91,7 @@ func ResourceLoadBalancer() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      60,
-							ValidateFunc: ValidAccessLogsInterval,
+							ValidateFunc: validAccessLogsInterval,
 						},
 					},
 				},
@@ -155,7 +155,7 @@ func ResourceLoadBalancer() *schema.Resource {
 						names.AttrTarget: {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: ValidHeathCheckTarget,
+							ValidateFunc: validHeathCheckTarget,
 						},
 						names.AttrTimeout: {
 							Type:         schema.TypeInt,
@@ -220,7 +220,7 @@ func ResourceLoadBalancer() *schema.Resource {
 						},
 					},
 				},
-				Set: ListenerHash,
+				Set: listenerHash,
 			},
 			names.AttrName: {
 				Type:          schema.TypeString,
@@ -228,7 +228,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  ValidName,
+				ValidateFunc:  validName,
 			},
 			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
@@ -278,14 +278,14 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	elbName := create.NewNameGenerator(
+	lbName := create.NewNameGenerator(
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-lb-"),
 	).Generate()
 	input := &elasticloadbalancing.CreateLoadBalancerInput{
 		Listeners:        listeners,
-		LoadBalancerName: aws.String(elbName),
+		LoadBalancerName: aws.String(lbName),
 		Tags:             getTagsIn(ctx),
 	}
 
@@ -310,10 +310,10 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating ELB Classic Load Balancer (%s): %s", elbName, err)
+		return sdkdiag.AppendErrorf(diags, "creating ELB Classic Load Balancer (%s): %s", lbName, err)
 	}
 
-	d.SetId(elbName)
+	d.SetId(lbName)
 
 	return append(diags, resourceLoadBalancerUpdate(ctx, d, meta)...)
 }
@@ -345,10 +345,10 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "elasticloadbalancing",
 		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("loadbalancer/%s", d.Id()),
+		Resource:  "loadbalancer/" + d.Id(),
 	}
 	d.Set(names.AttrARN, arn.String())
-	d.Set(names.AttrAvailabilityZones, flex.FlattenStringValueList(lb.AvailabilityZones))
+	d.Set(names.AttrAvailabilityZones, lb.AvailabilityZones)
 	d.Set("connection_draining", lbAttrs.ConnectionDraining.Enabled)
 	d.Set("connection_draining_timeout", lbAttrs.ConnectionDraining.Timeout)
 	d.Set("cross_zone_load_balancing", lbAttrs.CrossZoneLoadBalancing.Enabled)
@@ -365,8 +365,8 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("listener", flattenListenerDescriptions(lb.ListenerDescriptions))
 	d.Set(names.AttrName, lb.LoadBalancerName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lb.LoadBalancerName)))
-	d.Set(names.AttrSecurityGroups, flex.FlattenStringValueList(lb.SecurityGroups))
-	d.Set(names.AttrSubnets, flex.FlattenStringValueList(lb.Subnets))
+	d.Set(names.AttrSecurityGroups, lb.SecurityGroups)
+	d.Set(names.AttrSubnets, lb.Subnets)
 	d.Set("zone_id", lb.CanonicalHostedZoneNameID)
 
 	if lb.SourceSecurityGroup != nil {
@@ -402,12 +402,11 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 		// API/state
 		// See https://github.com/hashicorp/terraform/issues/10138
 		_, n := d.GetChange("access_logs")
-		elbal := lbAttrs.AccessLog
-		nl := n.([]interface{})
-		if len(nl) == 0 && !elbal.Enabled {
-			elbal = nil
+		accessLog := lbAttrs.AccessLog
+		if len(n.([]interface{})) == 0 && !accessLog.Enabled {
+			accessLog = nil
 		}
-		if err := d.Set("access_logs", flattenAccessLog(elbal)); err != nil {
+		if err := d.Set("access_logs", flattenAccessLog(accessLog)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting access_logs: %s", err)
 		}
 	}
@@ -436,19 +435,17 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChange("listener") {
 		o, n := d.GetChange("listener")
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-
-		remove, _ := expandListeners(os.Difference(ns).List())
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		del, _ := expandListeners(os.Difference(ns).List())
 		add, err := expandListeners(ns.Difference(os).List())
 
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		if len(remove) > 0 {
-			ports := make([]int32, 0, len(remove))
-			for _, listener := range remove {
+		if len(del) > 0 {
+			ports := make([]int32, 0, len(del))
+			for _, listener := range del {
 				ports = append(ports, listener.LoadBalancerPort)
 			}
 
@@ -498,10 +495,8 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 	// balancer
 	if d.HasChange("instances") {
 		o, n := d.GetChange("instances")
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-		remove := expandInstances(os.Difference(ns).List())
-		add := expandInstances(ns.Difference(os).List())
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := expandInstances(ns.Difference(os).List()), expandInstances(os.Difference(ns).List())
 
 		if len(add) > 0 {
 			input := &elasticloadbalancing.RegisterInstancesWithLoadBalancerInput{
@@ -516,9 +511,9 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 
-		if len(remove) > 0 {
+		if len(del) > 0 {
 			input := &elasticloadbalancing.DeregisterInstancesFromLoadBalancerInput{
-				Instances:        remove,
+				Instances:        del,
 				LoadBalancerName: aws.String(d.Id()),
 			}
 
@@ -549,15 +544,15 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			LoadBalancerName: aws.String(d.Id()),
 		}
 
-		if logs := d.Get("access_logs").([]interface{}); len(logs) == 1 {
-			l := logs[0].(map[string]interface{})
+		if v := d.Get("access_logs").([]interface{}); len(v) == 1 {
+			tfMap := v[0].(map[string]interface{})
 			input.LoadBalancerAttributes.AccessLog = &awstypes.AccessLog{
-				Enabled:        l[names.AttrEnabled].(bool),
-				EmitInterval:   aws.Int32(int32(l[names.AttrInterval].(int))),
-				S3BucketName:   aws.String(l[names.AttrBucket].(string)),
-				S3BucketPrefix: aws.String(l[names.AttrBucketPrefix].(string)),
+				Enabled:        tfMap[names.AttrEnabled].(bool),
+				EmitInterval:   aws.Int32(int32(tfMap[names.AttrInterval].(int))),
+				S3BucketName:   aws.String(tfMap[names.AttrBucket].(string)),
+				S3BucketPrefix: aws.String(tfMap[names.AttrBucketPrefix].(string)),
 			}
-		} else if len(logs) == 0 {
+		} else if len(v) == 0 {
 			// disable access logs
 			input.LoadBalancerAttributes.AccessLog = &awstypes.AccessLog{
 				Enabled: false,
@@ -616,15 +611,15 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChange(names.AttrHealthCheck) {
-		if hc := d.Get(names.AttrHealthCheck).([]interface{}); len(hc) > 0 {
-			check := hc[0].(map[string]interface{})
+		if v := d.Get(names.AttrHealthCheck).([]interface{}); len(v) > 0 {
+			tfMap := v[0].(map[string]interface{})
 			input := &elasticloadbalancing.ConfigureHealthCheckInput{
 				HealthCheck: &awstypes.HealthCheck{
-					HealthyThreshold:   aws.Int32(int32(check["healthy_threshold"].(int))),
-					Interval:           aws.Int32(int32(check[names.AttrInterval].(int))),
-					Target:             aws.String(check[names.AttrTarget].(string)),
-					Timeout:            aws.Int32(int32(check[names.AttrTimeout].(int))),
-					UnhealthyThreshold: aws.Int32(int32(check["unhealthy_threshold"].(int))),
+					HealthyThreshold:   aws.Int32(int32(tfMap["healthy_threshold"].(int))),
+					Interval:           aws.Int32(int32(tfMap[names.AttrInterval].(int))),
+					Target:             aws.String(tfMap[names.AttrTarget].(string)),
+					Timeout:            aws.Int32(int32(tfMap[names.AttrTimeout].(int))),
+					UnhealthyThreshold: aws.Int32(int32(tfMap["unhealthy_threshold"].(int))),
 				},
 				LoadBalancerName: aws.String(d.Id()),
 			}
@@ -651,15 +646,12 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChange(names.AttrAvailabilityZones) {
 		o, n := d.GetChange(names.AttrAvailabilityZones)
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
-		removed := flex.ExpandStringValueSet(os.Difference(ns))
-		added := flex.ExpandStringValueSet(ns.Difference(os))
-
-		if len(added) > 0 {
+		if len(add) > 0 {
 			input := &elasticloadbalancing.EnableAvailabilityZonesForLoadBalancerInput{
-				AvailabilityZones: added,
+				AvailabilityZones: add,
 				LoadBalancerName:  aws.String(d.Id()),
 			}
 
@@ -670,9 +662,9 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 
-		if len(removed) > 0 {
+		if len(del) > 0 {
 			input := &elasticloadbalancing.DisableAvailabilityZonesForLoadBalancerInput{
-				AvailabilityZones: removed,
+				AvailabilityZones: del,
 				LoadBalancerName:  aws.String(d.Id()),
 			}
 
@@ -686,16 +678,13 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChange(names.AttrSubnets) {
 		o, n := d.GetChange(names.AttrSubnets)
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
-		removed := flex.ExpandStringValueSet(os.Difference(ns))
-		added := flex.ExpandStringValueSet(ns.Difference(os))
-
-		if len(removed) > 0 {
+		if len(del) > 0 {
 			input := &elasticloadbalancing.DetachLoadBalancerFromSubnetsInput{
 				LoadBalancerName: aws.String(d.Id()),
-				Subnets:          removed,
+				Subnets:          del,
 			}
 
 			_, err := conn.DetachLoadBalancerFromSubnets(ctx, input)
@@ -705,10 +694,10 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 
-		if len(added) > 0 {
+		if len(add) > 0 {
 			input := &elasticloadbalancing.AttachLoadBalancerToSubnetsInput{
 				LoadBalancerName: aws.String(d.Id()),
-				Subnets:          added,
+				Subnets:          add,
 			}
 
 			_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidConfigurationRequestException](ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
@@ -792,7 +781,7 @@ func findLoadBalancerAttributesByName(ctx context.Context, conn *elasticloadbala
 	return output.LoadBalancerAttributes, nil
 }
 
-func ListenerHash(v interface{}) int {
+func listenerHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%d-", m["instance_port"].(int)))
@@ -807,7 +796,7 @@ func ListenerHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func ValidAccessLogsInterval(v interface{}, k string) (ws []string, errors []error) {
+func validAccessLogsInterval(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(int)
 
 	// Check if the value is either 5 or 60 (minutes).
@@ -820,7 +809,7 @@ func ValidAccessLogsInterval(v interface{}, k string) (ws []string, errors []err
 	return
 }
 
-func ValidHeathCheckTarget(v interface{}, k string) (ws []string, errors []error) {
+func validHeathCheckTarget(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	// Parse the Health Check target value.

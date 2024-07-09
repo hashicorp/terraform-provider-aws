@@ -10,6 +10,7 @@ var (
 	ResourceBackendServerPolicy       = resourceBackendServerPolicy
 	ResourceCookieStickinessPolicy    = resourceCookieStickinessPolicy
 	ResourceListenerPolicy            = resourceListenerPolicy
+	ResourceLoadBalancer              = resourceLoadBalancer
 	ResourcePolicy                    = resourcePolicy
 	ResourceProxyProtocolPolicy       = resourceProxyProtocolPolicy
 	ResourceSSLNegotiationPolicy      = resourceSSLNegotiationPolicy
@@ -25,6 +26,7 @@ var (
 	FindLoadBalancerPolicyByTwoPartKey              = findLoadBalancerPolicyByTwoPartKey
 	HostedZoneIDPerRegionMap                        = hostedZoneIDPerRegionMap
 	LBCookieStickinessPolicyParseResourceID         = lbCookieStickinessPolicyParseResourceID
+	ListenerHash                                    = listenerHash
 	ListenerPolicyParseResourceID                   = listenerPolicyParseResourceID
 	PolicyParseResourceID                           = policyParseResourceID
 	ProxyProtocolPolicyParseResourceID              = proxyProtocolPolicyParseResourceID

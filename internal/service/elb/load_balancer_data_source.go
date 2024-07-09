@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_elb")
-func DataSourceLoadBalancer() *schema.Resource {
+// @SDKDataSource("aws_elb", name="Classic Load Balancer")
+func dataSourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLoadBalancerRead,
 		Schema: map[string]*schema.Schema{
@@ -144,29 +144,24 @@ func DataSourceLoadBalancer() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"instance_protocol": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"lb_port": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"lb_protocol": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"ssl_certificate_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
-				Set: ListenerHash,
 			},
 
 			names.AttrSecurityGroups: {

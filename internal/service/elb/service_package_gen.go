@@ -25,8 +25,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceLoadBalancer,
+			Factory:  dataSourceLoadBalancer,
 			TypeName: "aws_elb",
+			Name:     "Classic Load Balancer",
 		},
 		{
 			Factory:  dataSourceHostedZoneID,
@@ -49,7 +50,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "App Cookie Stickiness Policy",
 		},
 		{
-			Factory:  ResourceLoadBalancer,
+			Factory:  resourceLoadBalancer,
 			TypeName: "aws_elb",
 			Name:     "Classic Load Balancer",
 			Tags: &types.ServicePackageResourceTags{
