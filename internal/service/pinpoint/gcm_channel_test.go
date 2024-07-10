@@ -81,7 +81,7 @@ func TestAccPinpointGCMChannel_apiKeyAuthMethod(t *testing.T) {
 		CheckDestroy:             testAccCheckGCMChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGCMChannelConfigApiKey_apiKeyAuthMethod(apiKey),
+				Config: testAccGCMChannelConfig_apiKeyAuthMethod(apiKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, "aws_pinpoint_app.test_app", names.AttrApplicationID),
@@ -123,7 +123,7 @@ func TestAccPinpointGCMChannel_tokenAuthMethod(t *testing.T) {
 		CheckDestroy:             testAccCheckGCMChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGCMChannelConfigServiceJson_tokenAuthMethod(serviceJsonFile),
+				Config: testAccGCMChannelConfig_tokenAuthMethod(serviceJsonFile),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, "aws_pinpoint_app.test_app", names.AttrApplicationID),
@@ -205,7 +205,7 @@ resource "aws_pinpoint_gcm_channel" "test_gcm_channel" {
 `, apiKey)
 }
 
-func testAccGCMChannelConfigApiKey_apiKeyAuthMethod(apiKey string) string {
+func testAccGCMChannelConfig_apiKeyAuthMethod(apiKey string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 
@@ -218,7 +218,7 @@ resource "aws_pinpoint_gcm_channel" "test_gcm_channel" {
 `, apiKey)
 }
 
-func testAccGCMChannelConfigServiceJson_tokenAuthMethod(serviceJsonFile string) string {
+func testAccGCMChannelConfig_tokenAuthMethod(serviceJsonFile string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 
