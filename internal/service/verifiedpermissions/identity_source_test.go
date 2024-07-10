@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVerifiedPermissionsIdentitySource_basic(t *testing.T) {
+func TestAccVerifiedPermissionsIdentitySource_Cognito_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -41,12 +41,18 @@ func TestAccVerifiedPermissionsIdentitySource_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdentitySourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccIdentitySourceConfig_Cognito_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
-					resource.TestCheckResourceAttrSet(resourceName, "policy_store_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "AWS::Cognito"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.cognito_user_pool_configuration.0.user_pool_arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.client_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.group_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.cognito_user_pool_configuration.0.user_pool_arn", "aws_cognito_user_pool.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", acctest.Ct0),
 				),
 			},
 			{
@@ -79,7 +85,7 @@ func TestAccVerifiedPermissionsIdentitySource_update(t *testing.T) {
 		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdentitySourceConfig_basic(rName),
+				Config: testAccIdentitySourceConfig_Cognito_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_store_id"),
@@ -144,7 +150,7 @@ func TestAccVerifiedPermissionsIdentitySource_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdentitySourceConfig_basic(rName),
+				Config: testAccIdentitySourceConfig_Cognito_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfverifiedpermissions.ResourceIdentitySource, resourceName),
@@ -227,14 +233,10 @@ resource "aws_verifiedpermissions_policy_store" "test" {
 `
 }
 
-func testAccIdentitySourceConfig_basic(rName string) string {
+func testAccIdentitySourceConfig_Cognito_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccIdentitySourceConfig_base(),
 		fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
-  name = %[1]q
-}
-
 resource "aws_verifiedpermissions_identity_source" "test" {
   policy_store_id = aws_verifiedpermissions_policy_store.test.id
   configuration {
@@ -242,6 +244,10 @@ resource "aws_verifiedpermissions_identity_source" "test" {
       user_pool_arn = aws_cognito_user_pool.test.arn
     }
   }
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
 }
 `, rName))
 }
