@@ -4,10 +4,14 @@
 package wafv2
 
 import (
+	"encoding/json"
+	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -980,6 +984,22 @@ func expandHeaderMatchPattern(l []interface{}) *awstypes.HeaderMatchPattern {
 	return f
 }
 
+func expandWebACLRulesJSON(rawRules string) ([]awstypes.Rule, error) {
+	var rules []awstypes.Rule
+
+	err := json.Unmarshal([]byte(rawRules), &rules)
+	if err != nil {
+		return nil, fmt.Errorf("decoding JSON: %s", err)
+	}
+
+	for i, r := range rules {
+		if reflect.DeepEqual(r, nil) {
+			return nil, fmt.Errorf("invalid ACL Rule supplied at index (%d)", i)
+		}
+	}
+	return rules, nil
+}
+
 func expandWebACLRules(l []interface{}) []awstypes.Rule {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -1898,6 +1918,14 @@ func flattenRuleLabels(l []awstypes.Label) []interface{} {
 	}
 
 	return out
+}
+
+func flattenRuleJSON(l []awstypes.Rule) string {
+	b, err := jsonutil.BuildJSON(l)
+	if err != nil {
+		return ""
+	}
+	return string(b)
 }
 
 func flattenRuleGroupRootStatement(s *awstypes.Statement) interface{} {

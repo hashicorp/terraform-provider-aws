@@ -101,6 +101,11 @@ func resourceWebACL() *schema.Resource {
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
+				"rule_json": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringIsJSON,
+				},
 				names.AttrRule: {
 					Type:     schema.TypeSet,
 					Optional: true,
@@ -179,16 +184,26 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	name := d.Get(names.AttrName).(string)
+
 	input := &wafv2.CreateWebACLInput{
 		AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
 		CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
 		ChallengeConfig:   expandChallengeConfig(d.Get("challenge_config").([]interface{})),
 		DefaultAction:     expandDefaultAction(d.Get(names.AttrDefaultAction).([]interface{})),
 		Name:              aws.String(name),
-		Rules:             expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List()),
-		Scope:             awstypes.Scope(d.Get(names.AttrScope).(string)),
-		Tags:              getTagsIn(ctx),
-		VisibilityConfig:  expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
+		// Rules:             expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List()),
+		Scope:            awstypes.Scope(d.Get(names.AttrScope).(string)),
+		Tags:             getTagsIn(ctx),
+		VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
+	}
+
+	if v, ok := d.GetOk(names.AttrRule); ok {
+		input.Rules = expandWebACLRules(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("rule_json"); ok {
+		rules, _ := expandWebACLRulesJSON(v.(string))
+		input.Rules = rules
 	}
 
 	if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
@@ -263,6 +278,12 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err := d.Set(names.AttrRule, flattenWebACLRules(rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
+	expandRules, _ := expandWebACLRulesJSON(d.Get("rule_json").(string))
+	rulesJSON := filterWebACLRules(webACL.Rules, expandRules)
+	if err := d.Set("rule_json", flattenRuleJSON(rulesJSON)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting JSON rule: %s", err)
+	}
+
 	d.Set("token_domains", aws.StringSlice(webACL.TokenDomains))
 	if err := d.Set("visibility_config", flattenVisibilityConfig(webACL.VisibilityConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting visibility_config: %s", err)
@@ -292,6 +313,17 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			rules = append(rules, findShieldRule(output.WebACL.Rules)...)
 		}
 
+		rulesjson, _ := expandWebACLRulesJSON(d.Get("rule_json").(string))
+		if sr := findShieldRule(rulesjson); len(sr) == 0 {
+			output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), aclName, aclScope)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
+			}
+
+			rules = append(rulesjson, findShieldRule(output.WebACL.Rules)...)
+		}
+
 		input := &wafv2.UpdateWebACLInput{
 			AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
 			CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
@@ -300,9 +332,18 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			Id:                aws.String(d.Id()),
 			LockToken:         aws.String(aclLockToken),
 			Name:              aws.String(aclName),
-			Rules:             rules,
-			Scope:             awstypes.Scope(aclScope),
-			VisibilityConfig:  expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
+			// Rules:             rules,
+			Scope:            awstypes.Scope(aclScope),
+			VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
+		}
+
+		if v, ok := d.GetOk(names.AttrRule); ok {
+			input.Rules = expandWebACLRules(v.(*schema.Set).List())
+		}
+
+		if v, ok := d.GetOk("rule_json"); ok {
+			rules, _ := expandWebACLRulesJSON(v.(string))
+			input.Rules = rules
 		}
 
 		if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
