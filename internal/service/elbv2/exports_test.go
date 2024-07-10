@@ -7,12 +7,15 @@ package elbv2
 var (
 	ResourceListener            = resourceListener
 	ResourceListenerCertificate = resourceListenerCertificate
+	ResourceListenerRule        = resourceListenerRule
 
 	FindListenerByARN                   = findListenerByARN
 	FindListenerCertificateByTwoPartKey = findListenerCertificateByTwoPartKey
+	FindListenerRuleByARN               = findListenerRuleByARN
 	HealthCheckProtocolEnumValues       = healthCheckProtocolEnumValues
 	HostedZoneIDPerRegionALBMap         = hostedZoneIDPerRegionALBMap
 	HostedZoneIDPerRegionNLBMap         = hostedZoneIDPerRegionNLBMap
+	ListenerARNFromRuleARN              = listenerARNFromRuleARN
 	ProtocolVersionEnumValues           = protocolVersionEnumValues
 )
 

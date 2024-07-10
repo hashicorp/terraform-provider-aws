@@ -5,7 +5,6 @@ package elbv2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"slices"
@@ -21,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -2147,33 +2146,23 @@ func testAccCheckListenerRuleRecreated(t *testing.T, before, after *awstypes.Rul
 	}
 }
 
-func testAccCheckListenerRuleExists(ctx context.Context, n string, res *awstypes.Rule) resource.TestCheckFunc {
+func testAccCheckListenerRuleExists(ctx context.Context, n string, v *awstypes.Rule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return errors.New("No Listener Rule ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
-		describe, err := conn.DescribeRules(ctx, &elasticloadbalancingv2.DescribeRulesInput{
-			RuleArns: []string{rs.Primary.ID},
-		})
+		output, err := tfelbv2.FindListenerRuleByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(describe.Rules) != 1 ||
-			*describe.Rules[0].RuleArn != rs.Primary.ID {
-			return errors.New("Listener Rule not found")
-		}
+		*v = *output
 
-		*res = describe.Rules[0]
 		return nil
 	}
 }
@@ -2187,23 +2176,17 @@ func testAccCheckListenerRuleDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			describe, err := conn.DescribeRules(ctx, &elasticloadbalancingv2.DescribeRulesInput{
-				RuleArns: []string{rs.Primary.ID},
-			})
+			_, err := tfelbv2.FindListenerRuleByARN(ctx, conn, rs.Primary.ID)
 
-			if err == nil {
-				if len(describe.Rules) != 0 &&
-					*describe.Rules[0].RuleArn == rs.Primary.ID {
-					return fmt.Errorf("Listener Rule %q still exists", rs.Primary.ID)
-				}
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			// Verify the error
-			if errs.IsA[*awstypes.RuleNotFoundException](err) {
-				return nil
-			} else {
-				return fmt.Errorf("Unexpected error checking LB Listener Rule destroyed: %s", err)
+			if err != nil {
+				return err
 			}
+
+			return fmt.Errorf("ELBv2 Listener Rule %s still exists", rs.Primary.ID)
 		}
 
 		return nil

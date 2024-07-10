@@ -49,7 +49,7 @@ const (
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.Rule")
 // @Testing(importIgnore="action.0.forward")
-func ResourceListenerRule() *schema.Resource {
+func resourceListenerRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerRuleCreate,
 		ReadWithoutTimeout:   resourceListenerRuleRead,
@@ -563,54 +563,35 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	var resp *elasticloadbalancingv2.DescribeRulesOutput
-	var req = &elasticloadbalancingv2.DescribeRulesInput{
-		RuleArns: []string{d.Id()},
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, elbv2PropagationTimeout, func() (interface{}, error) {
+		return findListenerByARN(ctx, conn, d.Id())
+	}, d.IsNewResource())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] ELBv2 Listener Rule (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
-		var err error
-		resp, err = conn.DescribeRules(ctx, req)
-		if err != nil {
-			if d.IsNewResource() && errs.IsA[*awstypes.RuleNotFoundException](err) {
-				return retry.RetryableError(err)
-			} else {
-				return retry.NonRetryableError(err)
-			}
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		resp, err = conn.DescribeRules(ctx, req)
-	}
 	if err != nil {
-		if errs.IsA[*awstypes.RuleNotFoundException](err) {
-			log.Printf("[WARN] DescribeRules - removing %s from state", d.Id())
-			d.SetId("")
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "retrieving Rules for listener %q: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listener Rule (%s): %s", d.Id(), err)
 	}
 
-	if len(resp.Rules) != 1 {
-		return sdkdiag.AppendErrorf(diags, "retrieving Rule %q", d.Id())
-	}
-
-	rule := resp.Rules[0]
+	rule := outputRaw.(*awstypes.Rule)
 
 	d.Set(names.AttrARN, rule.RuleArn)
 
 	// The listener arn isn't in the response but can be derived from the rule arn
-	d.Set("listener_arn", ListenerARNFromRuleARN(aws.ToString(rule.RuleArn)))
+	d.Set("listener_arn", listenerARNFromRuleARN(aws.ToString(rule.RuleArn)))
 
 	// Rules are evaluated in priority order, from the lowest value to the highest value. The default rule has the lowest priority.
-	if aws.ToString(rule.Priority) == "default" {
+	if v := aws.ToString(rule.Priority); v == "default" {
 		d.Set(names.AttrPriority, listenerRulePriorityDefault)
 	} else {
-		if priority, err := strconv.Atoi(aws.ToString(rule.Priority)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "Cannot convert rule priority %q to int: %s", aws.ToString(rule.Priority), err)
+		if v, err := strconv.Atoi(v); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		} else {
-			d.Set(names.AttrPriority, priority)
+			d.Set(names.AttrPriority, v)
 		}
 	}
 
@@ -688,7 +669,7 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		if d.HasChange(names.AttrPriority) {
-			params := &elasticloadbalancingv2.SetRulePrioritiesInput{
+			input := &elasticloadbalancingv2.SetRulePrioritiesInput{
 				RulePriorities: []awstypes.RulePriorityPair{
 					{
 						RuleArn:  aws.String(d.Id()),
@@ -697,7 +678,8 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 				},
 			}
 
-			_, err := conn.SetRulePriorities(ctx, params)
+			_, err := conn.SetRulePriorities(ctx, input)
+
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating ELB v2 Listener Rule (%s): setting priority: %s", d.Id(), err)
 			}
@@ -744,21 +726,29 @@ func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
+	log.Printf("[INFO] Deleting ELBv2 Listener Rule: %s", d.Id())
 	_, err := conn.DeleteRule(ctx, &elasticloadbalancingv2.DeleteRuleInput{
 		RuleArn: aws.String(d.Id()),
 	})
-	if err != nil && !errs.IsA[*awstypes.RuleNotFoundException](err) {
-		return sdkdiag.AppendErrorf(diags, "deleting LB Listener Rule: %s", err)
+
+	if errs.IsA[*awstypes.RuleNotFoundException](err) {
+		return diags
 	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting ELBv2 Listener Rule (%s): %s", d.Id(), err)
+	}
+
 	return diags
 }
 
-func retryListenerRuleCreate(ctx context.Context, conn *elasticloadbalancingv2.Client, d *schema.ResourceData, params *elasticloadbalancingv2.CreateRuleInput, listenerARN string) (*elasticloadbalancingv2.CreateRuleOutput, error) {
-	var resp *elasticloadbalancingv2.CreateRuleOutput
+func retryListenerRuleCreate(ctx context.Context, conn *elasticloadbalancingv2.Client, d *schema.ResourceData, input *elasticloadbalancingv2.CreateRuleInput, listenerARN string) (*elasticloadbalancingv2.CreateRuleOutput, error) {
+	var output *elasticloadbalancingv2.CreateRuleOutput
+
 	if v, ok := d.GetOk(names.AttrPriority); ok {
 		var err error
-		params.Priority = aws.Int32(int32(v.(int)))
-		resp, err = conn.CreateRule(ctx, params)
+		input.Priority = aws.Int32(int32(v.(int)))
+		output, err = conn.CreateRule(ctx, input)
 
 		if err != nil {
 			return nil, err
@@ -772,8 +762,8 @@ func retryListenerRuleCreate(ctx context.Context, conn *elasticloadbalancingv2.C
 			if err != nil {
 				return retry.NonRetryableError(err)
 			}
-			params.Priority = aws.Int32(priority + 1)
-			resp, err = conn.CreateRule(ctx, params)
+			input.Priority = aws.Int32(priority + 1)
+			output, err = conn.CreateRule(ctx, input)
 			if err != nil {
 				if errs.IsA[*awstypes.PriorityInUseException](err) {
 					return retry.RetryableError(err)
@@ -788,8 +778,8 @@ func retryListenerRuleCreate(ctx context.Context, conn *elasticloadbalancingv2.C
 			if err != nil {
 				return nil, fmt.Errorf("getting highest listener rule (%s) priority: %w", listenerARN, err)
 			}
-			params.Priority = aws.Int32(priority + 1)
-			resp, err = conn.CreateRule(ctx, params)
+			input.Priority = aws.Int32(priority + 1)
+			output, err = conn.CreateRule(ctx, input)
 		}
 
 		if err != nil {
@@ -797,11 +787,55 @@ func retryListenerRuleCreate(ctx context.Context, conn *elasticloadbalancingv2.C
 		}
 	}
 
-	if resp == nil || len(resp.Rules) == 0 {
+	if output == nil || len(output.Rules) == 0 {
 		return nil, fmt.Errorf("creating LB Listener Rule (%s): no rules returned in response", listenerARN)
 	}
 
-	return resp, nil
+	return output, nil
+}
+
+func findListenerRule(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeRulesInput) (*awstypes.Rule, error) {
+	output, err := findListenerRules(ctx, conn, input)
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findListenerRules(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeRulesInput) ([]awstypes.Rule, error) {
+	var output []awstypes.Rule
+
+	err := describeRulesPages(ctx, conn, input, func(page *elasticloadbalancingv2.DescribeRulesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Rules...)
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.RuleNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findListenerRuleByARN(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) (*awstypes.Rule, error) {
+	input := &elasticloadbalancingv2.DescribeRulesInput{
+		RuleArns: []string{arn},
+	}
+
+	return findListenerRule(ctx, conn, input)
 }
 
 func validListenerRulePriority(v interface{}, k string) (ws []string, errors []error) {
@@ -820,8 +854,8 @@ func validListenerRulePriority(v interface{}, k string) (ws []string, errors []e
 // arn:aws:elasticloadbalancing:us-east-1:012345678912:listener/app/name/0123456789abcdef/abcdef0123456789
 var lbListenerARNFromRuleARNRegexp = regexache.MustCompile(`^(arn:.+:listener)-rule(/.+)/[^/]+$`)
 
-func ListenerARNFromRuleARN(ruleArn string) string {
-	if arnComponents := lbListenerARNFromRuleARNRegexp.FindStringSubmatch(ruleArn); len(arnComponents) > 1 {
+func listenerARNFromRuleARN(ruleARN string) string {
+	if arnComponents := lbListenerARNFromRuleARNRegexp.FindStringSubmatch(ruleARN); len(arnComponents) > 1 {
 		return arnComponents[1] + arnComponents[2]
 	}
 
