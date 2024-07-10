@@ -311,7 +311,7 @@ resource "aws_elb" "test-lb" {
 }
 
 resource "aws_load_balancer_policy" "test-policy" {
-  load_balancer_name = aws_awstypes.test-lb.name
+  load_balancer_name = aws_elb.test-lb.name
   policy_name        = "test-policy-%[1]d"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
@@ -344,7 +344,7 @@ resource "aws_elb" "test" {
 }
 
 resource "aws_load_balancer_policy" "test" {
-  load_balancer_name = aws_awstypes.test.name
+  load_balancer_name = aws_elb.test.name
   policy_name        = %[1]q
   policy_type_name   = %[2]q
 }
@@ -370,7 +370,7 @@ resource "aws_elb" "test" {
 }
 
 resource "aws_load_balancer_policy" "test" {
-  load_balancer_name = aws_awstypes.test.name
+  load_balancer_name = aws_elb.test.name
   policy_name        = %[1]q
   policy_type_name   = "SSLNegotiationPolicyType"
 
@@ -406,7 +406,7 @@ resource "aws_elb" "test" {
 }
 
 resource "aws_load_balancer_policy" "test" {
-  load_balancer_name = aws_awstypes.test.name
+  load_balancer_name = aws_elb.test.name
   policy_name        = %[1]q
   policy_type_name   = "SSLNegotiationPolicyType"
 
@@ -437,7 +437,7 @@ resource "aws_elb" "test-lb" {
 }
 
 resource "aws_load_balancer_policy" "test-policy" {
-  load_balancer_name = aws_awstypes.test-lb.name
+  load_balancer_name = aws_elb.test-lb.name
   policy_name        = "test-policy-%[1]d"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
@@ -448,7 +448,7 @@ resource "aws_load_balancer_policy" "test-policy" {
 }
 
 resource "aws_load_balancer_listener_policy" "test-lb-test-policy-80" {
-  load_balancer_name = aws_awstypes.test-lb.name
+  load_balancer_name = aws_elb.test-lb.name
   load_balancer_port = 80
 
   policy_names = [
@@ -477,7 +477,7 @@ resource "aws_elb" "test-lb" {
 }
 
 resource "aws_load_balancer_policy" "test-policy" {
-  load_balancer_name = aws_awstypes.test-lb.name
+  load_balancer_name = aws_elb.test-lb.name
   policy_name        = "test-policy-%[1]d"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
@@ -488,7 +488,7 @@ resource "aws_load_balancer_policy" "test-policy" {
 }
 
 resource "aws_load_balancer_listener_policy" "test-lb-test-policy-80" {
-  load_balancer_name = aws_awstypes.test-lb.name
+  load_balancer_name = aws_elb.test-lb.name
   load_balancer_port = 80
 
   policy_names = [
