@@ -269,7 +269,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	lb := results[0]
 	d.SetId(aws.ToString(lb.LoadBalancerArn))
 	d.Set(names.AttrARN, lb.LoadBalancerArn)
-	d.Set("arn_suffix", SuffixFromARN(lb.LoadBalancerArn))
+	d.Set("arn_suffix", suffixFromARN(lb.LoadBalancerArn))
 	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
 	d.Set(names.AttrDNSName, lb.DNSName)
 	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
@@ -287,7 +287,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrVPCID, lb.VpcId)
 	d.Set("zone_id", lb.CanonicalHostedZoneId)
 
-	attributes, err := FindLoadBalancerAttributesByARN(ctx, conn, d.Id())
+	attributes, err := findLoadBalancerAttributesByARN(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Load Balancer (%s) attributes: %s", d.Id(), err)

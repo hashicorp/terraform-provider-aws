@@ -70,7 +70,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceLoadBalancer,
+			Factory:  resourceLoadBalancer,
 			TypeName: "aws_alb",
 			Name:     "Load Balancer",
 			Tags: &types.ServicePackageResourceTags{
@@ -111,7 +111,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_alb_target_group_attachment",
 		},
 		{
-			Factory:  ResourceLoadBalancer,
+			Factory:  resourceLoadBalancer,
 			TypeName: "aws_lb",
 			Name:     "Load Balancer",
 			Tags: &types.ServicePackageResourceTags{

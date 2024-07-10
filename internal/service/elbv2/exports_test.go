@@ -8,15 +8,19 @@ var (
 	ResourceListener            = resourceListener
 	ResourceListenerCertificate = resourceListenerCertificate
 	ResourceListenerRule        = resourceListenerRule
+	ResourceLoadBalancer        = resourceLoadBalancer
 
 	FindListenerByARN                   = findListenerByARN
 	FindListenerCertificateByTwoPartKey = findListenerCertificateByTwoPartKey
 	FindListenerRuleByARN               = findListenerRuleByARN
+	FindLoadBalancerAttributesByARN     = findLoadBalancerAttributesByARN
+	FindLoadBalancerByARN               = findLoadBalancerByARN
 	HealthCheckProtocolEnumValues       = healthCheckProtocolEnumValues
 	HostedZoneIDPerRegionALBMap         = hostedZoneIDPerRegionALBMap
 	HostedZoneIDPerRegionNLBMap         = hostedZoneIDPerRegionNLBMap
 	ListenerARNFromRuleARN              = listenerARNFromRuleARN
 	ProtocolVersionEnumValues           = protocolVersionEnumValues
+	SuffixFromARN                       = suffixFromARN
 )
 
 const (

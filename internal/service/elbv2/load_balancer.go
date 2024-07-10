@@ -4,7 +4,6 @@
 package elbv2
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
-
 	"context"
 	"errors"
 	"fmt"
@@ -41,7 +40,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 // @SDKResource("aws_lb", name="Load Balancer")
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;types.LoadBalancer")
-func ResourceLoadBalancer() *schema.Resource {
+func resourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCreate,
 		ReadWithoutTimeout:   resourceLoadBalancerRead,
@@ -489,7 +488,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	lb, err := FindLoadBalancerByARN(ctx, conn, d.Id())
+	lb, err := findLoadBalancerByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Load Balancer %s not found, removing from state", d.Id())
@@ -502,7 +501,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set(names.AttrARN, lb.LoadBalancerArn)
-	d.Set("arn_suffix", SuffixFromARN(lb.LoadBalancerArn))
+	d.Set("arn_suffix", suffixFromARN(lb.LoadBalancerArn))
 	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
 	d.Set(names.AttrDNSName, lb.DNSName)
 	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
@@ -522,7 +521,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrVPCID, lb.VpcId)
 	d.Set("zone_id", lb.CanonicalHostedZoneId)
 
-	attributes, err := FindLoadBalancerAttributesByARN(ctx, conn, d.Id())
+	attributes, err := findLoadBalancerAttributesByARN(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Load Balancer (%s) attributes: %s", d.Id(), err)
@@ -840,27 +839,6 @@ func (m loadBalancerAttributeMap) flatten(d *schema.ResourceData, apiObjects []a
 	}
 }
 
-func FindLoadBalancerByARN(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) (*awstypes.LoadBalancer, error) {
-	input := &elasticloadbalancingv2.DescribeLoadBalancersInput{
-		LoadBalancerArns: []string{arn},
-	}
-
-	output, err := findLoadBalancer(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Eventual consistency check.
-	if aws.ToString(output.LoadBalancerArn) != arn {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
 func findLoadBalancer(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeLoadBalancersInput) (*awstypes.LoadBalancer, error) {
 	output, err := findLoadBalancers(ctx, conn, input)
 
@@ -875,7 +853,6 @@ func findLoadBalancers(ctx context.Context, conn *elasticloadbalancingv2.Client,
 	var output []awstypes.LoadBalancer
 
 	pages := elasticloadbalancingv2.NewDescribeLoadBalancersPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -896,7 +873,28 @@ func findLoadBalancers(ctx context.Context, conn *elasticloadbalancingv2.Client,
 	return output, nil
 }
 
-func FindLoadBalancerAttributesByARN(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) ([]awstypes.LoadBalancerAttribute, error) {
+func findLoadBalancerByARN(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) (*awstypes.LoadBalancer, error) {
+	input := &elasticloadbalancingv2.DescribeLoadBalancersInput{
+		LoadBalancerArns: []string{arn},
+	}
+
+	output, err := findLoadBalancer(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.LoadBalancerArn) != arn {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findLoadBalancerAttributesByARN(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) ([]awstypes.LoadBalancerAttribute, error) {
 	input := &elasticloadbalancingv2.DescribeLoadBalancerAttributesInput{
 		LoadBalancerArn: aws.String(arn),
 	}
@@ -923,7 +921,7 @@ func FindLoadBalancerAttributesByARN(ctx context.Context, conn *elasticloadbalan
 
 func statusLoadBalancer(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindLoadBalancerByARN(ctx, conn, arn)
+		output, err := findLoadBalancerByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -1056,7 +1054,7 @@ func flattenSubnetMappingsFromAvailabilityZones(apiObjects []awstypes.Availabili
 	})
 }
 
-func SuffixFromARN(arn *string) string {
+func suffixFromARN(arn *string) string {
 	if arn == nil {
 		return ""
 	}
