@@ -892,7 +892,11 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting logs_config: %s", err)
 	}
 	d.Set(names.AttrName, project.Name)
-	d.Set("project_visibility", project.ProjectVisibility)
+	if v := project.ProjectVisibility; v != "" {
+		d.Set("project_visibility", project.ProjectVisibility)
+	} else {
+		d.Set("project_visibility", types.ProjectVisibilityTypePrivate)
+	}
 	d.Set("public_project_alias", project.PublicProjectAlias)
 	d.Set("resource_access_role", project.ResourceAccessRole)
 	d.Set("queued_timeout", project.QueuedTimeoutInMinutes)
