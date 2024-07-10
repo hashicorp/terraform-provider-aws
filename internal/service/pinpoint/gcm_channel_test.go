@@ -26,7 +26,7 @@ import (
  GCM_SERVICE_JSON_FILE - Path to a valid Google Cloud Messaging Token File
 **/
 
-func TestAccPinpointGCMChannel_basic(t *testing.T) {
+func TestAccPinpointGCMChannel_basicAPIKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel awstypes.GCMChannelResponse
 	resourceName := "aws_pinpoint_gcm_channel.test_gcm_channel"
@@ -34,12 +34,8 @@ func TestAccPinpointGCMChannel_basic(t *testing.T) {
 	if os.Getenv("GCM_API_KEY") == "" {
 		t.Skipf("GCM_API_KEY env missing, skip test")
 	}
-	if os.Getenv("GCM_SERVICE_JSON_FILE") == "" {
-		t.Skipf("GCM_SERVICE_JSON_FILE env missing, skip test")
-	}
 
 	apiKey := os.Getenv("GCM_API_KEY")
-	serviceJsonFile := os.Getenv("GCM_SERVICE_JSON_FILE")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
@@ -48,38 +44,99 @@ func TestAccPinpointGCMChannel_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckGCMChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGCMChannelConfigApiKey_basic(apiKey),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccGCMChannelConfig_basicAPIKey(apiKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, "aws_pinpoint_app.test_app", names.AttrApplicationID),
+					resource.TestCheckResourceAttr(resourceName, "default_authentication_method", tfpinpoint.DefaultAuthenticationMethodKey),
+					resource.TestCheckResourceAttr(resourceName, "api_key", apiKey),
+					resource.TestCheckResourceAttr(resourceName, "service_json", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccGCMChannelConfigApiKey_full(apiKey),
-				Check: resource.ComposeTestCheckFunc(
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccPinpointGCMChannel_apiKeyAuthMethod(t *testing.T) {
+	ctx := acctest.Context(t)
+	var channel awstypes.GCMChannelResponse
+	resourceName := "aws_pinpoint_gcm_channel.test_gcm_channel"
+
+	if os.Getenv("GCM_API_KEY") == "" {
+		t.Skipf("GCM_API_KEY env missing, skip test")
+	}
+
+	apiKey := os.Getenv("GCM_API_KEY")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGCMChannelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGCMChannelConfigApiKey_apiKeyAuthMethod(apiKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, "aws_pinpoint_app.test_app", names.AttrApplicationID),
+					resource.TestCheckResourceAttr(resourceName, "default_authentication_method", tfpinpoint.DefaultAuthenticationMethodKey),
+					resource.TestCheckResourceAttr(resourceName, "api_key", apiKey),
+					resource.TestCheckResourceAttr(resourceName, "service_json", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccGCMChannelConfigServiceJson_fromFile(serviceJsonFile),
-				Check: resource.ComposeTestCheckFunc(
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccPinpointGCMChannel_tokenAuthMethod(t *testing.T) {
+	ctx := acctest.Context(t)
+	var channel awstypes.GCMChannelResponse
+	resourceName := "aws_pinpoint_gcm_channel.test_gcm_channel"
+
+	if os.Getenv("GCM_SERVICE_JSON_FILE") == "" {
+		t.Skipf("GCM_SERVICE_JSON_FILE env missing, skip test")
+	}
+
+	serviceJsonFile := os.Getenv("GCM_SERVICE_JSON_FILE")
+	d, err := os.ReadFile(serviceJsonFile)
+	if err != nil {
+		t.Fatalf("reading token file: %s", err)
+	}
+	token := string(d)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGCMChannelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGCMChannelConfigServiceJson_tokenAuthMethod(serviceJsonFile),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, "aws_pinpoint_app.test_app", names.AttrApplicationID),
+					resource.TestCheckResourceAttr(resourceName, "default_authentication_method", tfpinpoint.DefaultAuthenticationMethodKey),
+					resource.TestCheckResourceAttr(resourceName, "api_key", ""),
+					resource.TestCheckResourceAttr(resourceName, "service_json", token),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"api_key", "service_json", "default_authentication_method"},
-			},
-			{
-				Config: testAccGCMChannelConfigApiKey_basic(apiKey),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
-				),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -136,7 +193,7 @@ func testAccCheckGCMChannelDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccGCMChannelConfigApiKey_basic(apiKey string) string {
+func testAccGCMChannelConfig_basicAPIKey(apiKey string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 
@@ -148,7 +205,7 @@ resource "aws_pinpoint_gcm_channel" "test_gcm_channel" {
 `, apiKey)
 }
 
-func testAccGCMChannelConfigApiKey_full(apiKey string) string {
+func testAccGCMChannelConfigApiKey_apiKeyAuthMethod(apiKey string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 
@@ -161,7 +218,7 @@ resource "aws_pinpoint_gcm_channel" "test_gcm_channel" {
 `, apiKey)
 }
 
-func testAccGCMChannelConfigServiceJson_fromFile(serviceJsonFile string) string {
+func testAccGCMChannelConfigServiceJson_tokenAuthMethod(serviceJsonFile string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 
