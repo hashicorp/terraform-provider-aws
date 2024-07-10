@@ -324,7 +324,7 @@ The following arguments are optional:
 * `transitEncryptionEnabled` - (Optional) Whether to enable encryption in transit.
   Changing this argument with an `engineVersion` < `7.0.5` will force a replacement.
   Engine versions prior to `7.0.5` only allow this transit encryption to be configured during creation of the replication group.
-* `transit_encryption_mode` - (Optional) A setting that enables clients to migrate to in-transit encryption with no downtime.
+* `transitEncryptionMode` - (Optional) A setting that enables clients to migrate to in-transit encryption with no downtime.
   Valid values are `preferred` and `required`.
   When enabling encryption on an existing replication group, this must first be set to `preferred` before setting it to `required` in a subsequent apply.
   See the `TransitEncryptionMode` field in the [`CreateReplicationGroup` API documentation](https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_CreateReplicationGroup.html) for additional details.
@@ -358,7 +358,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `60m`)
-* `delete` - (Default `40m`)
+* `delete` - (Default `45m`)
 * `update` - (Default `40m`)
 
 ## Import
@@ -393,4 +393,4 @@ Using `terraform import`, import ElastiCache Replication Groups using the `repli
 % terraform import aws_elasticache_replication_group.my_replication_group replication-group-1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6ce698e4fe3f3d72a384064dbc2302f1a27c68d094d09caaffb378fd8730393b -->
+<!-- cache-key: cdktf-0.20.1 input-10b8b8327add4ca2c312f6193624fd2f09afd1f475ca281760fdc359c19e7edb -->

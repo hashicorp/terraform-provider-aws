@@ -40,15 +40,15 @@ func TestAccRDSProxyDefaultTargetGroup_basic(t *testing.T) {
 				Config: testAccProxyDefaultTargetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`target-group:.+`)),
-					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`target-group:.+`)),
+					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "connection_pool_config.*", map[string]string{
 						"connection_borrow_timeout":    "120",
 						"init_query":                   "",
 						"max_connections_percent":      "100",
 						"max_idle_connections_percent": "50",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", acctest.Ct0),
 				),
 			},
 			{
@@ -80,15 +80,15 @@ func TestAccRDSProxyDefaultTargetGroup_emptyConnectionPool(t *testing.T) {
 				Config: testAccProxyDefaultTargetGroupConfig_emptyConnectionPoolConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`target-group:.+`)),
-					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`target-group:.+`)),
+					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "connection_pool_config.*", map[string]string{
 						"connection_borrow_timeout":    "120",
 						"init_query":                   "",
 						"max_connections_percent":      "100",
 						"max_idle_connections_percent": "50",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", acctest.Ct0),
 				),
 			},
 			{
@@ -277,7 +277,7 @@ func TestAccRDSProxyDefaultTargetGroup_sessionPinningFilters(t *testing.T) {
 				Config: testAccProxyDefaultTargetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
-					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", acctest.Ct0),
 				),
 			},
 			{
@@ -289,7 +289,7 @@ func TestAccRDSProxyDefaultTargetGroup_sessionPinningFilters(t *testing.T) {
 				Config: testAccProxyDefaultTargetGroupConfig_sessionPinningFilters(rName, sessionPinningFilters),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
-					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.0", sessionPinningFilters),
 				),
 			},

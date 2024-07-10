@@ -13,11 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -27,7 +29,7 @@ const (
 )
 
 // @SDKResource("aws_lightsail_database", name="Database")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="id", resourceType="Database")
 func ResourceDatabase() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDatabaseCreate,
@@ -40,16 +42,16 @@ func ResourceDatabase() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -78,7 +80,7 @@ func ResourceDatabase() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -86,11 +88,11 @@ func ResourceDatabase() *schema.Resource {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -145,13 +147,13 @@ func ResourceDatabase() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -204,7 +206,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Tags:                          getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.AvailabilityZone = aws.String(v.(string))
 	}
 
@@ -216,11 +218,11 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.PreferredBackupWindow = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+	if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("publicly_accessible"); ok {
+	if v, ok := d.GetOk(names.AttrPubliclyAccessible); ok {
 		input.PubliclyAccessible = aws.Bool(v.(bool))
 	}
 
@@ -293,24 +295,24 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	rd := database.RelationalDatabase
 
-	d.Set("arn", rd.Arn)
-	d.Set("availability_zone", rd.Location.AvailabilityZone)
+	d.Set(names.AttrARN, rd.Arn)
+	d.Set(names.AttrAvailabilityZone, rd.Location.AvailabilityZone)
 	d.Set("backup_retention_enabled", rd.BackupRetentionEnabled)
 	d.Set("blueprint_id", rd.RelationalDatabaseBlueprintId)
 	d.Set("bundle_id", rd.RelationalDatabaseBundleId)
 	d.Set("ca_certificate_identifier", rd.CaCertificateIdentifier)
 	d.Set("cpu_count", rd.Hardware.CpuCount)
-	d.Set("created_at", rd.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, rd.CreatedAt.Format(time.RFC3339))
 	d.Set("disk_size", rd.Hardware.DiskSizeInGb)
-	d.Set("engine", rd.Engine)
-	d.Set("engine_version", rd.EngineVersion)
+	d.Set(names.AttrEngine, rd.Engine)
+	d.Set(names.AttrEngineVersion, rd.EngineVersion)
 	d.Set("master_database_name", rd.MasterDatabaseName)
 	d.Set("master_endpoint_address", rd.MasterEndpoint.Address)
 	d.Set("master_endpoint_port", rd.MasterEndpoint.Port)
 	d.Set("master_username", rd.MasterUsername)
 	d.Set("preferred_backup_window", rd.PreferredBackupWindow)
-	d.Set("preferred_maintenance_window", rd.PreferredMaintenanceWindow)
-	d.Set("publicly_accessible", rd.PubliclyAccessible)
+	d.Set(names.AttrPreferredMaintenanceWindow, rd.PreferredMaintenanceWindow)
+	d.Set(names.AttrPubliclyAccessible, rd.PubliclyAccessible)
 	d.Set("ram_size", rd.Hardware.RamSizeInGb)
 	d.Set("relational_database_name", rd.Name)
 	d.Set("secondary_availability_zone", rd.SecondaryAvailabilityZone)
@@ -326,9 +328,9 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	if d.HasChangesExcept("apply_immediately", "final_snapshot_name", "skip_final_snapshot", "tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrApplyImmediately, "final_snapshot_name", "skip_final_snapshot", names.AttrTags, names.AttrTagsAll) {
 		input := &lightsail.UpdateRelationalDatabaseInput{
-			ApplyImmediately:       aws.Bool(d.Get("apply_immediately").(bool)),
+			ApplyImmediately:       aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			RelationalDatabaseName: aws.String(d.Id()),
 		}
 
@@ -352,12 +354,12 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
 		}
 
-		if d.HasChange("preferred_maintenance_window") {
-			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		if d.HasChange(names.AttrPreferredMaintenanceWindow) {
+			input.PreferredMaintenanceWindow = aws.String(d.Get(names.AttrPreferredMaintenanceWindow).(string))
 		}
 
-		if d.HasChange("publicly_accessible") {
-			input.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
+		if d.HasChange(names.AttrPubliclyAccessible) {
+			input.PubliclyAccessible = aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool))
 		}
 
 		output, err := conn.UpdateRelationalDatabase(ctx, input)
@@ -378,8 +380,8 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if d.HasChange("publicly_accessible") {
-			if err := waitDatabasePubliclyAccessibleModified(ctx, conn, aws.String(d.Id()), d.Get("publicly_accessible").(bool)); err != nil {
+		if d.HasChange(names.AttrPubliclyAccessible) {
+			if err := waitDatabasePubliclyAccessibleModified(ctx, conn, aws.String(d.Id()), d.Get(names.AttrPubliclyAccessible).(bool)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Lightsail Relational Database (%s) publicly accessible update: %s", d.Id(), err)
 			}
 		}
@@ -400,6 +402,10 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
 	if _, err := waitDatabaseModified(ctx, conn, aws.String(d.Id())); err != nil {
+		if IsANotFoundError(err) {
+			return diags
+		}
+
 		return sdkdiag.AppendErrorf(diags, "waiting for Lightsail Relational Database (%s) to become available: %s", d.Id(), err)
 	}
 
@@ -420,6 +426,10 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	output, err := conn.DeleteRelationalDatabase(ctx, input)
 
+	if IsANotFoundError(err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Lightsail Relational Database (%s): %s", d.Id(), err)
 	}
@@ -439,4 +449,29 @@ func resourceDatabaseImport(ctx context.Context, d *schema.ResourceData, meta in
 	// that final_snapshot_identifier is not required
 	d.Set("skip_final_snapshot", true)
 	return []*schema.ResourceData{d}, nil
+}
+
+func FindDatabaseById(ctx context.Context, conn *lightsail.Client, id string) (*types.RelationalDatabase, error) {
+	in := &lightsail.GetRelationalDatabaseInput{
+		RelationalDatabaseName: aws.String(id),
+	}
+
+	out, err := conn.GetRelationalDatabase(ctx, in)
+
+	if IsANotFoundError(err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.RelationalDatabase == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.RelationalDatabase, nil
 }

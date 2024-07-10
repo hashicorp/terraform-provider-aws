@@ -36,7 +36,7 @@ func (d *dataSourceNotificationChannel) Metadata(_ context.Context, req datasour
 func (d *dataSourceNotificationChannel) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Required: true,
 			},
 		},
@@ -62,7 +62,7 @@ func (d *dataSourceNotificationChannel) Schema(ctx context.Context, req datasour
 				CustomType: fwtypes.NewListNestedObjectTypeOf[snsData](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"topic_arn": schema.StringAttribute{
+						names.AttrTopicARN: schema.StringAttribute{
 							Computed:   true,
 							CustomType: fwtypes.ARNType,
 						},

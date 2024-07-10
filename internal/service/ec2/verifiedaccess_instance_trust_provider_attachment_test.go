@@ -38,8 +38,8 @@ func testAccVerifiedAccessInstanceTrustProviderAttachment_basic(t *testing.T, se
 				Config: testAccVerifiedAccessInstanceTrustProviderAttachmentConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceTrustProviderAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_trust_provider_id", trustProviderResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_trust_provider_id", trustProviderResourceName, names.AttrID),
 				),
 			},
 			{

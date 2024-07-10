@@ -42,8 +42,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Environment")
+// @FrameworkResource("aws_m2_environment", name="Environment")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/m2;m2.GetEnvironmentOutput")
 func newEnvironmentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &environmentResource{}
 
@@ -71,7 +72,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 				Optional: true,
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(500),
@@ -87,7 +88,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"engine_version": schema.StringAttribute{
+			names.AttrEngineVersion: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				Validators: []validator.String{
@@ -102,13 +103,13 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 				Optional: true,
 			},
 			names.AttrID: framework.IDAttribute(),
-			"instance_type": schema.StringAttribute{
+			names.AttrInstanceType: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(`^\S{1,20}$`), ""),
 				},
 			},
-			"kms_key_id": schema.StringAttribute{
+			names.AttrKMSKeyID: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
 				PlanModifiers: []planmodifier.String{
@@ -121,7 +122,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_\-]{1,59}$`), ""),
@@ -130,7 +131,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"preferred_maintenance_window": schema.StringAttribute{
+			names.AttrPreferredMaintenanceWindow: schema.StringAttribute{
 				CustomType: fwtypes.OnceAWeekWindowType,
 				Optional:   true,
 				Computed:   true,
@@ -138,7 +139,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"publicly_accessible": schema.BoolAttribute{
+			names.AttrPubliclyAccessible: schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
@@ -146,7 +147,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"security_group_ids": schema.SetAttribute{
+			names.AttrSecurityGroupIDs: schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
@@ -159,7 +160,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"subnet_ids": schema.SetAttribute{
+			names.AttrSubnetIDs: schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
@@ -216,7 +217,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"file_system_id": schema.StringAttribute{
+									names.AttrFileSystemID: schema.StringAttribute{
 										Required: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
@@ -241,7 +242,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"file_system_id": schema.StringAttribute{
+									names.AttrFileSystemID: schema.StringAttribute{
 										Required: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
@@ -259,7 +260,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -278,34 +279,17 @@ func (r *environmentResource) Create(ctx context.Context, request resource.Creat
 	conn := r.Meta().M2Client(ctx)
 
 	name := data.Name.ValueString()
-	input := &m2.CreateEnvironmentInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := m2.CreateEnvironmentInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
-	}
-
-	// AutoFlEx doesn't yet handle union types.
-	if !data.StorageConfigurations.IsNull() {
-		storageConfigurationsData, diags := data.StorageConfigurations.ToSlice(ctx)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		storageConfigurations, diags := expandStorageConfigurations(ctx, storageConfigurationsData)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		input.StorageConfigurations = storageConfigurations
 	}
 
 	// Additional fields.
 	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateEnvironment(ctx, input)
+	output, err := conn.CreateEnvironment(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating Mainframe Modernization Environment (%s)", name), err.Error())
@@ -567,10 +551,12 @@ func waitEnvironmentUpdated(ctx context.Context, conn *m2.Client, id string, tim
 
 func waitEnvironmentDeleted(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.EnvironmentLifecycleAvailable, awstypes.EnvironmentLifecycleCreating, awstypes.EnvironmentLifecycleDeleting),
-		Target:  []string{},
-		Refresh: statusEnvironment(ctx, conn, id),
-		Timeout: timeout,
+		Pending:    enum.Slice(awstypes.EnvironmentLifecycleAvailable, awstypes.EnvironmentLifecycleCreating, awstypes.EnvironmentLifecycleDeleting),
+		Target:     []string{},
+		Refresh:    statusEnvironment(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      4 * time.Minute,
+		MinTimeout: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -623,6 +609,42 @@ type storageConfigurationModel struct {
 	FSX fwtypes.ListNestedObjectValueOf[fsxStorageConfigurationModel] `tfsdk:"fsx"`
 }
 
+func (m storageConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.EFS.IsNull():
+		efsStorageConfigurationData, d := m.EFS.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.StorageConfigurationMemberEfs
+		diags.Append(fwflex.Expand(ctx, efsStorageConfigurationData, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+
+	case !m.FSX.IsNull():
+		fsxStorageConfigurationData, d := m.FSX.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.StorageConfigurationMemberFsx
+		diags.Append(fwflex.Expand(ctx, fsxStorageConfigurationData, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
 type efsStorageConfigurationModel struct {
 	FileSystemID types.String `tfsdk:"file_system_id"`
 	MountPoint   types.String `tfsdk:"mount_point"`
@@ -635,46 +657,6 @@ type fsxStorageConfigurationModel struct {
 
 type highAvailabilityConfigModel struct {
 	DesiredCapacity types.Int64 `tfsdk:"desired_capacity"`
-}
-
-func expandStorageConfigurations(ctx context.Context, storageConfigurationsData []*storageConfigurationModel) ([]awstypes.StorageConfiguration, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	apiObjects := []awstypes.StorageConfiguration{}
-
-	for _, item := range storageConfigurationsData {
-		if !item.EFS.IsNull() {
-			efsStorageConfigurationData, d := item.EFS.ToPtr(ctx)
-			diags.Append(d...)
-			if diags.HasError() {
-				return nil, diags
-			}
-
-			apiObject := &awstypes.StorageConfigurationMemberEfs{}
-			diags.Append(fwflex.Expand(ctx, efsStorageConfigurationData, &apiObject.Value)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-
-			apiObjects = append(apiObjects, apiObject)
-		}
-		if !item.FSX.IsNull() {
-			fsxStorageConfigurationData, d := item.FSX.ToPtr(ctx)
-			diags.Append(d...)
-			if diags.HasError() {
-				return nil, diags
-			}
-
-			apiObject := &awstypes.StorageConfigurationMemberFsx{}
-			diags.Append(fwflex.Expand(ctx, fsxStorageConfigurationData, &apiObject.Value)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-
-			apiObjects = append(apiObjects, apiObject)
-		}
-	}
-
-	return apiObjects, diags
 }
 
 func flattenStorageConfigurations(ctx context.Context, apiObjects []awstypes.StorageConfiguration) ([]*storageConfigurationModel, diag.Diagnostics) {

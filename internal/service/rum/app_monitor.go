@@ -5,18 +5,20 @@ package rum
 
 import (
 	"context"
-	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/cloudwatchrum"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/rum"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/rum/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -26,7 +28,7 @@ import (
 
 // @SDKResource("aws_rum_app_monitor", name="App Monitor")
 // @Tags(identifierAttribute="arn")
-func ResourceAppMonitor() *schema.Resource {
+func resourceAppMonitor() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAppMonitorCreate,
 		ReadWithoutTimeout:   resourceAppMonitorRead,
@@ -90,8 +92,8 @@ func ResourceAppMonitor() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(cloudwatchrum.Telemetry_Values(), false),
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[awstypes.Telemetry](),
 							},
 						},
 					},
@@ -101,7 +103,7 @@ func ResourceAppMonitor() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -112,11 +114,11 @@ func ResourceAppMonitor() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"status": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      cloudwatchrum.CustomEventsStatusDisabled,
-							ValidateFunc: validation.StringInSlice(cloudwatchrum.CustomEventsStatus_Values(), false),
+						names.AttrStatus: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.CustomEventsStatusDisabled,
+							ValidateDiagFunc: enum.Validate[awstypes.CustomEventsStatus](),
 						},
 					},
 				},
@@ -130,12 +132,12 @@ func ResourceAppMonitor() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 253),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -144,18 +146,20 @@ func ResourceAppMonitor() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RUMClient(ctx)
 
-	name := d.Get("name").(string)
-	input := &cloudwatchrum.CreateAppMonitorInput{
+	name := d.Get(names.AttrName).(string)
+	input := &rum.CreateAppMonitorInput{
 		Name:         aws.String(name),
 		CwLogEnabled: aws.Bool(d.Get("cw_log_enabled").(bool)),
-		Domain:       aws.String(d.Get("domain").(string)),
+		Domain:       aws.String(d.Get(names.AttrDomain).(string)),
 		Tags:         getTagsIn(ctx),
 	}
 
@@ -167,64 +171,67 @@ func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.CustomEvents = expandCustomEvents(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	_, err := conn.CreateAppMonitorWithContext(ctx, input)
+	_, err := conn.CreateAppMonitor(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating CloudWatch RUM App Monitor (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudWatch RUM App Monitor (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceAppMonitorRead(ctx, d, meta)
+	return append(diags, resourceAppMonitorRead(ctx, d, meta)...)
 }
 
 func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RUMClient(ctx)
 
-	appMon, err := FindAppMonitorByName(ctx, conn, d.Id())
+	appMon, err := findAppMonitorByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch RUM App Monitor %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch RUM App Monitor (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch RUM App Monitor (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("app_monitor_configuration", []interface{}{flattenAppMonitorConfiguration(appMon.AppMonitorConfiguration)}); err != nil {
-		return diag.Errorf("setting app_monitor_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting app_monitor_configuration: %s", err)
 	}
 
 	if err := d.Set("custom_events", []interface{}{flattenCustomEvents(appMon.CustomEvents)}); err != nil {
-		return diag.Errorf("setting custom_events: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting custom_events: %s", err)
 	}
 
 	d.Set("app_monitor_id", appMon.Id)
+	name := aws.ToString(appMon.Name)
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("appmonitor/%s", aws.StringValue(appMon.Name)),
 		Service:   "rum",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  "appmonitor/" + name,
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("cw_log_enabled", appMon.DataStorage.CwLog.CwLogEnabled)
 	d.Set("cw_log_group", appMon.DataStorage.CwLog.CwLogGroup)
-	d.Set("domain", appMon.Domain)
-	d.Set("name", appMon.Name)
+	d.Set(names.AttrDomain, appMon.Domain)
+	d.Set(names.AttrName, name)
 
 	setTagsOut(ctx, appMon.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceAppMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RUMClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
-		input := &cloudwatchrum.UpdateAppMonitorInput{
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &rum.UpdateAppMonitorInput{
 			Name: aws.String(d.Id()),
 		}
 
@@ -240,47 +247,48 @@ func resourceAppMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			input.CwLogEnabled = aws.Bool(d.Get("cw_log_enabled").(bool))
 		}
 
-		if d.HasChange("domain") {
-			input.Domain = aws.String(d.Get("domain").(string))
+		if d.HasChange(names.AttrDomain) {
+			input.Domain = aws.String(d.Get(names.AttrDomain).(string))
 		}
 
-		_, err := conn.UpdateAppMonitorWithContext(ctx, input)
+		_, err := conn.UpdateAppMonitor(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating CloudWatch RUM App Monitor (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudWatch RUM App Monitor (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceAppMonitorRead(ctx, d, meta)
+	return append(diags, resourceAppMonitorRead(ctx, d, meta)...)
 }
 
 func resourceAppMonitorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RUMClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudWatch RUM App Monitor: %s", d.Id())
-	_, err := conn.DeleteAppMonitorWithContext(ctx, &cloudwatchrum.DeleteAppMonitorInput{
+	_, err := conn.DeleteAppMonitor(ctx, &rum.DeleteAppMonitorInput{
 		Name: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, cloudwatchrum.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting CloudWatch RUM App Monitor (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch RUM App Monitor (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func FindAppMonitorByName(ctx context.Context, conn *cloudwatchrum.CloudWatchRUM, name string) (*cloudwatchrum.AppMonitor, error) {
-	input := &cloudwatchrum.GetAppMonitorInput{
+func findAppMonitorByName(ctx context.Context, conn *rum.Client, name string) (*awstypes.AppMonitor, error) {
+	input := &rum.GetAppMonitorInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.GetAppMonitorWithContext(ctx, input)
+	output, err := conn.GetAppMonitor(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudwatchrum.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -298,12 +306,12 @@ func FindAppMonitorByName(ctx context.Context, conn *cloudwatchrum.CloudWatchRUM
 	return output.AppMonitor, nil
 }
 
-func expandAppMonitorConfiguration(tfMap map[string]interface{}) *cloudwatchrum.AppMonitorConfiguration {
+func expandAppMonitorConfiguration(tfMap map[string]interface{}) *awstypes.AppMonitorConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	config := &cloudwatchrum.AppMonitorConfiguration{}
+	config := &awstypes.AppMonitorConfiguration{}
 
 	if v, ok := tfMap["guest_role_arn"].(string); ok && v != "" {
 		config.GuestRoleArn = aws.String(v)
@@ -314,7 +322,7 @@ func expandAppMonitorConfiguration(tfMap map[string]interface{}) *cloudwatchrum.
 	}
 
 	if v, ok := tfMap["session_sample_rate"].(float64); ok {
-		config.SessionSampleRate = aws.Float64(v)
+		config.SessionSampleRate = v
 	}
 
 	if v, ok := tfMap["allow_cookies"].(bool); ok {
@@ -326,25 +334,25 @@ func expandAppMonitorConfiguration(tfMap map[string]interface{}) *cloudwatchrum.
 	}
 
 	if v, ok := tfMap["excluded_pages"].(*schema.Set); ok && v.Len() > 0 {
-		config.ExcludedPages = flex.ExpandStringSet(v)
+		config.ExcludedPages = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap["favorite_pages"].(*schema.Set); ok && v.Len() > 0 {
-		config.FavoritePages = flex.ExpandStringSet(v)
+		config.FavoritePages = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap["included_pages"].(*schema.Set); ok && v.Len() > 0 {
-		config.IncludedPages = flex.ExpandStringSet(v)
+		config.IncludedPages = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap["telemetries"].(*schema.Set); ok && v.Len() > 0 {
-		config.Telemetries = flex.ExpandStringSet(v)
+		config.Telemetries = flex.ExpandStringyValueSet[awstypes.Telemetry](v)
 	}
 
 	return config
 }
 
-func flattenAppMonitorConfiguration(apiObject *cloudwatchrum.AppMonitorConfiguration) map[string]interface{} {
+func flattenAppMonitorConfiguration(apiObject *awstypes.AppMonitorConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -352,67 +360,63 @@ func flattenAppMonitorConfiguration(apiObject *cloudwatchrum.AppMonitorConfigura
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.GuestRoleArn; v != nil {
-		tfMap["guest_role_arn"] = aws.StringValue(v)
+		tfMap["guest_role_arn"] = aws.ToString(v)
 	}
 
 	if v := apiObject.IdentityPoolId; v != nil {
-		tfMap["identity_pool_id"] = aws.StringValue(v)
+		tfMap["identity_pool_id"] = aws.ToString(v)
 	}
 
-	if v := apiObject.SessionSampleRate; v != nil {
-		tfMap["session_sample_rate"] = aws.Float64Value(v)
-	}
+	tfMap["session_sample_rate"] = apiObject.SessionSampleRate
 
 	if v := apiObject.AllowCookies; v != nil {
-		tfMap["allow_cookies"] = aws.BoolValue(v)
+		tfMap["allow_cookies"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.EnableXRay; v != nil {
-		tfMap["enable_xray"] = aws.BoolValue(v)
+		tfMap["enable_xray"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.Telemetries; v != nil {
-		tfMap["telemetries"] = flex.FlattenStringSet(v)
+		tfMap["telemetries"] = apiObject.Telemetries
 	}
 
 	if v := apiObject.IncludedPages; v != nil {
-		tfMap["included_pages"] = flex.FlattenStringSet(v)
+		tfMap["included_pages"] = apiObject.IncludedPages
 	}
 
 	if v := apiObject.FavoritePages; v != nil {
-		tfMap["favorite_pages"] = flex.FlattenStringSet(v)
+		tfMap["favorite_pages"] = apiObject.FavoritePages
 	}
 
 	if v := apiObject.ExcludedPages; v != nil {
-		tfMap["excluded_pages"] = flex.FlattenStringSet(v)
+		tfMap["excluded_pages"] = apiObject.ExcludedPages
 	}
 
 	return tfMap
 }
 
-func expandCustomEvents(tfMap map[string]interface{}) *cloudwatchrum.CustomEvents {
+func expandCustomEvents(tfMap map[string]interface{}) *awstypes.CustomEvents {
 	if tfMap == nil {
 		return nil
 	}
 
-	config := &cloudwatchrum.CustomEvents{}
+	config := &awstypes.CustomEvents{}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
-		config.Status = aws.String(v)
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
+		config.Status = awstypes.CustomEventsStatus(v)
 	}
 
 	return config
 }
 
-func flattenCustomEvents(apiObject *cloudwatchrum.CustomEvents) map[string]interface{} {
+func flattenCustomEvents(apiObject *awstypes.CustomEvents) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Status; v != nil {
-		tfMap["status"] = aws.StringValue(v)
+	tfMap := map[string]interface{}{
+		names.AttrStatus: apiObject.Status,
 	}
 
 	return tfMap
