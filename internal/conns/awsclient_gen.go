@@ -130,6 +130,7 @@ import (
 	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
 	mediapackagev2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
 	mediastore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediastore"
+	mgn_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mgn"
 	mq_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mq"
 	mwaa_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mwaa"
 	neptunegraph_sdkv2 "github.com/aws/aws-sdk-go-v2/service/neptunegraph"
@@ -899,6 +900,10 @@ func (c *AWSClient) MediaStoreClient(ctx context.Context) *mediastore_sdkv2.Clie
 
 func (c *AWSClient) MemoryDBConn(ctx context.Context) *memorydb_sdkv1.MemoryDB {
 	return errs.Must(conn[*memorydb_sdkv1.MemoryDB](ctx, c, names.MemoryDB, make(map[string]any)))
+}
+
+func (c *AWSClient) MgnClient(ctx context.Context) *mgn_sdkv2.Client {
+	return errs.Must(client[*mgn_sdkv2.Client](ctx, c, names.Mgn, make(map[string]any)))
 }
 
 func (c *AWSClient) NeptuneConn(ctx context.Context) *neptune_sdkv1.Neptune {

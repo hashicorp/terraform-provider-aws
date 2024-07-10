@@ -645,12 +645,12 @@ service "mgn" {
 
   sdk {
     id             = "mgn"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
     provider_name_upper = "Mgn"
-    human_friendly      = "Application Migration (Mgn)"
+    human_friendly      = "Application Migration (MGN)"
   }
 
   client {
@@ -664,7 +664,6 @@ service "mgn" {
   provider_package_correct = "mgn"
   doc_prefix               = ["mgn_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "appstream" {

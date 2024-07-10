@@ -16,6 +16,7 @@ AppIntegrations
 AppStream 2.0
 AppSync
 Application Auto Scaling
+Application Migration (MGN)
 Application Signals
 Athena
 Audit Manager
