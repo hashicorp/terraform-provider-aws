@@ -5,24 +5,26 @@ package elbv2
 
 // Exports for use in tests only.
 var (
-	ResourceListener            = resourceListener
-	ResourceListenerCertificate = resourceListenerCertificate
-	ResourceListenerRule        = resourceListenerRule
-	ResourceLoadBalancer        = resourceLoadBalancer
-	ResourceTrustStore          = resourceTrustStore
+	ResourceListener             = resourceListener
+	ResourceListenerCertificate  = resourceListenerCertificate
+	ResourceListenerRule         = resourceListenerRule
+	ResourceLoadBalancer         = resourceLoadBalancer
+	ResourceTrustStore           = resourceTrustStore
+	ResourceTrustStoreRevocation = resourceTrustStoreRevocation
 
-	FindListenerByARN                   = findListenerByARN
-	FindListenerCertificateByTwoPartKey = findListenerCertificateByTwoPartKey
-	FindListenerRuleByARN               = findListenerRuleByARN
-	FindLoadBalancerAttributesByARN     = findLoadBalancerAttributesByARN
-	FindLoadBalancerByARN               = findLoadBalancerByARN
-	FindTrustStoreByARN                 = findTrustStoreByARN
-	HealthCheckProtocolEnumValues       = healthCheckProtocolEnumValues
-	HostedZoneIDPerRegionALBMap         = hostedZoneIDPerRegionALBMap
-	HostedZoneIDPerRegionNLBMap         = hostedZoneIDPerRegionNLBMap
-	ListenerARNFromRuleARN              = listenerARNFromRuleARN
-	ProtocolVersionEnumValues           = protocolVersionEnumValues
-	SuffixFromARN                       = suffixFromARN
+	FindListenerByARN                    = findListenerByARN
+	FindListenerCertificateByTwoPartKey  = findListenerCertificateByTwoPartKey
+	FindListenerRuleByARN                = findListenerRuleByARN
+	FindLoadBalancerAttributesByARN      = findLoadBalancerAttributesByARN
+	FindLoadBalancerByARN                = findLoadBalancerByARN
+	FindTrustStoreByARN                  = findTrustStoreByARN
+	FindTrustStoreRevocationByTwoPartKey = findTrustStoreRevocationByTwoPartKey
+	HealthCheckProtocolEnumValues        = healthCheckProtocolEnumValues
+	HostedZoneIDPerRegionALBMap          = hostedZoneIDPerRegionALBMap
+	HostedZoneIDPerRegionNLBMap          = hostedZoneIDPerRegionNLBMap
+	ListenerARNFromRuleARN               = listenerARNFromRuleARN
+	ProtocolVersionEnumValues            = protocolVersionEnumValues
+	SuffixFromARN                        = suffixFromARN
 )
 
 const (

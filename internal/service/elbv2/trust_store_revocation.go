@@ -25,7 +25,7 @@ import (
 )
 
 // @SDKResource("aws_lb_trust_store_revocation", name="Trust Store Revocation")
-func ResourceTrustStoreRevocation() *schema.Resource {
+func resourceTrustStoreRevocation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrustStoreRevocationCreate,
 		ReadWithoutTimeout:   resourceTrustStoreRevocationRead,
@@ -107,7 +107,7 @@ func resourceTrustStoreRevocationCreate(ctx context.Context, d *schema.ResourceD
 	d.SetId(id)
 
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		return FindTrustStoreRevocationByTwoPartKey(ctx, conn, trustStoreARN, revocationID)
+		return findTrustStoreRevocationByTwoPartKey(ctx, conn, trustStoreARN, revocationID)
 	})
 
 	if err != nil {
@@ -128,7 +128,7 @@ func resourceTrustStoreRevocationRead(ctx context.Context, d *schema.ResourceDat
 
 	trustStoreARN := parts[0]
 	revocationID := errs.Must(strconv.ParseInt(parts[1], 10, 64))
-	revocation, err := FindTrustStoreRevocationByTwoPartKey(ctx, conn, trustStoreARN, revocationID)
+	revocation, err := findTrustStoreRevocationByTwoPartKey(ctx, conn, trustStoreARN, revocationID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Trust Store Revocation %s not found, removing from state", d.Id())
@@ -171,7 +171,7 @@ func resourceTrustStoreRevocationDelete(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func FindTrustStoreRevocationByTwoPartKey(ctx context.Context, conn *elasticloadbalancingv2.Client, trustStoreARN string, revocationID int64) (*awstypes.DescribeTrustStoreRevocation, error) {
+func findTrustStoreRevocationByTwoPartKey(ctx context.Context, conn *elasticloadbalancingv2.Client, trustStoreARN string, revocationID int64) (*awstypes.DescribeTrustStoreRevocation, error) {
 	input := &elasticloadbalancingv2.DescribeTrustStoreRevocationsInput{
 		RevocationIds: []int64{revocationID},
 		TrustStoreArn: aws.String(trustStoreARN),
@@ -206,7 +206,6 @@ func findTrustStoreRevocations(ctx context.Context, conn *elasticloadbalancingv2
 	var output []awstypes.DescribeTrustStoreRevocation
 
 	pages := elasticloadbalancingv2.NewDescribeTrustStoreRevocationsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

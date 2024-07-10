@@ -163,7 +163,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTrustStoreRevocation,
+			Factory:  resourceTrustStoreRevocation,
 			TypeName: "aws_lb_trust_store_revocation",
 			Name:     "Trust Store Revocation",
 		},
