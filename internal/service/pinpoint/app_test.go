@@ -43,7 +43,6 @@ func TestAccPinpointApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
-					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -60,6 +59,12 @@ func TestAccPinpointApp_basic(t *testing.T) {
 							"maximum_duration":    knownvalue.Int64Exact(0),
 							"messages_per_second": knownvalue.Int64Exact(0),
 							"total":               knownvalue.Int64Exact(0),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("quiet_time"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"end":   knownvalue.StringExact(""),
+							"start": knownvalue.StringExact(""),
 						}),
 					})),
 				},
@@ -279,9 +284,15 @@ func TestAccPinpointApp_quietTime(t *testing.T) {
 				Config: testAccAppConfig_quietTime(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "quiet_time.0.start", "00:00"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("quiet_time"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"end":   knownvalue.StringExact("03:00"),
+							"start": knownvalue.StringExact("00:00"),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
