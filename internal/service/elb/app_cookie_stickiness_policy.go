@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -163,6 +164,10 @@ func resourceAppCookieStickinessPolicyDelete(ctx context.Context, d *schema.Reso
 
 	_, err = conn.SetLoadBalancerPoliciesOfListener(ctx, input)
 
+	if tfawserr.ErrCodeEquals(err, errCodeLoadBalancerNotFound) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ELB Classic App Cookie Stickiness Policy (%s): %s", d.Id(), err)
 	}
@@ -172,6 +177,10 @@ func resourceAppCookieStickinessPolicyDelete(ctx context.Context, d *schema.Reso
 		LoadBalancerName: aws.String(lbName),
 		PolicyName:       aws.String(policyName),
 	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeLoadBalancerNotFound) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ELB Classic App Cookie Stickiness Policy (%s): %s", d.Id(), err)

@@ -12,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -179,6 +180,10 @@ func resourceSSLNegotiationPolicyDelete(ctx context.Context, d *schema.ResourceD
 
 	_, err = conn.SetLoadBalancerPoliciesOfListener(ctx, input)
 
+	if tfawserr.ErrCodeEquals(err, errCodeLoadBalancerNotFound) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ELB Classic SSL Negotiation Policy (%s): %s", d.Id(), err)
 	}
@@ -187,6 +192,10 @@ func resourceSSLNegotiationPolicyDelete(ctx context.Context, d *schema.ResourceD
 		LoadBalancerName: aws.String(lbName),
 		PolicyName:       aws.String(policyName),
 	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeLoadBalancerNotFound) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ELB Classic SSL Negotiation Policy (%s): %s", d.Id(), err)

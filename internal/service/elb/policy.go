@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -221,6 +222,10 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		LoadBalancerName: aws.String(lbName),
 		PolicyName:       aws.String(policyName),
 	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeLoadBalancerNotFound) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ELB Classic Load Balancer Policy (%s): %s", d.Id(), err)

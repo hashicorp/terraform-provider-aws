@@ -4,5 +4,6 @@
 package elb
 
 const (
-	errCodeInvalidTarget = "InvalidTarget"
+	errCodeInvalidTarget        = "InvalidTarget"
+	errCodeLoadBalancerNotFound = "LoadBalancerNotFound"
 )
