@@ -248,13 +248,13 @@ func resourceONTAPFileSystem() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
-			resourceONTAPFileSystemThroughputCapacityperHAPairCustomizeDiff,
-			resourceONTAPFileSystemrHAPairsCustomizeDiff,
+			resourceONTAPFileSystemThroughputCapacityPerHAPairCustomizeDiff,
+			resourceONTAPFileSystemHAPairsCustomizeDiff,
 		),
 	}
 }
 
-func resourceONTAPFileSystemThroughputCapacityperHAPairCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
+func resourceONTAPFileSystemThroughputCapacityPerHAPairCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
 	// we want to force a new resource if the throughput_capacity_per_ha_pair is increased for Gen1 file systems
 	if d.HasChange("throughput_capacity_per_ha_pair") {
 		o, n := d.GetChange("throughput_capacity_per_ha_pair")
@@ -268,7 +268,7 @@ func resourceONTAPFileSystemThroughputCapacityperHAPairCustomizeDiff(_ context.C
 	return nil
 }
 
-func resourceONTAPFileSystemrHAPairsCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
+func resourceONTAPFileSystemHAPairsCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
 	// we want to force a new resource if the ha_pairs is increased for Gen1 single AZ file systems. multiple ha_pairs is not supported on Multi AZ.
 	if d.HasChange("ha_pairs") {
 		o, n := d.GetChange("ha_pairs")
