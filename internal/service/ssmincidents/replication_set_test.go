@@ -436,8 +436,6 @@ func testAccCheckReplicationSetDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			log.Printf("Replication Set Resource has incorrect Error\n")
-
 			if err != nil {
 				return create.Error(names.SSMIncidents, create.ErrActionCheckingDestroyed, tfssmincidents.ResNameReplicationSet, resource.Primary.ID,
 					errors.New("expected resource not found error, received an unexpected error"))

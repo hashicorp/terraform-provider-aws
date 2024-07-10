@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -132,6 +133,40 @@ func findCapacityReservationByID(ctx context.Context, conn *ec2.Client, id strin
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
+	}
+
+	return output, nil
+}
+
+func findCOIPPool(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCoipPoolsInput) (*awstypes.CoipPool, error) {
+	output, err := findCOIPPools(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findCOIPPools(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCoipPoolsInput) ([]awstypes.CoipPool, error) {
+	var output []awstypes.CoipPool
+
+	pages := ec2.NewDescribeCoipPoolsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidPoolIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.CoipPools...)
 	}
 
 	return output, nil
@@ -613,6 +648,230 @@ func findLaunchTemplateVersionByTwoPartKey(ctx context.Context, conn *ec2.Client
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayRouteTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTablesInput) (*awstypes.LocalGatewayRouteTable, error) {
+	output, err := findLocalGatewayRouteTables(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLocalGatewayRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTablesInput) ([]awstypes.LocalGatewayRouteTable, error) {
+	var output []awstypes.LocalGatewayRouteTable
+
+	pages := ec2.NewDescribeLocalGatewayRouteTablesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LocalGatewayRouteTables...)
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayRoutes(ctx context.Context, conn *ec2.Client, input *ec2.SearchLocalGatewayRoutesInput) ([]awstypes.LocalGatewayRoute, error) {
+	var output []awstypes.LocalGatewayRoute
+
+	pages := ec2.NewSearchLocalGatewayRoutesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidLocalGatewayRouteTableIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Routes...)
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayRouteByTwoPartKey(ctx context.Context, conn *ec2.Client, localGatewayRouteTableID, destinationCIDRBlock string) (*awstypes.LocalGatewayRoute, error) {
+	input := &ec2.SearchLocalGatewayRoutesInput{
+		Filters: []awstypes.Filter{
+			{
+				Name:   aws.String(names.AttrType),
+				Values: enum.Slice(awstypes.LocalGatewayRouteTypeStatic),
+			},
+		},
+		LocalGatewayRouteTableId: aws.String(localGatewayRouteTableID),
+	}
+
+	localGatewayRoutes, err := findLocalGatewayRoutes(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	localGatewayRoutes = tfslices.Filter(localGatewayRoutes, func(v awstypes.LocalGatewayRoute) bool {
+		return aws.ToString(v.DestinationCidrBlock) == destinationCIDRBlock
+	})
+
+	output, err := tfresource.AssertSingleValueResult(localGatewayRoutes)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.LocalGatewayRouteStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayRouteTableVPCAssociation(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTableVpcAssociationsInput) (*awstypes.LocalGatewayRouteTableVpcAssociation, error) {
+	output, err := findLocalGatewayRouteTableVPCAssociations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLocalGatewayRouteTableVPCAssociations(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTableVpcAssociationsInput) ([]awstypes.LocalGatewayRouteTableVpcAssociation, error) {
+	var output []awstypes.LocalGatewayRouteTableVpcAssociation
+
+	pages := ec2.NewDescribeLocalGatewayRouteTableVpcAssociationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LocalGatewayRouteTableVpcAssociations...)
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayRouteTableVPCAssociationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.LocalGatewayRouteTableVpcAssociation, error) {
+	input := &ec2.DescribeLocalGatewayRouteTableVpcAssociationsInput{
+		LocalGatewayRouteTableVpcAssociationIds: []string{id},
+	}
+
+	output, err := findLocalGatewayRouteTableVPCAssociation(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.ToString(output.State); state == string(awstypes.RouteTableAssociationStateCodeDisassociated) {
+		return nil, &retry.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.LocalGatewayRouteTableVpcAssociationId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayVirtualInterface(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayVirtualInterfacesInput) (*awstypes.LocalGatewayVirtualInterface, error) {
+	output, err := findLocalGatewayVirtualInterfaces(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLocalGatewayVirtualInterfaces(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayVirtualInterfacesInput) ([]awstypes.LocalGatewayVirtualInterface, error) {
+	var output []awstypes.LocalGatewayVirtualInterface
+
+	pages := ec2.NewDescribeLocalGatewayVirtualInterfacesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LocalGatewayVirtualInterfaces...)
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayVirtualInterfaceGroup(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput) (*awstypes.LocalGatewayVirtualInterfaceGroup, error) {
+	output, err := findLocalGatewayVirtualInterfaceGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLocalGatewayVirtualInterfaceGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput) ([]awstypes.LocalGatewayVirtualInterfaceGroup, error) {
+	var output []awstypes.LocalGatewayVirtualInterfaceGroup
+
+	pages := ec2.NewDescribeLocalGatewayVirtualInterfaceGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LocalGatewayVirtualInterfaceGroups...)
+	}
+
+	return output, nil
+}
+
+func findLocalGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewaysInput) (*awstypes.LocalGateway, error) {
+	output, err := findLocalGateways(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLocalGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewaysInput) ([]awstypes.LocalGateway, error) {
+	var output []awstypes.LocalGateway
+
+	pages := ec2.NewDescribeLocalGatewaysPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LocalGateways...)
 	}
 
 	return output, nil
