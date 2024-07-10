@@ -62,10 +62,16 @@ class MyConvertedCode(TerraformStack):
 This resource supports the following arguments:
 
 * `app_id` - (Required) Unique ID for an Amplify app.
+* `certificate_settings` - (Optional) The type of SSL/TLS certificate to use for your custom domain. If you don't specify a certificate type, Amplify uses the default certificate that it provisions and manages for you.
 * `domain_name` - (Required) Domain name for the domain association.
 * `enable_auto_sub_domain` - (Optional) Enables the automated creation of subdomains for branches.
 * `sub_domain` - (Required) Setting for the subdomain. Documented below.
 * `wait_for_verification` - (Optional) If enabled, the resource will wait for the domain association status to change to `PENDING_DEPLOYMENT` or `AVAILABLE`. Setting this to `false` will skip the process. Default: `true`.
+
+The `certificate_settings` configuration block supports the following arguments:
+
+* `type` - (Required) The certificate type. Valid values are `AMPLIFY_MANAGED` and `CUSTOM`.
+* `custom_certificate_arn` - (Optional) The Amazon resource name (ARN) for the custom certificate.
 
 The `sub_domain` configuration block supports the following arguments:
 
@@ -109,4 +115,4 @@ Using `terraform import`, import Amplify domain association using `app_id` and `
 % terraform import aws_amplify_domain_association.app d2ypk4k47z8u6/example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-87ee803ee3ec698dfb384caec80adf64fac4630f4377eb71233daf913f3898f7 -->
+<!-- cache-key: cdktf-0.20.1 input-be62188dd78c2bc3fe33b226ce5b4ddaa94e43d964007891a09d32a8b7f4f2bc -->

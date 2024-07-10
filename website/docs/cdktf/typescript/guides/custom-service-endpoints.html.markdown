@@ -166,6 +166,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>costoptimizationhub</code></li>
   <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
   <li><code>customerprofiles</code></li>
+  <li><code>databrew</code> (or <code>gluedatabrew</code>)</li>
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
   <li><code>datasync</code></li>
@@ -259,6 +260,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>neptunegraph</code></li>
   <li><code>networkfirewall</code></li>
   <li><code>networkmanager</code></li>
+  <li><code>networkmonitor</code></li>
   <li><code>oam</code> (or <code>cloudwatchobservabilityaccessmanager</code>)</li>
   <li><code>opensearch</code> (or <code>opensearchservice</code>)</li>
   <li><code>opensearchserverless</code></li>
@@ -446,4 +448,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-217dacc8986772aa95a9df842e787776d800041c33e189c22c8f136e26bc766c -->
+<!-- cache-key: cdktf-0.20.1 input-227dc81e204e7a234b4a0663958241753fb418ed412942f24e32d7208467522e -->
