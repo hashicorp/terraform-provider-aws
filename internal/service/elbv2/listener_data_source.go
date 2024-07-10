@@ -23,10 +23,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_alb_listener")
-// @SDKDataSource("aws_lb_listener")
+// @SDKDataSource("aws_alb_listener", name="Listener")
+// @SDKDataSource("aws_lb_listener", name="Listener")
 // @Testing(tagsTest=true)
-func DataSourceListener() *schema.Resource {
+func dataSourceListener() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceListenerRead,
 

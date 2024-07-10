@@ -29,8 +29,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_alb",
 		},
 		{
-			Factory:  DataSourceListener,
+			Factory:  dataSourceListener,
 			TypeName: "aws_alb_listener",
+			Name:     "Listener",
 		},
 		{
 			Factory:  DataSourceTargetGroup,
@@ -46,8 +47,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Hosted Zone ID",
 		},
 		{
-			Factory:  DataSourceListener,
+			Factory:  dataSourceListener,
 			TypeName: "aws_lb_listener",
+			Name:     "Listener",
 		},
 		{
 			Factory:  DataSourceTargetGroup,
