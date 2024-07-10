@@ -25,8 +25,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceLoadBalancer,
+			Factory:  dataSourceLoadBalancer,
 			TypeName: "aws_alb",
+			Name:     "Load Balancer",
 		},
 		{
 			Factory:  dataSourceListener,
@@ -38,8 +39,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_alb_target_group",
 		},
 		{
-			Factory:  DataSourceLoadBalancer,
+			Factory:  dataSourceLoadBalancer,
 			TypeName: "aws_lb",
+			Name:     "Load Balancer",
 		},
 		{
 			Factory:  dataSourceHostedZoneID,

@@ -21,10 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_alb")
-// @SDKDataSource("aws_lb")
+// @SDKDataSource("aws_alb", name="Load Balancer")
+// @SDKDataSource("aws_lb", name="Load Balancer")
 // @Testing(tagsTest=true)
-func DataSourceLoadBalancer() *schema.Resource {
+func dataSourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLoadBalancerRead,
 
