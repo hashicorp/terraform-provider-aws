@@ -131,7 +131,7 @@ func TestAccFSxONTAPFileSystem_multiAZ2(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.OntapDeploymentTypeMultiAz2),
-					resource.TestCheckResourceAttr(resourceName, "ha_pairs", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ha_pairs", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", fmt.Sprint(throughput1)),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput1)),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", fmt.Sprint(capacity1)),
@@ -937,7 +937,7 @@ resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity                = %[3]d
   subnet_ids                      = aws_subnet.test[*].id
   deployment_type                 = "MULTI_AZ_2"
-  ha_pairs 						  = 1
+  ha_pairs                        = 1
   throughput_capacity_per_ha_pair = %[2]d
   preferred_subnet_id             = aws_subnet.test[0].id
 
@@ -954,7 +954,7 @@ resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity                = %[3]d
   subnet_ids                      = aws_subnet.test[*].id
   deployment_type                 = "MULTI_AZ_1"
-  ha_pairs 						  = 1
+  ha_pairs                        = 1
   throughput_capacity_per_ha_pair = %[2]d
   preferred_subnet_id             = aws_subnet.test[0].id
 
@@ -971,7 +971,7 @@ resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity                = %[3]d
   subnet_ids                      = [aws_subnet.test[0].id]
   deployment_type                 = "SINGLE_AZ_1"
-  ha_pairs 						  = 1
+  ha_pairs                        = 1
   throughput_capacity_per_ha_pair = %[2]d
   preferred_subnet_id             = aws_subnet.test[0].id
 
@@ -988,7 +988,7 @@ resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity                = %[3]d
   subnet_ids                      = [aws_subnet.test[0].id]
   deployment_type                 = "SINGLE_AZ_2"
-  ha_pairs 						  = %[4]d
+  ha_pairs                        = %[4]d
   throughput_capacity_per_ha_pair = %[2]d
   preferred_subnet_id             = aws_subnet.test[0].id
 
