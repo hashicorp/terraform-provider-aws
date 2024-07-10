@@ -128,8 +128,15 @@ func resourceGCMChannelRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.Set(names.AttrApplicationID, output.ApplicationId)
+	d.Set("default_authentication_method", output.DefaultAuthenticationMethod)
+	switch aws.ToString(output.DefaultAuthenticationMethod) {
+	case defaultAuthenticationMethodKey:
+		d.Set("api_key", output.Credential)
+
+	case defaultAuthenticationMethodToken:
+		d.Set("service_json", output.Credential)
+	}
 	d.Set(names.AttrEnabled, output.Enabled)
-	// api_key is never returned
 
 	return diags
 }
