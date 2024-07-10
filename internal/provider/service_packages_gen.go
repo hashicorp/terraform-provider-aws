@@ -160,6 +160,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/mgn"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
@@ -404,6 +405,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		mediastore.ServicePackage(ctx),
 		memorydb.ServicePackage(ctx),
 		meta.ServicePackage(ctx),
+		mgn.ServicePackage(ctx),
 		mq.ServicePackage(ctx),
 		mwaa.ServicePackage(ctx),
 		neptune.ServicePackage(ctx),
