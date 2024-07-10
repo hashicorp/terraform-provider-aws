@@ -18,16 +18,16 @@ Provides a Pinpoint GCM Channel resource.
 ```terraform
 # Token method
 resource "aws_pinpoint_gcm_channel" "gcm" {
-  application_id                  = aws_pinpoint_app.app.application_id
-  default_authentication_method   = "TOKEN"
-  service_json                    = file("path_to_service_json")
+  application_id                = aws_pinpoint_app.app.application_id
+  default_authentication_method = "TOKEN"
+  service_json                  = file("path_to_service_json")
 }
 
 # API Key (Legacy) method
 resource "aws_pinpoint_gcm_channel" "gcm" {
-  application_id                  = aws_pinpoint_app.app.application_id
-  default_authentication_method   = "KEY"
-  api_key                         = "api_key"
+  application_id                = aws_pinpoint_app.app.application_id
+  default_authentication_method = "KEY"
+  api_key                       = "api_key"
 }
 
 resource "aws_pinpoint_app" "app" {}

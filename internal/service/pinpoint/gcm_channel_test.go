@@ -210,10 +210,10 @@ func testAccGCMChannelConfigApiKey_apiKeyAuthMethod(apiKey string) string {
 resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_gcm_channel" "test_gcm_channel" {
-  application_id = aws_pinpoint_app.test_app.application_id
-  enabled        = "false"
+  application_id                = aws_pinpoint_app.test_app.application_id
+  enabled                       = "false"
   default_authentication_method = "KEY"
-  api_key        = "%s"
+  api_key                       = "%s"
 }
 `, apiKey)
 }
@@ -223,10 +223,10 @@ func testAccGCMChannelConfigServiceJson_tokenAuthMethod(serviceJsonFile string) 
 resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_gcm_channel" "test_gcm_channel" {
-  application_id 								= aws_pinpoint_app.test_app.application_id
-  enabled        								= "false"
+  application_id                = aws_pinpoint_app.test_app.application_id
+  enabled                       = "false"
   default_authentication_method = "TOKEN"
-  service_json        					= file("%s")
+  service_json                  = file("%s")
 }
 `, serviceJsonFile)
 }
