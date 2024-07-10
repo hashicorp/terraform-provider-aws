@@ -302,7 +302,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 
 	for _, attr := range lbAttrs.AdditionalAttributes {
 		switch aws.ToString(attr.Key) {
-		case "elasticloadbalancing.http.desyncmitigationmode":
+		case loadBalancerAttributeDesyncMitigationMode:
 			d.Set("desync_mitigation_mode", attr.Value)
 		}
 	}

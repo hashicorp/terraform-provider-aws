@@ -413,7 +413,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	for _, attr := range lbAttrs.AdditionalAttributes {
 		switch aws.ToString(attr.Key) {
-		case "elasticloadbalancing.http.desyncmitigationmode":
+		case loadBalancerAttributeDesyncMitigationMode:
 			d.Set("desync_mitigation_mode", attr.Value)
 		}
 	}
@@ -530,7 +530,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			LoadBalancerAttributes: &awstypes.LoadBalancerAttributes{
 				AdditionalAttributes: []awstypes.AdditionalAttribute{
 					{
-						Key:   aws.String("elasticloadbalancing.http.desyncmitigationmode"),
+						Key:   aws.String(loadBalancerAttributeDesyncMitigationMode),
 						Value: aws.String(d.Get("desync_mitigation_mode").(string)),
 					},
 				},
