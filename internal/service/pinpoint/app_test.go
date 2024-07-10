@@ -232,6 +232,42 @@ func TestAccPinpointApp_campaignHookLambda(t *testing.T) {
 	})
 }
 
+func TestAccPinpointApp_campaignHookEmpty(t *testing.T) {
+	ctx := acctest.Context(t)
+	var application pinpoint.ApplicationResponse
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pinpoint_app.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppConfig_campaignHookEmpty(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppExists(ctx, resourceName, &application),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("campaign_hook"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"lambda_function_name": knownvalue.StringExact(""),
+							names.AttrMode:         knownvalue.StringExact(""),
+							"web_url":              knownvalue.StringExact(""),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccPinpointApp_limits(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application pinpoint.ApplicationResponse
@@ -269,6 +305,43 @@ func TestAccPinpointApp_limits(t *testing.T) {
 	})
 }
 
+func TestAccPinpointApp_limitsEmpty(t *testing.T) {
+	ctx := acctest.Context(t)
+	var application pinpoint.ApplicationResponse
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pinpoint_app.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppConfig_limitsEmpty(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppExists(ctx, resourceName, &application),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("limits"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"daily":               knownvalue.Int64Exact(0),
+							"maximum_duration":    knownvalue.Int64Exact(0),
+							"messages_per_second": knownvalue.Int64Exact(0),
+							"total":               knownvalue.Int64Exact(0),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccPinpointApp_quietTime(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application pinpoint.ApplicationResponse
@@ -291,6 +364,41 @@ func TestAccPinpointApp_quietTime(t *testing.T) {
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"end":   knownvalue.StringExact("03:00"),
 							"start": knownvalue.StringExact("00:00"),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccPinpointApp_quietTimeEmpty(t *testing.T) {
+	ctx := acctest.Context(t)
+	var application pinpoint.ApplicationResponse
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pinpoint_app.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppConfig_quietTimeEmpty(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppExists(ctx, resourceName, &application),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("quiet_time"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"end":   knownvalue.StringExact(""),
+							"start": knownvalue.StringExact(""),
 						}),
 					})),
 				},
@@ -461,6 +569,16 @@ resource "aws_lambda_permission" "test" {
 `, rName)
 }
 
+func testAccAppConfig_campaignHookEmpty(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_pinpoint_app" "test" {
+  name = %[1]q
+
+  campaign_hook {}
+}
+`, rName)
+}
+
 func testAccAppConfig_limits(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test" {
@@ -476,6 +594,16 @@ resource "aws_pinpoint_app" "test" {
 `, rName)
 }
 
+func testAccAppConfig_limitsEmpty(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_pinpoint_app" "test" {
+  name = %[1]q
+
+  limits {}
+}
+`, rName)
+}
+
 func testAccAppConfig_quietTime(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test" {
@@ -485,6 +613,16 @@ resource "aws_pinpoint_app" "test" {
     start = "00:00"
     end   = "03:00"
   }
+}
+`, rName)
+}
+
+func testAccAppConfig_quietTimeEmpty(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_pinpoint_app" "test" {
+  name = %[1]q
+
+  quiet_time {}
 }
 `, rName)
 }
