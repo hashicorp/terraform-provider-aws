@@ -33,13 +33,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type OperationTypeCtxKey string
-type OperationTypeCtxValue string
+type operationTypeCtxKey string
+type operationTypeCtxValue string
 
 const (
-	OperationType   OperationTypeCtxKey   = "OPERATION_KEY"
-	ReadOperation   OperationTypeCtxValue = "READ"
-	UpdateOperation OperationTypeCtxValue = "UPDATE"
+	operationType   operationTypeCtxKey   = "OPERATION_KEY"
+	readOperation   operationTypeCtxValue = "READ"
+	updateOperation operationTypeCtxValue = "UPDATE"
 )
 
 // @FrameworkResource(name="Identity Source")
@@ -223,7 +223,7 @@ func (r *resourceIdentitySource) Create(ctx context.Context, request resource.Cr
 	}
 
 	input := &verifiedpermissions.CreateIdentitySourceInput{}
-	response.Diagnostics.Append(flex.Expand(context.WithValue(ctx, OperationType, ReadOperation), plan, input)...)
+	response.Diagnostics.Append(flex.Expand(context.WithValue(ctx, operationType, readOperation), plan, input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -323,7 +323,7 @@ func (r *resourceIdentitySource) Update(ctx context.Context, request resource.Up
 			IdentitySourceId: flex.StringFromFramework(ctx, plan.ID),
 		}
 
-		response.Diagnostics.Append(flex.Expand(context.WithValue(ctx, OperationType, UpdateOperation), plan, input)...)
+		response.Diagnostics.Append(flex.Expand(context.WithValue(ctx, operationType, updateOperation), plan, input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -540,7 +540,7 @@ var (
 )
 
 func (m configuration) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
-	operation := ctx.Value(OperationType).(OperationTypeCtxValue)
+	operation := ctx.Value(operationType).(operationTypeCtxValue)
 
 	switch {
 	case !m.CognitoUserPoolConfiguration.IsNull():
@@ -551,14 +551,14 @@ func (m configuration) Expand(ctx context.Context) (result any, diags diag.Diagn
 		}
 
 		switch operation {
-		case ReadOperation:
+		case readOperation:
 			var result awstypes.ConfigurationMemberCognitoUserPoolConfiguration
 			diags.Append(flex.Expand(ctx, cognitoUserPoolConfigurationData, &result.Value)...)
 			if diags.HasError() {
 				return nil, diags
 			}
 			return &result, diags
-		case UpdateOperation:
+		case updateOperation:
 			var result awstypes.UpdateConfigurationMemberCognitoUserPoolConfiguration
 			diags.Append(flex.Expand(ctx, cognitoUserPoolConfigurationData, &result.Value)...)
 			if diags.HasError() {
@@ -576,14 +576,14 @@ func (m configuration) Expand(ctx context.Context) (result any, diags diag.Diagn
 		}
 
 		switch operation {
-		case ReadOperation:
+		case readOperation:
 			var result awstypes.ConfigurationMemberOpenIdConnectConfiguration
 			diags.Append(flex.Expand(ctx, openIDConnectConfigurationData, &result.Value)...)
 			if diags.HasError() {
 				return nil, diags
 			}
 			return &result, diags
-		case UpdateOperation:
+		case updateOperation:
 			var result awstypes.UpdateConfigurationMemberOpenIdConnectConfiguration
 			diags.Append(flex.Expand(ctx, openIDConnectConfigurationData, &result.Value)...)
 			if diags.HasError() {
@@ -600,7 +600,7 @@ var (
 )
 
 func (m openIDConnectTokenSelection) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
-	operation := ctx.Value(OperationType).(OperationTypeCtxValue)
+	operation := ctx.Value(operationType).(operationTypeCtxValue)
 
 	switch {
 	case !m.AccessTokenOnly.IsNull():
@@ -611,7 +611,7 @@ func (m openIDConnectTokenSelection) Expand(ctx context.Context) (result any, di
 		}
 
 		switch operation {
-		case ReadOperation:
+		case readOperation:
 			var result awstypes.OpenIdConnectTokenSelectionMemberAccessTokenOnly
 			diags.Append(flex.Expand(ctx, openIDConnectAccessTokenConfigurationData, &result.Value)...)
 			if diags.HasError() {
@@ -619,7 +619,7 @@ func (m openIDConnectTokenSelection) Expand(ctx context.Context) (result any, di
 			}
 			return &result, diags
 
-		case UpdateOperation:
+		case updateOperation:
 			var result awstypes.UpdateOpenIdConnectTokenSelectionMemberAccessTokenOnly
 			diags.Append(flex.Expand(ctx, openIDConnectAccessTokenConfigurationData, &result.Value)...)
 			if diags.HasError() {
@@ -637,7 +637,7 @@ func (m openIDConnectTokenSelection) Expand(ctx context.Context) (result any, di
 		}
 
 		switch operation {
-		case ReadOperation:
+		case readOperation:
 			var result awstypes.OpenIdConnectTokenSelectionMemberIdentityTokenOnly
 			diags.Append(flex.Expand(ctx, openIDConnectIdentityTokenConfigurationData, &result.Value)...)
 			if diags.HasError() {
@@ -645,7 +645,7 @@ func (m openIDConnectTokenSelection) Expand(ctx context.Context) (result any, di
 			}
 			return &result, diags
 
-		case UpdateOperation:
+		case updateOperation:
 			var result awstypes.UpdateOpenIdConnectTokenSelectionMemberIdentityTokenOnly
 			diags.Append(flex.Expand(ctx, openIDConnectIdentityTokenConfigurationData, &result.Value)...)
 			if diags.HasError() {
