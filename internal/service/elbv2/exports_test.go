@@ -5,11 +5,14 @@ package elbv2
 
 // Exports for use in tests only.
 var (
-	FindListenerByARN             = findListenerByARN
-	HealthCheckProtocolEnumValues = healthCheckProtocolEnumValues
-	HostedZoneIDPerRegionALBMap   = hostedZoneIDPerRegionALBMap
-	HostedZoneIDPerRegionNLBMap   = hostedZoneIDPerRegionNLBMap
-	ProtocolVersionEnumValues     = protocolVersionEnumValues
+	ResourceListenerCertificate = resourceListenerCertificate
+
+	FindListenerByARN                   = findListenerByARN
+	FindListenerCertificateByTwoPartKey = findListenerCertificateByTwoPartKey
+	HealthCheckProtocolEnumValues       = healthCheckProtocolEnumValues
+	HostedZoneIDPerRegionALBMap         = hostedZoneIDPerRegionALBMap
+	HostedZoneIDPerRegionNLBMap         = hostedZoneIDPerRegionNLBMap
+	ProtocolVersionEnumValues           = protocolVersionEnumValues
 )
 
 const (

@@ -11,13 +11,8 @@ import (
 )
 
 const (
-	propagationTimeout = 2 * time.Minute
-)
-
-const (
-	errCodeValidationError = "ValidationError"
-
-	tagsOnCreationErrMessage = "cannot specify tags on creation"
+	iamPropagationTimeout   = 2 * time.Minute
+	elbv2PropagationTimeout = 1 * time.Minute
 )
 
 // See https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_LoadBalancerAttribute.html#API_LoadBalancerAttribute_Contents.

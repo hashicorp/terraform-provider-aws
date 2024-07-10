@@ -84,8 +84,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceListenerCertificate,
+			Factory:  resourceListenerCertificate,
 			TypeName: "aws_alb_listener_certificate",
+			Name:     "Listener Certificate",
 		},
 		{
 			Factory:  ResourceListenerRule,
@@ -124,8 +125,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceListenerCertificate,
+			Factory:  resourceListenerCertificate,
 			TypeName: "aws_lb_listener_certificate",
+			Name:     "Listener Certificate",
 		},
 		{
 			Factory:  ResourceListenerRule,
