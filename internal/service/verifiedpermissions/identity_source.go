@@ -95,15 +95,15 @@ func (r *resourceIdentitySource) Schema(ctx context.Context, request resource.Sc
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"user_pool_arn": schema.StringAttribute{
-										CustomType: fwtypes.ARNType,
-										Required:   true,
-									},
 									"client_ids": schema.ListAttribute{
 										Computed:    true,
 										CustomType:  fwtypes.ListOfStringType,
 										ElementType: types.StringType,
 										Optional:    true,
+									},
+									"user_pool_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -130,14 +130,30 @@ func (r *resourceIdentitySource) Schema(ctx context.Context, request resource.Sc
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									names.AttrIssuer: schema.StringAttribute{
-										Required: true,
-									},
 									"entity_id_prefix": schema.StringAttribute{
 										Optional: true,
 									},
+									names.AttrIssuer: schema.StringAttribute{
+										Required: true,
+									},
 								},
 								Blocks: map[string]schema.Block{
+									"group_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[openIDConnectGroupConfiguration](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"group_claim": schema.StringAttribute{
+													Required: true,
+												},
+												"group_entity_type": schema.StringAttribute{
+													Required: true,
+												},
+											},
+										},
+									},
 									"token_selection": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[openIDConnectTokenSelection](ctx),
 										Validators: []validator.List{
@@ -181,22 +197,6 @@ func (r *resourceIdentitySource) Schema(ctx context.Context, request resource.Sc
 															},
 														},
 													},
-												},
-											},
-										},
-									},
-									"group_configuration": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[openIDConnectGroupConfiguration](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"group_claim": schema.StringAttribute{
-													Required: true,
-												},
-												"group_entity_type": schema.StringAttribute{
-													Required: true,
 												},
 											},
 										},
