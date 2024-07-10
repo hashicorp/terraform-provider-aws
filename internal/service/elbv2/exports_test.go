@@ -7,13 +7,9 @@ package elbv2
 var (
 	FindListenerByARN             = findListenerByARN
 	HealthCheckProtocolEnumValues = healthCheckProtocolEnumValues
+	HostedZoneIDPerRegionALBMap   = hostedZoneIDPerRegionALBMap
+	HostedZoneIDPerRegionNLBMap   = hostedZoneIDPerRegionNLBMap
 	ProtocolVersionEnumValues     = protocolVersionEnumValues
-)
-
-const (
-	MutualAuthenticationOff         = mutualAuthenticationOff
-	MutualAuthenticationVerify      = mutualAuthenticationVerify
-	MutualAuthenticationPassthrough = mutualAuthenticationPassthrough
 )
 
 const (
@@ -24,4 +20,8 @@ const (
 	AlpnPolicyNone           = alpnPolicyNone
 
 	LoadBalancerAttributeClientKeepAliveSeconds = loadBalancerAttributeClientKeepAliveSeconds
+
+	MutualAuthenticationOff         = mutualAuthenticationOff
+	MutualAuthenticationVerify      = mutualAuthenticationVerify
+	MutualAuthenticationPassthrough = mutualAuthenticationPassthrough
 )
