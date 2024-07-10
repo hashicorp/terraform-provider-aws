@@ -204,6 +204,10 @@ resource "aws_iam_server_certificate" "test" {
   name_prefix      = %[1]q
   certificate_body = "%[2]s"
   private_key      = "%[3]s"
+
+  timeouts {
+    delete = "30m"
+  }
 }
 
 resource "aws_elb" "test" {

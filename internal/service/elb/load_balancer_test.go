@@ -1396,10 +1396,14 @@ resource "aws_security_group" "test" {
 
 func testAccLoadBalancerConfig_listenerIAMServerCertificate(rName, certificate, key, lbProtocol string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_iam_server_certificate" "test_cert" {
+resource "aws_iam_server_certificate" "test" {
   name             = %[1]q
   certificate_body = "%[2]s"
   private_key      = "%[3]s"
+
+  timeouts {
+    delete = "30m"
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1412,7 +1416,7 @@ resource "aws_elb" "test" {
     instance_protocol  = %[4]q
     lb_port            = 443
     lb_protocol        = %[4]q
-    ssl_certificate_id = aws_iam_server_certificate.test_cert.arn
+    ssl_certificate_id = aws_iam_server_certificate.test.arn
   }
 }
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), lbProtocol))
@@ -1420,10 +1424,14 @@ resource "aws_elb" "test" {
 
 func testAccLoadBalancerConfig_listenerIAMServerCertificateAddInvalidListener(rName, certificate, key string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_iam_server_certificate" "test_cert" {
+resource "aws_iam_server_certificate" "test" {
   name             = %[1]q
   certificate_body = "%[2]s"
   private_key      = "%[3]s"
+
+  timeouts {
+    delete = "30m"
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1436,7 +1444,7 @@ resource "aws_elb" "test" {
     instance_protocol  = "https"
     lb_port            = 443
     lb_protocol        = "https"
-    ssl_certificate_id = aws_iam_server_certificate.test_cert.arn
+    ssl_certificate_id = aws_iam_server_certificate.test.arn
   }
 
   # lb_protocol tcp and ssl_certificate_id is not valid
@@ -1445,7 +1453,7 @@ resource "aws_elb" "test" {
     instance_protocol  = "tcp"
     lb_port            = 8443
     lb_protocol        = "tcp"
-    ssl_certificate_id = aws_iam_server_certificate.test_cert.arn
+    ssl_certificate_id = aws_iam_server_certificate.test.arn
   }
 }
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
