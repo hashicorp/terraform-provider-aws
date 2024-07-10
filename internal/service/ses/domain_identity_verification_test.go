@@ -10,9 +10,10 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -99,7 +100,7 @@ func testAccCheckDomainIdentityVerificationPassed(ctx context.Context, n string)
 		}
 
 		domain := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		params := &ses.GetIdentityVerificationAttributesInput{
 			Identities: []*string{
@@ -107,7 +108,7 @@ func testAccCheckDomainIdentityVerificationPassed(ctx context.Context, n string)
 			},
 		}
 
-		response, err := conn.GetIdentityVerificationAttributesWithContext(ctx, params)
+		response, err := conn.GetIdentityVerificationAttributes(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -116,7 +117,7 @@ func testAccCheckDomainIdentityVerificationPassed(ctx context.Context, n string)
 			return fmt.Errorf("SES Domain Identity %s not found in AWS", domain)
 		}
 
-		if aws.StringValue(response.VerificationAttributes[domain].VerificationStatus) != ses.VerificationStatusSuccess {
+		if aws.ToString(response.VerificationAttributes[domain].VerificationStatus) != awstypes.VerificationStatusSuccess {
 			return fmt.Errorf("SES Domain Identity %s not successfully verified.", domain)
 		}
 

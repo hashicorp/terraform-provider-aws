@@ -7,8 +7,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -43,7 +44,7 @@ func ResourceDomainDKIM() *schema.Resource {
 
 func resourceDomainDKIMCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	domainName := d.Get(names.AttrDomain).(string)
 
@@ -51,7 +52,7 @@ func resourceDomainDKIMCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Domain: aws.String(domainName),
 	}
 
-	_, err := conn.VerifyDomainDkimWithContext(ctx, createOpts)
+	_, err := conn.VerifyDomainDkim(ctx, createOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "requesting SES domain identity verification: %s", err)
 	}
@@ -63,7 +64,7 @@ func resourceDomainDKIMCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDomainDKIMRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	domainName := d.Id()
 	d.Set(names.AttrDomain, domainName)
@@ -74,7 +75,7 @@ func resourceDomainDKIMRead(ctx context.Context, d *schema.ResourceData, meta in
 		},
 	}
 
-	response, err := conn.GetIdentityDkimAttributesWithContext(ctx, readOpts)
+	response, err := conn.GetIdentityDkimAttributes(ctx, readOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SES Domain DKIM (%s): %s", d.Id(), err)
 	}
@@ -86,7 +87,7 @@ func resourceDomainDKIMRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diags
 	}
 
-	d.Set("dkim_tokens", aws.StringValueSlice(verificationAttrs.DkimTokens))
+	d.Set("dkim_tokens", verificationAttrs.DkimTokens)
 	return diags
 }
 

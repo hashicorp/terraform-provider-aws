@@ -7,8 +7,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -40,7 +41,7 @@ func ResourceDomainMailFrom() *schema.Resource {
 			"behavior_on_mx_failure": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  ses.BehaviorOnMXFailureUseDefaultValue,
+				Default:  awstypes.BehaviorOnMXFailureUseDefaultValue,
 			},
 		},
 	}
@@ -48,7 +49,7 @@ func ResourceDomainMailFrom() *schema.Resource {
 
 func resourceDomainMailFromSet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	behaviorOnMxFailure := d.Get("behavior_on_mx_failure").(string)
 	domainName := d.Get(names.AttrDomain).(string)
@@ -60,7 +61,7 @@ func resourceDomainMailFromSet(ctx context.Context, d *schema.ResourceData, meta
 		MailFromDomain:      aws.String(mailFromDomain),
 	}
 
-	_, err := conn.SetIdentityMailFromDomainWithContext(ctx, input)
+	_, err := conn.SetIdentityMailFromDomain(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting MAIL FROM domain: %s", err)
 	}
@@ -72,7 +73,7 @@ func resourceDomainMailFromSet(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceDomainMailFromRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	domainName := d.Id()
 
@@ -82,7 +83,7 @@ func resourceDomainMailFromRead(ctx context.Context, d *schema.ResourceData, met
 		},
 	}
 
-	out, err := conn.GetIdentityMailFromDomainAttributesWithContext(ctx, readOpts)
+	out, err := conn.GetIdentityMailFromDomainAttributes(ctx, readOpts)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "fetching SES MAIL FROM domain attributes for %s: %s", domainName, err)
@@ -109,7 +110,7 @@ func resourceDomainMailFromRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceDomainMailFromDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	domainName := d.Id()
 
@@ -118,7 +119,7 @@ func resourceDomainMailFromDelete(ctx context.Context, d *schema.ResourceData, m
 		MailFromDomain: nil,
 	}
 
-	_, err := conn.SetIdentityMailFromDomainWithContext(ctx, deleteOpts)
+	_, err := conn.SetIdentityMailFromDomain(ctx, deleteOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SES domain identity: %s", err)
 	}

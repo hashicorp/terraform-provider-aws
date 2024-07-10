@@ -171,6 +171,7 @@ import (
 	servicecatalogappregistry_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
 	servicediscovery_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	servicequotas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicequotas"
+	ses_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ses"
 	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
 	sfn_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sfn"
 	shield_sdkv2 "github.com/aws/aws-sdk-go-v2/service/shield"
@@ -249,7 +250,6 @@ import (
 	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
 	serverlessapplicationrepository_sdkv1 "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	servicecatalog_sdkv1 "github.com/aws/aws-sdk-go/service/servicecatalog"
-	ses_sdkv1 "github.com/aws/aws-sdk-go/service/ses"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
@@ -1081,8 +1081,8 @@ func (c *AWSClient) S3OutpostsConn(ctx context.Context) *s3outposts_sdkv1.S3Outp
 	return errs.Must(conn[*s3outposts_sdkv1.S3Outposts](ctx, c, names.S3Outposts, make(map[string]any)))
 }
 
-func (c *AWSClient) SESConn(ctx context.Context) *ses_sdkv1.SES {
-	return errs.Must(conn[*ses_sdkv1.SES](ctx, c, names.SES, make(map[string]any)))
+func (c *AWSClient) SESClient(ctx context.Context) *ses_sdkv2.Client {
+	return errs.Must(client[*ses_sdkv2.Client](ctx, c, names.SES, make(map[string]any)))
 }
 
 func (c *AWSClient) SESV2Client(ctx context.Context) *sesv2_sdkv2.Client {

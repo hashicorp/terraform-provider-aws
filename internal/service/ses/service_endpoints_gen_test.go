@@ -13,9 +13,9 @@ import (
 	"strings"
 	"testing"
 
+	ses_sdkv1 "github.com/aws/aws-sdk-go-v2/service/ses"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	ses_sdkv1 "github.com/aws/aws-sdk-go/service/ses"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -278,7 +278,7 @@ func defaultFIPSEndpoint(region string) (url.URL, error) {
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
-	client := meta.SESConn(ctx)
+	client := meta.SESClient(ctx)
 
 	req, _ := client.ListIdentitiesRequest(&ses_sdkv1.ListIdentitiesInput{})
 

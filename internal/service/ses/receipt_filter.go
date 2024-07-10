@@ -9,9 +9,10 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -62,8 +63,8 @@ func ResourceReceiptFilter() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					ses.ReceiptFilterPolicyBlock,
-					ses.ReceiptFilterPolicyAllow,
+					awstypes.ReceiptFilterPolicyBlock,
+					awstypes.ReceiptFilterPolicyAllow,
 				}, false),
 			},
 		},
@@ -72,21 +73,21 @@ func ResourceReceiptFilter() *schema.Resource {
 
 func resourceReceiptFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 
 	createOpts := &ses.CreateReceiptFilterInput{
-		Filter: &ses.ReceiptFilter{
+		Filter: &awstypes.ReceiptFilter{
 			Name: aws.String(name),
-			IpFilter: &ses.ReceiptIpFilter{
+			IpFilter: &awstypes.ReceiptIpFilter{
 				Cidr:   aws.String(d.Get("cidr").(string)),
 				Policy: aws.String(d.Get(names.AttrPolicy).(string)),
 			},
 		},
 	}
 
-	_, err := conn.CreateReceiptFilterWithContext(ctx, createOpts)
+	_, err := conn.CreateReceiptFilter(ctx, createOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SES receipt filter: %s", err)
 	}
@@ -98,19 +99,19 @@ func resourceReceiptFilterCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	listOpts := &ses.ListReceiptFiltersInput{}
 
-	response, err := conn.ListReceiptFiltersWithContext(ctx, listOpts)
+	response, err := conn.ListReceiptFilters(ctx, listOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SES Receipt Filter (%s): %s", d.Id(), err)
 	}
 
-	var filter *ses.ReceiptFilter
+	var filter *awstypes.ReceiptFilter
 
 	for _, responseFilter := range response.Filters {
-		if aws.StringValue(responseFilter.Name) == d.Id() {
+		if aws.ToString(responseFilter.Name) == d.Id() {
 			filter = responseFilter
 			break
 		}
@@ -140,13 +141,13 @@ func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceReceiptFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn(ctx)
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	deleteOpts := &ses.DeleteReceiptFilterInput{
 		FilterName: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteReceiptFilterWithContext(ctx, deleteOpts)
+	_, err := conn.DeleteReceiptFilter(ctx, deleteOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SES receipt filter: %s", err)
 	}

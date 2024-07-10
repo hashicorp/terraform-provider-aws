@@ -11,8 +11,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -76,7 +77,7 @@ func TestAccSESEmailIdentity_trailingPeriod(t *testing.T) {
 
 func testAccCheckEmailIdentityDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_email_identity" {
@@ -90,7 +91,7 @@ func testAccCheckEmailIdentityDestroy(ctx context.Context) resource.TestCheckFun
 				},
 			}
 
-			response, err := conn.GetIdentityVerificationAttributesWithContext(ctx, params)
+			response, err := conn.GetIdentityVerificationAttributes(ctx, params)
 			if err != nil {
 				return err
 			}
@@ -116,7 +117,7 @@ func testAccCheckEmailIdentityExists(ctx context.Context, n string) resource.Tes
 		}
 
 		email := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		params := &ses.GetIdentityVerificationAttributesInput{
 			Identities: []*string{
@@ -124,7 +125,7 @@ func testAccCheckEmailIdentityExists(ctx context.Context, n string) resource.Tes
 			},
 		}
 
-		response, err := conn.GetIdentityVerificationAttributesWithContext(ctx, params)
+		response, err := conn.GetIdentityVerificationAttributes(ctx, params)
 		if err != nil {
 			return err
 		}
