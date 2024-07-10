@@ -5,11 +5,8 @@ package redshiftdata
 
 import (
 	"context"
-	"log"
-	"time"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/redshiftdata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"log"
+	"time"
 )
 
 // @SDKResource("aws_redshiftdata_batch_statement")
@@ -83,9 +82,9 @@ func resourceBatchStatement() *schema.Resource {
 
 func resourceBatchStatementCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftDataConn()
+	conn := meta.(*conns.AWSClient).RedshiftDataClient(ctx)
 
-	input := &redshiftdataapiservice.BatchExecuteStatementInput{
+	input := &redshiftdata.BatchExecuteStatementInput{
 		Database:  aws.String(d.Get("database").(string)),
 		WithEvent: aws.Bool(d.Get("with_event").(bool)),
 	}
@@ -99,7 +98,7 @@ func resourceBatchStatementCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if v, ok := d.GetOk("sqls"); ok && len(v.([]interface{})) > 0 {
-		input.Sqls = flex.ExpandStringList(v.([]interface{}))
+		input.Sqls = aws.ToStringSlice(flex.ExpandStringList(v.([]interface{})))
 	}
 
 	if v, ok := d.GetOk("secret_arn"); ok {
@@ -114,15 +113,15 @@ func resourceBatchStatementCreate(ctx context.Context, d *schema.ResourceData, m
 		input.WorkgroupName = aws.String(v.(string))
 	}
 
-	output, err := conn.BatchExecuteStatementWithContext(ctx, input)
+	output, err := conn.BatchExecuteStatement(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "executing Redshift Data Batch Statement: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.Id))
+	d.SetId(aws.ToString(output.Id))
 
-	if err := waitStatementFinished(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitStatementFinished(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Data Statement (%s) to finish: %s", d.Id(), err)
 	}
 
@@ -131,7 +130,7 @@ func resourceBatchStatementCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceBatchStatementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftDataConn()
+	conn := meta.(*conns.AWSClient).RedshiftDataClient(ctx)
 
 	sub, err := FindStatementByID(ctx, conn, d.Id())
 
@@ -148,32 +147,9 @@ func resourceBatchStatementRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("cluster_identifier", sub.ClusterIdentifier)
 	d.Set("database", d.Get("database").(string))
 	d.Set("db_user", d.Get("db_user").(string))
-	f := flattenSQLStatements(sub.SubStatements)
-	d.Set("sqls", f)
+	d.Set("sqls", sub.SubStatements)
 	d.Set("secret_arn", sub.SecretArn)
 	d.Set("workgroup_name", sub.WorkgroupName)
 
 	return diags
-}
-
-func flattenSQLStatements(apiObjects []*redshiftdataapiservice.SubStatementData) []string {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	// tfMap := map[string]interface{}{}
-	var tfStrings []string
-
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		if v := apiObject.QueryString; v != nil {
-			// tfMap["query_string"] = aws.StringValue(v)
-			tfStrings = append(tfStrings, aws.StringValue(v))
-		}
-	}
-
-	return tfStrings
 }
