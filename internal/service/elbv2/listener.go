@@ -40,7 +40,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.Listener")
 // @Testing(importIgnore="default_action.0.forward")
-func ResourceListener() *schema.Resource {
+func resourceListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCreate,
 		ReadWithoutTimeout:   resourceListenerRead,
@@ -368,7 +368,6 @@ func ResourceListener() *schema.Resource {
 					},
 				},
 			},
-
 			names.AttrPort: {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -663,15 +662,17 @@ func findListener(ctx context.Context, conn *elasticloadbalancingv2.Client, inpu
 func findListeners(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeListenersInput, filter tfslices.Predicate[*awstypes.Listener]) ([]awstypes.Listener, error) {
 	var output []awstypes.Listener
 
-	paginator := elasticloadbalancingv2.NewDescribeListenersPaginator(conn, input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	pages := elasticloadbalancingv2.NewDescribeListenersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
 		if errs.IsA[*awstypes.ListenerNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
 		}
+
 		if err != nil {
 			return nil, err
 		}

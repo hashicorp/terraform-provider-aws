@@ -76,7 +76,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceListener,
+			Factory:  resourceListener,
 			TypeName: "aws_alb_listener",
 			Name:     "Listener",
 			Tags: &types.ServicePackageResourceTags{
@@ -117,7 +117,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceListener,
+			Factory:  resourceListener,
 			TypeName: "aws_lb_listener",
 			Name:     "Listener",
 			Tags: &types.ServicePackageResourceTags{
