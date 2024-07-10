@@ -12,7 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
@@ -38,13 +41,21 @@ func TestAccPinpointApp_basic(t *testing.T) {
 					testAccCheckAppExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "campaign_hook.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "limits.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("campaign_hook"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"lambda_function_name": knownvalue.StringExact(""),
+							names.AttrMode:         knownvalue.StringExact(""),
+							"web_url":              knownvalue.StringExact(""),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -187,9 +198,17 @@ func TestAccPinpointApp_campaignHookLambda(t *testing.T) {
 				Config: testAccAppConfig_campaignHookLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "campaign_hook.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "campaign_hook.0.mode", "DELIVERY"),
+					resource.TestCheckResourceAttrPair(resourceName, "campaign_hook.0.lambda_function_name", "aws_lambda_function.test", names.AttrARN),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("campaign_hook"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"lambda_function_name": knownvalue.NotNull(), // Should be a Pair function, waiting on https://github.com/hashicorp/terraform-plugin-testing/pull/330
+							names.AttrMode:         knownvalue.StringExact(pinpoint.ModeDelivery),
+							"web_url":              knownvalue.StringExact(""),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
