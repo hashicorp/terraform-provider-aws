@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.3-proton
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.54.16
+	github.com/aws/aws-sdk-go v1.54.17
 	github.com/aws/aws-sdk-go-v2 v1.30.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.24
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.24
@@ -77,7 +77,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.39.1
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.31.1
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.40.1
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.12.1
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.32.1
@@ -157,7 +157,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ram v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.18.1
 	github.com/aws/aws-sdk-go-v2/service/rds v1.81.2
-	github.com/aws/aws-sdk-go-v2/service/redshift v1.46.1
+	github.com/aws/aws-sdk-go-v2/service/redshift v1.46.2
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.43.0
