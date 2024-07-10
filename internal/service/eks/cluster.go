@@ -424,6 +424,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	// bootstrap_cluster_creator_admin_permissions isn't returned from the AWS API.
+	// See https://github.com/aws/containers-roadmap/issues/185#issuecomment-1863025784.
 	var bootstrapClusterCreatorAdminPermissions *bool
 	if v, ok := d.GetOk("access_config"); ok {
 		if apiObject := expandCreateAccessConfigRequest(v.([]interface{})); apiObject != nil {
@@ -1069,7 +1070,7 @@ func flattenAccessConfigResponse(apiObject *types.AccessConfigResponse, bootstra
 	if bootstrapClusterCreatorAdminPermissions != nil {
 		tfMap["bootstrap_cluster_creator_admin_permissions"] = aws.ToBool(bootstrapClusterCreatorAdminPermissions)
 	} else {
-		// Setting default value to true for backward compatibility
+		// Setting default value to true for backward compatibility.
 		tfMap["bootstrap_cluster_creator_admin_permissions"] = true
 	}
 
