@@ -77,6 +77,8 @@ func TestAccRDSCluster_basic(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "backtrack_window", acctest.Ct0),
+					resource.TestCheckNoResourceAttr(resourceName, "ca_certificate_identifier"),
+					resource.TestCheckNoResourceAttr(resourceName, "ca_certificate_valid_till"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
