@@ -63,8 +63,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Trust Store",
 		},
 		{
-			Factory:  DataSourceLoadBalancers,
+			Factory:  dataSourceLoadBalancers,
 			TypeName: "aws_lbs",
+			Name:     "Load Balancers",
 		},
 	}
 }
