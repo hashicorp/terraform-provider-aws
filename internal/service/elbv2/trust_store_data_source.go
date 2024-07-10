@@ -17,7 +17,7 @@ import (
 )
 
 // @SDKDataSource("aws_lb_trust_store", name="Trust Store")
-func DataSourceTrustStore() *schema.Resource {
+func dataSourceTrustStore() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTrustStoreRead,
 

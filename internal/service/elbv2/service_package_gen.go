@@ -58,7 +58,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_lb_target_group",
 		},
 		{
-			Factory:  DataSourceTrustStore,
+			Factory:  dataSourceTrustStore,
 			TypeName: "aws_lb_trust_store",
 			Name:     "Trust Store",
 		},
@@ -155,7 +155,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_lb_target_group_attachment",
 		},
 		{
-			Factory:  ResourceTrustStore,
+			Factory:  resourceTrustStore,
 			TypeName: "aws_lb_trust_store",
 			Name:     "Trust Store",
 			Tags: &types.ServicePackageResourceTags{

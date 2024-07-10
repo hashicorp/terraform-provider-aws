@@ -31,7 +31,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;types.TrustStore")
 // @Testing(importIgnore="ca_certificates_bundle_s3_bucket;ca_certificates_bundle_s3_key")
-func ResourceTrustStore() *schema.Resource {
+func resourceTrustStore() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrustStoreCreate,
 		ReadWithoutTimeout:   resourceTrustStoreRead,
@@ -142,7 +142,7 @@ func resourceTrustStoreCreate(ctx context.Context, d *schema.ResourceData, meta 
 	d.SetId(aws.ToString(output.TrustStores[0].TrustStoreArn))
 
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		return FindTrustStoreByARN(ctx, conn, d.Id())
+		return findTrustStoreByARN(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -170,7 +170,7 @@ func resourceTrustStoreRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	trustStore, err := FindTrustStoreByARN(ctx, conn, d.Id())
+	trustStore, err := findTrustStoreByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Trust Store %s not found, removing from state", d.Id())
@@ -236,7 +236,7 @@ func resourceTrustStoreDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func FindTrustStoreByARN(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) (*awstypes.TrustStore, error) {
+func findTrustStoreByARN(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) (*awstypes.TrustStore, error) {
 	input := &elasticloadbalancingv2.DescribeTrustStoresInput{
 		TrustStoreArns: []string{arn},
 	}
@@ -270,7 +270,6 @@ func findTrustStores(ctx context.Context, conn *elasticloadbalancingv2.Client, i
 	var output []awstypes.TrustStore
 
 	pages := elasticloadbalancingv2.NewDescribeTrustStoresPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -295,7 +294,6 @@ func findTrustStoreAssociations(ctx context.Context, conn *elasticloadbalancingv
 	var output []awstypes.TrustStoreAssociation
 
 	pages := elasticloadbalancingv2.NewDescribeTrustStoreAssociationsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

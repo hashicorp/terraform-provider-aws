@@ -9,12 +9,14 @@ var (
 	ResourceListenerCertificate = resourceListenerCertificate
 	ResourceListenerRule        = resourceListenerRule
 	ResourceLoadBalancer        = resourceLoadBalancer
+	ResourceTrustStore          = resourceTrustStore
 
 	FindListenerByARN                   = findListenerByARN
 	FindListenerCertificateByTwoPartKey = findListenerCertificateByTwoPartKey
 	FindListenerRuleByARN               = findListenerRuleByARN
 	FindLoadBalancerAttributesByARN     = findLoadBalancerAttributesByARN
 	FindLoadBalancerByARN               = findLoadBalancerByARN
+	FindTrustStoreByARN                 = findTrustStoreByARN
 	HealthCheckProtocolEnumValues       = healthCheckProtocolEnumValues
 	HostedZoneIDPerRegionALBMap         = hostedZoneIDPerRegionALBMap
 	HostedZoneIDPerRegionNLBMap         = hostedZoneIDPerRegionNLBMap
