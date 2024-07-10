@@ -41,7 +41,6 @@ func TestAccPinpointApp_basic(t *testing.T) {
 					testAccCheckAppExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "limits.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", acctest.Ct1),
@@ -53,6 +52,14 @@ func TestAccPinpointApp_basic(t *testing.T) {
 							"lambda_function_name": knownvalue.StringExact(""),
 							names.AttrMode:         knownvalue.StringExact(""),
 							"web_url":              knownvalue.StringExact(""),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("limits"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"daily":               knownvalue.Int64Exact(0),
+							"maximum_duration":    knownvalue.Int64Exact(0),
+							"messages_per_second": knownvalue.Int64Exact(0),
+							"total":               knownvalue.Int64Exact(0),
 						}),
 					})),
 				},
@@ -235,9 +242,17 @@ func TestAccPinpointApp_limits(t *testing.T) {
 				Config: testAccAppConfig_limits(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "limits.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "limits.0.total", "100"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("limits"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"daily":               knownvalue.Int64Exact(3),
+							"maximum_duration":    knownvalue.Int64Exact(600),
+							"messages_per_second": knownvalue.Int64Exact(50),
+							"total":               knownvalue.Int64Exact(100),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
