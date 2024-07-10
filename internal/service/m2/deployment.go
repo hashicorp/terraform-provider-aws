@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Deployment")
+// @FrameworkResource("aws_m2_deployment", name="Deployment")
 func newDeploymentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &deploymentResource{}
 

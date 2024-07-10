@@ -31,11 +31,11 @@ func {{ .SetTagsOutFunc }}(ctx context.Context, tags map[string]*string) {
 
 {{- if ne .CreateTagsFunc "" }}
 // {{ .CreateTagsFunc }} creates {{ .ServicePackage }} service tags for new resources.
-func {{ .CreateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, tags map[string]*string) error {
+func {{ .CreateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, tags map[string]*string, optFns ...func(*{{ .AWSService }}.Options)) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return  {{ .UpdateTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, nil, tags)
+	return  {{ .UpdateTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, nil, tags, optFns...)
 }
 {{- end }}

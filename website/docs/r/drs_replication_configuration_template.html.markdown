@@ -8,9 +8,9 @@ description: |-
 
 # Resource: aws_drs_replication_configuration_template
 
-Provides an Elastic Disaster Recovery replication configuration template resource.
+Provides an Elastic Disaster Recovery replication configuration template resource. Before using DRS, your account must be [initialized](https://docs.aws.amazon.com/drs/latest/userguide/getting-started-initializing.html).
 
-~> **NOTE:** This resource is provided on a best-effort basis and may not function as intended. Due to challenges with DRS permissions, it has not been fully tested. We are collaborating with AWS to enhance its functionality and [welcome your feedback](https://github.com/hashicorp/terraform-provider-aws/issues/new/choose).
+~> **NOTE:** Your configuration must use the PIT policy shown in the [basic configuration](#basic-configuration) due to AWS rules. The only value that you can change is the `retention_duration` of `rule_id` 3.
 
 ## Example Usage
 
@@ -32,9 +32,26 @@ resource "aws_drs_replication_configuration_template" "example" {
 
   pit_policy {
     enabled            = true
+    interval           = 10
+    retention_duration = 60
+    units              = "MINUTE"
+    rule_id            = 1
+  }
+
+  pit_policy {
+    enabled            = true
     interval           = 1
-    retention_duration = 1
+    retention_duration = 24
+    units              = "HOUR"
+    rule_id            = 2
+  }
+
+  pit_policy {
+    enabled            = true
+    interval           = 1
+    retention_duration = 3
     units              = "DAY"
+    rule_id            = 3
   }
 }
 ```
@@ -63,6 +80,8 @@ The following arguments are optional:
 * `tags` - (Optional) Set of tags to be associated with the Replication Configuration Template resource.
 
 ### `pit_policy`
+
+The PIT policies _must_ be specified as shown in the [basic configuration example](#basic-configuration) above. The only value that you can change is the `retention_duration` of `rule_id` 3.
 
 * `enabled` - (Optional) Whether this rule is enabled or not.
 * `interval` - (Required) How often, in the chosen units, a snapshot should be taken.

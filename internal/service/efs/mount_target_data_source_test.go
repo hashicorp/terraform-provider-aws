@@ -106,8 +106,8 @@ func TestAccEFSMountTargetDataSource_byFileSystemID(t *testing.T) {
 	})
 }
 
-func testAccMountTargetBaseDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+func testAccMountTargetDataSourceConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
 
@@ -118,31 +118,13 @@ resource "aws_efs_file_system" "test" {
 
 resource "aws_efs_mount_target" "test" {
   file_system_id = aws_efs_file_system.test.id
-  subnet_id      = aws_subnet.test.id
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
+  subnet_id      = aws_subnet.test[0].id
 }
 `, rName))
 }
 
 func testAccMountTargetDataSourceConfig_byID(rName string) string {
-	return acctest.ConfigCompose(testAccMountTargetBaseDataSourceConfig(rName), `
+	return acctest.ConfigCompose(testAccMountTargetDataSourceConfig_base(rName), `
 data "aws_efs_mount_target" "test" {
   mount_target_id = aws_efs_mount_target.test.id
 }
@@ -150,7 +132,7 @@ data "aws_efs_mount_target" "test" {
 }
 
 func testAccMountTargetDataSourceConfig_byAccessPointID(rName string) string {
-	return acctest.ConfigCompose(testAccMountTargetBaseDataSourceConfig(rName), `
+	return acctest.ConfigCompose(testAccMountTargetDataSourceConfig_base(rName), `
 resource "aws_efs_access_point" "test" {
   file_system_id = aws_efs_file_system.test.id
 }
@@ -162,7 +144,7 @@ data "aws_efs_mount_target" "test" {
 }
 
 func testAccMountTargetDataSourceConfig_byFileSystemID(rName string) string {
-	return acctest.ConfigCompose(testAccMountTargetBaseDataSourceConfig(rName), `
+	return acctest.ConfigCompose(testAccMountTargetDataSourceConfig_base(rName), `
 data "aws_efs_mount_target" "test" {
   file_system_id = aws_efs_file_system.test.id
 
