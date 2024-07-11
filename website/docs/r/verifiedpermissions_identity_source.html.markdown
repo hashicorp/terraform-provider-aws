@@ -65,11 +65,11 @@ resource "aws_verifiedpermissions_identity_source" "example" {
       entity_id_prefix = "MyOIDCProvider"
       group_configuration {
         group_claim       = "groups"
-        group_entity_type = "Mycorp::UserGroup"
+        group_entity_type = "MyCorp::UserGroup"
       }
     }
   }
-  principal_entity_type = "Mycorp::UserGroup"
+  principal_entity_type = "MyCorp::User"
 }
 ```
 
