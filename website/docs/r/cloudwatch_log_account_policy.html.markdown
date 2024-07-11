@@ -47,6 +47,7 @@ resource "aws_cloudwatch_log_account_policy" "data_protection" {
 ```
 
 ### Subscription Filter Policy
+
 ```terraform
 resource "aws_cloudwatch_log_account_policy" "subscription_filter" {
   policy_name = "subscription-filter"
