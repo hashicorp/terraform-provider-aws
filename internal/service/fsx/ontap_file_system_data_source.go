@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -198,7 +197,7 @@ func dataSourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	if err := d.Set(names.AttrEndpoints, flattenOntapFileSystemEndpoints(ontapConfig.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
-	haPairs := aws.ToInt64(ontapConfig.HAPairs)
+	haPairs := aws.ToInt32(ontapConfig.HAPairs)
 	d.Set("ha_pairs", haPairs)
 	d.Set(names.AttrKMSKeyID, filesystem.KmsKeyId)
 	d.Set("network_interface_ids", filesystem.NetworkInterfaceIds)
@@ -208,7 +207,7 @@ func dataSourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set(names.AttrStorageType, filesystem.StorageType)
 	d.Set(names.AttrSubnetIDs, filesystem.SubnetIds)
-	if aws.ToString(ontapConfig.DeploymentType) == awstypes.OntapDeploymentTypeSingleAz2 {
+	if ontapConfig.DeploymentType == awstypes.OntapDeploymentTypeSingleAz2 {
 		d.Set("throughput_capacity", nil)
 		d.Set("throughput_capacity_per_ha_pair", ontapConfig.ThroughputCapacityPerHAPair)
 	} else {

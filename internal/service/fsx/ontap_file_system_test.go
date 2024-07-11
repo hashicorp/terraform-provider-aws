@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -40,7 +39,7 @@ func TestAccFSxONTAPFileSystem_basic(t *testing.T) {
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", awstypes.OntapDeploymentTypeMultiAz1),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.OntapDeploymentTypeMultiAz1)),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "3072"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "AUTOMATIC"),
@@ -59,7 +58,7 @@ func TestAccFSxONTAPFileSystem_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_vpc.test", "default_route_table_id"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1024"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, awstypes.StorageTypeSsd),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, string(awstypes.StorageTypeSsd)),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
@@ -95,7 +94,7 @@ func TestAccFSxONTAPFileSystem_singleAZ(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_singleAZ(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", awstypes.OntapDeploymentTypeSingleAz1),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.OntapDeploymentTypeSingleAz1)),
 				),
 			},
 			{
@@ -131,7 +130,7 @@ func TestAccFSxONTAPFileSystem_multiAZ2(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_multiAZ2(rName, throughput1, capacity1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", awstypes.OntapDeploymentTypeMultiAz2),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.OntapDeploymentTypeMultiAz2)),
 					resource.TestCheckResourceAttr(resourceName, "ha_pairs", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", fmt.Sprint(throughput1)),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput1)),
@@ -149,7 +148,7 @@ func TestAccFSxONTAPFileSystem_multiAZ2(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckONTAPFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", awstypes.OntapDeploymentTypeMultiAz2),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.OntapDeploymentTypeMultiAz2)),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput2)),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", fmt.Sprint(capacity2)),
 				),
@@ -159,7 +158,7 @@ func TestAccFSxONTAPFileSystem_multiAZ2(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckONTAPFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", awstypes.OntapDeploymentTypeMultiAz2),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.OntapDeploymentTypeMultiAz2)),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput3)),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", fmt.Sprint(capacity3)),
 				),

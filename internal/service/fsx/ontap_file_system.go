@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -68,10 +68,10 @@ func resourceONTAPFileSystem() *schema.Resource {
 				),
 			},
 			"deployment_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: enum.Validate[awstypes.OntapDeploymentType](),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.OntapDeploymentType](),
 			},
 			"disk_iops_configuration": {
 				Type:     schema.TypeList,
@@ -87,10 +87,10 @@ func resourceONTAPFileSystem() *schema.Resource {
 							ValidateFunc: validation.IntBetween(0, 2400000),
 						},
 						names.AttrMode: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      awstypes.DiskIopsConfigurationModeAutomatic,
-							ValidateFunc: enum.Validate[awstypes.DiskIopsConfigurationMode](),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.DiskIopsConfigurationModeAutomatic,
+							ValidateDiagFunc: enum.Validate[awstypes.DiskIopsConfigurationMode](),
 						},
 					},
 				},
@@ -203,11 +203,11 @@ func resourceONTAPFileSystem() *schema.Resource {
 				ValidateFunc: validation.IntBetween(1024, 1024*1024),
 			},
 			names.AttrStorageType: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      awstypes.StorageTypeSsd,
-				ValidateFunc: enum.Validate[awstypes.StorageType](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.StorageTypeSsd,
+				ValidateDiagFunc: enum.Validate[awstypes.StorageType](),
 			},
 			names.AttrSubnetIDs: {
 				Type:     schema.TypeList,
@@ -260,7 +260,7 @@ func resourceONTAPFileSystemThroughputCapacityPerHAPairCustomizeDiff(_ context.C
 	// we want to force a new resource if the throughput_capacity_per_ha_pair is increased for Gen1 file systems
 	if d.HasChange("throughput_capacity_per_ha_pair") {
 		o, n := d.GetChange("throughput_capacity_per_ha_pair")
-		if n != nil && n.(int) != 0 && n.(int) > o.(int) && (d.Get("deployment_type").(string) == awstypes.OntapDeploymentTypeSingleAz1 || d.Get("deployment_type").(string) == awstypes.OntapDeploymentTypeMultiAz1) {
+		if n != nil && n.(int) != 0 && n.(int) > o.(int) && (d.Get("deployment_type").(string) == string(awstypes.OntapDeploymentTypeSingleAz1) || d.Get("deployment_type").(string) == string(awstypes.OntapDeploymentTypeMultiAz1)) {
 			if err := d.ForceNew("throughput_capacity_per_ha_pair"); err != nil {
 				return err
 			}
@@ -274,7 +274,7 @@ func resourceONTAPFileSystemHAPairsCustomizeDiff(_ context.Context, d *schema.Re
 	// we want to force a new resource if the ha_pairs is increased for Gen1 single AZ file systems. multiple ha_pairs is not supported on Multi AZ.
 	if d.HasChange("ha_pairs") {
 		o, n := d.GetChange("ha_pairs")
-		if n != nil && n.(int) != 0 && n.(int) > o.(int) && (d.Get("deployment_type").(string) == awstypes.OntapDeploymentTypeSingleAz1) {
+		if n != nil && n.(int) != 0 && n.(int) > o.(int) && (d.Get("deployment_type").(string) == string(awstypes.OntapDeploymentTypeSingleAz1)) {
 			if err := d.ForceNew("ha_pairs"); err != nil {
 				return err
 			}
@@ -290,15 +290,15 @@ func resourceONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 
 	input := &fsx.CreateFileSystemInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
-		FileSystemType:     aws.String(awstypes.FileSystemTypeOntap),
+		FileSystemType:     awstypes.FileSystemTypeOntap,
 		OntapConfiguration: &awstypes.CreateFileSystemOntapConfiguration{
-			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
-			DeploymentType:               aws.String(d.Get("deployment_type").(string)),
+			AutomaticBackupRetentionDays: aws.Int32(int32(d.Get("automatic_backup_retention_days").(int))),
+			DeploymentType:               awstypes.OntapDeploymentType(d.Get("deployment_type").(string)),
 			PreferredSubnetId:            aws.String(d.Get("preferred_subnet_id").(string)),
 		},
-		StorageCapacity: aws.Int64(int64(d.Get("storage_capacity").(int))),
-		StorageType:     aws.String(d.Get(names.AttrStorageType).(string)),
-		SubnetIds:       flex.ExpandStringList(d.Get(names.AttrSubnetIDs).([]interface{})),
+		StorageCapacity: aws.Int32(int32(d.Get("storage_capacity").(int))),
+		StorageType:     awstypes.StorageType(d.Get(names.AttrStorageType).(string)),
+		SubnetIds:       flex.ExpandStringValueList(d.Get(names.AttrSubnetIDs).([]interface{})),
 		Tags:            getTagsIn(ctx),
 	}
 
@@ -319,12 +319,12 @@ func resourceONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("ha_pairs"); ok {
-		v := int64(v.(int))
-		input.OntapConfiguration.HAPairs = aws.Int64(v)
+		v := int32(v.(int))
+		input.OntapConfiguration.HAPairs = aws.Int32(v)
 
 		if v > 0 {
 			if v, ok := d.GetOk("throughput_capacity_per_ha_pair"); ok {
-				input.OntapConfiguration.ThroughputCapacityPerHAPair = aws.Int64(int64(v.(int)))
+				input.OntapConfiguration.ThroughputCapacityPerHAPair = aws.Int32(int32(v.(int)))
 			}
 		}
 	}
@@ -334,15 +334,15 @@ func resourceONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("route_table_ids"); ok {
-		input.OntapConfiguration.RouteTableIds = flex.ExpandStringSet(v.(*schema.Set))
+		input.OntapConfiguration.RouteTableIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
-		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+		input.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("throughput_capacity"); ok {
-		input.OntapConfiguration.ThroughputCapacity = aws.Int64(int64(v.(int)))
+		input.OntapConfiguration.ThroughputCapacity = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
@@ -395,7 +395,7 @@ func resourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
 	d.Set("fsx_admin_password", d.Get("fsx_admin_password").(string))
-	haPairs := aws.ToInt64(ontapConfig.HAPairs)
+	haPairs := aws.ToInt32(ontapConfig.HAPairs)
 	d.Set("ha_pairs", haPairs)
 	d.Set(names.AttrKMSKeyID, filesystem.KmsKeyId)
 	d.Set("network_interface_ids", filesystem.NetworkInterfaceIds)
@@ -405,7 +405,7 @@ func resourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set(names.AttrStorageType, filesystem.StorageType)
 	d.Set(names.AttrSubnetIDs, filesystem.SubnetIds)
-	if aws.ToString(ontapConfig.DeploymentType) == awstypes.OntapDeploymentTypeSingleAz2 {
+	if ontapConfig.DeploymentType == awstypes.OntapDeploymentTypeSingleAz2 {
 		d.Set("throughput_capacity", nil)
 		d.Set("throughput_capacity_per_ha_pair", ontapConfig.ThroughputCapacityPerHAPair)
 	} else {
@@ -432,7 +432,7 @@ func resourceONTAPFileSystemUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if d.HasChange("automatic_backup_retention_days") {
-			input.OntapConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(d.Get("automatic_backup_retention_days").(int)))
+			input.OntapConfiguration.AutomaticBackupRetentionDays = aws.Int32(int32(d.Get("automatic_backup_retention_days").(int)))
 		}
 
 		if d.HasChange("daily_automatic_backup_start_time") {
@@ -448,9 +448,9 @@ func resourceONTAPFileSystemUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if d.HasChange("ha_pairs") {
-			input.OntapConfiguration.HAPairs = aws.Int64(int64(d.Get("ha_pairs").(int)))
+			input.OntapConfiguration.HAPairs = aws.Int32(int32(d.Get("ha_pairs").(int)))
 			//for the ONTAP update API the ThroughputCapacityPerHAPair must explicitly be passed when adding ha_pairs even if it hasn't changed.
-			input.OntapConfiguration.ThroughputCapacityPerHAPair = aws.Int64(int64(d.Get("throughput_capacity_per_ha_pair").(int)))
+			input.OntapConfiguration.ThroughputCapacityPerHAPair = aws.Int32(int32(d.Get("throughput_capacity_per_ha_pair").(int)))
 		}
 
 		if d.HasChange("route_table_ids") {
@@ -459,24 +459,24 @@ func resourceONTAPFileSystemUpdate(ctx context.Context, d *schema.ResourceData, 
 			add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
 			if len(add) > 0 {
-				input.OntapConfiguration.AddRouteTableIds = aws.StringSlice(add)
+				input.OntapConfiguration.AddRouteTableIds = add
 			}
 
 			if len(del) > 0 {
-				input.OntapConfiguration.RemoveRouteTableIds = aws.StringSlice(del)
+				input.OntapConfiguration.RemoveRouteTableIds = del
 			}
 		}
 
 		if d.HasChange("storage_capacity") {
-			input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
+			input.StorageCapacity = aws.Int32(int32(d.Get("storage_capacity").(int)))
 		}
 
 		if d.HasChange("throughput_capacity") {
-			input.OntapConfiguration.ThroughputCapacity = aws.Int64(int64(d.Get("throughput_capacity").(int)))
+			input.OntapConfiguration.ThroughputCapacity = aws.Int32(int32(d.Get("throughput_capacity").(int)))
 		}
 
 		if d.HasChange("throughput_capacity_per_ha_pair") {
-			input.OntapConfiguration.ThroughputCapacityPerHAPair = aws.Int64(int64(d.Get("throughput_capacity_per_ha_pair").(int)))
+			input.OntapConfiguration.ThroughputCapacityPerHAPair = aws.Int32(int32(d.Get("throughput_capacity_per_ha_pair").(int)))
 		}
 
 		if d.HasChange("weekly_maintenance_start_time") {
@@ -511,7 +511,7 @@ func resourceONTAPFileSystemDelete(ctx context.Context, d *schema.ResourceData, 
 		FileSystemId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeFileSystemNotFound) {
+	if errs.IsA[*awstypes.FileSystemNotFound](err) {
 		return diags
 	}
 
@@ -536,7 +536,7 @@ func expandOntapFileDiskIopsConfiguration(cfg []interface{}) *awstypes.DiskIopsC
 	out := awstypes.DiskIopsConfiguration{}
 
 	if v, ok := conf[names.AttrMode].(string); ok && len(v) > 0 {
-		out.Mode = aws.String(v)
+		out.Mode = awstypes.DiskIopsConfigurationMode(v)
 	}
 	if v, ok := conf[names.AttrIOPS].(int); ok {
 		out.Iops = aws.Int64(int64(v))
@@ -551,9 +551,8 @@ func flattenOntapFileDiskIopsConfiguration(rs *awstypes.DiskIopsConfiguration) [
 	}
 
 	m := make(map[string]interface{})
-	if rs.Mode != nil {
-		m[names.AttrMode] = aws.ToString(rs.Mode)
-	}
+	m[names.AttrMode] = string(rs.Mode)
+
 	if rs.Iops != nil {
 		m[names.AttrIOPS] = aws.ToInt64(rs.Iops)
 	}
@@ -587,7 +586,7 @@ func flattenOntapFileSystemEndpoint(rs *awstypes.FileSystemEndpoint) []interface
 		m[names.AttrDNSName] = aws.ToString(rs.DNSName)
 	}
 	if rs.IpAddresses != nil {
-		m[names.AttrIPAddresses] = flex.FlattenStringSet(rs.IpAddresses)
+		m[names.AttrIPAddresses] = flex.FlattenStringValueSet(rs.IpAddresses)
 	}
 
 	return []interface{}{m}
