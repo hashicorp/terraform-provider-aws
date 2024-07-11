@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -65,185 +66,11 @@ func resourceListenerRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"listener_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrPriority: {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     false,
-				ValidateFunc: validListenerRulePriority,
-			},
 			names.AttrAction: {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ActionTypeEnum](),
-						},
-						"order": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(listenerActionOrderMin, listenerActionOrderMax),
-						},
-
-						"target_group_arn": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumForward),
-							ValidateFunc:     verify.ValidARN,
-						},
-
-						"forward": {
-							Type:                  schema.TypeList,
-							Optional:              true,
-							DiffSuppressOnRefresh: true,
-							DiffSuppressFunc:      diffSuppressMissingForward(names.AttrAction),
-							MaxItems:              1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"target_group": {
-										Type:     schema.TypeSet,
-										MinItems: 1,
-										MaxItems: 5,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrARN: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												names.AttrWeight: {
-													Type:         schema.TypeInt,
-													ValidateFunc: validation.IntBetween(0, 999),
-													Default:      1,
-													Optional:     true,
-												},
-											},
-										},
-									},
-									"stickiness": {
-										Type:             schema.TypeList,
-										Optional:         true,
-										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-										MaxItems:         1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Optional: true,
-													Default:  false,
-												},
-												names.AttrDuration: {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IntBetween(1, 604800),
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-
-						"redirect": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumRedirect),
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"host": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      "#{host}",
-										ValidateFunc: validation.StringLenBetween(1, 128),
-									},
-
-									names.AttrPath: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      "/#{path}",
-										ValidateFunc: validation.StringLenBetween(1, 128),
-									},
-
-									names.AttrPort: {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "#{port}",
-									},
-
-									names.AttrProtocol: {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "#{protocol}",
-										ValidateFunc: validation.StringInSlice([]string{
-											"#{protocol}",
-											"HTTP",
-											"HTTPS",
-										}, false),
-									},
-
-									"query": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      "#{query}",
-										ValidateFunc: validation.StringLenBetween(0, 128),
-									},
-
-									names.AttrStatusCode: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.RedirectActionStatusCodeEnum](),
-									},
-								},
-							},
-						},
-
-						"fixed_response": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumFixedResponse),
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrContentType: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"text/plain",
-											"text/css",
-											"text/html",
-											"application/javascript",
-											"application/json",
-										}, false),
-									},
-
-									"message_body": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 1024),
-									},
-
-									names.AttrStatusCode: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[245]\d\d$`), ""),
-									},
-								},
-							},
-						},
-
 						"authenticate_cognito": {
 							Type:             schema.TypeList,
 							Optional:         true,
@@ -293,7 +120,6 @@ func resourceListenerRule() *schema.Resource {
 								},
 							},
 						},
-
 						"authenticate_oidc": {
 							Type:             schema.TypeList,
 							Optional:         true,
@@ -355,6 +181,155 @@ func resourceListenerRule() *schema.Resource {
 								},
 							},
 						},
+						"fixed_response": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumFixedResponse),
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrContentType: {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											"text/plain",
+											"text/css",
+											"text/html",
+											"application/javascript",
+											"application/json",
+										}, false),
+									},
+									"message_body": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 1024),
+									},
+									names.AttrStatusCode: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[245]\d\d$`), ""),
+									},
+								},
+							},
+						},
+						"forward": {
+							Type:                  schema.TypeList,
+							Optional:              true,
+							DiffSuppressOnRefresh: true,
+							DiffSuppressFunc:      diffSuppressMissingForward(names.AttrAction),
+							MaxItems:              1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"stickiness": {
+										Type:             schema.TypeList,
+										Optional:         true,
+										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+										MaxItems:         1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrDuration: {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntBetween(1, 604800),
+												},
+												names.AttrEnabled: {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Default:  false,
+												},
+											},
+										},
+									},
+									"target_group": {
+										Type:     schema.TypeSet,
+										MinItems: 1,
+										MaxItems: 5,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrARN: {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												names.AttrWeight: {
+													Type:         schema.TypeInt,
+													ValidateFunc: validation.IntBetween(0, 999),
+													Default:      1,
+													Optional:     true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"order": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(listenerActionOrderMin, listenerActionOrderMax),
+						},
+						"redirect": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumRedirect),
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"host": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "#{host}",
+										ValidateFunc: validation.StringLenBetween(1, 128),
+									},
+									names.AttrPath: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "/#{path}",
+										ValidateFunc: validation.StringLenBetween(1, 128),
+									},
+									names.AttrPort: {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "#{port}",
+									},
+									names.AttrProtocol: {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "#{protocol}",
+										ValidateFunc: validation.StringInSlice([]string{
+											"#{protocol}",
+											"HTTP",
+											"HTTPS",
+										}, false),
+									},
+									"query": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "#{query}",
+										ValidateFunc: validation.StringLenBetween(0, 128),
+									},
+									names.AttrStatusCode: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.RedirectActionStatusCodeEnum](),
+									},
+								},
+							},
+						},
+						"target_group_arn": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumForward),
+							ValidateFunc:     verify.ValidARN,
+						},
+						names.AttrType: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ActionTypeEnum](),
+						},
 					},
 				},
 			},
@@ -377,7 +352,6 @@ func resourceListenerRule() *schema.Resource {
 											Type:         schema.TypeString,
 											ValidateFunc: validation.StringLenBetween(1, 128),
 										},
-										Set: schema.HashString,
 									},
 								},
 							},
@@ -400,7 +374,6 @@ func resourceListenerRule() *schema.Resource {
 											ValidateFunc: validation.StringLenBetween(1, 128),
 										},
 										Required: true,
-										Set:      schema.HashString,
 									},
 								},
 							},
@@ -418,7 +391,6 @@ func resourceListenerRule() *schema.Resource {
 											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z-_]{1,40}$`), ""),
 										},
 										Required: true,
-										Set:      schema.HashString,
 									},
 								},
 							},
@@ -437,7 +409,6 @@ func resourceListenerRule() *schema.Resource {
 											Type:         schema.TypeString,
 											ValidateFunc: validation.StringLenBetween(1, 128),
 										},
-										Set: schema.HashString,
 									},
 								},
 							},
@@ -471,13 +442,25 @@ func resourceListenerRule() *schema.Resource {
 											ValidateFunc: verify.ValidCIDRNetworkAddress,
 										},
 										Required: true,
-										Set:      schema.HashString,
 									},
 								},
 							},
 						},
 					},
 				},
+			},
+			"listener_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			names.AttrPriority: {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     false,
+				ValidateFunc: validListenerRulePriority,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -522,7 +505,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	var err error
 
-	input.Conditions, err = lbListenerRuleConditions(d.Get(names.AttrCondition).(*schema.Set).List())
+	input.Conditions, err = expandRuleConditions(d.Get(names.AttrCondition).(*schema.Set).List())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -564,7 +547,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, elbv2PropagationTimeout, func() (interface{}, error) {
-		return findListenerByARN(ctx, conn, d.Id())
+		return findListenerRuleByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -700,7 +683,7 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if d.HasChange(names.AttrCondition) {
 			var err error
-			input.Conditions, err = lbListenerRuleConditions(d.Get(names.AttrCondition).(*schema.Set).List())
+			input.Conditions, err = expandRuleConditions(d.Get(names.AttrCondition).(*schema.Set).List())
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
@@ -743,59 +726,35 @@ func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, met
 }
 
 func retryListenerRuleCreate(ctx context.Context, conn *elasticloadbalancingv2.Client, d *schema.ResourceData, input *elasticloadbalancingv2.CreateRuleInput, listenerARN string) (*elasticloadbalancingv2.CreateRuleOutput, error) {
-	var output *elasticloadbalancingv2.CreateRuleOutput
-
 	if v, ok := d.GetOk(names.AttrPriority); ok {
-		var err error
 		input.Priority = aws.Int32(int32(v.(int)))
-		output, err = conn.CreateRule(ctx, input)
 
+		return conn.CreateRule(ctx, input)
+	}
+
+	const (
+		timeout = 5 * time.Minute
+	)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.PriorityInUseException](ctx, timeout, func() (interface{}, error) {
+		priority, err := highestListenerRulePriority(ctx, conn, listenerARN)
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		var priority int32
 
-		err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
-			var err error
-			priority, err = highestListenerRulePriority(ctx, conn, listenerARN)
-			if err != nil {
-				return retry.NonRetryableError(err)
-			}
-			input.Priority = aws.Int32(priority + 1)
-			output, err = conn.CreateRule(ctx, input)
-			if err != nil {
-				if errs.IsA[*awstypes.PriorityInUseException](err) {
-					return retry.RetryableError(err)
-				}
-				return retry.NonRetryableError(err)
-			}
-			return nil
-		})
+		input.Priority = aws.Int32(priority + 1)
+		return conn.CreateRule(ctx, input)
+	})
 
-		if tfresource.TimedOut(err) {
-			priority, err = highestListenerRulePriority(ctx, conn, listenerARN)
-			if err != nil {
-				return nil, fmt.Errorf("getting highest listener rule (%s) priority: %w", listenerARN, err)
-			}
-			input.Priority = aws.Int32(priority + 1)
-			output, err = conn.CreateRule(ctx, input)
-		}
-
-		if err != nil {
-			return nil, err
-		}
+	if err != nil {
+		return nil, err
 	}
 
-	if output == nil || len(output.Rules) == 0 {
-		return nil, fmt.Errorf("creating LB Listener Rule (%s): no rules returned in response", listenerARN)
-	}
-
-	return output, nil
+	return outputRaw.(*elasticloadbalancingv2.CreateRuleOutput), nil
 }
 
-func findListenerRule(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeRulesInput) (*awstypes.Rule, error) {
-	output, err := findListenerRules(ctx, conn, input)
+func findListenerRule(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeRulesInput, filter tfslices.Predicate[*awstypes.Rule]) (*awstypes.Rule, error) {
+	output, err := findListenerRules(ctx, conn, input, filter)
+
 	if err != nil {
 		return nil, err
 	}
@@ -803,7 +762,7 @@ func findListenerRule(ctx context.Context, conn *elasticloadbalancingv2.Client, 
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findListenerRules(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeRulesInput) ([]awstypes.Rule, error) {
+func findListenerRules(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeRulesInput, filter tfslices.Predicate[*awstypes.Rule]) ([]awstypes.Rule, error) {
 	var output []awstypes.Rule
 
 	err := describeRulesPages(ctx, conn, input, func(page *elasticloadbalancingv2.DescribeRulesOutput, lastPage bool) bool {
@@ -811,7 +770,11 @@ func findListenerRules(ctx context.Context, conn *elasticloadbalancingv2.Client,
 			return !lastPage
 		}
 
-		output = append(output, page.Rules...)
+		for _, v := range page.Rules {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 
 		return !lastPage
 	})
@@ -835,7 +798,26 @@ func findListenerRuleByARN(ctx context.Context, conn *elasticloadbalancingv2.Cli
 		RuleArns: []string{arn},
 	}
 
-	return findListenerRule(ctx, conn, input)
+	return findListenerRule(ctx, conn, input, tfslices.PredicateTrue[*awstypes.Rule]())
+}
+
+func highestListenerRulePriority(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) (int32, error) {
+	input := &elasticloadbalancingv2.DescribeRulesInput{
+		ListenerArn: aws.String(arn),
+	}
+	rules, err := findListenerRules(ctx, conn, input, func(v *awstypes.Rule) bool {
+		return aws.ToString(v.Priority) != "default"
+	})
+
+	if err != nil {
+		return 0, err
+	}
+
+	priorities := tfslices.ApplyToAll(rules, func(v awstypes.Rule) int32 {
+		return flex.StringToInt32Value(v.Priority)
+	})
+
+	return slices.Max(priorities), nil
 }
 
 func validListenerRulePriority(v interface{}, k string) (ws []string, errors []error) {
@@ -862,97 +844,64 @@ func listenerARNFromRuleARN(ruleARN string) string {
 	return ""
 }
 
-func highestListenerRulePriority(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) (priority int32, err error) {
-	var priorities []int32
-	var nextMarker *string
+func expandRuleConditions(tfList []interface{}) ([]awstypes.RuleCondition, error) {
+	apiObjects := make([]awstypes.RuleCondition, len(tfList))
 
-	for {
-		out, aerr := conn.DescribeRules(ctx, &elasticloadbalancingv2.DescribeRulesInput{
-			ListenerArn: aws.String(arn),
-			Marker:      nextMarker,
-		})
-		if aerr != nil {
-			return 0, aerr
-		}
-		for _, rule := range out.Rules {
-			if priority := aws.ToString(rule.Priority); priority != "default" {
-				p, _ := strconv.ParseInt(priority, 0, 32)
-				priorities = append(priorities, int32(p))
-			}
-		}
-		if out.NextMarker == nil {
-			break
-		}
-		nextMarker = out.NextMarker
-	}
+	for i, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]interface{})
+		apiObjects[i] = awstypes.RuleCondition{}
 
-	if len(priorities) == 0 {
-		return 0, nil
-	}
-
-	slices.Sort(priorities)
-
-	return priorities[len(priorities)-1], nil
-}
-
-// lbListenerRuleConditions converts data source generated by Terraform into
-// an elasticloadbalancingv2/types.RuleCondition object suitable for submitting to AWS API.
-func lbListenerRuleConditions(conditions []interface{}) ([]awstypes.RuleCondition, error) {
-	elbConditions := make([]awstypes.RuleCondition, len(conditions))
-	for i, condition := range conditions {
-		elbConditions[i] = awstypes.RuleCondition{}
-		conditionMap := condition.(map[string]interface{})
 		var field string
 		var attrs int
 
-		if hostHeader, ok := conditionMap["host_header"].([]interface{}); ok && len(hostHeader) > 0 {
+		if hostHeader, ok := tfMap["host_header"].([]interface{}); ok && len(hostHeader) > 0 {
 			field = "host-header"
 			attrs += 1
 			values := hostHeader[0].(map[string]interface{})[names.AttrValues].(*schema.Set)
 
-			elbConditions[i].HostHeaderConfig = &awstypes.HostHeaderConditionConfig{
+			apiObjects[i].HostHeaderConfig = &awstypes.HostHeaderConditionConfig{
 				Values: flex.ExpandStringValueSet(values),
 			}
 		}
 
-		if httpHeader, ok := conditionMap["http_header"].([]interface{}); ok && len(httpHeader) > 0 {
+		if httpHeader, ok := tfMap["http_header"].([]interface{}); ok && len(httpHeader) > 0 {
 			field = "http-header"
 			attrs += 1
 			httpHeaderMap := httpHeader[0].(map[string]interface{})
 			values := httpHeaderMap[names.AttrValues].(*schema.Set)
 
-			elbConditions[i].HttpHeaderConfig = &awstypes.HttpHeaderConditionConfig{
+			apiObjects[i].HttpHeaderConfig = &awstypes.HttpHeaderConditionConfig{
 				HttpHeaderName: aws.String(httpHeaderMap["http_header_name"].(string)),
 				Values:         flex.ExpandStringValueSet(values),
 			}
 		}
 
-		if httpRequestMethod, ok := conditionMap["http_request_method"].([]interface{}); ok && len(httpRequestMethod) > 0 {
+		if httpRequestMethod, ok := tfMap["http_request_method"].([]interface{}); ok && len(httpRequestMethod) > 0 {
 			field = "http-request-method"
 			attrs += 1
 			values := httpRequestMethod[0].(map[string]interface{})[names.AttrValues].(*schema.Set)
 
-			elbConditions[i].HttpRequestMethodConfig = &awstypes.HttpRequestMethodConditionConfig{
+			apiObjects[i].HttpRequestMethodConfig = &awstypes.HttpRequestMethodConditionConfig{
 				Values: flex.ExpandStringValueSet(values),
 			}
 		}
 
-		if pathPattern, ok := conditionMap["path_pattern"].([]interface{}); ok && len(pathPattern) > 0 {
+		if pathPattern, ok := tfMap["path_pattern"].([]interface{}); ok && len(pathPattern) > 0 {
 			field = "path-pattern"
 			attrs += 1
 			values := pathPattern[0].(map[string]interface{})[names.AttrValues].(*schema.Set)
 
-			elbConditions[i].PathPatternConfig = &awstypes.PathPatternConditionConfig{
+			apiObjects[i].PathPatternConfig = &awstypes.PathPatternConditionConfig{
 				Values: flex.ExpandStringValueSet(values),
 			}
 		}
 
-		if queryString, ok := conditionMap["query_string"].(*schema.Set); ok && queryString.Len() > 0 {
+		if queryString, ok := tfMap["query_string"].(*schema.Set); ok && queryString.Len() > 0 {
 			field = "query-string"
 			attrs += 1
 			values := queryString.List()
 
-			elbConditions[i].QueryStringConfig = &awstypes.QueryStringConditionConfig{
+			apiObjects[i].QueryStringConfig = &awstypes.QueryStringConditionConfig{
 				Values: make([]awstypes.QueryStringKeyValuePair, len(values)),
 			}
 			for j, p := range values {
@@ -963,16 +912,16 @@ func lbListenerRuleConditions(conditions []interface{}) ([]awstypes.RuleConditio
 				if valuePair[names.AttrKey].(string) != "" {
 					elbValuePair.Key = aws.String(valuePair[names.AttrKey].(string))
 				}
-				elbConditions[i].QueryStringConfig.Values[j] = elbValuePair
+				apiObjects[i].QueryStringConfig.Values[j] = elbValuePair
 			}
 		}
 
-		if sourceIp, ok := conditionMap["source_ip"].([]interface{}); ok && len(sourceIp) > 0 {
+		if sourceIp, ok := tfMap["source_ip"].([]interface{}); ok && len(sourceIp) > 0 {
 			field = "source-ip"
 			attrs += 1
 			values := sourceIp[0].(map[string]interface{})[names.AttrValues].(*schema.Set)
 
-			elbConditions[i].SourceIpConfig = &awstypes.SourceIpConditionConfig{
+			apiObjects[i].SourceIpConfig = &awstypes.SourceIpConditionConfig{
 				Values: flex.ExpandStringValueSet(values),
 			}
 		}
@@ -986,7 +935,8 @@ func lbListenerRuleConditions(conditions []interface{}) ([]awstypes.RuleConditio
 			return nil, errors.New("Only one of host_header, http_header, http_request_method, path_pattern, query_string or source_ip can be set in a condition block")
 		}
 
-		elbConditions[i].Field = aws.String(field)
+		apiObjects[i].Field = aws.String(field)
 	}
-	return elbConditions, nil
+
+	return apiObjects, nil
 }
