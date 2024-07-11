@@ -9,16 +9,7 @@ description: |-
 
 Terraform resource for managing an Amazon DataZone Project.
 
-### Basic Usage
-
-```terraform
-resource "aws_datazone_project" "test" {
-  domain_id = aws_datazone_domain.test.id
-  name      = "name"
-}
-```
-
-### Basic Usage
+## Example Usage
 
 ```terraform
 resource "aws_datazone_project" "test" {
@@ -29,6 +20,16 @@ resource "aws_datazone_project" "test" {
   skip_deletion_check = true
 }
 ```
+
+### Basic Usage
+
+```terraform
+resource "aws_datazone_project" "test" {
+  domain_id = aws_datazone_domain.test.id
+  name      = "name"
+}
+```
+
 
 ## Argument Reference
 
