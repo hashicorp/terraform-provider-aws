@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -102,9 +103,14 @@ func resourceWebACL() *schema.Resource {
 					),
 				},
 				"rule_json": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringIsJSON,
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateFunc:     validation.StringIsJSON,
+					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+					StateFunc: func(v interface{}) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
 				},
 				names.AttrRule: {
 					Type:     schema.TypeSet,
@@ -278,10 +284,17 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err := d.Set(names.AttrRule, flattenWebACLRules(rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
-	expandRules, _ := expandWebACLRulesJSON(d.Get("rule_json").(string))
-	rulesJSON := filterWebACLRules(webACL.Rules, expandRules)
-	if err := d.Set("rule_json", flattenRuleJSON(rulesJSON)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting JSON rule: %s", err)
+
+	// expandRules, _ := expandWebACLRulesJSON(d.Get("rule_json").(string))
+	// rulesJSON := filterWebACLRules(webACL.Rules, expandRules)
+	// if err := d.Set("rule_json", flattenRuleJSON("rulesJSON")); err != nil {
+	// 	return sdkdiag.AppendErrorf(diags, "setting JSON rule: %s", err)
+	// }
+
+	jsonRule := flattenRuleJSON(output.WebACL.Rules)
+	err = d.Set("rule_json", jsonRule)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading WebACL Rule JSON (%s): %s", d.Id(), err)
 	}
 
 	d.Set("token_domains", aws.StringSlice(webACL.TokenDomains))
@@ -313,17 +326,6 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			rules = append(rules, findShieldRule(output.WebACL.Rules)...)
 		}
 
-		rulesjson, _ := expandWebACLRulesJSON(d.Get("rule_json").(string))
-		if sr := findShieldRule(rulesjson); len(sr) == 0 {
-			output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), aclName, aclScope)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
-			}
-
-			rules = append(rulesjson, findShieldRule(output.WebACL.Rules)...)
-		}
-
 		input := &wafv2.UpdateWebACLInput{
 			AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
 			CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
@@ -332,17 +334,12 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			Id:                aws.String(d.Id()),
 			LockToken:         aws.String(aclLockToken),
 			Name:              aws.String(aclName),
-			// Rules:             rules,
-			Scope:            awstypes.Scope(aclScope),
-			VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
+			Rules:             rules,
+			Scope:             awstypes.Scope(aclScope),
+			VisibilityConfig:  expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 		}
 
-		if v, ok := d.GetOk(names.AttrRule); ok {
-			input.Rules = expandWebACLRules(v.(*schema.Set).List())
-		}
-
-		if v, ok := d.GetOk("rule_json"); ok {
-			rules, _ := expandWebACLRulesJSON(v.(string))
+		if _, ok := d.GetOk(names.AttrRule); ok {
 			input.Rules = rules
 		}
 
