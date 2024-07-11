@@ -54,11 +54,12 @@ func TestAccMetaServicePrincipal_ByRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_service_principal.test"
-	regions := []string{"us-east-1", "cn-north-1", "us-gov-east-1", "us-iso-east-1", "us-isob-east-1", "eu-isoe-west-1"}
+	regions := []string{"us-east-1", "cn-north-1", "us-gov-east-1", "us-iso-east-1", "us-isob-east-1", "eu-isoe-west-1"} //lintignore:AWSAT003
 
 	for _, region := range regions {
 		t.Run(region, func(t *testing.T) {
-			resource.Test(t, resource.TestCase{
+			t.Parallel()
+			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -98,17 +99,17 @@ func TestAccMetaServicePrincipal_UniqueForServiceInRegion(t *testing.T) {
 		Services []string
 	}{
 		{
-			Region:   "us-iso-east-1",
+			Region:   "us-iso-east-1", //lintignore:AWSAT003
 			Suffix:   "c2s.ic.gov",
 			Services: []string{"cloudhsm", "config", "logs", "states", "workspaces"},
 		},
 		{
-			Region:   "us-isob-east-1",
+			Region:   "us-isob-east-1", //lintignore:AWSAT003
 			Suffix:   "sc2s.sgov.gov",
 			Services: []string{"dms", "logs"},
 		},
 		{
-			Region:   "cn-north-1",
+			Region:   "cn-north-1", //lintignore:AWSAT003
 			Suffix:   "amazonaws.com.cn",
 			Services: []string{"codedeploy", "elasticmapreduce", "logs"},
 		},
@@ -128,7 +129,8 @@ func TestAccMetaServicePrincipal_UniqueForServiceInRegion(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(fmt.Sprintf("%s/%s", testCase.Region, testCase.Service), func(t *testing.T) {
-			resource.Test(t, resource.TestCase{
+			t.Parallel()
+			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
