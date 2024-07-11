@@ -51,6 +51,35 @@ func TestAccELBV2TrustStore_basic(t *testing.T) {
 	})
 }
 
+func TestAccELBV2TrustStore_statusActive(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf elbv2.TrustStore
+	resourceName := "aws_lb_trust_store.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrustStoreConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrustStoreExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, elbv2.TrustStoreStatusActive),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: false,
+			},
+		},
+	})
+}
+
 func TestAccELBV2TrustStore_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elbv2.TrustStore

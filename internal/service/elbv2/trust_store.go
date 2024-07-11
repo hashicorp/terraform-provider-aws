@@ -5,6 +5,7 @@ package elbv2
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -90,6 +91,10 @@ func ResourceTrustStore() *schema.Resource {
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validNamePrefix,
 			},
+			names.AttrStatus: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -147,6 +152,10 @@ func resourceTrustStoreCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Trust Store (%s) create: %s", d.Id(), err)
 	}
 
+	if _, err := waitTrustStoreActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Trust Store (%s) create: %s", d.Id(), err)
+	}
+
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, d.Id(), tags)
@@ -183,6 +192,7 @@ func resourceTrustStoreRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrARN, trustStore.TrustStoreArn)
 	d.Set(names.AttrName, trustStore.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(trustStore.Name)))
+	d.Set(names.AttrStatus, trustStore.Status)
 
 	return diags
 }
@@ -342,4 +352,41 @@ func waitForNoTrustStoreAssociations(ctx context.Context, conn *elbv2.ELBV2, arn
 	})
 
 	return err
+}
+
+func statusTrustStore(ctx context.Context, conn *elbv2.ELBV2, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindTrustStoreByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitTrustStoreActive(ctx context.Context, conn *elbv2.ELBV2, arn string, timeout time.Duration) (*elbv2.TrustStore, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{elbv2.TrustStoreStatusCreating},
+		Target:     []string{elbv2.TrustStoreStatusActive},
+		Refresh:    statusTrustStore(ctx, conn, arn),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*elbv2.TrustStore); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status)))
+
+		return output, err
+	}
+
+	return nil, err
 }
