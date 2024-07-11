@@ -2,8 +2,9 @@ package meta_test
 
 import (
 	"fmt"
-	"github.com/YakDriver/regexache"
 	"testing"
+
+	"github.com/YakDriver/regexache"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -155,16 +156,15 @@ data "aws_service_principal" "test" {}
 `
 const testAccSPNDataSourceConfig_basic = `
 data "aws_service_principal" "test" {
-	service_name = "s3"
+  service_name = "s3"
 }
 `
 
 func testAccSPNDataSourceConfig_withRegion(service string, region string) string {
 	return fmt.Sprintf(`
 data "aws_service_principal" "test" {
-	region = %[1]q
-
-	service_name = %[2]q
+  region       = %[1]q
+  service_name = %[2]q
 }
 `, region, service)
 }
