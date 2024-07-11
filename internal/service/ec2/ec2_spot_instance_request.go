@@ -141,6 +141,8 @@ func resourceSpotInstanceRequest() *schema.Resource {
 				Default:  false,
 			}
 
+			delete(s["network_interface"].Elem.(*schema.Resource).Schema, "network_card_index")
+
 			return s
 		}(),
 

@@ -2531,9 +2531,11 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []string, nInterfa
 			ini := v.(map[string]interface{})
 			ni := awstypes.InstanceNetworkInterfaceSpecification{
 				DeviceIndex:         aws.Int32(int32(ini["device_index"].(int))),
-				NetworkCardIndex:    aws.Int32(int32(ini["network_card_index"].(int))),
 				NetworkInterfaceId:  aws.String(ini[names.AttrNetworkInterfaceID].(string)),
 				DeleteOnTermination: aws.Bool(ini[names.AttrDeleteOnTermination].(bool)),
+			}
+			if nci, ok := ini["network_card_index"]; ok {
+				ni.NetworkCardIndex = aws.Int32(int32(nci.(int)))
 			}
 			networkInterfaces = append(networkInterfaces, ni)
 		}
