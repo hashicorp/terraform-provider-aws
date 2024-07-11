@@ -11,8 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// this test targets s3 service, so we will always expect .amazonaws.com in the SPN
-func TestAccServicePrincipalName(t *testing.T) {
+func TestAccMetaServicePrincipal_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service_principal.test"
 
@@ -35,7 +34,7 @@ func TestAccServicePrincipalName(t *testing.T) {
 	})
 }
 
-func TestAccServicePrincipalName_MissingService(t *testing.T) {
+func TestAccMetaServicePrincipal_MissingService(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -51,11 +50,10 @@ func TestAccServicePrincipalName_MissingService(t *testing.T) {
 	})
 }
 
-func TestAccServicePrincipalNameByRegion(t *testing.T) {
+func TestAccMetaServicePrincipal_ByRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_service_principal.test"
-
 	regions := []string{"us-east-1", "cn-north-1", "us-gov-east-1", "us-iso-east-1", "us-isob-east-1", "eu-isoe-west-1"}
 
 	for _, region := range regions {
@@ -80,7 +78,7 @@ func TestAccServicePrincipalNameByRegion(t *testing.T) {
 	}
 }
 
-func TestAccServicePrincipalName_UniqueForServiceInRegion(t *testing.T) {
+func TestAccMetaServicePrincipal_UniqueForServiceInRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service_principal.test"
 
