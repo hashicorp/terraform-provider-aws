@@ -8,8 +8,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/fsx"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -65,7 +66,7 @@ func dataSourceOpenzfsSnapshot() *schema.Resource {
 
 func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	input := &fsx.DescribeSnapshotsInput{}
 
@@ -81,7 +82,7 @@ func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 		input.Filters = nil
 	}
 
-	snapshots, err := findSnapshots(ctx, conn, input, tfslices.PredicateTrue[*fsx.Snapshot]())
+	snapshots, err := findSnapshots(ctx, conn, input, tfslices.PredicateTrue[*awstypes.Snapshot]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading FSx Snapshots: %s", err)
@@ -103,7 +104,7 @@ func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	snapshot := snapshots[0]
-	d.SetId(aws.StringValue(snapshot.SnapshotId))
+	d.SetId(aws.ToString(snapshot.SnapshotId))
 	d.Set(names.AttrARN, snapshot.ResourceARN)
 	d.Set(names.AttrCreationTime, snapshot.CreationTime.Format(time.RFC3339))
 	d.Set(names.AttrName, snapshot.Name)

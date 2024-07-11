@@ -4,22 +4,23 @@
 package fsx
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/fsx"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func newSnapshotFilterList(s *schema.Set) []*fsx.SnapshotFilter {
+func newSnapshotFilterList(s *schema.Set) []*awstypes.SnapshotFilter {
 	if s == nil {
-		return []*fsx.SnapshotFilter{}
+		return []*awstypes.SnapshotFilter{}
 	}
 
-	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) *fsx.SnapshotFilter {
+	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) *awstypes.SnapshotFilter {
 		tfMap := tfList.(map[string]interface{})
-		return &fsx.SnapshotFilter{
+		return &awstypes.SnapshotFilter{
 			Name:   aws.String(tfMap[names.AttrName].(string)),
 			Values: flex.ExpandStringList(tfMap[names.AttrValues].([]interface{})),
 		}
@@ -48,14 +49,14 @@ func snapshotFiltersSchema() *schema.Schema {
 	}
 }
 
-func newStorageVirtualMachineFilterList(s *schema.Set) []*fsx.StorageVirtualMachineFilter {
+func newStorageVirtualMachineFilterList(s *schema.Set) []*awstypes.StorageVirtualMachineFilter {
 	if s == nil {
-		return []*fsx.StorageVirtualMachineFilter{}
+		return []*awstypes.StorageVirtualMachineFilter{}
 	}
 
-	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) *fsx.StorageVirtualMachineFilter {
+	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) *awstypes.StorageVirtualMachineFilter {
 		tfMap := tfList.(map[string]interface{})
-		return &fsx.StorageVirtualMachineFilter{
+		return &awstypes.StorageVirtualMachineFilter{
 			Name:   aws.String(tfMap[names.AttrName].(string)),
 			Values: flex.ExpandStringList(tfMap[names.AttrValues].([]interface{})),
 		}

@@ -9,15 +9,17 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/fsx"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -69,7 +71,7 @@ func resourceONTAPFileSystem() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(fsx.OntapDeploymentType_Values(), false),
+				ValidateFunc: enum.Validate[awstypes.OntapDeploymentType](),
 			},
 			"disk_iops_configuration": {
 				Type:     schema.TypeList,
@@ -87,8 +89,8 @@ func resourceONTAPFileSystem() *schema.Resource {
 						names.AttrMode: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      fsx.DiskIopsConfigurationModeAutomatic,
-							ValidateFunc: validation.StringInSlice(fsx.DiskIopsConfigurationMode_Values(), false),
+							Default:      awstypes.DiskIopsConfigurationModeAutomatic,
+							ValidateFunc: enum.Validate[awstypes.DiskIopsConfigurationMode](),
 						},
 					},
 				},
@@ -204,8 +206,8 @@ func resourceONTAPFileSystem() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      fsx.StorageTypeSsd,
-				ValidateFunc: validation.StringInSlice(fsx.StorageType_Values(), false),
+				Default:      awstypes.StorageTypeSsd,
+				ValidateFunc: enum.Validate[awstypes.StorageType](),
 			},
 			names.AttrSubnetIDs: {
 				Type:     schema.TypeList,
@@ -258,7 +260,7 @@ func resourceONTAPFileSystemThroughputCapacityPerHAPairCustomizeDiff(_ context.C
 	// we want to force a new resource if the throughput_capacity_per_ha_pair is increased for Gen1 file systems
 	if d.HasChange("throughput_capacity_per_ha_pair") {
 		o, n := d.GetChange("throughput_capacity_per_ha_pair")
-		if n != nil && n.(int) != 0 && n.(int) > o.(int) && (d.Get("deployment_type").(string) == fsx.OntapDeploymentTypeSingleAz1 || d.Get("deployment_type").(string) == fsx.OntapDeploymentTypeMultiAz1) {
+		if n != nil && n.(int) != 0 && n.(int) > o.(int) && (d.Get("deployment_type").(string) == awstypes.OntapDeploymentTypeSingleAz1 || d.Get("deployment_type").(string) == awstypes.OntapDeploymentTypeMultiAz1) {
 			if err := d.ForceNew("throughput_capacity_per_ha_pair"); err != nil {
 				return err
 			}
@@ -272,7 +274,7 @@ func resourceONTAPFileSystemHAPairsCustomizeDiff(_ context.Context, d *schema.Re
 	// we want to force a new resource if the ha_pairs is increased for Gen1 single AZ file systems. multiple ha_pairs is not supported on Multi AZ.
 	if d.HasChange("ha_pairs") {
 		o, n := d.GetChange("ha_pairs")
-		if n != nil && n.(int) != 0 && n.(int) > o.(int) && (d.Get("deployment_type").(string) == fsx.OntapDeploymentTypeSingleAz1) {
+		if n != nil && n.(int) != 0 && n.(int) > o.(int) && (d.Get("deployment_type").(string) == awstypes.OntapDeploymentTypeSingleAz1) {
 			if err := d.ForceNew("ha_pairs"); err != nil {
 				return err
 			}
@@ -284,12 +286,12 @@ func resourceONTAPFileSystemHAPairsCustomizeDiff(_ context.Context, d *schema.Re
 
 func resourceONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	input := &fsx.CreateFileSystemInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
-		FileSystemType:     aws.String(fsx.FileSystemTypeOntap),
-		OntapConfiguration: &fsx.CreateFileSystemOntapConfiguration{
+		FileSystemType:     aws.String(awstypes.FileSystemTypeOntap),
+		OntapConfiguration: &awstypes.CreateFileSystemOntapConfiguration{
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 			DeploymentType:               aws.String(d.Get("deployment_type").(string)),
 			PreferredSubnetId:            aws.String(d.Get("preferred_subnet_id").(string)),
@@ -347,13 +349,13 @@ func resourceONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 		input.OntapConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateFileSystemWithContext(ctx, input)
+	output, err := conn.CreateFileSystem(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating FSx for NetApp ONTAP File System: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.FileSystem.FileSystemId))
+	d.SetId(aws.ToString(output.FileSystem.FileSystemId))
 
 	if _, err := waitFileSystemCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for FSx for NetApp ONTAP File System (%s) create: %s", d.Id(), err)
@@ -364,7 +366,7 @@ func resourceONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	filesystem, err := findONTAPFileSystemByID(ctx, conn, d.Id())
 
@@ -393,17 +395,17 @@ func resourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
 	d.Set("fsx_admin_password", d.Get("fsx_admin_password").(string))
-	haPairs := aws.Int64Value(ontapConfig.HAPairs)
+	haPairs := aws.ToInt64(ontapConfig.HAPairs)
 	d.Set("ha_pairs", haPairs)
 	d.Set(names.AttrKMSKeyID, filesystem.KmsKeyId)
-	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
+	d.Set("network_interface_ids", filesystem.NetworkInterfaceIds)
 	d.Set(names.AttrOwnerID, filesystem.OwnerId)
 	d.Set("preferred_subnet_id", ontapConfig.PreferredSubnetId)
-	d.Set("route_table_ids", aws.StringValueSlice(ontapConfig.RouteTableIds))
+	d.Set("route_table_ids", ontapConfig.RouteTableIds)
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set(names.AttrStorageType, filesystem.StorageType)
-	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(filesystem.SubnetIds))
-	if aws.StringValue(ontapConfig.DeploymentType) == fsx.OntapDeploymentTypeSingleAz2 {
+	d.Set(names.AttrSubnetIDs, filesystem.SubnetIds)
+	if aws.ToString(ontapConfig.DeploymentType) == awstypes.OntapDeploymentTypeSingleAz2 {
 		d.Set("throughput_capacity", nil)
 		d.Set("throughput_capacity_per_ha_pair", ontapConfig.ThroughputCapacityPerHAPair)
 	} else {
@@ -420,13 +422,13 @@ func resourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceONTAPFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &fsx.UpdateFileSystemInput{
 			ClientRequestToken: aws.String(id.UniqueId()),
 			FileSystemId:       aws.String(d.Id()),
-			OntapConfiguration: &fsx.UpdateFileSystemOntapConfiguration{},
+			OntapConfiguration: &awstypes.UpdateFileSystemOntapConfiguration{},
 		}
 
 		if d.HasChange("automatic_backup_retention_days") {
@@ -482,7 +484,7 @@ func resourceONTAPFileSystemUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		startTime := time.Now()
-		_, err := conn.UpdateFileSystemWithContext(ctx, input)
+		_, err := conn.UpdateFileSystem(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating FSx for NetApp ONTAP File System (%s): %s", d.Id(), err)
@@ -492,8 +494,8 @@ func resourceONTAPFileSystemUpdate(ctx context.Context, d *schema.ResourceData, 
 			return sdkdiag.AppendErrorf(diags, "waiting for FSx for NetApp ONTAP File System (%s) update: %s", d.Id(), err)
 		}
 
-		if _, err := waitFileSystemAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for FSx for NetApp ONTAP File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, err)
+		if _, err := waitFileSystemAdministrativeActionCompleted(ctx, conn, d.Id(), awstypes.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx for NetApp ONTAP File System (%s) administrative action (%s) complete: %s", d.Id(), awstypes.AdministrativeActionTypeFileSystemUpdate, err)
 		}
 	}
 
@@ -502,14 +504,14 @@ func resourceONTAPFileSystemUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceONTAPFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	log.Printf("[DEBUG] Deleting FSx for NetApp ONTAP File System: %s", d.Id())
-	_, err := conn.DeleteFileSystemWithContext(ctx, &fsx.DeleteFileSystemInput{
+	_, err := conn.DeleteFileSystem(ctx, &fsx.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {
+	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeFileSystemNotFound) {
 		return diags
 	}
 
@@ -524,14 +526,14 @@ func resourceONTAPFileSystemDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func expandOntapFileDiskIopsConfiguration(cfg []interface{}) *fsx.DiskIopsConfiguration {
+func expandOntapFileDiskIopsConfiguration(cfg []interface{}) *awstypes.DiskIopsConfiguration {
 	if len(cfg) < 1 {
 		return nil
 	}
 
 	conf := cfg[0].(map[string]interface{})
 
-	out := fsx.DiskIopsConfiguration{}
+	out := awstypes.DiskIopsConfiguration{}
 
 	if v, ok := conf[names.AttrMode].(string); ok && len(v) > 0 {
 		out.Mode = aws.String(v)
@@ -543,23 +545,23 @@ func expandOntapFileDiskIopsConfiguration(cfg []interface{}) *fsx.DiskIopsConfig
 	return &out
 }
 
-func flattenOntapFileDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []interface{} {
+func flattenOntapFileDiskIopsConfiguration(rs *awstypes.DiskIopsConfiguration) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
 
 	m := make(map[string]interface{})
 	if rs.Mode != nil {
-		m[names.AttrMode] = aws.StringValue(rs.Mode)
+		m[names.AttrMode] = aws.ToString(rs.Mode)
 	}
 	if rs.Iops != nil {
-		m[names.AttrIOPS] = aws.Int64Value(rs.Iops)
+		m[names.AttrIOPS] = aws.ToInt64(rs.Iops)
 	}
 
 	return []interface{}{m}
 }
 
-func flattenOntapFileSystemEndpoints(rs *fsx.FileSystemEndpoints) []interface{} {
+func flattenOntapFileSystemEndpoints(rs *awstypes.FileSystemEndpoints) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
@@ -575,14 +577,14 @@ func flattenOntapFileSystemEndpoints(rs *fsx.FileSystemEndpoints) []interface{} 
 	return []interface{}{m}
 }
 
-func flattenOntapFileSystemEndpoint(rs *fsx.FileSystemEndpoint) []interface{} {
+func flattenOntapFileSystemEndpoint(rs *awstypes.FileSystemEndpoint) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
 
 	m := make(map[string]interface{})
 	if rs.DNSName != nil {
-		m[names.AttrDNSName] = aws.StringValue(rs.DNSName)
+		m[names.AttrDNSName] = aws.ToString(rs.DNSName)
 	}
 	if rs.IpAddresses != nil {
 		m[names.AttrIPAddresses] = flex.FlattenStringSet(rs.IpAddresses)
@@ -591,8 +593,8 @@ func flattenOntapFileSystemEndpoint(rs *fsx.FileSystemEndpoint) []interface{} {
 	return []interface{}{m}
 }
 
-func findONTAPFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
-	output, err := findFileSystemByIDAndType(ctx, conn, id, fsx.FileSystemTypeOntap)
+func findONTAPFileSystemByID(ctx context.Context, conn *fsx.Client, id string) (*awstypes.FileSystem, error) {
+	output, err := findFileSystemByIDAndType(ctx, conn, id, awstypes.FileSystemTypeOntap)
 
 	if err != nil {
 		return nil, err

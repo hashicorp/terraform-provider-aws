@@ -7,8 +7,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/fsx"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -195,14 +196,14 @@ func dataSourceONTAPStorageVirtualMachine() *schema.Resource {
 
 func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &fsx.DescribeStorageVirtualMachinesInput{}
 
 	if v, ok := d.GetOk(names.AttrID); ok {
-		input.StorageVirtualMachineIds = aws.StringSlice([]string{v.(string)})
+		input.StorageVirtualMachineIds = []string{v.(string)}
 	}
 
 	input.Filters = newStorageVirtualMachineFilterList(
@@ -213,13 +214,13 @@ func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Res
 		input.Filters = nil
 	}
 
-	svm, err := findStorageVirtualMachine(ctx, conn, input, tfslices.PredicateTrue[*fsx.StorageVirtualMachine]())
+	svm, err := findStorageVirtualMachine(ctx, conn, input, tfslices.PredicateTrue[*awstypes.StorageVirtualMachine]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading FSx ONTAP Storage Virtual Machine: %s", err)
 	}
 
-	d.SetId(aws.StringValue(svm.StorageVirtualMachineId))
+	d.SetId(aws.ToString(svm.StorageVirtualMachineId))
 	if err := d.Set("active_directory_configuration", flattenSvmActiveDirectoryConfiguration(d, svm.ActiveDirectoryConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting active_directory_configuration: %s", err)
 	}
@@ -250,7 +251,7 @@ func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func flattenLifecycleTransitionReason(rs *fsx.LifecycleTransitionReason) []interface{} {
+func flattenLifecycleTransitionReason(rs *awstypes.LifecycleTransitionReason) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
@@ -258,7 +259,7 @@ func flattenLifecycleTransitionReason(rs *fsx.LifecycleTransitionReason) []inter
 	m := make(map[string]interface{})
 
 	if rs.Message != nil {
-		m[names.AttrMessage] = aws.StringValue(rs.Message)
+		m[names.AttrMessage] = aws.ToString(rs.Message)
 	}
 
 	return []interface{}{m}

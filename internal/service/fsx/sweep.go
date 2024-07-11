@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/fsx"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
@@ -87,7 +89,7 @@ func sweepBackups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.FSxConn(ctx)
+	conn := client.FSxClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeBackupsInput{}
@@ -100,7 +102,7 @@ func sweepBackups(region string) error {
 		for _, fs := range page.Backups {
 			r := resourceBackup()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(fs.BackupId))
+			d.SetId(aws.ToString(fs.BackupId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -132,7 +134,7 @@ func sweepLustreFileSystems(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.FSxConn(ctx)
+	conn := client.FSxClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
@@ -143,13 +145,13 @@ func sweepLustreFileSystems(region string) error {
 		}
 
 		for _, fs := range page.FileSystems {
-			if aws.StringValue(fs.FileSystemType) != fsx.FileSystemTypeLustre {
+			if string(fs.FileSystemType) != awstypes.FileSystemTypeLustre {
 				continue
 			}
 
 			r := resourceLustreFileSystem()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(fs.FileSystemId))
+			d.SetId(aws.ToString(fs.FileSystemId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -181,7 +183,7 @@ func sweepONTAPFileSystems(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.FSxConn(ctx)
+	conn := client.FSxClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
@@ -192,13 +194,13 @@ func sweepONTAPFileSystems(region string) error {
 		}
 
 		for _, fs := range page.FileSystems {
-			if aws.StringValue(fs.FileSystemType) != fsx.FileSystemTypeOntap {
+			if string(fs.FileSystemType) != awstypes.FileSystemTypeOntap {
 				continue
 			}
 
 			r := resourceONTAPFileSystem()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(fs.FileSystemId))
+			d.SetId(aws.ToString(fs.FileSystemId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -230,7 +232,7 @@ func sweepONTAPStorageVirtualMachine(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.FSxConn(ctx)
+	conn := client.FSxClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeStorageVirtualMachinesInput{}
@@ -243,7 +245,7 @@ func sweepONTAPStorageVirtualMachine(region string) error {
 		for _, vm := range page.StorageVirtualMachines {
 			r := resourceONTAPStorageVirtualMachine()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(vm.StorageVirtualMachineId))
+			d.SetId(aws.ToString(vm.StorageVirtualMachineId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -275,7 +277,7 @@ func sweepONTAPVolumes(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.FSxConn(ctx)
+	conn := client.FSxClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeVolumesInput{}
@@ -286,16 +288,16 @@ func sweepONTAPVolumes(region string) error {
 		}
 
 		for _, v := range page.Volumes {
-			if aws.StringValue(v.VolumeType) != fsx.VolumeTypeOntap {
+			if string(v.VolumeType) != awstypes.VolumeTypeOntap {
 				continue
 			}
-			if v.OntapConfiguration != nil && aws.BoolValue(v.OntapConfiguration.StorageVirtualMachineRoot) {
+			if v.OntapConfiguration != nil && aws.ToBool(v.OntapConfiguration.StorageVirtualMachineRoot) {
 				continue
 			}
 
 			r := resourceONTAPVolume()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.VolumeId))
+			d.SetId(aws.ToString(v.VolumeId))
 			d.Set("bypass_snaplock_enterprise_retention", true)
 			d.Set("skip_final_backup", true)
 
@@ -329,7 +331,7 @@ func sweepOpenZFSFileSystems(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.FSxConn(ctx)
+	conn := client.FSxClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
@@ -340,13 +342,13 @@ func sweepOpenZFSFileSystems(region string) error {
 		}
 
 		for _, fs := range page.FileSystems {
-			if aws.StringValue(fs.FileSystemType) != fsx.FileSystemTypeOpenzfs {
+			if string(fs.FileSystemType) != awstypes.FileSystemTypeOpenzfs {
 				continue
 			}
 
 			r := resourceOpenZFSFileSystem()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(fs.FileSystemId))
+			d.SetId(aws.ToString(fs.FileSystemId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -378,7 +380,7 @@ func sweepOpenZFSVolume(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.FSxConn(ctx)
+	conn := client.FSxClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeVolumesInput{}
@@ -389,16 +391,16 @@ func sweepOpenZFSVolume(region string) error {
 		}
 
 		for _, v := range page.Volumes {
-			if aws.StringValue(v.VolumeType) != fsx.VolumeTypeOpenzfs {
+			if string(v.VolumeType) != awstypes.VolumeTypeOpenzfs {
 				continue
 			}
-			if v.OpenZFSConfiguration != nil && aws.StringValue(v.OpenZFSConfiguration.ParentVolumeId) == "" {
+			if v.OpenZFSConfiguration != nil && aws.ToString(v.OpenZFSConfiguration.ParentVolumeId) == "" {
 				continue
 			}
 
 			r := resourceOpenZFSVolume()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.VolumeId))
+			d.SetId(aws.ToString(v.VolumeId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -430,7 +432,7 @@ func sweepWindowsFileSystems(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.FSxConn(ctx)
+	conn := client.FSxClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
@@ -441,13 +443,13 @@ func sweepWindowsFileSystems(region string) error {
 		}
 
 		for _, fs := range page.FileSystems {
-			if aws.StringValue(fs.FileSystemType) != fsx.FileSystemTypeWindows {
+			if string(fs.FileSystemType) != awstypes.FileSystemTypeWindows {
 				continue
 			}
 
 			r := resourceWindowsFileSystem()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(fs.FileSystemId))
+			d.SetId(aws.ToString(fs.FileSystemId))
 			d.Set("skip_final_backup", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
