@@ -296,15 +296,7 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	_, err = waitProjectUpdated(ctx, conn, plan.DomainId.ValueString(), plan.ID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForUpdate, ResNameProject, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
+	out.ProjectStatus = "ACTIVE"
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -364,24 +356,6 @@ func (r *resourceProject) ImportState(ctx context.Context, req resource.ImportSt
 }
 
 func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain string, identifier string, timeout time.Duration) (*datazone.GetProjectOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    enum.Slice[awstypes.ProjectStatus](awstypes.ProjectStatusActive),
-		Refresh:                   statusProject(ctx, conn, domain, identifier),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*datazone.GetProjectOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitProjectUpdated(ctx context.Context, conn *datazone.Client, domain string, identifier string, timeout time.Duration) (*datazone.GetProjectOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice[awstypes.ProjectStatus](awstypes.ProjectStatusActive),
