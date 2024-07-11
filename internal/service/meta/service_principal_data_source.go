@@ -5,6 +5,7 @@ package meta
 
 import (
 	"context"
+
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
