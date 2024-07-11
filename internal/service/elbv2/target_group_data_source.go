@@ -21,10 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_alb_target_group")
-// @SDKDataSource("aws_lb_target_group")
+// @SDKDataSource("aws_alb_target_group", name="Target Group")
+// @SDKDataSource("aws_lb_target_group", name="Target Group")
 // @Testing(tagsTest=true)
-func DataSourceTargetGroup() *schema.Resource {
+func dataSourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTargetGroupRead,
 

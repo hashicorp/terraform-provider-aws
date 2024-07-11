@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -151,7 +152,7 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] Deleting ELBv2 Target Group Attachment: %s", d.Id())
 	_, err := conn.DeregisterTargets(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
+	if errs.IsA[*awstypes.LoadBalancerNotFoundException](err) {
 		return diags
 	}
 
