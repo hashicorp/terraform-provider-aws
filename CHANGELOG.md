@@ -14,6 +14,7 @@ ENHANCEMENTS:
 * resource/aws_ec2_capacity_reservation: Retry `InsufficientInstanceCapacity` errors ([#36754](https://github.com/hashicorp/terraform-provider-aws/issues/36754))
 * resource/aws_eks_cluster: Add `bootstrap_self_managed_addons` argument ([#38162](https://github.com/hashicorp/terraform-provider-aws/issues/38162))
 * resource/aws_globalaccelerator_cross_account_attachment: Add `cidr_block` argument to `resource` configuration block ([#38196](https://github.com/hashicorp/terraform-provider-aws/issues/38196))
+* resource/aws_iam_server_certificate: Add configurable `delete` timeout ([#38212](https://github.com/hashicorp/terraform-provider-aws/issues/38212))
 * resource/aws_launch_template: Add `network_interfaces.primary_ipv6` argument ([#37142](https://github.com/hashicorp/terraform-provider-aws/issues/37142))
 * resource/aws_mskconnect_connector: Add `tags` argument and `tags_all` attribute ([#38270](https://github.com/hashicorp/terraform-provider-aws/issues/38270))
 * resource/aws_mskconnect_custom_plugin: Add `tags` argument and `tags_all` attribute ([#38270](https://github.com/hashicorp/terraform-provider-aws/issues/38270))

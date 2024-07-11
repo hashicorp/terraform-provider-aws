@@ -67,6 +67,7 @@ const (
 	ECREndpointID                        = "api.ecr"
 	EFSEndpointID                        = "elasticfilesystem"
 	EKSEndpointID                        = "eks"
+	ELBEndpointID                        = "elasticloadbalancing"
 	EMREndpointID                        = "elasticmapreduce"
 	EventsEndpointID                     = "events"
 	EvidentlyEndpointID                  = "evidently"

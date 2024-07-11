@@ -46674,40 +46674,20 @@ var awsisoPartition = partition{
 		"redshift": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
-					Region: "fips-us-iso-east-1",
+					Region: "us-iso-east-1",
 				}: endpoint{
-					Hostname: "redshift-fips.us-iso-east-1.c2s.ic.gov",
+					Hostname: "redshift.us-iso-east-1.c2s.ic.gov",
 					CredentialScope: credentialScope{
 						Region: "us-iso-east-1",
 					},
-					Deprecated: boxedTrue,
-				},
-				endpointKey{
-					Region: "fips-us-iso-west-1",
-				}: endpoint{
-					Hostname: "redshift-fips.us-iso-west-1.c2s.ic.gov",
-					CredentialScope: credentialScope{
-						Region: "us-iso-west-1",
-					},
-					Deprecated: boxedTrue,
-				},
-				endpointKey{
-					Region: "us-iso-east-1",
-				}: endpoint{},
-				endpointKey{
-					Region:  "us-iso-east-1",
-					Variant: fipsVariant,
-				}: endpoint{
-					Hostname: "redshift-fips.us-iso-east-1.c2s.ic.gov",
 				},
 				endpointKey{
 					Region: "us-iso-west-1",
-				}: endpoint{},
-				endpointKey{
-					Region:  "us-iso-west-1",
-					Variant: fipsVariant,
 				}: endpoint{
-					Hostname: "redshift-fips.us-iso-west-1.c2s.ic.gov",
+					Hostname: "redshift.us-iso-west-1.c2s.ic.gov",
+					CredentialScope: credentialScope{
+						Region: "us-iso-west-1",
+					},
 				},
 			},
 		},
@@ -47683,22 +47663,12 @@ var awsisobPartition = partition{
 		"redshift": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
-					Region: "fips-us-isob-east-1",
+					Region: "us-isob-east-1",
 				}: endpoint{
-					Hostname: "redshift-fips.us-isob-east-1.sc2s.sgov.gov",
+					Hostname: "redshift.us-isob-east-1.sc2s.sgov.gov",
 					CredentialScope: credentialScope{
 						Region: "us-isob-east-1",
 					},
-					Deprecated: boxedTrue,
-				},
-				endpointKey{
-					Region: "us-isob-east-1",
-				}: endpoint{},
-				endpointKey{
-					Region:  "us-isob-east-1",
-					Variant: fipsVariant,
-				}: endpoint{
-					Hostname: "redshift-fips.us-isob-east-1.sc2s.sgov.gov",
 				},
 			},
 		},
