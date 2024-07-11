@@ -11,13 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -170,7 +171,7 @@ func resourceBackupDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		BackupId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeBackupNotFound) {
+	if errs.IsA[*awstypes.BackupNotFound](err) {
 		return diags
 	}
 
@@ -190,45 +191,43 @@ func findBackupByID(ctx context.Context, conn *fsx.Client, id string) (*awstypes
 		BackupIds: []string{id},
 	}
 
-	return findBackup(ctx, conn, input, tfslices.PredicateTrue[*awstypes.Backup]())
+	return findBackup(ctx, conn, input, tfslices.PredicateTrue[awstypes.Backup]())
 }
 
-func findBackup(ctx context.Context, conn *fsx.Client, input *fsx.DescribeBackupsInput, filter tfslices.Predicate[*awstypes.Backup]) (*awstypes.Backup, error) {
+func findBackup(ctx context.Context, conn *fsx.Client, input *fsx.DescribeBackupsInput, filter tfslices.Predicate[awstypes.Backup]) (*awstypes.Backup, error) {
 	output, err := findBackups(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findBackups(ctx context.Context, conn *fsx.Client, input *fsx.DescribeBackupsInput, filter tfslices.Predicate[*awstypes.Backup]) ([]*awstypes.Backup, error) {
-	var output []*awstypes.Backup
+func findBackups(ctx context.Context, conn *fsx.Client, input *fsx.DescribeBackupsInput, filter tfslices.Predicate[awstypes.Backup]) ([]awstypes.Backup, error) {
+	var output []awstypes.Backup
 
-	err := conn.DescribeBackupsPagesWithContext(ctx, input, func(page *fsx.DescribeBackupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := fsx.NewDescribeBackupsPaginator(conn, input)
 
-		for _, v := range page.Backups {
-			if v != nil && filter(v) {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.FileSystemNotFound](err) || errs.IsA[*awstypes.BackupNotFound](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeFileSystemNotFound) || tfawserr.ErrCodeEquals(err, awstypes.ErrCodeBackupNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.Backups {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
@@ -246,7 +245,7 @@ func statusBackup(ctx context.Context, conn *fsx.Client, id string) retry.StateR
 			return nil, "", err
 		}
 
-		return output, aws.ToString(output.Lifecycle), nil
+		return output, string(output.Lifecycle), nil
 	}
 }
 
@@ -255,8 +254,8 @@ func waitBackupAvailable(ctx context.Context, conn *fsx.Client, id string) (*aws
 		timeout = 10 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.BackupLifecycleCreating, awstypes.BackupLifecyclePending, awstypes.BackupLifecycleTransferring},
-		Target:  []string{awstypes.BackupLifecycleAvailable},
+		Pending: enum.Slice(awstypes.BackupLifecycleCreating, awstypes.BackupLifecyclePending, awstypes.BackupLifecycleTransferring),
+		Target:  enum.Slice(awstypes.BackupLifecycleAvailable),
 		Refresh: statusBackup(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -275,7 +274,7 @@ func waitBackupDeleted(ctx context.Context, conn *fsx.Client, id string) (*awsty
 		timeout = 10 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.FileSystemLifecycleDeleting},
+		Pending: enum.Slice(awstypes.FileSystemLifecycleDeleting),
 		Target:  []string{},
 		Refresh: statusBackup(ctx, conn, id),
 		Timeout: timeout,
