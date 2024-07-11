@@ -1,4 +1,5 @@
-## 5.58.0 (Unreleased)
+## 5.59.0 (Unreleased)
+## 5.58.0 (July 11, 2024)
 
 FEATURES:
 
