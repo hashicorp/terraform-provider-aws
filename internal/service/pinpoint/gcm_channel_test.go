@@ -127,7 +127,7 @@ func TestAccPinpointGCMChannel_tokenAuthMethod(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, "aws_pinpoint_app.test_app", names.AttrApplicationID),
-					resource.TestCheckResourceAttr(resourceName, "default_authentication_method", tfpinpoint.DefaultAuthenticationMethodKey),
+					resource.TestCheckResourceAttr(resourceName, "default_authentication_method", tfpinpoint.DefaultAuthenticationMethodToken),
 					resource.TestCheckResourceAttr(resourceName, "api_key", ""),
 					resource.TestCheckResourceAttr(resourceName, "service_json", token),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
