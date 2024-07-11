@@ -329,7 +329,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	stack, err := FindStackByID(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 		// If it's not found in the default region we're in, we check us-east-1
 		// in the event this stack was created with Terraform before version 0.9.
 		// See https://github.com/hashicorp/terraform/issues/12842.

@@ -46,6 +46,8 @@ var (
 	ResourceInstanceState                            = resourceInstanceState
 	ResourceKeyPair                                  = resourceKeyPair
 	ResourceLaunchTemplate                           = resourceLaunchTemplate
+	ResourceLocalGatewayRoute                        = resourceLocalGatewayRoute
+	ResourceLocalGatewayRouteTableVPCAssociation     = resourceLocalGatewayRouteTableVPCAssociation
 	ResourceMainRouteTableAssociation                = resourceMainRouteTableAssociation
 	ResourceNetworkACL                               = resourceNetworkACL
 	ResourceNetworkACLRule                           = resourceNetworkACLRule
@@ -123,6 +125,8 @@ var (
 	FindInstanceStateByID                                      = findInstanceStateByID
 	FindKeyPairByName                                          = findKeyPairByName
 	FindLaunchTemplateByID                                     = findLaunchTemplateByID
+	FindLocalGatewayRouteByTwoPartKey                          = findLocalGatewayRouteByTwoPartKey
+	FindLocalGatewayRouteTableVPCAssociationByID               = findLocalGatewayRouteTableVPCAssociationByID
 	FindMainRouteTableAssociationByID                          = findMainRouteTableAssociationByID
 	FindNetworkACLByIDV2                                       = findNetworkACLByID
 	FindNetworkInsightsAnalysisByID                            = findNetworkInsightsAnalysisByID
