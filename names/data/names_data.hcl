@@ -6142,12 +6142,12 @@ service "meta" {
   }
 
   resource_prefix {
-    actual  = "aws_(arn|billing_service_account|default_tags|ip_ranges|partition|regions?|service)$"
+    actual  = "aws_(arn|billing_service_account|default_tags|ip_ranges|partition|regions?|service|service_principal)$"
     correct = "aws_meta_"
   }
 
   provider_package_correct = "meta"
-  doc_prefix               = ["arn", "ip_ranges", "billing_service_account", "default_tags", "partition", "region", "service\\."]
+  doc_prefix               = ["arn", "ip_ranges", "billing_service_account", "default_tags", "partition", "region", "service\\.", "service_principal"]
   brand                    = ""
   exclude                  = true
   allowed_subcategory      = true

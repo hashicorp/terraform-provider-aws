@@ -43,7 +43,7 @@ func (d *dataSourceServicePrincipal) Schema(ctx context.Context, req datasource.
 			names.AttrServiceName: schema.StringAttribute{
 				Required: true,
 			},
-			names.AttrSuffix: schema.StringAttribute{
+			"suffix": schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrRegion: schema.StringAttribute{

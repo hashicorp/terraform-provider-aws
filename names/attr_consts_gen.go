@@ -203,7 +203,6 @@ const (
 	AttrSubnetID                   = "subnet_id"
 	AttrSubnetIDs                  = "subnet_ids"
 	AttrSubnets                    = "subnets"
-	AttrSuffix                     = "suffix"
 	AttrTableName                  = "table_name"
 	AttrTags                       = "tags"
 	AttrTagsAll                    = "tags_all"

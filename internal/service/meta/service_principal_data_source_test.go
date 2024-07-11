@@ -25,7 +25,7 @@ func TestAccMetaServicePrincipal_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, "s3."+acctest.Region()+".amazonaws.com"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "s3.amazonaws.com"),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrSuffix, "amazonaws.com"),
+					resource.TestCheckResourceAttr(dataSourceName, "suffix", "amazonaws.com"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, acctest.Region()),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrServiceName, "s3"),
 				),
@@ -68,7 +68,7 @@ func TestAccMetaServicePrincipal_ByRegion(t *testing.T) {
 						Check: resource.ComposeTestCheckFunc(
 							resource.TestCheckResourceAttr(dataSourceName, names.AttrID, fmt.Sprintf("s3.%s.amazonaws.com", region)),
 							resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "s3.amazonaws.com"),
-							resource.TestCheckResourceAttr(dataSourceName, names.AttrSuffix, "amazonaws.com"),
+							resource.TestCheckResourceAttr(dataSourceName, "suffix", "amazonaws.com"),
 							resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, region),
 						),
 					},
@@ -138,7 +138,7 @@ func TestAccMetaServicePrincipal_UniqueForServiceInRegion(t *testing.T) {
 						Check: resource.ComposeTestCheckFunc(
 							resource.TestCheckResourceAttr(dataSourceName, names.AttrID, testCase.ID),
 							resource.TestCheckResourceAttr(dataSourceName, names.AttrName, testCase.SPN),
-							resource.TestCheckResourceAttr(dataSourceName, names.AttrSuffix, testCase.Suffix),
+							resource.TestCheckResourceAttr(dataSourceName, "suffix", testCase.Suffix),
 							resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, testCase.Region),
 						),
 					},
