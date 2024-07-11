@@ -322,6 +322,10 @@ func waitForNoTrustStoreAssociations(ctx context.Context, conn *elasticloadbalan
 	_, err := tfresource.RetryUntilEqual(ctx, timeout, 0, func() (int, error) {
 		associations, err := findTrustStoreAssociations(ctx, conn, input)
 
+		if tfresource.NotFound(err) {
+			return 0, nil
+		}
+
 		if err != nil {
 			return 0, err
 		}
