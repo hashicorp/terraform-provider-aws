@@ -157,6 +157,14 @@ func (r *resourceAccessPolicy) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameAccessPolicy, state.ID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 
 	if resp.Diagnostics.HasError() {
