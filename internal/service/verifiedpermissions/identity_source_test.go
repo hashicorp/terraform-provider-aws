@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -89,7 +90,7 @@ func TestAccVerifiedPermissionsIdentitySource_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccIdentitySourceConfig_updateCognitoConfiguration(rName),
+				Config: testAccIdentitySourceConfig_Cognito_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.cognito_user_pool_configuration.0.user_pool_arn"),
@@ -194,6 +195,60 @@ func TestAccVerifiedPermissionsIdentitySource_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfverifiedpermissions.ResourceIdentitySource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccVerifiedPermissionsIdentitySource_Cognito_update(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var identitySource verifiedpermissions.GetIdentitySourceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_verifiedpermissions_identity_source.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIdentitySourceConfig_Cognito_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "AWS::Cognito"),
+				),
+			},
+			{
+				Config: testAccIdentitySourceConfig_Cognito_update(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "AWS::Cognito"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.client_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.cognito_user_pool_configuration.0.client_ids.0", "aws_cognito_user_pool_client.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.group_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.cognito_user_pool_configuration.0.user_pool_arn", "aws_cognito_user_pool.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", acctest.Ct0),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccIdentitySourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -327,10 +382,20 @@ resource "aws_cognito_user_pool" "test" {
 `, rName))
 }
 
-func testAccIdentitySourceConfig_updateCognitoConfiguration(rName string) string {
+func testAccIdentitySourceConfig_Cognito_update(rName string) string {
 	return acctest.ConfigCompose(
 		testAccIdentitySourceConfig_base(),
 		fmt.Sprintf(`
+resource "aws_verifiedpermissions_identity_source" "test" {
+  policy_store_id = aws_verifiedpermissions_policy_store.test.id
+  configuration {
+    cognito_user_pool_configuration {
+      user_pool_arn = aws_cognito_user_pool.test.arn
+      client_ids    = [aws_cognito_user_pool_client.test.id]
+   }
+  }
+}
+
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 }
@@ -339,16 +404,6 @@ resource "aws_cognito_user_pool_client" "test" {
   name                = %[1]q
   user_pool_id        = aws_cognito_user_pool.test.id
   explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
-}
-
-resource "aws_verifiedpermissions_identity_source" "test" {
-  policy_store_id = aws_verifiedpermissions_policy_store.test.id
-  configuration {
-    cognito_user_pool_configuration {
-      user_pool_arn = aws_cognito_user_pool.test.arn
-      client_ids    = [aws_cognito_user_pool_client.test.id]
-    }
-  }
 }
 `, rName))
 }
