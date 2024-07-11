@@ -507,8 +507,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
 	d.Set("internal", lb.Scheme == awstypes.LoadBalancerSchemeEnumInternal)
 	d.Set(names.AttrIPAddressType, lb.IpAddressType)
-	lbType := string(lb.Type)
-	d.Set("load_balancer_type", lbType)
+	d.Set("load_balancer_type", lb.Type)
 	d.Set(names.AttrName, lb.LoadBalancerName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lb.LoadBalancerName)))
 	d.Set(names.AttrSecurityGroups, lb.SecurityGroups)
@@ -1085,7 +1084,7 @@ func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, 
 	// Application Load Balancers, so the logic below is simple individual checks.
 	// If other differences arise we'll want to refactor to check other
 	// conditions in combinations, but for now all we handle is subnets
-	if lbType := diff.Get("load_balancer_type").(string); lbType != string(awstypes.LoadBalancerTypeEnumNetwork) {
+	if lbType := awstypes.LoadBalancerTypeEnum(diff.Get("load_balancer_type").(string)); lbType != awstypes.LoadBalancerTypeEnumNetwork {
 		return nil
 	}
 
@@ -1163,7 +1162,7 @@ func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, 
 }
 
 func customizeDiffLoadBalancerALB(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	if lbType := diff.Get("load_balancer_type").(string); lbType != string(awstypes.LoadBalancerTypeEnumApplication) {
+	if lbType := awstypes.LoadBalancerTypeEnum(diff.Get("load_balancer_type").(string)); lbType != awstypes.LoadBalancerTypeEnumApplication {
 		return nil
 	}
 
@@ -1219,7 +1218,7 @@ func customizeDiffLoadBalancerALB(_ context.Context, diff *schema.ResourceDiff, 
 }
 
 func customizeDiffLoadBalancerGWLB(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	if lbType := diff.Get("load_balancer_type").(string); lbType != string(awstypes.LoadBalancerTypeEnumGateway) {
+	if lbType := awstypes.LoadBalancerTypeEnum(diff.Get("load_balancer_type").(string)); lbType != awstypes.LoadBalancerTypeEnumGateway {
 		return nil
 	}
 

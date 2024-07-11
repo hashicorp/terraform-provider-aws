@@ -964,31 +964,31 @@ func expandLbListenerActionForwardConfigTargetGroupStickinessConfig(l []interfac
 	}
 }
 
-func flattenLbListenerActions(d *schema.ResourceData, attrName string, actions []awstypes.Action) []interface{} {
-	if len(actions) == 0 {
+func flattenLbListenerActions(d *schema.ResourceData, attrName string, apiObjects []awstypes.Action) []interface{} {
+	if len(apiObjects) == 0 {
 		return []interface{}{}
 	}
 
-	var vActions []interface{}
+	var tfList []interface{}
 
-	for i, action := range actions {
-		m := map[string]interface{}{
-			names.AttrType: string(action.Type),
-			"order":        aws.ToInt32(action.Order),
+	for i, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			names.AttrType: apiObject.Type,
+			"order":        aws.ToInt32(apiObject.Order),
 		}
 
-		switch action.Type {
+		switch apiObject.Type {
 		case awstypes.ActionTypeEnumForward:
-			flattenLbForwardAction(d, attrName, i, action, m)
+			flattenLbForwardAction(d, attrName, i, apiObject, tfMap)
 
 		case awstypes.ActionTypeEnumRedirect:
-			m["redirect"] = flattenLbListenerActionRedirectConfig(action.RedirectConfig)
+			tfMap["redirect"] = flattenLbListenerActionRedirectConfig(apiObject.RedirectConfig)
 
 		case awstypes.ActionTypeEnumFixedResponse:
-			m["fixed_response"] = flattenLbListenerActionFixedResponseConfig(action.FixedResponseConfig)
+			tfMap["fixed_response"] = flattenLbListenerActionFixedResponseConfig(apiObject.FixedResponseConfig)
 
 		case awstypes.ActionTypeEnumAuthenticateCognito:
-			m["authenticate_cognito"] = flattenLbListenerActionAuthenticateCognitoConfig(action.AuthenticateCognitoConfig)
+			tfMap["authenticate_cognito"] = flattenLbListenerActionAuthenticateCognitoConfig(apiObject.AuthenticateCognitoConfig)
 
 		case awstypes.ActionTypeEnumAuthenticateOidc:
 			// The LB API currently provides no way to read the ClientSecret
@@ -998,13 +998,13 @@ func flattenLbListenerActions(d *schema.ResourceData, attrName string, actions [
 				clientSecret = v.(string)
 			}
 
-			m["authenticate_oidc"] = flattenAuthenticateOIDCActionConfig(action.AuthenticateOidcConfig, clientSecret)
+			tfMap["authenticate_oidc"] = flattenAuthenticateOIDCActionConfig(apiObject.AuthenticateOidcConfig, clientSecret)
 		}
 
-		vActions = append(vActions, m)
+		tfList = append(tfList, tfMap)
 	}
 
-	return vActions
+	return tfList
 }
 
 func flattenLbForwardAction(d *schema.ResourceData, attrName string, i int, awsAction awstypes.Action, actionMap map[string]any) {
@@ -1074,45 +1074,45 @@ func flattenMutualAuthenticationAttributes(description *awstypes.MutualAuthentic
 	return []interface{}{m}
 }
 
-func flattenAuthenticateOIDCActionConfig(config *awstypes.AuthenticateOidcActionConfig, clientSecret string) []interface{} {
-	if config == nil {
+func flattenAuthenticateOIDCActionConfig(apiObject *awstypes.AuthenticateOidcActionConfig, clientSecret string) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"authentication_request_extra_params": config.AuthenticationRequestExtraParams,
-		"authorization_endpoint":              aws.ToString(config.AuthorizationEndpoint),
-		names.AttrClientID:                    aws.ToString(config.ClientId),
+	tfMap := map[string]interface{}{
+		"authentication_request_extra_params": apiObject.AuthenticationRequestExtraParams,
+		"authorization_endpoint":              aws.ToString(apiObject.AuthorizationEndpoint),
+		names.AttrClientID:                    aws.ToString(apiObject.ClientId),
 		names.AttrClientSecret:                clientSecret,
-		names.AttrIssuer:                      aws.ToString(config.Issuer),
-		"on_unauthenticated_request":          string(config.OnUnauthenticatedRequest),
-		names.AttrScope:                       aws.ToString(config.Scope),
-		"session_cookie_name":                 aws.ToString(config.SessionCookieName),
-		"session_timeout":                     aws.ToInt64(config.SessionTimeout),
-		"token_endpoint":                      aws.ToString(config.TokenEndpoint),
-		"user_info_endpoint":                  aws.ToString(config.UserInfoEndpoint),
+		names.AttrIssuer:                      aws.ToString(apiObject.Issuer),
+		"on_unauthenticated_request":          apiObject.OnUnauthenticatedRequest,
+		names.AttrScope:                       aws.ToString(apiObject.Scope),
+		"session_cookie_name":                 aws.ToString(apiObject.SessionCookieName),
+		"session_timeout":                     aws.ToInt64(apiObject.SessionTimeout),
+		"token_endpoint":                      aws.ToString(apiObject.TokenEndpoint),
+		"user_info_endpoint":                  aws.ToString(apiObject.UserInfoEndpoint),
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
 
-func flattenLbListenerActionAuthenticateCognitoConfig(config *awstypes.AuthenticateCognitoActionConfig) []interface{} {
-	if config == nil {
+func flattenLbListenerActionAuthenticateCognitoConfig(apiObject *awstypes.AuthenticateCognitoActionConfig) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"authentication_request_extra_params": config.AuthenticationRequestExtraParams,
-		"on_unauthenticated_request":          string(config.OnUnauthenticatedRequest),
-		names.AttrScope:                       aws.ToString(config.Scope),
-		"session_cookie_name":                 aws.ToString(config.SessionCookieName),
-		"session_timeout":                     aws.ToInt64(config.SessionTimeout),
-		"user_pool_arn":                       aws.ToString(config.UserPoolArn),
-		"user_pool_client_id":                 aws.ToString(config.UserPoolClientId),
-		"user_pool_domain":                    aws.ToString(config.UserPoolDomain),
+	tfMap := map[string]interface{}{
+		"authentication_request_extra_params": apiObject.AuthenticationRequestExtraParams,
+		"on_unauthenticated_request":          apiObject.OnUnauthenticatedRequest,
+		names.AttrScope:                       aws.ToString(apiObject.Scope),
+		"session_cookie_name":                 aws.ToString(apiObject.SessionCookieName),
+		"session_timeout":                     aws.ToInt64(apiObject.SessionTimeout),
+		"user_pool_arn":                       aws.ToString(apiObject.UserPoolArn),
+		"user_pool_client_id":                 aws.ToString(apiObject.UserPoolClientId),
+		"user_pool_domain":                    aws.ToString(apiObject.UserPoolDomain),
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
 
 func flattenLbListenerActionFixedResponseConfig(config *awstypes.FixedResponseActionConfig) []interface{} {
@@ -1174,21 +1174,21 @@ func flattenLbListenerActionForwardConfigTargetGroupStickinessConfig(config *aws
 	return []interface{}{m}
 }
 
-func flattenLbListenerActionRedirectConfig(config *awstypes.RedirectActionConfig) []interface{} {
-	if config == nil {
+func flattenLbListenerActionRedirectConfig(apiObject *awstypes.RedirectActionConfig) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"host":               aws.ToString(config.Host),
-		names.AttrPath:       aws.ToString(config.Path),
-		names.AttrPort:       aws.ToString(config.Port),
-		names.AttrProtocol:   aws.ToString(config.Protocol),
-		"query":              aws.ToString(config.Query),
-		names.AttrStatusCode: string(config.StatusCode),
+	tfMap := map[string]interface{}{
+		"host":               aws.ToString(apiObject.Host),
+		names.AttrPath:       aws.ToString(apiObject.Path),
+		names.AttrPort:       aws.ToString(apiObject.Port),
+		names.AttrProtocol:   aws.ToString(apiObject.Protocol),
+		"query":              aws.ToString(apiObject.Query),
+		names.AttrStatusCode: apiObject.StatusCode,
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
 
 const (
@@ -1276,7 +1276,7 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 			))
 		}
 
-		switch awstypes.ActionTypeEnum(actionType.AsString()) {
+		switch actionType := awstypes.ActionTypeEnum(actionType.AsString()); actionType {
 		case awstypes.ActionTypeEnumForward:
 			if tga.IsNull() && (f.IsNull() || f.LengthInt() == 0) {
 				typePath := actionPath.GetAttr(names.AttrType)
@@ -1285,7 +1285,7 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 					fmt.Sprintf("Either %q or %q must be specified when %q is %q.",
 						errs.PathString(actionPath.GetAttr("target_group_arn")), errs.PathString(actionPath.GetAttr("forward")),
 						errs.PathString(typePath),
-						awstypes.ActionTypeEnumForward,
+						actionType,
 					),
 				))
 			}
@@ -1295,7 +1295,7 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 				*diags = append(*diags, errs.NewAttributeRequiredWhenError(
 					actionPath.GetAttr("redirect"),
 					actionPath.GetAttr(names.AttrType),
-					string(awstypes.ActionTypeEnumRedirect),
+					string(actionType),
 				))
 			}
 
@@ -1304,7 +1304,7 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 				*diags = append(*diags, errs.NewAttributeRequiredWhenError(
 					actionPath.GetAttr("fixed_response"),
 					actionPath.GetAttr(names.AttrType),
-					string(awstypes.ActionTypeEnumFixedResponse),
+					string(actionType),
 				))
 			}
 
@@ -1313,7 +1313,7 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 				*diags = append(*diags, errs.NewAttributeRequiredWhenError(
 					actionPath.GetAttr("authenticate_cognito"),
 					actionPath.GetAttr(names.AttrType),
-					string(awstypes.ActionTypeEnumAuthenticateCognito),
+					string(actionType),
 				))
 			}
 
@@ -1322,7 +1322,7 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 				*diags = append(*diags, errs.NewAttributeRequiredWhenError(
 					actionPath.GetAttr("authenticate_oidc"),
 					actionPath.GetAttr(names.AttrType),
-					string(awstypes.ActionTypeEnumAuthenticateOidc),
+					string(actionType),
 				))
 			}
 		}
