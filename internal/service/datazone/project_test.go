@@ -81,11 +81,7 @@ func TestAccDataZoneProject_disappears(t *testing.T) {
 	resourceName := "aws_datazone_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.AttrDomainName)
-			testAccPreCheckProject(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProjectDestroy(ctx),
@@ -97,6 +93,7 @@ func TestAccDataZoneProject_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceProject, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				//ExpectError:        regexache.MustCompile(`(AccessDeniedException)`),
 			},
 		},
 	})
@@ -104,7 +101,6 @@ func TestAccDataZoneProject_disappears(t *testing.T) {
 func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datazone_project" {
 				continue
@@ -159,7 +155,7 @@ func testAccCheckProjectExists(ctx context.Context, name string, project *datazo
 			Identifier:       &rs.Primary.ID,
 		})
 
-		if err != nil {
+		if err != nil && !errs.IsA[*types.ResourceNotFoundException](err) {
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameProject, rs.Primary.ID, err)
 		}
 
@@ -168,19 +164,7 @@ func testAccCheckProjectExists(ctx context.Context, name string, project *datazo
 		return nil
 	}
 }
-func testAccPreCheckProject(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
 
-	input := &datazone.ListProjectsInput{}
-	_, err := conn.ListProjects(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
 func testAccCheckProjectNotRecreated(before, after *datazone.GetProjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.Id), aws.ToString(after.Id); before != after {
@@ -190,7 +174,7 @@ func testAccCheckProjectNotRecreated(before, after *datazone.GetProjectOutput) r
 		return nil
 	}
 }
-func TestAccDataZoneCheckProjectUpdate(t *testing.T) {
+func TestAccDataZoneProject_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

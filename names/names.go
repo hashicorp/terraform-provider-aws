@@ -112,6 +112,7 @@ const (
 	VerifiedPermissionsEndpointID        = "verifiedpermissions"
 	WAFEndpointID                        = "waf"
 	WAFRegionalEndpointID                = "waf-regional"
+	DataZoneEndpointID                   = "datazone"
 )
 
 // These should move to aws-sdk-go-base.

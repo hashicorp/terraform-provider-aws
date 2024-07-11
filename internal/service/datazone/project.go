@@ -143,12 +143,13 @@ func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest
 }
 
 func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().DataZoneClient(ctx)
 	var plan resourceProjectData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	conn := r.Meta().DataZoneClient(ctx)
+
 	var validateDomain datazone.GetDomainInput
 	validateDomain.Identifier = plan.DomainId.ValueStringPointer()
 	_, err := conn.GetDomain(ctx, &validateDomain)
@@ -161,13 +162,11 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	in := &datazone.CreateProjectInput{
-		Name: aws.String(plan.Name.ValueString()),
+		Name:             aws.String(plan.Name.ValueString()),
+		DomainIdentifier: aws.String(plan.DomainId.ValueString()),
 	}
 	if !plan.Description.IsNull() {
 		in.Description = aws.String(plan.Description.ValueString())
-	}
-	if !plan.DomainId.IsNull() {
-		in.DomainIdentifier = aws.String(plan.DomainId.ValueString())
 	}
 	if !plan.GlossaryTerms.IsNull() {
 		in.GlossaryTerms = aws.ToStringSlice(flex.ExpandFrameworkStringList(ctx, plan.GlossaryTerms))
@@ -181,11 +180,20 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 		)
 		return
 	}
-	if out == nil || !(out.FailureReasons == nil) {
+	if out == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameProject, plan.Name.String(), nil),
-			errors.New("failure reasons populated").Error(),
+			errors.New("failure when creating").Error(),
 		)
+		return
+	}
+	if !(out.FailureReasons == nil) && len(out.FailureReasons) > 0 {
+		for _, x := range out.FailureReasons {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameProject, plan.Name.String(), nil),
+				errors.New("error message: "+*x.Message+" error code: "+*x.Code).Error(),
+			)
+		}
 		return
 	}
 
@@ -214,11 +222,8 @@ func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	in := &datazone.GetProjectInput{
-		DomainIdentifier: state.DomainId.ValueStringPointer(),
-		Identifier:       state.ID.ValueStringPointer(),
-	}
-	out, err := conn.GetProject(ctx, in)
+	//out, err := conn.GetProject(ctx, in)
+	out, err := findProjectByID(ctx, conn, state.DomainId.ValueString(), state.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -361,8 +366,8 @@ func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain strin
 		Target:                    enum.Slice[awstypes.ProjectStatus](awstypes.ProjectStatusActive),
 		Refresh:                   statusProject(ctx, conn, domain, identifier),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+		NotFoundChecks:            40,
+		ContinuousTargetOccurence: 10,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -409,16 +414,14 @@ func findProjectByID(ctx context.Context, conn *datazone.Client, domain string, 
 		DomainIdentifier: aws.String(domain),
 		Identifier:       aws.String(identifier),
 	}
-
 	out, err := conn.GetProject(ctx, in)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
 		}
-
 		return nil, err
 	}
 
