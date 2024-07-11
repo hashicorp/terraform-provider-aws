@@ -1,12 +1,12 @@
 version: 2
 updates:
-  - directory: "/"
-    package-ecosystem: "github-actions"
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
       interval: "daily"
 
-  - directory: "/"
-    package-ecosystem: "gomod"
+  - package-ecosystem: "gomod"
+    directory: "/"
     groups:
       aws-sdk-go:
         patterns:
@@ -43,8 +43,8 @@ updates:
       interval: "daily"
     open-pull-requests-limit: 30
 
-  - directory: "/.ci/providerlint"
-    package-ecosystem: "gomod"
+  - package-ecosystem: "gomod"
+    directory: "/.ci/providerlint"
     ignore:
       - dependency-name: "golang.org/x/tools"
       - dependency-name: "google.golang.org/grpc"
@@ -52,8 +52,8 @@ updates:
     schedule:
       interval: "daily"
 
-  - directory: "/.ci/tools"
-    package-ecosystem: "gomod"
+  - package-ecosystem: "gomod"
+    directory: "/.ci/tools"
     ignore:
       - dependency-name: "golang.org/x/tools"
       - dependency-name: "google.golang.org/grpc"
@@ -61,8 +61,8 @@ updates:
     schedule:
       interval: "daily"
 
-  - directory: "/skaff"
-    package-ecosystem: "gomod"
+  - package-ecosystem: "gomod"
+    directory: "/skaff"
     ignore:
       - dependency-name: "golang.org/x/tools"
       - dependency-name: "google.golang.org/grpc"
@@ -70,15 +70,15 @@ updates:
     schedule:
       interval: "daily"
 
-  - directory: "/tools/awssdkpatch"
-    package-ecosystem: "gomod"
+  - package-ecosystem: "gomod"
+    directory: "/tools/awssdkpatch"
     allow:
       - dependency-type: direct
     schedule:
       interval: "daily"
 
-  - directory: "/tools/tfsdk2fw"
-    package-ecosystem: "gomod"
+  - package-ecosystem: "gomod"
+    directory: "/tools/tfsdk2fw"
     allow:
       - dependency-type: direct
     ignore:
@@ -90,7 +90,7 @@ updates:
     schedule:
       interval: "daily"
 
-  - directory: "/infrastructure/repository"
-    package-ecosystem: "terraform"
+  - package-ecosystem: "terraform"
+    directory: "/infrastructure/repository"
     schedule:
       interval: "daily"
