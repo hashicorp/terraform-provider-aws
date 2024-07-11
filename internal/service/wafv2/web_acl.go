@@ -105,6 +105,7 @@ func resourceWebACL() *schema.Resource {
 				"rule_json": {
 					Type:             schema.TypeString,
 					Optional:         true,
+					Computed:         true,
 					ValidateFunc:     validation.StringIsJSON,
 					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 					StateFunc: func(v interface{}) string {
@@ -280,22 +281,28 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrDescription, webACL.Description)
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, webACL.Name)
+
+	// if d.Get(names.AttrRule).(*schema.Set).Len() > 0 {
 	rules := filterWebACLRules(webACL.Rules, expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List()))
 	if err := d.Set(names.AttrRule, flattenWebACLRules(rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
-
-	// expandRules, _ := expandWebACLRulesJSON(d.Get("rule_json").(string))
-	// rulesJSON := filterWebACLRules(webACL.Rules, expandRules)
-	// if err := d.Set("rule_json", flattenRuleJSON("rulesJSON")); err != nil {
-	// 	return sdkdiag.AppendErrorf(diags, "setting JSON rule: %s", err)
-	// }
-
-	jsonRule := flattenRuleJSON(output.WebACL.Rules)
-	err = d.Set("rule_json", jsonRule)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading WebACL Rule JSON (%s): %s", d.Id(), err)
+	// } else if d.Get("rule_json").(string) != "" {
+	if v, ok := d.GetOk("rule_json"); ok {
+		expandRules, err := expandWebACLRulesJSON(v.(string))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "expanding json rule: %s", err)
+		}
+		rulesJSON := filterWebACLRules(webACL.Rules, expandRules)
+		flattenRules, err := flattenRuleJSON(rulesJSON)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "flattening json rule: %s", err)
+		}
+		if err := d.Set("rule_json", flattenRules); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting JSON rule: %s", err)
+		}
 	}
+	// }
 
 	d.Set("token_domains", aws.StringSlice(webACL.TokenDomains))
 	if err := d.Set("visibility_config", flattenVisibilityConfig(webACL.VisibilityConfig)); err != nil {

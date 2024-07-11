@@ -11,7 +11,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
-	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -1920,12 +1919,12 @@ func flattenRuleLabels(l []awstypes.Label) []interface{} {
 	return out
 }
 
-func flattenRuleJSON(l []awstypes.Rule) string {
-	b, err := jsonutil.BuildJSON(l)
+func flattenRuleJSON(l []awstypes.Rule) (string, error) {
+	b, err := json.Marshal(l)
 	if err != nil {
-		return ""
+		return "", err
 	}
-	return string(b)
+	return string(b), nil
 }
 
 func flattenRuleGroupRootStatement(s *awstypes.Statement) interface{} {
