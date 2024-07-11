@@ -12,7 +12,15 @@ Terraform resource for managing an Amazon DataZone Project.
 ### Basic Usage
 
 ```terraform
+resource "aws_datazone_project" "test" {
+  domain_id           = aws_datazone_domain.test.id
+  name                = "name"
+}
+```
 
+### Basic Usage
+
+```terraform
 resource "aws_datazone_project" "test" {
   domain_id           = aws_datazone_domain.test.id
   glossary_terms      = ["2N8w6XJCwZf"]
@@ -20,14 +28,13 @@ resource "aws_datazone_project" "test" {
   description         = "desc"
   skip_deletion_check = true
 }
-
 ```
 
 ## Argument Reference
 
 The following arguments are required:
 
-* `domain_id` - (Required) Identifier of domain which the project is part of. Must follow the regex of ^dzd[-_][a-zA-Z0-9_-]{1,36}$. 
+* `domain_id` - (Required) Identifier of domain which the project is part of. Must follow the regex of ^dzd[-_][a-zA-Z0-9_-]{1,36}$.
 * `name` - (Required) Name of the project. Must follow the regex of ^[\w -]+$. and have a length of at most 64.
 
 The following arguments are optional:
