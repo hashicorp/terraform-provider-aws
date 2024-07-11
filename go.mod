@@ -171,7 +171,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.2.3
 	github.com/aws/aws-sdk-go-v2/service/rum v1.19.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.58.2
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.46.1
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.46.3
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.32.1
