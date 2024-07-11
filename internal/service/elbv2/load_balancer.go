@@ -445,7 +445,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	attributes = append(attributes, loadBalancerAttributes.expand(d, false)...)
+	attributes = append(attributes, loadBalancerAttributes.expand(d, lbType, false)...)
 
 	wait := false
 	if len(attributes) > 0 {
@@ -545,6 +545,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
+	lbType := awstypes.LoadBalancerTypeEnum(d.Get("load_balancer_type").(string))
 	var attributes []awstypes.LoadBalancerAttribute
 
 	if d.HasChange("access_logs") {
@@ -569,7 +570,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	attributes = append(attributes, loadBalancerAttributes.expand(d, true)...)
+	attributes = append(attributes, loadBalancerAttributes.expand(d, lbType, true)...)
 
 	if len(attributes) > 0 {
 		if err := modifyLoadBalancerAttributes(ctx, conn, d.Id(), attributes); err != nil {
@@ -583,7 +584,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			SecurityGroups:  flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		}
 
-		if v := d.Get("load_balancer_type"); v == awstypes.LoadBalancerTypeEnumNetwork {
+		if lbType == awstypes.LoadBalancerTypeEnumNetwork {
 			if v, ok := d.GetOk("enforce_security_group_inbound_rules_on_private_link_traffic"); ok {
 				input.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic = awstypes.EnforceSecurityGroupInboundRulesOnPrivateLinkTrafficEnum(v.(string))
 			}
@@ -703,7 +704,7 @@ func modifyLoadBalancerAttributes(ctx context.Context, conn *elasticloadbalancin
 type loadBalancerAttributeInfo struct {
 	apiAttributeKey            string
 	tfType                     schema.ValueType
-	loadBalancerTypesSupported []string
+	loadBalancerTypesSupported []awstypes.LoadBalancerTypeEnum
 }
 
 type loadBalancerAttributeMap map[string]loadBalancerAttributeInfo
@@ -712,81 +713,80 @@ var loadBalancerAttributes = loadBalancerAttributeMap(map[string]loadBalancerAtt
 	"client_keep_alive": {
 		apiAttributeKey:            loadBalancerAttributeClientKeepAliveSeconds,
 		tfType:                     schema.TypeInt,
-		loadBalancerTypesSupported: enum.Slice(awstypes.LoadBalancerTypeEnumApplication),
+		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumApplication},
 	},
 	"desync_mitigation_mode": {
 		apiAttributeKey:            loadBalancerAttributeRoutingHTTPDesyncMitigationMode,
 		tfType:                     schema.TypeString,
-		loadBalancerTypesSupported: enum.Slice(awstypes.LoadBalancerTypeEnumApplication),
+		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumApplication},
 	},
 	"dns_record_client_routing_policy": {
 		apiAttributeKey:            loadBalancerAttributeDNSRecordClientRoutingPolicy,
 		tfType:                     schema.TypeString,
-		loadBalancerTypesSupported: enum.Slice(awstypes.LoadBalancerTypeEnumNetwork),
+		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumNetwork},
 	},
 	"drop_invalid_header_fields": {
 		apiAttributeKey:            loadBalancerAttributeRoutingHTTPDropInvalidHeaderFieldsEnabled,
 		tfType:                     schema.TypeBool,
-		loadBalancerTypesSupported: enum.Slice(awstypes.LoadBalancerTypeEnumApplication),
+		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumApplication},
 	},
 	"enable_cross_zone_load_balancing": {
 		apiAttributeKey: loadBalancerAttributeLoadBalancingCrossZoneEnabled,
 		tfType:          schema.TypeBool,
 		// Although this attribute is supported for ALBs, it must always be true.
-		loadBalancerTypesSupported: enum.Slice(awstypes.LoadBalancerTypeEnumNetwork, awstypes.LoadBalancerTypeEnumGateway),
+		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumNetwork, awstypes.LoadBalancerTypeEnumGateway},
 	},
 	"enable_deletion_protection": {
 		apiAttributeKey:            loadBalancerAttributeDeletionProtectionEnabled,
 		tfType:                     schema.TypeBool,
-		loadBalancerTypesSupported: enum.Slice(awstypes.LoadBalancerTypeEnumApplication, awstypes.LoadBalancerTypeEnumNetwork, awstypes.LoadBalancerTypeEnumGateway),
+		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumApplication, awstypes.LoadBalancerTypeEnumNetwork, awstypes.LoadBalancerTypeEnumGateway},
 	},
 	"enable_http2": {
 		apiAttributeKey:            loadBalancerAttributeRoutingHTTP2Enabled,
 		tfType:                     schema.TypeBool,
-		loadBalancerTypesSupported: enum.Slice(awstypes.LoadBalancerTypeEnumApplication),
+		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumApplication},
 	},
 	"enable_tls_version_and_cipher_suite_headers": {
 		apiAttributeKey:            loadBalancerAttributeRoutingHTTPXAmznTLSVersionAndCipherSuiteEnabled,
 		tfType:                     schema.TypeBool,
-		loadBalancerTypesSupported: enum.Slice(awstypes.LoadBalancerTypeEnumApplication),
+		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumApplication},
 	},
 	"enable_waf_fail_open": {
 		apiAttributeKey:            loadBalancerAttributeWAFFailOpenEnabled,
 		tfType:                     schema.TypeBool,
-		loadBalancerTypesSupported: enum.Slice(awstypes.LoadBalancerTypeEnumApplication),
+		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumApplication},
 	},
 	"enable_xff_client_port": {
 		apiAttributeKey:            loadBalancerAttributeRoutingHTTPXFFClientPortEnabled,
 		tfType:                     schema.TypeBool,
-		loadBalancerTypesSupported: enum.Slice(awstypes.LoadBalancerTypeEnumApplication),
+		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumApplication},
 	},
 	"idle_timeout": {
 		apiAttributeKey:            loadBalancerAttributeIdleTimeoutTimeoutSeconds,
 		tfType:                     schema.TypeInt,
-		loadBalancerTypesSupported: enum.Slice(awstypes.LoadBalancerTypeEnumApplication),
+		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumApplication},
 	},
 	"preserve_host_header": {
 		apiAttributeKey:            loadBalancerAttributeRoutingHTTPPreserveHostHeaderEnabled,
 		tfType:                     schema.TypeBool,
-		loadBalancerTypesSupported: enum.Slice(awstypes.LoadBalancerTypeEnumApplication),
+		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumApplication},
 	},
 	"xff_header_processing_mode": {
 		apiAttributeKey:            loadBalancerAttributeRoutingHTTPXFFHeaderProcessingMode,
 		tfType:                     schema.TypeString,
-		loadBalancerTypesSupported: enum.Slice(awstypes.LoadBalancerTypeEnumApplication),
+		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumApplication},
 	},
 })
 
-func (m loadBalancerAttributeMap) expand(d *schema.ResourceData, update bool) []awstypes.LoadBalancerAttribute {
+func (m loadBalancerAttributeMap) expand(d *schema.ResourceData, lbType awstypes.LoadBalancerTypeEnum, update bool) []awstypes.LoadBalancerAttribute {
 	var apiObjects []awstypes.LoadBalancerAttribute
 
-	loadBalancerType := d.Get("load_balancer_type").(string)
 	for tfAttributeName, attributeInfo := range m {
 		if update && !d.HasChange(tfAttributeName) {
 			continue
 		}
 
-		if !slices.Contains(attributeInfo.loadBalancerTypesSupported, loadBalancerType) {
+		if !slices.Contains(attributeInfo.loadBalancerTypesSupported, lbType) {
 			continue
 		}
 
