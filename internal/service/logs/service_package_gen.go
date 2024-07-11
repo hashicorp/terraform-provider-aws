@@ -46,6 +46,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
+			Factory:  resourceAccountPolicy,
+			TypeName: "aws_cloudwatch_log_account_policy",
+		},
+		{
 			Factory:  resourceDataProtectionPolicy,
 			TypeName: "aws_cloudwatch_log_data_protection_policy",
 		},
