@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -59,10 +59,10 @@ func resourceLustreFileSystem() *schema.Resource {
 				Computed: true,
 			},
 			"auto_import_policy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: enum.Validate[awstypes.AutoImportPolicyType](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.AutoImportPolicyType](),
 			},
 			"automatic_backup_retention_days": {
 				Type:         schema.TypeInt,
@@ -91,27 +91,27 @@ func resourceLustreFileSystem() *schema.Resource {
 				),
 			},
 			"data_compression_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: enum.Validate[awstypes.DataCompressionType](),
-				Default:      awstypes.DataCompressionTypeNone,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.DataCompressionType](),
+				Default:          awstypes.DataCompressionTypeNone,
 			},
 			"deployment_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      awstypes.LustreDeploymentTypeScratch1,
-				ValidateFunc: enum.Validate[awstypes.LustreDeploymentType](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.LustreDeploymentTypeScratch1,
+				ValidateDiagFunc: enum.Validate[awstypes.LustreDeploymentType](),
 			},
 			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"drive_cache_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: enum.Validate[awstypes.DriveCacheType](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.DriveCacheType](),
 			},
 			"export_path": {
 				Type:     schema.TypeString,
@@ -174,9 +174,9 @@ func resourceLustreFileSystem() *schema.Resource {
 							},
 						},
 						"level": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: enum.Validate[awstypes.LustreAccessAuditLogLevel](),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LustreAccessAuditLogLevel](),
 						},
 					},
 				},
@@ -192,7 +192,7 @@ func resourceLustreFileSystem() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(enum.Validate[awstypes.MetadataConfigurationMode]()),
+							ValidateDiagFunc: enum.Validate[awstypes.MetadataConfigurationMode](),
 						},
 						names.AttrIOPS: {
 							Type:             schema.TypeInt,
@@ -268,11 +268,11 @@ func resourceLustreFileSystem() *schema.Resource {
 				ValidateFunc: validation.IntAtLeast(1200),
 			},
 			names.AttrStorageType: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      awstypes.StorageTypeSsd,
-				ValidateFunc: enum.Validate[awstypes.StorageType](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.StorageTypeSsd,
+				ValidateDiagFunc: enum.Validate[awstypes.StorageType](),
 			},
 			names.AttrSubnetIDs: {
 				Type:     schema.TypeList,
@@ -311,7 +311,7 @@ func resourceLustreFileSystemStorageCapacityCustomizeDiff(_ context.Context, d *
 	// we want to force a new resource if the new storage capacity is less than the old one
 	if d.HasChange("storage_capacity") {
 		o, n := d.GetChange("storage_capacity")
-		if n.(int) < o.(int) || d.Get("deployment_type").(string) == awstypes.LustreDeploymentTypeScratch1 {
+		if n.(int) < o.(int) || d.Get("deployment_type").(string) == string(awstypes.LustreDeploymentTypeScratch1) {
 			if err := d.ForceNew("storage_capacity"); err != nil {
 				return err
 			}
@@ -326,8 +326,8 @@ func resourceLustreFileSystemMetadataConfigCustomizeDiff(_ context.Context, d *s
 	if v, ok := d.GetOk("metadata_configuration"); ok {
 		if len(v.([]any)) > 0 {
 			deploymentType := d.Get("deployment_type").(string)
-			if deploymentType != awstypes.LustreDeploymentTypePersistent2 {
-				return fmt.Errorf("metadata_configuration can only be set when deployment type is " + awstypes.LustreDeploymentTypePersistent2)
+			if deploymentType != string(awstypes.LustreDeploymentTypePersistent2) {
+				return fmt.Errorf("metadata_configuration can only be set when deployment type is " + string(awstypes.LustreDeploymentTypePersistent2))
 			}
 		}
 	}
@@ -372,33 +372,33 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 
 	inputC := &fsx.CreateFileSystemInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
-		FileSystemType:     aws.String(awstypes.FileSystemTypeLustre),
+		FileSystemType:     awstypes.FileSystemTypeLustre,
 		LustreConfiguration: &awstypes.CreateFileSystemLustreConfiguration{
-			DeploymentType: aws.String(d.Get("deployment_type").(string)),
+			DeploymentType: awstypes.LustreDeploymentType(d.Get("deployment_type").(string)),
 		},
-		StorageCapacity: aws.Int64(int64(d.Get("storage_capacity").(int))),
-		StorageType:     aws.String(d.Get(names.AttrStorageType).(string)),
-		SubnetIds:       flex.ExpandStringList(d.Get(names.AttrSubnetIDs).([]interface{})),
+		StorageCapacity: aws.Int32(int32(d.Get("storage_capacity").(int))),
+		StorageType:     awstypes.StorageType(d.Get(names.AttrStorageType).(string)),
+		SubnetIds:       flex.ExpandStringValueList(d.Get(names.AttrSubnetIDs).([]interface{})),
 		Tags:            getTagsIn(ctx),
 	}
 	inputB := &fsx.CreateFileSystemFromBackupInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		LustreConfiguration: &awstypes.CreateFileSystemLustreConfiguration{
-			DeploymentType: aws.String(d.Get("deployment_type").(string)),
+			DeploymentType: awstypes.LustreDeploymentType(d.Get("deployment_type").(string)),
 		},
-		StorageType: aws.String(d.Get(names.AttrStorageType).(string)),
-		SubnetIds:   flex.ExpandStringList(d.Get(names.AttrSubnetIDs).([]interface{})),
+		StorageType: awstypes.StorageType(d.Get(names.AttrStorageType).(string)),
+		SubnetIds:   flex.ExpandStringValueList(d.Get(names.AttrSubnetIDs).([]interface{})),
 		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("auto_import_policy"); ok {
-		inputC.LustreConfiguration.AutoImportPolicy = aws.String(v.(string))
-		inputB.LustreConfiguration.AutoImportPolicy = aws.String(v.(string))
+		inputC.LustreConfiguration.AutoImportPolicy = awstypes.AutoImportPolicyType(v.(string))
+		inputB.LustreConfiguration.AutoImportPolicy = awstypes.AutoImportPolicyType(v.(string))
 	}
 
 	if v, ok := d.GetOk("automatic_backup_retention_days"); ok {
-		inputC.LustreConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(v.(int)))
-		inputB.LustreConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(v.(int)))
+		inputC.LustreConfiguration.AutomaticBackupRetentionDays = aws.Int32(int32(v.(int)))
+		inputB.LustreConfiguration.AutomaticBackupRetentionDays = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("copy_tags_to_backups"); ok {
@@ -412,13 +412,13 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("data_compression_type"); ok {
-		inputC.LustreConfiguration.DataCompressionType = aws.String(v.(string))
-		inputB.LustreConfiguration.DataCompressionType = aws.String(v.(string))
+		inputC.LustreConfiguration.DataCompressionType = awstypes.DataCompressionType(v.(string))
+		inputB.LustreConfiguration.DataCompressionType = awstypes.DataCompressionType(v.(string))
 	}
 
 	if v, ok := d.GetOk("drive_cache_type"); ok {
-		inputC.LustreConfiguration.DriveCacheType = aws.String(v.(string))
-		inputB.LustreConfiguration.DriveCacheType = aws.String(v.(string))
+		inputC.LustreConfiguration.DriveCacheType = awstypes.DriveCacheType(v.(string))
+		inputB.LustreConfiguration.DriveCacheType = awstypes.DriveCacheType(v.(string))
 	}
 
 	if v, ok := d.GetOk("export_path"); ok {
@@ -437,8 +437,8 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("imported_file_chunk_size"); ok {
-		inputC.LustreConfiguration.ImportedFileChunkSize = aws.Int64(int64(v.(int)))
-		inputB.LustreConfiguration.ImportedFileChunkSize = aws.Int64(int64(v.(int)))
+		inputC.LustreConfiguration.ImportedFileChunkSize = aws.Int32(int32(v.(int)))
+		inputB.LustreConfiguration.ImportedFileChunkSize = aws.Int32(int32(v.(int)))
 	}
 
 	// Applicable only for TypePersistent1 and TypePersistent2.
@@ -458,8 +458,8 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("per_unit_storage_throughput"); ok {
-		inputC.LustreConfiguration.PerUnitStorageThroughput = aws.Int64(int64(v.(int)))
-		inputB.LustreConfiguration.PerUnitStorageThroughput = aws.Int64(int64(v.(int)))
+		inputC.LustreConfiguration.PerUnitStorageThroughput = aws.Int32(int32(v.(int)))
+		inputB.LustreConfiguration.PerUnitStorageThroughput = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("root_squash_configuration"); ok && len(v.([]interface{})) > 0 {
@@ -468,8 +468,8 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
-		inputC.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
-		inputB.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+		inputC.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
+		inputB.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
@@ -577,11 +577,11 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if d.HasChange("auto_import_policy") {
-			input.LustreConfiguration.AutoImportPolicy = aws.String(d.Get("auto_import_policy").(string))
+			input.LustreConfiguration.AutoImportPolicy = awstypes.AutoImportPolicyType(d.Get("auto_import_policy").(string))
 		}
 
 		if d.HasChange("automatic_backup_retention_days") {
-			input.LustreConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(d.Get("automatic_backup_retention_days").(int)))
+			input.LustreConfiguration.AutomaticBackupRetentionDays = aws.Int32(int32(d.Get("automatic_backup_retention_days").(int)))
 		}
 
 		if d.HasChange("daily_automatic_backup_start_time") {
@@ -589,7 +589,7 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if d.HasChange("data_compression_type") {
-			input.LustreConfiguration.DataCompressionType = aws.String(d.Get("data_compression_type").(string))
+			input.LustreConfiguration.DataCompressionType = awstypes.DataCompressionType(d.Get("data_compression_type").(string))
 		}
 
 		if d.HasChange("log_configuration") {
@@ -601,7 +601,7 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if d.HasChange("per_unit_storage_throughput") {
-			input.LustreConfiguration.PerUnitStorageThroughput = aws.Int64(int64(d.Get("per_unit_storage_throughput").(int)))
+			input.LustreConfiguration.PerUnitStorageThroughput = aws.Int32(int32(d.Get("per_unit_storage_throughput").(int)))
 		}
 
 		if d.HasChange("root_squash_configuration") {
@@ -609,7 +609,7 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if d.HasChange("storage_capacity") {
-			input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
+			input.StorageCapacity = aws.Int32(int32(d.Get("storage_capacity").(int)))
 		}
 
 		if d.HasChange("weekly_maintenance_start_time") {
@@ -644,7 +644,7 @@ func resourceLustreFileSystemDelete(ctx context.Context, d *schema.ResourceData,
 		FileSystemId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeFileSystemNotFound) {
+	if errs.IsA[*awstypes.FileSystemNotFound](err) {
 		return diags
 	}
 
@@ -672,7 +672,7 @@ func expandLustreRootSquashConfiguration(l []interface{}) *awstypes.LustreRootSq
 	}
 
 	if v, ok := data["no_squash_nids"].(*schema.Set); ok && v.Len() > 0 {
-		req.NoSquashNids = flex.ExpandStringSet(v)
+		req.NoSquashNids = flex.ExpandStringValueSet(v)
 	}
 
 	return req
@@ -690,7 +690,7 @@ func flattenLustreRootSquashConfiguration(adopts *awstypes.LustreRootSquashConfi
 	}
 
 	if adopts.NoSquashNids != nil {
-		m["no_squash_nids"] = flex.FlattenStringSet(adopts.NoSquashNids)
+		m["no_squash_nids"] = flex.FlattenStringValueSet(adopts.NoSquashNids)
 	}
 
 	return []map[string]interface{}{m}
@@ -703,7 +703,7 @@ func expandLustreLogCreateConfiguration(l []interface{}) *awstypes.LustreLogCrea
 
 	data := l[0].(map[string]interface{})
 	req := &awstypes.LustreLogCreateConfiguration{
-		Level: aws.String(data["level"].(string)),
+		Level: awstypes.LustreAccessAuditLogLevel(data["level"].(string)),
 	}
 
 	if v, ok := data[names.AttrDestination].(string); ok && v != "" {
@@ -719,7 +719,7 @@ func flattenLustreLogConfiguration(adopts *awstypes.LustreLogConfiguration) []ma
 	}
 
 	m := map[string]interface{}{
-		"level": aws.ToString(adopts.Level),
+		"level": string(adopts.Level),
 	}
 
 	if adopts.Destination != nil {
@@ -736,11 +736,11 @@ func expandLustreMetadataCreateConfiguration(l []interface{}) *awstypes.CreateFi
 
 	data := l[0].(map[string]interface{})
 	req := &awstypes.CreateFileSystemLustreMetadataConfiguration{
-		Mode: aws.String(data[names.AttrMode].(string)),
+		Mode: awstypes.MetadataConfigurationMode(data[names.AttrMode].(string)),
 	}
 
 	if v, ok := data[names.AttrIOPS].(int); ok && v != 0 {
-		req.Iops = aws.Int64(int64(v))
+		req.Iops = aws.Int32(int32(v))
 	}
 
 	return req
@@ -753,11 +753,11 @@ func expandLustreMetadataUpdateConfiguration(l []interface{}) *awstypes.UpdateFi
 
 	data := l[0].(map[string]interface{})
 	req := &awstypes.UpdateFileSystemLustreMetadataConfiguration{
-		Mode: aws.String(data[names.AttrMode].(string)),
+		Mode: awstypes.MetadataConfigurationMode(data[names.AttrMode].(string)),
 	}
 
 	if v, ok := data[names.AttrIOPS].(int); ok && v != 0 {
-		req.Iops = aws.Int64(int64(v))
+		req.Iops = aws.Int32(int32(v))
 	}
 
 	return req
@@ -769,11 +769,11 @@ func flattenLustreMetadataConfiguration(adopts *awstypes.FileSystemLustreMetadat
 	}
 
 	m := map[string]interface{}{
-		names.AttrMode: aws.ToString(adopts.Mode),
+		names.AttrMode: string(adopts.Mode),
 	}
 
 	if adopts.Iops != nil {
-		m[names.AttrIOPS] = aws.ToInt64(adopts.Iops)
+		m[names.AttrIOPS] = aws.ToInt32(adopts.Iops)
 	}
 
 	return []map[string]interface{}{m}
@@ -813,56 +813,54 @@ func findFileSystemByID(ctx context.Context, conn *fsx.Client, id string) (*awst
 		FileSystemIds: []string{id},
 	}
 
-	return findFileSystem(ctx, conn, input, tfslices.PredicateTrue[*awstypes.FileSystem]())
+	return findFileSystem(ctx, conn, input, tfslices.PredicateTrue[awstypes.FileSystem]())
 }
 
-func findFileSystemByIDAndType(ctx context.Context, conn *fsx.Client, fsID, fsType string) (*awstypes.FileSystem, error) {
+func findFileSystemByIDAndType(ctx context.Context, conn *fsx.Client, fsID string, fsType awstypes.FileSystemType) (*awstypes.FileSystem, error) {
 	input := &fsx.DescribeFileSystemsInput{
 		FileSystemIds: []string{fsID},
 	}
-	filter := func(fs *awstypes.FileSystem) bool {
-		return string(fs.FileSystemType) == fsType
+	filter := func(fs awstypes.FileSystem) bool {
+		return fs.FileSystemType == fsType
 	}
 
 	return findFileSystem(ctx, conn, input, filter)
 }
 
-func findFileSystem(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFileSystemsInput, filter tfslices.Predicate[*awstypes.FileSystem]) (*awstypes.FileSystem, error) {
+func findFileSystem(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFileSystemsInput, filter tfslices.Predicate[awstypes.FileSystem]) (*awstypes.FileSystem, error) {
 	output, err := findFileSystems(ctx, conn, input, filter)
 
 	if err != nil {
-		return nil, err
+		return &awstypes.FileSystem{}, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findFileSystems(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFileSystemsInput, filter tfslices.Predicate[*awstypes.FileSystem]) ([]*awstypes.FileSystem, error) {
-	var output []*awstypes.FileSystem
+func findFileSystems(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFileSystemsInput, filter tfslices.Predicate[awstypes.FileSystem]) ([]awstypes.FileSystem, error) {
+	var output []awstypes.FileSystem
 
-	err := conn.DescribeFileSystemsPagesWithContext(ctx, input, func(page *fsx.DescribeFileSystemsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := fsx.NewDescribeFileSystemsPaginator(conn, input)
 
-		for _, v := range page.FileSystems {
-			if v != nil && filter(v) {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.FileSystemNotFound](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeFileSystemNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.FileSystems {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
@@ -880,14 +878,14 @@ func statusFileSystem(ctx context.Context, conn *fsx.Client, id string) retry.St
 			return nil, "", err
 		}
 
-		return output, aws.ToString(output.Lifecycle), nil
+		return output, string(output.Lifecycle), nil
 	}
 }
 
 func waitFileSystemCreated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.FileSystem, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.FileSystemLifecycleCreating},
-		Target:  []string{awstypes.FileSystemLifecycleAvailable},
+		Pending: enum.Slice(awstypes.FileSystemLifecycleCreating),
+		Target:  enum.Slice(awstypes.FileSystemLifecycleAvailable),
 		Refresh: statusFileSystem(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
@@ -899,7 +897,7 @@ func waitFileSystemCreated(ctx context.Context, conn *fsx.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FileSystem); ok {
-		if status, details := aws.ToString(output.Lifecycle), output.FailureDetails; status == awstypes.FileSystemLifecycleFailed && details != nil {
+		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.FileSystemLifecycleFailed && details != nil {
 			tfresource.SetLastError(err, errors.New(aws.ToString(details.Message)))
 		}
 
@@ -911,8 +909,8 @@ func waitFileSystemCreated(ctx context.Context, conn *fsx.Client, id string, tim
 
 func waitFileSystemUpdated(ctx context.Context, conn *fsx.Client, id string, startTime time.Time, timeout time.Duration) (*awstypes.FileSystem, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.FileSystemLifecycleUpdating},
-		Target:  []string{awstypes.FileSystemLifecycleAvailable},
+		Pending: enum.Slice(awstypes.FileSystemLifecycleUpdating),
+		Target:  enum.Slice(awstypes.FileSystemLifecycleAvailable),
 		Refresh: statusFileSystem(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
@@ -921,14 +919,14 @@ func waitFileSystemUpdated(ctx context.Context, conn *fsx.Client, id string, sta
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FileSystem); ok {
-		switch status := aws.ToString(output.Lifecycle); status {
+		switch status := output.Lifecycle; status {
 		case awstypes.FileSystemLifecycleFailed, awstypes.FileSystemLifecycleMisconfigured, awstypes.FileSystemLifecycleMisconfiguredUnavailable:
 			// Report any failed non-FILE_SYSTEM_UPDATE administrative actions.
 			// See https://docs.aws.amazon.com/fsx/latest/APIReference/API_AdministrativeAction.html#FSx-Type-AdministrativeAction-AdministrativeActionType.
-			administrativeActions := tfslices.Filter(output.AdministrativeActions, func(v *awstypes.AdministrativeAction) bool {
-				return v != nil && string(v.Status) == awstypes.StatusFailed && string(v.AdministrativeActionType) != awstypes.AdministrativeActionTypeFileSystemUpdate && v.FailureDetails != nil && startTime.Before(aws.TimeValue(v.RequestTime))
+			administrativeActions := tfslices.Filter(output.AdministrativeActions, func(v awstypes.AdministrativeAction) bool {
+				return v.Status == awstypes.StatusFailed && v.AdministrativeActionType != awstypes.AdministrativeActionTypeFileSystemUpdate && v.FailureDetails != nil && startTime.Before(aws.ToTime(v.RequestTime))
 			})
-			administrativeActionsError := errors.Join(tfslices.ApplyToAll(administrativeActions, func(v *awstypes.AdministrativeAction) error {
+			administrativeActionsError := errors.Join(tfslices.ApplyToAll(administrativeActions, func(v awstypes.AdministrativeAction) error {
 				return fmt.Errorf("%s: %s", string(v.AdministrativeActionType), aws.ToString(v.FailureDetails.Message))
 			})...)
 
@@ -951,7 +949,7 @@ func waitFileSystemUpdated(ctx context.Context, conn *fsx.Client, id string, sta
 
 func waitFileSystemDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.FileSystem, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.FileSystemLifecycleAvailable, awstypes.FileSystemLifecycleDeleting},
+		Pending: enum.Slice(awstypes.FileSystemLifecycleAvailable, awstypes.FileSystemLifecycleDeleting),
 		Target:  []string{},
 		Refresh: statusFileSystem(ctx, conn, id),
 		Timeout: timeout,
@@ -961,7 +959,7 @@ func waitFileSystemDeleted(ctx context.Context, conn *fsx.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FileSystem); ok {
-		if status, details := aws.ToString(output.Lifecycle), output.FailureDetails; status == awstypes.FileSystemLifecycleFailed && details != nil {
+		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.FileSystemLifecycleFailed && details != nil {
 			tfresource.SetLastError(err, errors.New(aws.ToString(details.Message)))
 		}
 
@@ -971,28 +969,24 @@ func waitFileSystemDeleted(ctx context.Context, conn *fsx.Client, id string, tim
 	return nil, err
 }
 
-func findFileSystemAdministrativeAction(ctx context.Context, conn *fsx.Client, fsID, actionType string) (*awstypes.AdministrativeAction, error) {
+func findFileSystemAdministrativeAction(ctx context.Context, conn *fsx.Client, fsID string, actionType awstypes.AdministrativeActionType) (awstypes.AdministrativeAction, error) {
 	output, err := findFileSystemByID(ctx, conn, fsID)
 
 	if err != nil {
-		return nil, err
+		return awstypes.AdministrativeAction{}, err
 	}
 
 	for _, v := range output.AdministrativeActions {
-		if v == nil {
-			continue
-		}
-
-		if string(v.AdministrativeActionType) == actionType {
+		if v.AdministrativeActionType == actionType {
 			return v, nil
 		}
 	}
 
 	// If the administrative action isn't found, assume it's complete.
-	return &awstypes.AdministrativeAction{Status: aws.String(awstypes.StatusCompleted)}, nil
+	return awstypes.AdministrativeAction{Status: awstypes.StatusCompleted}, nil
 }
 
-func statusFileSystemAdministrativeAction(ctx context.Context, conn *fsx.Client, fsID, actionType string) retry.StateRefreshFunc {
+func statusFileSystemAdministrativeAction(ctx context.Context, conn *fsx.Client, fsID string, actionType awstypes.AdministrativeActionType) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findFileSystemAdministrativeAction(ctx, conn, fsID, actionType)
 
@@ -1008,10 +1002,10 @@ func statusFileSystemAdministrativeAction(ctx context.Context, conn *fsx.Client,
 	}
 }
 
-func waitFileSystemAdministrativeActionCompleted(ctx context.Context, conn *fsx.Client, fsID, actionType string, timeout time.Duration) (*awstypes.AdministrativeAction, error) { //nolint:unparam
+func waitFileSystemAdministrativeActionCompleted(ctx context.Context, conn *fsx.Client, fsID string, actionType awstypes.AdministrativeActionType, timeout time.Duration) (*awstypes.AdministrativeAction, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.StatusInProgress, awstypes.StatusPending},
-		Target:  []string{awstypes.StatusCompleted, awstypes.StatusUpdatedOptimizing},
+		Pending: enum.Slice(awstypes.StatusInProgress, awstypes.StatusPending),
+		Target:  enum.Slice(awstypes.StatusCompleted, awstypes.StatusUpdatedOptimizing),
 		Refresh: statusFileSystemAdministrativeAction(ctx, conn, fsID, actionType),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
@@ -1020,7 +1014,7 @@ func waitFileSystemAdministrativeActionCompleted(ctx context.Context, conn *fsx.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.AdministrativeAction); ok {
-		if status, details := string(output.Status), output.FailureDetails; status == awstypes.StatusFailed && details != nil {
+		if status, details := output.Status, output.FailureDetails; status == awstypes.StatusFailed && details != nil {
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
