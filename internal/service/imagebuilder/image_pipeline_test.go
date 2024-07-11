@@ -659,7 +659,7 @@ func TestAccImageBuilderImagePipeline_workflow(t *testing.T) {
 				Config: testAccImagePipelineConfig_workflow(rName, imagebuilder.OnWorkflowFailureAbort, "test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "workflow.0.on_failure", imagebuilder.OnWorkflowFailureAbort),
 					resource.TestCheckResourceAttr(resourceName, "workflow.0.parallel_group", "test1"),
 				),
@@ -673,7 +673,7 @@ func TestAccImageBuilderImagePipeline_workflow(t *testing.T) {
 				Config: testAccImagePipelineConfig_workflow(rName, imagebuilder.OnWorkflowFailureContinue, "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "workflow.0.on_failure", imagebuilder.OnWorkflowFailureContinue),
 					resource.TestCheckResourceAttr(resourceName, "workflow.0.parallel_group", "test2"),
 				),
@@ -697,8 +697,8 @@ func TestAccImageBuilderImagePipeline_workflowParameter(t *testing.T) {
 				Config: testAccImagePipelineConfig_workflowParameter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "workflow.0.parameter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.parameter.#", acctest.Ct1),
 				),
 			},
 			{
@@ -710,8 +710,8 @@ func TestAccImageBuilderImagePipeline_workflowParameter(t *testing.T) {
 				Config: testAccImagePipelineConfig_workflowParameter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "workflow.0.parameter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.parameter.#", acctest.Ct1),
 				),
 			},
 		},
