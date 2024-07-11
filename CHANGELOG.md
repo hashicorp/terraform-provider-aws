@@ -1,5 +1,10 @@
 ## 5.58.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_cloudwatch_log_account_policy` ([#38328](https://github.com/hashicorp/terraform-provider-aws/issues/38328))
+* **New Resource:** `aws_verifiedpermissions_identity_source` ([#38181](https://github.com/hashicorp/terraform-provider-aws/issues/38181))
+
 ENHANCEMENTS:
 
 * data-source/aws_launch_template: Add `network_interfaces.primary_ipv6` attribute ([#37142](https://github.com/hashicorp/terraform-provider-aws/issues/37142))
@@ -13,6 +18,7 @@ ENHANCEMENTS:
 * resource/aws_ec2_capacity_reservation: Add configurable timeouts ([#36754](https://github.com/hashicorp/terraform-provider-aws/issues/36754))
 * resource/aws_ec2_capacity_reservation: Retry `InsufficientInstanceCapacity` errors ([#36754](https://github.com/hashicorp/terraform-provider-aws/issues/36754))
 * resource/aws_eks_cluster: Add `bootstrap_self_managed_addons` argument ([#38162](https://github.com/hashicorp/terraform-provider-aws/issues/38162))
+* resource/aws_fms_policy: Add `resource_set_ids` attribute ([#38161](https://github.com/hashicorp/terraform-provider-aws/issues/38161))
 * resource/aws_fsx_ontap_file_system: Add `384`, `768`, `1536`, `3072`, and `6144` as valid values for `throughput_capacity` ([#38308](https://github.com/hashicorp/terraform-provider-aws/issues/38308))
 * resource/aws_fsx_ontap_file_system: Add `384`, `768`, and `1536` as valid values for `throughput_capacity_per_ha_pair` ([#38308](https://github.com/hashicorp/terraform-provider-aws/issues/38308))
 * resource/aws_fsx_ontap_file_system: Add `MULTI_AZ_2` as a valid value for `deployment_type` ([#38308](https://github.com/hashicorp/terraform-provider-aws/issues/38308))
