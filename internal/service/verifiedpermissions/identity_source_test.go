@@ -570,7 +570,7 @@ resource "aws_verifiedpermissions_identity_source" "test" {
     cognito_user_pool_configuration {
       user_pool_arn = aws_cognito_user_pool.test.arn
       client_ids    = [aws_cognito_user_pool_client.test.id]
-   }
+    }
   }
 }
 
