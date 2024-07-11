@@ -243,48 +243,46 @@ func testAccAccountPolicyConfig_lambdaBase(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_cloudwatch_log_group" "test" {
-	name              = %[1]q
-	retention_in_days = 1
+  name              = %[1]q
+  retention_in_days = 1
 }
 
 resource "aws_iam_role" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
-"Version": "2012-10-17",
-"Statement": [
-	{
-	"Action": "sts:AssumeRole",
-	"Principal": {
-		"Service": "lambda.${data.aws_partition.current.dns_suffix}"
-	},
-	"Effect": "Allow",
-	"Sid": ""
-	}
-]
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "lambda.${data.aws_partition.current.dns_suffix}"
+    },
+    "Effect": "Allow",
+    "Sid": ""
+  }]
 }
 EOF
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
-	policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-	role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+ role       = aws_iam_role.test.name
 }
 
 resource "aws_lambda_function" "test" {
-	filename      = "test-fixtures/lambdatest.zip"
-	function_name = %[1]q
-	role          = aws_iam_role.test.arn
-	runtime       = "nodejs16.x"
-	handler       = "exports.handler"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.test.arn
+  runtime       = "nodejs16.x"
+  handler       = "exports.handler"
 }
 
 resource "aws_lambda_permission" "test" {
-	statement_id  = "AllowExecutionFromCloudWatchLogs"
-	action        = "lambda:*"
-	function_name = aws_lambda_function.test.arn
-	principal     = "logs.${data.aws_partition.current.dns_suffix}"
+  statement_id  = "AllowExecutionFromCloudWatchLogs"
+  action        = "lambda:*"
+  function_name = aws_lambda_function.test.arn
+  principal     = "logs.${data.aws_partition.current.dns_suffix}"
 }
 `, rName)
 }
@@ -292,14 +290,14 @@ resource "aws_lambda_permission" "test" {
 func testAccAccountPolicyConfig_basicSubscriptionFilter(rName string) string {
 	return acctest.ConfigCompose(testAccAccountPolicyConfig_lambdaBase(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_account_policy" "test" {
-  	policy_name = %[1]q
-  	policy_type  = "SUBSCRIPTION_FILTER_POLICY"
-	policy_document = jsonencode({
-            DestinationArn = "${aws_lambda_function.test.arn}"
-            FilterPattern = " "
-			Distribution = "Random"
-        }
-    )
+  policy_name = %[1]q
+  policy_type = "SUBSCRIPTION_FILTER_POLICY"
+
+  policy_document = jsonencode({
+    DestinationArn = "${aws_lambda_function.test.arn}"
+    FilterPattern  = " "
+    Distribution   = "Random"
+  })
 }
 `, rName))
 }
@@ -307,15 +305,16 @@ resource "aws_cloudwatch_log_account_policy" "test" {
 func testAccAccountPolicyConfig_selectionCriteria(rName, rSelectionCriteria string) string {
 	return acctest.ConfigCompose(testAccAccountPolicyConfig_lambdaBase(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_account_policy" "test" {
-  	policy_name = %[1]q
-  	policy_type  = "SUBSCRIPTION_FILTER_POLICY"
-	policy_document = jsonencode({
-            DestinationArn = "${aws_lambda_function.test.arn}"
-            FilterPattern = " "
-			Distribution = "Random"
-        }
-    )
-	selection_criteria = %[2]q
+  policy_name = %[1]q
+  policy_type = "SUBSCRIPTION_FILTER_POLICY"
+
+  policy_document = jsonencode({
+    DestinationArn = "${aws_lambda_function.test.arn}"
+    FilterPattern  = " "
+    Distribution  = "Random"
+  })
+
+  selection_criteria = %[2]q
 }
 `, rName, rSelectionCriteria))
 }
@@ -325,13 +324,14 @@ func testAccAccountPolicyConfig_basicDataProtection(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_cloudwatch_log_group" "test" {
-	name              = %[1]q
-	retention_in_days = 1
+ name              = %[1]q
+  retention_in_days = 1
 }
 
 resource "aws_cloudwatch_log_account_policy" "test" {
   policy_name = %[1]q
   policy_type = "DATA_PROTECTION_POLICY"
+
   policy_document = jsonencode({
     Name    = "Test"
     Version = "2021-06-01"
