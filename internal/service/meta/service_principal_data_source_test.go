@@ -70,8 +70,9 @@ func TestAccMetaServicePrincipal_ByRegion(t *testing.T) {
 					{
 						Config: testAccSPNDataSourceConfig_withRegion("s3", region),
 						Check: resource.ComposeTestCheckFunc(
-							resource.TestCheckResourceAttr(dataSourceName, names.AttrID, fmt.Sprintf("s3.%s.amazonaws.com", region)), //lintignore:AWSR001
-							resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "s3.amazonaws.com"),                       //lintignore:AWSR001
+							//lintignore:AWSR001
+							resource.TestCheckResourceAttr(dataSourceName, names.AttrID, fmt.Sprintf("s3.%s.amazonaws.com", region)),
+							resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "s3.amazonaws.com"),
 							resource.TestCheckResourceAttr(dataSourceName, "suffix", "amazonaws.com"),
 							resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, region),
 						),
