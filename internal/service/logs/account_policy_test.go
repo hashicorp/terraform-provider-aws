@@ -173,7 +173,7 @@ func testAccCheckAccountPolicyExists(ctx context.Context, n string, v *types.Acc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
-		output, err := tflogs.FindAccountPolicy(ctx, conn, rs.Primary.Attributes["policy_type"], rs.Primary.ID)
+		output, err := tflogs.FindAccountPolicyByTwoPartKey(ctx, conn, types.PolicyType(rs.Primary.Attributes["policy_type"]), rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -209,7 +209,7 @@ func testAccCheckAccountPolicyDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			_, err := tflogs.FindAccountPolicy(ctx, conn, rs.Primary.Attributes["policy_type"], rs.Primary.ID)
+			_, err := tflogs.FindAccountPolicyByTwoPartKey(ctx, conn, types.PolicyType(rs.Primary.Attributes["policy_type"]), rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

@@ -16,7 +16,7 @@ var (
 	ResourceStream               = resourceStream
 	ResourceSubscriptionFilter   = resourceSubscriptionFilter
 
-	FindAccountPolicy                  = findAccountPolicy
+	FindAccountPolicyByTwoPartKey      = findAccountPolicyByTwoPartKey
 	FindDestinationByName              = findDestinationByName
 	FindLogGroupByName                 = findLogGroupByName
 	FindLogStreamByTwoPartKey          = findLogStreamByTwoPartKey // nosemgrep:ci.logs-in-var-name
