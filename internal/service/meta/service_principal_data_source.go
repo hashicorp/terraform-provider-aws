@@ -15,28 +15,30 @@ import (
 )
 
 // @FrameworkDataSource
-func newDataSourceServicePrincipal(context.Context) (datasource.DataSourceWithConfigure, error) {
-	d := &dataSourceServicePrincipal{}
+func newServicePrincipalDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &servicePrincipalDataSource{}
 
 	return d, nil
 }
 
-type dataSourceServicePrincipal struct {
+type servicePrincipalDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceServicePrincipal) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+func (*servicePrincipalDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
 	response.TypeName = "aws_service_principal"
 }
 
-func (d *dataSourceServicePrincipal) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *servicePrincipalDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: schema.StringAttribute{
-				Optional: true,
 				Computed: true,
 			},
 			names.AttrName: schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrRegion: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
@@ -46,17 +48,13 @@ func (d *dataSourceServicePrincipal) Schema(ctx context.Context, req datasource.
 			"suffix": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrRegion: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
 		},
 	}
 }
 
 // Read is called when the provider must read data source values in order to update state.
 // Config values should be read from the ReadRequest and new state values set on the ReadResponse.
-func (d *dataSourceServicePrincipal) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	var data dataSourceServicePrincipalData
 
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
@@ -111,9 +109,9 @@ func (d *dataSourceServicePrincipal) Read(ctx context.Context, request datasourc
 }
 
 type dataSourceServicePrincipalData struct {
-	Suffix      types.String `tfsdk:"suffix"`
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
-	ServiceName types.String `tfsdk:"service_name"`
 	Region      types.String `tfsdk:"region"`
+	ServiceName types.String `tfsdk:"service_name"`
+	Suffix      types.String `tfsdk:"suffix"`
 }
