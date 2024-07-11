@@ -9,6 +9,7 @@ var (
 	ResourceListenerCertificate  = resourceListenerCertificate
 	ResourceListenerRule         = resourceListenerRule
 	ResourceLoadBalancer         = resourceLoadBalancer
+	ResourceTargetGroup          = resourceTargetGroup
 	ResourceTrustStore           = resourceTrustStore
 	ResourceTrustStoreRevocation = resourceTrustStoreRevocation
 
@@ -17,6 +18,7 @@ var (
 	FindListenerRuleByARN                = findListenerRuleByARN
 	FindLoadBalancerAttributesByARN      = findLoadBalancerAttributesByARN
 	FindLoadBalancerByARN                = findLoadBalancerByARN
+	FindTargetGroupByARN                 = findTargetGroupByARN
 	FindTrustStoreByARN                  = findTrustStoreByARN
 	FindTrustStoreRevocationByTwoPartKey = findTrustStoreRevocationByTwoPartKey
 	HealthCheckProtocolEnumValues        = healthCheckProtocolEnumValues

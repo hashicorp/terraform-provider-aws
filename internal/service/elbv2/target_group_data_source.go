@@ -244,13 +244,13 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
 	}
 	d.Set(names.AttrName, targetGroup.TargetGroupName)
-	targetType := string(targetGroup.TargetType)
+	targetType := targetGroup.TargetType
 	d.Set("target_type", targetType)
 
-	var protocol string
-	if targetType != string(awstypes.TargetTypeEnumLambda) {
+	var protocol awstypes.ProtocolEnum
+	if targetType != awstypes.TargetTypeEnumLambda {
 		d.Set(names.AttrPort, targetGroup.Port)
-		protocol = string(targetGroup.Protocol)
+		protocol = targetGroup.Protocol
 		d.Set(names.AttrProtocol, protocol)
 		d.Set(names.AttrVPCID, targetGroup.VpcId)
 	}
