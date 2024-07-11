@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -46,39 +45,39 @@ func sweepLoadBalancers(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
+	input := &elasticloadbalancingv2.DescribeLoadBalancersInput{}
 	conn := client.ELBV2Client(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	var sweeperErrs *multierror.Error
-
-	pages := elasticloadbalancingv2.NewDescribeLoadBalancersPaginator(conn, &elasticloadbalancingv2.DescribeLoadBalancersInput{})
-
+	pages := elasticloadbalancingv2.NewDescribeLoadBalancersPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping LB sweep for %s: %s", region, err)
-			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+			log.Printf("[WARN] Skipping ELBv2 Load Balancer sweep for %s: %s", region, err)
+			return nil
 		}
 
 		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving LBs: %w", err))
+			return fmt.Errorf("error listing ELBv2 Load Balancers (%s): %w", region, err)
 		}
 
-		for _, loadBalancer := range page.LoadBalancers {
-			name := aws.ToString(loadBalancer.LoadBalancerName)
+		for _, v := range page.LoadBalancers {
+			r := resourceLoadBalancer()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.LoadBalancerArn))
 
-			log.Printf("[INFO] Deleting LB: %s", name)
-			_, err := conn.DeleteLoadBalancer(ctx, &elasticloadbalancingv2.DeleteLoadBalancerInput{
-				LoadBalancerArn: loadBalancer.LoadBalancerArn,
-			})
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("failed to delete LB (%s): %w", name, err))
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping ELBv2 Load Balancers (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepTargetGroups(region string) error {
@@ -87,32 +86,36 @@ func sweepTargetGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
+	input := &elasticloadbalancingv2.DescribeTargetGroupsInput{}
 	conn := client.ELBV2Client(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := elasticloadbalancingv2.NewDescribeTargetGroupsPaginator(conn, &elasticloadbalancingv2.DescribeTargetGroupsInput{})
-
+	pages := elasticloadbalancingv2.NewDescribeTargetGroupsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping ELBv2 Target Group sweep for %s: %s", region, err)
+			return nil
+		}
+
 		if err != nil {
-			if awsv2.SkipSweepError(err) {
-				log.Printf("[WARN] Skipping LB Target Group sweep for %s: %s", region, err)
-				return nil
-			}
-			return fmt.Errorf("retrieving LB Target Groups: %w", err)
+			return fmt.Errorf("error listing ELBv2 Target Groups (%s): %w", region, err)
 		}
 
-		for _, targetGroup := range page.TargetGroups {
-			name := aws.ToString(targetGroup.TargetGroupName)
+		for _, v := range page.TargetGroups {
+			r := resourceTargetGroup()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.TargetGroupArn))
 
-			log.Printf("[INFO] Deleting LB Target Group: %s", name)
-			_, err := conn.DeleteTargetGroup(ctx, &elasticloadbalancingv2.DeleteTargetGroupInput{
-				TargetGroupArn: targetGroup.TargetGroupArn,
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete LB Target Group (%s): %s", name, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping ELBv2 Target Groups (%s): %w", region, err)
 	}
 
 	return nil
@@ -124,36 +127,40 @@ func sweepListeners(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-
+	input := &elasticloadbalancingv2.DescribeLoadBalancersInput{}
 	conn := client.ELBV2Client(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
-	pages := elasticloadbalancingv2.NewDescribeLoadBalancersPaginator(conn, &elasticloadbalancingv2.DescribeLoadBalancersInput{})
-
+	pages := elasticloadbalancingv2.NewDescribeLoadBalancersPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("error describing ELBv2 Listeners for %s: %w", region, err))
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping ELBv2 Listener sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, loadBalancer := range page.LoadBalancers {
-			pages := elasticloadbalancingv2.NewDescribeListenersPaginator(conn, &elasticloadbalancingv2.DescribeListenersInput{
-				LoadBalancerArn: loadBalancer.LoadBalancerArn})
+		if err != nil {
+			return fmt.Errorf("error listing ELBv2 Load Balancers (%s): %w", region, err)
+		}
 
+		for _, v := range page.LoadBalancers {
+			input := &elasticloadbalancingv2.DescribeListenersInput{
+				LoadBalancerArn: v.LoadBalancerArn,
+			}
+
+			pages := elasticloadbalancingv2.NewDescribeListenersPaginator(conn, input)
 			for pages.HasMorePages() {
 				page, err := pages.NextPage(ctx)
 
 				if err != nil {
-					errs = multierror.Append(errs, fmt.Errorf("failed to describe LB Listeners (%s): %w", region, err))
 					continue
 				}
 
-				for _, listener := range page.Listeners {
-					r := ResourceListener()
+				for _, v := range page.Listeners {
+					r := resourceListener()
 					d := r.Data(nil)
-					d.SetId(aws.ToString(listener.ListenerArn))
+					d.SetId(aws.ToString(v.ListenerArn))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -161,14 +168,11 @@ func sweepListeners(region string) error {
 		}
 	}
 
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping ELBv2 Listeners for %s: %w", region, err))
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping ELBv2 Listeners (%s): %w", region, err)
 	}
 
-	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping ELBv2 Listener sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }
