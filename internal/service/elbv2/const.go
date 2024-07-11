@@ -12,7 +12,7 @@ import (
 
 const (
 	iamPropagationTimeout   = 2 * time.Minute
-	elbv2PropagationTimeout = 5 * time.Minute
+	elbv2PropagationTimeout = 5 * time.Minute // nosemgrep:ci.elbv2-in-const-name, ci.elbv2-in-var-name
 )
 
 // See https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_LoadBalancerAttribute.html#API_LoadBalancerAttribute_Contents.
