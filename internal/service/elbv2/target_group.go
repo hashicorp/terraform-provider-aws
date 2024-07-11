@@ -557,7 +557,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set(names.AttrPort, targetGroup.Port)
 	}
 	var protocol awstypes.ProtocolEnum
-	if _, ok := d.GetOk(names.AttrProtocol); ok {
+	if _, ok := d.GetOk(names.AttrProtocol); targetGroup.Protocol != "" || ok {
 		protocol = targetGroup.Protocol
 		d.Set(names.AttrProtocol, protocol)
 	}
