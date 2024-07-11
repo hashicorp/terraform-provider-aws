@@ -23,9 +23,6 @@ import (
 
 func TestAccVerifiedPermissionsIdentitySource_Cognito_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var identitySource verifiedpermissions.GetIdentitySourceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -67,9 +64,6 @@ func TestAccVerifiedPermissionsIdentitySource_Cognito_basic(t *testing.T) {
 
 func TestAccVerifiedPermissionsIdentitySource_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var identitySource verifiedpermissions.GetIdentitySourceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -130,11 +124,55 @@ func TestAccVerifiedPermissionsIdentitySource_update(t *testing.T) {
 	})
 }
 
+func TestAccVerifiedPermissionsIdentitySource_OpenID_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var identitySource verifiedpermissions.GetIdentitySourceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_verifiedpermissions_identity_source.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIdentitySourceConfig_OpenID_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "Mycorp::UserGroup"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", acctest.Ct1),
+					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.entity_id_prefix"),
+					testAccCheckPairAsHTTPSURL(resourceName, "configuration.0.open_id_connect_configuration.0.issuer", "aws_cognito_user_pool.test", "endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.audiences.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.audiences.0", "https://myapp.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.principal_id_claim", "sub"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.identity_token_only.#", acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccIdentitySourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVerifiedPermissionsIdentitySource_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var identitySource verifiedpermissions.GetIdentitySourceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -222,6 +260,43 @@ func testAccIdentitySourceImportStateIdFunc(resourceName string) resource.Import
 	}
 }
 
+func testAccCheckPairAsHTTPSURL(nameFirst, keyFirst, nameSecond, keySecond string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		first, err := acctest.PrimaryInstanceState(s, nameFirst)
+		if err != nil {
+			return err
+		}
+
+		vFirst, ok := first.Attributes[keyFirst]
+		if !ok {
+			return fmt.Errorf("%s: No attribute %q found", nameFirst, keyFirst)
+		}
+
+		second, err := acctest.PrimaryInstanceState(s, nameSecond)
+		if err != nil {
+			return err
+		}
+
+		vSecond, ok := second.Attributes[keySecond]
+		if !ok {
+			return fmt.Errorf("%s: No attribute %q found", nameSecond, keySecond)
+		}
+
+		vSecond = fmt.Sprintf("https://%s", vSecond)
+
+		if vFirst != vSecond {
+			return fmt.Errorf(
+				"%s: Attribute '%s' expected %#v, got %#v",
+				nameFirst,
+				keyFirst,
+				vSecond,
+				vFirst)
+		}
+
+		return nil
+	}
+}
+
 func testAccIdentitySourceConfig_base() string {
 	return `
 resource "aws_verifiedpermissions_policy_store" "test" {
@@ -274,6 +349,32 @@ resource "aws_verifiedpermissions_identity_source" "test" {
       client_ids    = [aws_cognito_user_pool_client.test.id]
     }
   }
+}
+`, rName))
+}
+
+func testAccIdentitySourceConfig_OpenID_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccIdentitySourceConfig_base(),
+		fmt.Sprintf(`
+resource "aws_verifiedpermissions_identity_source" "test" {
+  policy_store_id = aws_verifiedpermissions_policy_store.test.id
+  configuration {
+    open_id_connect_configuration {
+      issuer = "https://${aws_cognito_user_pool.test.endpoint}"
+      token_selection {
+        access_token_only {
+          audiences          = ["https://myapp.example.com"]
+          principal_id_claim = "sub"
+        }
+      }
+    }
+  }
+  principal_entity_type = "Mycorp::UserGroup"
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
 }
 `, rName))
 }
