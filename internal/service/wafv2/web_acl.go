@@ -322,15 +322,33 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		aclLockToken := d.Get("lock_token").(string)
 		// Find the AWS managed ShieldMitigationRuleGroup group rule if existent and add it into the set of rules to update
 		// so that the provider will not remove the Shield rule when changes are applied to the WebACL.
-		rules := expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List())
-		if sr := findShieldRule(rules); len(sr) == 0 {
-			output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), aclName, aclScope)
+		var rules []awstypes.Rule
+		if d.HasChange(names.AttrRule) {
+			rules = expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List())
+			if sr := findShieldRule(rules); len(sr) == 0 {
+				output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), aclName, aclScope)
 
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
+				}
+
+				rules = append(rules, findShieldRule(output.WebACL.Rules)...)
 			}
+		}
+		if d.HasChange("rule_json") {
+			rules, err := expandWebACLRulesJSON(d.Get("rule_json").(string))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "expanding WAFv2 WebACL JSON rule (%s): %s", d.Id(), err)
+			}
+			if sr := findShieldRule(rules); len(sr) == 0 {
+				output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), aclName, aclScope)
 
-			rules = append(rules, findShieldRule(output.WebACL.Rules)...)
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
+				}
+
+				rules = append(rules, findShieldRule(output.WebACL.Rules)...)
+			}
 		}
 
 		input := &wafv2.UpdateWebACLInput{
@@ -344,10 +362,6 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			Rules:             rules,
 			Scope:             awstypes.Scope(aclScope),
 			VisibilityConfig:  expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
-		}
-
-		if _, ok := d.GetOk(names.AttrRule); ok {
-			input.Rules = rules
 		}
 
 		if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
