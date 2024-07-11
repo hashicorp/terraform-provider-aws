@@ -74,9 +74,6 @@ func (r *resourceIdentitySource) Schema(ctx context.Context, request resource.Sc
 			"principal_entity_type": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -263,6 +260,9 @@ func (r *resourceIdentitySource) Create(ctx context.Context, request resource.Cr
 
 	configuration, d := flattenConfiguration(ctx, out.Configuration)
 	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 	state.Configuration = configuration
 
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
@@ -328,7 +328,7 @@ func (r *resourceIdentitySource) Update(ctx context.Context, request resource.Up
 			return
 		}
 
-		output, err := conn.UpdateIdentitySource(ctx, input)
+		_, err := conn.UpdateIdentitySource(ctx, input)
 
 		if err != nil {
 			response.Diagnostics.AddError(
@@ -338,7 +338,24 @@ func (r *resourceIdentitySource) Update(ctx context.Context, request resource.Up
 			return
 		}
 
-		response.Diagnostics.Append(flex.Flatten(ctx, output, &plan)...)
+		// response.Diagnostics.Append(flex.Flatten(ctx, output, &plan)...)
+		// Retrieve values not included in update response.
+		out, err := findIdentitySourceByIDAndPolicyStoreID(ctx, conn, state.ID.ValueString(), state.PolicyStoreID.ValueString())
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionUpdating, ResNameIdentitySource, plan.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		response.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+		configuration, d := flattenConfiguration(ctx, out.Configuration)
+		response.Diagnostics.Append(d...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		plan.UpdateConfiguration = configuration
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
