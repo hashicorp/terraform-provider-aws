@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -22,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
@@ -123,17 +123,17 @@ func resourceONTAPVolume() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 203),
 			},
 			"ontap_volume_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: enum.Validate[awstypes.InputOntapVolumeType](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.InputOntapVolumeType](),
 			},
 			"security_style": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: enum.Validate[awstypes.StorageVirtualMachineRootVolumeSecurityStyle](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.StorageVirtualMachineRootVolumeSecurityStyle](),
 			},
 			"size_in_bytes": {
 				Type:         nullable.TypeNullableInt,
@@ -174,10 +174,10 @@ func resourceONTAPVolume() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									names.AttrType: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: enum.Validate[awstypes.AutocommitPeriodType](),
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.AutocommitPeriodType](),
 									},
 									names.AttrValue: {
 										Type:         schema.TypeInt,
@@ -188,10 +188,10 @@ func resourceONTAPVolume() *schema.Resource {
 							},
 						},
 						"privileged_delete": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      awstypes.PrivilegedDeleteDisabled,
-							ValidateFunc: enum.Validate[awstypes.PrivilegedDelete](),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.PrivilegedDeleteDisabled,
+							ValidateDiagFunc: enum.Validate[awstypes.PrivilegedDelete](),
 						},
 						names.AttrRetentionPeriod: {
 							Type:             schema.TypeList,
@@ -209,10 +209,10 @@ func resourceONTAPVolume() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												names.AttrType: {
-													Type:         schema.TypeString,
-													Optional:     true,
-													Computed:     true,
-													ValidateFunc: enum.Validate[awstypes.RetentionPeriodType](),
+													Type:             schema.TypeString,
+													Optional:         true,
+													Computed:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.RetentionPeriodType](),
 												},
 												names.AttrValue: {
 													Type:         schema.TypeInt,
@@ -230,10 +230,10 @@ func resourceONTAPVolume() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												names.AttrType: {
-													Type:         schema.TypeString,
-													Optional:     true,
-													Computed:     true,
-													ValidateFunc: enum.Validate[awstypes.RetentionPeriodType](),
+													Type:             schema.TypeString,
+													Optional:         true,
+													Computed:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.RetentionPeriodType](),
 												},
 												names.AttrValue: {
 													Type:         schema.TypeInt,
@@ -251,10 +251,10 @@ func resourceONTAPVolume() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												names.AttrType: {
-													Type:         schema.TypeString,
-													Optional:     true,
-													Computed:     true,
-													ValidateFunc: enum.Validate[awstypes.RetentionPeriodType](),
+													Type:             schema.TypeString,
+													Optional:         true,
+													Computed:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.RetentionPeriodType](),
 												},
 												names.AttrValue: {
 													Type:         schema.TypeInt,
@@ -268,10 +268,10 @@ func resourceONTAPVolume() *schema.Resource {
 							},
 						},
 						"snaplock_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: enum.Validate[awstypes.SnaplockType](),
+							Type:             schema.TypeString,
+							Required:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SnaplockType](),
 						},
 						"volume_append_mode_enabled": {
 							Type:     schema.TypeBool,
@@ -311,10 +311,10 @@ func resourceONTAPVolume() *schema.Resource {
 							ValidateFunc: validation.IntBetween(2, 183),
 						},
 						names.AttrName: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: enum.Validate[awstypes.TieringPolicyName](),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.TieringPolicyName](),
 						},
 					},
 				},
@@ -326,18 +326,18 @@ func resourceONTAPVolume() *schema.Resource {
 				Computed: true,
 			},
 			"volume_style": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: enum.Validate[awstypes.VolumeStyle](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.VolumeStyle](),
 			},
 			names.AttrVolumeType: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      awstypes.VolumeTypeOntap,
-				ValidateFunc: enum.Validate[awstypes.VolumeType](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.VolumeTypeOntap,
+				ValidateDiagFunc: enum.Validate[awstypes.VolumeType](),
 			},
 		},
 		CustomizeDiff: verify.SetTagsDiff,
@@ -365,7 +365,7 @@ func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("ontap_volume_type"); ok {
-		ontapConfig.OntapVolumeType = awstypes.OntapVolumeType(v.(string))
+		ontapConfig.OntapVolumeType = awstypes.InputOntapVolumeType(v.(string))
 	}
 
 	if v, ok := d.GetOk("security_style"); ok {
@@ -377,7 +377,7 @@ func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("size_in_megabytes"); ok {
-		ontapConfig.SizeInMegabytes = aws.Int64(int64(v.(int)))
+		ontapConfig.SizeInMegabytes = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("snaplock_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -405,7 +405,7 @@ func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 		Name:               aws.String(name),
 		OntapConfiguration: ontapConfig,
 		Tags:               getTagsIn(ctx),
-		VolumeType:         aws.String(d.Get(names.AttrVolumeType).(string)),
+		VolumeType:         awstypes.VolumeType(d.Get(names.AttrVolumeType).(string)),
 	}
 
 	output, err := conn.CreateVolume(ctx, input)
@@ -510,7 +510,7 @@ func resourceONTAPVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("size_in_megabytes") {
-			ontapConfig.SizeInMegabytes = aws.Int64(int64(d.Get("size_in_megabytes").(int)))
+			ontapConfig.SizeInMegabytes = aws.Int32(int32(d.Get("size_in_megabytes").(int)))
 		}
 
 		if d.HasChange("snaplock_configuration") {
@@ -571,7 +571,7 @@ func resourceONTAPVolumeDelete(ctx context.Context, d *schema.ResourceData, meta
 		VolumeId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeVolumeNotFound) {
+	if errs.IsA[*awstypes.VolumeNotFound](err) {
 		return diags
 	}
 
@@ -594,11 +594,11 @@ func expandAggregateConfiguration(tfMap map[string]interface{}) *awstypes.Create
 	apiObject := &awstypes.CreateAggregateConfiguration{}
 
 	if v, ok := tfMap["aggregates"].([]interface{}); ok && v != nil {
-		apiObject.Aggregates = flex.ExpandStringList(v)
+		apiObject.Aggregates = flex.ExpandStringValueList(v)
 	}
 
 	if v, ok := tfMap["constituents_per_aggregate"].(int); ok && v != 0 {
-		apiObject.ConstituentsPerAggregate = aws.Int64(int64(v))
+		apiObject.ConstituentsPerAggregate = aws.Int32(int32(v))
 	}
 
 	return apiObject
@@ -611,23 +611,21 @@ func flattenAggregateConfiguration(apiObject *awstypes.AggregateConfiguration) m
 
 	tfMap := map[string]interface{}{}
 
-	var aggregates int64
+	var aggregates int32
 
 	if v := apiObject.Aggregates; v != nil {
-		if v := v; v != nil {
-			tfMap["aggregates"] = v
-			//Need to get the count of aggregates for calculating constituents_per_aggregate
-			aggregates = int64(len(v))
-		}
+		tfMap["aggregates"] = v
+		//Need to get the count of aggregates for calculating constituents_per_aggregate
+		aggregates = int32(len(v))
 	}
 
 	if v := apiObject.TotalConstituents; v != nil {
-		tfMap["total_constituents"] = aws.ToInt64(v)
+		tfMap["total_constituents"] = aws.ToInt32(v)
 		//Since the api only returns totalConstituents, need to calculate the value of ConstituentsPerAggregate so state will be consistent with config
 		if aggregates != 0 {
-			tfMap["constituents_per_aggregate"] = aws.ToInt64(v) / aggregates
+			tfMap["constituents_per_aggregate"] = aws.ToInt32(v) / aggregates
 		} else {
-			tfMap["constituents_per_aggregate"] = aws.ToInt64(v)
+			tfMap["constituents_per_aggregate"] = aws.ToInt32(v)
 		}
 	}
 
@@ -645,14 +643,14 @@ func expandTieringPolicy(tfMap map[string]interface{}) *awstypes.TieringPolicy {
 
 	// Cooling period only accepts a minimum of 2 but int will return 0 not nil if unset.
 	// Therefore we only set it if it is 2 or more.
-	if tfMap[names.AttrName].(string) == awstypes.TieringPolicyNameAuto || tfMap[names.AttrName].(string) == awstypes.TieringPolicyNameSnapshotOnly {
+	if tfMap[names.AttrName].(string) == string(awstypes.TieringPolicyNameAuto) || tfMap[names.AttrName].(string) == string(awstypes.TieringPolicyNameSnapshotOnly) {
 		if v, ok := tfMap["cooling_period"].(int); ok && v >= minTieringPolicyCoolingPeriod {
-			apiObject.CoolingPeriod = aws.Int64(int64(v))
+			apiObject.CoolingPeriod = aws.Int32(int32(v))
 		}
 	}
 
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
-		apiObject.Name = aws.String(v)
+		apiObject.Name = awstypes.TieringPolicyName(v)
 	}
 
 	return apiObject
@@ -666,14 +664,12 @@ func flattenTieringPolicy(apiObject *awstypes.TieringPolicy) map[string]interfac
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CoolingPeriod; v != nil {
-		if v := aws.ToInt64(v); v >= minTieringPolicyCoolingPeriod {
+		if v := aws.ToInt32(v); v >= minTieringPolicyCoolingPeriod {
 			tfMap["cooling_period"] = v
 		}
 	}
 
-	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.ToString(v)
-	}
+	tfMap[names.AttrName] = string(apiObject.Name)
 
 	return tfMap
 }
@@ -750,11 +746,11 @@ func expandAutocommitPeriod(tfMap map[string]interface{}) *awstypes.AutocommitPe
 	apiObject := &awstypes.AutocommitPeriod{}
 
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
-		apiObject.Type = aws.String(v)
+		apiObject.Type = awstypes.AutocommitPeriodType(v)
 	}
 
 	if v, ok := tfMap[names.AttrValue].(int); ok && v != 0 {
-		apiObject.Value = aws.Int64(int64(v))
+		apiObject.Value = aws.Int32(int32(v))
 	}
 
 	return apiObject
@@ -790,11 +786,11 @@ func expandRetentionPeriod(tfMap map[string]interface{}) *awstypes.RetentionPeri
 	apiObject := &awstypes.RetentionPeriod{}
 
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
-		apiObject.Type = aws.String(v)
+		apiObject.Type = awstypes.RetentionPeriodType(v)
 	}
 
 	if v, ok := tfMap[names.AttrValue].(int); ok && v != 0 {
-		apiObject.Value = aws.Int64(int64(v))
+		apiObject.Value = aws.Int32(int32(v))
 	}
 
 	return apiObject
@@ -815,17 +811,13 @@ func flattenSnaplockConfiguration(apiObject *awstypes.SnaplockConfiguration) map
 		tfMap["autocommit_period"] = []interface{}{flattenAutocommitPeriod(v)}
 	}
 
-	if v := apiObject.PrivilegedDelete; v != nil {
-		tfMap["privileged_delete"] = aws.ToString(v)
-	}
+	tfMap["privileged_delete"] = string(apiObject.PrivilegedDelete)
 
 	if v := apiObject.RetentionPeriod; v != nil {
 		tfMap[names.AttrRetentionPeriod] = []interface{}{flattenSnaplockRetentionPeriod(v)}
 	}
 
-	if v := apiObject.SnaplockType; v != nil {
-		tfMap["snaplock_type"] = aws.ToString(v)
-	}
+	tfMap["snaplock_type"] = string(apiObject.SnaplockType)
 
 	if v := apiObject.VolumeAppendModeEnabled; v != nil {
 		tfMap["volume_append_mode_enabled"] = aws.ToBool(v)
@@ -841,12 +833,10 @@ func flattenAutocommitPeriod(apiObject *awstypes.AutocommitPeriod) map[string]in
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Type; v != nil {
-		tfMap[names.AttrType] = aws.ToString(v)
-	}
+	tfMap[names.AttrType] = string(apiObject.Type)
 
 	if v := apiObject.Value; v != nil {
-		tfMap[names.AttrValue] = aws.ToInt64(v)
+		tfMap[names.AttrValue] = aws.ToInt32(v)
 	}
 
 	return tfMap
@@ -881,12 +871,10 @@ func flattenRetentionPeriod(apiObject *awstypes.RetentionPeriod) map[string]inte
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Type; v != nil {
-		tfMap[names.AttrType] = aws.ToString(v)
-	}
+	tfMap[names.AttrType] = string(apiObject.Type)
 
 	if v := apiObject.Value; v != nil {
-		tfMap[names.AttrValue] = aws.ToInt64(v)
+		tfMap[names.AttrValue] = aws.ToInt32(v)
 	}
 
 	return tfMap
@@ -911,56 +899,54 @@ func findVolumeByID(ctx context.Context, conn *fsx.Client, id string) (*awstypes
 		VolumeIds: []string{id},
 	}
 
-	return findVolume(ctx, conn, input, tfslices.PredicateTrue[*awstypes.Volume]())
+	return findVolume(ctx, conn, input, tfslices.PredicateTrue[awstypes.Volume]())
 }
 
-func findVolumeByIDAndType(ctx context.Context, conn *fsx.Client, volID, volType string) (*awstypes.Volume, error) {
+func findVolumeByIDAndType(ctx context.Context, conn *fsx.Client, volID string, volType awstypes.VolumeType) (*awstypes.Volume, error) {
 	input := &fsx.DescribeVolumesInput{
 		VolumeIds: []string{volID},
 	}
-	filter := func(fs *awstypes.Volume) bool {
-		return string(fs.VolumeType) == volType
+	filter := func(fs awstypes.Volume) bool {
+		return fs.VolumeType == volType
 	}
 
 	return findVolume(ctx, conn, input, filter)
 }
 
-func findVolume(ctx context.Context, conn *fsx.Client, input *fsx.DescribeVolumesInput, filter tfslices.Predicate[*awstypes.Volume]) (*awstypes.Volume, error) {
+func findVolume(ctx context.Context, conn *fsx.Client, input *fsx.DescribeVolumesInput, filter tfslices.Predicate[awstypes.Volume]) (*awstypes.Volume, error) {
 	output, err := findVolumes(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findVolumes(ctx context.Context, conn *fsx.Client, input *fsx.DescribeVolumesInput, filter tfslices.Predicate[*awstypes.Volume]) ([]*awstypes.Volume, error) {
-	var output []*awstypes.Volume
+func findVolumes(ctx context.Context, conn *fsx.Client, input *fsx.DescribeVolumesInput, filter tfslices.Predicate[awstypes.Volume]) ([]awstypes.Volume, error) {
+	var output []awstypes.Volume
 
-	err := conn.DescribeVolumesPagesWithContext(ctx, input, func(page *fsx.DescribeVolumesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := fsx.NewDescribeVolumesPaginator(conn, input)
 
-		for _, v := range page.Volumes {
-			if v != nil && filter(v) {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.VolumeNotFound](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeVolumeNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.Volumes {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
@@ -978,14 +964,14 @@ func statusVolume(ctx context.Context, conn *fsx.Client, id string) retry.StateR
 			return nil, "", err
 		}
 
-		return output, aws.ToString(output.Lifecycle), nil
+		return output, string(output.Lifecycle), nil
 	}
 }
 
 func waitVolumeCreated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.Volume, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.VolumeLifecycleCreating, awstypes.VolumeLifecyclePending},
-		Target:  []string{awstypes.VolumeLifecycleCreated, awstypes.VolumeLifecycleMisconfigured, awstypes.VolumeLifecycleAvailable},
+		Pending: enum.Slice(awstypes.VolumeLifecycleCreating, awstypes.VolumeLifecyclePending),
+		Target:  enum.Slice(awstypes.VolumeLifecycleCreated, awstypes.VolumeLifecycleMisconfigured, awstypes.VolumeLifecycleAvailable),
 		Refresh: statusVolume(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
@@ -994,8 +980,8 @@ func waitVolumeCreated(ctx context.Context, conn *fsx.Client, id string, timeout
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Volume); ok {
-		if status, reason := aws.ToString(output.Lifecycle), output.LifecycleTransitionReason; status == awstypes.VolumeLifecycleFailed && reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
+		if output.Lifecycle == awstypes.VolumeLifecycleFailed && output.LifecycleTransitionReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
 		}
 
 		return output, err
@@ -1006,8 +992,8 @@ func waitVolumeCreated(ctx context.Context, conn *fsx.Client, id string, timeout
 
 func waitVolumeUpdated(ctx context.Context, conn *fsx.Client, id string, startTime time.Time, timeout time.Duration) (*awstypes.Volume, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.VolumeLifecyclePending},
-		Target:  []string{awstypes.VolumeLifecycleCreated, awstypes.VolumeLifecycleMisconfigured, awstypes.VolumeLifecycleAvailable},
+		Pending: enum.Slice(awstypes.VolumeLifecyclePending),
+		Target:  enum.Slice(awstypes.VolumeLifecycleCreated, awstypes.VolumeLifecycleMisconfigured, awstypes.VolumeLifecycleAvailable),
 		Refresh: statusVolume(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   150 * time.Second,
@@ -1016,14 +1002,14 @@ func waitVolumeUpdated(ctx context.Context, conn *fsx.Client, id string, startTi
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Volume); ok {
-		switch status := aws.ToString(output.Lifecycle); status {
+		switch output.Lifecycle {
 		case awstypes.VolumeLifecycleFailed:
 			// Report any failed non-VOLUME_UPDATE administrative actions.
 			// See https://docs.aws.amazon.com/fsx/latest/APIReference/API_AdministrativeAction.html#FSx-Type-AdministrativeAction-AdministrativeActionType.
-			administrativeActions := tfslices.Filter(output.AdministrativeActions, func(v *awstypes.AdministrativeAction) bool {
-				return v != nil && string(v.Status) == awstypes.StatusFailed && string(v.AdministrativeActionType) != awstypes.AdministrativeActionTypeVolumeUpdate && v.FailureDetails != nil && startTime.Before(aws.TimeValue(v.RequestTime))
+			administrativeActions := tfslices.Filter(output.AdministrativeActions, func(v awstypes.AdministrativeAction) bool {
+				return v.Status == awstypes.StatusFailed && v.AdministrativeActionType != awstypes.AdministrativeActionTypeVolumeUpdate && v.FailureDetails != nil && startTime.Before(aws.ToTime(v.RequestTime))
 			})
-			administrativeActionsError := errors.Join(tfslices.ApplyToAll(administrativeActions, func(v *awstypes.AdministrativeAction) error {
+			administrativeActionsError := errors.Join(tfslices.ApplyToAll(administrativeActions, func(v awstypes.AdministrativeAction) error {
 				return fmt.Errorf("%s: %s", string(v.AdministrativeActionType), aws.ToString(v.FailureDetails.Message))
 			})...)
 
@@ -1046,7 +1032,7 @@ func waitVolumeUpdated(ctx context.Context, conn *fsx.Client, id string, startTi
 
 func waitVolumeDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.Volume, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.VolumeLifecycleCreated, awstypes.VolumeLifecycleMisconfigured, awstypes.VolumeLifecycleAvailable, awstypes.VolumeLifecycleDeleting},
+		Pending: enum.Slice(awstypes.VolumeLifecycleCreated, awstypes.VolumeLifecycleMisconfigured, awstypes.VolumeLifecycleAvailable, awstypes.VolumeLifecycleDeleting),
 		Target:  []string{},
 		Refresh: statusVolume(ctx, conn, id),
 		Timeout: timeout,
@@ -1056,8 +1042,8 @@ func waitVolumeDeleted(ctx context.Context, conn *fsx.Client, id string, timeout
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Volume); ok {
-		if status, reason := aws.ToString(output.Lifecycle), output.LifecycleTransitionReason; status == awstypes.VolumeLifecycleFailed && reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
+		if output.Lifecycle == awstypes.VolumeLifecycleFailed && output.LifecycleTransitionReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
 		}
 
 		return output, err
@@ -1066,28 +1052,24 @@ func waitVolumeDeleted(ctx context.Context, conn *fsx.Client, id string, timeout
 	return nil, err
 }
 
-func findVolumeAdministrativeAction(ctx context.Context, conn *fsx.Client, volID, actionType string) (*awstypes.AdministrativeAction, error) {
+func findVolumeAdministrativeAction(ctx context.Context, conn *fsx.Client, volID string, actionType awstypes.AdministrativeActionType) (awstypes.AdministrativeAction, error) {
 	output, err := findVolumeByID(ctx, conn, volID)
 
 	if err != nil {
-		return nil, err
+		return awstypes.AdministrativeAction{}, err
 	}
 
 	for _, v := range output.AdministrativeActions {
-		if v == nil {
-			continue
-		}
-
-		if string(v.AdministrativeActionType) == actionType {
+		if v.AdministrativeActionType == actionType {
 			return v, nil
 		}
 	}
 
 	// If the administrative action isn't found, assume it's complete.
-	return &awstypes.AdministrativeAction{Status: aws.String(awstypes.StatusCompleted)}, nil
+	return awstypes.AdministrativeAction{Status: awstypes.StatusCompleted}, nil
 }
 
-func statusVolumeAdministrativeAction(ctx context.Context, conn *fsx.Client, volID, actionType string) retry.StateRefreshFunc {
+func statusVolumeAdministrativeAction(ctx context.Context, conn *fsx.Client, volID string, actionType awstypes.AdministrativeActionType) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findVolumeAdministrativeAction(ctx, conn, volID, actionType)
 
@@ -1103,10 +1085,10 @@ func statusVolumeAdministrativeAction(ctx context.Context, conn *fsx.Client, vol
 	}
 }
 
-func waitVolumeAdministrativeActionCompleted(ctx context.Context, conn *fsx.Client, volID, actionType string, timeout time.Duration) (*awstypes.AdministrativeAction, error) { //nolint:unparam
+func waitVolumeAdministrativeActionCompleted(ctx context.Context, conn *fsx.Client, volID string, actionType awstypes.AdministrativeActionType, timeout time.Duration) (*awstypes.AdministrativeAction, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.StatusInProgress, awstypes.StatusPending},
-		Target:  []string{awstypes.StatusCompleted, awstypes.StatusUpdatedOptimizing},
+		Pending: enum.Slice(awstypes.StatusInProgress, awstypes.StatusPending),
+		Target:  enum.Slice(awstypes.StatusCompleted, awstypes.StatusUpdatedOptimizing),
 		Refresh: statusVolumeAdministrativeAction(ctx, conn, volID, actionType),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
@@ -1115,7 +1097,7 @@ func waitVolumeAdministrativeActionCompleted(ctx context.Context, conn *fsx.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.AdministrativeAction); ok {
-		if status, details := string(output.Status), output.FailureDetails; status == awstypes.StatusFailed && details != nil {
+		if output.Status == awstypes.StatusFailed && output.FailureDetails != nil {
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
