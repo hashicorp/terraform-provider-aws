@@ -389,7 +389,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if targetType != awstypes.TargetTypeEnumLambda {
 		input.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
-		input.Protocol = awstypes.ProtocolEnum(protocol)
+		input.Protocol = protocol
 		switch protocol {
 		case awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps:
 			input.ProtocolVersion = aws.String(d.Get("protocol_version").(string))
@@ -632,7 +632,7 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 			if targetType != awstypes.TargetTypeEnumLambda {
 				input.HealthCheckPort = aws.String(tfMap[names.AttrPort].(string))
-				input.HealthCheckProtocol = awstypes.ProtocolEnum(healthCheckProtocol)
+				input.HealthCheckProtocol = healthCheckProtocol
 			}
 
 			_, err := conn.ModifyTargetGroup(ctx, input)
@@ -694,7 +694,10 @@ func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting ELBv2 Target Group: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ResourceInUseException](ctx, 2*time.Minute, func() (interface{}, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ResourceInUseException](ctx, timeout, func() (interface{}, error) {
 		return conn.DeleteTargetGroup(ctx, &elasticloadbalancingv2.DeleteTargetGroupInput{
 			TargetGroupArn: aws.String(d.Id()),
 		})
