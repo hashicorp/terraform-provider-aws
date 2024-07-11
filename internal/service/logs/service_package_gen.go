@@ -48,6 +48,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceAccountPolicy,
 			TypeName: "aws_cloudwatch_log_account_policy",
+			Name:     "Account Policy",
 		},
 		{
 			Factory:  resourceDataProtectionPolicy,
