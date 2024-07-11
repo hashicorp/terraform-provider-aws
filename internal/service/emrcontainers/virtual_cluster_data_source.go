@@ -104,7 +104,7 @@ func dataSourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, m
 	} else {
 		d.Set("container_provider", nil)
 	}
-	d.Set(names.AttrCreatedAt, aws.TimeValue(vc.CreatedAt).String())
+	d.Set(names.AttrCreatedAt, aws.ToTime(vc.CreatedAt).String())
 	d.Set(names.AttrName, vc.Name)
 	d.Set(names.AttrState, vc.State)
 	d.Set("virtual_cluster_id", vc.Id)
