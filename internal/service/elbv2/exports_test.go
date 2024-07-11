@@ -5,13 +5,14 @@ package elbv2
 
 // Exports for use in tests only.
 var (
-	ResourceListener             = resourceListener
-	ResourceListenerCertificate  = resourceListenerCertificate
-	ResourceListenerRule         = resourceListenerRule
-	ResourceLoadBalancer         = resourceLoadBalancer
-	ResourceTargetGroup          = resourceTargetGroup
-	ResourceTrustStore           = resourceTrustStore
-	ResourceTrustStoreRevocation = resourceTrustStoreRevocation
+	ResourceListener              = resourceListener
+	ResourceListenerCertificate   = resourceListenerCertificate
+	ResourceListenerRule          = resourceListenerRule
+	ResourceLoadBalancer          = resourceLoadBalancer
+	ResourceTargetGroup           = resourceTargetGroup
+	ResourceTargetGroupAttachment = resourceTargetGroupAttachment
+	ResourceTrustStore            = resourceTrustStore
+	ResourceTrustStoreRevocation  = resourceTrustStoreRevocation
 
 	FindListenerByARN                    = findListenerByARN
 	FindListenerCertificateByTwoPartKey  = findListenerCertificateByTwoPartKey
@@ -19,6 +20,7 @@ var (
 	FindLoadBalancerAttributesByARN      = findLoadBalancerAttributesByARN
 	FindLoadBalancerByARN                = findLoadBalancerByARN
 	FindTargetGroupByARN                 = findTargetGroupByARN
+	FindTargetHealthDescription          = findTargetHealthDescription
 	FindTrustStoreByARN                  = findTrustStoreByARN
 	FindTrustStoreRevocationByTwoPartKey = findTrustStoreRevocationByTwoPartKey
 	HealthCheckProtocolEnumValues        = healthCheckProtocolEnumValues

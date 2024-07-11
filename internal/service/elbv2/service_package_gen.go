@@ -112,8 +112,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTargetGroupAttachment,
+			Factory:  resourceTargetGroupAttachment,
 			TypeName: "aws_alb_target_group_attachment",
+			Name:     "Target Group Attachment",
 		},
 		{
 			Factory:  resourceLoadBalancer,
@@ -153,8 +154,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTargetGroupAttachment,
+			Factory:  resourceTargetGroupAttachment,
 			TypeName: "aws_lb_target_group_attachment",
+			Name:     "Target Group Attachment",
 		},
 		{
 			Factory:  resourceTrustStore,
