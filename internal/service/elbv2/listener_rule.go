@@ -817,6 +817,10 @@ func highestListenerRulePriority(ctx context.Context, conn *elasticloadbalancing
 		return flex.StringToInt32Value(v.Priority)
 	})
 
+	if len(priorities) == 0 {
+		return 0, nil
+	}
+
 	return slices.Max(priorities), nil
 }
 
