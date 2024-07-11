@@ -30,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -828,14 +827,14 @@ func (m targetGroupAttributeMap) expand(d *schema.ResourceData, targetType awsty
 	return apiObjects
 }
 
-func (m targetGroupAttributeMap) flatten(d *schema.ResourceData, targetType awstypes.TargetTypeEnum, apiObjects []*awstypes.TargetGroupAttribute) {
+func (m targetGroupAttributeMap) flatten(d *schema.ResourceData, targetType awstypes.TargetTypeEnum, apiObjects []awstypes.TargetGroupAttribute) {
 	for tfAttributeName, attributeInfo := range m {
 		if !slices.Contains(attributeInfo.targetTypesSupported, targetType) {
 			continue
 		}
 
 		k := attributeInfo.apiAttributeKey
-		i := slices.IndexFunc(apiObjects, func(v *awstypes.TargetGroupAttribute) bool {
+		i := slices.IndexFunc(apiObjects, func(v awstypes.TargetGroupAttribute) bool {
 			return aws.ToString(v.Key) == k
 		})
 
@@ -930,7 +929,7 @@ func findTargetGroups(ctx context.Context, conn *elasticloadbalancingv2.Client, 
 	return output, nil
 }
 
-func findTargetGroupAttributesByARN(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) ([]*awstypes.TargetGroupAttribute, error) {
+func findTargetGroupAttributesByARN(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) ([]awstypes.TargetGroupAttribute, error) {
 	input := &elasticloadbalancingv2.DescribeTargetGroupAttributesInput{
 		TargetGroupArn: aws.String(arn),
 	}
@@ -952,7 +951,7 @@ func findTargetGroupAttributesByARN(ctx context.Context, conn *elasticloadbalanc
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return tfslices.ToPointers(output.Attributes), nil
+	return output.Attributes, nil
 }
 
 func validTargetGroupHealthCheckPort(v interface{}, k string) (ws []string, errors []error) {
@@ -1162,7 +1161,7 @@ func expandTargetGroupStickinessAttributes(tfMap map[string]interface{}, protoco
 	return apiObjects
 }
 
-func flattenTargetGroupStickinessAttributes(apiObjects []*awstypes.TargetGroupAttribute, protocol awstypes.ProtocolEnum) map[string]interface{} {
+func flattenTargetGroupStickinessAttributes(apiObjects []awstypes.TargetGroupAttribute, protocol awstypes.ProtocolEnum) map[string]interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1221,7 +1220,7 @@ func expandTargetGroupTargetFailoverAttributes(tfMap map[string]interface{}, pro
 	return apiObjects
 }
 
-func flattenTargetGroupTargetFailoverAttributes(apiObjects []*awstypes.TargetGroupAttribute, protocol awstypes.ProtocolEnum) map[string]interface{} {
+func flattenTargetGroupTargetFailoverAttributes(apiObjects []awstypes.TargetGroupAttribute, protocol awstypes.ProtocolEnum) map[string]interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1262,7 +1261,7 @@ func expandTargetGroupTargetHealthStateAttributes(tfMap map[string]interface{}, 
 	return apiObjects
 }
 
-func flattenTargetGroupTargetHealthStateAttributes(apiObjects []*awstypes.TargetGroupAttribute, protocol awstypes.ProtocolEnum) map[string]interface{} {
+func flattenTargetGroupTargetHealthStateAttributes(apiObjects []awstypes.TargetGroupAttribute, protocol awstypes.ProtocolEnum) map[string]interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
