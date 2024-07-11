@@ -52,13 +52,9 @@ func (d *servicePrincipalDataSource) Schema(ctx context.Context, request datasou
 	}
 }
 
-// Read is called when the provider must read data source values in order to update state.
-// Config values should be read from the ReadRequest and new state values set on the ReadResponse.
 func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data dataSourceServicePrincipalData
-
+	var data servicePrincipalDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -108,7 +104,7 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dataSourceServicePrincipalData struct {
+type servicePrincipalDataSourceModel struct {
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	Region      types.String `tfsdk:"region"`
