@@ -124,7 +124,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.19.3
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.52.3
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.12.3
-	github.com/aws/aws-sdk-go-v2/service/kinesis v1.29.1
+	github.com/aws/aws-sdk-go-v2/service/kinesis v1.29.3
 	github.com/aws/aws-sdk-go-v2/service/kms v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.56.1
