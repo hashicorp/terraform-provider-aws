@@ -147,7 +147,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.30.2
-	github.com/aws/aws-sdk-go-v2/service/osis v1.12.1
+	github.com/aws/aws-sdk-go-v2/service/osis v1.12.3
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.12.1
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.7.1
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.14.1
