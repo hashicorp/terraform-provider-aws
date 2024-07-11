@@ -13,8 +13,8 @@ Terraform resource for managing an Amazon DataZone Project.
 
 ```terraform
 resource "aws_datazone_project" "test" {
-  domain_id           = aws_datazone_domain.test.id
-  name                = "name"
+  domain_id = aws_datazone_domain.test.id
+  name      = "name"
 }
 ```
 
