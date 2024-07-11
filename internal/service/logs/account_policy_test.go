@@ -267,7 +267,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
- role       = aws_iam_role.test.name
+  role       = aws_iam_role.test.name
 }
 
 resource "aws_lambda_function" "test" {
@@ -311,7 +311,7 @@ resource "aws_cloudwatch_log_account_policy" "test" {
   policy_document = jsonencode({
     DestinationArn = "${aws_lambda_function.test.arn}"
     FilterPattern  = " "
-    Distribution  = "Random"
+    Distribution   = "Random"
   })
 
   selection_criteria = %[2]q
@@ -324,7 +324,7 @@ func testAccAccountPolicyConfig_basicDataProtection(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_cloudwatch_log_group" "test" {
- name              = %[1]q
+  name              = %[1]q
   retention_in_days = 1
 }
 
