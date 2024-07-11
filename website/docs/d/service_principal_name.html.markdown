@@ -23,7 +23,7 @@ data "aws_service_principal" "current" {
 
 data "aws_service_principal" "test" {
   service_name = "s3"
-  region = "us-iso-east-1"
+  region       = "us-iso-east-1"
 }
 ```
 
