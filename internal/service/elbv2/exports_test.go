@@ -19,7 +19,6 @@ var (
 	FindListenerRuleByARN                = findListenerRuleByARN
 	FindLoadBalancerAttributesByARN      = findLoadBalancerAttributesByARN
 	FindLoadBalancerByARN                = findLoadBalancerByARN
-	FindTargetGroupByARN                 = findTargetGroupByARN
 	FindTargetHealthDescription          = findTargetHealthDescription
 	FindTrustStoreByARN                  = findTrustStoreByARN
 	FindTrustStoreRevocationByTwoPartKey = findTrustStoreRevocationByTwoPartKey
