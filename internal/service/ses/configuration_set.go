@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -47,10 +48,10 @@ func ResourceConfigurationSet() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"tls_policy": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      awstypes.TlsPolicyOptional,
-							ValidateFunc: enum.Validate[awstypes.TlsPolicy](),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.TlsPolicyOptional,
+							ValidateDiagFunc: enum.Validate[awstypes.TlsPolicy](),
 						},
 					},
 				},
@@ -127,7 +128,7 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 	if v := d.Get("reputation_metrics_enabled"); v.(bool) {
 		input := &ses.UpdateConfigurationSetReputationMetricsEnabledInput{
 			ConfigurationSetName: aws.String(configurationSetName),
-			Enabled:              aws.Bool(v.(bool)),
+			Enabled:              aws.ToBool(v.(*bool)),
 		}
 
 		_, err := conn.UpdateConfigurationSetReputationMetricsEnabled(ctx, input)
@@ -139,7 +140,7 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 	if v := d.Get("sending_enabled"); !v.(bool) {
 		input := &ses.UpdateConfigurationSetSendingEnabledInput{
 			ConfigurationSetName: aws.String(configurationSetName),
-			Enabled:              aws.Bool(v.(bool)),
+			Enabled:              aws.ToBool(v.(*bool)),
 		}
 
 		_, err := conn.UpdateConfigurationSetSendingEnabled(ctx, input)
@@ -169,16 +170,16 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 
 	configSetInput := &ses.DescribeConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Id()),
-		ConfigurationSetAttributeNames: aws.StringSlice([]string{
+		ConfigurationSetAttributeNames: []awstypes.ConfigurationSetAttribute{
 			awstypes.ConfigurationSetAttributeDeliveryOptions,
 			awstypes.ConfigurationSetAttributeReputationOptions,
 			awstypes.ConfigurationSetAttributeTrackingOptions,
-		}),
+		},
 	}
 
 	response, err := conn.DescribeConfigurationSet(ctx, configSetInput)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, awstypes.ErrCodeConfigurationSetDoesNotExistException) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.ConfigurationSetDoesNotExistException](err) {
 		log.Printf("[WARN] SES Configuration Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -202,7 +203,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 	if repOpts != nil {
 		d.Set("reputation_metrics_enabled", repOpts.ReputationMetricsEnabled)
 		d.Set("sending_enabled", repOpts.SendingEnabled)
-		d.Set("last_fresh_start", aws.TimeValue(repOpts.LastFreshStart).Format(time.RFC3339))
+		d.Set("last_fresh_start", aws.ToTime(repOpts.LastFreshStart).Format(time.RFC3339))
 	}
 
 	arn := arn.ARN{
@@ -236,7 +237,7 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 	if d.HasChange("reputation_metrics_enabled") {
 		input := &ses.UpdateConfigurationSetReputationMetricsEnabledInput{
 			ConfigurationSetName: aws.String(d.Id()),
-			Enabled:              aws.Bool(d.Get("reputation_metrics_enabled").(bool)),
+			Enabled:              aws.ToBool(d.Get("reputation_metrics_enabled").(*bool)),
 		}
 
 		_, err := conn.UpdateConfigurationSetReputationMetricsEnabled(ctx, input)
@@ -248,7 +249,7 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 	if d.HasChange("sending_enabled") {
 		input := &ses.UpdateConfigurationSetSendingEnabledInput{
 			ConfigurationSetName: aws.String(d.Id()),
-			Enabled:              aws.Bool(d.Get("sending_enabled").(bool)),
+			Enabled:              aws.ToBool(d.Get("sending_enabled").(*bool)),
 		}
 
 		_, err := conn.UpdateConfigurationSetSendingEnabled(ctx, input)
@@ -282,7 +283,7 @@ func resourceConfigurationSetDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if _, err := conn.DeleteConfigurationSet(ctx, input); err != nil {
-		if !tfawserr.ErrCodeEquals(err, awstypes.ErrCodeConfigurationSetDoesNotExistException) {
+		if errs.IsA[*awstypes.ConfigurationSetDoesNotExistException](err) {
 			return sdkdiag.AppendErrorf(diags, "deleting SES Configuration Set (%s): %s", d.Id(), err)
 		}
 	}
