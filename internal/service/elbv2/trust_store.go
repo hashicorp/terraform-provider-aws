@@ -370,7 +370,7 @@ func statusTrustStore(ctx context.Context, conn *elbv2.ELBV2, arn string) retry.
 	}
 }
 
-func waitTrustStoreActive(ctx context.Context, conn *elbv2.ELBV2, arn string, timeout time.Duration) (*elbv2.TrustStore, error) { //nolint:unparam
+func waitTrustStoreActive(ctx context.Context, conn *elbv2.ELBV2, arn string, timeout time.Duration) (*elbv2.TrustStore, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{elbv2.TrustStoreStatusCreating},
 		Target:     []string{elbv2.TrustStoreStatusActive},
