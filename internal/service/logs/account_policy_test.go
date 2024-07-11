@@ -96,7 +96,7 @@ func TestAccLogsAccountPolicy_basicDataProtection(t *testing.T) {
 		}
 	]
 }
-`),
+`), //lintignore:AWSAT005
 				),
 			},
 			{
