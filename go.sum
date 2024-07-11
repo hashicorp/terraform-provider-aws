@@ -216,8 +216,8 @@ github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.33.3 h1:yiBmRRlVw
 github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.33.3/go.mod h1:L5bVuO4PeXuDuMYZfL3IW69E6mz6PDCYpp6IKDlcLMA=
 github.com/aws/aws-sdk-go-v2/service/emr v1.42.2 h1:j3aHjEsxFGCNGOCJjJM6AtPhdvn1pw2i2hGqxLU0qeI=
 github.com/aws/aws-sdk-go-v2/service/emr v1.42.2/go.mod h1:rN91rXF7gucnSnArDWbv9xDdZjBEetO4LFoJgGK/Wqw=
-github.com/aws/aws-sdk-go-v2/service/emrserverless v1.23.1 h1:rIk+siZNs0c7EV9wh+IfE2jQXq9cxZNQ/JFSV83fVQU=
-github.com/aws/aws-sdk-go-v2/service/emrserverless v1.23.1/go.mod h1:VvEUSAlhzMaoix/TUi5I4WVMb8NxrDnZVsIYiIPH3gQ=
+github.com/aws/aws-sdk-go-v2/service/emrserverless v1.23.3 h1:zxpxkpY1h+kPWquiUSG8u2CJ3AtEJPqqBqiMKxLwPjI=
+github.com/aws/aws-sdk-go-v2/service/emrserverless v1.23.3/go.mod h1:9+NjcAre2lLrpGvCrb9V+TUDii5D+Z8xER/vCPZdZFg=
 github.com/aws/aws-sdk-go-v2/service/eventbridge v1.33.1 h1:3PRnz+WV+Bc5d9Gx98RvYYJQ32P0KlRUrHMULi3/kjw=
 github.com/aws/aws-sdk-go-v2/service/eventbridge v1.33.1/go.mod h1:v4y6Klv2BhCY5bysrjNWKfZc1OSmc7x+fhTg4Bc42KY=
 github.com/aws/aws-sdk-go-v2/service/evidently v1.21.1 h1:7X0M3cccUpUg4UY0vCtI1WXyHLJIN6Loaxj1hcO0LZ0=
