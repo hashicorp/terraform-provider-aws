@@ -13,4 +13,8 @@ var (
 	FindModelInvocationLoggingConfiguration = findModelInvocationLoggingConfiguration
 	FindProvisionedModelThroughputByID      = findProvisionedModelThroughputByID
 	WaitModelCustomizationJobCompleted      = waitModelCustomizationJobCompleted
+
+	ResourceGuardrail = newResourceGuardrail
+
+	FindGuardrailByID = findGuardrailByID
 )

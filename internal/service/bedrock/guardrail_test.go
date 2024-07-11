@@ -3,300 +3,344 @@
 
 package bedrock_test
 
-// // **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-// //
-// // TIP: ==== INTRODUCTION ====
-// // Thank you for trying the skaff tool!
-// //
-// // You have opted to include these helpful comments. They all include "TIP:"
-// // to help you find and remove them when you're done with them.
-// //
-// // While some aspects of this file are customized to your input, the
-// // scaffold tool does *not* look at the AWS API and ensure it has correct
-// // function, structure, and variable names. It makes guesses based on
-// // commonalities. You will need to make significant adjustments.
-// //
-// // In other words, as generated, this is a rough outline of the work you will
-// // need to do. If something doesn't make sense for your situation, get rid of
-// // it.
+import (
+	"context"
+	"errors"
+	"fmt"
+	"testing"
 
-// import (
-// 	// TIP: ==== IMPORTS ====
-// 	// This is a common set of imports but not customized to your code since
-// 	// your code hasn't been written yet. Make sure you, your IDE, or
-// 	// goimports -w <file> fixes these imports.
-// 	//
-// 	// The provider linter wants your imports to be in two groups: first,
-// 	// standard library (i.e., "fmt" or "strings"), second, everything else.
-// 	//
-// 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-// 	// using the services/bedrock/types package. If so, you'll
-// 	// need to import types and reference the nested types, e.g., as
-// 	// types.<Type Name>.
-// 	"context"
-// 	"errors"
-// 	"fmt"
-// 	"testing"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/bedrock"
+	"github.com/aws/aws-sdk-go-v2/service/bedrock/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
 
-// 	"github.com/YakDriver/regexache"
+func TestAccBedrockGuardrail_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	// TIP: This is a long-running test guard for tests that run longer than
+	// 300s (5 min) generally.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
-// 	"github.com/aws/aws-sdk-go-v2/aws"
-// 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
-// 	"github.com/aws/aws-sdk-go-v2/service/bedrock/types"
-// 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
-// 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-// 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-// 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-// 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-// 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-// 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-// 	"github.com/hashicorp/terraform-provider-aws/names"
+	var guardrail bedrock.GetGuardrailOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_guardrail.test"
 
-// 	// TIP: You will often need to import the package that this test file lives
-// 	// in. Since it is in the "test" context, it must import the package to use
-// 	// any normal context constants, variables, or functions.
-// 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
-// )
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGuardrailDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardrailConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
+					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.#", acctest.Ct2),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckNoResourceAttr(resourceName, "kms_key_arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "version", "DRAFT"),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.#", acctest.Ct1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportStateIdFunc:       testAccGuardrailImportStateIDFunc(ctx, resourceName),
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
 
-// // TIP: File Structure. The basic outline for all test files should be as
-// // follows. Improve this resource's maintainability by following this
-// // outline.
-// //
-// // 1. Package declaration (add "_test" since this is a test file)
-// // 2. Imports
-// // 3. Unit tests
-// // 4. Basic test
-// // 5. Disappears test
-// // 6. All the other tests
-// // 7. Helper functions (exists, destroy, check, etc.)
-// // 8. Functions that return Terraform configurations
+func TestAccBedrockGuardrail_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
-// // TIP: ==== UNIT TESTS ====
-// // This is an example of a unit test. Its name is not prefixed with
-// // "TestAcc" like an acceptance test.
-// //
-// // Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// // function (or method). Because of this, they are quick and cheap to run.
-// //
-// // In designing a resource's implementation, isolate complex bits from AWS bits
-// // so that they can be tested through a unit test. We encourage more unit tests
-// // in the provider.
-// //
-// // Cut and dry functions using well-used patterns, like typical flatteners and
-// // expanders, don't need unit testing. However, if they are complex or
-// // intricate, they should be unit tested.
-// func TestGuardrailExampleUnitTest(t *testing.T) {
-// 	t.Parallel()
+	var guardrail bedrock.GetGuardrailOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_guardrail.test"
 
-// 	testCases := []struct {
-// 		TestName string
-// 		Input    string
-// 		Expected string
-// 		Error    bool
-// 	}{
-// 		{
-// 			TestName: "empty",
-// 			Input:    "",
-// 			Expected: "",
-// 			Error:    true,
-// 		},
-// 		{
-// 			TestName: "descriptive name",
-// 			Input:    "some input",
-// 			Expected: "some output",
-// 			Error:    false,
-// 		},
-// 		{
-// 			TestName: "another descriptive name",
-// 			Input:    "more input",
-// 			Expected: "more output",
-// 			Error:    false,
-// 		},
-// 	}
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGuardrailDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardrailConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceGuardrail, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
-// 	for _, testCase := range testCases {
-// 		testCase := testCase
-// 		t.Run(testCase.TestName, func(t *testing.T) {
-// 			t.Parallel()
-// 			got, err := tfbedrock.FunctionFromResource(testCase.Input)
+func TestAccBedrockGuardrail_kmsKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_guardrail.test"
+	var guardrail bedrock.GetGuardrailOutput
 
-// 			if err != nil && !testCase.Error {
-// 				t.Errorf("got error (%s), expected no error", err)
-// 			}
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGuardrailDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardrailConfig_kmsKey(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
+					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportStateIdFunc:       testAccGuardrailImportStateIDFunc(ctx, resourceName),
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
 
-// 			if err == nil && testCase.Error {
-// 				t.Errorf("got (%s) and no error, expected error", got)
-// 			}
+func TestAccBedrockGuardrail_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_guardrail.test"
+	var guardrail bedrock.GetGuardrailOutput
 
-// 			if got != testCase.Expected {
-// 				t.Errorf("got %s, expected %s", got, testCase.Expected)
-// 			}
-// 		})
-// 	}
-// }
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGuardrailDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardrailConfig_tags(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccGuardrailConfig_tags(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue1Updated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue1Updated),
+				),
+			},
+		},
+	})
+}
 
-// // TIP: ==== ACCEPTANCE TESTS ====
-// // This is an example of a basic acceptance test. This should test as much of
-// // standard functionality of the resource as possible, and test importing, if
-// // applicable. We prefix its name with "TestAcc", the service, and the
-// // resource name.
-// //
-// // Acceptance test access AWS and cost money to run.
-// func TestAccBedrockGuardrail_basic(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	// TIP: This is a long-running test guard for tests that run longer than
-// 	// 300s (5 min) generally.
-// 	if testing.Short() {
-// 		t.Skip("skipping long-running test in short mode")
-// 	}
+func TestAccBedrockGuardrail_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_guardrail.test"
+	var guardrail bedrock.GetGuardrailOutput
 
-// 	var guardrail bedrock.DescribeGuardrailResponse
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	resourceName := "aws_bedrock_guardrail.test"
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGuardrailDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardrailConfig_wordConfig_only(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
+					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "version", "DRAFT"),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.#", acctest.Ct1),
+				),
+			},
+			{
+				Config: testAccGuardrailConfig_update(rName, "test", "test", "MEDIUM", "^\\d{3}-\\d{2}-\\d{4}$", "NAME", "investment_topic", "HATE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
+					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "test"),
+					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_strength", "MEDIUM"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.0.pattern", "^\\d{3}-\\d{2}-\\d{4}$"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.0.type", "NAME"),
+					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.0.name", "investment_topic"),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.text", "HATE"),
+				),
+			},
+			{
+				Config: testAccGuardrailConfig_update(rName, "update", "update", "HIGH", "^\\d{4}-\\d{2}-\\d{4}$", "USERNAME", "earnings_topic", "HATRED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
+					resource.TestCheckResourceAttr(resourceName, "blocked_input_messaging", "update"),
+					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "update"),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.0.input_strength", "HIGH"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.0.pattern", "^\\d{4}-\\d{2}-\\d{4}$"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.0.type", "USERNAME"),
+					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.0.name", "earnings_topic"),
+					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.text", "HATRED"),
+				),
+			},
+		},
+	})
+}
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(ctx, t)
-// 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-// 			testAccPreCheck(ctx, t)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckGuardrailDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccGuardrailConfig_basic(rName),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
-// 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-// 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-// 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-// 						"console_access": "false",
-// 						"groups.#":       "0",
-// 						"username":       "Test",
-// 						"password":       "TestTest1234",
-// 					}),
-// 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "bedrock", regexache.MustCompile(`guardrail:+.`)),
-// 				),
-// 			},
-// 			{
-// 				ResourceName:            resourceName,
-// 				ImportState:             true,
-// 				ImportStateVerify:       true,
-// 				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
-// 			},
-// 		},
-// 	})
-// }
+func testAccGuardrailImportStateIDFunc(ctx context.Context, n string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", n)
+		}
 
-// func TestAccBedrockGuardrail_disappears(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	if testing.Short() {
-// 		t.Skip("skipping long-running test in short mode")
-// 	}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
 
-// 	var guardrail bedrock.DescribeGuardrailResponse
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	resourceName := "aws_bedrock_guardrail.test"
+		version := rs.Primary.Attributes[names.AttrVersion]
+		id := rs.Primary.ID
+		_, err := tfbedrock.FindGuardrailByID(ctx, conn, id, version)
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(ctx, t)
-// 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-// 			testAccPreCheck(t)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckGuardrailDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccGuardrailConfig_basic(rName, testAccGuardrailVersionNewer),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
-// 					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-// 					// but expects a new resource factory function as the third argument. To expose this
-// 					// private function to the testing package, you may need to add a line like the following
-// 					// to exports_test.go:
-// 					//
-// 					//   var ResourceGuardrail = newResourceGuardrail
-// 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceGuardrail, resourceName),
-// 				),
-// 				ExpectNonEmptyPlan: true,
-// 			},
-// 		},
-// 	})
-// }
+		if err != nil {
+			return "", err
+		}
 
-// func testAccCheckGuardrailDestroy(ctx context.Context) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+		return fmt.Sprintf("%s:%s", id, version), nil
+	}
+}
 
-// 		for _, rs := range s.RootModule().Resources {
-// 			if rs.Type != "aws_bedrock_guardrail" {
-// 				continue
-// 			}
+func testAccCheckGuardrailDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
 
-// 			input := &bedrock.DescribeGuardrailInput{
-// 				GuardrailId: aws.String(rs.Primary.ID),
-// 			}
-// 			_, err := conn.DescribeGuardrail(ctx, &bedrock.DescribeGuardrailInput{
-// 				GuardrailId: aws.String(rs.Primary.ID),
-// 			})
-// 			if errs.IsA[*types.ResourceNotFoundException](err) {
-// 				return nil
-// 			}
-// 			if err != nil {
-// 				return create.Error(names.Bedrock, create.ErrActionCheckingDestroyed, tfbedrock.ResNameGuardrail, rs.Primary.ID, err)
-// 			}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_bedrock_guardrail" {
+				continue
+			}
 
-// 			return create.Error(names.Bedrock, create.ErrActionCheckingDestroyed, tfbedrock.ResNameGuardrail, rs.Primary.ID, errors.New("not destroyed"))
-// 		}
+			_, err := conn.GetGuardrail(ctx, &bedrock.GetGuardrailInput{
+				GuardrailIdentifier: aws.String(rs.Primary.ID),
+				GuardrailVersion:    aws.String(rs.Primary.Attributes[names.AttrVersion]),
+			})
+			if errs.IsA[*types.ResourceNotFoundException](err) {
+				return nil
+			}
+			if err != nil {
+				return create.Error(names.Bedrock, create.ErrActionCheckingDestroyed, tfbedrock.ResNameGuardrail, rs.Primary.ID, err)
+			}
 
-// 		return nil
-// 	}
-// }
+			return create.Error(names.Bedrock, create.ErrActionCheckingDestroyed, tfbedrock.ResNameGuardrail, rs.Primary.ID, errors.New("not destroyed"))
+		}
 
-// func testAccCheckGuardrailExists(ctx context.Context, name string, guardrail *bedrock.DescribeGuardrailResponse) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		rs, ok := s.RootModule().Resources[name]
-// 		if !ok {
-// 			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameGuardrail, name, errors.New("not found"))
-// 		}
+		return nil
+	}
+}
 
-// 		if rs.Primary.ID == "" {
-// 			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameGuardrail, name, errors.New("not set"))
-// 		}
+func testAccCheckGuardrailExists(ctx context.Context, name string, guardrail *bedrock.GetGuardrailOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameGuardrail, name, errors.New("not found"))
+		}
 
-// 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
-// 		resp, err := conn.DescribeGuardrail(ctx, &bedrock.DescribeGuardrailInput{
-// 			GuardrailId: aws.String(rs.Primary.ID),
-// 		})
+		if rs.Primary.ID == "" {
+			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameGuardrail, name, errors.New("not set"))
+		}
 
-// 		if err != nil {
-// 			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameGuardrail, rs.Primary.ID, err)
-// 		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+		resp, err := conn.GetGuardrail(ctx, &bedrock.GetGuardrailInput{
+			GuardrailIdentifier: aws.String(rs.Primary.ID),
+			GuardrailVersion:    aws.String(rs.Primary.Attributes[names.AttrVersion]),
+		})
 
-// 		*guardrail = *resp
+		if err != nil {
+			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameGuardrail, rs.Primary.ID, err)
+		}
 
-// 		return nil
-// 	}
-// }
+		*guardrail = *resp
 
-// func testAccPreCheck(ctx context.Context, t *testing.T) {
-// 	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+		return nil
+	}
+}
 
-// 	input := &bedrock.ListGuardrailsInput{}
-// 	_, err := conn.ListGuardrails(ctx, input)
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
 
-// 	if acctest.PreCheckSkipError(err) {
-// 		t.Skipf("skipping acceptance testing: %s", err)
-// 	}
-// 	if err != nil {
-// 		t.Fatalf("unexpected PreCheck error: %s", err)
-// 	}
-// }
+	input := &bedrock.ListGuardrailsInput{}
+	_, err := conn.ListGuardrails(ctx, input)
 
-// func testAccCheckGuardrailNotRecreated(before, after *bedrock.DescribeGuardrailResponse) resource.TestCheckFunc {
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+// func testAccCheckGuardrailNotRecreated(before, after *bedrock.GetGuardrailOutput) resource.TestCheckFunc {
 // 	return func(s *terraform.State) error {
 // 		if before, after := aws.ToString(before.GuardrailId), aws.ToString(after.GuardrailId); before != after {
 // 			return create.Error(names.Bedrock, create.ErrActionCheckingNotRecreated, tfbedrock.ResNameGuardrail, aws.ToString(before.GuardrailId), errors.New("recreated"))
@@ -306,29 +350,232 @@ package bedrock_test
 // 	}
 // }
 
-// func testAccGuardrailConfig_basic(rName, version string) string {
-// 	return fmt.Sprintf(`
-// resource "aws_security_group" "test" {
-//   name = %[1]q
-// }
+func testAccGuardrailConfig_basic(rName string) string {
+	return fmt.Sprintf(`
 
-// resource "aws_bedrock_guardrail" "test" {
-//   guardrail_name             = %[1]q
-//   engine_type             = "ActiveBedrock"
-//   engine_version          = %[2]q
-//   host_instance_type      = "bedrock.t2.micro"
-//   security_groups         = [aws_security_group.test.id]
-//   authentication_strategy = "simple"
-//   storage_type            = "efs"
+resource "aws_bedrock_guardrail" "test" {
+  name                      = %[1]q
+  blocked_input_messaging   = "test"
+  blocked_outputs_messaging = "test"
+  description               = "test"
+  content_policy_config {
+    filters_config {
+      input_strength  = "MEDIUM"
+      output_strength = "MEDIUM"
+      type            = "HATE"
+    }
+    filters_config {
+      input_strength  = "HIGH"
+      output_strength = "HIGH"
+      type            = "VIOLENCE"
+    }
+  }
+  contextual_grounding_policy_config {
+    filters_config {
+      threshold  = 0.4
+      type       = "GROUNDING"
+    }
+  }
+  sensitive_information_policy_config {
+    pii_entities_config {
+      action = "BLOCK"
+      type   = "NAME"
+    }
+    pii_entities_config {
+      action = "BLOCK"
+      type   = "DRIVER_ID"
+    }
+    pii_entities_config {
+      action = "ANONYMIZE"
+      type   = "USERNAME"
+    }
 
-//   logs {
-//     general = true
-//   }
+    regexes_config {
+      action      = "BLOCK"
+      description = "example regex"
+      name        = "regex_example"
+      pattern     = "^\\d{3}-\\d{2}-\\d{4}$"
+    }
+  }
+  topic_policy_config {
+    topics_config {
+      name       = "investment_topic"
+      examples   = ["Where should I invest my money ?"]
+      type       = "DENY"
+      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
+    }
+  }
+  word_policy_config {
+    managed_word_lists_config {
+      type = "PROFANITY"
+    }
+    words_config {
+      text = "HATE"
+    }
+  }
+  tags = {
+    "Modified By" = "terraform"
+  }
+}
+`, rName)
+}
 
-//   user {
-//     username = "Test"
-//     password = "TestTest1234"
-//   }
-// }
-// `, rName, version)
-// }
+func testAccGuardrailConfig_kmsKey(rName string) string {
+	return acctest.ConfigCompose(testAccCustomModelConfig_base(rName), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_bedrock_guardrail" "test" {
+  name                      = %[1]q
+  blocked_input_messaging   = "test"
+  blocked_outputs_messaging = "test"
+  description               = "test"
+  kms_key_arn   			= aws_kms_key.test.arn
+  content_policy_config {
+    filters_config {
+      input_strength  = "MEDIUM"
+      output_strength = "MEDIUM"
+      type            = "HATE"
+    }
+    filters_config {
+      input_strength  = "HIGH"
+      output_strength = "HIGH"
+      type            = "VIOLENCE"
+    }
+  }
+  word_policy_config {
+    managed_word_lists_config {
+      type = "PROFANITY"
+    }
+    words_config {
+      text = "HATE"
+    }
+  }
+  tags = {
+    "Modified By" = "terraform"
+  }
+}
+`, rName))
+}
+
+func testAccGuardrailConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccCustomModelConfig_base(rName), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_bedrock_guardrail" "test" {
+  name                      = %[1]q
+  blocked_input_messaging   = "test"
+  blocked_outputs_messaging = "test"
+  description               = "test"
+  kms_key_arn   			= aws_kms_key.test.arn
+  content_policy_config {
+    filters_config {
+      input_strength  = "MEDIUM"
+      output_strength = "MEDIUM"
+      type            = "HATE"
+    }
+    filters_config {
+      input_strength  = "HIGH"
+      output_strength = "HIGH"
+      type            = "VIOLENCE"
+    }
+  }
+  word_policy_config {
+    managed_word_lists_config {
+      type = "PROFANITY"
+    }
+    words_config {
+      text = "HATE"
+    }
+  }
+  tags = {
+    %[2]q = %[3]q
+	%[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccGuardrailConfig_update(rName, blockedInputMessaging, blockedOutputMessaging, inputStrength, regexPattern, piiType, topicName, wordConfig string) string {
+	return fmt.Sprintf(`
+
+resource "aws_bedrock_guardrail" "test" {
+  name                      = %[1]q
+  blocked_input_messaging   = %[2]q
+  blocked_outputs_messaging = %[3]q
+  description               = "test"
+  content_policy_config {
+    filters_config {
+      input_strength  = %[4]q
+      output_strength = "MEDIUM"
+      type            = "HATE"
+    }
+  }
+  sensitive_information_policy_config {
+    pii_entities_config {
+      action = "BLOCK"
+      type   = %[6]q
+    }
+
+    regexes_config {
+      action      = "BLOCK"
+      description = "example regex"
+      name        = "regex_example"
+      pattern     = %[5]q
+    }
+  }
+  topic_policy_config {
+    topics_config {
+      name       = %[7]q
+      examples   = ["Where should I invest my money ?"]
+      type       = "DENY"
+      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
+    }
+  }
+  word_policy_config {
+    managed_word_lists_config {
+      type = "PROFANITY"
+    }
+    words_config {
+      text = %[8]q
+    }
+  }
+  tags = {
+    "Modified By" = "terraform"
+  }
+}
+`, rName, blockedInputMessaging, blockedOutputMessaging, inputStrength, regexPattern, piiType, topicName, wordConfig)
+}
+
+func testAccGuardrailConfig_wordConfig_only(rName string) string {
+	return acctest.ConfigCompose(testAccCustomModelConfig_base(rName), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_bedrock_guardrail" "test" {
+  name                      = %[1]q
+  blocked_input_messaging   = "test"
+  blocked_outputs_messaging = "test"
+  description               = "test"
+  kms_key_arn   			= aws_kms_key.test.arn
+  word_policy_config {
+    managed_word_lists_config {
+      type = "PROFANITY"
+    }
+    words_config {
+      text = "HATE"
+    }
+  }
+  tags = {
+    "Modified By" = "terraform"
+  }
+}
+`, rName))
+}
