@@ -8,7 +8,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -187,10 +186,10 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 47),
 			},
 			"root_volume_security_style": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: enum.Validate[awstypes.StorageVirtualMachineRootVolumeSecurityStyle](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.StorageVirtualMachineRootVolumeSecurityStyle](),
 			},
 			"subtype": {
 				Type:     schema.TypeString,

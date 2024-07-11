@@ -11,7 +11,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -49,7 +48,7 @@ func TestAccFSxONTAPStorageVirtualMachine_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.nfs.0.dns_name"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrFileSystemID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "subtype", awstypes.StorageVirtualMachineSubtypeDefault),
+					resource.TestCheckResourceAttr(resourceName, "subtype", string(awstypes.StorageVirtualMachineSubtypeDefault)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
 				),

@@ -47,14 +47,14 @@ func dataSourceONTAPStorageVirtualMachinesRead(ctx context.Context, d *schema.Re
 		input.Filters = nil
 	}
 
-	svms, err := findStorageVirtualMachines(ctx, conn, input, tfslices.PredicateTrue[*awstypes.StorageVirtualMachine]())
+	svms, err := findStorageVirtualMachines(ctx, conn, input, tfslices.PredicateTrue[awstypes.StorageVirtualMachine]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading FSx ONTAP Storage Virtual Machines: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set(names.AttrIDs, tfslices.ApplyToAll(svms, func(svm *awstypes.StorageVirtualMachine) string {
+	d.Set(names.AttrIDs, tfslices.ApplyToAll(svms, func(svm awstypes.StorageVirtualMachine) string {
 		return aws.ToString(svm.StorageVirtualMachineId)
 	}))
 

@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
@@ -212,10 +212,10 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 47),
 			},
 			"root_volume_security_style": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: enum.Validate[awstypes.StorageVirtualMachineRootVolumeSecurityStyle](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.StorageVirtualMachineRootVolumeSecurityStyle](),
 			},
 			"subtype": {
 				Type:     schema.TypeString,
@@ -255,7 +255,7 @@ func resourceONTAPStorageVirtualMachineCreate(ctx context.Context, d *schema.Res
 	}
 
 	if v, ok := d.GetOk("root_volume_security_style"); ok {
-		input.RootVolumeSecurityStyle = aws.String(v.(string))
+		input.RootVolumeSecurityStyle = awstypes.StorageVirtualMachineRootVolumeSecurityStyle(v.(string))
 	}
 
 	if v, ok := d.GetOk("svm_admin_password"); ok {
@@ -355,7 +355,7 @@ func resourceONTAPStorageVirtualMachineDelete(ctx context.Context, d *schema.Res
 		StorageVirtualMachineId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeStorageVirtualMachineNotFound) {
+	if errs.IsA[*awstypes.StorageVirtualMachineNotFound](err) {
 		return diags
 	}
 
@@ -400,7 +400,7 @@ func expandSelfManagedActiveDirectoryConfiguration(cfg []interface{}) *awstypes.
 	out := awstypes.SelfManagedActiveDirectoryConfiguration{}
 
 	if v, ok := conf["dns_ips"].(*schema.Set); ok {
-		out.DnsIps = flex.ExpandStringSet(v)
+		out.DnsIps = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := conf[names.AttrDomainName].(string); ok && len(v) > 0 {
@@ -456,7 +456,7 @@ func expandSelfManagedActiveDirectoryConfigurationUpdates(cfg []interface{}) *aw
 	out := awstypes.SelfManagedActiveDirectoryConfigurationUpdates{}
 
 	if v, ok := conf["dns_ips"].(*schema.Set); ok {
-		out.DnsIps = flex.ExpandStringSet(v)
+		out.DnsIps = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := conf[names.AttrDomainName].(string); ok && len(v) > 0 {
@@ -569,7 +569,7 @@ func flattenSvmEndpoint(rs *awstypes.SvmEndpoint) []interface{} {
 		m[names.AttrDNSName] = aws.ToString(rs.DNSName)
 	}
 	if rs.IpAddresses != nil {
-		m[names.AttrIPAddresses] = flex.FlattenStringSet(rs.IpAddresses)
+		m[names.AttrIPAddresses] = flex.FlattenStringValueSet(rs.IpAddresses)
 	}
 
 	return []interface{}{m}
@@ -577,48 +577,46 @@ func flattenSvmEndpoint(rs *awstypes.SvmEndpoint) []interface{} {
 
 func findStorageVirtualMachineByID(ctx context.Context, conn *fsx.Client, id string) (*awstypes.StorageVirtualMachine, error) {
 	input := &fsx.DescribeStorageVirtualMachinesInput{
-		StorageVirtualMachineIds: []*string{aws.String(id)},
+		StorageVirtualMachineIds: []string{id},
 	}
 
-	return findStorageVirtualMachine(ctx, conn, input, tfslices.PredicateTrue[*awstypes.StorageVirtualMachine]())
+	return findStorageVirtualMachine(ctx, conn, input, tfslices.PredicateTrue[awstypes.StorageVirtualMachine]())
 }
 
-func findStorageVirtualMachine(ctx context.Context, conn *fsx.Client, input *fsx.DescribeStorageVirtualMachinesInput, filter tfslices.Predicate[*awstypes.StorageVirtualMachine]) (*awstypes.StorageVirtualMachine, error) {
+func findStorageVirtualMachine(ctx context.Context, conn *fsx.Client, input *fsx.DescribeStorageVirtualMachinesInput, filter tfslices.Predicate[awstypes.StorageVirtualMachine]) (*awstypes.StorageVirtualMachine, error) {
 	output, err := findStorageVirtualMachines(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findStorageVirtualMachines(ctx context.Context, conn *fsx.Client, input *fsx.DescribeStorageVirtualMachinesInput, filter tfslices.Predicate[*awstypes.StorageVirtualMachine]) ([]*awstypes.StorageVirtualMachine, error) {
-	var output []*awstypes.StorageVirtualMachine
+func findStorageVirtualMachines(ctx context.Context, conn *fsx.Client, input *fsx.DescribeStorageVirtualMachinesInput, filter tfslices.Predicate[awstypes.StorageVirtualMachine]) ([]awstypes.StorageVirtualMachine, error) {
+	var output []awstypes.StorageVirtualMachine
 
-	err := conn.DescribeStorageVirtualMachinesPagesWithContext(ctx, input, func(page *fsx.DescribeStorageVirtualMachinesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := fsx.NewDescribeStorageVirtualMachinesPaginator(conn, input)
 
-		for _, v := range page.StorageVirtualMachines {
-			if v != nil && filter(v) {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.StorageVirtualMachineNotFound](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeStorageVirtualMachineNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.StorageVirtualMachines {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
@@ -636,14 +634,14 @@ func statusStorageVirtualMachine(ctx context.Context, conn *fsx.Client, id strin
 			return nil, "", err
 		}
 
-		return output, aws.ToString(output.Lifecycle), nil
+		return output, string(output.Lifecycle), nil
 	}
 }
 
 func waitStorageVirtualMachineCreated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.StorageVirtualMachine, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.StorageVirtualMachineLifecycleCreating, awstypes.StorageVirtualMachineLifecyclePending},
-		Target:  []string{awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleMisconfigured},
+		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecycleCreating, awstypes.StorageVirtualMachineLifecyclePending),
+		Target:  enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleMisconfigured),
 		Refresh: statusStorageVirtualMachine(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
@@ -664,8 +662,8 @@ func waitStorageVirtualMachineCreated(ctx context.Context, conn *fsx.Client, id 
 
 func waitStorageVirtualMachineUpdated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.StorageVirtualMachine, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.StorageVirtualMachineLifecyclePending},
-		Target:  []string{awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleMisconfigured},
+		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecyclePending),
+		Target:  enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleMisconfigured),
 		Refresh: statusStorageVirtualMachine(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
@@ -686,7 +684,7 @@ func waitStorageVirtualMachineUpdated(ctx context.Context, conn *fsx.Client, id 
 
 func waitStorageVirtualMachineDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.StorageVirtualMachine, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleDeleting},
+		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleDeleting),
 		Target:  []string{},
 		Refresh: statusStorageVirtualMachine(ctx, conn, id),
 		Timeout: timeout,
