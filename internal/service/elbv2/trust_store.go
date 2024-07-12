@@ -229,6 +229,10 @@ func resourceTrustStoreDelete(ctx context.Context, d *schema.ResourceData, meta 
 		})
 	}, "is currently in use by a listener")
 
+	if errs.IsA[*awstypes.TrustStoreNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ELBv2 Trust Store (%s): %s", d.Id(), err)
 	}
