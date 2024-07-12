@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_quick_connect")
@@ -22,24 +23,24 @@ func DataSourceQuickConnect() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQuickConnectRead,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"name", "quick_connect_id"},
+				ExactlyOneOf: []string{names.AttrName, "quick_connect_id"},
 			},
 			"quick_connect_config": {
 				Type:     schema.TypeList,
@@ -101,9 +102,9 @@ func DataSourceQuickConnect() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"quick_connect_id", "name"},
+				ExactlyOneOf: []string{"quick_connect_id", names.AttrName},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -114,7 +115,7 @@ func dataSourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 
 	input := &connect.DescribeQuickConnectInput{
 		InstanceId: aws.String(instanceID),
@@ -122,7 +123,7 @@ func dataSourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, met
 
 	if v, ok := d.GetOk("quick_connect_id"); ok {
 		input.QuickConnectId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("name"); ok {
+	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
 		quickConnectSummary, err := dataSourceGetQuickConnectSummaryByName(ctx, conn, instanceID, name)
 
@@ -149,16 +150,16 @@ func dataSourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, met
 
 	quickConnect := resp.QuickConnect
 
-	d.Set("arn", quickConnect.QuickConnectARN)
-	d.Set("description", quickConnect.Description)
-	d.Set("name", quickConnect.Name)
+	d.Set(names.AttrARN, quickConnect.QuickConnectARN)
+	d.Set(names.AttrDescription, quickConnect.Description)
+	d.Set(names.AttrName, quickConnect.Name)
 	d.Set("quick_connect_id", quickConnect.QuickConnectId)
 
 	if err := d.Set("quick_connect_config", flattenQuickConnectConfig(quickConnect.QuickConnectConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting quick_connect_config: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(ctx, quickConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, quickConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

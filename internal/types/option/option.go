@@ -3,6 +3,16 @@
 
 package option
 
+import (
+	"errors"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+)
+
+var (
+	errMissingValue = errors.New("missing value")
+)
+
 type Option[T any] []T
 
 const (
@@ -31,12 +41,18 @@ func (o Option[T]) IsSome() bool {
 	return o != nil
 }
 
+// MustUnwrap returns the contained value or an error.
+func (o Option[T]) Unwrap() (T, error) {
+	if o.IsNone() {
+		var zero T
+		return zero, errMissingValue
+	}
+	return o[value], nil
+}
+
 // MustUnwrap returns the contained value or panics.
 func (o Option[T]) MustUnwrap() T {
-	if o.IsNone() {
-		panic("missing value")
-	}
-	return o[value]
+	return errs.Must(o.Unwrap())
 }
 
 // UnwrapOr returns the contained value or the specified default.

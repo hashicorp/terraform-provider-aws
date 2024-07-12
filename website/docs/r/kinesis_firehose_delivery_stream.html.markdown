@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_kinesis_firehose_delivery_stream
 
-Provides a Kinesis Firehose Delivery Stream resource. Amazon Kinesis Firehose is a fully managed, elastic service to easily deliver real-time data streams to destinations such as Amazon S3 and Amazon Redshift.
+Provides a Kinesis Firehose Delivery Stream resource. Amazon Kinesis Firehose is a fully managed, elastic service to easily deliver real-time data streams to destinations such as Amazon S3 , Amazon Redshift and Snowflake.
 
 For more details, see the [Amazon Kinesis Firehose Documentation][1].
 
@@ -592,6 +592,33 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 }
 ```
 
+### Snowflake Destination
+
+```terraform
+resource "aws_kinesis_firehose_delivery_stream" "example_snowflake_destination" {
+  name        = "example-snowflake-destination"
+  destination = "snowflake"
+
+  snowflake_configuration {
+    account_url = "https://example.snowflakecomputing.com"
+    database    = "example-db"
+    private_key = "..."
+    role_arn    = aws_iam_role.firehose.arn
+    schema      = "example-schema"
+    table       = "example-table"
+    user        = "example-usr"
+
+    s3_configuration {
+      role_arn           = aws_iam_role.firehose.arn
+      bucket_arn         = aws_s3_bucket.bucket.arn
+      buffering_size     = 10
+      buffering_interval = 400
+      compression_format = "GZIP"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -603,13 +630,14 @@ This resource supports the following arguments:
 * `server_side_encryption` - (Optional) Encrypt at rest options. See [`server_side_encryption` block](#server_side_encryption-block) below for details.
 
   **NOTE:** Server-side encryption should not be enabled when a kinesis stream is configured as the source of the firehose delivery stream.
-* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint`, `opensearch` and `opensearchserverless`.
+* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint`, `opensearch`, `opensearchserverless` and `snowflake`.
 * `elasticsearch_configuration` - (Optional) Configuration options when `destination` is `elasticsearch`. See [`elasticsearch_configuration` block](#elasticsearch_configuration-block) below for details.
 * `extended_s3_configuration` - (Optional, only Required when `destination` is `extended_s3`) Enhanced configuration options for the s3 destination. See [`extended_s3_configuration` block](#extended_s3_configuration-block) below for details.
 * `http_endpoint_configuration` - (Optional) Configuration options when `destination` is `http_endpoint`. Requires the user to also specify an `s3_configuration` block.  See [`http_endpoint_configuration` block](#http_endpoint_configuration-block) below for details.
 * `opensearch_configuration` - (Optional) Configuration options when `destination` is `opensearch`. See [`opensearch_configuration` block](#opensearch_configuration-block) below for details.
 * `opensearchserverless_configuration` - (Optional) Configuration options when `destination` is `opensearchserverless`. See [`opensearchserverless_configuration` block](#opensearchserverless_configuration-block) below for details.
 * `redshift_configuration` - (Optional) Configuration options when `destination` is `redshift`. Requires the user to also specify an `s3_configuration` block. See [`redshift_configuration` block](#redshift_configuration-block) below for details.
+* `snowflake_configuration` - (Optional) Configuration options when `destination` is `snowflake`. See [`snowflake_configuration` block](#snowflake_configuration-block) below for details.
 * `splunk_configuration` - (Optional) Configuration options when `destination` is `splunk`. See [`splunk_configuration` block](#splunk_configuration-block) below for details.
 
 ### `kinesis_source_configuration` block
@@ -759,6 +787,32 @@ The `http_endpoint_configuration` configuration block supports the following arg
 * `processing_configuration` - (Optional) The data processing configuration.  See [`processing_configuration` block](#processing_configuration-block) below for details.
 * `request_configuration` - (Optional) The request configuration.  See [`request_configuration` block](#request_configuration-block) below for details.
 * `retry_duration` - (Optional) Total amount of seconds Firehose spends on retries. This duration starts after the initial attempt fails, It does not include the time periods during which Firehose waits for acknowledgment from the specified destination after each attempt. Valid values between `0` and `7200`. Default is `300`.
+
+### `snowflake_configuration` block
+
+The `snowflake_configuration` configuration block supports the following arguments:
+
+* `account_url` - (Required) The URL of the Snowflake account. Format: https://[account_identifier].snowflakecomputing.com.
+* `private_key` - (Required) The private key for authentication.
+* `key_passphrase` - (Required) The passphrase for the private key.
+* `user` - (Required) The user for authentication.
+* `database` - (Required) The Snowflake database name.
+* `schema` - (Required) The Snowflake schema name.
+* `table` - (Required) The Snowflake table name.
+* `snowflake_role_configuration` - (Optional) The configuration for Snowflake role.
+    * `enabled` - (Optional) Whether the Snowflake role is enabled.
+    * `snowflake_role` - (Optional) The Snowflake role.
+* `data_loading_option` - (Optional) The data loading option.
+* `metadata_column_name` - (Optional) The name of the metadata column.
+* `content_column_name` - (Optional) The name of the content column.
+* `snowflake_vpc_configuration` - (Optional) The VPC configuration for Snowflake.
+    * `private_link_vpce_id` - (Required) The VPCE ID for Firehose to privately connect with Snowflake.
+* `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. See [`cloudwatch_logging_options` block](#cloudwatch_logging_options-block) below for details.
+* `processing_configuration` - (Optional) The processing configuration. See [`processing_configuration` block](#processing_configuration-block) below for details.
+* `role_arn` - (Required) The ARN of the IAM role.
+* `retry_duration` - (Optional) After an initial failure to deliver to Snowflake, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 60s.  There will be no retry if the value is 0.
+* `s3_backup_mode` - (Optional) The S3 backup mode.
+* `s3_configuration` - (Required) The S3 configuration. See [`s3_configuration` block](#s3_configuration-block) below for details.
 
 ### `cloudwatch_logging_options` block
 
@@ -915,7 +969,7 @@ The `output_format_configuration` configuration block supports the following arg
 The `serializer` configuration block supports the following arguments:
 
 * `orc_ser_de` - (Optional) Specifies converting data to the ORC format before storing it in Amazon S3. For more information, see [Apache ORC](https://orc.apache.org/docs/). See [`orc_ser_de` block](#orc_ser_de-block) below for details.
-* `parquet_ser_de` - (Optional) Specifies converting data to the Parquet format before storing it in Amazon S3. For more information, see [Apache Parquet](https://parquet.apache.org/documentation/latest/). More details below.
+* `parquet_ser_de` - (Optional) Specifies converting data to the Parquet format before storing it in Amazon S3. For more information, see [Apache Parquet](https://parquet.apache.org/docs/). More details below.
 
 #### `orc_ser_de` block
 

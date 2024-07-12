@@ -6,16 +6,17 @@ package cognitoidp
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_cognito_user_pool_clients")
-func DataSourceUserPoolClients() *schema.Resource {
+// @SDKDataSource("aws_cognito_user_pool_clients", name="User Pool Clients")
+func dataSourceUserPoolClients() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceuserPoolClientsRead,
 		Schema: map[string]*schema.Schema{
@@ -33,7 +34,7 @@ func DataSourceUserPoolClients() *schema.Resource {
 				},
 				Computed: true,
 			},
-			"user_pool_id": {
+			names.AttrUserPoolID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -43,34 +44,26 @@ func DataSourceUserPoolClients() *schema.Resource {
 
 func dataSourceuserPoolClientsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
-	userPoolID := d.Get("user_pool_id").(string)
+	userPoolID := d.Get(names.AttrUserPoolID).(string)
 	input := &cognitoidentityprovider.ListUserPoolClientsInput{
 		UserPoolId: aws.String(userPoolID),
 	}
+	var clientIDs, clientNames []string
 
-	var clientIDs []string
-	var clientNames []string
-	err := conn.ListUserPoolClientsPagesWithContext(ctx, input, func(page *cognitoidentityprovider.ListUserPoolClientsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := cognitoidentityprovider.NewListUserPoolClientsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Cognito User Pool Clients (%s): %s", userPoolID, err)
 		}
 
 		for _, v := range page.UserPoolClients {
-			if v == nil {
-				continue
-			}
-
-			clientNames = append(clientNames, aws.StringValue(v.ClientName))
-			clientIDs = append(clientIDs, aws.StringValue(v.ClientId))
+			clientNames = append(clientNames, aws.ToString(v.ClientName))
+			clientIDs = append(clientIDs, aws.ToString(v.ClientId))
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting user pool clients: %s", err)
 	}
 
 	d.SetId(userPoolID)

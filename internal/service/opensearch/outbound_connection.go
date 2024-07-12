@@ -17,39 +17,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_opensearch_outbound_connection")
 func ResourceOutboundConnection() *schema.Resource {
-	outboundConnectionDomainInfoSchema := func() *schema.Schema {
-		return &schema.Schema{
-			Type:     schema.TypeList,
-			Required: true,
-			ForceNew: true,
-			MaxItems: 1,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"domain_name": {
-						Type:     schema.TypeString,
-						Required: true,
-						ForceNew: true,
-					},
-					"owner_id": {
-						Type:     schema.TypeString,
-						Required: true,
-						ForceNew: true,
-					},
-					"region": {
-						Type:     schema.TypeString,
-						Required: true,
-						ForceNew: true,
-					},
-				},
-			},
-		}
-	}
-
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOutboundConnectionCreate,
 		ReadWithoutTimeout:   resourceOutboundConnectionRead,
@@ -64,64 +38,95 @@ func ResourceOutboundConnection() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accept_connection": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
-			"connection_alias": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"connection_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(opensearchservice.ConnectionMode_Values(), false),
-			},
-			"connection_properties": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cross_cluster_search": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"skip_unavailable": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			outboundConnectionDomainInfoSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDomainName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrOwnerID: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrRegion: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+						},
+					},
+				}
+			}
+
+			return map[string]*schema.Schema{
+				"accept_connection": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  false,
+				},
+				"connection_alias": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"connection_mode": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(opensearchservice.ConnectionMode_Values(), false),
+				},
+				"connection_properties": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cross_cluster_search": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"skip_unavailable": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+										},
 									},
 								},
 							},
-						},
-						"endpoint": {
-							Type:     schema.TypeString,
-							Computed: true,
+							names.AttrEndpoint: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"connection_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"local_domain_info":  outboundConnectionDomainInfoSchema(),
-			"remote_domain_info": outboundConnectionDomainInfoSchema(),
+				"connection_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"local_domain_info":  outboundConnectionDomainInfoSchema(),
+				"remote_domain_info": outboundConnectionDomainInfoSchema(),
+			}
 		},
 	}
 }
 
 func resourceOutboundConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	connectionAlias := d.Get("connection_alias").(string)
@@ -136,13 +141,13 @@ func resourceOutboundConnectionCreate(ctx context.Context, d *schema.ResourceDat
 	output, err := conn.CreateOutboundConnectionWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating OpenSearch Outbound Connection (%s): %s", connectionAlias, err)
+		return sdkdiag.AppendErrorf(diags, "creating OpenSearch Outbound Connection (%s): %s", connectionAlias, err)
 	}
 
 	d.SetId(aws.StringValue(output.ConnectionId))
 
 	if _, err := waitOutboundConnectionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for OpenSearch Outbound Connection (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Outbound Connection (%s) create: %s", d.Id(), err)
 	}
 
 	if d.Get("accept_connection").(bool) {
@@ -153,18 +158,19 @@ func resourceOutboundConnectionCreate(ctx context.Context, d *schema.ResourceDat
 		_, err := conn.AcceptInboundConnectionWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("accepting OpenSearch Inbound Connection (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "accepting OpenSearch Inbound Connection (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitInboundConnectionAccepted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return diag.Errorf("waiting for OpenSearch Inbound Connection (%s) accept: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Inbound Connection (%s) accept: %s", d.Id(), err)
 		}
 	}
 
-	return resourceOutboundConnectionRead(ctx, d, meta)
+	return append(diags, resourceOutboundConnectionRead(ctx, d, meta)...)
 }
 
 func resourceOutboundConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	connection, err := FindOutboundConnectionByID(ctx, conn, d.Id())
@@ -176,7 +182,7 @@ func resourceOutboundConnectionRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if err != nil {
-		return diag.Errorf("reading OpenSearch Outbound Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Outbound Connection (%s): %s", d.Id(), err)
 	}
 
 	d.Set("connection_alias", connection.ConnectionAlias)
@@ -190,6 +196,7 @@ func resourceOutboundConnectionRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceOutboundConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	log.Printf("[DEBUG] Deleting OpenSearch Outbound Connection: %s", d.Id())
@@ -202,11 +209,11 @@ func resourceOutboundConnectionDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting OpenSearch Outbound Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting OpenSearch Outbound Connection (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitOutboundConnectionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for OpenSearch Outbound Connection (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Outbound Connection (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
@@ -350,9 +357,9 @@ func expandOutboundConnectionDomainInfo(vOptions []interface{}) *opensearchservi
 
 	return &opensearchservice.DomainInformationContainer{
 		AWSDomainInformation: &opensearchservice.AWSDomainInformation{
-			DomainName: aws.String(mOptions["domain_name"].(string)),
-			OwnerId:    aws.String(mOptions["owner_id"].(string)),
-			Region:     aws.String(mOptions["region"].(string)),
+			DomainName: aws.String(mOptions[names.AttrDomainName].(string)),
+			OwnerId:    aws.String(mOptions[names.AttrOwnerID].(string)),
+			Region:     aws.String(mOptions[names.AttrRegion].(string)),
 		},
 	}
 }
@@ -362,9 +369,9 @@ func flattenOutboundConnectionDomainInfo(domainInfo *opensearchservice.DomainInf
 		return nil
 	}
 	return []interface{}{map[string]interface{}{
-		"owner_id":    aws.StringValue(domainInfo.AWSDomainInformation.OwnerId),
-		"domain_name": aws.StringValue(domainInfo.AWSDomainInformation.DomainName),
-		"region":      aws.StringValue(domainInfo.AWSDomainInformation.Region),
+		names.AttrOwnerID:    aws.StringValue(domainInfo.AWSDomainInformation.OwnerId),
+		names.AttrDomainName: aws.StringValue(domainInfo.AWSDomainInformation.DomainName),
+		names.AttrRegion:     aws.StringValue(domainInfo.AWSDomainInformation.Region),
 	}}
 }
 
@@ -386,7 +393,7 @@ func flattenOutboundConnectionConnectionProperties(cProperties *opensearchservic
 	}
 	return []interface{}{map[string]interface{}{
 		"cross_cluster_search": flattenOutboundConnectionCrossClusterSearchConnectionProperties(cProperties.CrossClusterSearch),
-		"endpoint":             aws.StringValue(cProperties.Endpoint),
+		names.AttrEndpoint:     aws.StringValue(cProperties.Endpoint),
 	}}
 }
 

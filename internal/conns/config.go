@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	imds_sdkv2 "github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/version"
 )
 
 type Config struct {
@@ -68,11 +70,21 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	ctx, logger := logging.NewTfLogger(ctx)
 
+	const (
+		maxBackoff = 300 * time.Second // AWS SDK for Go v1 DefaultRetryerMaxRetryDelay: https://github.com/aws/aws-sdk-go/blob/9f6e3bb9f523aef97fa1cd5c5f8ba8ecf212e44e/aws/client/default_retryer.go#L48-L49.
+	)
 	awsbaseConfig := awsbase.Config{
-		AccessKey:                      c.AccessKey,
-		AllowedAccountIds:              c.AllowedAccountIds,
-		APNInfo:                        StdUserAgentProducts(c.TerraformVersion),
+		AccessKey:         c.AccessKey,
+		AllowedAccountIds: c.AllowedAccountIds,
+		APNInfo: &awsbase.APNInfo{
+			PartnerName: "HashiCorp",
+			Products: []awsbase.UserAgentProduct{
+				{Name: "Terraform", Version: c.TerraformVersion, Comment: "+https://www.terraform.io"},
+				{Name: "terraform-provider-aws", Version: version.ProviderVersion, Comment: "+https://registry.terraform.io/providers/hashicorp/aws"},
+			},
+		},
 		AssumeRoleWithWebIdentity:      c.AssumeRoleWithWebIdentity,
+		Backoff:                        &v1CompatibleBackoff{maxRetryDelay: maxBackoff},
 		CallerDocumentationURL:         "https://registry.terraform.io/providers/hashicorp/aws",
 		CallerName:                     "Terraform AWS Provider",
 		EC2MetadataServiceEnableState:  c.EC2MetadataServiceEnableState,
@@ -84,6 +96,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		HTTPSProxy:                     c.HTTPSProxy,
 		HTTPProxyMode:                  awsbase.HTTPProxyModeLegacy,
 		Logger:                         logger,
+		MaxBackoff:                     maxBackoff,
 		MaxRetries:                     c.MaxRetries,
 		NoProxy:                        c.NoProxy,
 		Profile:                        c.Profile,
@@ -136,7 +149,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
-			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Severity: baseSeverityToSDKSeverity(d.Severity()),
 			Summary:  d.Summary(),
 			Detail:   d.Detail(),
 		})
@@ -156,11 +169,11 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	awsbaseConfig.SkipCredsValidation = skipCredsValidation
 
 	tflog.Debug(ctx, "Creating AWS SDK v1 session")
-	sess, awsDiags := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
+	session, awsDiags := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
 
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
-			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Severity: baseSeverityToSDKSeverity(d.Severity()),
 			Summary:  fmt.Sprintf("creating AWS SDK v1 session: %s", d.Summary()),
 			Detail:   d.Detail(),
 		})
@@ -174,7 +187,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	accountID, partition, awsDiags := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
-			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Severity: baseSeverityToSDKSeverity(d.Severity()),
 			Summary:  fmt.Sprintf("Retrieving AWS account details: %s", d.Summary()),
 			Detail:   d.Detail(),
 		})
@@ -202,9 +215,8 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.IgnoreTagsConfig = c.IgnoreTagsConfig
 	client.Partition = partition
 	client.Region = c.Region
-	client.SetHTTPClient(ctx, sess.Config.HTTPClient) // Must be called while client.Session is nil.
-	client.Session = sess
-	client.TerraformVersion = c.TerraformVersion
+	client.SetHTTPClient(ctx, session.Config.HTTPClient) // Must be called while client.Session is nil.
+	client.session = session
 
 	// Used for lazy-loading AWS API clients.
 	client.awsConfig = &cfg
@@ -219,7 +231,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	return client, diags
 }
 
-func baseSeverityToSdkSeverity(s basediag.Severity) diag.Severity {
+func baseSeverityToSDKSeverity(s basediag.Severity) diag.Severity {
 	switch s {
 	case basediag.SeverityWarning:
 		return diag.Warning

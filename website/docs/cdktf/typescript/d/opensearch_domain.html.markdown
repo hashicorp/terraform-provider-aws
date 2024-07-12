@@ -59,6 +59,7 @@ This data source exports the following attributes in addition to the arguments a
             * `unit` - Unit of time.
         * `cronExpressionForRecurrence` - Cron expression for an Auto-Tune maintenance schedule.
     * `rollbackOnDisable` - Whether the domain is set to roll back to default Auto-Tune settings when disabling Auto-Tune.
+    * `useOffPeakWindow` - Whether to schedule Auto-Tune optimizations that require blue/green deployments during the domain's configured daily off-peak window.
 * `clusterConfig` - Cluster configuration of the domain.
     * `coldStorageOptions` - Configuration block containing cold storage configuration.
         * `enabled` - Indicates  cold storage is enabled.
@@ -80,6 +81,7 @@ This data source exports the following attributes in addition to the arguments a
     * `identityPoolId` - Cognito Identity pool used by the domain.
     * `roleArn` - IAM Role with the AmazonOpenSearchServiceCognitoAccess policy attached.
 * `created` – Status of the creation of the domain.
+* `dashboardEndpoint` - Domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
 * `deleted` – Status of the deletion of the domain.
 * `domainId` – Unique identifier for the domain.
 * `ebsOptions` - EBS Options for the instances in the domain.
@@ -93,7 +95,7 @@ This data source exports the following attributes in addition to the arguments a
     * `enabled` - Whether encryption at rest is enabled in the domain.
     * `kmsKeyId` - KMS key id used to encrypt data at rest.
 * `endpoint` – Domain-specific endpoint used to submit index, search, and data upload requests.
-* `dashboardEndpoint` - Domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
+* `ipAddressType` - Type of IP addresses supported by the endpoint for the domain.
 * `kibanaEndpoint` - (**Deprecated**) Domain-specific endpoint for kibana without https scheme. Use the `dashboardEndpoint` attribute instead.
 * `logPublishingOptions` - Domain log publishing related options.
     * `logType` - Type of OpenSearch log being published.
@@ -119,4 +121,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnetIds` - Subnets used by the domain.
     * `vpcId` - VPC used by the domain.
 
-<!-- cache-key: cdktf-0.20.1 input-01f37a17c598cc10c99e74b9d128dbd7cbef41745f5cf5aaa6e1db32feb9eb3e -->
+<!-- cache-key: cdktf-0.20.1 input-9ad96ddccd055a8801cf41664d1bc56b8cf4e140901a238bc44f8b3314f475e2 -->

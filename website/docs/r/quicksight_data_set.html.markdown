@@ -167,7 +167,7 @@ The following arguments are required:
 * `data_set_id` - (Required, Forces new resource) Identifier for the data set.
 * `import_mode` - (Required) Indicates whether you want to import the data into SPICE. Valid values are `SPICE` and `DIRECT_QUERY`.
 * `name` - (Required) Display name for the dataset.
-* `physical_table_map` - (Required) Declares the physical tables that are available in the underlying data sources. See [physical_table_map](#physical_table_map).
+* `physical_table_map` - (Optional) Declares the physical tables that are available in the underlying data sources. See [physical_table_map](#physical_table_map).
 
 The following arguments are optional:
 

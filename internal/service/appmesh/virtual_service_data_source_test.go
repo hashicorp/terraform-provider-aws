@@ -10,6 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -29,20 +32,22 @@ func testAccVirtualServiceDataSource_virtualNode(t *testing.T) {
 			{
 				Config: testAccVirtualServiceDataSourceConfig_virtualNode(rName, vsName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "created_date", dataSourceName, "created_date"),
-					resource.TestCheckResourceAttrPair(resourceName, "last_updated_date", dataSourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedDate, dataSourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrLastUpdatedDate, dataSourceName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttrPair(resourceName, "mesh_name", dataSourceName, "mesh_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "mesh_owner", dataSourceName, "mesh_owner"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_owner", dataSourceName, "resource_owner"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtResourceOwner, dataSourceName, acctest.CtResourceOwner),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.#", dataSourceName, "spec.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.provider.#", dataSourceName, "spec.0.provider.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.provider.0.virtual_node.#", dataSourceName, "spec.0.provider.0.virtual_node.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.provider.0.virtual_node.0.virtual_node_name", dataSourceName, "spec.0.provider.0.virtual_node.0.virtual_node_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.provider.0.virtual_router.#", dataSourceName, "spec.0.provider.0.virtual_router.#"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 		},
 	})
@@ -63,20 +68,22 @@ func testAccVirtualServiceDataSource_virtualRouter(t *testing.T) {
 			{
 				Config: testAccVirtualServiceDataSourceConfig_virtualRouter(rName, vsName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "created_date", dataSourceName, "created_date"),
-					resource.TestCheckResourceAttrPair(resourceName, "last_updated_date", dataSourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedDate, dataSourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrLastUpdatedDate, dataSourceName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttrPair(resourceName, "mesh_name", dataSourceName, "mesh_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "mesh_owner", dataSourceName, "mesh_owner"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_owner", dataSourceName, "resource_owner"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtResourceOwner, dataSourceName, acctest.CtResourceOwner),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.#", dataSourceName, "spec.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.provider.#", dataSourceName, "spec.0.provider.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.provider.0.virtual_node.#", dataSourceName, "spec.0.provider.0.virtual_node.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.provider.0.virtual_router.#", dataSourceName, "spec.0.provider.0.virtual_router.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.provider.0.virtual_router.0.virtual_router_name", dataSourceName, "spec.0.provider.0.virtual_router.0.virtual_router_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 		},
 	})
@@ -105,10 +112,6 @@ resource "aws_appmesh_virtual_service" "test" {
         virtual_node_name = aws_appmesh_virtual_node.test.name
       }
     }
-  }
-
-  tags = {
-    Name = %[2]q
   }
 }
 

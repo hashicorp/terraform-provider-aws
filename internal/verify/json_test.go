@@ -384,14 +384,25 @@ func TestNormalizeJSONOrYAMLString(t *testing.T) {
 		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, validNormalizedJSON)
 	}
 
-	validNormalizedYaml := `abc: 1
+	validNormalizedYAML := `abc: 1
 `
-	actual, err = NormalizeJSONOrYAMLString(validNormalizedYaml)
+	actual, err = NormalizeJSONOrYAMLString(validNormalizedYAML)
 	if err != nil {
 		t.Fatalf("Expected not to throw an error while parsing template, but got: %s", err)
 	}
-	if actual != validNormalizedYaml {
-		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, validNormalizedYaml)
+	if actual != validNormalizedYAML {
+		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, validNormalizedYAML)
+	}
+
+	validNormalizedYAMLWithCarriageReturn := "abc: 1\r\n"
+	expectedNormalizedYAML := `abc: 1
+`
+	actual, err = NormalizeJSONOrYAMLString(validNormalizedYAMLWithCarriageReturn)
+	if err != nil {
+		t.Fatalf("Expected not to throw an error while parsing template, but got: %s", err)
+	}
+	if actual != expectedNormalizedYAML {
+		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, expectedNormalizedYAML)
 	}
 }
 

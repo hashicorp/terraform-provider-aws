@@ -179,3 +179,37 @@ func TestObjectValueOfEqual(t *testing.T) {
 		})
 	}
 }
+
+func TestNullOutObjectPtrFields(t *testing.T) {
+	t.Parallel()
+
+	type A struct {
+		F1 types.Bool                        `tfsdk:"f1"`
+		F2 types.String                      `tfsdk:"f2"`
+		F3 fwtypes.ListValueOf[types.String] `tfsdk:"f3"`
+		F4 fwtypes.SetValueOf[types.Int64]   `tfsdk:"f4"`
+	}
+
+	ctx := context.Background()
+	a := new(A)
+	a.F1 = types.BoolValue(true)
+	a.F2 = types.StringValue("test")
+	a.F3 = fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("test")})
+	a.F4 = fwtypes.NewSetValueOfMust[types.Int64](ctx, []attr.Value{types.Int64Value(-1)})
+	diags := fwtypes.NullOutObjectPtrFields(ctx, a)
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %v", diags)
+	}
+	if !a.F1.IsNull() {
+		t.Errorf("expected F1 to be null")
+	}
+	if !a.F2.IsNull() {
+		t.Errorf("expected F2 to be null")
+	}
+	if !a.F3.IsNull() {
+		t.Errorf("expected F3 to be null")
+	}
+	if !a.F4.IsNull() {
+		t.Errorf("expected F4 to be null")
+	}
+}

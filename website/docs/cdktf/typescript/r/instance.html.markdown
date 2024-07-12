@@ -223,7 +223,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-### Host resource group or Licence Manager registered AMI example
+### Host resource group or License Manager registered AMI example
 
 A host resource group is a collection of Dedicated Hosts that you can manage as a single entity. As you launch instances, License Manager allocates the hosts and launches instances on them based on the settings that you configured. You can add existing Dedicated Hosts to a host resource group and take advantage of automated host management through License Manager.
 
@@ -432,7 +432,7 @@ The `maintenanceOptions` block supports the following:
 
 The `instanceMarketOptions` block supports the following:
 
-* `marketType` - (Optional) Type of market for the instance. Valid value is `spot`. Defaults to `spot`.
+* `marketType` - (Optional) Type of market for the instance. Valid value is `spot`. Defaults to `spot`. Required if `spotOptions` is specified.
 * `spotOptions` - (Optional) Block to configure the options for Spot Instances. See [Spot Options](#spot-options) below for details on attributes.
 
 ### Metadata Options
@@ -561,4 +561,4 @@ Using `terraform import`, import instances using the `id`. For example:
 % terraform import aws_instance.web i-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-67ef2c8ff896e0ca74cabe3df836f7f729bff46945ada7b8471c2e4bdf0cc046 -->
+<!-- cache-key: cdktf-0.20.1 input-22fa60b78e07a8c405942a5e6347bd94ae3a9cbb548f38ac0744b9f7ef890b1b -->
