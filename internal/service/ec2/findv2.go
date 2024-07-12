@@ -172,6 +172,61 @@ func findCOIPPools(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCoi
 	return output, nil
 }
 
+func findDHCPOptions(ctx context.Context, conn *ec2.Client, input *ec2.DescribeDhcpOptionsInput) (*awstypes.DhcpOptions, error) {
+	output, err := findDHCPOptionses(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findDHCPOptionses(ctx context.Context, conn *ec2.Client, input *ec2.DescribeDhcpOptionsInput) ([]awstypes.DhcpOptions, error) {
+	var output []awstypes.DhcpOptions
+
+	pages := ec2.NewDescribeDhcpOptionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidDHCPOptionIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.DhcpOptions...)
+	}
+
+	return output, nil
+}
+
+func findDHCPOptionsByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.DhcpOptions, error) {
+	input := &ec2.DescribeDhcpOptionsInput{
+		DhcpOptionsIds: []string{id},
+	}
+
+	output, err := findDHCPOptions(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.DhcpOptionsId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func findFleet(ctx context.Context, conn *ec2.Client, input *ec2.DescribeFleetsInput) (*awstypes.FleetData, error) {
 	output, err := findFleets(ctx, conn, input)
 

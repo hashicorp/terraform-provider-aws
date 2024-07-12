@@ -524,68 +524,6 @@ func FindVPCPeeringConnectionByID(ctx context.Context, conn *ec2.EC2, id string)
 	return output, nil
 }
 
-func FindDHCPOptions(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeDhcpOptionsInput) (*ec2.DhcpOptions, error) {
-	output, err := FindDHCPOptionses(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func FindDHCPOptionses(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeDhcpOptionsInput) ([]*ec2.DhcpOptions, error) {
-	var output []*ec2.DhcpOptions
-
-	err := conn.DescribeDhcpOptionsPagesWithContext(ctx, input, func(page *ec2.DescribeDhcpOptionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.DhcpOptions {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidDHCPOptionIDNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-func FindDHCPOptionsByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.DhcpOptions, error) {
-	input := &ec2.DescribeDhcpOptionsInput{
-		DhcpOptionsIds: aws.StringSlice([]string{id}),
-	}
-
-	output, err := FindDHCPOptions(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Eventual consistency check.
-	if aws.StringValue(output.DhcpOptionsId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
 func FindEgressOnlyInternetGateway(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeEgressOnlyInternetGatewaysInput) (*ec2.EgressOnlyInternetGateway, error) {
 	output, err := FindEgressOnlyInternetGateways(ctx, conn, input)
 
