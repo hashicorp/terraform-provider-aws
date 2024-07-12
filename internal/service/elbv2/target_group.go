@@ -395,7 +395,8 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 		input.VpcId = aws.String(d.Get(names.AttrVPCID).(string))
 
-		if targetType == awstypes.TargetTypeEnumIp {
+		switch targetType {
+		case awstypes.TargetTypeEnumInstance, awstypes.TargetTypeEnumIp:
 			if v, ok := d.GetOk(names.AttrIPAddressType); ok {
 				input.IpAddressType = awstypes.TargetGroupIpAddressTypeEnum(v.(string))
 			}
