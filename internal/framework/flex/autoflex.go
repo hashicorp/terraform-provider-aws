@@ -130,6 +130,11 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 		return diags
 	}
 
+	if fromTypedExpander, ok := valFrom.Interface().(TypedExpander); ok {
+		diags.Append(expandTypedExpander(ctx, fromTypedExpander, valTo)...)
+		return diags
+	}
+
 	if valTo.Kind() == reflect.Interface {
 		tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]any{
 			"from": valFrom.Type(),

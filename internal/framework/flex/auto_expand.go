@@ -24,6 +24,11 @@ type Expander interface {
 	Expand(ctx context.Context) (any, diag.Diagnostics)
 }
 
+// Expander is implemented by types that customize their expansion and can have multiple target types
+type TypedExpander interface {
+	ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics)
+}
+
 // Expand "expands" a resource's "business logic" data structure,
 // implemented using Terraform Plugin Framework data types, into
 // an AWS SDK for Go v2 API data structure.
@@ -73,6 +78,11 @@ func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.V
 
 	if fromExpander, ok := valFrom.Interface().(Expander); ok {
 		diags.Append(expandExpander(ctx, fromExpander, vTo)...)
+		return diags
+	}
+
+	if fromTypedExpander, ok := valFrom.Interface().(TypedExpander); ok {
+		diags.Append(expandTypedExpander(ctx, fromTypedExpander, vTo)...)
 		return diags
 	}
 
@@ -929,6 +939,50 @@ func expandExpander(ctx context.Context, fromExpander Expander, toVal reflect.Va
 
 	if expanded == nil {
 		diags.Append(diagExpandsToNil(reflect.TypeOf(fromExpander)))
+		return diags
+	}
+
+	expandedVal := reflect.ValueOf(expanded)
+
+	targetType := toVal.Type()
+	if targetType.Kind() == reflect.Interface {
+		expandedType := reflect.TypeOf(expanded)
+		if !expandedType.Implements(targetType) {
+			diags.Append(diagExpandedTypeDoesNotImplement(expandedType, targetType))
+			return diags
+		}
+
+		toVal.Set(expandedVal)
+
+		return diags
+	}
+
+	if targetType.Kind() == reflect.Struct {
+		expandedVal = expandedVal.Elem()
+	}
+	expandedType := expandedVal.Type()
+
+	if !expandedType.AssignableTo(targetType) {
+		diags.Append(diagCannotBeAssigned(expandedType, targetType))
+		return diags
+	}
+
+	toVal.Set(expandedVal)
+
+	return diags
+}
+
+func expandTypedExpander(ctx context.Context, fromTypedExpander TypedExpander, toVal reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	expanded, d := fromTypedExpander.ExpandTo(ctx, toVal.Type())
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if expanded == nil {
+		diags.Append(diagExpandsToNil(reflect.TypeOf(fromTypedExpander)))
 		return diags
 	}
 
