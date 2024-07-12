@@ -2555,6 +2555,92 @@ func TestAccELBV2TargetGroup_targetHealthStateUnhealthyConnectionTermination(t *
 	})
 }
 
+func TestAccELBV2TargetGroup_targetGroupHealthState(t *testing.T) {
+	ctx := acctest.Context(t)
+	var targetGroup awstypes.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, "off", "off", 1, "off"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_count", "off"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_percentage", "off"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_percentage", "off"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, acctest.Ct1, "off", 1, "off"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_percentage", "off"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_percentage", "off"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, acctest.Ct1, "100", 1, "off"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_percentage", "100"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_percentage", "off"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, acctest.Ct1, "off", 1, "100"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_percentage", "off"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_percentage", "100"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, acctest.Ct1, "100", 1, "100"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_percentage", "100"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_percentage", "100"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2TargetGroup_Instance_HealthCheck_defaults(t *testing.T) {
 	t.Parallel()
 
@@ -4890,6 +4976,37 @@ resource "aws_vpc" "test" {
   }
 }
 `, rName, protocol, enabled)
+}
+
+func testAccTargetGroupConfig_targetGroupHealthState(rName, targetGroupHealthCount string, targetGroupHealthPercentageEnabled string, unhealthyStateRoutingCount int, unhealthyStateRoutingPercentageEnabled string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 80
+  protocol = "TCP"
+  vpc_id   = aws_vpc.test.id
+
+  target_group_health {
+    dns_failover {
+      minimum_healthy_targets_count      = %[2]q
+      minimum_healthy_targets_percentage = %[3]q
+    }
+
+    unhealthy_state_routing {
+      minimum_healthy_targets_count      = %[4]d
+      minimum_healthy_targets_percentage = %[5]q
+    }
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, targetGroupHealthCount, targetGroupHealthPercentageEnabled, unhealthyStateRoutingCount, unhealthyStateRoutingPercentageEnabled)
 }
 
 func testAccTargetGroupConfig_typeTCP(rName string) string {
