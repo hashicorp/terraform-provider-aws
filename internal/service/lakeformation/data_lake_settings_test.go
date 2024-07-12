@@ -50,7 +50,7 @@ func testAccDataLakeSettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "external_data_filtering_allow_list.0", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "authorized_session_tag_value_list.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "authorized_session_tag_value_list.0", "engine1"),
-					resource.TestCheckResourceAttr(resourceName, "allow_full_table_external_data_access", "true"),
+					resource.TestCheckResourceAttr(resourceName, "allow_full_table_external_data_access", acctest.CtTrue),
 				),
 			},
 		},
