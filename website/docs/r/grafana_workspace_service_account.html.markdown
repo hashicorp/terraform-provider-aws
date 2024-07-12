@@ -37,21 +37,21 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Identifier of the service account in the given Grafana workspace
+* `service_account_id` - Identifier of the service account in the given Grafana workspace
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Managed Grafana Workspace Service Account using the `id`, `grafana_role` and `workspace_id` separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Managed Grafana Workspace Service Account using the `workspace_id` and `service_account_id` separated by a comma (`,`). For example:
 
 ```terraform
 import {
   to = aws_grafana_workspace_service_account.example
-  id = "1,ADMIN,g-abc12345"
+  id = "g-abc12345,1"
 }
 ```
 
-Using `terraform import`, import Managed Grafana Workspace Service Account using the `id`, `grafana_role` and `workspace_id` separated by a comma (`,`). For example:
+Using `terraform import`, import Managed Grafana Workspace Service Account using the `workspace_id` and `service_account_id` separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_grafana_workspace_service_account.example 1,ADMIN,g-abc12345
+% terraform import aws_grafana_workspace_service_account.example g-abc12345,1
 ```

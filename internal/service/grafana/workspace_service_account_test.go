@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfgrafana "github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -29,21 +30,17 @@ func TestAccGrafanaWorkspaceServiceAccount_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.Grafana) },
 		ErrorCheck:               acctest.ErrorCheck(t, grafana.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
+		CheckDestroy:             testAccCheckWorkspaceServiceAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceServiceAccountConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceServiceAccountExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, "grafana_role"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttrSet(resourceName, "workspace_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "service_account_id"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCheckWorkspaceServiceAccountImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -63,13 +60,15 @@ func TestAccGrafanaWorkspaceServiceAccount_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
+		CheckDestroy:             testAccCheckWorkspaceServiceAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceServiceAccountConfig_basic(resourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceServiceAccountExists(ctx, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfgrafana.ResourceWorkspaceServiceAccount, resourceName),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -83,7 +82,9 @@ func testAccCheckWorkspaceServiceAccountExists(ctx context.Context, n string, v 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaClient(ctx)
-		output, err := tfgrafana.FindWorkspaceServiceAccount(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["workspace_id"])
+
+		output, err := tfgrafana.FindWorkspaceServiceAccountByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["workspace_id"])
+
 		if err != nil {
 			return err
 		}
@@ -94,14 +95,28 @@ func testAccCheckWorkspaceServiceAccountExists(ctx context.Context, n string, v 
 	}
 }
 
-func testAccCheckWorkspaceServiceAccountImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("not found: %s", resourceName)
-		}
+func testAccCheckWorkspaceServiceAccountDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaClient(ctx)
 
-		return fmt.Sprintf("%s,%s,%s", rs.Primary.Attributes[names.AttrID], rs.Primary.Attributes["grafana_role"], rs.Primary.Attributes["workspace_id"]), nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_grafana_workspace_service_account" {
+				continue
+			}
+
+			_, err := tfgrafana.FindWorkspaceServiceAccountByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["workspace_id"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Grafana Workspace Service Account %s still exists", rs.Primary.ID)
+		}
+		return nil
 	}
 }
 

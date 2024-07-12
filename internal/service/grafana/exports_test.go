@@ -8,12 +8,12 @@ var (
 	ResourceWorkspace                  = resourceWorkspace
 	ResourceWorkspaceAPIKey            = resourceWorkspaceAPIKey
 	ResourceWorkspaceSAMLConfiguration = resourceWorkspaceSAMLConfiguration
-	ResourceWorkspaceServiceAccount    = newResourceWorkspaceServiceAccount
+	ResourceWorkspaceServiceAccount    = newWorkspaceServiceAccountResource
 
-	FindLicensedWorkspaceByID        = findLicensedWorkspaceByID
-	FindRoleAssociationsByTwoPartKey = findRoleAssociationsByTwoPartKey
-	FindSAMLConfigurationByID        = findSAMLConfigurationByID
-	FindWorkspaceByID                = findWorkspaceByID
-	FindWorkspaceServiceAccount      = findWorkspaceServiceAccount
-	FindWorkspaceServiceAccountToken = findWorkspaceServiceAccountToken
+	FindLicensedWorkspaceByID               = findLicensedWorkspaceByID
+	FindRoleAssociationsByTwoPartKey        = findRoleAssociationsByTwoPartKey
+	FindSAMLConfigurationByID               = findSAMLConfigurationByID
+	FindWorkspaceByID                       = findWorkspaceByID
+	FindWorkspaceServiceAccountByTwoPartKey = findWorkspaceServiceAccountByTwoPartKey
+	FindWorkspaceServiceAccountToken        = findWorkspaceServiceAccountToken
 )
