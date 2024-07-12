@@ -27,8 +27,8 @@ func TestAccKMSAliasDataSource_service(t *testing.T) {
 			{
 				Config: testAccAliasDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kms", rName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kms", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "target_key_arn", "kms", regexache.MustCompile(`key/[0-9a-z]{8}-([0-9a-z]{4}-){3}[0-9a-z]{12}`)),
 					resource.TestMatchResourceAttr(resourceName, "target_key_id", regexache.MustCompile("^[0-9a-z]{8}-([0-9a-z]{4}-){3}[0-9a-z]{12}$")),
 				),
@@ -51,7 +51,7 @@ func TestAccKMSAliasDataSource_cmk(t *testing.T) {
 			{
 				Config: testAccAliasDataSourceConfig_cmk(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceAliasResourceName, "arn", aliasResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceAliasResourceName, names.AttrARN, aliasResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceAliasResourceName, "target_key_arn", aliasResourceName, "target_key_arn"),
 					resource.TestCheckResourceAttrPair(datasourceAliasResourceName, "target_key_id", aliasResourceName, "target_key_id"),
 				),

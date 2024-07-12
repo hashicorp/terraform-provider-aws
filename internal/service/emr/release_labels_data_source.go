@@ -13,10 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_emr_release_labels")
-func DataSourceReleaseLabels() *schema.Resource {
+// @SDKDataSource("aws_emr_release_labels", name="Release Labels")
+func dataSourceReleaseLabels() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReleaseLabelsRead,
 
@@ -31,7 +32,7 @@ func DataSourceReleaseLabels() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -88,7 +89,7 @@ func expandReleaseLabelsFilters(filters []interface{}) *emr.ReleaseLabelFilter {
 		app.Application = aws.String(v)
 	}
 
-	if v, ok := m["prefix"].(string); ok && v != "" {
+	if v, ok := m[names.AttrPrefix].(string); ok && v != "" {
 		app.Prefix = aws.String(v)
 	}
 

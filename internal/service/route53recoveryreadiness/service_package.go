@@ -6,21 +6,39 @@ package route53recoveryreadiness
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	route53recoveryreadiness_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, m map[string]any) (*route53recoveryreadiness_sdkv1.Route53RecoveryReadiness, error) {
-	sess := m["session"].(*session_sdkv1.Session)
-	config := &aws_sdkv1.Config{Endpoint: aws_sdkv1.String(m["endpoint"].(string))}
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*route53recoveryreadiness.Route53RecoveryReadiness, error) {
+	sess := config[names.AttrSession].(*session.Session)
 
-	// Force "global" services to correct Regions.
-	if m["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
-		config.Region = aws_sdkv1.String(endpoints_sdkv1.UsWest2RegionID)
+	cfg := aws.Config{}
+
+	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+		tflog.Debug(ctx, "setting endpoint", map[string]any{
+			"tf_aws.endpoint": endpoint,
+		})
+		cfg.Endpoint = aws.String(endpoint)
+	} else {
+		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
 	}
 
-	return route53recoveryreadiness_sdkv1.New(sess.Copy(config)), nil
+	// Force "global" services to correct Regions.
+	if config["partition"].(string) == endpoints.AwsPartitionID {
+		if aws.StringValue(cfg.Region) != endpoints.UsWest2RegionID {
+			tflog.Info(ctx, "overriding region", map[string]any{
+				"original_region": aws.StringValue(cfg.Region),
+				"override_region": endpoints.UsWest2RegionID,
+			})
+			cfg.Region = aws.String(endpoints.UsWest2RegionID)
+		}
+	}
+
+	return route53recoveryreadiness.New(sess.Copy(&cfg)), nil
 }

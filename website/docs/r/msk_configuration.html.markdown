@@ -29,7 +29,7 @@ PROPERTIES
 This resource supports the following arguments:
 
 * `server_properties` - (Required) Contents of the server.properties file. Supported properties are documented in the [MSK Developer Guide](https://docs.aws.amazon.com/msk/latest/developerguide/msk-configuration-properties.html).
-* `kafka_versions` - (Required) List of Apache Kafka versions which can use this configuration.
+* `kafka_versions` - (Optional) List of Apache Kafka versions which can use this configuration.
 * `name` - (Required) Name of the configuration.
 * `description` - (Optional) Description of the configuration.
 

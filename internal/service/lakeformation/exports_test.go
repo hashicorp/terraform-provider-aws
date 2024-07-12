@@ -6,6 +6,8 @@ package lakeformation
 // exports used for testing only.
 var (
 	ResourceDataCellsFilter = newResourceDataCellsFilter
+	ResourceResourceLFTag   = newResourceResourceLFTag
 
 	FindDataCellsFilterByID = findDataCellsFilterByID
+	FindResourceLFTagByID   = findResourceLFTagByID
 )

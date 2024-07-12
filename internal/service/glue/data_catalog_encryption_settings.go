@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_glue_data_catalog_encryption_settings")
@@ -29,7 +30,7 @@ func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -69,6 +70,11 @@ func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(glue.CatalogEncryptionMode_Values(), false),
+									},
+									"catalog_encryption_service_role": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
 									},
 									"sse_aws_kms_key_id": {
 										Type:         schema.TypeString,
@@ -122,7 +128,7 @@ func resourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "reading Glue Data Catalog Encryption Settings (%s): %s", d.Id(), err)
 	}
 
-	d.Set("catalog_id", d.Id())
+	d.Set(names.AttrCatalogID, d.Id())
 	if output.DataCatalogEncryptionSettings != nil {
 		if err := d.Set("data_catalog_encryption_settings", []interface{}{flattenDataCatalogEncryptionSettings(output.DataCatalogEncryptionSettings)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting data_catalog_encryption_settings: %s", err)
@@ -200,6 +206,10 @@ func expandEncryptionAtRest(tfMap map[string]interface{}) *glue.EncryptionAtRest
 		apiObject.CatalogEncryptionMode = aws.String(v)
 	}
 
+	if v, ok := tfMap["catalog_encryption_service_role"].(string); ok && v != "" {
+		apiObject.CatalogEncryptionServiceRole = aws.String(v)
+	}
+
 	if v, ok := tfMap["sse_aws_kms_key_id"].(string); ok && v != "" {
 		apiObject.SseAwsKmsKeyId = aws.String(v)
 	}
@@ -252,6 +262,10 @@ func flattenEncryptionAtRest(apiObject *glue.EncryptionAtRest) map[string]interf
 
 	if v := apiObject.CatalogEncryptionMode; v != nil {
 		tfMap["catalog_encryption_mode"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.CatalogEncryptionServiceRole; v != nil {
+		tfMap["catalog_encryption_service_role"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SseAwsKmsKeyId; v != nil {

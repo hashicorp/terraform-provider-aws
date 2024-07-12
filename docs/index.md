@@ -37,17 +37,23 @@ Follow the guide for your contribution type and refer to the Development Referen
 
 ### 4. Write Tests
 
-We require changes to be covered by [acceptance tests](running-and-writing-acceptance-tests.md) for all contributions. If you are unable to pay for acceptance tests for your contributions, mention this in your pull request. We will happily accept "best effort" acceptance tests implementations and run them for you on our side. Your PR may take longer to merge, but this is not a blocker for contributions.
+We require all changes to be covered by [acceptance tests](running-and-writing-acceptance-tests.md) and/or [unit tests](unit-tests.md), depending on the situation. In the context of the Terraform AWS Provider, _acceptance tests_ are tests of interactions with AWS, such as creating, reading information about, and destroying AWS resources. In contrast, _unit tests_ test functionality wholly within the provider itself, such as function tests.
 
-### 5. Update the Changelog
+If you are unable to pay for acceptance tests for your contributions, mention this in your pull request. We will happily accept "best effort" acceptance tests implementations and run them for you on our side. Your PR may take longer to merge, but this is not a blocker for contributions.
+
+### 5. Continuous Integration
+
+When submitting a pull request, you'll notice that we run several automated processes on your proposed change.Some of these processes are tests to ensure your contribution aligns with our standards. While we strive for accuracy, some users may find these tests confusing. Check out [Continuous Integration](continuous-integration.md) for additional clarity.
+
+### 6. Update the Changelog
 
 HashiCorp's open-source projects have always maintained a user-friendly, readable CHANGELOG.md that allows users to tell at a glance whether a release should have any effect on them, and to gauge the risk of an upgrade. Not all changes require an entry in the changelog, refer to our [Changelog Process](changelog-process.md) for details about when and how to create a changelog.
 
-### 6. Create a Pull Request
+### 7. Create a Pull Request
 
 When your contribution is ready, Create a [Pull Request](raising-a-pull-request.md) in the AWS provider repository.
 
-Pull requests are usually triaged within a few days of creation and are prioritized based on community reactions. Our [Prioritization Guides](prioritization.md) provides more details about the process.
+Pull requests are usually triaged within a few days of creation and are prioritized based on community reactions. Our [Prioritization Guides](prioritization.md) provide more details about the process.
 
 ## Submit an Issue
 

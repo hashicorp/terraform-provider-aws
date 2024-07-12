@@ -7,17 +7,17 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // @SDKResource("aws_iam_security_token_service_preferences", name="Security Token Service Preferences")
-func ResourceSecurityTokenServicePreferences() *schema.Resource {
+func resourceSecurityTokenServicePreferences() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityTokenServicePreferencesUpsert,
 		ReadWithoutTimeout:   resourceSecurityTokenServicePreferencesRead,
@@ -26,9 +26,9 @@ func ResourceSecurityTokenServicePreferences() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"global_endpoint_token_version": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(iam.GlobalEndpointTokenVersion_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.GlobalEndpointTokenVersion](),
 			},
 		},
 	}
@@ -36,13 +36,13 @@ func ResourceSecurityTokenServicePreferences() *schema.Resource {
 
 func resourceSecurityTokenServicePreferencesUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	input := &iam.SetSecurityTokenServicePreferencesInput{
-		GlobalEndpointTokenVersion: aws.String(d.Get("global_endpoint_token_version").(string)),
+		GlobalEndpointTokenVersion: awstypes.GlobalEndpointTokenVersion(d.Get("global_endpoint_token_version").(string)),
 	}
 
-	_, err := conn.SetSecurityTokenServicePreferencesWithContext(ctx, input)
+	_, err := conn.SetSecurityTokenServicePreferences(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting IAM Security Token Service Preferences: %s", err)
@@ -57,15 +57,15 @@ func resourceSecurityTokenServicePreferencesUpsert(ctx context.Context, d *schem
 
 func resourceSecurityTokenServicePreferencesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	output, err := conn.GetAccountSummaryWithContext(ctx, &iam.GetAccountSummaryInput{})
+	output, err := conn.GetAccountSummary(ctx, &iam.GetAccountSummaryInput{})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Account Summary: %s", err)
 	}
 
-	d.Set("global_endpoint_token_version", fmt.Sprintf("v%dToken", aws.Int64Value(output.SummaryMap[iam.SummaryKeyTypeGlobalEndpointTokenVersion])))
+	d.Set("global_endpoint_token_version", fmt.Sprintf("v%dToken", output.SummaryMap[string(awstypes.SummaryKeyTypeGlobalEndpointTokenVersion)]))
 
 	return diags
 }

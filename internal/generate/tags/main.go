@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	v1 "github.com/hashicorp/terraform-provider-aws/internal/generate/tags/templates/v1"
 	v2 "github.com/hashicorp/terraform-provider-aws/internal/generate/tags/templates/v2"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 const (
@@ -43,7 +43,7 @@ var (
 	waitForPropagation       = flag.Bool("Wait", false, "whether to generate WaitTagsPropagated")
 
 	createTagsFunc             = flag.String("CreateTagsFunc", "createTags", "createTagsFunc")
-	getTagFunc                 = flag.String("GetTagFunc", "GetTag", "getTagFunc")
+	getTagFunc                 = flag.String("GetTagFunc", "findTag", "getTagFunc")
 	getTagsInFunc              = flag.String("GetTagsInFunc", "getTagsIn", "getTagsInFunc")
 	keyValueTagsFunc           = flag.String("KeyValueTagsFunc", "KeyValueTags", "keyValueTagsFunc")
 	listTagsFunc               = flag.String("ListTagsFunc", defaultListTagsFunc, "listTagsFunc")
@@ -68,6 +68,7 @@ var (
 	tagOp                      = flag.String("TagOp", "TagResource", "tagOp")
 	tagOpBatchSize             = flag.String("TagOpBatchSize", "", "tagOpBatchSize")
 	tagResTypeElem             = flag.String("TagResTypeElem", "", "tagResTypeElem")
+	tagResTypeElemType         = flag.String("TagResTypeElemType", "", "tagResTypeElemType")
 	tagType                    = flag.String("TagType", "Tag", "tagType")
 	tagType2                   = flag.String("TagType2", "", "tagType")
 	tagTypeAddBoolElem         = flag.String("TagTypeAddBoolElem", "", "TagTypeAddBoolElem")
@@ -192,6 +193,7 @@ type TemplateData struct {
 	TagOpBatchSize             string
 	TagPackage                 string
 	TagResTypeElem             string
+	TagResTypeElemType         string
 	TagType                    string
 	TagType2                   string
 	TagTypeAddBoolElem         string
@@ -257,26 +259,16 @@ func main() {
 
 	g.Infof("Generating internal/service/%s/%s", servicePackage, filename)
 
-	awsPkg, err := names.AWSGoPackage(*sdkServicePackage, *sdkVersion)
+	service, err := data.LookupService(*sdkServicePackage)
 	if err != nil {
 		g.Fatalf("encountered: %s", err)
 	}
+
+	awsPkg := service.GoPackageName(*sdkVersion)
 
 	var awsIntfPkg string
 	if *sdkVersion == sdkV1 && (*getTag || *listTags || *updateTags) {
 		awsIntfPkg = fmt.Sprintf("%[1]s/%[1]siface", awsPkg)
-	}
-
-	clientTypeName, err := names.AWSGoClientTypeName(*sdkServicePackage, *sdkVersion)
-
-	if err != nil {
-		g.Fatalf("encountered: %s", err)
-	}
-
-	providerNameUpper, err := names.ProviderNameUpper(*sdkServicePackage)
-
-	if err != nil {
-		g.Fatalf("encountered: %s", err)
 	}
 
 	createTagsFunc := *createTagsFunc
@@ -287,6 +279,7 @@ func main() {
 		createTagsFunc = ""
 	}
 
+	clientTypeName := service.ClientTypeName(*sdkVersion)
 	var clientType string
 	if *sdkVersion == sdkV1 {
 		clientType = fmt.Sprintf("%siface.%sAPI", awsPkg, clientTypeName)
@@ -296,13 +289,6 @@ func main() {
 
 	tagPackage := awsPkg
 
-	if tagPackage == "wafregional" {
-		tagPackage = "waf"
-		if *sdkVersion == sdkV1 {
-			awsPkg = ""
-		}
-	}
-
 	var cleanRetryErrorCodes []string
 	for _, c := range strings.Split(*retryTagsErrorCodes, ",") {
 		if strings.HasPrefix(c, fmt.Sprintf("%s.", servicePackage)) || strings.HasPrefix(c, "types.") {
@@ -311,6 +297,8 @@ func main() {
 			cleanRetryErrorCodes = append(cleanRetryErrorCodes, fmt.Sprintf(`"%s"`, c))
 		}
 	}
+
+	providerNameUpper := service.ProviderNameUpper()
 
 	templateData := TemplateData{
 		AWSService:             awsPkg,
@@ -330,6 +318,7 @@ func main() {
 		SkipTypesImp:      *skipTypesImp,
 		TfLogPkg:          *updateTags,
 		TfResourcePkg:     *getTag || *waitForPropagation || *retryTagsListTagsType != "",
+		TfSlicesPkg:       *serviceTagsSlice && *tagTypeIDElem != "" && *tagTypeAddBoolElem != "",
 		TimePkg:           *waitForPropagation || *retryTagsListTagsType != "",
 
 		CreateTagsFunc:             createTagsFunc,
@@ -362,6 +351,7 @@ func main() {
 		TagOpBatchSize:             *tagOpBatchSize,
 		TagPackage:                 tagPackage,
 		TagResTypeElem:             *tagResTypeElem,
+		TagResTypeElemType:         *tagResTypeElemType,
 		TagType:                    *tagType,
 		TagType2:                   *tagType2,
 		TagTypeAddBoolElem:         *tagTypeAddBoolElem,

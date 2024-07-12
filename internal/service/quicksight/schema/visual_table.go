@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func tableVisualSchema() *schema.Schema {
@@ -21,8 +22,8 @@ func tableVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id": idSchema(),
-				"actions":   visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
+				"visual_id":       idSchema(),
+				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -88,7 +89,7 @@ func tableVisualSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"content": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableFieldLinkContentConfiguration.html
+																			names.AttrContent: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableFieldLinkContentConfiguration.html
 																				Type:     schema.TypeList,
 																				Optional: true,
 																				MinItems: 1,
@@ -114,7 +115,7 @@ func tableVisualSchema() *schema.Schema {
 																							Elem: &schema.Resource{
 																								Schema: map[string]*schema.Schema{
 																									"font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-																									"value": {
+																									names.AttrValue: {
 																										Type:     schema.TypeString,
 																										Optional: true,
 																									},
@@ -124,7 +125,7 @@ func tableVisualSchema() *schema.Schema {
 																					},
 																				},
 																			},
-																			"target": stringSchema(false, validation.StringInSlice(quicksight.URLTargetConfiguration_Values(), false)),
+																			names.AttrTarget: stringSchema(false, validation.StringInSlice(quicksight.URLTargetConfiguration_Values(), false)),
 																		},
 																	},
 																},
@@ -156,8 +157,8 @@ func tableVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"group_by": dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"values":   measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													"group_by":       dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													names.AttrValues: measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
 										},
@@ -168,7 +169,7 @@ func tableVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"values": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_UnaggregatedField.html
+													names.AttrValues: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_UnaggregatedField.html
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 1,
@@ -350,7 +351,7 @@ func expandTableVisual(tfList []interface{}) *quicksight.TableVisual {
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap["actions"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
 		visual.Actions = expandVisualCustomActions(v)
 	}
 	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -443,7 +444,7 @@ func expandTableAggregatedFieldWells(tfList []interface{}) *quicksight.TableAggr
 	if v, ok := tfMap["group_by"].([]interface{}); ok && len(v) > 0 {
 		config.GroupBy = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		config.Values = expandMeasureFields(v)
 	}
 
@@ -462,7 +463,7 @@ func expandTableUnaggregatedFieldWells(tfList []interface{}) *quicksight.TableUn
 
 	config := &quicksight.TableUnaggregatedFieldWells{}
 
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		config.Values = expandUnaggregatedFields(v)
 	}
 
@@ -677,10 +678,10 @@ func expandTableFieldLinkConfiguration(tfList []interface{}) *quicksight.TableFi
 
 	options := &quicksight.TableFieldLinkConfiguration{}
 
-	if v, ok := tfMap["target"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTarget].(string); ok && v != "" {
 		options.Target = aws.String(v)
 	}
-	if v, ok := tfMap["content"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrContent].([]interface{}); ok && len(v) > 0 {
 		options.Content = expandTableFieldLinkContentConfiguration(v)
 	}
 
@@ -740,7 +741,7 @@ func expandTableFieldCustomTextContent(tfList []interface{}) *quicksight.TableFi
 
 	options := &quicksight.TableFieldCustomTextContent{}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		options.Value = aws.String(v)
 	}
 	if v, ok := tfMap["custom_text_content"].([]interface{}); ok && len(v) > 0 {
@@ -1004,7 +1005,7 @@ func flattenTableVisual(apiObject *quicksight.TableVisual) []interface{} {
 		"visual_id": aws.StringValue(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
-		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
 	if apiObject.ChartConfiguration != nil {
 		tfMap["chart_configuration"] = flattenTableConfiguration(apiObject.ChartConfiguration)
@@ -1091,7 +1092,7 @@ func flattenTableFieldOption(apiObject []*quicksight.TableFieldOption) []interfa
 			tfMap["url_styling"] = flattenTableFieldURLConfiguration(config.URLStyling)
 		}
 		if config.Visibility != nil {
-			tfMap["visbility"] = aws.StringValue(config.Visibility)
+			tfMap["visibility"] = aws.StringValue(config.Visibility)
 		}
 		if config.Width != nil {
 			tfMap["width"] = aws.StringValue(config.Width)
@@ -1152,10 +1153,10 @@ func flattenTableFieldLinkConfiguration(apiObject *quicksight.TableFieldLinkConf
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Content != nil {
-		tfMap["content"] = flattenTableFieldLinkContentConfiguration(apiObject.Content)
+		tfMap[names.AttrContent] = flattenTableFieldLinkContentConfiguration(apiObject.Content)
 	}
 	if apiObject.Target != nil {
-		tfMap["target"] = aws.StringValue(apiObject.Target)
+		tfMap[names.AttrTarget] = aws.StringValue(apiObject.Target)
 	}
 
 	return []interface{}{tfMap}
@@ -1200,7 +1201,7 @@ func flattenTableFieldCustomTextContent(apiObject *quicksight.TableFieldCustomTe
 		tfMap["font_configuration"] = flattenFontConfiguration(apiObject.FontConfiguration)
 	}
 	if apiObject.Value != nil {
-		tfMap["value"] = aws.StringValue(apiObject.Value)
+		tfMap[names.AttrValue] = aws.StringValue(apiObject.Value)
 	}
 
 	return []interface{}{tfMap}
@@ -1232,7 +1233,7 @@ func flattenTableAggregatedFieldWells(apiObject *quicksight.TableAggregatedField
 		tfMap["group_by"] = flattenDimensionFields(apiObject.GroupBy)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureFields(apiObject.Values)
+		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}
@@ -1245,7 +1246,7 @@ func flattenTableUnaggregatedFieldWells(apiObject *quicksight.TableUnaggregatedF
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenUnaggregatedField(apiObject.Values)
+		tfMap[names.AttrValues] = flattenUnaggregatedField(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}

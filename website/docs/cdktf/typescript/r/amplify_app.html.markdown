@@ -208,7 +208,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) Name for an Amplify app.
-* `accessToken` - (Optional) Personal access token for a third-party source control system for an Amplify app. The personal access token is used to create a webhook and a read-only deploy key. The token is not stored.
+* `accessToken` - (Optional) Personal access token for a third-party source control system for an Amplify app. This token must have write access to the relevant repo to create a webhook and a read-only deploy key for the Amplify project. The token is not stored, so after applying this attribute can be removed and the setup token deleted.
 * `autoBranchCreationConfig` - (Optional) Automated branch creation configuration for an Amplify app. An `autoBranchCreationConfig` block is documented below.
 * `autoBranchCreationPatterns` - (Optional) Automated branch creation glob patterns for an Amplify app.
 * `basicAuthCredentials` - (Optional) Credentials for basic authorization for an Amplify app.
@@ -294,4 +294,4 @@ Using `terraform import`, import Amplify App using Amplify App ID (appId). For e
 
 App ID can be obtained from App ARN (e.g., `arn:aws:amplify:us-east-1:12345678:apps/d2ypk4k47z8u6`).
 
-<!-- cache-key: cdktf-0.20.1 input-30bc1b23375a839b9e6c3eff5658fb91ee811a1f4556657ed20a8f4bdccfc827 -->
+<!-- cache-key: cdktf-0.20.1 input-d7ee79d01f5e2f26ebf8925269494af0843648275257f3560646ceda6935e583 -->

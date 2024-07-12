@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_workspaces_workspace")
@@ -31,10 +32,10 @@ func DataSourceWorkspace() *schema.Resource {
 				Type:          schema.TypeString,
 				Computed:      true,
 				Optional:      true,
-				RequiredWith:  []string{"user_name"},
+				RequiredWith:  []string{names.AttrUserName},
 				ConflictsWith: []string{"workspace_id"},
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,7 +43,7 @@ func DataSourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,7 +51,7 @@ func DataSourceWorkspace() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:          schema.TypeString,
 				Computed:      true,
 				Optional:      true,
@@ -69,7 +70,7 @@ func DataSourceWorkspace() *schema.Resource {
 				Type:          schema.TypeString,
 				Computed:      true,
 				Optional:      true,
-				ConflictsWith: []string{"directory_id", "user_name"},
+				ConflictsWith: []string{"directory_id", names.AttrUserName},
 			},
 			"workspace_properties": {
 				Type:     schema.TypeList,
@@ -99,7 +100,7 @@ func DataSourceWorkspace() *schema.Resource {
 					},
 				},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -131,7 +132,7 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if directoryID, ok := d.GetOk("directory_id"); ok {
-		userName := d.Get("user_name").(string)
+		userName := d.Get(names.AttrUserName).(string)
 		resp, err := conn.DescribeWorkspaces(ctx, &workspaces.DescribeWorkspacesInput{
 			DirectoryId: aws.String(directoryID.(string)),
 			UserName:    aws.String(userName),
@@ -154,11 +155,11 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.SetId(aws.ToString(workspace.WorkspaceId))
 	d.Set("bundle_id", workspace.BundleId)
 	d.Set("directory_id", workspace.DirectoryId)
-	d.Set("ip_address", workspace.IpAddress)
+	d.Set(names.AttrIPAddress, workspace.IpAddress)
 	d.Set("computer_name", workspace.ComputerName)
-	d.Set("state", workspace.State)
+	d.Set(names.AttrState, workspace.State)
 	d.Set("root_volume_encryption_enabled", workspace.RootVolumeEncryptionEnabled)
-	d.Set("user_name", workspace.UserName)
+	d.Set(names.AttrUserName, workspace.UserName)
 	d.Set("user_volume_encryption_enabled", workspace.UserVolumeEncryptionEnabled)
 	d.Set("volume_encryption_key", workspace.VolumeEncryptionKey)
 	if err := d.Set("workspace_properties", FlattenWorkspaceProperties(workspace.WorkspaceProperties)); err != nil {
@@ -170,7 +171,7 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "listing tags: %s", err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
