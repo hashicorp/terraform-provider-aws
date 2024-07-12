@@ -29,9 +29,9 @@ func TestAccCloudFrontOriginAccessControlDataSource_description(t *testing.T) {
 				Config: testAccOriginAccessControlDataSourceConfig_description(rName, "Acceptance Test 1"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "etag"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "id", resourceName, "id"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "origin_access_control_origin_type", resourceName, "origin_access_control_origin_type"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "signing_behavior", resourceName, "signing_behavior"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "signing_protocol", resourceName, "signing_protocol"),
@@ -57,8 +57,8 @@ func TestAccCloudFrontOriginAccessControlDataSource_noDescription(t *testing.T) 
 				Config: testAccOriginAccessControlDataSourceConfig_noDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "etag"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "id", resourceName, "id"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "origin_access_control_origin_type", resourceName, "origin_access_control_origin_type"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "signing_behavior", resourceName, "signing_behavior"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "signing_protocol", resourceName, "signing_protocol"),

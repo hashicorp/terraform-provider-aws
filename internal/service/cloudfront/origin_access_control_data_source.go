@@ -16,7 +16,7 @@ import (
 )
 
 // @FrameworkDataSource(name="Origin Access Control")
-func newDataSourceOriginAccessControl(context.Context) (datasource.DataSourceWithConfigure, error) {
+func newDataSourceOriginAccessControl(_ context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceOriginAccessControl{}
 
 	return d, nil
@@ -30,24 +30,24 @@ const (
 	DSNameOriginAccessControl = "Origin Access Control Data Source"
 )
 
-func (d *dataSourceOriginAccessControl) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+func (d *dataSourceOriginAccessControl) Metadata(_ context.Context, _ datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	response.TypeName = "aws_cloudfront_origin_access_control"
 }
 
 // Schema returns the schema for this data source.
-func (d *dataSourceOriginAccessControl) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *dataSourceOriginAccessControl) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
 			"etag": schema.StringAttribute{
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Required: true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
 			"origin_access_control_origin_type": schema.StringAttribute{
