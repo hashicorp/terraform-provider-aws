@@ -82,7 +82,6 @@ class MyConvertedCode(TerraformStack):
             admins=[test.arn, Token.as_string(aws_iam_role_test.arn)],
             allow_external_data_filtering=True,
             authorized_session_tag_value_list=["Amazon EMR"],
-            allow_full_table_external_data_access=True,
             create_database_default_permissions=[LakeformationDataLakeSettingsCreateDatabaseDefaultPermissions(
                 permissions=["SELECT", "ALTER", "DROP"],
                 principal=test.arn
@@ -113,7 +112,6 @@ The following arguments are optional:
 * `allow_external_data_filtering` - (Optional) Whether to allow Amazon EMR clusters to access data managed by Lake Formation.
 * `external_data_filtering_allow_list` - (Optional) A list of the account IDs of Amazon Web Services accounts with Amazon EMR clusters that are to perform data filtering.
 * `authorized_session_tag_value_list` - (Optional) Lake Formation relies on a privileged process secured by Amazon EMR or the third party integrator to tag the user's role while assuming it.
-* `allow_full_table_external_data_access` - (Optional) Whether to allow a third-party query engine to get data access credentials without session tags when a caller has full data access permissions.
 
 ~> **NOTE:** Although optional, not including `admins`, `create_database_default_permissions`, `create_table_default_permissions`, and/or `trusted_resource_owners` results in the setting being cleared.
 
