@@ -18,21 +18,23 @@ import (
 )
 
 // @SDKDataSource("aws_appmesh_gateway_route", name="Gateway Route")
+// @Tags
+// @Testing(serialize=true)
 func dataSourceGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGatewayRouteRead,
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"created_date": {
+				names.AttrCreatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"last_updated_date": {
+				names.AttrLastUpdatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -45,11 +47,11 @@ func dataSourceGatewayRoute() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"resource_owner": {
+				names.AttrResourceOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -67,9 +69,8 @@ func dataSourceGatewayRoute() *schema.Resource {
 func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	gatewayRouteName := d.Get("name").(string)
+	gatewayRouteName := d.Get(names.AttrName).(string)
 	gatewayRoute, err := findGatewayRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_gateway_name").(string), gatewayRouteName)
 
 	if err != nil {
@@ -78,14 +79,14 @@ func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.StringValue(gatewayRoute.GatewayRouteName))
 	arn := aws.StringValue(gatewayRoute.Metadata.Arn)
-	d.Set("arn", arn)
-	d.Set("created_date", gatewayRoute.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", gatewayRoute.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedDate, gatewayRoute.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, gatewayRoute.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", gatewayRoute.MeshName)
 	meshOwner := aws.StringValue(gatewayRoute.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
-	d.Set("name", gatewayRoute.GatewayRouteName)
-	d.Set("resource_owner", gatewayRoute.Metadata.ResourceOwner)
+	d.Set(names.AttrName, gatewayRoute.GatewayRouteName)
+	d.Set(names.AttrResourceOwner, gatewayRoute.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenGatewayRouteSpec(gatewayRoute.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
@@ -104,9 +105,7 @@ func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setKeyValueTagsOut(ctx, tags)
 
 	return diags
 }

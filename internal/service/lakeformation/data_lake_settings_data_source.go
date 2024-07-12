@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_lakeformation_data_lake_settings")
@@ -40,12 +41,16 @@ func DataSourceDataLakeSettings() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"allow_full_table_external_data_access": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"authorized_session_tag_value_list": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -54,12 +59,12 @@ func DataSourceDataLakeSettings() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"permissions": {
+						names.AttrPermissions: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"principal": {
+						names.AttrPrincipal: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -71,12 +76,12 @@ func DataSourceDataLakeSettings() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"permissions": {
+						names.AttrPermissions: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"principal": {
+						names.AttrPrincipal: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -103,7 +108,7 @@ func dataSourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData,
 
 	input := &lakeformation.GetDataLakeSettingsInput{}
 
-	if v, ok := d.GetOk("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 	d.SetId(fmt.Sprintf("%d", create.StringHashcode(prettify(input))))
@@ -133,7 +138,8 @@ func dataSourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("create_database_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateDatabaseDefaultPermissions))
 	d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
 	d.Set("external_data_filtering_allow_list", flattenDataLakeSettingsDataFilteringAllowList(settings.ExternalDataFilteringAllowList))
-	d.Set("trusted_resource_owners", flex.FlattenStringValueList(settings.TrustedResourceOwners))
+	d.Set("trusted_resource_owners", flex.FlattenStringyValueList(settings.TrustedResourceOwners))
+	d.Set("allow_full_table_external_data_access", settings.AllowFullTableExternalDataAccess)
 
 	return diags
 }

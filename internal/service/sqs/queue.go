@@ -29,8 +29,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -39,7 +41,7 @@ import (
 
 var (
 	queueSchema = map[string]*schema.Schema{
-		"arn": {
+		names.AttrARN: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -95,21 +97,21 @@ var (
 			Default:      defaultQueueMessageRetentionPeriod,
 			ValidateFunc: validation.IntBetween(60, 1_209_600),
 		},
-		"name": {
+		names.AttrName: {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Computed:      true,
 			ForceNew:      true,
-			ConflictsWith: []string{"name_prefix"},
+			ConflictsWith: []string{names.AttrNamePrefix},
 		},
-		"name_prefix": {
+		names.AttrNamePrefix: {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Computed:      true,
 			ForceNew:      true,
-			ConflictsWith: []string{"name"},
+			ConflictsWith: []string{names.AttrName},
 		},
-		"policy": {
+		names.AttrPolicy: {
 			Type:                  schema.TypeString,
 			Optional:              true,
 			Computed:              true,
@@ -154,7 +156,7 @@ var (
 		},
 		names.AttrTags:    tftags.TagsSchema(),
 		names.AttrTagsAll: tftags.TagsSchemaComputed(),
-		"url": {
+		names.AttrURL: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -167,7 +169,7 @@ var (
 	}
 
 	queueAttributeMap = attrmap.New(map[string]types.QueueAttributeName{
-		"arn":                               types.QueueAttributeNameQueueArn,
+		names.AttrARN:                       types.QueueAttributeNameQueueArn,
 		"content_based_deduplication":       types.QueueAttributeNameContentBasedDeduplication,
 		"deduplication_scope":               types.QueueAttributeNameDeduplicationScope,
 		"delay_seconds":                     types.QueueAttributeNameDelaySeconds,
@@ -177,17 +179,18 @@ var (
 		"kms_master_key_id":                 types.QueueAttributeNameKmsMasterKeyId,
 		"max_message_size":                  types.QueueAttributeNameMaximumMessageSize,
 		"message_retention_seconds":         types.QueueAttributeNameMessageRetentionPeriod,
-		"policy":                            types.QueueAttributeNamePolicy,
+		names.AttrPolicy:                    types.QueueAttributeNamePolicy,
 		"receive_wait_time_seconds":         types.QueueAttributeNameReceiveMessageWaitTimeSeconds,
 		"redrive_allow_policy":              types.QueueAttributeNameRedriveAllowPolicy,
 		"redrive_policy":                    types.QueueAttributeNameRedrivePolicy,
 		"sqs_managed_sse_enabled":           types.QueueAttributeNameSqsManagedSseEnabled,
 		"visibility_timeout_seconds":        types.QueueAttributeNameVisibilityTimeout,
-	}, queueSchema).WithIAMPolicyAttribute("policy").WithMissingSetToNil("*").WithAlwaysSendConfiguredBooleanValueOnCreate("sqs_managed_sse_enabled")
+	}, queueSchema).WithIAMPolicyAttribute(names.AttrPolicy).WithMissingSetToNil("*").WithAlwaysSendConfiguredBooleanValueOnCreate("sqs_managed_sse_enabled")
 )
 
 // @SDKResource("aws_sqs_queue", name="Queue")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sqs/types;awstypes;map[awstypes.QueueAttributeName]string")
 func resourceQueue() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueueCreate,
@@ -209,6 +212,7 @@ func resourceQueue() *schema.Resource {
 }
 
 func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
 	name := queueName(d)
@@ -219,7 +223,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	attributes, err := queueAttributeMap.ResourceDataToAPIAttributesCreate(d)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input.Attributes = flex.ExpandStringyValueMap(attributes)
@@ -238,13 +242,13 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.Errorf("creating SQS Queue (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SQS Queue (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(outputRaw.(*sqs.CreateQueueOutput).QueueUrl))
 
 	if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes); err != nil {
-		return diag.Errorf("waiting for SQS Queue (%s) attributes create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) attributes create: %s", d.Id(), err)
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
@@ -253,18 +257,19 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// If default tags only, continue. Otherwise, error.
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
-			return resourceQueueRead(ctx, d, meta)
+			return append(diags, resourceQueueRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return diag.Errorf("setting SQS Queue (%s) tags: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting SQS Queue (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceQueueRead(ctx, d, meta)
+	return append(diags, resourceQueueRead(ctx, d, meta)...)
 }
 
 func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNotFound(ctx, queueReadTimeout, func() (interface{}, error) {
@@ -274,21 +279,21 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SQS Queue (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading SQS Queue (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SQS Queue (%s): %s", d.Id(), err)
 	}
 
 	name, err := queueNameFromURL(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	err = queueAttributeMap.APIAttributesToResourceData(outputRaw.(map[types.QueueAttributeName]string), d)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// Backwards compatibility: https://github.com/hashicorp/terraform-provider-aws/issues/19786.
@@ -296,24 +301,25 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("kms_data_key_reuse_period_seconds", defaultQueueKMSDataKeyReusePeriodSeconds)
 	}
 
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 	if d.Get("fifo_queue").(bool) {
-		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, fifoQueueNameSuffix))
+		d.Set(names.AttrNamePrefix, create.NamePrefixFromNameWithSuffix(name, fifoQueueNameSuffix))
 	} else {
-		d.Set("name_prefix", create.NamePrefixFromName(name))
+		d.Set(names.AttrNamePrefix, create.NamePrefixFromName(name))
 	}
-	d.Set("url", d.Id())
+	d.Set(names.AttrURL, d.Id())
 
-	return nil
+	return diags
 }
 
 func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		attributes, err := queueAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &sqs.SetQueueAttributesInput{
@@ -324,18 +330,19 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.SetQueueAttributes(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating SQS Queue (%s) attributes: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SQS Queue (%s) attributes: %s", d.Id(), err)
 		}
 
 		if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes); err != nil {
-			return diag.Errorf("waiting for SQS Queue (%s) attributes update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) attributes update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceQueueRead(ctx, d, meta)
+	return append(diags, resourceQueueRead(ctx, d, meta)...)
 }
 
 func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SQS Queue: %s", d.Id())
@@ -344,18 +351,18 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeQueueDoesNotExist) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting SQS Queue (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SQS Queue (%s): %s", d.Id(), err)
 	}
 
 	if err := waitQueueDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for SQS Queue (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
@@ -385,8 +392,8 @@ func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 	return nil
 }
 
-func queueName(d verify.ResourceDiffer) string {
-	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get("name").(string)), create.WithConfiguredPrefix(d.Get("name_prefix").(string))}
+func queueName(d sdkv2.ResourceDiffer) string {
+	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrName).(string)), create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string))}
 	if d.Get("fifo_queue").(bool) {
 		optFns = append(optFns, create.WithSuffix(fifoQueueNameSuffix))
 	}

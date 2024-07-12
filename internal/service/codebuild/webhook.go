@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_codebuild_webhook", name="Webhook")
@@ -47,7 +48,7 @@ func resourceWebhook() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -61,7 +62,7 @@ func resourceWebhook() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.WebhookFilterType](),
@@ -87,7 +88,7 @@ func resourceWebhook() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -151,7 +152,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("payload_url", webhook.PayloadUrl)
 	d.Set("project_name", d.Id())
 	d.Set("secret", d.Get("secret").(string))
-	d.Set("url", webhook.Url)
+	d.Set(names.AttrURL, webhook.Url)
 
 	return diags
 }
@@ -234,7 +235,7 @@ func expandWebhookFilterGroups(tfList []interface{}) [][]types.WebhookFilter {
 			continue
 		}
 
-		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 			apiObjects = append(apiObjects, expandWebhookFilters(v))
 		}
 	}
@@ -282,7 +283,7 @@ func expandWebhookFilter(tfMap map[string]interface{}) *types.WebhookFilter {
 		apiObject.Pattern = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = types.WebhookFilterType(v)
 	}
 
@@ -298,7 +299,7 @@ func flattenWebhookFilterGroups(apiObjects [][]types.WebhookFilter) []interface{
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
-			"filter": flattenWebhookFilters(apiObject),
+			names.AttrFilter: flattenWebhookFilters(apiObject),
 		}
 		tfList = append(tfList, tfMap)
 	}
@@ -322,7 +323,7 @@ func flattenWebhookFilters(apiObjects []types.WebhookFilter) []interface{} {
 
 func flattenWebhookFilter(apiObject types.WebhookFilter) map[string]interface{} {
 	tfMap := map[string]interface{}{
-		"type": apiObject.Type,
+		names.AttrType: apiObject.Type,
 	}
 
 	if v := apiObject.ExcludeMatchedPattern; v != nil {

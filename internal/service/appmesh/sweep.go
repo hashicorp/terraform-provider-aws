@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -141,7 +142,7 @@ func sweepVirtualGateways(region string) error {
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualGatewayName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
-					d.Set("name", virtualGatewayName)
+					d.Set(names.AttrName, virtualGatewayName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -212,7 +213,7 @@ func sweepVirtualNodes(region string) error {
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualNodeName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
-					d.Set("name", virtualNodeName)
+					d.Set(names.AttrName, virtualNodeName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -283,7 +284,7 @@ func sweepVirtualRouters(region string) error {
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualRouterName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
-					d.Set("name", virtualRouterName)
+					d.Set(names.AttrName, virtualRouterName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -354,7 +355,7 @@ func sweepVirtualServices(region string) error {
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualServiceName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
-					d.Set("name", virtualServiceName)
+					d.Set(names.AttrName, virtualServiceName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -437,7 +438,7 @@ func sweepGatewayRoutes(region string) error {
 							d := r.Data(nil)
 							d.SetId(fmt.Sprintf("%s/%s/%s", meshName, virtualGatewayName, gatewayRouteName)) // Logged in Delete handler, not used in API call.
 							d.Set("mesh_name", meshName)
-							d.Set("name", gatewayRouteName)
+							d.Set(names.AttrName, gatewayRouteName)
 							d.Set("virtual_gateway_name", virtualGatewayName)
 
 							sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -533,7 +534,7 @@ func sweepRoutes(region string) error {
 							d := r.Data(nil)
 							d.SetId(fmt.Sprintf("%s/%s/%s", meshName, virtualRouterName, routeName)) // Logged in Delete handler, not used in API call.
 							d.Set("mesh_name", meshName)
-							d.Set("name", routeName)
+							d.Set(names.AttrName, routeName)
 							d.Set("virtual_router_name", virtualRouterName)
 
 							sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

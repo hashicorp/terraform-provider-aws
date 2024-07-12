@@ -37,7 +37,7 @@ func ResourcePipeline() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,7 +71,7 @@ func ResourcePipeline() *schema.Resource {
 				MaxItems:     1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket": {
+						names.AttrBucket: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -108,7 +108,7 @@ func ResourcePipeline() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([0-9A-Za-z-])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -130,7 +130,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 		ClientRequestToken:  aws.String(id.UniqueId()),
 		PipelineDisplayName: aws.String(d.Get("pipeline_display_name").(string)),
 		PipelineName:        aws.String(name),
-		RoleArn:             aws.String(d.Get("role_arn").(string)),
+		RoleArn:             aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:                getTagsIn(ctx),
 	}
 
@@ -177,7 +177,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker Pipeline (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", pipeline.PipelineArn)
+	d.Set(names.AttrARN, pipeline.PipelineArn)
 	if err := d.Set("parallelism_configuration", flattenParallelismConfiguration(pipeline.ParallelismConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parallelism_configuration: %s", err)
 	}
@@ -185,7 +185,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("pipeline_description", pipeline.PipelineDescription)
 	d.Set("pipeline_display_name", pipeline.PipelineDisplayName)
 	d.Set("pipeline_name", pipeline.PipelineName)
-	d.Set("role_arn", pipeline.RoleArn)
+	d.Set(names.AttrRoleARN, pipeline.RoleArn)
 
 	return diags
 }
@@ -194,7 +194,7 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &sagemaker.UpdatePipelineInput{
 			PipelineName: aws.String(d.Id()),
 		}
@@ -219,8 +219,8 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.PipelineDisplayName = aws.String(d.Get("pipeline_display_name").(string))
 		}
 
-		if d.HasChange("role_arn") {
-			input.RoleArn = aws.String(d.Get("role_arn").(string))
+		if d.HasChange(names.AttrRoleARN) {
+			input.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 		}
 
 		_, err := conn.UpdatePipelineWithContext(ctx, input)
@@ -262,7 +262,7 @@ func expandPipelineDefinitionS3Location(l []interface{}) *sagemaker.PipelineDefi
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.PipelineDefinitionS3Location{
-		Bucket:    aws.String(m["bucket"].(string)),
+		Bucket:    aws.String(m[names.AttrBucket].(string)),
 		ObjectKey: aws.String(m["object_key"].(string)),
 	}
 

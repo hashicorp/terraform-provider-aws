@@ -244,7 +244,7 @@ You must choose one or the other
 See [related part of AWS Docs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricAlarm.html)
 for details about valid values.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `alarmName` - (Required) The descriptive name for the alarm. This name must be unique within the user's AWS account
 * `comparisonOperator` - (Required) The arithmetic operation to use when comparing the specified Statistic and Threshold. The specified Statistic value is used as the first operand. Either of the following is supported: `GreaterThanOrEqualToThreshold`, `GreaterThanThreshold`, `LessThanThreshold`, `LessThanOrEqualToThreshold`. Additionally, the values  `LessThanLowerOrGreaterThanUpperThreshold`, `LessThanLowerThreshold`, and `GreaterThanUpperThreshold` are used only for alarms based on anomaly detection models.
@@ -344,4 +344,4 @@ Using `terraform import`, import CloudWatch Metric Alarm using the `alarmName`. 
 % terraform import aws_cloudwatch_metric_alarm.test alarm-12345
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-35c84ffb25db36c6ca1bc5ffe04bb308aa8f69f6412b0c58319d41a28b5c21f7 -->
+<!-- cache-key: cdktf-0.20.1 input-0b340ec933b98038675ae29782c793a97864dde77b03ac56cb0fdf0a426ba0fa -->

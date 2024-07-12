@@ -147,13 +147,7 @@ func testAccCheckUserGroupAssociationDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			userGroupID, userID, err := tfelasticache.UserGroupAssociationParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			err = tfelasticache.FindUserGroupAssociation(ctx, conn, userGroupID, userID)
+			err := tfelasticache.FindUserGroupAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_group_id"], rs.Primary.Attributes["user_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -177,19 +171,9 @@ func testAccCheckUserGroupAssociationExists(ctx context.Context, n string) resou
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ElastiCache User Group Association ID is set")
-		}
-
-		userGroupID, userID, err := tfelasticache.UserGroupAssociationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
-		err = tfelasticache.FindUserGroupAssociation(ctx, conn, userGroupID, userID)
+		err := tfelasticache.FindUserGroupAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_group_id"], rs.Primary.Attributes["user_id"])
 
 		return err
 	}

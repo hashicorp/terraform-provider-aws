@@ -26,15 +26,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_rest_api", name="REST API")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetRestApiOutput", importIgnore="put_rest_api_mode")
 func resourceRestAPI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRestAPICreate,
@@ -56,7 +57,7 @@ func resourceRestAPI() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.ApiKeySourceType](),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,11 +71,11 @@ func resourceRestAPI() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -132,16 +133,16 @@ func resourceRestAPI() *schema.Resource {
 					return old == "" && new == "-1"
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Optional:              true,
 				Computed:              true,
@@ -181,7 +182,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &apigateway.CreateRestApiInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
@@ -195,7 +196,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.BinaryMediaTypes = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -208,14 +209,14 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("minimum_compression_size"); ok && v.(string) != "" && v.(string) != "-1" {
-		mcs, err := strconv.Atoi(v.(string))
+		mcs, err := strconv.ParseInt(v.(string), 0, 32)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "converting minimum_compression_size (%s): %s", v, err)
 		}
 		input.MinimumCompressionSize = aws.Int32(int32(mcs))
 	}
 
-	if v, ok := d.GetOk("policy"); ok {
+	if v, ok := d.GetOk(names.AttrPolicy); ok {
 		policy, err := structure.NormalizeJsonString(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -248,7 +249,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.FailOnWarnings = v.(bool)
 		}
 
-		if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
+		if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]interface{})) > 0 {
 			input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 		}
 
@@ -295,10 +296,10 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("api_key_source", api.ApiKeySource)
-	d.Set("arn", apiARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, apiARN(meta.(*conns.AWSClient), d.Id()))
 	d.Set("binary_media_types", api.BinaryMediaTypes)
-	d.Set("created_date", api.CreatedDate.Format(time.RFC3339))
-	d.Set("description", api.Description)
+	d.Set(names.AttrCreatedDate, api.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrDescription, api.Description)
 	d.Set("disable_execute_api_endpoint", api.DisableExecuteApiEndpoint)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(api.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
@@ -309,7 +310,7 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 	} else {
 		d.Set("minimum_compression_size", strconv.FormatInt(int64(aws.ToInt32(api.MinimumCompressionSize)), 10))
 	}
-	d.Set("name", api.Name)
+	d.Set(names.AttrName, api.Name)
 
 	input := &apigateway.GetResourcesInput{
 		RestApiId: aws.String(d.Id()),
@@ -333,12 +334,12 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), policy)
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), policy)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 
 	setTagsOut(ctx, api.Tags)
 
@@ -349,7 +350,7 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		operations := make([]types.PatchOperation, 0)
 
 		if d.HasChange("api_key_source") {
@@ -391,11 +392,11 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		if d.HasChange("description") {
+		if d.HasChange(names.AttrDescription) {
 			operations = append(operations, types.PatchOperation{
 				Op:    types.OpReplace,
 				Path:  aws.String("/description"),
-				Value: aws.String(d.Get("description").(string)),
+				Value: aws.String(d.Get(names.AttrDescription).(string)),
 			})
 		}
 
@@ -470,16 +471,16 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			})
 		}
 
-		if d.HasChange("name") {
+		if d.HasChange(names.AttrName) {
 			operations = append(operations, types.PatchOperation{
 				Op:    types.OpReplace,
 				Path:  aws.String("/name"),
-				Value: aws.String(d.Get("name").(string)),
+				Value: aws.String(d.Get(names.AttrName).(string)),
 			})
 		}
 
-		if d.HasChange("policy") {
-			policy, _ := structure.NormalizeJsonString(d.Get("policy").(string)) // validation covers error
+		if d.HasChange(names.AttrPolicy) {
+			policy, _ := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string)) // validation covers error
 
 			operations = append(operations, types.PatchOperation{
 				Op:    types.OpReplace,
@@ -499,7 +500,7 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		if d.HasChanges("body", "parameters") {
+		if d.HasChanges("body", names.AttrParameters) {
 			if body, ok := d.GetOk("body"); ok {
 				// Terraform implementation uses the `overwrite` mode by default.
 				// Overwrite mode will delete existing literal properties if they are not explicitly set in the OpenAPI definition.
@@ -516,7 +517,7 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					input.FailOnWarnings = v.(bool)
 				}
 
-				if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
+				if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]interface{})) > 0 {
 					input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 				}
 
@@ -624,7 +625,7 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 		}
 	}
 
-	if v, ok := d.GetOk("description"); ok && v.(string) != aws.ToString(output.Description) {
+	if v, ok := d.GetOk(names.AttrDescription); ok && v.(string) != aws.ToString(output.Description) {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/description"),
@@ -687,7 +688,7 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 		})
 	}
 
-	if v, ok := d.GetOk("name"); ok && v.(string) != aws.ToString(output.Name) {
+	if v, ok := d.GetOk(names.AttrName); ok && v.(string) != aws.ToString(output.Name) {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/name"),
@@ -695,7 +696,7 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 		})
 	}
 
-	if v, ok := d.GetOk("policy"); ok {
+	if v, ok := d.GetOk(names.AttrPolicy); ok {
 		if equivalent, err := awspolicy.PoliciesAreEquivalent(v.(string), aws.ToString(output.Policy)); err != nil || !equivalent {
 			policy, _ := structure.NormalizeJsonString(v.(string)) // validation covers error
 

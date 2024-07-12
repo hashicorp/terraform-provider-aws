@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -33,7 +34,7 @@ func ResourceProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,7 +43,7 @@ func ResourceProfile() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -53,7 +54,7 @@ func ResourceProfile() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -80,9 +81,10 @@ func ResourceProfile() *schema.Resource {
 }
 
 func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &rolesanywhere.CreateProfileInput{
 		Name:     aws.String(name),
 		RoleArns: expandStringList(d.Get("role_arns").(*schema.Set).List()),
@@ -93,7 +95,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.DurationSeconds = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("enabled"); ok {
+	if v, ok := d.GetOk(names.AttrEnabled); ok {
 		input.Enabled = aws.Bool(v.(bool))
 	}
 
@@ -113,15 +115,16 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := conn.CreateProfile(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating RolesAnywhere Profile (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating RolesAnywhere Profile (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Profile.ProfileId))
 
-	return resourceProfileRead(ctx, d, meta)
+	return append(diags, resourceProfileRead(ctx, d, meta)...)
 }
 
 func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	profile, err := FindProfileByID(ctx, conn, d.Id())
@@ -129,29 +132,30 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RolesAnywhere Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading RolesAnywhere Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RolesAnywhere Profile (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", profile.ProfileArn)
+	d.Set(names.AttrARN, profile.ProfileArn)
 	d.Set("duration_seconds", profile.DurationSeconds)
-	d.Set("enabled", profile.Enabled)
+	d.Set(names.AttrEnabled, profile.Enabled)
 	d.Set("managed_policy_arns", profile.ManagedPolicyArns)
-	d.Set("name", profile.Name)
+	d.Set(names.AttrName, profile.Name)
 	d.Set("require_instance_properties", profile.RequireInstanceProperties)
 	d.Set("role_arns", profile.RoleArns)
 	d.Set("session_policy", profile.SessionPolicy)
 
-	return nil
+	return diags
 }
 
 func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
-	if d.HasChangesExcept("enabled", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &rolesanywhere.UpdateProfileInput{
 			ProfileId: aws.String(d.Id()),
 		}
@@ -164,8 +168,8 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ManagedPolicyArns = expandStringList(d.Get("managed_policy_arns").(*schema.Set).List())
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
 		if d.HasChange("role_arns") {
@@ -179,29 +183,30 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		log.Printf("[DEBUG] Updating RolesAnywhere Profile (%s): %#v", d.Id(), input)
 		_, err := conn.UpdateProfile(ctx, input)
 		if err != nil {
-			return diag.Errorf("updating RolesAnywhere Profile (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating RolesAnywhere Profile (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("enabled") {
-		_, n := d.GetChange("enabled")
+	if d.HasChange(names.AttrEnabled) {
+		_, n := d.GetChange(names.AttrEnabled)
 		if n == true {
 			err := enableProfile(ctx, d.Id(), meta)
 			if err != nil {
-				diag.Errorf("enabling RolesAnywhere Profile (%s): %s", d.Id(), err)
+				sdkdiag.AppendErrorf(diags, "enabling RolesAnywhere Profile (%s): %s", d.Id(), err)
 			}
 		} else {
 			err := disableProfile(ctx, d.Id(), meta)
 			if err != nil {
-				diag.Errorf("disabling RolesAnywhere Profile (%s): %s", d.Id(), err)
+				sdkdiag.AppendErrorf(diags, "disabling RolesAnywhere Profile (%s): %s", d.Id(), err)
 			}
 		}
 	}
 
-	return resourceProfileRead(ctx, d, meta)
+	return append(diags, resourceProfileRead(ctx, d, meta)...)
 }
 
 func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	log.Printf("[DEBUG] Deleting RolesAnywhere Profile (%s)", d.Id())
@@ -211,14 +216,14 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	var resourceNotFoundException *types.ResourceNotFoundException
 	if errors.As(err, &resourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting RolesAnywhere Profile: (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting RolesAnywhere Profile: (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func disableProfile(ctx context.Context, profileId string, meta interface{}) error {
