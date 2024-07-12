@@ -353,6 +353,214 @@ func waitSpotInstanceRequestFulfilled(ctx context.Context, conn *ec2.Client, id 
 	return nil, err
 }
 
+const (
+	SubnetIPv6CIDRBlockAssociationCreatedTimeout = 3 * time.Minute
+	SubnetIPv6CIDRBlockAssociationDeletedTimeout = 3 * time.Minute
+)
+
+func waitSubnetAvailable(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Subnet, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SubnetStatePending),
+		Target:  enum.Slice(awstypes.SubnetStateAvailable),
+		Refresh: statusSubnetState(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Subnet); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSubnetIPv6CIDRBlockAssociationCreated(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SubnetCidrBlockState, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SubnetCidrBlockStateCodeAssociating, awstypes.SubnetCidrBlockStateCodeDisassociated, awstypes.SubnetCidrBlockStateCodeFailing),
+		Target:  enum.Slice(awstypes.SubnetCidrBlockStateCodeAssociated),
+		Refresh: statusSubnetIPv6CIDRBlockAssociationState(ctx, conn, id),
+		Timeout: SubnetIPv6CIDRBlockAssociationCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SubnetCidrBlockState); ok {
+		if output.State == awstypes.SubnetCidrBlockStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSubnetIPv6CIDRBlockAssociationDeleted(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SubnetCidrBlockState, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SubnetCidrBlockStateCodeAssociated, awstypes.SubnetCidrBlockStateCodeDisassociating, awstypes.SubnetCidrBlockStateCodeFailing),
+		Target:  []string{},
+		Refresh: statusSubnetIPv6CIDRBlockAssociationState(ctx, conn, id),
+		Timeout: SubnetIPv6CIDRBlockAssociationDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SubnetCidrBlockState); ok {
+		if output.State == awstypes.SubnetCidrBlockStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSubnetAssignIPv6AddressOnCreationUpdated(ctx context.Context, conn *ec2.Client, subnetID string, expectedValue bool) (*awstypes.Subnet, error) {
+	stateConf := &retry.StateChangeConf{
+		Target:     enum.Slice(strconv.FormatBool(expectedValue)),
+		Refresh:    statusSubnetAssignIPv6AddressOnCreation(ctx, conn, subnetID),
+		Timeout:    ec2PropagationTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Subnet); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSubnetEnableLniAtDeviceIndexUpdated(ctx context.Context, conn *ec2.Client, subnetID string, expectedValue int64) (*awstypes.Subnet, error) {
+	stateConf := &retry.StateChangeConf{
+		Target:     enum.Slice(strconv.FormatInt(expectedValue, 10)),
+		Refresh:    statusSubnetEnableLniAtDeviceIndex(ctx, conn, subnetID),
+		Timeout:    ec2PropagationTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Subnet); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSubnetEnableDNS64Updated(ctx context.Context, conn *ec2.Client, subnetID string, expectedValue bool) (*awstypes.Subnet, error) {
+	stateConf := &retry.StateChangeConf{
+		Target:     enum.Slice(strconv.FormatBool(expectedValue)),
+		Refresh:    statusSubnetEnableDNS64(ctx, conn, subnetID),
+		Timeout:    ec2PropagationTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Subnet); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSubnetEnableResourceNameDNSAAAARecordOnLaunchUpdated(ctx context.Context, conn *ec2.Client, subnetID string, expectedValue bool) (*awstypes.Subnet, error) {
+	stateConf := &retry.StateChangeConf{
+		Target:     enum.Slice(strconv.FormatBool(expectedValue)),
+		Refresh:    statusSubnetEnableResourceNameDNSAAAARecordOnLaunch(ctx, conn, subnetID),
+		Timeout:    ec2PropagationTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Subnet); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSubnetEnableResourceNameDNSARecordOnLaunchUpdated(ctx context.Context, conn *ec2.Client, subnetID string, expectedValue bool) (*awstypes.Subnet, error) {
+	stateConf := &retry.StateChangeConf{
+		Target:     enum.Slice(strconv.FormatBool(expectedValue)),
+		Refresh:    statusSubnetEnableResourceNameDNSARecordOnLaunch(ctx, conn, subnetID),
+		Timeout:    ec2PropagationTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Subnet); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSubnetMapCustomerOwnedIPOnLaunchUpdated(ctx context.Context, conn *ec2.Client, subnetID string, expectedValue bool) (*awstypes.Subnet, error) {
+	stateConf := &retry.StateChangeConf{
+		Target:     enum.Slice(strconv.FormatBool(expectedValue)),
+		Refresh:    statusSubnetMapCustomerOwnedIPOnLaunch(ctx, conn, subnetID),
+		Timeout:    ec2PropagationTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Subnet); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSubnetMapPublicIPOnLaunchUpdated(ctx context.Context, conn *ec2.Client, subnetID string, expectedValue bool) (*awstypes.Subnet, error) {
+	stateConf := &retry.StateChangeConf{
+		Target:     enum.Slice(strconv.FormatBool(expectedValue)),
+		Refresh:    statusSubnetMapPublicIPOnLaunch(ctx, conn, subnetID),
+		Timeout:    ec2PropagationTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Subnet); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSubnetPrivateDNSHostnameTypeOnLaunchUpdated(ctx context.Context, conn *ec2.Client, subnetID string, expectedValue string) (*awstypes.Subnet, error) {
+	stateConf := &retry.StateChangeConf{
+		Target:     enum.Slice(expectedValue),
+		Refresh:    statusSubnetPrivateDNSHostnameTypeOnLaunch(ctx, conn, subnetID),
+		Timeout:    ec2PropagationTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Subnet); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitVPCCreated(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Vpc, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VpcStatePending),

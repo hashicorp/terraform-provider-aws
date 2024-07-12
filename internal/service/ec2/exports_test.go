@@ -148,7 +148,7 @@ var (
 	FindSpotFleetRequestByID                                   = findSpotFleetRequestByID
 	FindSpotFleetRequests                                      = findSpotFleetRequests
 	FindSpotInstanceRequestByID                                = findSpotInstanceRequestByID
-	FindSubnetsV2                                              = findSubnets
+	FindSubnets                                                = findSubnets
 	FindTag                                                    = findTag
 	FindTrafficMirrorFilterByID                                = findTrafficMirrorFilterByID
 	FindTrafficMirrorFilterRuleByTwoPartKey                    = findTrafficMirrorFilterRuleByTwoPartKey

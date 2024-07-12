@@ -271,68 +271,6 @@ func FindNetworkInterfaceSecurityGroup(ctx context.Context, conn *ec2.EC2, netwo
 	}
 }
 
-func FindSubnetByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Subnet, error) {
-	input := &ec2.DescribeSubnetsInput{
-		SubnetIds: aws.StringSlice([]string{id}),
-	}
-
-	output, err := FindSubnet(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Eventual consistency check.
-	if aws.StringValue(output.SubnetId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
-func FindSubnet(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeSubnetsInput) (*ec2.Subnet, error) {
-	output, err := FindSubnets(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func FindSubnets(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeSubnetsInput) ([]*ec2.Subnet, error) {
-	var output []*ec2.Subnet
-
-	err := conn.DescribeSubnetsPagesWithContext(ctx, input, func(page *ec2.DescribeSubnetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.Subnets {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
 func FindSubnetCIDRReservationBySubnetIDAndReservationID(ctx context.Context, conn *ec2.EC2, subnetID, reservationID string) (*ec2.SubnetCidrReservation, error) {
 	input := &ec2.GetSubnetCidrReservationsInput{
 		SubnetId: aws.String(subnetID),
@@ -369,32 +307,6 @@ func FindSubnetCIDRReservationBySubnetIDAndReservationID(ctx context.Context, co
 		LastError:   err,
 		LastRequest: input,
 	}
-}
-
-func FindSubnetIPv6CIDRBlockAssociationByID(ctx context.Context, conn *ec2.EC2, associationID string) (*ec2.SubnetIpv6CidrBlockAssociation, error) {
-	input := &ec2.DescribeSubnetsInput{
-		Filters: newAttributeFilterList(map[string]string{
-			"ipv6-cidr-block-association.association-id": associationID,
-		}),
-	}
-
-	output, err := FindSubnet(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, association := range output.Ipv6CidrBlockAssociationSet {
-		if aws.StringValue(association.AssociationId) == associationID {
-			if state := aws.StringValue(association.Ipv6CidrBlockState.State); state == ec2.SubnetCidrBlockStateCodeDisassociated {
-				return nil, &retry.NotFoundError{Message: state}
-			}
-
-			return association, nil
-		}
-	}
-
-	return nil, &retry.NotFoundError{}
 }
 
 func FindVPC(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeVpcsInput) (*ec2.Vpc, error) {

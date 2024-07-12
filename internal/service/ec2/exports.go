@@ -15,6 +15,7 @@ var (
 	FindSecurityGroupByDescriptionAndVPCID                         = findSecurityGroupByDescriptionAndVPCID
 	FindSecurityGroupByNameAndVPCID                                = findSecurityGroupByNameAndVPCID
 	FindSecurityGroupByNameAndVPCIDAndOwnerID                      = findSecurityGroupByNameAndVPCIDAndOwnerID
+	FindSubnetByID                                                 = findSubnetByID
 	FindVPCByIDV2                                                  = findVPCByID
 	FindVPCEndpointByID                                            = findVPCEndpointByID
 	NewCustomFilterListFrameworkV2                                 = newCustomFilterListFrameworkV2

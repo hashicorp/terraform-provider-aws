@@ -1124,6 +1124,37 @@ func findSpotPrice(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpo
 	return tfresource.AssertSingleValueResult(output)
 }
 
+func findSubnetByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Subnet, error) {
+	input := &ec2.DescribeSubnetsInput{
+		SubnetIds: []string{id},
+	}
+
+	output, err := findSubnet(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.SubnetId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findSubnet(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnetsInput) (*awstypes.Subnet, error) {
+	output, err := findSubnets(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
 func findSubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnetsInput) ([]awstypes.Subnet, error) {
 	var output []awstypes.Subnet
 
@@ -1146,6 +1177,32 @@ func findSubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubne
 	}
 
 	return output, nil
+}
+
+func findSubnetIPv6CIDRBlockAssociationByID(ctx context.Context, conn *ec2.Client, associationID string) (*awstypes.SubnetIpv6CidrBlockAssociation, error) {
+	input := &ec2.DescribeSubnetsInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"ipv6-cidr-block-association.association-id": associationID,
+		}),
+	}
+
+	output, err := findSubnet(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, association := range output.Ipv6CidrBlockAssociationSet {
+		if aws.ToString(association.AssociationId) == associationID {
+			if state := association.Ipv6CidrBlockState.State; state == awstypes.SubnetCidrBlockStateCodeDisassociated {
+				return nil, &retry.NotFoundError{Message: string(state)}
+			}
+
+			return &association, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
 }
 
 func findVolumeModifications(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVolumesModificationsInput) ([]awstypes.VolumeModification, error) {

@@ -339,6 +339,166 @@ func statusSpotInstanceRequest(ctx context.Context, conn *ec2.Client, id string)
 	}
 }
 
+func statusSubnetState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findSubnetByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusSubnetIPv6CIDRBlockAssociationState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findSubnetIPv6CIDRBlockAssociationByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output.Ipv6CidrBlockState, string(output.Ipv6CidrBlockState.State), nil
+	}
+}
+
+func statusSubnetAssignIPv6AddressOnCreation(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findSubnetByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strconv.FormatBool(aws.ToBool(output.AssignIpv6AddressOnCreation)), nil
+	}
+}
+
+func statusSubnetEnableDNS64(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findSubnetByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strconv.FormatBool(aws.ToBool(output.EnableDns64)), nil
+	}
+}
+
+func statusSubnetEnableLniAtDeviceIndex(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findSubnetByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strconv.FormatInt(int64(aws.ToInt32(output.EnableLniAtDeviceIndex)), 10), nil
+	}
+}
+
+func statusSubnetEnableResourceNameDNSAAAARecordOnLaunch(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findSubnetByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strconv.FormatBool(aws.ToBool(output.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsAAAARecord)), nil
+	}
+}
+
+func statusSubnetEnableResourceNameDNSARecordOnLaunch(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findSubnetByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strconv.FormatBool(aws.ToBool(output.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsARecord)), nil
+	}
+}
+
+func statusSubnetMapCustomerOwnedIPOnLaunch(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findSubnetByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strconv.FormatBool(aws.ToBool(output.MapCustomerOwnedIpOnLaunch)), nil
+	}
+}
+
+func statusSubnetMapPublicIPOnLaunch(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findSubnetByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strconv.FormatBool(aws.ToBool(output.MapPublicIpOnLaunch)), nil
+	}
+}
+
+func statusSubnetPrivateDNSHostnameTypeOnLaunch(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findSubnetByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.PrivateDnsNameOptionsOnLaunch.HostnameType), nil
+	}
+}
+
 func statusVolume(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findEBSVolumeByID(ctx, conn, id)
