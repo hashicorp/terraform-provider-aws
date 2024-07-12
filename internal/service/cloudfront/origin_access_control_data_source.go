@@ -34,7 +34,6 @@ func (d *dataSourceOriginAccessControl) Metadata(_ context.Context, _ datasource
 	response.TypeName = "aws_cloudfront_origin_access_control"
 }
 
-// Schema returns the schema for this data source.
 func (d *dataSourceOriginAccessControl) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
