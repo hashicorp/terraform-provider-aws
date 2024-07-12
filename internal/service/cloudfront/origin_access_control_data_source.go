@@ -6,72 +6,100 @@ package cloudfront
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceOriginAccessControl() *schema.Resource {
-	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceOriginAccessControlRead,
+// @FrameworkDataSource(name="Origin Access Control")
+func newDataSourceOriginAccessControl(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &dataSourceOriginAccessControl{}
 
-		Schema: map[string]*schema.Schema{
-			"description": {
-				Type:     schema.TypeString,
+	return d, nil
+}
+
+type dataSourceOriginAccessControl struct {
+	framework.DataSourceWithConfigure
+}
+
+const (
+	DSNameOriginAccessControl = "Origin Access Control Data Source"
+)
+
+func (d *dataSourceOriginAccessControl) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+	response.TypeName = "aws_cloudfront_origin_access_control"
+}
+
+// Schema returns the schema for this data source.
+func (d *dataSourceOriginAccessControl) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"description": schema.StringAttribute{
 				Computed: true,
-				Default:  nil,
 			},
-			"etag": {
-				Type:     schema.TypeString,
+			"etag": schema.StringAttribute{
 				Computed: true,
 			},
-			"id": {
-				Type:     schema.TypeString,
+			"id": schema.StringAttribute{
 				Required: true,
 			},
-			"name": {
-				Type:     schema.TypeString,
+			"name": schema.StringAttribute{
 				Computed: true,
 			},
-			"origin_access_control_origin_type": {
-				Type:     schema.TypeString,
+			"origin_access_control_origin_type": schema.StringAttribute{
 				Computed: true,
 			},
-			"signing_behavior": {
-				Type:     schema.TypeString,
+			"signing_behavior": schema.StringAttribute{
 				Computed: true,
 			},
-			"signing_protocol": {
-				Type:     schema.TypeString,
+			"signing_protocol": schema.StringAttribute{
 				Computed: true,
 			},
 		},
 	}
 }
 
-func dataSourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
-	id := d.Get("id").(string)
-	params := &cloudfront.GetOriginAccessControlInput{
-		Id: aws.String(id),
+func (d *dataSourceOriginAccessControl) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	conn := d.Meta().CloudFrontClient(ctx)
+	var data dataSourceOriginAccessControlData
+
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	resp, err := conn.GetOriginAccessControl(ctx, params)
+	output, err := findOriginAccessControlByID(ctx, conn, data.ID.ValueString())
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudFront Origin Access Control (%s): %s", id, err)
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, DSNameOriginAccessControl, data.ID.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	// Update other attributes outside DistributionConfig
-	d.SetId(aws.ToString(resp.OriginAccessControl.Id))
-	d.Set("etag", resp.ETag)
-	d.Set("description", resp.OriginAccessControl.OriginAccessControlConfig.Description)
-	d.Set("name", resp.OriginAccessControl.OriginAccessControlConfig.Name)
-	d.Set("origin_access_control_origin_type", resp.OriginAccessControl.OriginAccessControlConfig.OriginAccessControlOriginType)
-	d.Set("signing_behavior", resp.OriginAccessControl.OriginAccessControlConfig.SigningBehavior)
-	d.Set("signing_protocol", resp.OriginAccessControl.OriginAccessControlConfig.SigningProtocol)
-	return diags
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.OriginAccessControl.OriginAccessControlConfig, &data)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	data.Etag = fwflex.StringToFramework(ctx, output.ETag)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+type dataSourceOriginAccessControlData struct {
+	Description                   types.String `tfsdk:"description"`
+	Etag                          types.String `tfsdk:"etag"`
+	ID                            types.String `tfsdk:"id"`
+	Name                          types.String `tfsdk:"name"`
+	OriginAccessControlOriginType types.String `tfsdk:"origin_access_control_origin_type"`
+	SigningBehavior               types.String `tfsdk:"signing_behavior"`
+	SigningProtocol               types.String `tfsdk:"signing_protocol"`
 }
