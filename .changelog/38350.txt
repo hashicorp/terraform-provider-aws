@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_kinesisanalyticsv2_application: Add support for `FLINK-1_19` `runtime_environment` value
+resource/aws_kinesisanalyticsv2_application: Support `FLINK-1_19` as a valid value for `runtime_environment`
 ```
