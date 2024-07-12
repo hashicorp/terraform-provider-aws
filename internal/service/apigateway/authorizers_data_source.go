@@ -6,21 +6,22 @@ package apigateway
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_api_gateway_authorizers")
-func DataSourceAuthorizers() *schema.Resource {
+// @SDKDataSource("aws_api_gateway_authorizers", name="Authorizers")
+func dataSourceAuthorizers() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAuthorizersRead,
 
 		Schema: map[string]*schema.Schema{
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -35,7 +36,7 @@ func DataSourceAuthorizers() *schema.Resource {
 
 func dataSourceAuthorizersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	apiID := d.Get("rest_api_id").(string)
 	input := &apigateway.GetAuthorizersInput{
@@ -49,10 +50,6 @@ func dataSourceAuthorizersRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		for _, v := range page.Items {
-			if v == nil {
-				continue
-			}
-
 			ids = append(ids, v.Id)
 		}
 
@@ -64,7 +61,7 @@ func dataSourceAuthorizersRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(apiID)
-	d.Set("ids", aws.StringValueSlice(ids))
+	d.Set(names.AttrIDs, aws.ToStringSlice(ids))
 
 	return diags
 }

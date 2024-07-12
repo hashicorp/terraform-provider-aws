@@ -31,7 +31,7 @@ func TestAccOpsWorksStaticWebLayer_basic(t *testing.T) {
 				Config: testAccStaticWebLayerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", "Static Web Server"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "Static Web Server"),
 				),
 			},
 			{

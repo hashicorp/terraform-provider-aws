@@ -686,6 +686,7 @@ class MyConvertedCode extends TerraformStack {
 * `stepConcurrencyLevel` - (Optional) Number of steps that can be executed concurrently. You can specify a maximum of 256 steps. Only valid for EMR clusters with `releaseLabel` 5.28.0 or greater (default is 1).
 * `tags` - (Optional) list of tags to apply to the EMR Cluster. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `terminationProtection` - (Optional) Switch on/off termination protection (default is `false`, except when using multiple master nodes). Before attempting to destroy the resource when termination protection is enabled, this configuration must be applied with its value set to `false`.
+* `unhealthyNodeReplacement` - (Optional) Whether whether Amazon EMR should gracefully replace core nodes that have degraded within the cluster. Default value is `false`.
 * `visibleToAllUsers` - (Optional) Whether the job flow is visible to all IAM users of the AWS account associated with the job flow. Default value is `true`.
 
 ### bootstrap_action
@@ -916,4 +917,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b9d18b24d38c79ee9f688a74547cdb740e2cd654a3d3dc2a431681dd4a66d46c -->
+<!-- cache-key: cdktf-0.20.1 input-c921965b6e59ca4fc2d1ad8eaeeec6e7c7afc0ff2e4415087fe68f92fd8a4344 -->

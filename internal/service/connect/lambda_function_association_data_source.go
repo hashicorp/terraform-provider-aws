@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_lambda_function_association")
@@ -18,12 +19,12 @@ func DataSourceLambdaFunctionAssociation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLambdaFunctionAssociationRead,
 		Schema: map[string]*schema.Schema{
-			"function_arn": {
+			names.AttrFunctionARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -35,8 +36,8 @@ func dataSourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-	functionArn := d.Get("function_arn")
-	instanceID := d.Get("instance_id")
+	functionArn := d.Get(names.AttrFunctionARN)
+	instanceID := d.Get(names.AttrInstanceID)
 
 	lfaArn, err := FindLambdaFunctionAssociationByARNWithContext(ctx, conn, instanceID.(string), functionArn.(string))
 	if err != nil {
@@ -48,8 +49,8 @@ func dataSourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Reso
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("function_arn", functionArn)
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrFunctionARN, functionArn)
+	d.Set(names.AttrInstanceID, instanceID)
 
 	return diags
 }

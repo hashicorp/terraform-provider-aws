@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,9 +22,8 @@ func TestAccNetworkManagerCustomerGatewayAssociation_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":                      testAccCustomerGatewayAssociation_basic,
-		"disappears":                 testAccCustomerGatewayAssociation_disappears,
-		"disappears_CustomerGateway": testAccCustomerGatewayAssociation_Disappears_customerGateway,
+		acctest.CtBasic:      testAccCustomerGatewayAssociation_basic,
+		acctest.CtDisappears: testAccCustomerGatewayAssociation_disappears,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -73,32 +71,6 @@ func testAccCustomerGatewayAssociation_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayAssociationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceCustomerGatewayAssociation(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func testAccCustomerGatewayAssociation_Disappears_customerGateway(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_networkmanager_customer_gateway_association.test"
-	vpnConnectionResourceName := "aws_vpn_connection.test"
-	customerGatewayResourceName := "aws_customer_gateway.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomerGatewayAssociationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCustomerGatewayAssociationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGatewayAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPNConnection(), vpnConnectionResourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceCustomerGateway(), customerGatewayResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

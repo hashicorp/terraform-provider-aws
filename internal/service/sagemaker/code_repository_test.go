@@ -37,10 +37,10 @@ func TestAccSageMakerCodeRepository_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeRepositoryExists(ctx, resourceName, &repo),
 					resource.TestCheckResourceAttr(resourceName, "code_repository_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "git_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "git_config.0.repository_url", "https://github.com/hashicorp/terraform-provider-aws.git"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -69,8 +69,8 @@ func TestAccSageMakerCodeRepository_Git_branch(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeRepositoryExists(ctx, resourceName, &repo),
 					resource.TestCheckResourceAttr(resourceName, "code_repository_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "git_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "git_config.0.repository_url", "https://github.com/hashicorp/terraform-provider-aws.git"),
 					resource.TestCheckResourceAttr(resourceName, "git_config.0.branch", "master"),
 				),
@@ -101,10 +101,10 @@ func TestAccSageMakerCodeRepository_Git_secret(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeRepositoryExists(ctx, resourceName, &repo),
 					resource.TestCheckResourceAttr(resourceName, "code_repository_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "git_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "git_config.0.repository_url", "https://github.com/hashicorp/terraform-provider-aws.git"),
-					resource.TestCheckResourceAttrPair(resourceName, "git_config.0.secret_arn", "aws_secretsmanager_secret.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "git_config.0.secret_arn", "aws_secretsmanager_secret.test", names.AttrARN),
 				),
 			},
 			{
@@ -117,10 +117,10 @@ func TestAccSageMakerCodeRepository_Git_secret(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeRepositoryExists(ctx, resourceName, &repo),
 					resource.TestCheckResourceAttr(resourceName, "code_repository_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "git_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "git_config.0.repository_url", "https://github.com/hashicorp/terraform-provider-aws.git"),
-					resource.TestCheckResourceAttrPair(resourceName, "git_config.0.secret_arn", "aws_secretsmanager_secret.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "git_config.0.secret_arn", "aws_secretsmanager_secret.test2", names.AttrARN),
 				),
 			},
 		},
@@ -140,11 +140,11 @@ func TestAccSageMakerCodeRepository_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDeviceFleetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodeRepositoryConfig_basicTags1(rName, "key1", "value1"),
+				Config: testAccCodeRepositoryConfig_basicTags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeRepositoryExists(ctx, resourceName, &repo),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -153,20 +153,20 @@ func TestAccSageMakerCodeRepository_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCodeRepositoryConfig_basicTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCodeRepositoryConfig_basicTags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeRepositoryExists(ctx, resourceName, &repo),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccCodeRepositoryConfig_basicTags1(rName, "key2", "value2"),
+				Config: testAccCodeRepositoryConfig_basicTags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeRepositoryExists(ctx, resourceName, &repo),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

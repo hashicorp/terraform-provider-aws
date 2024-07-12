@@ -51,7 +51,7 @@ resource "aws_rds_cluster" "default" {
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html).
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `apply_immediately` - (Optional) Specifies whether any database modifications are applied immediately, or during the next maintenance window. Default is`false`.
 * `auto_minor_version_upgrade` - (Optional) Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window. Default `true`.
@@ -62,7 +62,7 @@ This argument supports the following arguments:
 * `custom_iam_instance_profile` - (Optional) Instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
 * `db_parameter_group_name` - (Optional) Name of the DB parameter group to associate with this instance.
 * `db_subnet_group_name` - (Required if `publicly_accessible = false`, Optional otherwise, Forces new resource) DB subnet group to associate with this DB instance. **NOTE:** This must match the `db_subnet_group_name` of the attached [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html).
-* `engine_version` - (Optional) Database engine version.
+* `engine_version` - (Optional) Database engine version. Please note that to upgrade the `engine_version` of the instance, it must be done on the `aws_rds_cluster` `engine_version`. Trying to upgrade in `aws_cluster_instance` will not update the `engine_version`.
 * `engine` - (Required, Forces new resource) Name of the database engine to be used for the RDS cluster instance.
   Valid Values: `aurora-mysql`, `aurora-postgresql`, `mysql`, `postgres`.(Note that `mysql` and `postgres` are Multi-AZ RDS clusters).
 * `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.

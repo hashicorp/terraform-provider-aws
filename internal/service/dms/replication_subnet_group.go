@@ -53,7 +53,7 @@ func ResourceReplicationSubnetGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validReplicationSubnetGroupID,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				MinItems: 2,
 				Required: true,
@@ -61,7 +61,7 @@ func ResourceReplicationSubnetGroup() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,7 +79,7 @@ func resourceReplicationSubnetGroupCreate(ctx context.Context, d *schema.Resourc
 	input := &dms.CreateReplicationSubnetGroupInput{
 		ReplicationSubnetGroupDescription: aws.String(d.Get("replication_subnet_group_description").(string)),
 		ReplicationSubnetGroupIdentifier:  aws.String(replicationSubnetGroupID),
-		SubnetIds:                         flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		SubnetIds:                         flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		Tags:                              getTagsIn(ctx),
 	}
 
@@ -127,8 +127,8 @@ func resourceReplicationSubnetGroupRead(ctx context.Context, d *schema.ResourceD
 	subnetIDs := tfslices.ApplyToAll(group.Subnets, func(sn *dms.Subnet) string {
 		return aws.StringValue(sn.SubnetIdentifier)
 	})
-	d.Set("subnet_ids", subnetIDs)
-	d.Set("vpc_id", group.VpcId)
+	d.Set(names.AttrSubnetIDs, subnetIDs)
+	d.Set(names.AttrVPCID, group.VpcId)
 
 	return diags
 }
@@ -137,12 +137,12 @@ func resourceReplicationSubnetGroupUpdate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		// Updates to subnet groups are only valid when sending SubnetIds even if there are no
 		// changes to SubnetIds.
 		input := &dms.ModifyReplicationSubnetGroupInput{
 			ReplicationSubnetGroupIdentifier: aws.String(d.Get("replication_subnet_group_id").(string)),
-			SubnetIds:                        flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+			SubnetIds:                        flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		}
 
 		if d.HasChange("replication_subnet_group_description") {

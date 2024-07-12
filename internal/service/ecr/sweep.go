@@ -7,13 +7,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -29,43 +28,39 @@ func sweepRepositories(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.ECRConn(ctx)
+	conn := client.ECRClient(ctx)
+	input := &ecr.DescribeRepositoriesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	var errors error
-	err = conn.DescribeRepositoriesPagesWithContext(ctx, &ecr.DescribeRepositoriesInput{}, func(page *ecr.DescribeRepositoriesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := ecr.NewDescribeRepositoriesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, repository := range page.Repositories {
-			repositoryName := aws.StringValue(repository.RepositoryName)
-			log.Printf("[INFO] Deleting ECR repository: %s", repositoryName)
-
-			_, err = conn.DeleteRepositoryWithContext(ctx, &ecr.DeleteRepositoryInput{
-				// We should probably sweep repositories even if there are images.
-				Force:          aws.Bool(true),
-				RegistryId:     repository.RegistryId,
-				RepositoryName: repository.RepositoryName,
-			})
-			if err != nil {
-				if !tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
-					sweeperErr := fmt.Errorf("Error deleting ECR repository (%s): %w", repositoryName, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					errors = multierror.Append(errors, sweeperErr)
-				}
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-	if err != nil {
-		if awsv1.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping ECR repository sweep for %s: %s", region, err)
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping ECR Repository sweep for %s: %s", region, err)
 			return nil
 		}
-		errors = multierror.Append(errors, fmt.Errorf("Error retreiving ECR repositories: %w", err))
+
+		if err != nil {
+			return fmt.Errorf("error listing ECR Repositories (%s): %w", region, err)
+		}
+
+		for _, v := range page.Repositories {
+			r := resourceRepository()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.RepositoryName))
+			d.Set(names.AttrForceDelete, true)
+			d.Set("registry_id", v.RegistryId)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 	}
 
-	return errors
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping ECR Repositories (%s): %w", region, err)
+	}
+
+	return nil
 }

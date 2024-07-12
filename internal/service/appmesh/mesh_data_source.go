@@ -12,43 +12,48 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_appmesh_mesh")
-func DataSourceMesh() *schema.Resource {
+// @SDKDataSource("aws_appmesh_mesh", name="Service Mesh")
+// @Tags
+// @Testing(serialize=true)
+func dataSourceMesh() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceMeshRead,
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"mesh_owner": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"resource_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"spec":         dataSourcePropertyFromResourceProperty(resourceMeshSpecSchema()),
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrLastUpdatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"mesh_owner": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrResourceOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceMeshSpecSchema()),
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -56,10 +61,9 @@ func DataSourceMesh() *schema.Resource {
 func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	meshName := d.Get("name").(string)
-	mesh, err := FindMeshByTwoPartKey(ctx, conn, meshName, d.Get("mesh_owner").(string))
+	meshName := d.Get(names.AttrName).(string)
+	mesh, err := findMeshByTwoPartKey(ctx, conn, meshName, d.Get("mesh_owner").(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Service Mesh (%s): %s", meshName, err)
@@ -67,12 +71,12 @@ func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(mesh.MeshName))
 	arn := aws.StringValue(mesh.Metadata.Arn)
-	d.Set("arn", arn)
-	d.Set("created_date", mesh.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedDate, mesh.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	meshOwner := aws.StringValue(mesh.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
-	d.Set("resource_owner", mesh.Metadata.ResourceOwner)
+	d.Set(names.AttrResourceOwner, mesh.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenMeshSpec(mesh.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
@@ -90,9 +94,7 @@ func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setKeyValueTagsOut(ctx, tags)
 
 	return diags
 }

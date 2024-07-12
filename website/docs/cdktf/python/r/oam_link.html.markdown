@@ -55,6 +55,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the link.
+* `id` - ARN of the link.
 * `label` - Label that is assigned to this link.
 * `link_id` - ID string that AWS generated as part of the link ARN.
 * `sink_arn` - ARN of the sink that is used for this link.
@@ -92,4 +93,4 @@ Using `terraform import`, import CloudWatch Observability Access Manager Link us
 % terraform import aws_oam_link.example arn:aws:oam:us-west-2:123456789012:link/link-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ff78965c47d628d5cd420e2503ed25c914c1d4493bc3eefc1a9e530ca1d58967 -->
+<!-- cache-key: cdktf-0.20.1 input-fd2920b5314cbcd6b3d6a130b19dbc23a4b5073b9a86049f3532c12b3da72ce8 -->

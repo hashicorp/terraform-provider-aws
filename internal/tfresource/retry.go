@@ -60,8 +60,8 @@ func RetryWhen(ctx context.Context, timeout time.Duration, f func() (interface{}
 // RetryGWhen is the generic version of RetryWhen which obviates the need for a type
 // assertion after the call. It retries the function `f` when the error it returns
 // satisfies `retryable`. `f` is retried until `timeout` expires.
-func RetryGWhen[T any](ctx context.Context, timeout time.Duration, f func() (*T, error), retryable Retryable) (*T, error) {
-	var output *T
+func RetryGWhen[T any](ctx context.Context, timeout time.Duration, f func() (T, error), retryable Retryable) (T, error) {
+	var output T
 
 	err := Retry(ctx, timeout, func() *retry.RetryError {
 		var err error
@@ -86,7 +86,8 @@ func RetryGWhen[T any](ctx context.Context, timeout time.Duration, f func() (*T,
 	}
 
 	if err != nil {
-		return nil, err
+		var zero T
+		return zero, err
 	}
 
 	return output, nil
@@ -139,7 +140,7 @@ func RetryWhenMessageContains(ctx context.Context, timeout time.Duration, f func
 }
 
 // RetryGWhenMessageContains retries the specified function when it returns an error containing any of the specified messages.
-func RetryGWhenMessageContains[T any](ctx context.Context, timeout time.Duration, f func() (*T, error), codes []string, messages []string) (*T, error) {
+func RetryGWhenMessageContains[T any](ctx context.Context, timeout time.Duration, f func() (T, error), codes []string, messages []string) (T, error) {
 	return RetryGWhen(ctx, timeout, f, func(err error) (bool, error) {
 		for i, message := range messages {
 			if tfawserr.ErrMessageContains(err, codes[i], message) || tfawserr_sdkv2.ErrMessageContains(err, codes[i], message) {
@@ -154,6 +155,26 @@ func RetryGWhenMessageContains[T any](ctx context.Context, timeout time.Duration
 func RetryWhenIsA[T error](ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if errs.IsA[T](err) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
+func RetryWhenIsOneOf2[T1, T2 error](ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
+	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if errs.IsA[T1](err) || errs.IsA[T2](err) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
+func RetryWhenIsOneOf3[T1, T2, T3 error](ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
+	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if errs.IsA[T1](err) || errs.IsA[T2](err) || errs.IsA[T3](err) {
 			return true, err
 		}
 
@@ -238,6 +259,17 @@ func RetryUntilNotFound(ctx context.Context, timeout time.Duration, f func() (in
 // RetryWhenNotFound retries the specified function when it returns a retry.NotFoundError.
 func RetryWhenNotFound(ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if NotFound(err) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
+// RetryGWhenNotFound retries the specified function when it returns a retry.NotFoundError.
+func RetryGWhenNotFound[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
+	return RetryGWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if NotFound(err) {
 			return true, err
 		}

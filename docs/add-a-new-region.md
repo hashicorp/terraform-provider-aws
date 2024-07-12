@@ -3,7 +3,7 @@
 New regions can typically be used immediately with the provider, with two important caveats:
 
 - Regions often need to be explicitly enabled via the AWS console. See [ap-east-1 launch blog](https://aws.amazon.com/blogs/aws/now-open-aws-asia-pacific-hong-kong-region/) for an example of how to enable a new region for use.
-- Until the provider is aware of the new region, automatic region validation will fail. In order to use the region before validation support is added to the provider you will need to disable region validation by doing the following:
+- Until the provider is aware of the new region, automatic region validation will fail. To use the region before validation support is added to the provider you will need to disable region validation by doing the following:
 
 ```terraform
 provider "aws" {
@@ -16,7 +16,7 @@ provider "aws" {
 
 ## Enabling Region Validation
 
-Support for region validation requires that the provider has an updated AWS Go SDK dependency that includes the new region. These are added to the AWS Go SDK `aws/endpoints/defaults.go` file and generally noted in the AWS Go SDK `CHANGELOG` as `aws/endpoints: Updated Regions`. This also needs to be done in the core Terraform binary itself to enable it for the S3 backend. The provider currently takes a dependency on both v1 AND v2 of the AWS Go SDK, as we start to base new (and migrate) resources on v2. Many of the authentication and provider level configuration interactions are also located in the aws-go-sdk-base library. As all of these things take direct dependencies and as a result there ends up being quite a few places these dependency updates need to be made.
+Support for region validation requires that the provider has an updated AWS Go SDK dependency that includes the new region. These are added to the AWS Go SDK `aws/endpoints/defaults.go` file and generally noted in the AWS Go SDK `CHANGELOG` as `aws/endpoints: Updated Regions`. This also needs to be done in the core Terraform binary itself to enable it for the S3 backend. The provider currently takes a dependency on both v1 AND v2 of the AWS Go SDK, as we start to base new (and migrate) resources on v2. Many of the authentication and provider-level configuration interactions are also located in the aws-go-sdk-base library. As all of these things take direct dependencies and as a result there end up being quite a few places where these dependency updates need to be made.
 
 ### Update aws-go-sdk-base
 

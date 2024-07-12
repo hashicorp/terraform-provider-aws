@@ -2,9 +2,6 @@ rules:
   - id: avoid-return-diag_FromErr
     languages: [go]
     message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
-    paths:
-      exclude:
-        - internal/service/[o-z]*
     pattern: return diag.FromErr($ERR)
     fix: return sdkdiag.AppendFromErr(diags, $ERR)
     severity: WARNING
@@ -12,9 +9,6 @@ rules:
   - id: avoid-append-diag_FromErr
     languages: [go]
     message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
-    paths:
-      exclude:
-        - internal/service/[o-z]*
     pattern: append(diags, diag.FromErr($ERR)...)
     fix: sdkdiag.AppendFromErr(diags, $ERR)
     severity: WARNING
@@ -22,9 +16,6 @@ rules:
   - id: avoid-diag_Errorf
     languages: [go]
     message: Prefer `sdkdiag.AppendErrorf` to `diag.Errorf`
-    paths:
-      exclude:
-        - internal/service/[o-z]*
     pattern: diag.Errorf($...ARGS)
     fix: sdkdiag.AppendErrorf(diags, $...ARGS)
     severity: WARNING
@@ -32,9 +23,6 @@ rules:
   - id: avoid-return-create_DiagError
     languages: [go]
     message: Prefer `create.AppendDiagError` to `create.DiagError`
-    paths:
-      exclude:
-        - internal/service/[o-z]*
     pattern: return create.DiagError($...ARGS)
     fix: return create.AppendDiagError(diags, $...ARGS)
     severity: WARNING
@@ -42,9 +30,6 @@ rules:
   - id: avoid-append-create_DiagError
     languages: [go]
     message: Prefer `create.AppendDiagError` to `create.DiagError`
-    paths:
-      exclude:
-        - internal/service/[o-z]*
     pattern: append(diags, create.DiagError($...ARGS)...)
     fix: create.AppendDiagError(diags, $...ARGS)
     severity: WARNING
@@ -52,9 +37,6 @@ rules:
   - id: append-Read-to-diags
     languages: [go]
     message: Append results of $READFN to diags instead of returning directly
-    paths:
-      exclude:
-        - internal/service/[o-z]*
     patterns:
       - pattern: return $READFN($...ARGS)
       - metavariable-regex:
@@ -70,9 +52,6 @@ rules:
   - id: append-Update-to-diags
     languages: [go]
     message: Append results of $UPDATEFN to diags instead of returning directly
-    paths:
-      exclude:
-        - internal/service/[o-z]*
     patterns:
       - pattern: return $UPDATEFN($...ARGS)
       - metavariable-regex:
@@ -93,7 +72,7 @@ rules:
       include:
         - internal/service
       exclude:
-        - internal/service/[o-z]*
+        - internal/service/o*
     patterns:
       - pattern: return nil
       - pattern-not-inside: |
