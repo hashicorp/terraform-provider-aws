@@ -17,7 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_resolver_rule_association")
@@ -37,7 +39,7 @@ func ResourceRuleAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -49,7 +51,7 @@ func ResourceRuleAssociation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -60,33 +62,35 @@ func ResourceRuleAssociation() *schema.Resource {
 }
 
 func resourceRuleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	input := &route53resolver.AssociateResolverRuleInput{
 		ResolverRuleId: aws.String(d.Get("resolver_rule_id").(string)),
-		VPCId:          aws.String(d.Get("vpc_id").(string)),
+		VPCId:          aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.Name = aws.String(v.(string))
 	}
 
 	output, err := conn.AssociateResolverRuleWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Route53 Resolver Rule Association: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Resolver Rule Association: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.ResolverRuleAssociation.Id))
 
 	if _, err := waitRuleAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Route53 Resolver Rule Association (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Rule Association (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceRuleAssociationRead(ctx, d, meta)
+	return append(diags, resourceRuleAssociationRead(ctx, d, meta)...)
 }
 
 func resourceRuleAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	ruleAssociation, err := FindResolverRuleAssociationByID(ctx, conn, d.Id())
@@ -94,42 +98,43 @@ func resourceRuleAssociationRead(ctx context.Context, d *schema.ResourceData, me
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Rule Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Rule Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Rule Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", ruleAssociation.Name)
+	d.Set(names.AttrName, ruleAssociation.Name)
 	d.Set("resolver_rule_id", ruleAssociation.ResolverRuleId)
-	d.Set("vpc_id", ruleAssociation.VPCId)
+	d.Set(names.AttrVPCID, ruleAssociation.VPCId)
 
-	return nil
+	return diags
 }
 
 func resourceRuleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Rule Association: %s", d.Id())
 	_, err := conn.DisassociateResolverRuleWithContext(ctx, &route53resolver.DisassociateResolverRuleInput{
 		ResolverRuleId: aws.String(d.Get("resolver_rule_id").(string)),
-		VPCId:          aws.String(d.Get("vpc_id").(string)),
+		VPCId:          aws.String(d.Get(names.AttrVPCID).(string)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Route53 Resolver Rule Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 Resolver Rule Association (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitRuleAssociationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Route53 Resolver Rule Association (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Rule Association (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindResolverRuleAssociationByID(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverRuleAssociation, error) {

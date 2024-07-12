@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_servicecatalog_tag_option")
@@ -42,16 +43,16 @@ func ResourceTagOption() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"key": {
+			names.AttrKey: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"value": {
+			names.AttrValue: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -64,8 +65,8 @@ func resourceTagOptionCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.CreateTagOptionInput{
-		Key:   aws.String(d.Get("key").(string)),
-		Value: aws.String(d.Get("value").(string)),
+		Key:   aws.String(d.Get(names.AttrKey).(string)),
+		Value: aws.String(d.Get(names.AttrValue).(string)),
 	}
 
 	var output *servicecatalog.CreateTagOptionOutput
@@ -137,9 +138,9 @@ func resourceTagOptionRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("active", output.Active)
-	d.Set("key", output.Key)
-	d.Set("owner", output.Owner)
-	d.Set("value", output.Value)
+	d.Set(names.AttrKey, output.Key)
+	d.Set(names.AttrOwner, output.Owner)
+	d.Set(names.AttrValue, output.Value)
 
 	return diags
 }
@@ -159,8 +160,8 @@ func resourceTagOptionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Active = aws.Bool(d.Get("active").(bool))
 	}
 
-	if d.HasChange("value") {
-		input.Value = aws.String(d.Get("value").(string))
+	if d.HasChange(names.AttrValue) {
+		input.Value = aws.String(d.Get(names.AttrValue).(string))
 	}
 
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {

@@ -533,69 +533,6 @@ func TestFullHumanFriendly(t *testing.T) {
 	}
 }
 
-func TestAWSGoV1Package(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "same as AWS",
-			Input:    CloudTrail,
-			Expected: CloudTrail,
-			Error:    false,
-		},
-		{
-			TestName: "different from AWS",
-			Input:    Transcribe,
-			Expected: "transcribeservice",
-			Error:    false,
-		},
-		{
-			TestName: "different from AWS 2",
-			Input:    RBin,
-			Expected: "recyclebin",
-			Error:    false,
-		},
-		{
-			TestName: "doesnotexist",
-			Input:    "doesnotexist",
-			Expected: "",
-			Error:    true,
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-
-			got, err := AWSGoV1Package(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
 func TestAWSGoV1ClientName(t *testing.T) {
 	t.Parallel()
 

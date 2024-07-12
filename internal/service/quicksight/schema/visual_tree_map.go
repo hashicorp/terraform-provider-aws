@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func treeMapVisualSchema() *schema.Schema {
@@ -18,8 +19,8 @@ func treeMapVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id": idSchema(),
-				"actions":   visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
+				"visual_id":       idSchema(),
+				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TreeMapConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -96,7 +97,7 @@ func expandTreeMapVisual(tfList []interface{}) *quicksight.TreeMapVisual {
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap["actions"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
 		visual.Actions = expandVisualCustomActions(v)
 	}
 	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -233,7 +234,7 @@ func flattenTreeMapVisual(apiObject *quicksight.TreeMapVisual) []interface{} {
 		"visual_id": aws.StringValue(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
-		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
 	if apiObject.ChartConfiguration != nil {
 		tfMap["chart_configuration"] = flattenTreeMapConfiguration(apiObject.ChartConfiguration)

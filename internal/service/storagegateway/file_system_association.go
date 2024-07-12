@@ -25,18 +25,21 @@ import (
 
 // @SDKResource("aws_storagegateway_file_system_association", name="File System Association")
 // @Tags(identifierAttribute="arn")
-func ResourceFileSystemAssociation() *schema.Resource {
+func resourceFileSystemAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFileSystemAssociationCreate,
 		ReadWithoutTimeout:   resourceFileSystemAssociationRead,
 		UpdateWithoutTimeout: resourceFileSystemAssociationUpdate,
 		DeleteWithoutTimeout: resourceFileSystemAssociationDelete,
-		CustomizeDiff:        customdiff.Sequence(verify.SetTagsDiff),
+
+		CustomizeDiff: customdiff.Sequence(verify.SetTagsDiff),
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -77,7 +80,7 @@ func ResourceFileSystemAssociation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
@@ -88,7 +91,7 @@ func ResourceFileSystemAssociation() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"username": {
+			names.AttrUsername: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -109,9 +112,9 @@ func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.Resource
 		ClientToken: aws.String(id.UniqueId()),
 		GatewayARN:  aws.String(gatewayARN),
 		LocationARN: aws.String(d.Get("location_arn").(string)),
-		Password:    aws.String(d.Get("password").(string)),
+		Password:    aws.String(d.Get(names.AttrPassword).(string)),
 		Tags:        getTagsIn(ctx),
-		UserName:    aws.String(d.Get("username").(string)),
+		UserName:    aws.String(d.Get(names.AttrUsername).(string)),
 	}
 
 	if v, ok := d.GetOk("audit_destination_arn"); ok {
@@ -153,7 +156,7 @@ func resourceFileSystemAssociationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway File System Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", filesystem.FileSystemAssociationARN)
+	d.Set(names.AttrARN, filesystem.FileSystemAssociationARN)
 	d.Set("audit_destination_arn", filesystem.AuditDestinationARN)
 	d.Set("gateway_arn", filesystem.GatewayARN)
 	d.Set("location_arn", filesystem.LocationARN)
@@ -171,11 +174,11 @@ func resourceFileSystemAssociationUpdate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
-	if d.HasChangesExcept("tags_all") {
+	if d.HasChangesExcept(names.AttrTagsAll) {
 		input := &storagegateway.UpdateFileSystemAssociationInput{
 			AuditDestinationARN:      aws.String(d.Get("audit_destination_arn").(string)),
-			Password:                 aws.String(d.Get("password").(string)),
-			UserName:                 aws.String(d.Get("username").(string)),
+			Password:                 aws.String(d.Get(names.AttrPassword).(string)),
+			UserName:                 aws.String(d.Get(names.AttrUsername).(string)),
 			FileSystemAssociationARN: aws.String(d.Id()),
 		}
 

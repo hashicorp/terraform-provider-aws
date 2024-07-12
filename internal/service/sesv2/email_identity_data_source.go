@@ -21,7 +21,7 @@ func DataSourceEmailIdentity() *schema.Resource {
 		ReadWithoutTimeout: dataSourceEmailIdentityRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,7 +59,7 @@ func DataSourceEmailIdentity() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -100,13 +100,13 @@ func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, me
 
 	out, err := FindEmailIdentityByID(ctx, conn, name)
 	if err != nil {
-		return append(diags, create.DiagError(names.SESV2, create.ErrActionReading, DSNameEmailIdentity, name, err)...)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, DSNameEmailIdentity, name, err)
 	}
 
 	arn := emailIdentityNameToARN(meta, name)
 
 	d.SetId(name)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 	d.Set("email_identity", name)
 
@@ -116,7 +116,7 @@ func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, me
 		tfMap["domain_signing_selector"] = d.Get("dkim_signing_attributes.0.domain_signing_selector").(string)
 
 		if err := d.Set("dkim_signing_attributes", []interface{}{tfMap}); err != nil {
-			return append(diags, create.DiagError(names.SESV2, create.ErrActionSetting, ResNameEmailIdentity, name, err)...)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, ResNameEmailIdentity, name, err)
 		}
 	} else {
 		d.Set("dkim_signing_attributes", nil)

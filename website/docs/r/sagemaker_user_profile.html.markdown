@@ -92,6 +92,7 @@ This resource supports the following arguments:
 
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+* `custom_image` - (Optional) A list of custom SageMaker images that are configured to run as a CodeEditor app. see [Custom Image](#custom_image) below.
 
 #### r_session_app_settings
 

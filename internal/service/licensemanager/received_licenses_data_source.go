@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_licensemanager_received_licenses")
@@ -21,12 +22,12 @@ func DataSourceReceivedLicenses() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReceivedLicensesRead,
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": DataSourceFiltersSchema(),
+			names.AttrFilter: DataSourceFiltersSchema(),
 		},
 	}
 }
@@ -38,7 +39,7 @@ func dataSourceReceivedLicensesRead(ctx context.Context, d *schema.ResourceData,
 	in := &licensemanager.ListReceivedLicensesInput{}
 
 	in.Filters = BuildFiltersDataSource(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)
 
 	if len(in.Filters) == 0 {
@@ -58,7 +59,7 @@ func dataSourceReceivedLicensesRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", licenseARNs)
+	d.Set(names.AttrARNs, licenseARNs)
 
 	return diags
 }

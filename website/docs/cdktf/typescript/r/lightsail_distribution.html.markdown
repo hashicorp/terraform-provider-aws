@@ -186,7 +186,7 @@ class MyConvertedCode extends TerraformStack {
     const awsLightsailInstanceTest = new LightsailInstance(this, "test_2", {
       availabilityZone: Token.asString(Fn.lookupNested(available.names, ["0"])),
       blueprintId: "amazon_linux_2",
-      bundleId: "nano_1_0",
+      bundleId: "nano_3_0",
       name: "test-instance",
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
@@ -240,10 +240,7 @@ The following arguments are optional:
 * `certificateName` - (Optional) The name of the SSL/TLS certificate attached to the distribution, if any.
 * `ipAddressType` - (Optional) The IP address type of the distribution. Default: `dualstack`.
 * `isEnabled` - (Optional) Indicates whether the distribution is enabled. Default: `true`.
-* `tags` - (Optional) Map of tags for the Lightsail Distribution. If
-  configured with a provider
-  [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
-  present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags for the Lightsail Distribution. To create a key-only tag, use an empty string as the value. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### default_cache_behavior
 
@@ -347,4 +344,4 @@ Using `terraform import`, import Lightsail Distribution using the `id`. For exam
 % terraform import aws_lightsail_distribution.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b44e08c4566f08d2f501b30c7bf2c5324fc78fc14f7f0e7e555cd7b0bc5ae99f -->
+<!-- cache-key: cdktf-0.20.1 input-079fa9f5c14e2177dea920793fcdd0e0faa5a3555a595860660d177f155b2df8 -->

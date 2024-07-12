@@ -8,34 +8,35 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_sfn_alias")
-func DataSourceAlias() *schema.Resource {
+// @SDKDataSource("aws_sfn_alias", name="Alias")
+func dataSourceAlias() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAliasRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -48,7 +49,7 @@ func DataSourceAlias() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"weight": {
+						names.AttrWeight: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -68,48 +69,49 @@ const (
 )
 
 func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn(ctx)
-	aliasArn := ""
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
+	aliasArn := ""
 	in := &sfn.ListStateMachineAliasesInput{
 		StateMachineArn: aws.String(d.Get("statemachine_arn").(string)),
 	}
 
-	out, err := conn.ListStateMachineAliasesWithContext(ctx, in)
+	out, err := conn.ListStateMachineAliases(ctx, in)
 
 	if err != nil {
-		return diag.Errorf("listing Step Functions State Machines: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing Step Functions State Machines: %s", err)
 	}
 
 	if n := len(out.StateMachineAliases); n == 0 {
-		return diag.Errorf("no Step Functions State Machine Aliases matched")
+		return sdkdiag.AppendErrorf(diags, "no Step Functions State Machine Aliases matched")
 	}
 
 	for _, in := range out.StateMachineAliases {
-		if v := aws.StringValue(in.StateMachineAliasArn); strings.HasSuffix(v, d.Get("name").(string)) {
+		if v := aws.ToString(in.StateMachineAliasArn); strings.HasSuffix(v, d.Get(names.AttrName).(string)) {
 			aliasArn = v
 		}
 	}
 
 	if aliasArn == "" {
-		return diag.Errorf("no Step Functions State Machine Aliases matched")
+		return sdkdiag.AppendErrorf(diags, "no Step Functions State Machine Aliases matched")
 	}
 
-	output, err := FindAliasByARN(ctx, conn, aliasArn)
+	output, err := findAliasByARN(ctx, conn, aliasArn)
 
 	if err != nil {
-		return diag.Errorf("reading Step Functions State Machine Alias (%s): %s", aliasArn, err)
+		return sdkdiag.AppendErrorf(diags, "reading Step Functions State Machine Alias (%s): %s", aliasArn, err)
 	}
 
 	d.SetId(aliasArn)
-	d.Set("arn", output.StateMachineAliasArn)
-	d.Set("name", output.Name)
-	d.Set("description", output.Description)
-	d.Set("creation_date", aws.TimeValue(output.CreationDate).Format(time.RFC3339))
+	d.Set(names.AttrARN, output.StateMachineAliasArn)
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set(names.AttrCreationDate, aws.ToTime(output.CreationDate).Format(time.RFC3339))
 
 	if err := d.Set("routing_configuration", flattenAliasRoutingConfiguration(output.RoutingConfiguration)); err != nil {
-		return create.DiagError(names.SFN, create.ErrActionSetting, ResNameAlias, d.Id(), err)
+		return create.AppendDiagError(diags, names.SFN, create.ErrActionSetting, ResNameAlias, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

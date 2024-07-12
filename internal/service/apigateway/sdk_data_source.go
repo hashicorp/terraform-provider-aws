@@ -5,28 +5,29 @@ package apigateway
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_api_gateway_sdk")
-func DataSourceSdk() *schema.Resource {
+// @SDKDataSource("aws_api_gateway_sdk", name="SDK")
+func dataSourceSDK() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceSdkRead,
+		ReadWithoutTimeout: dataSourceSDKRead,
+
 		Schema: map[string]*schema.Schema{
 			"body": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -34,7 +35,7 @@ func DataSourceSdk() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -56,35 +57,35 @@ func DataSourceSdk() *schema.Resource {
 	}
 }
 
-func dataSourceSdkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSDKRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	restApiId := d.Get("rest_api_id").(string)
+	apiID := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
 	sdkType := d.Get("sdk_type").(string)
-
 	input := &apigateway.GetSdkInput{
-		RestApiId: aws.String(restApiId),
-		StageName: aws.String(stageName),
+		RestApiId: aws.String(apiID),
 		SdkType:   aws.String(sdkType),
+		StageName: aws.String(stageName),
 	}
 
-	if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
-		input.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]interface{})) > 0 {
+		input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
-	id := fmt.Sprintf("%s:%s:%s", restApiId, stageName, sdkType)
+	id := apiID + ":" + stageName + ":" + sdkType
 
-	export, err := conn.GetSdkWithContext(ctx, input)
+	sdk, err := conn.GetSdk(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway SDK (%s): %s", id, err)
 	}
 
 	d.SetId(id)
-	d.Set("body", string(export.Body))
-	d.Set("content_type", export.ContentType)
-	d.Set("content_disposition", export.ContentDisposition)
+	d.Set("body", string(sdk.Body))
+	d.Set("content_disposition", sdk.ContentDisposition)
+	d.Set(names.AttrContentType, sdk.ContentType)
 
 	return diags
 }

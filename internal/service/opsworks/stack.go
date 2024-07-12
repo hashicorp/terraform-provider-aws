@@ -11,7 +11,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -54,7 +53,7 @@ func ResourceStack() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -84,7 +83,7 @@ func ResourceStack() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"password": {
+						names.AttrPassword: {
 							Type:      schema.TypeString,
 							Optional:  true,
 							Sensitive: true,
@@ -98,16 +97,16 @@ func ResourceStack() *schema.Resource {
 							Optional:  true,
 							Sensitive: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(opsworks.SourceType_Values(), false),
 						},
-						"url": {
+						names.AttrURL: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"username": {
+						names.AttrUsername: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -123,7 +122,7 @@ func ResourceStack() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"vpc_id"},
+				ConflictsWith: []string{names.AttrVPCID},
 			},
 			"default_instance_profile_arn": {
 				Type:     schema.TypeString,
@@ -147,7 +146,7 @@ func ResourceStack() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				RequiredWith: []string{"vpc_id"},
+				RequiredWith: []string{names.AttrVPCID},
 			},
 			"hostname_theme": {
 				Type:     schema.TypeString,
@@ -159,16 +158,16 @@ func ResourceStack() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-			"service_role_arn": {
+			names.AttrServiceRoleARN: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -189,7 +188,7 @@ func ResourceStack() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:          schema.TypeString,
 				ForceNew:      true,
 				Computed:      true,
@@ -206,8 +205,8 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
-	name := d.Get("name").(string)
-	region := d.Get("region").(string)
+	name := d.Get(names.AttrName).(string)
+	region := d.Get(names.AttrRegion).(string)
 	input := &opsworks.CreateStackInput{
 		ChefConfiguration: &opsworks.ChefConfiguration{
 			ManageBerkshelf: aws.Bool(d.Get("manage_berkshelf").(bool)),
@@ -221,7 +220,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		HostnameTheme:             aws.String(d.Get("hostname_theme").(string)),
 		Name:                      aws.String(name),
 		Region:                    aws.String(region),
-		ServiceRoleArn:            aws.String(d.Get("service_role_arn").(string)),
+		ServiceRoleArn:            aws.String(d.Get(names.AttrServiceRoleARN).(string)),
 		UseCustomCookbooks:        aws.Bool(d.Get("use_custom_cookbooks").(bool)),
 		UseOpsworksSecurityGroups: aws.Bool(d.Get("use_opsworks_security_groups").(bool)),
 	}
@@ -264,7 +263,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ChefConfiguration.BerkshelfVersion = aws.String(d.Get("berkshelf_version").(string))
 	}
 
-	if v, ok := d.GetOk("vpc_id"); ok {
+	if v, ok := d.GetOk(names.AttrVPCID); ok {
 		input.VpcId = aws.String(v.(string))
 	}
 
@@ -325,25 +324,16 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
-		log.Printf(`[DEBUG] overriding region using "stack_endpoint": %s`, v)
-		conn, err = regionalConn(ctx, meta.(*conns.AWSClient), v.(string))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, `reading OpsWorks Stack (%s): creating client for "stack_endpoint" (%s): %s`, d.Id(), v, err)
-		}
+		conn = meta.(*conns.AWSClient).OpsWorksConnForRegion(ctx, v.(string))
 	}
 
 	stack, err := FindStackByID(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 		// If it's not found in the default region we're in, we check us-east-1
 		// in the event this stack was created with Terraform before version 0.9.
 		// See https://github.com/hashicorp/terraform/issues/12842.
-		v := endpoints.UsEast1RegionID
-		log.Printf(`[DEBUG] overriding region using legacy region: %s`, v)
-		conn, err = regionalConn(ctx, meta.(*conns.AWSClient), v)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, `reading OpsWorks Stack (%s): creating client for legacy region (%s): %s`, d.Id(), v, err)
-		}
+		conn = meta.(*conns.AWSClient).OpsWorksConnForRegion(ctx, names.USEast1RegionID)
 
 		stack, err = FindStackByID(ctx, conn, d.Id())
 	}
@@ -365,7 +355,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("agent_version", stack.AgentVersion)
 	arn := aws.StringValue(stack.Arn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	if stack.ChefConfiguration != nil {
 		if v := aws.StringValue(stack.ChefConfiguration.BerkshelfVersion); v != "" {
 			d.Set("berkshelf_version", v)
@@ -389,7 +379,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		if v, ok := d.GetOk("custom_cookbooks_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			v := v.([]interface{})[0].(map[string]interface{})
 
-			tfMap["password"] = v["password"]
+			tfMap[names.AttrPassword] = v[names.AttrPassword]
 			tfMap["ssh_key"] = v["ssh_key"]
 		}
 
@@ -407,12 +397,12 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("default_ssh_key_name", stack.DefaultSshKeyName)
 	d.Set("default_subnet_id", stack.DefaultSubnetId)
 	d.Set("hostname_theme", stack.HostnameTheme)
-	d.Set("name", stack.Name)
-	d.Set("region", stack.Region)
-	d.Set("service_role_arn", stack.ServiceRoleArn)
+	d.Set(names.AttrName, stack.Name)
+	d.Set(names.AttrRegion, stack.Region)
+	d.Set(names.AttrServiceRoleARN, stack.ServiceRoleArn)
 	d.Set("use_custom_cookbooks", stack.UseCustomCookbooks)
 	d.Set("use_opsworks_security_groups", stack.UseOpsworksSecurityGroups)
-	d.Set("vpc_id", stack.VpcId)
+	d.Set(names.AttrVPCID, stack.VpcId)
 
 	tags, err := listTags(ctx, conn, arn)
 
@@ -431,13 +421,10 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
-		conn, err = regionalConn(ctx, meta.(*conns.AWSClient), v.(string))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, `updating OpsWorks Stack (%s): creating client for "stack_endpoint" (%s): %s`, d.Id(), v, err)
-		}
+		conn = meta.(*conns.AWSClient).OpsWorksConnForRegion(ctx, v.(string))
 	}
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &opsworks.UpdateStackInput{
 			StackId: aws.String(d.Id()),
 		}
@@ -507,12 +494,12 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.HostnameTheme = aws.String(d.Get("hostname_theme").(string))
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		if d.HasChange("service_role_arn") {
-			input.ServiceRoleArn = aws.String(d.Get("service_role_arn").(string))
+		if d.HasChange(names.AttrServiceRoleARN) {
+			input.ServiceRoleArn = aws.String(d.Get(names.AttrServiceRoleARN).(string))
 		}
 
 		if d.HasChange("use_custom_cookbooks") {
@@ -530,10 +517,10 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	if d.HasChange(names.AttrTagsAll) {
+		o, n := d.GetChange(names.AttrTagsAll)
 
-		if err := updateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := updateTags(ctx, conn, d.Get(names.AttrARN).(string), o, n); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating OpsWorks Stack (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -547,10 +534,7 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
-		conn, err = regionalConn(ctx, meta.(*conns.AWSClient), v.(string))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, `deleting OpsWorks Stack (%s): creating client for "stack_endpoint" (%s): %s`, d.Id(), v, err)
-		}
+		conn = meta.(*conns.AWSClient).OpsWorksConnForRegion(ctx, v.(string))
 	}
 
 	log.Printf("[DEBUG] Deleting OpsWorks Stack: %s", d.Id())
@@ -575,7 +559,7 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	// wait for the security groups to be deleted.
 	// There is no robust way to check for this, so we'll just wait a
 	// nominal amount of time.
-	if _, ok := d.GetOk("vpc_id"); ok {
+	if _, ok := d.GetOk(names.AttrVPCID); ok {
 		if _, ok := d.GetOk("use_opsworks_security_groups"); ok {
 			log.Print("[INFO] Waiting for Opsworks built-in security groups to be deleted")
 			time.Sleep(securityGroupsDeletedSleepTime)
@@ -621,7 +605,7 @@ func expandSource(tfMap map[string]interface{}) *opsworks.Source {
 
 	apiObject := &opsworks.Source{}
 
-	if v, ok := tfMap["password"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPassword].(string); ok && v != "" {
 		apiObject.Password = aws.String(v)
 	}
 
@@ -633,15 +617,15 @@ func expandSource(tfMap map[string]interface{}) *opsworks.Source {
 		apiObject.SshKey = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 
-	if v, ok := tfMap["url"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURL].(string); ok && v != "" {
 		apiObject.Url = aws.String(v)
 	}
 
-	if v, ok := tfMap["username"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrUsername].(string); ok && v != "" {
 		apiObject.Username = aws.String(v)
 	}
 
@@ -656,7 +640,7 @@ func flattenSource(apiObject *opsworks.Source) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Password; v != nil {
-		tfMap["password"] = aws.StringValue(v)
+		tfMap[names.AttrPassword] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Revision; v != nil {
@@ -668,40 +652,16 @@ func flattenSource(apiObject *opsworks.Source) map[string]interface{} {
 	}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
+		tfMap[names.AttrType] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Url; v != nil {
-		tfMap["url"] = aws.StringValue(v)
+		tfMap[names.AttrURL] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Username; v != nil {
-		tfMap["username"] = aws.StringValue(v)
+		tfMap[names.AttrUsername] = aws.StringValue(v)
 	}
 
 	return tfMap
-}
-
-// opsworksConn will return a connection for the stack_endpoint in the
-// configuration. Stacks can only be accessed or managed within the endpoint
-// in which they are created, so we allow users to specify an original endpoint
-// for Stacks created before multiple endpoints were offered (Terraform v0.9.0).
-// See:
-//   - https://github.com/hashicorp/terraform/pull/12688
-//   - https://github.com/hashicorp/terraform/issues/12842
-func regionalConn(ctx context.Context, client *conns.AWSClient, regionName string) (*opsworks.OpsWorks, error) {
-	conn := client.OpsWorksConn(ctx)
-
-	// Regions are the same, no need to reconfigure.
-	if aws.StringValue(conn.Config.Region) == regionName {
-		return conn, nil
-	}
-
-	sess, err := conns.NewSessionForRegion(&conn.Config, regionName, client.TerraformVersion)
-
-	if err != nil {
-		return nil, fmt.Errorf("creating AWS session (%s): %w", regionName, err)
-	}
-
-	return opsworks.New(sess), nil
 }

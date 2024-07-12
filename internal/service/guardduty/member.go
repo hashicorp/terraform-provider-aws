@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_guardduty_member")
@@ -35,7 +36,7 @@ func ResourceMember() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -46,7 +47,7 @@ func ResourceMember() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"email": {
+			names.AttrEmail: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -80,13 +81,13 @@ func ResourceMember() *schema.Resource {
 func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	detectorID := d.Get("detector_id").(string)
 
 	input := guardduty.CreateMembersInput{
 		AccountDetails: []*guardduty.AccountDetail{{
 			AccountId: aws.String(accountID),
-			Email:     aws.String(d.Get("email").(string)),
+			Email:     aws.String(d.Get(names.AttrEmail).(string)),
 		}},
 		DetectorId: aws.String(detectorID),
 	}
@@ -156,9 +157,9 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	member := gmo.Members[0]
-	d.Set("account_id", member.AccountId)
+	d.Set(names.AttrAccountID, member.AccountId)
 	d.Set("detector_id", detectorID)
-	d.Set("email", member.Email)
+	d.Set(names.AttrEmail, member.Email)
 
 	status := aws.StringValue(member.RelationshipStatus)
 	d.Set("relationship_status", status)

@@ -28,18 +28,19 @@ import (
 
 // @SDKResource("aws_storagegateway_cached_iscsi_volume", name="Cached iSCSI Volume")
 // @Tags(identifierAttribute="arn")
-func ResourceCachediSCSIVolume() *schema.Resource {
+func resourceCachediSCSIVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCachediSCSIVolumeCreate,
 		ReadWithoutTimeout:   resourceCachediSCSIVolumeRead,
 		UpdateWithoutTimeout: resourceCachediSCSIVolumeUpdate,
 		DeleteWithoutTimeout: resourceCachediSCSIVolumeDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,7 +59,7 @@ func ResourceCachediSCSIVolume() *schema.Resource {
 				Computed: true,
 			},
 			// Poor API naming: this accepts the IP address of the network interface
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -67,7 +68,7 @@ func ResourceCachediSCSIVolume() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"snapshot_id": {
+			names.AttrSnapshotID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -78,7 +79,7 @@ func ResourceCachediSCSIVolume() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"target_arn": {
+			names.AttrTargetARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -107,7 +108,7 @@ func ResourceCachediSCSIVolume() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"kms_key": {
+			names.AttrKMSKey: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -127,13 +128,13 @@ func resourceCachediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData
 	input := &storagegateway.CreateCachediSCSIVolumeInput{
 		ClientToken:        aws.String(id.UniqueId()),
 		GatewayARN:         aws.String(d.Get("gateway_arn").(string)),
-		NetworkInterfaceId: aws.String(d.Get("network_interface_id").(string)),
+		NetworkInterfaceId: aws.String(d.Get(names.AttrNetworkInterfaceID).(string)),
 		TargetName:         aws.String(d.Get("target_name").(string)),
 		VolumeSizeInBytes:  aws.Int64(int64(d.Get("volume_size_in_bytes").(int))),
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("snapshot_id"); ok {
+	if v, ok := d.GetOk(names.AttrSnapshotID); ok {
 		input.SnapshotId = aws.String(v.(string))
 	}
 
@@ -141,7 +142,7 @@ func resourceCachediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData
 		input.SourceVolumeARN = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKey); ok {
 		input.KMSKey = aws.String(v.(string))
 	}
 
@@ -189,12 +190,12 @@ func resourceCachediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, 
 	volume := output.CachediSCSIVolumes[0]
 
 	arn := aws.StringValue(volume.VolumeARN)
-	d.Set("arn", arn)
-	d.Set("snapshot_id", volume.SourceSnapshotId)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrSnapshotID, volume.SourceSnapshotId)
 	d.Set("volume_arn", arn)
 	d.Set("volume_id", volume.VolumeId)
 	d.Set("volume_size_in_bytes", volume.VolumeSizeInBytes)
-	d.Set("kms_key", volume.KMSKey)
+	d.Set(names.AttrKMSKey, volume.KMSKey)
 	if volume.KMSKey != nil {
 		d.Set("kms_encrypted", true)
 	} else {
@@ -204,11 +205,11 @@ func resourceCachediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, 
 	if volume.VolumeiSCSIAttributes != nil {
 		d.Set("chap_enabled", volume.VolumeiSCSIAttributes.ChapEnabled)
 		d.Set("lun_number", volume.VolumeiSCSIAttributes.LunNumber)
-		d.Set("network_interface_id", volume.VolumeiSCSIAttributes.NetworkInterfaceId)
+		d.Set(names.AttrNetworkInterfaceID, volume.VolumeiSCSIAttributes.NetworkInterfaceId)
 		d.Set("network_interface_port", volume.VolumeiSCSIAttributes.NetworkInterfacePort)
 
 		targetARN := aws.StringValue(volume.VolumeiSCSIAttributes.TargetARN)
-		d.Set("target_arn", targetARN)
+		d.Set(names.AttrTargetARN, targetARN)
 
 		gatewayARN, targetName, err := ParseVolumeGatewayARNAndTargetNameFromARN(targetARN)
 		if err != nil {
