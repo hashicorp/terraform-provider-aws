@@ -536,7 +536,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if v, ok := d.GetOk("target_group_health"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			attributes = append(attributes, expandTargetGroupHealthAttributes(v.([]interface{})[0].(map[string]interface{}))...)
+			attributes = append(attributes, expandTargetGroupHealthAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
 		}
 
 		if v, ok := d.GetOk("target_health_state"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -725,7 +725,7 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if d.HasChange("target_group_health") {
 			if v, ok := d.GetOk("target_group_health"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				attributes = append(attributes, expandTargetGroupHealthAttributes(v.([]interface{})[0].(map[string]interface{}))...)
+				attributes = append(attributes, expandTargetGroupHealthAttributes(v.([]interface{})[0].(map[string]interface{}), protocol)...)
 			}
 		}
 
@@ -1347,43 +1347,50 @@ func flattenTargetGroupTargetHealthStateAttributes(apiObjects []awstypes.TargetG
 	return tfMap
 }
 
-func expandTargetGroupHealthAttributes(tfMap map[string]interface{}) []awstypes.TargetGroupAttribute {
+func expandTargetGroupHealthAttributes(tfMap map[string]interface{}, protocol awstypes.ProtocolEnum) []awstypes.TargetGroupAttribute {
 	if tfMap == nil {
 		return nil
 	}
 
 	var apiObjects []awstypes.TargetGroupAttribute
 
-	if dnsFailoverMap, ok := tfMap["dns_failover"].([]interface{})[0].(map[string]interface{}); ok {
-		apiObjects = append(apiObjects,
-			awstypes.TargetGroupAttribute{
-				Key:   aws.String(targetGroupAttributeTargetGroupHealthDNSFailoverMinimumHealthyTargetsCount),
-				Value: aws.String(dnsFailoverMap["minimum_healthy_targets_count"].(string)),
-			},
-			awstypes.TargetGroupAttribute{
-				Key:   aws.String(targetGroupAttributeTargetGroupHealthDNSFailoverMinimumHealthyTargetsPercentage),
-				Value: aws.String(dnsFailoverMap["minimum_healthy_targets_percentage"].(string)),
-			},
-		)
-	}
+	// Supported on Application Load Balancers and Network Load Balancers.
+	switch protocol {
+	case awstypes.ProtocolEnumGeneve:
+	default:
+		if v, ok := tfMap["dns_failover"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			tfMap := v[0].(map[string]interface{})
+			apiObjects = append(apiObjects,
+				awstypes.TargetGroupAttribute{
+					Key:   aws.String(targetGroupAttributeTargetGroupHealthDNSFailoverMinimumHealthyTargetsCount),
+					Value: aws.String(tfMap["minimum_healthy_targets_count"].(string)),
+				},
+				awstypes.TargetGroupAttribute{
+					Key:   aws.String(targetGroupAttributeTargetGroupHealthDNSFailoverMinimumHealthyTargetsPercentage),
+					Value: aws.String(tfMap["minimum_healthy_targets_percentage"].(string)),
+				},
+			)
+		}
 
-	if unhealthyStateRoutingMap, ok := tfMap["unhealthy_state_routing"].([]interface{})[0].(map[string]interface{}); ok {
-		apiObjects = append(apiObjects,
-			awstypes.TargetGroupAttribute{
-				Key:   aws.String(targetGroupAttributeTargetGroupHealthUnhealthyStateRoutingMinimumHealthyTargetsCount),
-				Value: flex.IntValueToString(unhealthyStateRoutingMap["minimum_healthy_targets_count"].(int)),
-			},
-			awstypes.TargetGroupAttribute{
-				Key:   aws.String(targetGroupAttributeTargetGroupHealthUnhealthyStateRoutingMinimumHealthyTargetsPercentage),
-				Value: aws.String(unhealthyStateRoutingMap["minimum_healthy_targets_percentage"].(string)),
-			},
-		)
+		if v, ok := tfMap["unhealthy_state_routing"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			tfMap := v[0].(map[string]interface{})
+			apiObjects = append(apiObjects,
+				awstypes.TargetGroupAttribute{
+					Key:   aws.String(targetGroupAttributeTargetGroupHealthUnhealthyStateRoutingMinimumHealthyTargetsCount),
+					Value: flex.IntValueToString(tfMap["minimum_healthy_targets_count"].(int)),
+				},
+				awstypes.TargetGroupAttribute{
+					Key:   aws.String(targetGroupAttributeTargetGroupHealthUnhealthyStateRoutingMinimumHealthyTargetsPercentage),
+					Value: aws.String(tfMap["minimum_healthy_targets_percentage"].(string)),
+				},
+			)
+		}
 	}
 
 	return apiObjects
 }
 
-func flattenTargetGroupHealthAttributes(apiObjects []awstypes.TargetGroupAttribute, _ awstypes.ProtocolEnum) map[string]interface{} {
+func flattenTargetGroupHealthAttributes(apiObjects []awstypes.TargetGroupAttribute, protocol awstypes.ProtocolEnum) map[string]interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1392,16 +1399,21 @@ func flattenTargetGroupHealthAttributes(apiObjects []awstypes.TargetGroupAttribu
 	dnsFailoverMap := make(map[string]interface{})
 	unhealthyStateRoutingMap := make(map[string]interface{})
 
-	for _, apiObject := range apiObjects {
-		switch k, v := aws.ToString(apiObject.Key), apiObject.Value; k {
-		case "target_group_health.dns_failover.minimum_healthy_targets.count":
-			dnsFailoverMap["minimum_healthy_targets_count"] = aws.ToString(v)
-		case "target_group_health.dns_failover.minimum_healthy_targets.percentage":
-			dnsFailoverMap["minimum_healthy_targets_percentage"] = aws.ToString(v)
-		case "target_group_health.unhealthy_state_routing.minimum_healthy_targets.count":
-			unhealthyStateRoutingMap["minimum_healthy_targets_count"] = flex.StringToIntValue(v)
-		case "target_group_health.unhealthy_state_routing.minimum_healthy_targets.percentage":
-			unhealthyStateRoutingMap["minimum_healthy_targets_percentage"] = aws.ToString(v)
+	// Supported on Application Load Balancers and Network Load Balancers.
+	switch protocol {
+	case awstypes.ProtocolEnumGeneve:
+	default:
+		for _, apiObject := range apiObjects {
+			switch k, v := aws.ToString(apiObject.Key), apiObject.Value; k {
+			case targetGroupAttributeTargetGroupHealthDNSFailoverMinimumHealthyTargetsCount:
+				dnsFailoverMap["minimum_healthy_targets_count"] = aws.ToString(v)
+			case targetGroupAttributeTargetGroupHealthDNSFailoverMinimumHealthyTargetsPercentage:
+				dnsFailoverMap["minimum_healthy_targets_percentage"] = aws.ToString(v)
+			case targetGroupAttributeTargetGroupHealthUnhealthyStateRoutingMinimumHealthyTargetsCount:
+				unhealthyStateRoutingMap["minimum_healthy_targets_count"] = flex.StringToIntValue(v)
+			case targetGroupAttributeTargetGroupHealthUnhealthyStateRoutingMinimumHealthyTargetsPercentage:
+				unhealthyStateRoutingMap["minimum_healthy_targets_percentage"] = aws.ToString(v)
+			}
 		}
 	}
 
