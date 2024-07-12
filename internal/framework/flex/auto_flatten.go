@@ -33,7 +33,7 @@ func Flatten(ctx context.Context, apiObject, tfObject any, optFns ...AutoFlexOpt
 	var diags diag.Diagnostics
 	flattener := newAutoFlattener(optFns)
 
-	diags.Append(autoFlexConvert(ctx, apiObject, tfObject, flattener)...)
+	diags.Append(autoFlattenConvert(ctx, apiObject, tfObject, flattener)...)
 	if diags.HasError() {
 		diags.AddError("AutoFlEx", fmt.Sprintf("Flatten[%T, %T]", apiObject, tfObject))
 		return diags
@@ -64,6 +64,29 @@ func newAutoFlattener(optFns []AutoFlexOptionsFunc) *autoFlattener {
 
 func (flattener autoFlattener) getOptions() AutoFlexOptions {
 	return flattener.Options
+}
+
+// autoFlattenConvert converts `from` to `to` using the specified auto-flexer.
+func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	valFrom, valTo, d := autoFlexValues(ctx, from, to)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Top-level struct to struct conversion.
+	if valFrom.IsValid() && valTo.IsValid() {
+		if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct {
+			diags.Append(autoFlexConvertStruct(ctx, from, to, flexer)...)
+			return diags
+		}
+	}
+
+	// Anything else.
+	diags.Append(flexer.convert(ctx, valFrom, valTo)...)
+	return diags
 }
 
 // convert converts a single AWS API value to its Plugin Framework equivalent.

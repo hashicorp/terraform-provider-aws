@@ -39,7 +39,7 @@ func Expand(ctx context.Context, tfObject, apiObject any, optFns ...AutoFlexOpti
 	var diags diag.Diagnostics
 	expander := newAutoExpander(optFns)
 
-	diags.Append(autoFlexConvert(ctx, tfObject, apiObject, expander)...)
+	diags.Append(autoExpandConvert(ctx, tfObject, apiObject, expander)...)
 	if diags.HasError() {
 		diags.AddError("AutoFlEx", fmt.Sprintf("Expand[%T, %T]", tfObject, apiObject))
 		return diags
@@ -70,6 +70,30 @@ func newAutoExpander(optFns []AutoFlexOptionsFunc) *autoExpander {
 
 func (expander autoExpander) getOptions() AutoFlexOptions {
 	return expander.Options
+}
+
+// autoFlexConvert converts `from` to `to` using the specified auto-flexer.
+func autoExpandConvert(ctx context.Context, from, to any, flexer autoFlexer) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	valFrom, valTo, d := autoFlexValues(ctx, from, to)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Top-level struct to struct conversion.
+	if valFrom.IsValid() && valTo.IsValid() {
+		if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct &&
+			!typFrom.Implements(reflect.TypeFor[basetypes.ListValuable]()) {
+			diags.Append(autoFlexConvertStruct(ctx, from, to, flexer)...)
+			return diags
+		}
+	}
+
+	// Anything else.
+	diags.Append(flexer.convert(ctx, valFrom, valTo)...)
+	return diags
 }
 
 // convert converts a single Plugin Framework value to its AWS API equivalent.

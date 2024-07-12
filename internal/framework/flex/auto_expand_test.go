@@ -1055,6 +1055,106 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 	runAutoExpandTestCases(t, testCases)
 }
 
+func TestExpandListOfNestedObject(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		{
+			TestName: "valid value to []struct",
+			Source: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
+				{
+					Field1: types.StringValue("value1"),
+				},
+				{
+					Field1: types.StringValue("value2"),
+				},
+			}),
+			Target: &[]TestFlexAWS01{},
+			WantTarget: &[]TestFlexAWS01{
+				{
+					Field1: "value1",
+				},
+				{
+					Field1: "value2",
+				},
+			},
+		},
+		{
+			TestName:   "empty value to []struct",
+			Source:     fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{}),
+			Target:     &[]TestFlexAWS01{},
+			WantTarget: &[]TestFlexAWS01{},
+		},
+		{
+			TestName:   "null value to []struct",
+			Source:     fwtypes.NewListNestedObjectValueOfNull[TestFlexTF01](ctx),
+			Target:     &[]TestFlexAWS01{},
+			WantTarget: &[]TestFlexAWS01{},
+		},
+
+		{
+			TestName: "valid value to []*struct",
+			Source: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
+				{
+					Field1: types.StringValue("value1"),
+				},
+				{
+					Field1: types.StringValue("value2"),
+				},
+			}),
+			Target: &[]*TestFlexAWS01{},
+			WantTarget: &[]*TestFlexAWS01{
+				{
+					Field1: "value1",
+				},
+				{
+					Field1: "value2",
+				},
+			},
+		},
+		{
+			TestName:   "empty value to []*struct",
+			Source:     fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{}),
+			Target:     &[]*TestFlexAWS01{},
+			WantTarget: &[]*TestFlexAWS01{},
+		},
+		{
+			TestName:   "null value to []*struct",
+			Source:     fwtypes.NewListNestedObjectValueOfNull[TestFlexTF01](ctx),
+			Target:     &[]*TestFlexAWS01{},
+			WantTarget: &[]*TestFlexAWS01{},
+		},
+
+		{
+			TestName: "single list value to single struct",
+			Source: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
+				{
+					Field1: types.StringValue("value1"),
+				},
+			}),
+			Target: &TestFlexAWS01{},
+			WantTarget: &TestFlexAWS01{
+				Field1: "value1",
+			},
+		},
+		{
+			TestName:   "empty list value to single struct",
+			Source:     fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{}),
+			Target:     &[]TestFlexAWS01{},
+			WantTarget: &[]TestFlexAWS01{},
+		},
+		{
+			TestName:   "null value to single struct",
+			Source:     fwtypes.NewListNestedObjectValueOfNull[TestFlexTF01](ctx),
+			Target:     &[]TestFlexAWS01{},
+			WantTarget: &[]TestFlexAWS01{},
+		},
+	}
+	runAutoExpandTestCases(t, testCases)
+}
+
 func TestExpandSimpleNestedBlockWithStringEnum(t *testing.T) {
 	t.Parallel()
 
