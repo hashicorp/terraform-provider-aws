@@ -122,7 +122,7 @@ func (r *workspaceServiceAccountResource) Read(ctx context.Context, request reso
 
 	conn := r.Meta().GrafanaClient(ctx)
 
-	output, err := findWorkspaceServiceAccountByTwoPartKey(ctx, conn, data.WorkspaceID.ValueString(), data.ServiceAccountID.String())
+	output, err := findWorkspaceServiceAccountByTwoPartKey(ctx, conn, data.WorkspaceID.ValueString(), data.ServiceAccountID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -146,6 +146,9 @@ func (r *workspaceServiceAccountResource) Read(ctx context.Context, request reso
 	// Restore resource ID.
 	// It has been overwritten by the 'Id' field from the API response.
 	data.setID()
+
+	// Role is returned from the API in lowercase.
+	data.GrafanaRole = fwtypes.StringEnumValueToUpper(output.GrafanaRole)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
