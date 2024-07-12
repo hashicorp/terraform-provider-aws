@@ -6,6 +6,7 @@ package flex
 import (
 	"context"
 	"encoding/json"
+	"reflect"
 	"time"
 
 	smithydocument "github.com/aws/smithy-go/document"
@@ -364,20 +365,16 @@ type TestFlexAWS22 struct {
 	Field1 map[string]map[string]*string
 }
 
-type testFlexTFInterfaceListNestedObject struct {
-	Field1 fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceFlexer] `tfsdk:"field1"`
+type testFlexTFListNestedObject[T any] struct {
+	Field1 fwtypes.ListNestedObjectValueOf[T] `tfsdk:"field1"`
 }
 
-type testFlexTFInterfaceListNestedObjectNonFlexer struct {
-	Field1 fwtypes.ListNestedObjectValueOf[TestFlexTF01] `tfsdk:"field1"`
+type testFlexTFSetNestedObject[T any] struct {
+	Field1 fwtypes.SetNestedObjectValueOf[T] `tfsdk:"field1"`
 }
 
-type testFlexTFInterfaceSetNestedObject struct {
-	Field1 fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceFlexer] `tfsdk:"field1"`
-}
-
-type testFlexTFInterfaceObjectValue struct {
-	Field1 fwtypes.ObjectValueOf[testFlexTFInterfaceFlexer] `tfsdk:"field1"`
+type testFlexTFObjectValue[T any] struct {
+	Field1 fwtypes.ObjectValueOf[T] `tfsdk:"field1"`
 }
 
 type testFlexTFInterfaceFlexer struct {
@@ -468,17 +465,17 @@ func (t *testFlexTFFlexer) Flatten(ctx context.Context, v any) (diags diag.Diagn
 	}
 }
 
-type testFlexTFExpanderListNestedObject struct {
-	Field1 fwtypes.ListNestedObjectValueOf[testFlexTFFlexer] `tfsdk:"field1"`
-}
+type testFlexTFExpanderListNestedObject testFlexTFListNestedObject[testFlexTFFlexer]
 
-type testFlexTFExpanderSetNestedObject struct {
-	Field1 fwtypes.SetNestedObjectValueOf[testFlexTFFlexer] `tfsdk:"field1"`
-}
+type testFlexTFExpanderSetNestedObject testFlexTFSetNestedObject[testFlexTFFlexer]
 
-type testFlexTFExpanderObjectValue struct {
-	Field1 fwtypes.ObjectValueOf[testFlexTFFlexer] `tfsdk:"field1"`
-}
+type testFlexTFExpanderObjectValue testFlexTFObjectValue[testFlexTFFlexer]
+
+type testFlexTFTypedExpanderListNestedObject testFlexTFListNestedObject[testFlexTFTypedExpander]
+
+type testFlexTFTypedExpanderSetNestedObject testFlexTFSetNestedObject[testFlexTFTypedExpander]
+
+type testFlexTFTypedExpanderObjectValue testFlexTFObjectValue[testFlexTFTypedExpander]
 
 type testFlexTFExpanderToString struct {
 	Field1 types.String `tfsdk:"field1"`
@@ -498,6 +495,57 @@ var _ Expander = testFlexTFExpanderToNil{}
 
 func (t testFlexTFExpanderToNil) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	return nil, nil
+}
+
+type testFlexTFTypedExpander struct {
+	Field1 types.String `tfsdk:"field1"`
+}
+
+var _ TypedExpander = testFlexTFTypedExpander{}
+
+func (t testFlexTFTypedExpander) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	return &testFlexAWSExpander{
+		AWSField: t.Field1.ValueString(),
+	}, nil
+}
+
+type testFlexTFTypedExpanderToNil struct {
+	Field1 types.String `tfsdk:"field1"`
+}
+
+var _ TypedExpander = testFlexTFTypedExpanderToNil{}
+
+func (t testFlexTFTypedExpanderToNil) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	return nil, nil
+}
+
+type testFlexTFInterfaceTypedExpander struct {
+	Field1 types.String `tfsdk:"field1"`
+}
+
+var _ TypedExpander = testFlexTFInterfaceTypedExpander{}
+
+func (t testFlexTFInterfaceTypedExpander) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	switch targetType {
+	case reflect.TypeFor[testFlexAWSInterfaceInterface]():
+		return &testFlexAWSInterfaceInterfaceImpl{
+			AWSField: t.Field1.ValueString(),
+		}, nil
+	}
+
+	return nil, nil
+}
+
+type testFlexTFInterfaceIncompatibleTypedExpander struct {
+	Field1 types.String `tfsdk:"field1"`
+}
+
+var _ TypedExpander = testFlexTFInterfaceIncompatibleTypedExpander{}
+
+func (t testFlexTFInterfaceIncompatibleTypedExpander) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	return &testFlexAWSInterfaceIncompatibleImpl{
+		AWSField: t.Field1.ValueString(),
+	}, nil
 }
 
 type testFlexAWSExpander struct {
