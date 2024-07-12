@@ -51,8 +51,8 @@ func dataSourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrDomain, domainName)
 
 	readOpts := &ses.GetIdentityVerificationAttributesInput{
-		Identities: []*string{
-			aws.String(domainName),
+		Identities: []string{
+			aws.ToString(&domainName),
 		},
 	}
 
