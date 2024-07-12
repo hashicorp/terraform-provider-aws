@@ -92,12 +92,12 @@ resource "aws_lb_target_group" "tcp-example" {
 
   target_group_health {
     dns_failover {
-      minimum_healthy_targets_count = "1"
+      minimum_healthy_targets_count      = "1"
       minimum_healthy_targets_percentage = "off"
     }
 
     unhealthy_state_routing {
-      minimum_healthy_targets_count = "1"
+      minimum_healthy_targets_count      = "1"
       minimum_healthy_targets_percentage = "off"
     }
   }
