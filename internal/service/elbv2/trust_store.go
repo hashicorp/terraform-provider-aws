@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -146,6 +147,10 @@ func resourceTrustStoreCreate(ctx context.Context, d *schema.ResourceData, meta 
 	})
 
 	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Trust Store (%s) create: %s", d.Id(), err)
+	}
+
+	if _, err := waitTrustStoreActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Trust Store (%s) create: %s", d.Id(), err)
 	}
 
@@ -292,6 +297,41 @@ func findTrustStores(ctx context.Context, conn *elasticloadbalancingv2.Client, i
 	}
 
 	return output, nil
+}
+
+func statusTrustStore(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findTrustStoreByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitTrustStoreActive(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string, timeout time.Duration) (*awstypes.TrustStore, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.TrustStoreStatusCreating),
+		Target:     enum.Slice(awstypes.TrustStoreStatusActive),
+		Refresh:    statusTrustStore(ctx, conn, arn),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TrustStore); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func findTrustStoreAssociations(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeTrustStoreAssociationsInput) ([]awstypes.TrustStoreAssociation, error) {
