@@ -4988,12 +4988,12 @@ resource "aws_lb_target_group" "test" {
 
   target_group_health {
     dns_failover {
-      minimum_healthy_targets_count = %[2]q
+      minimum_healthy_targets_count      = %[2]q
       minimum_healthy_targets_percentage = %[3]q
     }
 
     unhealthy_state_routing {
-      minimum_healthy_targets_count = %[4]d
+      minimum_healthy_targets_count      = %[4]d
       minimum_healthy_targets_percentage = %[5]q
     }
   }
