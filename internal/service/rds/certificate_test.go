@@ -8,29 +8,42 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRDSCertificate_Basic(t *testing.T) {
+func TestAccRDSCertificate_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:      testAccCertificate_basic,
+		acctest.CtDisappears: testAccCertificate_disappears,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccCertificate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v types.Certificate
 	resourceName := "aws_rds_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateConfig_Basic("rds-ca-rsa4096-g1"),
+				Config: testAccCertificateConfig_basic("rds-ca-rsa4096-g1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificate(ctx, resourceName, "rds-ca-rsa4096-g1"),
+					testAccCheckCertificateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "certificate_identifier", "rds-ca-rsa4096-g1"),
 				),
 			},
@@ -40,11 +53,34 @@ func TestAccRDSCertificate_Basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCertificateConfig_Basic("rds-ca-rsa4096-g1"),
+				Config: testAccCertificateConfig_basic("rds-ca-ecc384-g1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificate(ctx, resourceName, "rds-ca-rsa4096-g1"),
-					resource.TestCheckResourceAttr(resourceName, "certificate_identifier", "rds-ca-rsa4096-g1"),
+					testAccCheckCertificateExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "certificate_identifier", "rds-ca-ecc384-g1"),
 				),
+			},
+		},
+	})
+}
+
+func testAccCertificate_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.Certificate
+	resourceName := "aws_rds_certificate.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateConfig_basic("rds-ca-rsa4096-g1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertificateExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceCertificate(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -52,53 +88,55 @@ func TestAccRDSCertificate_Basic(t *testing.T) {
 
 func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
-		response, err := conn.DescribeCertificatesWithContext(ctx, &rds_sdkv1.DescribeCertificatesInput{})
-		if err != nil {
-			return err
-		}
-
-		for _, c := range (*response).Certificates {
-			if aws.BoolValue(c.CustomerOverride) == true {
-				return fmt.Errorf("RDS certificate customer override is not removed on resource destruction")
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_rds_certificate" {
+				continue
 			}
+
+			_, err := tfrds.FindDefaultCertificate(ctx, conn)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("RDS Default Certificate %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckCertificate(ctx context.Context, n string, certificate_identifier string) resource.TestCheckFunc {
+func testAccCheckCertificateExists(ctx context.Context, n string, v *types.Certificate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
+		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		output, err := tfrds.FindDefaultCertificate(ctx, conn)
 
-		response, err := conn.DescribeCertificatesWithContext(ctx, &rds_sdkv1.DescribeCertificatesInput{})
 		if err != nil {
 			return err
 		}
 
-		if aws.StringValue((*response).DefaultCertificateForNewLaunches) != certificate_identifier {
-			return fmt.Errorf("RDS certificate override is not in the expected state (%s)", certificate_identifier)
-		}
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCertificateConfig_Basic(certificate_identifier string) string {
+func testAccCertificateConfig_basic(certificateID string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_certificate" "test" {
-  certificate_identifier = "%s"
+  certificate_identifier = %[1]q
 }
-	`, certificate_identifier)
+`, certificateID)
 }
