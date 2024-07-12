@@ -1,7 +1,7 @@
 ---
 subcategory: "DataZone"
 layout: "aws"
-page_title: "Amazon: aws_datazone_project"
+page_title: "AWS: aws_datazone_project"
 description: |-
   Terraform resource for managing an Amazon DataZone Project.
 ---
@@ -29,7 +29,6 @@ resource "aws_datazone_project" "test" {
   name      = "name"
 }
 ```
-
 
 ## Argument Reference
 
