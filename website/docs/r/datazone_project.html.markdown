@@ -7,7 +7,7 @@ description: |-
 ---
 # Resource: aws_datazone_project
 
-Terraform resource for managing an Amazon DataZone Project.
+Terraform resource for managing an AWS DataZone Project.
 
 ## Example Usage
 
@@ -62,9 +62,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `3m`)
-* `update` - (Default `30m`)
-* `delete` - (Default `3m`)
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 

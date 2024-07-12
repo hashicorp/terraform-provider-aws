@@ -40,9 +40,8 @@ import (
 
 func newResourceProject(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceProject{}
-	r.SetDefaultCreateTimeout(3 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(3 * time.Minute)
+	r.SetDefaultCreateTimeout(10 * time.Minute)
+	r.SetDefaultDeleteTimeout(10 * time.Minute)
 	return r, nil
 }
 
@@ -135,7 +134,6 @@ func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Update: true,
 				Delete: true,
 			}),
 		},
