@@ -1480,6 +1480,146 @@ func findSecurityGroupByNameAndVPCID(ctx context.Context, conn *ec2.Client, name
 		),
 	}
 	return findSecurityGroup(ctx, conn, input)
+
+}
+
+func findSecurityGroupByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecurityGroup, error) {
+	input := &ec2.DescribeSecurityGroupsInput{
+		GroupIds: []string{id},
+	}
+
+	output, err := findSecurityGroup(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.GroupId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findSecurityGroupByDescriptionAndVPCID(ctx context.Context, conn *ec2.Client, description, vpcID string) (*awstypes.SecurityGroup, error) {
+	input := &ec2.DescribeSecurityGroupsInput{
+		Filters: newAttributeFilterListV2(
+			map[string]string{
+				"description": description, // nosemgrep:ci.literal-description-string-constant
+				"vpc-id":      vpcID,
+			},
+		),
+	}
+	return findSecurityGroup(ctx, conn, input)
+}
+
+func findSecurityGroupByNameAndVPCIDAndOwnerID(ctx context.Context, conn *ec2.Client, name, vpcID, ownerID string) (*awstypes.SecurityGroup, error) {
+	input := &ec2.DescribeSecurityGroupsInput{
+		Filters: newAttributeFilterListV2(
+			map[string]string{
+				"group-name": name,
+				"vpc-id":     vpcID,
+				"owner-id":   ownerID,
+			},
+		),
+	}
+	return findSecurityGroup(ctx, conn, input)
+}
+
+func findSecurityGroupRule(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupRulesInput) (*awstypes.SecurityGroupRule, error) {
+	output, err := findSecurityGroupRules(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSecurityGroupRules(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupRulesInput) ([]awstypes.SecurityGroupRule, error) {
+	var output []awstypes.SecurityGroupRule
+
+	pages := ec2.NewDescribeSecurityGroupRulesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidSecurityGroupRuleIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SecurityGroupRules...)
+	}
+
+	return output, nil
+}
+
+func findSecurityGroupRuleByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecurityGroupRule, error) {
+	input := &ec2.DescribeSecurityGroupRulesInput{
+		SecurityGroupRuleIds: []string{id},
+	}
+
+	output, err := findSecurityGroupRule(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.SecurityGroupRuleId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findSecurityGroupEgressRuleByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecurityGroupRule, error) {
+	output, err := findSecurityGroupRuleByID(ctx, conn, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !aws.ToBool(output.IsEgress) {
+		return nil, &retry.NotFoundError{}
+	}
+
+	return output, nil
+}
+
+func findSecurityGroupIngressRuleByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecurityGroupRule, error) {
+	output, err := findSecurityGroupRuleByID(ctx, conn, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if aws.ToBool(output.IsEgress) {
+		return nil, &retry.NotFoundError{}
+	}
+
+	return output, nil
+}
+
+func findSecurityGroupRulesBySecurityGroupID(ctx context.Context, conn *ec2.Client, id string) ([]awstypes.SecurityGroupRule, error) {
+	input := &ec2.DescribeSecurityGroupRulesInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"group-id": id,
+		}),
+	}
+
+	return findSecurityGroupRules(ctx, conn, input)
 }
 
 func findNetworkInterfaces(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInterfacesInput) ([]awstypes.NetworkInterface, error) {

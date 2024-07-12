@@ -6,8 +6,8 @@ package ec2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -85,10 +85,10 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeSecurityGroupsInput{
-		Filters: newAttributeFilterList(
+		Filters: newAttributeFilterListV2(
 			map[string]string{
 				"group-name": DefaultSecurityGroupName,
 			},
@@ -96,33 +96,33 @@ func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if v, ok := d.GetOk(names.AttrVPCID); ok {
-		input.Filters = append(input.Filters, newAttributeFilterList(
+		input.Filters = append(input.Filters, newAttributeFilterListV2(
 			map[string]string{
 				"vpc-id": v.(string),
 			},
 		)...)
 	} else {
-		input.Filters = append(input.Filters, newAttributeFilterList(
+		input.Filters = append(input.Filters, newAttributeFilterListV2(
 			map[string]string{
 				names.AttrDescription: "default group",
 			},
 		)...)
 	}
 
-	sg, err := FindSecurityGroup(ctx, conn, input)
+	sg, err := findSecurityGroup(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Default Security Group: %s", err)
 	}
 
-	d.SetId(aws.StringValue(sg.GroupId))
+	d.SetId(aws.ToString(sg.GroupId))
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := KeyValueTags(ctx, getTagsIn(ctx))
-	oldTags := KeyValueTags(ctx, sg.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
+	newTags := keyValueTagsV2(ctx, getTagsInV2(ctx))
+	oldTags := keyValueTagsV2(ctx, sg.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
 	if !newTags.Equal(oldTags) {
-		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
+		if err := updateTagsV2(ctx, conn, d.Id(), oldTags, newTags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Default Security Group (%s) tags: %s", d.Id(), err)
 		}
 	}
