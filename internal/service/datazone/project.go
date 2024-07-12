@@ -38,6 +38,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @FrameworkResource("aws_datazone_project", name="Project")
 func newResourceProject(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceProject{}
 	r.SetDefaultCreateTimeout(10 * time.Minute)
