@@ -25,7 +25,7 @@ import (
 // @SDKResource("aws_default_subnet", name="Subnet")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceDefaultSubnet() *schema.Resource {
+func resourceDefaultSubnet() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultSubnetCreate,

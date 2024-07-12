@@ -20,7 +20,7 @@ import (
 // @SDKResource("aws_default_security_group", name="Security Group")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceDefaultSecurityGroup() *schema.Resource {
+func resourceDefaultSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultSecurityGroupCreate,
