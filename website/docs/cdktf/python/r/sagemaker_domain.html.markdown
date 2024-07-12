@@ -81,9 +81,10 @@ class MyConvertedCode(TerraformStack):
         example = SagemakerAppImageConfig(self, "example",
             app_image_config_name="example",
             kernel_gateway_image_config=SagemakerAppImageConfigKernelGatewayImageConfig(
-                kernel_spec=SagemakerAppImageConfigKernelGatewayImageConfigKernelSpec(
+                kernel_spec=[SagemakerAppImageConfigKernelGatewayImageConfigKernelSpec(
                     name="example"
                 )
+                ]
             )
         )
         aws_sagemaker_image_example = SagemakerImage(self, "example_1",
@@ -185,6 +186,7 @@ The following arguments are optional:
 #### `canvas_app_settings` Block
 
 * `direct_deploy_settings` - (Optional) The model deployment settings for the SageMaker Canvas application. See [`direct_deploy_settings` Block](#direct_deploy_settings-block) below.
+* `generative_ai_settings` - (Optional) The generative AI settings for the SageMaker Canvas application. See [`generative_ai_settings` Block](#generative_ai_settings-block) below.
 * `identity_provider_oauth_settings` - (Optional) The settings for connecting to an external data source with OAuth. See [`identity_provider_oauth_settings` Block](#identity_provider_oauth_settings-block) below.
 * `kendra_settings` - (Optional) The settings for document querying. See [`kendra_settings` Block](#kendra_settings-block) below.
 * `model_register_settings` - (Optional) The model registry settings for the SageMaker Canvas application. See [`model_register_settings` Block](#model_register_settings-block) below.
@@ -199,7 +201,11 @@ The following arguments are optional:
 
 ##### `direct_deploy_settings` Block
 
-* `status` - (Optional)Describes whether model deployment permissions are enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
+* `status` - (Optional) Describes whether model deployment permissions are enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
+
+##### `generative_ai_settings` Block
+
+* `amazon_bedrock_role_arn` - (Optional) The ARN of an Amazon Web Services IAM role that allows fine-tuning of large language models (LLMs) in Amazon Bedrock. The IAM role should have Amazon S3 read and write permissions, as well as a trust relationship that establishes bedrock.amazonaws.com as a service principal.
 
 ##### `kendra_settings` Block
 
@@ -343,4 +349,4 @@ Using `terraform import`, import SageMaker Domains using the `id`. For example:
 % terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1aef42f588000331a9cbfd58b449907f26fa2c1a99529bd8fe066eea5f20c0de -->
+<!-- cache-key: cdktf-0.20.1 input-888b29765c78136a5dfabf8748cce1605dbe6705ed2be06764d7f9fb568fcfae -->

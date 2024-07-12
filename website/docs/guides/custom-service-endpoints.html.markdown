@@ -134,6 +134,7 @@ provider "aws" {
   <li><code>costoptimizationhub</code></li>
   <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
   <li><code>customerprofiles</code></li>
+  <li><code>databrew</code> (or <code>gluedatabrew</code>)</li>
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
   <li><code>datasync</code></li>
@@ -227,6 +228,7 @@ provider "aws" {
   <li><code>neptunegraph</code></li>
   <li><code>networkfirewall</code></li>
   <li><code>networkmanager</code></li>
+  <li><code>networkmonitor</code></li>
   <li><code>oam</code> (or <code>cloudwatchobservabilityaccessmanager</code>)</li>
   <li><code>opensearch</code> (or <code>opensearchservice</code>)</li>
   <li><code>opensearchserverless</code></li>

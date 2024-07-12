@@ -43,6 +43,10 @@ func resourceServerCertificate() *schema.Resource {
 			StateContext: resourceServerCertificateImport,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Delete: schema.DefaultTimeout(15 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -210,15 +214,12 @@ func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceServerCertificateRead(ctx, d, meta)...)
 }
 
-const deleteTimeout = 15 * time.Minute
-
 func resourceServerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM Server Certificate: %s", d.Id())
-
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.DeleteConflictException](ctx, deleteTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.DeleteConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteServerCertificate(ctx, &iam.DeleteServerCertificateInput{
 			ServerCertificateName: aws.String(d.Get(names.AttrName).(string)),
 		})

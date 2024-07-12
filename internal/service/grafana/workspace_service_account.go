@@ -71,7 +71,7 @@ func (r *resourceWorkspaceServiceAccount) Schema(ctx context.Context, req resour
 					enum.FrameworkValidate[awstypes.Role](),
 				},
 			},
-			names.AttrWorkspaceID: schema.StringAttribute{
+			"workspace_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -179,7 +179,7 @@ func (r *resourceWorkspaceServiceAccount) ImportState(ctx context.Context, req r
 	}
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("grafana_role"), parts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrWorkspaceID), parts[2])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("workspace_id"), parts[2])...)
 }
 
 func findWorkspaceServiceAccount(ctx context.Context, conn *grafana.Client, id, workspaceID string) (*awstypes.ServiceAccountSummary, error) {

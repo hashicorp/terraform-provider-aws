@@ -86,7 +86,7 @@ func (r *resourceWorkspaceServiceAccountToken) Schema(ctx context.Context, req r
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrWorkspaceID: schema.StringAttribute{
+			"workspace_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

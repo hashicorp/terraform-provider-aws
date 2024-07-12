@@ -6,8 +6,9 @@ package efs
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -19,8 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_efs_file_system")
-func DataSourceFileSystem() *schema.Resource {
+// @SDKDataSource("aws_efs_file_system", name="File System")
+// @Tags
+func dataSourceFileSystem() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFileSystemRead,
 
@@ -119,7 +121,7 @@ func DataSourceFileSystem() *schema.Resource {
 
 func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn(ctx)
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &efs.DescribeFileSystemsInput{}
@@ -132,10 +134,10 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.FileSystemId = aws.String(v.(string))
 	}
 
-	filter := tfslices.PredicateTrue[*efs.FileSystemDescription]()
+	filter := tfslices.PredicateTrue[*awstypes.FileSystemDescription]()
 
 	if tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig); len(tagsToMatch) > 0 {
-		filter = func(v *efs.FileSystemDescription) bool {
+		filter = func(v *awstypes.FileSystemDescription) bool {
 			return KeyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch)
 		}
 	}
@@ -143,10 +145,10 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 	fs, err := findFileSystem(ctx, conn, input, filter)
 
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EFS file system", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EFS File System", err))
 	}
 
-	fsID := aws.StringValue(fs.FileSystemId)
+	fsID := aws.ToString(fs.FileSystemId)
 	d.SetId(fsID)
 	d.Set(names.AttrARN, fs.FileSystemArn)
 	d.Set("availability_zone_id", fs.AvailabilityZoneId)
@@ -158,7 +160,7 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrKMSKeyID, fs.KmsKeyId)
 	d.Set(names.AttrName, fs.Name)
 	d.Set("performance_mode", fs.PerformanceMode)
-	if err := d.Set("protection", flattenFileSystemProtection(fs.FileSystemProtection)); err != nil {
+	if err := d.Set("protection", flattenFileSystemProtectionDescription(fs.FileSystemProtection)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting protection: %s", err)
 	}
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
@@ -167,19 +169,17 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("throughput_mode", fs.ThroughputMode)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, fs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, fs.Tags)
 
-	res, err := conn.DescribeLifecycleConfigurationWithContext(ctx, &efs.DescribeLifecycleConfigurationInput{
-		FileSystemId: fs.FileSystemId,
+	output, err := conn.DescribeLifecycleConfiguration(ctx, &efs.DescribeLifecycleConfigurationInput{
+		FileSystemId: aws.String(d.Id()),
 	})
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing lifecycle configuration for EFS file system (%s): %s",
-			aws.StringValue(fs.FileSystemId), err)
+		return sdkdiag.AppendErrorf(diags, "reading EFS File System (%s) lifecycle configuration: %s", d.Id(), err)
 	}
 
-	if err := d.Set("lifecycle_policy", flattenFileSystemLifecyclePolicies(res.LifecyclePolicies)); err != nil {
+	if err := d.Set("lifecycle_policy", flattenLifecyclePolicies(output.LifecyclePolicies)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lifecycle_policy: %s", err)
 	}
 

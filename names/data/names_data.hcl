@@ -917,7 +917,6 @@ service "batch" {
 }
 
 service "bedrock" {
-
   sdk {
     id             = "Bedrock"
     client_version = [2]
@@ -925,11 +924,11 @@ service "bedrock" {
 
   names {
     provider_name_upper = "Bedrock"
-    human_friendly      = "Amazon Bedrock"
+    human_friendly      = "Bedrock"
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListFoundationModels"
+    endpoint_api_call = "ListFoundationModels"
   }
 
   resource_prefix {
@@ -938,11 +937,10 @@ service "bedrock" {
 
   provider_package_correct = "bedrock"
   doc_prefix               = ["bedrock_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "bedrockagent" {
-
   cli_v2_command {
     aws_cli_v2_command           = "bedrock-agent"
     aws_cli_v2_command_no_dashes = "bedrockagent"
@@ -955,11 +953,11 @@ service "bedrockagent" {
 
   names {
     provider_name_upper = "BedrockAgent"
-    human_friendly      = "Agents for Amazon Bedrock"
+    human_friendly      = "Bedrock Agents"
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListAgents"
+    endpoint_api_call = "ListAgents"
   }
 
   resource_prefix {
@@ -968,7 +966,7 @@ service "bedrockagent" {
 
   provider_package_correct = "bedrockagent"
   doc_prefix               = ["bedrockagent_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "bcmdataexports" {
@@ -1780,6 +1778,31 @@ service "logs" {
   brand                    = "AWS"
 }
 
+service "networkmonitor" {
+
+  sdk {
+    id             = "NetworkMonitor"
+    client_version = [2]
+  }
+
+  names {
+    provider_name_upper = "NetworkMonitor"
+    human_friendly      = "CloudWatch Network Monitor"
+  }
+
+  endpoint_info {
+    endpoint_api_call        = "ListMonitors"
+  }
+
+  resource_prefix {
+    correct = "aws_networkmonitor_"
+  }
+
+  provider_package_correct = "networkmonitor"
+  doc_prefix               = ["networkmonitor_"]
+  brand                    = "Amazon"
+}
+
 service "rum" {
 
   go_packages {
@@ -2165,7 +2188,7 @@ service "cognitoidp" {
 
   sdk {
     id             = "Cognito Identity Provider"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -2180,6 +2203,7 @@ service "cognitoidp" {
 
   endpoint_info {
     endpoint_api_call        = "ListUserPools"
+    endpoint_api_params      = "MaxResults: aws_sdkv2.Int32(1)"
   }
 
   resource_prefix {
@@ -3006,7 +3030,7 @@ service "ds" {
 
   sdk {
     id             = "Directory Service"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -3258,16 +3282,12 @@ service "efs" {
 
   sdk {
     id             = "EFS"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
     provider_name_upper = "EFS"
     human_friendly      = "EFS (Elastic File System)"
-  }
-
-  client {
-    go_v1_client_typename = "EFS"
   }
 
   endpoint_info {
@@ -3509,7 +3529,7 @@ service "elb" {
 
   sdk {
     id             = "Elastic Load Balancing"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4224,14 +4244,9 @@ service "glue" {
 
 service "databrew" {
 
-  go_packages {
-    v1_package = "gluedatabrew"
-    v2_package = "databrew"
-  }
-
   sdk {
     id             = "DataBrew"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4240,8 +4255,8 @@ service "databrew" {
     human_friendly      = "Glue DataBrew"
   }
 
-  client {
-    go_v1_client_typename = "GlueDataBrew"
+  endpoint_info {
+    endpoint_api_call = "ListProjects"
   }
 
   resource_prefix {
@@ -4251,7 +4266,6 @@ service "databrew" {
   provider_package_correct = "databrew"
   doc_prefix               = ["databrew_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "groundstation" {
@@ -4544,7 +4558,7 @@ service "iotanalytics" {
 
   sdk {
     id             = "IoTAnalytics"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4636,7 +4650,7 @@ service "iotevents" {
 
   sdk {
     id             = "IoT Events"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4722,7 +4736,7 @@ service "greengrass" {
 
   sdk {
     id             = "Greengrass"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -5864,7 +5878,7 @@ service "grafana" {
 
   sdk {
     id             = "grafana"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -5925,7 +5939,7 @@ service "kafkaconnect" {
 
   sdk {
     id             = "KafkaConnect"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -8534,7 +8548,7 @@ service "sfn" {
 
   sdk {
     id             = "SFN"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -9759,7 +9773,7 @@ service "iot" {
 
   sdk {
     id             = "IoT"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {

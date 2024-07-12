@@ -214,6 +214,14 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameCollection, state.ID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 
 	if resp.Diagnostics.HasError() {

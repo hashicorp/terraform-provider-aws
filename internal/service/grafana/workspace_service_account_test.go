@@ -83,7 +83,7 @@ func testAccCheckWorkspaceServiceAccountExists(ctx context.Context, n string, v 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaClient(ctx)
-		output, err := tfgrafana.FindWorkspaceServiceAccount(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrWorkspaceID])
+		output, err := tfgrafana.FindWorkspaceServiceAccount(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["workspace_id"])
 		if err != nil {
 			return err
 		}
@@ -101,7 +101,7 @@ func testAccCheckWorkspaceServiceAccountImportStateIdFunc(resourceName string) r
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s,%s,%s", rs.Primary.Attributes[names.AttrID], rs.Primary.Attributes["grafana_role"], rs.Primary.Attributes[names.AttrWorkspaceID]), nil
+		return fmt.Sprintf("%s,%s,%s", rs.Primary.Attributes[names.AttrID], rs.Primary.Attributes["grafana_role"], rs.Primary.Attributes["workspace_id"]), nil
 	}
 }
 

@@ -1,0 +1,59 @@
+rules:
+  - id: notfound-without-err-checks
+    languages: [go]
+    message: When checking for tfresource.NotFound() errors, typically other error conditions should be checked.
+    patterns:
+      - pattern: |
+          if tfresource.NotFound($ERR) { ... }
+      - pattern-not-inside: |
+          if tfresource.NotFound($ERR) { ... }
+          if $ERR != nil { ... }
+      - pattern-not-inside: |
+          if tfresource.NotFound($ERR) { ... }
+          if $FUNC($ERR, ...) { ... }
+          if $ERR != nil { ... }
+      - pattern-not-inside: |
+          if err != nil {
+            if tfresource.NotFound($ERR) { ... }
+            return ...
+          }
+      - pattern-not-inside: |
+          if err != nil {
+            if tfresource.NotFound($ERR) {
+              ...
+            } else {
+              ...
+            }
+          }
+      - pattern-not-inside: |
+          if err == nil {
+            ...
+          } else if tfresource.NotFound($ERR) {
+            ...
+          } else { ... }
+      - pattern-not-inside: |
+          if tfresource.NotFound($ERR) {
+            ...
+          } else if err != nil {
+            ...
+          } else {
+            ...
+          }
+      - pattern-not-inside: |
+          if tfresource.NotFound($ERR) {
+            ...
+          }
+          return $ERR
+      - pattern-not-inside: |
+          if tfresource.NotFound($ERR) {
+            continue
+          }
+      - pattern-not-inside: |
+          if tfresource.NotFound($ERR) {
+            ...
+          } else if err != nil {
+            ...
+          }
+      - pattern-not-inside: |
+          tfresource.RetryWhen(...)
+    severity: ERROR

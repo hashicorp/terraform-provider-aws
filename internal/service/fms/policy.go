@@ -134,6 +134,14 @@ func resourcePolicy() *schema.Resource {
 				ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must match a supported resource type, such as AWS::EC2::VPC, see also: https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html"),
 				ConflictsWith: []string{"resource_type_list"},
 			},
+			"resource_set_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"resource_type_list": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -275,6 +283,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set(names.AttrResourceType, policy.ResourceType)
 	d.Set("resource_type_list", policy.ResourceTypeList)
+	d.Set("resource_set_ids", policy.ResourceSetIds)
 	securityServicePolicy := []map[string]interface{}{{
 		names.AttrType:         string(policy.SecurityServicePolicyData.Type),
 		"managed_service_data": aws.ToString(policy.SecurityServicePolicyData.ManagedServiceData),
@@ -376,6 +385,7 @@ func expandPolicy(d *schema.ResourceData) *awstypes.Policy {
 		RemediationEnabled:             d.Get("remediation_enabled").(bool),
 		ResourceType:                   resourceType,
 		ResourceTypeList:               flex.ExpandStringValueSet(d.Get("resource_type_list").(*schema.Set)),
+		ResourceSetIds:                 flex.ExpandStringValueSet(d.Get("resource_set_ids").(*schema.Set)),
 	}
 
 	if d.Id() != "" {

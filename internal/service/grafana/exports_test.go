@@ -5,8 +5,15 @@ package grafana
 
 // Exports for use in tests only.
 var (
-	ResourceWorkspaceServiceAccount = newResourceWorkspaceServiceAccount
+	ResourceWorkspace                  = resourceWorkspace
+	ResourceWorkspaceAPIKey            = resourceWorkspaceAPIKey
+	ResourceWorkspaceSAMLConfiguration = resourceWorkspaceSAMLConfiguration
+	ResourceWorkspaceServiceAccount    = newResourceWorkspaceServiceAccount
 
+	FindLicensedWorkspaceByID        = findLicensedWorkspaceByID
+	FindRoleAssociationsByTwoPartKey = findRoleAssociationsByTwoPartKey
+	FindSAMLConfigurationByID        = findSAMLConfigurationByID
+	FindWorkspaceByID                = findWorkspaceByID
 	FindWorkspaceServiceAccount      = findWorkspaceServiceAccount
 	FindWorkspaceServiceAccountToken = findWorkspaceServiceAccountToken
 )

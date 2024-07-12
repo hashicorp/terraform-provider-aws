@@ -79,7 +79,7 @@ func testAccCheckWorkspaceServiceAccountTokenExists(ctx context.Context, n strin
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaClient(ctx)
-		output, err := tfgrafana.FindWorkspaceServiceAccountToken(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["service_account_id"], rs.Primary.Attributes[names.AttrWorkspaceID])
+		output, err := tfgrafana.FindWorkspaceServiceAccountToken(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["service_account_id"], rs.Primary.Attributes["workspace_id"])
 		if err != nil {
 			return err
 		}

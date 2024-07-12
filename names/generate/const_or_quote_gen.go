@@ -242,7 +242,6 @@ func ConstOrQuote(constant string) string {
 		"volume_size":                   "AttrVolumeSize",
 		"volume_type":                   "AttrVolumeType",
 		"weight":                        "AttrWeight",
-		"workspace_id":                  "AttrWorkspaceID",
 	}
 
 	if v, ok := allConstants[constant]; ok {
