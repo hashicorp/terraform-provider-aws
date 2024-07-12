@@ -21,48 +21,6 @@ import (
 //
 
 const (
-	InstanceReadyTimeout = 10 * time.Minute
-	InstanceStartTimeout = 10 * time.Minute
-	InstanceStopTimeout  = 10 * time.Minute
-
-	// General timeout for IAM resource change to propagate.
-	// See https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_general.html#troubleshoot_general_eventual-consistency.
-	// We have settled on 2 minutes as the best timeout value.
-	iamPropagationTimeout = 2 * time.Minute
-
-	// General timeout for EC2 resource changes to propagate.
-	// See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/query-api-troubleshooting.html#eventual-consistency.
-	ec2PropagationTimeout = 5 * time.Minute // nosemgrep:ci.ec2-in-const-name, ci.ec2-in-var-name
-
-	RouteNotFoundChecks                        = 1000 // Should exceed any reasonable custom timeout value.
-	RouteTableNotFoundChecks                   = 1000 // Should exceed any reasonable custom timeout value.
-	RouteTableAssociationCreatedNotFoundChecks = 1000 // Should exceed any reasonable custom timeout value.
-	SecurityGroupNotFoundChecks                = 1000 // Should exceed any reasonable custom timeout value.
-	InternetGatewayNotFoundChecks              = 1000 // Should exceed any reasonable custom timeout value.
-)
-
-const ManagedPrefixListEntryCreateTimeout = 5 * time.Minute
-
-func WaitSecurityGroupCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SecurityGroup, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{SecurityGroupStatusCreated},
-		Refresh:                   StatusSecurityGroup(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            SecurityGroupNotFoundChecks,
-		ContinuousTargetOccurence: 3,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.SecurityGroup); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-const (
 	SubnetIPv6CIDRBlockAssociationCreatedTimeout = 3 * time.Minute
 	SubnetIPv6CIDRBlockAssociationDeletedTimeout = 3 * time.Minute
 )

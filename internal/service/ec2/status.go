@@ -65,26 +65,6 @@ func StatusNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx context.Context, conn
 	}
 }
 
-const (
-	SecurityGroupStatusCreated = "Created"
-)
-
-func StatusSecurityGroup(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindSecurityGroupByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, SecurityGroupStatusCreated, nil
-	}
-}
-
 func StatusSubnetState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSubnetByID(ctx, conn, id)

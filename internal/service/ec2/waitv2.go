@@ -20,6 +20,27 @@ import (
 )
 
 const (
+	InstanceReadyTimeout = 10 * time.Minute
+	InstanceStartTimeout = 10 * time.Minute
+	InstanceStopTimeout  = 10 * time.Minute
+
+	// General timeout for IAM resource change to propagate.
+	// See https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_general.html#troubleshoot_general_eventual-consistency.
+	// We have settled on 2 minutes as the best timeout value.
+	iamPropagationTimeout = 2 * time.Minute
+
+	// General timeout for EC2 resource changes to propagate.
+	// See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/query-api-troubleshooting.html#eventual-consistency.
+	ec2PropagationTimeout = 5 * time.Minute // nosemgrep:ci.ec2-in-const-name, ci.ec2-in-var-name
+
+	RouteNotFoundChecks                        = 1000 // Should exceed any reasonable custom timeout value.
+	RouteTableNotFoundChecks                   = 1000 // Should exceed any reasonable custom timeout value.
+	RouteTableAssociationCreatedNotFoundChecks = 1000 // Should exceed any reasonable custom timeout value.
+	SecurityGroupNotFoundChecks                = 1000 // Should exceed any reasonable custom timeout value.
+	InternetGatewayNotFoundChecks              = 1000 // Should exceed any reasonable custom timeout value.
+
+	ManagedPrefixListEntryCreateTimeout = 5 * time.Minute
+
 	AvailabilityZoneGroupOptInStatusTimeout = 10 * time.Minute
 )
 
@@ -281,6 +302,25 @@ func waitPlacementGroupDeleted(ctx context.Context, conn *ec2.Client, name strin
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.PlacementGroup); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSecurityGroupCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SecurityGroup, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    []string{SecurityGroupStatusCreated},
+		Refresh:                   statusSecurityGroup(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            SecurityGroupNotFoundChecks,
+		ContinuousTargetOccurence: 3,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SecurityGroup); ok {
 		return output, err
 	}
 

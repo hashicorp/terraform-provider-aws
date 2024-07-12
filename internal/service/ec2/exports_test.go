@@ -95,6 +95,7 @@ var (
 	CustomFiltersSchema                                        = customFiltersSchema
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone
 	ErrCodeInvalidSpotDatafeedNotFound                         = errCodeInvalidSpotDatafeedNotFound
+	ExpandIPPerms                                              = expandIPPerms
 	FindAvailabilityZones                                      = findAvailabilityZones
 	FindCapacityReservationByID                                = findCapacityReservationByID
 	FindCarrierGatewayByID                                     = findCarrierGatewayByID
@@ -140,6 +141,7 @@ var (
 	FindRouteByPrefixListIDDestination                         = findRouteByPrefixListIDDestination
 	FindRouteTableAssociationByID                              = findRouteTableAssociationByID
 	FindRouteTableByID                                         = findRouteTableByID
+	FindSecurityGroupByID                                      = findSecurityGroupByID
 	FindSnapshot                                               = findSnapshot
 	FindSnapshotByID                                           = findSnapshotByID
 	FindSpotDatafeedSubscription                               = findSpotDatafeedSubscription
@@ -189,12 +191,16 @@ var (
 	FindVerifiedAccessTrustProviderByID                        = findVerifiedAccessTrustProviderByID
 	FindVolumeAttachmentInstanceByID                           = findVolumeAttachmentInstanceByID
 	FlattenNetworkInterfacePrivateIPAddresses                  = flattenNetworkInterfacePrivateIPAddresses
+	FlattenSecurityGroups                                      = flattenSecurityGroups
 	IPAMServicePrincipal                                       = ipamServicePrincipal
 	NewAttributeFilterList                                     = newAttributeFilterList
 	NewAttributeFilterListV2                                   = newAttributeFilterListV2
 	NewCustomFilterList                                        = newCustomFilterList
 	NewTagFilterList                                           = newTagFilterList
 	ProtocolForValue                                           = protocolForValue
+	SecurityGroupExpandRules                                   = securityGroupExpandRules
+	SecurityGroupCollapseRules                                 = securityGroupCollapseRules
+	SecurityGroupIPPermGather                                  = securityGroupIPPermGather
 	StopEBSVolumeAttachmentInstance                            = stopVolumeAttachmentInstance
 	StopInstance                                               = stopInstance
 	UpdateTags                                                 = updateTags
