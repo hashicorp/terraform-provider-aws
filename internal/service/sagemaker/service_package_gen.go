@@ -5,6 +5,8 @@ package sagemaker
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	sagemaker_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
@@ -257,6 +259,16 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*s
 	}
 
 	return sagemaker_sdkv1.New(sess.Copy(&cfg)), nil
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*sagemaker_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return sagemaker_sdkv2.NewFromConfig(cfg,
+		sagemaker_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

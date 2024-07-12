@@ -164,6 +164,7 @@ import (
 	rum_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rum"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
+	sagemaker_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
 	schemas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/schemas"
 	secretsmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
@@ -1130,6 +1131,10 @@ func (c *AWSClient) SWFClient(ctx context.Context) *swf_sdkv2.Client {
 
 func (c *AWSClient) SageMakerConn(ctx context.Context) *sagemaker_sdkv1.SageMaker {
 	return errs.Must(conn[*sagemaker_sdkv1.SageMaker](ctx, c, names.SageMaker, make(map[string]any)))
+}
+
+func (c *AWSClient) SageMakerClient(ctx context.Context) *sagemaker_sdkv2.Client {
+	return errs.Must(client[*sagemaker_sdkv2.Client](ctx, c, names.SageMaker, make(map[string]any)))
 }
 
 func (c *AWSClient) SchedulerClient(ctx context.Context) *scheduler_sdkv2.Client {
