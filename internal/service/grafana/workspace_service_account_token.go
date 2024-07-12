@@ -237,15 +237,15 @@ func findWorkspaceServiceAccountTokens(ctx context.Context, conn *grafana.Client
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if err != nil {
-			return nil, err
-		}
-
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
+		}
+
+		if err != nil {
+			return nil, err
 		}
 
 		for _, v := range page.ServiceAccountTokens {
