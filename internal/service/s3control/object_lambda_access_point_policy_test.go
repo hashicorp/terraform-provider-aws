@@ -34,7 +34,7 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(ctx, resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
-					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
@@ -111,7 +111,7 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(ctx, resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
-					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
@@ -126,7 +126,7 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(ctx, resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
-					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),

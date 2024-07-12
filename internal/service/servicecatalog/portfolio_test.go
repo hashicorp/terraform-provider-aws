@@ -37,11 +37,11 @@ func TestAccServiceCatalogPortfolio_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &dpo),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "catalog", regexache.MustCompile(`portfolio/.+`)),
-					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test-2"),
-					resource.TestCheckResourceAttr(resourceName, "provider_name", "test-3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, "test-3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -136,18 +136,4 @@ resource "aws_servicecatalog_portfolio" "test" {
   provider_name = "test-3"
 }
 `, name)
-}
-
-func testAccPortfolioConfig_tags1(name, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_servicecatalog_portfolio" "test" {
-  name          = %[1]q
-  description   = "test-b"
-  provider_name = "test-c"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, name, tagKey1, tagValue1)
 }

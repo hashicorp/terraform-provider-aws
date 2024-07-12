@@ -54,7 +54,7 @@ func TestAccImageBuilderDistributionConfigurationDataSource_arn(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.launch_template_configuration.0.launch_template_id", resourceName, "distribution.0.launch_template_configuration.0.launch_template_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.launch_template_configuration.0.account_id", resourceName, "distribution.0.launch_template_configuration.0.account_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

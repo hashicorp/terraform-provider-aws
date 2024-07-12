@@ -147,11 +147,17 @@ func resourceAccountSettingDefaultDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	settingName := d.Get(names.AttrName).(string)
+	settingValue := "disabled"
+
+	//Default value: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-maintenance.html#task-retirement-change
+	if settingName == ecs.SettingNameFargateTaskRetirementWaitPeriod {
+		settingValue = fargateTaskRetirementWaitPeriodValue
+	}
 
 	log.Printf("[WARN] Disabling ECS Account Setting Default %s", settingName)
 	input := ecs.PutAccountSettingDefaultInput{
 		Name:  aws.String(settingName),
-		Value: aws.String("disabled"),
+		Value: aws.String(settingValue),
 	}
 
 	_, err := conn.PutAccountSettingDefaultWithContext(ctx, &input)

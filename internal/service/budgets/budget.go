@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,6 +34,7 @@ import (
 )
 
 // @SDKResource("aws_budgets_budget")
+// @Tags(identifierAttribute="arn")
 func ResourceBudget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetCreate,
@@ -259,12 +261,12 @@ func ResourceBudget() *schema.Resource {
 							Required:         true,
 							DiffSuppressFunc: suppressEquivalentBudgetLimitAmount,
 						},
-						"start_time": {
+						names.AttrStartTime: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validTimePeriodTimestamp,
 						},
-						"unit": {
+						names.AttrUnit: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -272,6 +274,8 @@ func ResourceBudget() *schema.Resource {
 				},
 				ConflictsWith: []string{"limit_amount", "limit_unit"},
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"time_period_end": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -290,6 +294,7 @@ func ResourceBudget() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.TimeUnit](),
 			},
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -313,8 +318,9 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	_, err = conn.CreateBudget(ctx, &budgets.CreateBudgetInput{
-		AccountId: aws.String(accountID),
-		Budget:    budget,
+		AccountId:    aws.String(accountID),
+		Budget:       budget,
+		ResourceTags: getTagsIn(ctx),
 	})
 
 	if err != nil {
@@ -796,8 +802,8 @@ func convertPlannedBudgetLimitsToSet(plannedBudgetLimits map[string]awstypes.Spe
 
 		convertedPlannedBudgetLimit := make(map[string]string)
 		convertedPlannedBudgetLimit["amount"] = aws.ToString(v.Amount)
-		convertedPlannedBudgetLimit["start_time"] = startTime
-		convertedPlannedBudgetLimit["unit"] = aws.ToString(v.Unit)
+		convertedPlannedBudgetLimit[names.AttrStartTime] = startTime
+		convertedPlannedBudgetLimit[names.AttrUnit] = aws.ToString(v.Unit)
 
 		convertedPlannedBudgetLimits[i] = convertedPlannedBudgetLimit
 		i++
@@ -961,13 +967,13 @@ func expandPlannedBudgetLimitsUnmarshal(plannedBudgetLimitsRaw []interface{}) (m
 	for _, plannedBudgetLimit := range plannedBudgetLimitsRaw {
 		plannedBudgetLimit := plannedBudgetLimit.(map[string]interface{})
 
-		key, err := TimePeriodSecondsFromString(plannedBudgetLimit["start_time"].(string))
+		key, err := TimePeriodSecondsFromString(plannedBudgetLimit[names.AttrStartTime].(string))
 		if err != nil {
 			return nil, err
 		}
 
 		amount := plannedBudgetLimit["amount"].(string)
-		unit := plannedBudgetLimit["unit"].(string)
+		unit := plannedBudgetLimit[names.AttrUnit].(string)
 
 		plannedBudgetLimits[key] = awstypes.Spend{
 			Amount: aws.String(amount),

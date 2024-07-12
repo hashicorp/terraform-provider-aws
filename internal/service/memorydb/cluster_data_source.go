@@ -81,7 +81,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"parameter_group_name": {
+			names.AttrParameterGroupName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -116,7 +116,7 @@ func DataSourceCluster() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"create_time": {
+									names.AttrCreateTime: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -147,7 +147,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"sns_topic_arn": {
+			names.AttrSNSTopicARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -213,7 +213,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("num_replicas_per_shard", numReplicasPerShard)
 
 	d.Set("num_shards", cluster.NumberOfShards)
-	d.Set("parameter_group_name", cluster.ParameterGroupName)
+	d.Set(names.AttrParameterGroupName, cluster.ParameterGroupName)
 
 	var securityGroupIds []*string
 	for _, v := range cluster.SecurityGroups {
@@ -229,9 +229,9 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("snapshot_window", cluster.SnapshotWindow)
 
 	if aws.StringValue(cluster.SnsTopicStatus) == ClusterSNSTopicStatusActive {
-		d.Set("sns_topic_arn", cluster.SnsTopicArn)
+		d.Set(names.AttrSNSTopicARN, cluster.SnsTopicArn)
 	} else {
-		d.Set("sns_topic_arn", "")
+		d.Set(names.AttrSNSTopicARN, "")
 	}
 
 	d.Set("subnet_group_name", cluster.SubnetGroupName)

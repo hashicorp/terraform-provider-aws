@@ -6,7 +6,7 @@ package organizations
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_organizations_policy")
-func DataSourcePolicy() *schema.Resource {
+// @SDKDataSource("aws_organizations_policy", name="Policy")
+func dataSourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePolicyRead,
 
@@ -28,7 +28,7 @@ func DataSourcePolicy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"content": {
+			names.AttrContent: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +54,7 @@ func DataSourcePolicy() *schema.Resource {
 
 func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	policyID := d.Get("policy_id").(string)
 	policy, err := findPolicyByID(ctx, conn, policyID)
@@ -64,10 +64,10 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	policySummary := policy.PolicySummary
-	d.SetId(aws.StringValue(policySummary.Id))
+	d.SetId(aws.ToString(policySummary.Id))
 	d.Set(names.AttrARN, policySummary.Arn)
 	d.Set("aws_managed", policySummary.AwsManaged)
-	d.Set("content", policy.Content)
+	d.Set(names.AttrContent, policy.Content)
 	d.Set(names.AttrDescription, policySummary.Description)
 	d.Set(names.AttrName, policySummary.Name)
 	d.Set(names.AttrType, policySummary.Type)

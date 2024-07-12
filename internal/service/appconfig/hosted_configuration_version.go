@@ -35,7 +35,7 @@ func ResourceHostedConfigurationVersion() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -51,13 +51,13 @@ func ResourceHostedConfigurationVersion() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
-			"content": {
+			names.AttrContent: {
 				Type:      schema.TypeString,
 				Required:  true,
 				ForceNew:  true,
 				Sensitive: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -81,14 +81,14 @@ func resourceHostedConfigurationVersionCreate(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	appID := d.Get("application_id").(string)
+	appID := d.Get(names.AttrApplicationID).(string)
 	profileID := d.Get("configuration_profile_id").(string)
 
 	input := &appconfig.CreateHostedConfigurationVersionInput{
 		ApplicationId:          aws.String(appID),
 		ConfigurationProfileId: aws.String(profileID),
-		Content:                []byte(d.Get("content").(string)),
-		ContentType:            aws.String(d.Get("content_type").(string)),
+		Content:                []byte(d.Get(names.AttrContent).(string)),
+		ContentType:            aws.String(d.Get(names.AttrContentType).(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -138,10 +138,10 @@ func resourceHostedConfigurationVersionRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "reading AppConfig Hosted Configuration Version (%s): empty response", d.Id())
 	}
 
-	d.Set("application_id", output.ApplicationId)
+	d.Set(names.AttrApplicationID, output.ApplicationId)
 	d.Set("configuration_profile_id", output.ConfigurationProfileId)
-	d.Set("content", string(output.Content))
-	d.Set("content_type", output.ContentType)
+	d.Set(names.AttrContent, string(output.Content))
+	d.Set(names.AttrContentType, output.ContentType)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("version_number", output.VersionNumber)
 

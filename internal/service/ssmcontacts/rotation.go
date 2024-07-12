@@ -65,7 +65,7 @@ func (r *resourceRotation) Schema(ctx context.Context, request resource.SchemaRe
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
-			"start_time": schema.StringAttribute{
+			names.AttrStartTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Optional:   true,
 			},

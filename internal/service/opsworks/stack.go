@@ -83,7 +83,7 @@ func ResourceStack() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"password": {
+						names.AttrPassword: {
 							Type:      schema.TypeString,
 							Optional:  true,
 							Sensitive: true,
@@ -102,11 +102,11 @@ func ResourceStack() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(opsworks.SourceType_Values(), false),
 						},
-						"url": {
+						names.AttrURL: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"username": {
+						names.AttrUsername: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -167,7 +167,7 @@ func ResourceStack() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"service_role_arn": {
+			names.AttrServiceRoleARN: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -220,7 +220,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		HostnameTheme:             aws.String(d.Get("hostname_theme").(string)),
 		Name:                      aws.String(name),
 		Region:                    aws.String(region),
-		ServiceRoleArn:            aws.String(d.Get("service_role_arn").(string)),
+		ServiceRoleArn:            aws.String(d.Get(names.AttrServiceRoleARN).(string)),
 		UseCustomCookbooks:        aws.Bool(d.Get("use_custom_cookbooks").(bool)),
 		UseOpsworksSecurityGroups: aws.Bool(d.Get("use_opsworks_security_groups").(bool)),
 	}
@@ -329,7 +329,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	stack, err := FindStackByID(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 		// If it's not found in the default region we're in, we check us-east-1
 		// in the event this stack was created with Terraform before version 0.9.
 		// See https://github.com/hashicorp/terraform/issues/12842.
@@ -379,7 +379,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		if v, ok := d.GetOk("custom_cookbooks_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			v := v.([]interface{})[0].(map[string]interface{})
 
-			tfMap["password"] = v["password"]
+			tfMap[names.AttrPassword] = v[names.AttrPassword]
 			tfMap["ssh_key"] = v["ssh_key"]
 		}
 
@@ -399,7 +399,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("hostname_theme", stack.HostnameTheme)
 	d.Set(names.AttrName, stack.Name)
 	d.Set(names.AttrRegion, stack.Region)
-	d.Set("service_role_arn", stack.ServiceRoleArn)
+	d.Set(names.AttrServiceRoleARN, stack.ServiceRoleArn)
 	d.Set("use_custom_cookbooks", stack.UseCustomCookbooks)
 	d.Set("use_opsworks_security_groups", stack.UseOpsworksSecurityGroups)
 	d.Set(names.AttrVPCID, stack.VpcId)
@@ -498,8 +498,8 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		if d.HasChange("service_role_arn") {
-			input.ServiceRoleArn = aws.String(d.Get("service_role_arn").(string))
+		if d.HasChange(names.AttrServiceRoleARN) {
+			input.ServiceRoleArn = aws.String(d.Get(names.AttrServiceRoleARN).(string))
 		}
 
 		if d.HasChange("use_custom_cookbooks") {
@@ -605,7 +605,7 @@ func expandSource(tfMap map[string]interface{}) *opsworks.Source {
 
 	apiObject := &opsworks.Source{}
 
-	if v, ok := tfMap["password"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPassword].(string); ok && v != "" {
 		apiObject.Password = aws.String(v)
 	}
 
@@ -621,11 +621,11 @@ func expandSource(tfMap map[string]interface{}) *opsworks.Source {
 		apiObject.Type = aws.String(v)
 	}
 
-	if v, ok := tfMap["url"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURL].(string); ok && v != "" {
 		apiObject.Url = aws.String(v)
 	}
 
-	if v, ok := tfMap["username"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrUsername].(string); ok && v != "" {
 		apiObject.Username = aws.String(v)
 	}
 
@@ -640,7 +640,7 @@ func flattenSource(apiObject *opsworks.Source) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Password; v != nil {
-		tfMap["password"] = aws.StringValue(v)
+		tfMap[names.AttrPassword] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Revision; v != nil {
@@ -656,11 +656,11 @@ func flattenSource(apiObject *opsworks.Source) map[string]interface{} {
 	}
 
 	if v := apiObject.Url; v != nil {
-		tfMap["url"] = aws.StringValue(v)
+		tfMap[names.AttrURL] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Username; v != nil {
-		tfMap["username"] = aws.StringValue(v)
+		tfMap[names.AttrUsername] = aws.StringValue(v)
 	}
 
 	return tfMap

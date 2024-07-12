@@ -94,7 +94,7 @@ func ResourcePipelineDefinition() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"field": {
+						names.AttrField: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -166,7 +166,7 @@ func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, 
 		}
 		if aws.BoolValue(output.Errored) {
 			errors := getValidationError(output.ValidationErrors)
-			if strings.Contains(errors.Error(), "role") {
+			if strings.Contains(errors.Error(), names.AttrRole) {
 				return retry.RetryableError(fmt.Errorf("validating after creation DataPipeline Pipeline Definition (%s): %w", pipelineID, errors))
 			}
 		}
@@ -437,7 +437,7 @@ func expandPipelineDefinitionObject(tfMap map[string]interface{}) *datapipeline.
 	}
 
 	apiObject := &datapipeline.PipelineObject{
-		Fields: expandPipelineDefinitionPipelineFields(tfMap["field"].(*schema.Set).List()),
+		Fields: expandPipelineDefinitionPipelineFields(tfMap[names.AttrField].(*schema.Set).List()),
 		Id:     aws.String(tfMap[names.AttrID].(string)),
 		Name:   aws.String(tfMap[names.AttrName].(string)),
 	}
@@ -514,7 +514,7 @@ func flattenPipelineDefinitionObject(apiObject *datapipeline.PipelineObject) map
 	}
 
 	tfMap := map[string]interface{}{}
-	tfMap["field"] = flattenPipelineDefinitionParameterFields(apiObject.Fields)
+	tfMap[names.AttrField] = flattenPipelineDefinitionParameterFields(apiObject.Fields)
 	tfMap[names.AttrID] = aws.StringValue(apiObject.Id)
 	tfMap[names.AttrName] = aws.StringValue(apiObject.Name)
 

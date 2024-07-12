@@ -72,7 +72,7 @@ func ResourceMonitoringSchedule() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"schedule_expression": {
+									names.AttrScheduleExpression: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -259,7 +259,7 @@ func expandScheduleConfig(configured []interface{}) *sagemaker.ScheduleConfig {
 
 	c := &sagemaker.ScheduleConfig{}
 
-	if v, ok := m["schedule_expression"].(string); ok && v != "" {
+	if v, ok := m[names.AttrScheduleExpression].(string); ok && v != "" {
 		c.ScheduleExpression = aws.String(v)
 	}
 
@@ -296,7 +296,7 @@ func flattenScheduleConfig(config *sagemaker.ScheduleConfig) []map[string]interf
 	m := map[string]interface{}{}
 
 	if config.ScheduleExpression != nil {
-		m["schedule_expression"] = aws.StringValue(config.ScheduleExpression)
+		m[names.AttrScheduleExpression] = aws.StringValue(config.ScheduleExpression)
 	}
 
 	return []map[string]interface{}{m}

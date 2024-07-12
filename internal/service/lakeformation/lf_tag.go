@@ -39,7 +39,7 @@ func ResourceLFTag() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -76,7 +76,7 @@ func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	tagValues := d.Get(names.AttrValues).(*schema.Set)
 
 	var catalogID string
-	if v, ok := d.GetOk("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		catalogID = v.(string)
 	} else {
 		catalogID = meta.(*conns.AWSClient).AccountID
@@ -146,7 +146,7 @@ func resourceLFTagRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set(names.AttrKey, output.TagKey)
 	d.Set(names.AttrValues, flex.FlattenStringValueSet(output.TagValues))
-	d.Set("catalog_id", output.CatalogId)
+	d.Set(names.AttrCatalogID, output.CatalogId)
 
 	return diags
 }

@@ -210,7 +210,7 @@ func ResourcePreset() *schema.Resource {
 								"16:9",
 							}, false),
 						},
-						"format": {
+						names.AttrFormat: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -219,7 +219,7 @@ func ResourcePreset() *schema.Resource {
 								"png",
 							}, false),
 						},
-						"interval": {
+						names.AttrInterval: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -468,7 +468,7 @@ func ResourcePreset() *schema.Resource {
 								"ShrinkToFit",
 							}, false),
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -559,11 +559,11 @@ func expandETThumbnails(d *schema.ResourceData) *elastictranscoder.Thumbnails {
 		thumbnails.AspectRatio = aws.String(v.(string))
 	}
 
-	if v, ok := t["interval"]; ok && v.(string) != "" {
+	if v, ok := t[names.AttrInterval]; ok && v.(string) != "" {
 		thumbnails.Interval = aws.String(v.(string))
 	}
 
-	if v, ok := t["format"]; ok && v.(string) != "" {
+	if v, ok := t[names.AttrFormat]; ok && v.(string) != "" {
 		thumbnails.Format = aws.String(v.(string))
 	}
 
@@ -743,7 +743,7 @@ func expandETVideoWatermarks(d *schema.ResourceData) []*elastictranscoder.Preset
 			MaxWidth:         aws.String(p["max_width"].(string)),
 			Opacity:          aws.String(p["opacity"].(string)),
 			SizingPolicy:     aws.String(p["sizing_policy"].(string)),
-			Target:           aws.String(p["target"].(string)),
+			Target:           aws.String(p[names.AttrTarget].(string)),
 			VerticalAlign:    aws.String(p["vertical_align"].(string)),
 			VerticalOffset:   aws.String(p["vertical_offset"].(string)),
 		}
@@ -860,14 +860,14 @@ func flattenETThumbnails(thumbs *elastictranscoder.Thumbnails) []map[string]inte
 	}
 
 	result := map[string]interface{}{
-		"aspect_ratio":   aws.StringValue(thumbs.AspectRatio),
-		"format":         aws.StringValue(thumbs.Format),
-		"interval":       aws.StringValue(thumbs.Interval),
-		"max_height":     aws.StringValue(thumbs.MaxHeight),
-		"max_width":      aws.StringValue(thumbs.MaxWidth),
-		"padding_policy": aws.StringValue(thumbs.PaddingPolicy),
-		"resolution":     aws.StringValue(thumbs.Resolution),
-		"sizing_policy":  aws.StringValue(thumbs.SizingPolicy),
+		"aspect_ratio":     aws.StringValue(thumbs.AspectRatio),
+		names.AttrFormat:   aws.StringValue(thumbs.Format),
+		names.AttrInterval: aws.StringValue(thumbs.Interval),
+		"max_height":       aws.StringValue(thumbs.MaxHeight),
+		"max_width":        aws.StringValue(thumbs.MaxWidth),
+		"padding_policy":   aws.StringValue(thumbs.PaddingPolicy),
+		"resolution":       aws.StringValue(thumbs.Resolution),
+		"sizing_policy":    aws.StringValue(thumbs.SizingPolicy),
 	}
 
 	return []map[string]interface{}{result}
@@ -909,7 +909,7 @@ func flattenETWatermarks(watermarks []*elastictranscoder.PresetWatermark) []map[
 			"max_width":         aws.StringValue(w.MaxWidth),
 			"opacity":           aws.StringValue(w.Opacity),
 			"sizing_policy":     aws.StringValue(w.SizingPolicy),
-			"target":            aws.StringValue(w.Target),
+			names.AttrTarget:    aws.StringValue(w.Target),
 			"vertical_align":    aws.StringValue(w.VerticalAlign),
 			"vertical_offset":   aws.StringValue(w.VerticalOffset),
 		}

@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,6 +20,7 @@ import (
 
 // @SDKDataSource("aws_ec2_transit_gateway_peering_attachment", name="Transit Gateway Peering Attachment")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceTransitGatewayPeeringAttachment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayPeeringAttachmentRead,
@@ -29,7 +30,7 @@ func dataSourceTransitGatewayPeeringAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -62,21 +63,21 @@ func dataSourceTransitGatewayPeeringAttachment() *schema.Resource {
 
 func dataSourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newCustomFilterListV2(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if v, ok := d.GetOk(names.AttrID); ok {
-		input.TransitGatewayAttachmentIds = aws.StringSlice([]string{v.(string)})
+		input.TransitGatewayAttachmentIds = []string{v.(string)}
 	}
 
 	if v, ok := d.GetOk(names.AttrTags); ok {
-		input.Filters = append(input.Filters, newTagFilterList(
-			Tags(tftags.New(ctx, v.(map[string]interface{}))),
+		input.Filters = append(input.Filters, newTagFilterListV2(
+			TagsV2(tftags.New(ctx, v.(map[string]interface{}))),
 		)...)
 	}
 
@@ -85,18 +86,18 @@ func dataSourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schem
 		input.Filters = nil
 	}
 
-	transitGatewayPeeringAttachment, err := FindTransitGatewayPeeringAttachment(ctx, conn, input)
+	transitGatewayPeeringAttachment, err := findTransitGatewayPeeringAttachment(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway Peering Attachment", err))
 	}
 
-	d.SetId(aws.StringValue(transitGatewayPeeringAttachment.TransitGatewayAttachmentId))
+	d.SetId(aws.ToString(transitGatewayPeeringAttachment.TransitGatewayAttachmentId))
 
 	local := transitGatewayPeeringAttachment.RequesterTgwInfo
 	peer := transitGatewayPeeringAttachment.AccepterTgwInfo
 
-	if aws.StringValue(transitGatewayPeeringAttachment.AccepterTgwInfo.OwnerId) == meta.(*conns.AWSClient).AccountID && aws.StringValue(transitGatewayPeeringAttachment.AccepterTgwInfo.Region) == meta.(*conns.AWSClient).Region {
+	if aws.ToString(transitGatewayPeeringAttachment.AccepterTgwInfo.OwnerId) == meta.(*conns.AWSClient).AccountID && aws.ToString(transitGatewayPeeringAttachment.AccepterTgwInfo.Region) == meta.(*conns.AWSClient).Region {
 		local = transitGatewayPeeringAttachment.AccepterTgwInfo
 		peer = transitGatewayPeeringAttachment.RequesterTgwInfo
 	}
@@ -107,7 +108,7 @@ func dataSourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schem
 	d.Set(names.AttrState, transitGatewayPeeringAttachment.State)
 	d.Set(names.AttrTransitGatewayID, local.TransitGatewayId)
 
-	setTagsOut(ctx, transitGatewayPeeringAttachment.Tags)
+	setTagsOutV2(ctx, transitGatewayPeeringAttachment.Tags)
 
 	return diags
 }

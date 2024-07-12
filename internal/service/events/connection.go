@@ -74,7 +74,7 @@ func resourceConnection() *schema.Resource {
 							Elem:         element(),
 							AtLeastOneOf: atLeastOneOf,
 						},
-						"header": {
+						names.AttrHeader: {
 							Type:         schema.TypeList,
 							Optional:     true,
 							Elem:         element(),
@@ -141,7 +141,7 @@ func resourceConnection() *schema.Resource {
 								},
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"password": {
+										names.AttrPassword: {
 											Type:      schema.TypeString,
 											Required:  true,
 											Sensitive: true,
@@ -149,7 +149,7 @@ func resourceConnection() *schema.Resource {
 												validation.StringLenBetween(1, 512),
 											),
 										},
-										"username": {
+										names.AttrUsername: {
 											Type:     schema.TypeString,
 											Required: true,
 											ValidateFunc: validation.All(
@@ -189,14 +189,14 @@ func resourceConnection() *schema.Resource {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"client_id": {
+													names.AttrClientID: {
 														Type:     schema.TypeString,
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
 														),
 													},
-													"client_secret": {
+													names.AttrClientSecret: {
 														Type:      schema.TypeString,
 														Required:  true,
 														Sensitive: true,
@@ -521,10 +521,10 @@ func expandCreateConnectionBasicAuthRequestParameters(config []interface{}) *typ
 	basicAuthParameters := &types.CreateConnectionBasicAuthRequestParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
-		if val, ok := param["username"].(string); ok && val != "" {
+		if val, ok := param[names.AttrUsername].(string); ok && val != "" {
 			basicAuthParameters.Username = aws.String(val)
 		}
-		if val, ok := param["password"].(string); ok && val != "" {
+		if val, ok := param[names.AttrPassword].(string); ok && val != "" {
 			basicAuthParameters.Password = aws.String(val)
 		}
 	}
@@ -558,10 +558,10 @@ func expandCreateConnectionOAuthClientRequestParameters(config []interface{}) *t
 	oAuthClientRequestParameters := &types.CreateConnectionOAuthClientRequestParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
-		if val, ok := param["client_id"].(string); ok && val != "" {
+		if val, ok := param[names.AttrClientID].(string); ok && val != "" {
 			oAuthClientRequestParameters.ClientID = aws.String(val)
 		}
-		if val, ok := param["client_secret"].(string); ok && val != "" {
+		if val, ok := param[names.AttrClientSecret].(string); ok && val != "" {
 			oAuthClientRequestParameters.ClientSecret = aws.String(val)
 		}
 	}
@@ -578,7 +578,7 @@ func expandConnectionHTTPParameters(config []interface{}) *types.ConnectionHttpP
 		if val, ok := param["body"]; ok {
 			httpParameters.BodyParameters = expandConnectionHTTPParametersBody(val.([]interface{}))
 		}
-		if val, ok := param["header"]; ok {
+		if val, ok := param[names.AttrHeader]; ok {
 			httpParameters.HeaderParameters = expandConnectionHTTPParametersHeader(val.([]interface{}))
 		}
 		if val, ok := param["query_string"]; ok {
@@ -705,11 +705,11 @@ func flattenConnectionBasicAuthParameters(basicAuthParameters *types.ConnectionB
 
 	config := make(map[string]interface{})
 	if basicAuthParameters.Username != nil {
-		config["username"] = aws.ToString(basicAuthParameters.Username)
+		config[names.AttrUsername] = aws.ToString(basicAuthParameters.Username)
 	}
 
 	if v, ok := d.GetOk("auth_parameters.0.basic.0.password"); ok {
-		config["password"] = v.(string)
+		config[names.AttrPassword] = v.(string)
 	}
 
 	result := []map[string]interface{}{config}
@@ -740,11 +740,11 @@ func flattenConnectionOAuthClientResponseParameters(oAuthClientRequestParameters
 
 	config := make(map[string]interface{})
 	if oAuthClientRequestParameters.ClientID != nil {
-		config["client_id"] = aws.ToString(oAuthClientRequestParameters.ClientID)
+		config[names.AttrClientID] = aws.ToString(oAuthClientRequestParameters.ClientID)
 	}
 
 	if v, ok := d.GetOk("auth_parameters.0.oauth.0.client_parameters.0.client_secret"); ok {
-		config["client_secret"] = v.(string)
+		config[names.AttrClientSecret] = v.(string)
 	}
 
 	result := []map[string]interface{}{config}
@@ -800,7 +800,7 @@ func flattenConnectionHTTPParameters(httpParameters *types.ConnectionHttpParamet
 
 	parameters := make(map[string]interface{})
 	parameters["body"] = bodyParameters
-	parameters["header"] = headerParameters
+	parameters[names.AttrHeader] = headerParameters
 	parameters["query_string"] = queryStringParameters
 
 	result := []map[string]interface{}{parameters}
@@ -852,10 +852,10 @@ func expandUpdateConnectionBasicAuthRequestParameters(config []interface{}) *typ
 	basicAuthParameters := &types.UpdateConnectionBasicAuthRequestParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
-		if val, ok := param["username"].(string); ok && val != "" {
+		if val, ok := param[names.AttrUsername].(string); ok && val != "" {
 			basicAuthParameters.Username = aws.String(val)
 		}
-		if val, ok := param["password"].(string); ok && val != "" {
+		if val, ok := param[names.AttrPassword].(string); ok && val != "" {
 			basicAuthParameters.Password = aws.String(val)
 		}
 	}
@@ -889,10 +889,10 @@ func expandUpdateConnectionOAuthClientRequestParameters(config []interface{}) *t
 	oAuthClientRequestParameters := &types.UpdateConnectionOAuthClientRequestParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
-		if val, ok := param["client_id"].(string); ok && val != "" {
+		if val, ok := param[names.AttrClientID].(string); ok && val != "" {
 			oAuthClientRequestParameters.ClientID = aws.String(val)
 		}
-		if val, ok := param["client_secret"].(string); ok && val != "" {
+		if val, ok := param[names.AttrClientSecret].(string); ok && val != "" {
 			oAuthClientRequestParameters.ClientSecret = aws.String(val)
 		}
 	}

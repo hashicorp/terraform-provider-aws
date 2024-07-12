@@ -21,7 +21,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 		ReadWithoutTimeout: dataSourceResponseHeadersPolicyRead,
 
 		Schema: map[string]*schema.Schema{
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -107,7 +107,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"header": {
+									names.AttrHeader: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -151,7 +151,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"header": {
+									names.AttrHeader: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -342,7 +342,7 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 	d.SetId(responseHeadersPolicyID)
 
 	apiObject := output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig
-	d.Set("comment", apiObject.Comment)
+	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.CorsConfig != nil {
 		if err := d.Set("cors_config", []interface{}{flattenResponseHeadersPolicyCorsConfig(apiObject.CorsConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting cors_config: %s", err)

@@ -134,7 +134,7 @@ func NewSTSError(m string) STSError {
 }
 
 var parameterWhitelist = map[string]bool{
-	"action":               true,
+	names.AttrAction:       true,
 	names.AttrVersion:      true,
 	"x-amz-algorithm":      true,
 	"x-amz-credential":     true,
@@ -329,7 +329,7 @@ func (v tokenVerifier) Verify(token string) (*Identity, error) {
 		queryParamsLower.Set(strings.ToLower(key), values[0])
 	}
 
-	if queryParamsLower.Get("action") != "GetCallerIdentity" {
+	if queryParamsLower.Get(names.AttrAction) != "GetCallerIdentity" {
 		return nil, FormatError{"unexpected action parameter in pre-signed URL"}
 	}
 

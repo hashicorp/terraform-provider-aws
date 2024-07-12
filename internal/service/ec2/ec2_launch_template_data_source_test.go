@@ -41,7 +41,6 @@ func TestAccEC2LaunchTemplateDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "disable_api_stop", dataSourceName, "disable_api_stop"),
 					resource.TestCheckResourceAttrPair(resourceName, "disable_api_termination", dataSourceName, "disable_api_termination"),
 					resource.TestCheckResourceAttrPair(resourceName, "ebs_optimized", dataSourceName, "ebs_optimized"),
-					resource.TestCheckResourceAttrPair(resourceName, "elastic_gpu_specifications.#", dataSourceName, "elastic_gpu_specifications.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "elastic_inference_accelerator.#", dataSourceName, "elastic_inference_accelerator.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "enclave_options.#", dataSourceName, "enclave_options.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "hibernation_options.#", dataSourceName, "hibernation_options.#"),
@@ -65,7 +64,7 @@ func TestAccEC2LaunchTemplateDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "ram_disk_id", dataSourceName, "ram_disk_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_names.#", dataSourceName, "security_group_names.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "tag_specifications.#", dataSourceName, "tag_specifications.#"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(resourceName, "user_data", dataSourceName, "user_data"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_security_group_ids.#", dataSourceName, "vpc_security_group_ids.#"),
 				),
@@ -120,7 +119,7 @@ func TestAccEC2LaunchTemplateDataSource_filter(t *testing.T) {
 	})
 }
 
-func TestAccEC2LaunchTemplateDataSource_tags(t *testing.T) {
+func TestAccEC2LaunchTemplateDataSource_matchTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_launch_template.test"
@@ -133,11 +132,11 @@ func TestAccEC2LaunchTemplateDataSource_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchTemplateDataSourceConfig_tags(rName),
+				Config: testAccLaunchTemplateDataSourceConfig_matchTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -168,10 +167,6 @@ resource "aws_launch_template" "test" {
 
   elastic_inference_accelerator {
     type = "eia1.medium"
-  }
-
-  elastic_gpu_specifications {
-    type = "test"
   }
 
   iam_instance_profile {
@@ -269,7 +264,7 @@ data "aws_launch_template" "test" {
 `, rName)
 }
 
-func testAccLaunchTemplateDataSourceConfig_tags(rName string) string {
+func testAccLaunchTemplateDataSourceConfig_matchTags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name = %[1]q

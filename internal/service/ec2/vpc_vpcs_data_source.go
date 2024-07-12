@@ -27,8 +27,8 @@ func DataSourceVPCs() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": customFiltersSchema(),
-			"ids": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -50,7 +50,7 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		)...)
 	}
 
-	if filters, filtersOk := d.GetOk("filter"); filtersOk {
+	if filters, filtersOk := d.GetOk(names.AttrFilter); filtersOk {
 		input.Filters = append(input.Filters,
 			newCustomFilterList(filters.(*schema.Set))...)
 	}
@@ -72,7 +72,7 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", vpcIDs)
+	d.Set(names.AttrIDs, vpcIDs)
 
 	return diags
 }

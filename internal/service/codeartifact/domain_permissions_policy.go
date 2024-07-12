@@ -36,7 +36,7 @@ func resourceDomainPermissionsPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -81,7 +81,7 @@ func resourceDomainPermissionsPolicyPut(ctx context.Context, d *schema.ResourceD
 	}
 
 	input := &codeartifact.PutDomainPermissionsPolicyInput{
-		Domain:         aws.String(d.Get("domain").(string)),
+		Domain:         aws.String(d.Get(names.AttrDomain).(string)),
 		PolicyDocument: aws.String(policy),
 	}
 
@@ -127,7 +127,7 @@ func resourceDomainPermissionsPolicyRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading CodeArtifact Domain Permissions Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("domain", domainName)
+	d.Set(names.AttrDomain, domainName)
 	d.Set("domain_owner", owner)
 	d.Set("policy_revision", policy.Revision)
 	d.Set(names.AttrResourceARN, policy.ResourceArn)

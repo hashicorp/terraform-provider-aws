@@ -47,6 +47,8 @@ const (
 // @SDKResource("aws_alb_listener_rule", name="Listener Rule")
 // @SDKResource("aws_lb_listener_rule", name="Listener Rule")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.Rule")
+// @Testing(importIgnore="action.0.forward")
 func ResourceListenerRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerRuleCreate,
@@ -69,14 +71,14 @@ func ResourceListenerRule() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"priority": {
+			names.AttrPriority: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     false,
 				ValidateFunc: validListenerRulePriority,
 			},
-			"action": {
+			names.AttrAction: {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
@@ -104,7 +106,7 @@ func ResourceListenerRule() *schema.Resource {
 							Type:                  schema.TypeList,
 							Optional:              true,
 							DiffSuppressOnRefresh: true,
-							DiffSuppressFunc:      diffSuppressMissingForward("action"),
+							DiffSuppressFunc:      diffSuppressMissingForward(names.AttrAction),
 							MaxItems:              1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -120,7 +122,7 @@ func ResourceListenerRule() *schema.Resource {
 													Required:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"weight": {
+												names.AttrWeight: {
 													Type:         schema.TypeInt,
 													ValidateFunc: validation.IntBetween(0, 999),
 													Default:      1,
@@ -141,7 +143,7 @@ func ResourceListenerRule() *schema.Resource {
 													Optional: true,
 													Default:  false,
 												},
-												"duration": {
+												names.AttrDuration: {
 													Type:         schema.TypeInt,
 													Required:     true,
 													ValidateFunc: validation.IntBetween(1, 604800),
@@ -167,7 +169,7 @@ func ResourceListenerRule() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
 
-									"path": {
+									names.AttrPath: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "/#{path}",
@@ -198,7 +200,7 @@ func ResourceListenerRule() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(0, 128),
 									},
 
-									"status_code": {
+									names.AttrStatusCode: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.RedirectActionStatusCodeEnum](),
@@ -214,7 +216,7 @@ func ResourceListenerRule() *schema.Resource {
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"content_type": {
+									names.AttrContentType: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringInSlice([]string{
@@ -232,7 +234,7 @@ func ResourceListenerRule() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(0, 1024),
 									},
 
-									"status_code": {
+									names.AttrStatusCode: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
@@ -260,7 +262,7 @@ func ResourceListenerRule() *schema.Resource {
 										Computed:         true,
 										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateCognitoActionConditionalBehaviorEnum](),
 									},
-									"scope": {
+									names.AttrScope: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "openid",
@@ -308,16 +310,16 @@ func ResourceListenerRule() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"client_id": {
+									names.AttrClientID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"client_secret": {
+									names.AttrClientSecret: {
 										Type:      schema.TypeString,
 										Required:  true,
 										Sensitive: true,
 									},
-									"issuer": {
+									names.AttrIssuer: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -327,7 +329,7 @@ func ResourceListenerRule() *schema.Resource {
 										Computed:         true,
 										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateOidcActionConditionalBehaviorEnum](),
 									},
-									"scope": {
+									names.AttrScope: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "openid",
@@ -356,7 +358,7 @@ func ResourceListenerRule() *schema.Resource {
 					},
 				},
 			},
-			"condition": {
+			names.AttrCondition: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -483,7 +485,7 @@ func ResourceListenerRule() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
-			validateListenerActionsCustomDiff("action"),
+			validateListenerActionsCustomDiff(names.AttrAction),
 		),
 	}
 }
@@ -513,14 +515,14 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		Tags:        getTagsInV2(ctx),
 	}
 
-	input.Actions = expandLbListenerActions(cty.GetAttrPath("action"), d.Get("action").([]any), &diags)
+	input.Actions = expandLbListenerActions(cty.GetAttrPath(names.AttrAction), d.Get(names.AttrAction).([]any), &diags)
 	if diags.HasError() {
 		return diags
 	}
 
 	var err error
 
-	input.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
+	input.Conditions, err = lbListenerRuleConditions(d.Get(names.AttrCondition).(*schema.Set).List())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -603,19 +605,19 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	// Rules are evaluated in priority order, from the lowest value to the highest value. The default rule has the lowest priority.
 	if aws.ToString(rule.Priority) == "default" {
-		d.Set("priority", listenerRulePriorityDefault)
+		d.Set(names.AttrPriority, listenerRulePriorityDefault)
 	} else {
 		if priority, err := strconv.Atoi(aws.ToString(rule.Priority)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "Cannot convert rule priority %q to int: %s", aws.ToString(rule.Priority), err)
 		} else {
-			d.Set("priority", priority)
+			d.Set(names.AttrPriority, priority)
 		}
 	}
 
 	sort.Slice(rule.Actions, func(i, j int) bool {
 		return aws.ToInt32(rule.Actions[i].Order) < aws.ToInt32(rule.Actions[j].Order)
 	})
-	if err := d.Set("action", flattenLbListenerActions(d, "action", rule.Actions)); err != nil {
+	if err := d.Set(names.AttrAction, flattenLbListenerActions(d, names.AttrAction, rule.Actions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting action: %s", err)
 	}
 
@@ -673,7 +675,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 
 		conditions[i] = conditionMap
 	}
-	if err := d.Set("condition", conditions); err != nil {
+	if err := d.Set(names.AttrCondition, conditions); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting condition: %s", err)
 	}
 
@@ -685,12 +687,12 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		if d.HasChange("priority") {
+		if d.HasChange(names.AttrPriority) {
 			params := &elasticloadbalancingv2.SetRulePrioritiesInput{
 				RulePriorities: []awstypes.RulePriorityPair{
 					{
 						RuleArn:  aws.String(d.Id()),
-						Priority: aws.Int32(int32(d.Get("priority").(int))),
+						Priority: aws.Int32(int32(d.Get(names.AttrPriority).(int))),
 					},
 				},
 			}
@@ -706,17 +708,17 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 			RuleArn: aws.String(d.Id()),
 		}
 
-		if d.HasChange("action") {
-			input.Actions = expandLbListenerActions(cty.GetAttrPath("action"), d.Get("action").([]any), &diags)
+		if d.HasChange(names.AttrAction) {
+			input.Actions = expandLbListenerActions(cty.GetAttrPath(names.AttrAction), d.Get(names.AttrAction).([]any), &diags)
 			if diags.HasError() {
 				return diags
 			}
 			requestUpdate = true
 		}
 
-		if d.HasChange("condition") {
+		if d.HasChange(names.AttrCondition) {
 			var err error
-			input.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
+			input.Conditions, err = lbListenerRuleConditions(d.Get(names.AttrCondition).(*schema.Set).List())
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
@@ -753,7 +755,7 @@ func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, met
 
 func retryListenerRuleCreate(ctx context.Context, conn *elasticloadbalancingv2.Client, d *schema.ResourceData, params *elasticloadbalancingv2.CreateRuleInput, listenerARN string) (*elasticloadbalancingv2.CreateRuleOutput, error) {
 	var resp *elasticloadbalancingv2.CreateRuleOutput
-	if v, ok := d.GetOk("priority"); ok {
+	if v, ok := d.GetOk(names.AttrPriority); ok {
 		var err error
 		params.Priority = aws.Int32(int32(v.(int)))
 		resp, err = conn.CreateRule(ctx, params)

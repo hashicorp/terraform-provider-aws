@@ -40,7 +40,7 @@ func DataSourceConstraint() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -96,7 +96,7 @@ func dataSourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta 
 	detail := output.ConstraintDetail
 
 	d.Set(names.AttrDescription, detail.Description)
-	d.Set("owner", detail.Owner)
+	d.Set(names.AttrOwner, detail.Owner)
 	d.Set("portfolio_id", detail.PortfolioId)
 	d.Set("product_id", detail.ProductId)
 	d.Set(names.AttrType, detail.Type)

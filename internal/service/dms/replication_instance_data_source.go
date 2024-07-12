@@ -23,7 +23,7 @@ func DataSourceReplicationInstance() *schema.Resource {
 		ReadWithoutTimeout: dataSourceReplicationInstanceRead,
 
 		Schema: map[string]*schema.Schema{
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -55,7 +55,7 @@ func DataSourceReplicationInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -110,7 +110,7 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.SetId(aws.StringValue(instance.ReplicationInstanceIdentifier))
-	d.Set("allocated_storage", instance.AllocatedStorage)
+	d.Set(names.AttrAllocatedStorage, instance.AllocatedStorage)
 	d.Set(names.AttrAutoMinorVersionUpgrade, instance.AutoMinorVersionUpgrade)
 	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
 	d.Set(names.AttrEngineVersion, instance.EngineVersion)
@@ -118,7 +118,7 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("multi_az", instance.MultiAZ)
 	d.Set("network_type", instance.NetworkType)
 	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
-	d.Set("publicly_accessible", instance.PubliclyAccessible)
+	d.Set(names.AttrPubliclyAccessible, instance.PubliclyAccessible)
 	arn := aws.StringValue(instance.ReplicationInstanceArn)
 	d.Set("replication_instance_arn", arn)
 	d.Set("replication_instance_class", instance.ReplicationInstanceClass)

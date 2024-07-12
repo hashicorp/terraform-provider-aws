@@ -100,7 +100,7 @@ func resourceLocationObjectStorage() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"uri": {
+			names.AttrURI: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -184,7 +184,7 @@ func resourceLocationObjectStorageRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("server_port", output.ServerPort)
 	d.Set("server_protocol", output.ServerProtocol)
 	d.Set("subdirectory", subdirectory)
-	d.Set("uri", uri)
+	d.Set(names.AttrURI, uri)
 
 	return diags
 }

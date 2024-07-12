@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dynamodb_contributor_insights", name="Contributor Insights")
@@ -45,7 +46,7 @@ func resourceContributorInsights() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"table_name": {
+			names.AttrTableName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -58,7 +59,7 @@ func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
-	tableName := d.Get("table_name").(string)
+	tableName := d.Get(names.AttrTableName).(string)
 	input := &dynamodb.UpdateContributorInsightsInput{
 		ContributorInsightsAction: awstypes.ContributorInsightsActionEnable,
 		TableName:                 aws.String(tableName),
@@ -107,7 +108,7 @@ func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Set("index_name", output.IndexName)
-	d.Set("table_name", output.TableName)
+	d.Set(names.AttrTableName, output.TableName)
 
 	return diags
 }

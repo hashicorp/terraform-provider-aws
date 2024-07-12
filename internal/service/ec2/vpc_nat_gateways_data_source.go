@@ -27,8 +27,8 @@ func DataSourceNATGateways() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": customFiltersSchema(),
-			"ids": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -64,7 +64,7 @@ func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	input.Filter = append(input.Filter, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filter) == 0 {
@@ -84,7 +84,7 @@ func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", natGatewayIDs)
+	d.Set(names.AttrIDs, natGatewayIDs)
 
 	return diags
 }

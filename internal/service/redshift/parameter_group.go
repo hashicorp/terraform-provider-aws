@@ -52,7 +52,7 @@ func resourceParameterGroup() *schema.Resource {
 				ForceNew: true,
 				Default:  "Managed by Terraform",
 			},
-			"family": {
+			names.AttrFamily: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -69,7 +69,7 @@ func resourceParameterGroup() *schema.Resource {
 					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
 			},
-			"parameter": {
+			names.AttrParameter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -101,7 +101,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	name := d.Get(names.AttrName).(string)
 	input := &redshift.CreateClusterParameterGroupInput{
 		Description:          aws.String(d.Get(names.AttrDescription).(string)),
-		ParameterGroupFamily: aws.String(d.Get("family").(string)),
+		ParameterGroupFamily: aws.String(d.Get(names.AttrFamily).(string)),
 		ParameterGroupName:   aws.String(name),
 		Tags:                 getTagsIn(ctx),
 	}
@@ -114,7 +114,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(name)
 
-	if v := d.Get("parameter").(*schema.Set); v.Len() > 0 {
+	if v := d.Get(names.AttrParameter).(*schema.Set); v.Len() > 0 {
 		input := &redshift.ModifyClusterParameterGroupInput{
 			ParameterGroupName: aws.String(d.Id()),
 			Parameters:         expandParameters(v.List()),
@@ -155,7 +155,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	}.String()
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, parameterGroup.Description)
-	d.Set("family", parameterGroup.ParameterGroupFamily)
+	d.Set(names.AttrFamily, parameterGroup.ParameterGroupFamily)
 	d.Set(names.AttrName, parameterGroup.ParameterGroupName)
 
 	setTagsOut(ctx, parameterGroup.Tags)
@@ -171,7 +171,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Parameter Group (%s) parameters: %s", d.Id(), err)
 	}
 
-	d.Set("parameter", flattenParameters(output.Parameters))
+	d.Set(names.AttrParameter, flattenParameters(output.Parameters))
 
 	return diags
 }
@@ -180,8 +180,8 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	if d.HasChange("parameter") {
-		o, n := d.GetChange("parameter")
+	if d.HasChange(names.AttrParameter) {
+		o, n := d.GetChange(names.AttrParameter)
 		if o == nil {
 			o = new(schema.Set)
 		}

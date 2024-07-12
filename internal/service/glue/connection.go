@@ -43,7 +43,7 @@ func ResourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -116,7 +116,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	var catalogID string
-	if v, ok := d.GetOkExists("catalog_id"); ok {
+	if v, ok := d.GetOkExists(names.AttrCatalogID); ok {
 		catalogID = v.(string)
 	} else {
 		catalogID = meta.(*conns.AWSClient).AccountID
@@ -169,7 +169,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	}.String()
 	d.Set(names.AttrARN, connectionArn)
 
-	d.Set("catalog_id", catalogID)
+	d.Set(names.AttrCatalogID, catalogID)
 	if err := d.Set("connection_properties", aws.StringValueMap(connection.ConnectionProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting connection_properties: %s", err)
 	}

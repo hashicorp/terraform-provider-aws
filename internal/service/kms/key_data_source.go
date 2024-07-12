@@ -27,7 +27,7 @@ func dataSourceKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"aws_account_id": {
+			names.AttrAWSAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -35,7 +35,7 @@ func dataSourceKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -68,7 +68,7 @@ func dataSourceKey() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"key_id": {
+			names.AttrKeyID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateKeyOrAlias,
@@ -169,7 +169,7 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	keyID := d.Get("key_id").(string)
+	keyID := d.Get(names.AttrKeyID).(string)
 	input := &kms.DescribeKeyInput{
 		KeyId: aws.String(keyID),
 	}
@@ -186,9 +186,9 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.ToString(output.KeyId))
 	d.Set(names.AttrARN, output.Arn)
-	d.Set("aws_account_id", output.AWSAccountId)
+	d.Set(names.AttrAWSAccountID, output.AWSAccountId)
 	d.Set("cloud_hsm_cluster_id", output.CloudHsmClusterId)
-	d.Set("creation_date", aws.ToTime(output.CreationDate).Format(time.RFC3339))
+	d.Set(names.AttrCreationDate, aws.ToTime(output.CreationDate).Format(time.RFC3339))
 	d.Set("customer_master_key_spec", output.CustomerMasterKeySpec)
 	d.Set("custom_key_store_id", output.CustomKeyStoreId)
 	if output.DeletionDate != nil {

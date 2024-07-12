@@ -19,6 +19,7 @@ import (
 )
 
 // @SDKDataSource("aws_iam_role", name="Role")
+// @Tags
 func dataSourceRole() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRoleRead,
@@ -48,7 +49,7 @@ func dataSourceRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -84,7 +85,6 @@ func dataSourceRole() *schema.Resource {
 func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
 	role, err := findRoleByName(ctx, conn, name)
@@ -99,7 +99,7 @@ func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrDescription, role.Description)
 	d.Set("max_session_duration", role.MaxSessionDuration)
 	d.Set(names.AttrName, role.RoleName)
-	d.Set("path", role.Path)
+	d.Set(names.AttrPath, role.Path)
 	if role.PermissionsBoundary != nil {
 		d.Set("permissions_boundary", role.PermissionsBoundary.PermissionsBoundaryArn)
 	} else {
@@ -116,12 +116,7 @@ func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("assume_role_policy", assumeRolePolicy)
 
-	tags := KeyValueTags(ctx, role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, role.Tags)
 
 	return diags
 }

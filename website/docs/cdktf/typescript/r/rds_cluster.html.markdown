@@ -327,7 +327,7 @@ the AWS official documentation :
 * [create-db-cluster](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html)
 * [modify-db-cluster](https://docs.aws.amazon.com/cli/latest/reference/rds/modify-db-cluster.html)
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `allocatedStorage` - (Optional, Required for Multi-AZ DB cluster) The amount of storage in gibibytes (GiB) to allocate to each DB instance in the Multi-AZ DB cluster.
 * `allowMajorVersionUpgrade` - (Optional) Enable to allow major engine version upgrades when changing engine versions. Defaults to `false`.
@@ -355,7 +355,7 @@ This argument supports the following arguments:
 * `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the cluster in.
 * `domainIamRoleName` - (Optional, but required if `domain` is provided) The name of the IAM role to be used when making API calls to the Directory Service.
 * `enableGlobalWriteForwarding` - (Optional) Whether cluster should forward writes to an associated global cluster. Applied to secondary clusters to enable them to forward writes to an [`aws_rds_global_cluster`](/docs/providers/aws/r/rds_global_cluster.html)'s primary cluster. See the [User Guide for Aurora](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database-write-forwarding.html) for more information.
-* `enableHttpEndpoint` - (Optional) Enable HTTP endpoint (data API). Only valid when `engineMode` is set to `serverless`.
+* `enableHttpEndpoint` - (Optional) Enable HTTP endpoint (data API). Only valid for some combinations of `engineMode`, `engine` and `engineVersion` and only available in some regions. See the [Region and version availability](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html#data-api.regions) section of the documentation. This option also does not work with any of these options specified: `snapshotIdentifier`, `replicationSourceIdentifier`, `s3Import`.
 * `enableLocalWriteForwarding` - (Optional) Whether read replicas can forward write operations to the writer DB instance in the DB cluster. By default, write operations aren't allowed on reader DB instances.. See the [User Guide for Aurora](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-mysql-write-forwarding.html) for more information. **NOTE:** Local write forwarding requires Aurora MySQL version 3.04 or higher.
 * `enabledCloudwatchLogsExports` - (Optional) Set of log types to export to cloudwatch. If omitted, no logs will be exported. The following log types are supported: `audit`, `error`, `general`, `slowquery`, `postgresql` (PostgreSQL).
 * `engineMode` - (Optional) Database engine mode. Valid values: `global` (only valid for Aurora MySQL 1.21 and earlier), `parallelquery`, `provisioned`, `serverless`. Defaults to: `provisioned`. See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html) for limitations when using `serverless`.
@@ -630,4 +630,4 @@ Using `terraform import`, import RDS Clusters using the `clusterIdentifier`. For
 % terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0b4bca535089ac4f464ccb7385451ae8994cd85b37a79f79c1ebbbbdb59f4178 -->
+<!-- cache-key: cdktf-0.20.1 input-4aa8b7ab5177f43e0123092bcb7fcd25b90ce3aa7103428fa9b42656f0208fe7 -->

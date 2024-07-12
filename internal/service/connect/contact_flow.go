@@ -48,7 +48,7 @@ func ResourceContactFlow() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content": {
+			names.AttrContent: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -71,7 +71,7 @@ func ResourceContactFlow() *schema.Resource {
 			"filename": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"content"},
+				ConflictsWith: []string{names.AttrContent},
 			},
 			names.AttrInstanceID: {
 				Type:     schema.TypeString,
@@ -125,7 +125,7 @@ func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta
 			return sdkdiag.AppendErrorf(diags, "unable to load %q: %s", filename, err)
 		}
 		input.Content = aws.String(file)
-	} else if v, ok := d.GetOk("content"); ok {
+	} else if v, ok := d.GetOk(names.AttrContent); ok {
 		input.Content = aws.String(v.(string))
 	}
 
@@ -180,7 +180,7 @@ func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrName, resp.ContactFlow.Name)
 	d.Set(names.AttrDescription, resp.ContactFlow.Description)
 	d.Set(names.AttrType, resp.ContactFlow.Type)
-	d.Set("content", resp.ContactFlow.Content)
+	d.Set(names.AttrContent, resp.ContactFlow.Content)
 
 	setTagsOut(ctx, resp.ContactFlow.Tags)
 
@@ -213,7 +213,7 @@ func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChanges("content", "content_hash", "filename") {
+	if d.HasChanges(names.AttrContent, "content_hash", "filename") {
 		updateContentInput := &connect.UpdateContactFlowContentInput{
 			ContactFlowId: aws.String(contactFlowID),
 			InstanceId:    aws.String(instanceID),
@@ -231,7 +231,7 @@ func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta
 				return sdkdiag.AppendErrorf(diags, "unable to load %q: %s", filename, err)
 			}
 			updateContentInput.Content = aws.String(file)
-		} else if v, ok := d.GetOk("content"); ok {
+		} else if v, ok := d.GetOk(names.AttrContent); ok {
 			updateContentInput.Content = aws.String(v.(string))
 		}
 

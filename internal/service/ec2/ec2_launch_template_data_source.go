@@ -6,23 +6,25 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_launch_template")
-func DataSourceLaunchTemplate() *schema.Resource {
+// @SDKDataSource("aws_launch_template", name="Launch Template")
+// @Tags
+// @Testing(tagsTest=false)
+func dataSourceLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLaunchTemplateRead,
 
@@ -40,7 +42,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -53,11 +55,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"encrypted": {
+									names.AttrEncrypted: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"iops": {
+									names.AttrIOPS: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -65,19 +67,19 @@ func DataSourceLaunchTemplate() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"snapshot_id": {
+									names.AttrSnapshotID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"throughput": {
+									names.AttrThroughput: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"volume_size": {
+									names.AttrVolumeSize: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"volume_type": {
+									names.AttrVolumeType: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -88,7 +90,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -211,7 +213,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"hibernation_options": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -397,6 +399,10 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"max_spot_price_as_percentage_of_optimal_on_demand_price": {
+							Type:     schema.TypeInt,
+							Computed: true,
 						},
 						"memory_gib_per_vcpu": {
 							Type:     schema.TypeList,
@@ -667,6 +673,10 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"primary_ipv6": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"private_ip_address": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -696,7 +706,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"group_name": {
+						names.AttrGroupName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -757,7 +767,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -781,41 +791,40 @@ func DataSourceLaunchTemplate() *schema.Resource {
 
 func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeLaunchTemplatesInput{}
 
 	if v, ok := d.GetOk(names.AttrID); ok {
-		input.LaunchTemplateIds = aws.StringSlice([]string{v.(string)})
+		input.LaunchTemplateIds = []string{v.(string)}
 	}
 
 	if v, ok := d.GetOk(names.AttrName); ok {
-		input.LaunchTemplateNames = aws.StringSlice([]string{v.(string)})
+		input.LaunchTemplateNames = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newCustomFilterListV2(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
-	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterListV2(
+		TagsV2(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
 	if len(input.Filters) == 0 {
 		input.Filters = nil
 	}
 
-	lt, err := FindLaunchTemplate(ctx, conn, input)
+	lt, err := findLaunchTemplate(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Launch Template", err))
 	}
 
-	d.SetId(aws.StringValue(lt.LaunchTemplateId))
+	d.SetId(aws.ToString(lt.LaunchTemplateId))
 
-	version := strconv.FormatInt(aws.Int64Value(lt.LatestVersionNumber), 10)
-	ltv, err := FindLaunchTemplateVersionByTwoPartKey(ctx, conn, d.Id(), version)
+	version := flex.Int64ToStringValue(lt.LatestVersionNumber)
+	ltv, err := findLaunchTemplateVersionByTwoPartKey(ctx, conn, d.Id(), version)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s) Version (%s): %s", d.Id(), version, err)
@@ -823,7 +832,7 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
@@ -838,9 +847,7 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "settings tags: %s", err)
-	}
+	setTagsOutV2(ctx, lt.Tags)
 
 	return diags
 }

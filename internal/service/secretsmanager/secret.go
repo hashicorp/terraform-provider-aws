@@ -33,7 +33,9 @@ import (
 )
 
 // @SDKResource("aws_secretsmanager_secret", name="Secret")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/secretsmanager;secretsmanager.DescribeSecretOutput")
+// @Testing(importIgnore="force_overwrite_replica_secret;recovery_window_in_days")
 func resourceSecret() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretCreate,
@@ -138,7 +140,7 @@ func resourceSecret() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status_message": {
+						names.AttrStatusMessage: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -572,7 +574,7 @@ func flattenReplicationStatusType(apiObject types.ReplicationStatusType) map[str
 	}
 
 	if v := apiObject.StatusMessage; v != nil {
-		tfMap["status_message"] = aws.ToString(v)
+		tfMap[names.AttrStatusMessage] = aws.ToString(v)
 	}
 
 	return tfMap

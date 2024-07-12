@@ -38,7 +38,7 @@ func TestAccIAMSigningCertificate_basic(t *testing.T) {
 				Config: testAccSigningCertificateConfig_basic(rName, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(ctx, resourceName, &cred),
-					resource.TestCheckResourceAttrPair(resourceName, "user_name", "aws_iam_user.test", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, "aws_iam_user.test", names.AttrName),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_body"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),

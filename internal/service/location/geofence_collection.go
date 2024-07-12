@@ -54,7 +54,7 @@ func ResourceGeofenceCollection() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"create_time": {
+			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -136,7 +136,7 @@ func resourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("collection_arn", out.CollectionArn)
 	d.Set("collection_name", out.CollectionName)
-	d.Set("create_time", aws.TimeValue(out.CreateTime).Format(time.RFC3339))
+	d.Set(names.AttrCreateTime, aws.TimeValue(out.CreateTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, out.Description)
 	d.Set(names.AttrKMSKeyID, out.KmsKeyId)
 	d.Set("update_time", aws.TimeValue(out.UpdateTime).Format(time.RFC3339))

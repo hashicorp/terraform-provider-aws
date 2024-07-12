@@ -36,7 +36,7 @@ func dataSourceWebACL() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"scope": {
+				names.AttrScope: {
 					Type:             schema.TypeString,
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.Scope](),
@@ -53,7 +53,7 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	var foundWebACL awstypes.WebACLSummary
 	input := &wafv2.ListWebACLsInput{
-		Scope: awstypes.Scope(d.Get("scope").(string)),
+		Scope: awstypes.Scope(d.Get(names.AttrScope).(string)),
 		Limit: aws.Int32(100),
 	}
 

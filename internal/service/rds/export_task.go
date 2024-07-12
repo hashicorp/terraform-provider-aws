@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_rds_export_task")
 func newResourceExportTask(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceExportTask{}
 	r.SetDefaultCreateTimeout(60 * time.Minute)
@@ -78,7 +78,7 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 			"failure_cause": schema.StringAttribute{
 				Computed: true,
 			},
-			"iam_role_arn": schema.StringAttribute{
+			names.AttrIAMRoleARN: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
@@ -94,7 +94,7 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 			"percent_progress": schema.Int64Attribute{
 				Computed: true,
 			},
-			"s3_bucket_name": schema.StringAttribute{
+			names.AttrS3BucketName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
@@ -117,7 +117,7 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
-			"source_type": schema.StringAttribute{
+			names.AttrSourceType: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrStatus: schema.StringAttribute{

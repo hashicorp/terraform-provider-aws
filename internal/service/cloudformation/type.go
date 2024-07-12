@@ -55,7 +55,7 @@ func resourceType() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"execution_role_arn": {
+			names.AttrExecutionRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -72,7 +72,7 @@ func resourceType() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"log_group_name": {
+						names.AttrLogGroupName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -94,7 +94,7 @@ func resourceType() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"schema": {
+			names.AttrSchema: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -151,7 +151,7 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		TypeName:             aws.String(typeName),
 	}
 
-	if v, ok := d.GetOk("execution_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
 		input.ExecutionRoleArn = aws.String(v.(string))
 	}
 
@@ -207,7 +207,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("deprecated_status", output.DeprecatedStatus)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("documentation_url", output.DocumentationUrl)
-	d.Set("execution_role_arn", output.ExecutionRoleArn)
+	d.Set(names.AttrExecutionRoleARN, output.ExecutionRoleArn)
 	d.Set("is_default_version", output.IsDefaultVersion)
 	if output.LoggingConfig != nil {
 		if err := d.Set("logging_config", []interface{}{flattenLoggingConfig(output.LoggingConfig)}); err != nil {
@@ -217,7 +217,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		d.Set("logging_config", nil)
 	}
 	d.Set("provisioning_type", output.ProvisioningType)
-	d.Set("schema", output.Schema)
+	d.Set(names.AttrSchema, output.Schema)
 	d.Set("source_url", output.SourceUrl)
 	d.Set(names.AttrType, output.Type)
 	d.Set("type_arn", typeARN)
@@ -412,7 +412,7 @@ func expandLoggingConfig(tfMap map[string]interface{}) *awstypes.LoggingConfig {
 
 	apiObject := &awstypes.LoggingConfig{}
 
-	if v, ok := tfMap["log_group_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
 		apiObject.LogGroupName = aws.String(v)
 	}
 
@@ -472,7 +472,7 @@ func flattenLoggingConfig(apiObject *awstypes.LoggingConfig) map[string]interfac
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.LogGroupName; v != nil {
-		tfMap["log_group_name"] = aws.ToString(v)
+		tfMap[names.AttrLogGroupName] = aws.ToString(v)
 	}
 
 	if v := apiObject.LogRoleArn; v != nil {

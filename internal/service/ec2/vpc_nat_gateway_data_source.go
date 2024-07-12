@@ -32,7 +32,7 @@ func DataSourceNATGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"association_id": {
+			names.AttrAssociationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -40,7 +40,7 @@ func DataSourceNATGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -119,7 +119,7 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	input.Filter = append(input.Filter, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 	if len(input.Filter) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
@@ -144,7 +144,7 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 		// Length check guarantees the attributes are always set (#30865).
 		if isPrimary := aws.BoolValue(address.IsPrimary); isPrimary || len(ngw.NatGatewayAddresses) == 1 {
 			d.Set("allocation_id", address.AllocationId)
-			d.Set("association_id", address.AssociationId)
+			d.Set(names.AttrAssociationID, address.AssociationId)
 			d.Set(names.AttrNetworkInterfaceID, address.NetworkInterfaceId)
 			d.Set("private_ip", address.PrivateIp)
 			d.Set("public_ip", address.PublicIp)

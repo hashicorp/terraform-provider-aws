@@ -18,6 +18,8 @@ import (
 )
 
 // @SDKDataSource("aws_appmesh_route", name="Route")
+// @Tags
+// @Testing(serialize=true)
 func dataSourceRoute() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouteRead,
@@ -49,7 +51,7 @@ func dataSourceRoute() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"resource_owner": {
+				names.AttrResourceOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -67,7 +69,6 @@ func dataSourceRoute() *schema.Resource {
 func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	routeName := d.Get(names.AttrName).(string)
 	route, err := findRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_router_name").(string), routeName)
@@ -85,7 +86,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 	meshOwner := aws.StringValue(route.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
 	d.Set(names.AttrName, route.RouteName)
-	d.Set("resource_owner", route.Metadata.ResourceOwner)
+	d.Set(names.AttrResourceOwner, route.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenRouteSpec(route.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
@@ -104,9 +105,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setKeyValueTagsOut(ctx, tags)
 
 	return diags
 }

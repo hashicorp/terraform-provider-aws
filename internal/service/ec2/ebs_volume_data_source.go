@@ -21,8 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ebs_volume")
-func DataSourceEBSVolume() *schema.Resource {
+// @SDKDataSource("aws_ebs_volume", name="EBS Volume")
+// @Tags
+// @Testing(tagsTest=false)
+func dataSourceEBSVolume() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEBSVolumeRead,
 
@@ -39,12 +41,12 @@ func DataSourceEBSVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
-			"iops": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrIOPS: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -52,7 +54,7 @@ func DataSourceEBSVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"most_recent": {
+			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -65,20 +67,20 @@ func DataSourceEBSVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"size": {
+			names.AttrSize: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"snapshot_id": {
+			names.AttrSnapshotID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"throughput": {
+			names.AttrThroughput: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"volume_type": {
+			names.AttrVolumeType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -93,19 +95,18 @@ func DataSourceEBSVolume() *schema.Resource {
 func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeVolumesInput{}
 
 	input.Filters = append(input.Filters, newCustomFilterListV2(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
 		input.Filters = nil
 	}
 
-	output, err := findEBSVolumesV2(ctx, conn, input)
+	output, err := findEBSVolumes(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS Volumes: %s", err)
@@ -118,7 +119,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	var volume awstypes.Volume
 
 	if len(output) > 1 {
-		recent := d.Get("most_recent").(bool)
+		recent := d.Get(names.AttrMostRecent).(bool)
 
 		if !recent {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
@@ -142,20 +143,18 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set(names.AttrARN, arn.String())
 	d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone)
-	d.Set("encrypted", volume.Encrypted)
-	d.Set("iops", volume.Iops)
+	d.Set(names.AttrEncrypted, volume.Encrypted)
+	d.Set(names.AttrIOPS, volume.Iops)
 	d.Set(names.AttrKMSKeyID, volume.KmsKeyId)
 	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
 	d.Set("outpost_arn", volume.OutpostArn)
-	d.Set("size", volume.Size)
-	d.Set("snapshot_id", volume.SnapshotId)
-	d.Set("throughput", volume.Throughput)
+	d.Set(names.AttrSize, volume.Size)
+	d.Set(names.AttrSnapshotID, volume.SnapshotId)
+	d.Set(names.AttrThroughput, volume.Throughput)
 	d.Set("volume_id", volume.VolumeId)
-	d.Set("volume_type", volume.VolumeType)
+	d.Set(names.AttrVolumeType, volume.VolumeType)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, volume.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOutV2(ctx, volume.Tags)
 
 	return diags
 }

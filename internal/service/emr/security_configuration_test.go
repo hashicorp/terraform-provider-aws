@@ -33,8 +33,8 @@ func TestAccEMRSecurityConfiguration_basic(t *testing.T) {
 				Config: testAccSecurityConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "configuration"),
-					acctest.CheckResourceAttrRFC3339(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrConfiguration),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 				),

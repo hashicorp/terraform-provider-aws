@@ -36,7 +36,7 @@ func TestAccEC2EBSVolumeAttachment_basic(t *testing.T) {
 				Config: testAccEBSVolumeAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "device_name", "/dev/sdh"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, "/dev/sdh"),
 				),
 			},
 			{
@@ -64,7 +64,7 @@ func TestAccEC2EBSVolumeAttachment_skipDestroy(t *testing.T) {
 				Config: testAccEBSVolumeAttachmentConfig_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "device_name", "/dev/sdh"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, "/dev/sdh"),
 				),
 			},
 			{
@@ -73,7 +73,7 @@ func TestAccEC2EBSVolumeAttachment_skipDestroy(t *testing.T) {
 				ImportStateIdFunc: testAccVolumeAttachmentImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"skip_destroy", // attribute only used on resource deletion
+					names.AttrSkipDestroy, // attribute only used on resource deletion
 				},
 			},
 		},
@@ -113,7 +113,7 @@ func TestAccEC2EBSVolumeAttachment_attachStopped(t *testing.T) {
 				Config:    testAccEBSVolumeAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "device_name", "/dev/sdh"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, "/dev/sdh"),
 				),
 			},
 			{
@@ -140,8 +140,8 @@ func TestAccEC2EBSVolumeAttachment_update(t *testing.T) {
 			{
 				Config: testAccEBSVolumeAttachmentConfig_update(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "force_detach", "false"),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "force_detach", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtFalse),
 				),
 			},
 			{
@@ -150,15 +150,15 @@ func TestAccEC2EBSVolumeAttachment_update(t *testing.T) {
 				ImportStateIdFunc: testAccVolumeAttachmentImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_detach", // attribute only used on resource deletion
-					"skip_destroy", // attribute only used on resource deletion
+					"force_detach",        // attribute only used on resource deletion
+					names.AttrSkipDestroy, // attribute only used on resource deletion
 				},
 			},
 			{
 				Config: testAccEBSVolumeAttachmentConfig_update(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "force_detach", "true"),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "force_detach", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
 				),
 			},
 			{
@@ -167,8 +167,8 @@ func TestAccEC2EBSVolumeAttachment_update(t *testing.T) {
 				ImportStateIdFunc: testAccVolumeAttachmentImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_detach", // attribute only used on resource deletion
-					"skip_destroy", // attribute only used on resource deletion
+					"force_detach",        // attribute only used on resource deletion
+					names.AttrSkipDestroy, // attribute only used on resource deletion
 				},
 			},
 		},
@@ -217,7 +217,7 @@ func TestAccEC2EBSVolumeAttachment_stopInstance(t *testing.T) {
 				Config: testAccEBSVolumeAttachmentConfig_stopInstance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "device_name", "/dev/sdh"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, "/dev/sdh"),
 				),
 			},
 			{
@@ -246,7 +246,7 @@ func testAccCheckVolumeAttachmentExists(ctx context.Context, n string) resource.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err := tfec2.FindEBSVolumeAttachment(ctx, conn, rs.Primary.Attributes["volume_id"], rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["device_name"])
+		_, err := tfec2.FindEBSVolumeAttachment(ctx, conn, rs.Primary.Attributes["volume_id"], rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes[names.AttrDeviceName])
 
 		return err
 	}
@@ -286,7 +286,7 @@ func testAccCheckVolumeAttachmentDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			_, err := tfec2.FindEBSVolumeAttachment(ctx, conn, rs.Primary.Attributes["volume_id"], rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["device_name"])
+			_, err := tfec2.FindEBSVolumeAttachment(ctx, conn, rs.Primary.Attributes["volume_id"], rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes[names.AttrDeviceName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -410,6 +410,6 @@ func testAccVolumeAttachmentImportStateIDFunc(resourceName string) resource.Impo
 		if !ok {
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
-		return fmt.Sprintf("%s:%s:%s", rs.Primary.Attributes["device_name"], rs.Primary.Attributes["volume_id"], rs.Primary.Attributes[names.AttrInstanceID]), nil
+		return fmt.Sprintf("%s:%s:%s", rs.Primary.Attributes[names.AttrDeviceName], rs.Primary.Attributes["volume_id"], rs.Primary.Attributes[names.AttrInstanceID]), nil
 	}
 }

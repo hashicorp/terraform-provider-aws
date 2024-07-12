@@ -31,12 +31,12 @@ func TestAccIoTCertificate_csr(t *testing.T) {
 				Config: testAccCertificateConfig_csr,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_pem"),
+					resource.TestCheckResourceAttrSet(resourceName, acctest.CtCertificatePEM),
 					resource.TestCheckResourceAttrSet(resourceName, "csr"),
-					resource.TestCheckNoResourceAttr(resourceName, "private_key"),
-					resource.TestCheckNoResourceAttr(resourceName, "public_key"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrPrivateKey),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrPublicKey),
 				),
 			},
 		},
@@ -57,12 +57,12 @@ func TestAccIoTCertificate_Keys_certificate(t *testing.T) {
 				Config: testAccCertificateConfig_keys,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_pem"),
+					resource.TestCheckResourceAttrSet(resourceName, acctest.CtCertificatePEM),
 					resource.TestCheckNoResourceAttr(resourceName, "csr"),
-					resource.TestCheckResourceAttrSet(resourceName, "private_key"),
-					resource.TestCheckResourceAttrSet(resourceName, "public_key"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPrivateKey),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPublicKey),
 				),
 			},
 		},
@@ -85,19 +85,19 @@ func TestAccIoTCertificate_Keys_existingCertificate(t *testing.T) {
 				Config: testAccCertificateConfig_existingCertificate(certificate, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "active", "false"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_pem"),
+					resource.TestCheckResourceAttrSet(resourceName, acctest.CtCertificatePEM),
 					resource.TestCheckNoResourceAttr(resourceName, "csr"),
-					resource.TestCheckNoResourceAttr(resourceName, "private_key"),
-					resource.TestCheckNoResourceAttr(resourceName, "public_key"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrPrivateKey),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrPublicKey),
 				),
 			},
 			{
 				Config: testAccCertificateConfig_existingCertificate(certificate, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 				),
 			},
 		},
@@ -111,7 +111,7 @@ func testAccCheckCertificateExists(ctx context.Context, n string) resource.TestC
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		_, err := tfiot.FindCertificateByID(ctx, conn, rs.Primary.ID)
 
@@ -121,7 +121,7 @@ func testAccCheckCertificateExists(ctx context.Context, n string) resource.TestC
 
 func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_certificate" {

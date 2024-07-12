@@ -41,7 +41,7 @@ func TestAccSESV2ConfigurationSetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "sending_options.0.sending_enabled", dataSourceName, "sending_options.0.sending_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "suppression_options.#", dataSourceName, "suppression_options.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "suppression_options.#", dataSourceName, "suppression_options.#"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(resourceName, "vdm_options.#", dataSourceName, "vdm_options.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "vdm_options.0.dashboard_options.#", dataSourceName, "vdm_options.0.dashboard_options.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "vdm_options.0.dashboard_options.0.engagement_metrics", dataSourceName, "vdm_options.0.dashboard_options.0.engagement_metrics"),

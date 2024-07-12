@@ -28,7 +28,7 @@ func DataSourceSolutionStack() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringIsValidRegExp,
 			},
-			"most_recent": {
+			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -75,7 +75,7 @@ func dataSourceSolutionStackRead(ctx context.Context, d *schema.ResourceData, me
 		// Query returned single result.
 		solutionStack = filteredSolutionStacks[0]
 	} else {
-		recent := d.Get("most_recent").(bool)
+		recent := d.Get(names.AttrMostRecent).(bool)
 		log.Printf("[DEBUG] aws_elastic_beanstalk_solution_stack - multiple results found and `most_recent` is set to: %t", recent)
 		if recent {
 			solutionStack = mostRecentSolutionStack(filteredSolutionStacks)

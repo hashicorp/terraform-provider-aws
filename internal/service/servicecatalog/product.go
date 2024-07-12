@@ -56,7 +56,7 @@ func ResourceProduct() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,7 +78,7 @@ func ResourceProduct() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -172,7 +172,7 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta int
 	input := &servicecatalog.CreateProductInput{
 		IdempotencyToken: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
-		Owner:            aws.String(d.Get("owner").(string)),
+		Owner:            aws.String(d.Get(names.AttrOwner).(string)),
 		ProductType:      aws.String(d.Get(names.AttrType).(string)),
 		ProvisioningArtifactParameters: expandProvisioningArtifactParameters(
 			d.Get("provisioning_artifact_parameters").([]interface{})[0].(map[string]interface{}),
@@ -245,13 +245,13 @@ func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set(names.AttrARN, output.ProductViewDetail.ProductARN)
 	if output.ProductViewDetail.CreatedTime != nil {
-		d.Set("created_time", output.ProductViewDetail.CreatedTime.Format(time.RFC3339))
+		d.Set(names.AttrCreatedTime, output.ProductViewDetail.CreatedTime.Format(time.RFC3339))
 	}
 	d.Set(names.AttrDescription, pvs.ShortDescription)
 	d.Set("distributor", pvs.Distributor)
 	d.Set("has_default_path", pvs.HasDefaultPath)
 	d.Set(names.AttrName, pvs.Name)
-	d.Set("owner", pvs.Owner)
+	d.Set(names.AttrOwner, pvs.Owner)
 	d.Set(names.AttrStatus, output.ProductViewDetail.Status)
 	d.Set("support_description", pvs.SupportDescription)
 	d.Set("support_email", pvs.SupportEmail)
@@ -287,7 +287,7 @@ func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Name = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("owner"); ok {
+	if v, ok := d.GetOk(names.AttrOwner); ok {
 		input.Owner = aws.String(v.(string))
 	}
 

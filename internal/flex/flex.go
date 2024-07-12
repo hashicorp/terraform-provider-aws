@@ -212,6 +212,10 @@ func ExpandStringValueSet(configured *schema.Set) []string {
 	return ExpandStringValueList(configured.List()) // nosemgrep:ci.helper-schema-Set-extraneous-ExpandStringList-with-List
 }
 
+func ExpandStringValueEmptySet(configured *schema.Set) []string {
+	return ExpandStringValueListEmpty(configured.List()) // nosemgrep:ci.helper-schema-Set-extraneous-ExpandStringList-with-List
+}
+
 func ExpandStringyValueSet[E ~string](configured *schema.Set) []E {
 	return ExpandStringyValueList[E](configured.List())
 }
@@ -249,6 +253,11 @@ func ExpandInt64Set(configured *schema.Set) []*int64 {
 	return ExpandInt64List(configured.List())
 }
 
+// Takes the result of schema.Set of strings and returns a []int64
+func ExpandInt64ValueSet(configured *schema.Set) []int64 {
+	return ExpandInt64ValueList(configured.List())
+}
+
 func FlattenInt64Set(list []*int64) *schema.Set {
 	return schema.NewSet(schema.HashInt, FlattenInt64List(list))
 }
@@ -272,6 +281,14 @@ func FlattenInt32Set(set []*int32) *schema.Set {
 
 func FlattenInt32ValueSet(set []int32) *schema.Set {
 	return schema.NewSet(schema.HashInt, FlattenInt32ValueList(set))
+}
+
+// Takes the result of flatmap.Expand for an array of int64
+// and returns a []int64
+func ExpandInt64ValueList(configured []interface{}) []int64 {
+	return tfslices.ApplyToAll(configured, func(v any) int64 {
+		return int64(v.(int))
+	})
 }
 
 // Takes the result of flatmap.Expand for an array of int64
@@ -408,9 +425,14 @@ func IntValueToString(v int) *string {
 	return aws.String(strconv.Itoa(v))
 }
 
-// Int64ToStringValue converts an int64 pointer to a Go string value.
+// Int32ToStringValue converts an int32 pointer to a Go string value.
 func Int32ToStringValue(v *int32) string {
 	return strconv.FormatInt(int64(aws.Int32Value(v)), 10)
+}
+
+// Int32ValueToStringValue converts an int32 value to a Go string value.
+func Int32ValueToStringValue(v int32) string {
+	return strconv.FormatInt(int64(v), 10)
 }
 
 // Int64ToStringValue converts an int64 pointer to a Go string value.
@@ -433,13 +455,25 @@ func StringToIntValue(v *string) int {
 // StringToInt32Value converts a string pointer to a Go int32 value.
 // Invalid integer strings are converted to 0.
 func StringToInt32Value(v *string) int32 {
-	i, _ := strconv.ParseInt(aws.StringValue(v), 0, 32)
-	return int32(i)
+	return StringValueToInt32Value(aws.StringValue(v))
 }
 
 // StringValueToBase64String converts a string to a Go base64 string pointer.
 func StringValueToBase64String(v string) *string {
 	return aws.String(itypes.Base64EncodeOnce([]byte(v)))
+}
+
+// StringValueToInt64 converts a string to a Go int32 pointer.
+// Invalid integer strings are converted to 0.
+func StringValueToInt32(v string) *int32 {
+	return aws.Int32(StringValueToInt32Value(v))
+}
+
+// StringValueToInt32Value converts a string to a Go int32 value.
+// Invalid integer strings are converted to 0.
+func StringValueToInt32Value(v string) int32 {
+	i, _ := strconv.ParseInt(v, 0, 32)
+	return int32(i)
 }
 
 // StringValueToInt64 converts a string to a Go int64 pointer.

@@ -33,7 +33,7 @@ func dataSourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,7 +50,7 @@ func dataSourceService() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"hosted_zone_id": {
+						names.AttrHostedZoneID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -115,11 +115,11 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	serviceARN := aws.ToString(out.Arn)
 	d.Set(names.AttrARN, serviceARN)
 	d.Set("auth_type", out.AuthType)
-	d.Set("certificate_arn", out.CertificateArn)
+	d.Set(names.AttrCertificateARN, out.CertificateArn)
 	d.Set("custom_domain_name", out.CustomDomainName)
 	if out.DnsEntry != nil {
 		if err := d.Set("dns_entry", []interface{}{flattenDNSEntry(out.DnsEntry)}); err != nil {
-			return diag.Errorf("setting dns_entry: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
 		}
 	} else {
 		d.Set("dns_entry", nil)
@@ -146,5 +146,5 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 		setTagsOut(ctx, Tags(tags))
 	}
 
-	return nil
+	return diags
 }

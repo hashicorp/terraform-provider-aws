@@ -23,6 +23,7 @@ import (
 
 // @SDKResource("aws_default_subnet", name="Subnet")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceDefaultSubnet() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -76,7 +77,7 @@ func ResourceDefaultSubnet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -108,7 +109,7 @@ func ResourceDefaultSubnet() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -255,7 +256,7 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceDefaultSubnetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	if d.Get("force_destroy").(bool) {
+	if d.Get(names.AttrForceDestroy).(bool) {
 		return append(diags, resourceSubnetDelete(ctx, d, meta)...)
 	}
 

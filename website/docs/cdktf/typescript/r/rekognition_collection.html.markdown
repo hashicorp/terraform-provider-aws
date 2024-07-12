@@ -45,7 +45,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `tags` - (Optional) A map of tags assigned to the WorkSpaces Connection Alias. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -93,4 +93,4 @@ Using `terraform import`, import Rekognition Collection using the `example_id_ar
 % terraform import aws_rekognition_collection.example collection-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-023adf31db1ee74bd956de742af39c5e5781369c72bfd8d33dc85792861b0879 -->
+<!-- cache-key: cdktf-0.20.1 input-e93746c92e7d7250b0634ef2b685e01c3fb3dbcdb9e923b38199736f6578f3be -->

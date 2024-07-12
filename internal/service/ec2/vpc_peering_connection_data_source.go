@@ -33,7 +33,7 @@ func DataSourceVPCPeeringConnection() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeBool},
 			},
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -43,14 +43,14 @@ func DataSourceVPCPeeringConnection() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cidr_block": {
+						names.AttrCIDRBlock: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -83,7 +83,7 @@ func DataSourceVPCPeeringConnection() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cidr_block": {
+						names.AttrCIDRBlock: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -158,7 +158,7 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 			"status-code":                   d.Get(names.AttrStatus).(string),
 			"requester-vpc-info.vpc-id":     d.Get(names.AttrVPCID).(string),
 			"requester-vpc-info.owner-id":   d.Get(names.AttrOwnerID).(string),
-			"requester-vpc-info.cidr-block": d.Get("cidr_block").(string),
+			"requester-vpc-info.cidr-block": d.Get(names.AttrCIDRBlock).(string),
 			"accepter-vpc-info.vpc-id":      d.Get("peer_vpc_id").(string),
 			"accepter-vpc-info.owner-id":    d.Get("peer_owner_id").(string),
 			"accepter-vpc-info.cidr-block":  d.Get("peer_cidr_block").(string),
@@ -172,7 +172,7 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -189,12 +189,12 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 	d.Set(names.AttrStatus, vpcPeeringConnection.Status.Code)
 	d.Set(names.AttrVPCID, vpcPeeringConnection.RequesterVpcInfo.VpcId)
 	d.Set(names.AttrOwnerID, vpcPeeringConnection.RequesterVpcInfo.OwnerId)
-	d.Set("cidr_block", vpcPeeringConnection.RequesterVpcInfo.CidrBlock)
+	d.Set(names.AttrCIDRBlock, vpcPeeringConnection.RequesterVpcInfo.CidrBlock)
 
 	cidrBlockSet := []interface{}{}
 	for _, v := range vpcPeeringConnection.RequesterVpcInfo.CidrBlockSet {
 		cidrBlockSet = append(cidrBlockSet, map[string]interface{}{
-			"cidr_block": aws.StringValue(v.CidrBlock),
+			names.AttrCIDRBlock: aws.StringValue(v.CidrBlock),
 		})
 	}
 	if err := d.Set("cidr_block_set", cidrBlockSet); err != nil {
@@ -219,7 +219,7 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 	peerCidrBlockSet := []interface{}{}
 	for _, v := range vpcPeeringConnection.AccepterVpcInfo.CidrBlockSet {
 		peerCidrBlockSet = append(peerCidrBlockSet, map[string]interface{}{
-			"cidr_block": aws.StringValue(v.CidrBlock),
+			names.AttrCIDRBlock: aws.StringValue(v.CidrBlock),
 		})
 	}
 	if err := d.Set("peer_cidr_block_set", peerCidrBlockSet); err != nil {

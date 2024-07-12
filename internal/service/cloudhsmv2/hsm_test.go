@@ -40,7 +40,7 @@ func testAccHSM_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "hsm_eni_id", regexache.MustCompile(`^eni-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "hsm_id", regexache.MustCompile(`^hsm-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "hsm_state", string(types.HsmStateActive)),
-					resource.TestCheckResourceAttrSet(resourceName, "ip_address"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrIPAddress),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test.0", names.AttrID),
 				),
 			},
@@ -118,7 +118,7 @@ func testAccHSM_IPAddress(t *testing.T) {
 				Config: testAccHSMConfig_ipAddress(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHSMExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "ip_address", "10.0.0.5"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddress, "10.0.0.5"),
 				),
 			},
 			{

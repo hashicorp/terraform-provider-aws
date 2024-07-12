@@ -52,7 +52,7 @@ func DataSourceManagedPrefixList() *schema.Resource {
 					},
 				},
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			names.AttrID: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -97,7 +97,7 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {

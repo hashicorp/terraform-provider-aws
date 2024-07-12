@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_amplify_app", name="App")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amplify/types;types.App", serialize=true, serializeDelay=true)
 func resourceApp() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAppCreate,
@@ -121,7 +122,7 @@ func resourceApp() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
-						"stage": {
+						names.AttrStage: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[types.Stage](),
@@ -181,12 +182,12 @@ func resourceApp() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"condition": {
+						names.AttrCondition: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
-						"source": {
+						names.AttrSource: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
@@ -202,7 +203,7 @@ func resourceApp() *schema.Resource {
 								"404-200",
 							}, false),
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
@@ -634,7 +635,7 @@ func expandAutoBranchCreationConfig(tfMap map[string]interface{}) *types.AutoBra
 		apiObject.PullRequestEnvironmentName = aws.String(v)
 	}
 
-	if v, ok := tfMap["stage"].(string); ok && v != "" && v != stageNone {
+	if v, ok := tfMap[names.AttrStage].(string); ok && v != "" && v != stageNone {
 		apiObject.Stage = types.Stage(v)
 	}
 
@@ -684,7 +685,7 @@ func flattenAutoBranchCreationConfig(apiObject *types.AutoBranchCreationConfig) 
 		tfMap["pull_request_environment_name"] = aws.ToString(v)
 	}
 
-	tfMap["stage"] = apiObject.Stage
+	tfMap[names.AttrStage] = apiObject.Stage
 
 	return tfMap
 }
@@ -696,11 +697,11 @@ func expandCustomRule(tfMap map[string]interface{}) *types.CustomRule {
 
 	apiObject := &types.CustomRule{}
 
-	if v, ok := tfMap["condition"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCondition].(string); ok && v != "" {
 		apiObject.Condition = aws.String(v)
 	}
 
-	if v, ok := tfMap["source"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSource].(string); ok && v != "" {
 		apiObject.Source = aws.String(v)
 	}
 
@@ -708,7 +709,7 @@ func expandCustomRule(tfMap map[string]interface{}) *types.CustomRule {
 		apiObject.Status = aws.String(v)
 	}
 
-	if v, ok := tfMap["target"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTarget].(string); ok && v != "" {
 		apiObject.Target = aws.String(v)
 	}
 
@@ -745,11 +746,11 @@ func flattenCustomRule(apiObject types.CustomRule) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Condition; v != nil {
-		tfMap["condition"] = aws.ToString(v)
+		tfMap[names.AttrCondition] = aws.ToString(v)
 	}
 
 	if v := apiObject.Source; v != nil {
-		tfMap["source"] = aws.ToString(v)
+		tfMap[names.AttrSource] = aws.ToString(v)
 	}
 
 	if v := apiObject.Status; v != nil {
@@ -757,7 +758,7 @@ func flattenCustomRule(apiObject types.CustomRule) map[string]interface{} {
 	}
 
 	if v := apiObject.Target; v != nil {
-		tfMap["target"] = aws.ToString(v)
+		tfMap[names.AttrTarget] = aws.ToString(v)
 	}
 
 	return tfMap

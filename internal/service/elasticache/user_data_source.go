@@ -41,7 +41,7 @@ func dataSourceUser() *schema.Resource {
 					},
 				},
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -60,7 +60,7 @@ func dataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -90,9 +90,9 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 			return sdkdiag.AppendErrorf(diags, "setting authentication_mode: %s", err)
 		}
 	}
-	d.Set("engine", user.Engine)
+	d.Set(names.AttrEngine, user.Engine)
 	d.Set("user_id", user.UserId)
-	d.Set("user_name", user.UserName)
+	d.Set(names.AttrUserName, user.UserName)
 
 	return diags
 }

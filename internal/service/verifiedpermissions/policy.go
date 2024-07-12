@@ -122,7 +122,7 @@ func (r *resourcePolicy) Schema(ctx context.Context, req resource.SchemaRequest,
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"principal": schema.ListNestedBlock{
+									names.AttrPrincipal: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[templateLinkedPrincipal](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),

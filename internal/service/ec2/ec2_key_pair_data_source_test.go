@@ -39,19 +39,19 @@ func TestAccEC2KeyPairDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource1Name, "fingerprint", resourceName, "fingerprint"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "key_name", resourceName, "key_name"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "key_pair_id", resourceName, "key_pair_id"),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 
 					resource.TestCheckResourceAttrPair(dataSource2Name, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "fingerprint", resourceName, "fingerprint"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "key_name", resourceName, "key_name"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "key_pair_id", resourceName, "key_pair_id"),
-					resource.TestCheckResourceAttrPair(dataSource2Name, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 
 					resource.TestCheckResourceAttrPair(dataSource3Name, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSource3Name, "fingerprint", resourceName, "fingerprint"),
 					resource.TestCheckResourceAttrPair(dataSource3Name, "key_name", resourceName, "key_name"),
 					resource.TestCheckResourceAttrPair(dataSource3Name, "key_pair_id", resourceName, "key_pair_id"),
-					resource.TestCheckResourceAttrPair(dataSource3Name, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSource3Name, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -81,14 +81,14 @@ func TestAccEC2KeyPairDataSource_includePublicKey(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource1Name, "fingerprint", resourceName, "fingerprint"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "key_name", resourceName, "key_name"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "key_pair_id", resourceName, "key_pair_id"),
-					resource.TestCheckResourceAttrWith(dataSource1Name, "public_key", func(v string) error {
+					resource.TestCheckResourceAttrWith(dataSource1Name, names.AttrPublicKey, func(v string) error {
 						if !tfec2.OpenSSHPublicKeysEqual(v, publicKey) {
 							return fmt.Errorf("Attribute 'public_key' expected %q, not equal to %q", publicKey, v)
 						}
 
 						return nil
 					}),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

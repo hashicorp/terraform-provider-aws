@@ -242,6 +242,20 @@ func ResourceDomain() *schema.Resource {
 											},
 										},
 									},
+									"generative_ai_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"amazon_bedrock_role_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
 									"identity_provider_oauth_settings": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -389,6 +403,27 @@ func ResourceDomain() *schema.Resource {
 											ValidateFunc: verify.ValidARN,
 										},
 									},
+									"custom_image": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 200,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"app_image_config_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_version_number": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -403,7 +438,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"file_system_id": {
+												names.AttrFileSystemID: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -987,7 +1022,7 @@ func ResourceDomain() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -1078,7 +1113,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("security_group_id_for_domain_boundary", domain.SecurityGroupIdForDomainBoundary)
 	d.Set("single_sign_on_managed_application_instance_id", domain.SingleSignOnManagedApplicationInstanceId)
 	d.Set("single_sign_on_application_arn", domain.SingleSignOnApplicationArn)
-	d.Set("url", domain.Url)
+	d.Set(names.AttrURL, domain.Url)
 	d.Set(names.AttrVPCID, domain.VpcId)
 
 	if err := d.Set(names.AttrSubnetIDs, flex.FlattenStringSet(domain.SubnetIds)); err != nil {
@@ -1373,6 +1408,10 @@ func expandDomainCodeEditorAppSettings(l []interface{}) *sagemaker.CodeEditorApp
 
 	config := &sagemaker.CodeEditorAppSettings{}
 
+	if v, ok := m["custom_image"].([]interface{}); ok && len(v) > 0 {
+		config.CustomImages = expandDomainCustomImages(v)
+	}
+
 	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
@@ -1598,6 +1637,9 @@ func expandCanvasAppSettings(l []interface{}) *sagemaker.CanvasAppSettings {
 	if v, ok := m["direct_deploy_settings"].([]interface{}); ok {
 		config.DirectDeploySettings = expandDirectDeploySettings(v)
 	}
+	if v, ok := m["generative_ai_settings"].([]interface{}); ok {
+		config.GenerativeAiSettings = expandGenerativeAiSettings(v)
+	}
 	if v, ok := m["identity_provider_oauth_settings"].([]interface{}); ok {
 		config.IdentityProviderOAuthSettings = expandIdentityProviderOAuthSettings(v)
 	}
@@ -1644,6 +1686,22 @@ func expandDirectDeploySettings(l []interface{}) *sagemaker.DirectDeploySettings
 
 	if v, ok := m[names.AttrStatus].(string); ok && v != "" {
 		config.Status = aws.String(v)
+	}
+
+	return config
+}
+
+func expandGenerativeAiSettings(l []interface{}) *sagemaker.GenerativeAiSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.GenerativeAiSettings{}
+
+	if v, ok := m["amazon_bedrock_role_arn"].(string); ok && v != "" {
+		config.AmazonBedrockRoleArn = aws.String(v)
 	}
 
 	return config
@@ -1949,6 +2007,10 @@ func flattenDomainCodeEditorAppSettings(config *sagemaker.CodeEditorAppSettings)
 
 	m := map[string]interface{}{}
 
+	if config.CustomImages != nil {
+		m["custom_image"] = flattenDomainCustomImages(config.CustomImages)
+	}
+
 	if config.DefaultResourceSpec != nil {
 		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
 	}
@@ -2075,6 +2137,7 @@ func flattenCanvasAppSettings(config *sagemaker.CanvasAppSettings) []map[string]
 
 	m := map[string]interface{}{
 		"direct_deploy_settings":           flattenDirectDeploySettings(config.DirectDeploySettings),
+		"generative_ai_settings":           flattenGenerativeAiSettings(config.GenerativeAiSettings),
 		"identity_provider_oauth_settings": flattenIdentityProviderOAuthSettings(config.IdentityProviderOAuthSettings),
 		"kendra_settings":                  flattenKendraSettings(config.KendraSettings),
 		"time_series_forecasting_settings": flattenTimeSeriesForecastingSettings(config.TimeSeriesForecastingSettings),
@@ -2092,6 +2155,18 @@ func flattenDirectDeploySettings(config *sagemaker.DirectDeploySettings) []map[s
 
 	m := map[string]interface{}{
 		names.AttrStatus: aws.StringValue(config.Status),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenGenerativeAiSettings(config *sagemaker.GenerativeAiSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"amazon_bedrock_role_arn": aws.StringValue(config.AmazonBedrockRoleArn),
 	}
 
 	return []map[string]interface{}{m}
@@ -2401,7 +2476,7 @@ func expandEFSFileSystemConfig(tfMap map[string]interface{}) *sagemaker.EFSFileS
 
 	apiObject := &sagemaker.EFSFileSystemConfig{}
 
-	if v, ok := tfMap["file_system_id"].(string); ok {
+	if v, ok := tfMap[names.AttrFileSystemID].(string); ok {
 		apiObject.FileSystemId = aws.String(v)
 	}
 
@@ -2452,7 +2527,7 @@ func flattenEFSFileSystemConfig(apiObject *sagemaker.EFSFileSystemConfig) []map[
 	tfMap := map[string]interface{}{}
 
 	if apiObject.FileSystemId != nil {
-		tfMap["file_system_id"] = aws.StringValue(apiObject.FileSystemId)
+		tfMap[names.AttrFileSystemID] = aws.StringValue(apiObject.FileSystemId)
 	}
 
 	if apiObject.FileSystemPath != nil {
