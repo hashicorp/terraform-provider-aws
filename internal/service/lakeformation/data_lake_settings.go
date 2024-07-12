@@ -268,7 +268,7 @@ func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("create_database_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateDatabaseDefaultPermissions))
 	d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
 	d.Set("external_data_filtering_allow_list", flattenDataLakeSettingsDataFilteringAllowList(settings.ExternalDataFilteringAllowList))
-	d.Set("trusted_resource_owners", flex.FlattenStringList(settings.TrustedResourceOwners))
+	d.Set("trusted_resource_owners", flex.FlattenStringValueList(settings.TrustedResourceOwners))
 	d.Set("allow_full_table_external_data_access", settings.AllowFullTableExternalDataAccess)
 
 	return diags
