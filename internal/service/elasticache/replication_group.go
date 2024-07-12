@@ -111,8 +111,7 @@ func resourceReplicationGroup() *schema.Resource {
 			},
 			names.AttrDescription: {
 				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
+				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			names.AttrEngine: {
