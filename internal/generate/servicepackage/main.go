@@ -21,11 +21,13 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
+	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
 
 func main() {
 	const (
-		filename = `service_package_gen.go`
+		filename                  = `service_package_gen.go`
+		endpointResolverFilenamne = `service_endpoint_resolver_gen.go`
 	)
 	g := common.NewGenerator()
 
@@ -65,8 +67,10 @@ func main() {
 		}
 
 		s := ServiceDatum{
-			SkipClientGenerate:   l.SkipClientGenerate(),
+			GenerateClient:       !l.SkipClientGenerate(),
+			ClientSDKV1:          l.ClientSDKV1(),
 			GoV1Package:          l.GoV1Package(),
+			ClientSDKV2:          l.ClientSDKV2(),
 			GoV2Package:          l.GoV2Package(),
 			ProviderPackage:      p,
 			ProviderNameUpper:    l.ProviderNameUpper(),
@@ -76,7 +80,6 @@ func main() {
 			SDKResources:         v.sdkResources,
 		}
 
-		s.SDKVersion = l.SDKVersion()
 		if l.ClientSDKV1() {
 			s.GoV1ClientTypeName = l.GoV1ClientTypeName()
 		}
@@ -98,6 +101,20 @@ func main() {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 
+		if p != "meta" {
+			g.Infof("Generating internal/service/%s/%s", servicePackage, endpointResolverFilenamne)
+
+			d = g.NewGoFileDestination(endpointResolverFilenamne)
+
+			if err := d.WriteTemplate("endpointresolver", endpointResolverTmpl, s); err != nil {
+				g.Fatalf("error generating %s endpoint resolver: %s", p, err)
+			}
+
+			if err := d.Write(); err != nil {
+				g.Fatalf("generating file (%s): %s", endpointResolverFilenamne, err)
+			}
+		}
+
 		break
 	}
 }
@@ -111,10 +128,11 @@ type ResourceDatum struct {
 }
 
 type ServiceDatum struct {
-	SkipClientGenerate   bool
-	SDKVersion           string // AWS SDK for Go version ("1", "2" or "1,2")
+	GenerateClient       bool
+	ClientSDKV1          bool
 	GoV1Package          string // AWS SDK for Go v1 package name
 	GoV1ClientTypeName   string // AWS SDK for Go v1 client type name
+	ClientSDKV2          bool
 	GoV2Package          string // AWS SDK for Go v2 package name
 	ProviderPackage      string
 	ProviderNameUpper    string
@@ -124,8 +142,11 @@ type ServiceDatum struct {
 	SDKResources         map[string]ResourceDatum
 }
 
-//go:embed file.tmpl
+//go:embed file.gtpl
 var tmpl string
+
+//go:embed endpoint_resolver.go.gtpl
+var endpointResolverTmpl string
 
 // Annotation processing.
 var (
@@ -201,7 +222,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("multiple Tags annotations: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
 
-				d.TagsIdentifierAttribute = attr
+				d.TagsIdentifierAttribute = namesgen.ConstOrQuote(attr)
 			}
 
 			if attr, ok := args.Keyword["resourceType"]; ok {

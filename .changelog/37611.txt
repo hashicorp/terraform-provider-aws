@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_storagegateway_smb_file_share: Fix crash when `cache_attributes` is removed on update
+```
