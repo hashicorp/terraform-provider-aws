@@ -6,6 +6,7 @@ package chatbot
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -46,6 +47,7 @@ const (
 
 type resourceSlackChannelConfiguration struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -70,6 +72,7 @@ func (r *resourceSlackChannelConfiguration) Schema(ctx context.Context, req reso
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
+			names.AttrID: framework.IDAttribute(),
 			"logging_level": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -143,7 +146,7 @@ func (r *resourceSlackChannelConfiguration) Create(ctx context.Context, req reso
 	}
 
 	plan.SlackChannelName = fwflex.StringToFramework(ctx, output.ChannelConfiguration.SlackChannelName)
-
+	plan.setID()
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -157,7 +160,12 @@ func (r *resourceSlackChannelConfiguration) Read(ctx context.Context, req resour
 		return
 	}
 
-	output, err := findSlackChannelConfigurationByArn(ctx, conn, state.ChatConfigurationArn.ValueString())
+	if err := state.InitFromID(); err != nil {
+		resp.Diagnostics.AddError("parsing resource ID", err.Error())
+		return
+	}
+
+	output, err := findSlackChannelConfigurationByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -180,9 +188,15 @@ func (r *resourceSlackChannelConfiguration) Read(ctx context.Context, req resour
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func findSlackChannelConfigurationByArn(ctx context.Context, conn *chatbot.Client, ChatConfigurationArn string) (*awstypes.SlackChannelConfiguration, error) {
+func findSlackChannelConfigurationByID(ctx context.Context, conn *chatbot.Client, ID string) (*awstypes.SlackChannelConfiguration, error) {
+	fmt.Println("Inside findSlackChannelConfigurationByID: ", ID)
+
 	input := &chatbot.DescribeSlackChannelConfigurationsInput{
-		ChatConfigurationArn: aws.String(ChatConfigurationArn),
+		ChatConfigurationArn: aws.String(ID),
+	}
+
+	if ID == "" {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	output, err := conn.DescribeSlackChannelConfigurations(ctx, input)
@@ -282,14 +296,31 @@ func (r *resourceSlackChannelConfiguration) Delete(ctx context.Context, req reso
 }
 
 func (r *resourceSlackChannelConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("chat_configuration_arn"), req, resp)
 }
 
+/*
+	 func (r *resourceSlackChannelConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+		idParts := strings.Split(req.ID, ",")
+
+		if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+			resp.Diagnostics.AddError(
+				"Unexpected Import Identifier",
+				fmt.Sprintf("Expected import identifier with format: attr_one,attr_two. Got: %q", req.ID),
+			)
+			return
+		}
+
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("attr_one"), idParts[0])...)
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("attr_two"), idParts[1])...)
+	}
+*/
 type resourceSlackChannelConfigurationData struct {
 	ChatConfigurationArn      types.String                     `tfsdk:"chat_configuration_arn"`
 	ConfigurationName         types.String                     `tfsdk:"configuration_name"`
 	GuardrailPolicyARNs       fwtypes.SetValueOf[types.String] `tfsdk:"guardrail_policy_arns"`
 	IAMRoleARN                fwtypes.ARN                      `tfsdk:"iam_role_arn"`
+	ID                        types.String                     `tfsdk:"id"`
 	LoggingLevel              types.String                     `tfsdk:"logging_level"`
 	SlackChannelID            types.String                     `tfsdk:"slack_channel_id"`
 	SlackChannelName          types.String                     `tfsdk:"slack_channel_name"`
@@ -298,4 +329,13 @@ type resourceSlackChannelConfigurationData struct {
 	Tags                      types.Map                        `tfsdk:"tags"`
 	TagsAll                   types.Map                        `tfsdk:"tags_all"`
 	UserAuthorizationRequired types.Bool                       `tfsdk:"user_authorization_required"`
+}
+
+func (data *resourceSlackChannelConfigurationData) InitFromID() error {
+	data.ChatConfigurationArn = data.ID
+	return nil
+}
+
+func (data *resourceSlackChannelConfigurationData) setID() {
+	data.ID = data.ChatConfigurationArn
 }
