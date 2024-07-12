@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -70,8 +69,8 @@ func resourceDomainDKIMRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrDomain, domainName)
 
 	readOpts := &ses.GetIdentityDkimAttributesInput{
-		Identities: []*string{
-			aws.String(domainName),
+		Identities: []string{
+			aws.ToString(&domainName),
 		},
 	}
 
