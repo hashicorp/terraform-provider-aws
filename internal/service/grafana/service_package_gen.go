@@ -22,11 +22,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 	return []*types.ServicePackageFrameworkResource{
 		{
 			Factory: newWorkspaceServiceAccountResource,
-			Name:    "WorkspaceServiceAccount",
+			Name:    "Workspace Service Account",
 		},
 		{
-			Factory: newResourceWorkspaceServiceAccountToken,
-			Name:    "WorkspaceServiceAccountToken",
+			Factory: newWorkspaceServiceAccountTokenResource,
+			Name:    "Workspace Service Account Token",
 		},
 	}
 }

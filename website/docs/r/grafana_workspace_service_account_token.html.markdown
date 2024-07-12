@@ -45,7 +45,7 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Identifier of the service account token in the given Grafana workspace.
+* `service_account_token_id` - Identifier of the service account token in the given Grafana workspace.
 * `created_at` - Specifies when the service account token was created.
 * `expires_at` - Specifies when the service account token will expire.
 * `key` - The key for the service account token. Used when making calls to the Grafana HTTP APIs to authenticate and authorize the requests.

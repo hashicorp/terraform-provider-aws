@@ -5,11 +5,12 @@ package grafana
 
 import (
 	"context"
-	"time"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/grafana"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -19,39 +20,40 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_grafana_workspace_service_account_token", name="WorkspaceServiceAccountToken")
-func newResourceWorkspaceServiceAccountToken(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceWorkspaceServiceAccountToken{}, nil
+// @FrameworkResource("aws_grafana_workspace_service_account_token", name="Workspace Service Account Token")
+func newWorkspaceServiceAccountTokenResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &workspaceServiceAccountTokenResource{}, nil
 }
 
-const (
-	ResNameServiceAccountToken = "WorkspaceServiceAccountToken"
-)
-
-type resourceWorkspaceServiceAccountToken struct {
+type workspaceServiceAccountTokenResource struct {
 	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[resourceWorkspaceServiceAccountTokenData]
-	framework.WithImportByID
+	framework.WithNoUpdate
 }
 
-func (r *resourceWorkspaceServiceAccountToken) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (r *workspaceServiceAccountTokenResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_grafana_workspace_service_account_token"
 }
 
-func (r *resourceWorkspaceServiceAccountToken) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *workspaceServiceAccountTokenResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrCreatedAt: schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
@@ -64,12 +66,19 @@ func (r *resourceWorkspaceServiceAccountToken) Schema(ctx context.Context, req r
 				},
 			},
 			"expires_at": schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrKey: schema.StringAttribute{
 				Computed:  true,
 				Sensitive: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"seconds_to_live": schema.Int64Attribute{
 				Required: true,
@@ -86,6 +95,7 @@ func (r *resourceWorkspaceServiceAccountToken) Schema(ctx context.Context, req r
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"service_account_token_id": framework.IDAttribute(),
 			"workspace_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -96,140 +106,200 @@ func (r *resourceWorkspaceServiceAccountToken) Schema(ctx context.Context, req r
 	}
 }
 
-func (r *resourceWorkspaceServiceAccountToken) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data resourceWorkspaceServiceAccountTokenData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+func (r *workspaceServiceAccountTokenResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data workspaceServiceAccountTokenResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().GrafanaClient(ctx)
 
-	input := &grafana.CreateWorkspaceServiceAccountTokenInput{
-		Name:             aws.String(data.Name.ValueString()),
-		SecondsToLive:    aws.Int32(int32(data.SecondsToLive.ValueInt64())),
-		ServiceAccountId: aws.String(data.ServiceAccountID.ValueString()),
-		WorkspaceId:      aws.String(data.WorkspaceID.ValueString()),
+	name := data.Name.ValueString()
+	input := &grafana.CreateWorkspaceServiceAccountTokenInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	output, err := conn.CreateWorkspaceServiceAccountToken(ctx, input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Grafana, create.ErrActionCreating, ResNameServiceAccountToken, "", err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Grafana Workspace Service Account Token (%s)", name), err.Error())
+
 		return
 	}
 
-	//update unknowns
-	saTokenID := aws.ToString(output.ServiceAccountToken.Id)
-	out, err := findWorkspaceServiceAccountToken(ctx, conn, saTokenID, data.ServiceAccountID.ValueString(), data.WorkspaceID.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Grafana, create.ErrActionReading, ResNameServiceAccountToken, "", err),
-			err.Error(),
-		)
-		return
-	}
-
-	data.ID = fwflex.StringValueToFramework(ctx, saTokenID)
+	// Set values for unknowns.
 	data.Key = fwflex.StringToFramework(ctx, output.ServiceAccountToken.Key)
-	data.CreatedAt = fwflex.StringValueToFramework(ctx, out.CreatedAt.Format(time.RFC3339))
-	data.ExpiresAt = fwflex.StringValueToFramework(ctx, out.ExpiresAt.Format(time.RFC3339))
+	data.TokenID = fwflex.StringToFramework(ctx, output.ServiceAccountToken.Id)
+	data.setID()
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	serviceAccountToken, err := findWorkspaceServiceAccountTokenByThreePartKey(ctx, conn, data.WorkspaceID.ValueString(), data.ServiceAccountID.ValueString(), data.TokenID.ValueString())
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Grafana Workspace Service Account Token (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	data.CreatedAt = fwflex.TimeToFramework(ctx, serviceAccountToken.CreatedAt)
+	data.ExpiresAt = fwflex.TimeToFramework(ctx, serviceAccountToken.ExpiresAt)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceWorkspaceServiceAccountToken) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data resourceWorkspaceServiceAccountTokenData
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+func (r *workspaceServiceAccountTokenResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data workspaceServiceAccountTokenResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
 		return
 	}
 
 	conn := r.Meta().GrafanaClient(ctx)
 
-	output, err := findWorkspaceServiceAccountToken(ctx, conn, data.ID.ValueString(), data.ServiceAccountID.ValueString(), data.WorkspaceID.ValueString())
+	output, err := findWorkspaceServiceAccountTokenByThreePartKey(ctx, conn, data.WorkspaceID.ValueString(), data.ServiceAccountID.ValueString(), data.TokenID.ValueString())
+
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Grafana, create.ErrActionSetting, ResNameServiceAccount, data.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Grafana Workspace Service Account Token (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
-	if resp.Diagnostics.HasError() {
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	// Restore resource ID.
+	// It has been overwritten by the 'Id' field from the API response.
+	data.setID()
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceWorkspaceServiceAccountToken) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data resourceWorkspaceServiceAccountTokenData
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+func (r *workspaceServiceAccountTokenResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data workspaceServiceAccountTokenResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().GrafanaClient(ctx)
 
-	_, err := conn.DeleteWorkspaceServiceAccountToken(ctx, &grafana.DeleteWorkspaceServiceAccountTokenInput{
-		ServiceAccountId: fwflex.StringFromFramework(ctx, data.ServiceAccountID),
-		TokenId:          fwflex.StringFromFramework(ctx, data.ID),
-		WorkspaceId:      fwflex.StringFromFramework(ctx, data.WorkspaceID),
-	})
+	input := &grafana.DeleteWorkspaceServiceAccountTokenInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	_, err := conn.DeleteWorkspaceServiceAccountToken(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Grafana, create.ErrActionDeleting, ResNameServiceAccount, data.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Grafana Workspace Service Account Token (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 }
 
-func findWorkspaceServiceAccountToken(ctx context.Context, conn *grafana.Client, id, serviceAccountID, workspaceID string) (*awstypes.ServiceAccountTokenSummary, error) {
-	input := &grafana.ListWorkspaceServiceAccountTokensInput{
-		WorkspaceId:      aws.String(workspaceID),
-		ServiceAccountId: aws.String(serviceAccountID),
+func findWorkspaceServiceAccountToken(ctx context.Context, conn *grafana.Client, input *grafana.ListWorkspaceServiceAccountTokensInput, filter tfslices.Predicate[*awstypes.ServiceAccountTokenSummary]) (*awstypes.ServiceAccountTokenSummary, error) {
+	output, err := findWorkspaceServiceAccountTokens(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
 	}
 
-	paginator := grafana.NewListWorkspaceServiceAccountTokensPaginator(conn, input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findWorkspaceServiceAccountTokens(ctx context.Context, conn *grafana.Client, input *grafana.ListWorkspaceServiceAccountTokensInput, filter tfslices.Predicate[*awstypes.ServiceAccountTokenSummary]) ([]awstypes.ServiceAccountTokenSummary, error) {
+	var output []awstypes.ServiceAccountTokenSummary
+
+	pages := grafana.NewListWorkspaceServiceAccountTokensPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
 		if err != nil {
 			return nil, err
 		}
 
-		for _, sa := range page.ServiceAccountTokens {
-			if aws.ToString(sa.Id) == id {
-				return &sa, nil
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		for _, v := range page.ServiceAccountTokens {
+			if filter(&v) {
+				output = append(output, v)
 			}
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return output, nil
 }
 
-type resourceWorkspaceServiceAccountTokenData struct {
-	ID               types.String `tfsdk:"id"`
-	CreatedAt        types.String `tfsdk:"created_at"`
-	ExpiresAt        types.String `tfsdk:"expires_at"`
-	Key              types.String `tfsdk:"key"`
-	Name             types.String `tfsdk:"name"`
-	SecondsToLive    types.Int64  `tfsdk:"seconds_to_live"`
-	ServiceAccountID types.String `tfsdk:"service_account_id"`
-	WorkspaceID      types.String `tfsdk:"workspace_id"`
+func findWorkspaceServiceAccountTokenByThreePartKey(ctx context.Context, conn *grafana.Client, workspaceID, serviceAccountID, tokenID string) (*awstypes.ServiceAccountTokenSummary, error) {
+	input := &grafana.ListWorkspaceServiceAccountTokensInput{
+		ServiceAccountId: aws.String(serviceAccountID),
+		WorkspaceId:      aws.String(workspaceID),
+	}
+
+	return findWorkspaceServiceAccountToken(ctx, conn, input, func(v *awstypes.ServiceAccountTokenSummary) bool {
+		return aws.ToString(v.Id) == tokenID
+	})
+}
+
+type workspaceServiceAccountTokenResourceModel struct {
+	CreatedAt        timetypes.RFC3339 `tfsdk:"created_at"`
+	ExpiresAt        timetypes.RFC3339 `tfsdk:"expires_at"`
+	ID               types.String      `tfsdk:"id"`
+	Key              types.String      `tfsdk:"key"`
+	Name             types.String      `tfsdk:"name"`
+	SecondsToLive    types.Int64       `tfsdk:"seconds_to_live"`
+	ServiceAccountID types.String      `tfsdk:"service_account_id"`
+	TokenID          types.String      `tfsdk:"service_account_token_id"`
+	WorkspaceID      types.String      `tfsdk:"workspace_id"`
+}
+
+const (
+	workspaceServiceAccountTokenResourceIDPartCount = 3
+)
+
+func (data *workspaceServiceAccountTokenResourceModel) InitFromID() error {
+	id := data.ID.ValueString()
+	parts, err := flex.ExpandResourceId(id, workspaceServiceAccountTokenResourceIDPartCount, false)
+
+	if err != nil {
+		return err
+	}
+
+	data.WorkspaceID = types.StringValue(parts[0])
+	data.ServiceAccountID = types.StringValue(parts[1])
+	data.TokenID = types.StringValue(parts[2])
+
+	return nil
+}
+
+func (data *workspaceServiceAccountTokenResourceModel) setID() {
+	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.WorkspaceID.ValueString(), data.ServiceAccountID.ValueString(), data.TokenID.ValueString()}, workspaceServiceAccountTokenResourceIDPartCount, false)))
 }
