@@ -1469,6 +1469,7 @@ func TestAccELBV2ListenerRule_EmptyAction(t *testing.T) {
 	}
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/35668.
 func TestAccELBV2ListenerRule_redirectWithTargetGroupARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
@@ -1502,10 +1503,15 @@ func TestAccELBV2ListenerRule_redirectWithTargetGroupARN(t *testing.T) {
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccListenerRuleConfig_redirectWithTargetGroupARN(lbName),
-				PlanOnly:                 true,
-				ExpectNonEmptyPlan:       false,
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.36.0",
+					},
+				},
+				Config:             testAccListenerRuleConfig_redirectWithTargetGroupARN(lbName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
 			},
 		},
 	})
