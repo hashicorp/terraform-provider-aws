@@ -6,7 +6,13 @@ updates:
       interval: "daily"
 
   - package-ecosystem: "gomod"
-    directory: "/"
+    directories:
+      - "/"
+      - "/.ci/providerlint"
+      - "/.ci/tools"
+      - "/skaff"
+      - "/tools/awssdkpatch"
+      - "/tools/tfsdk2fw"
     groups:
       aws-sdk-go:
         patterns:
@@ -34,7 +40,6 @@ updates:
       - dependency-name: "github.com/hashicorp/terraform-plugin-log"
       # go-hclog should only be updated via terraform-plugin-log
       - dependency-name: "github.com/hashicorp/go-hclog"
-      - dependency-name: "golang.org/x/tools"
       # grpc should only be updated via terraform-plugin-go/terraform-plugin-framework
       - dependency-name: "google.golang.org/grpc"
       # protobuf should only be updated via terraform-plugin-go/terraform-plugin-framework
@@ -42,53 +47,6 @@ updates:
     schedule:
       interval: "daily"
     open-pull-requests-limit: 30
-
-  - package-ecosystem: "gomod"
-    directory: "/.ci/providerlint"
-    ignore:
-      - dependency-name: "golang.org/x/tools"
-      - dependency-name: "google.golang.org/grpc"
-      - dependency-name: "google.golang.org/protobuf"
-    schedule:
-      interval: "daily"
-
-  - package-ecosystem: "gomod"
-    directory: "/.ci/tools"
-    ignore:
-      - dependency-name: "golang.org/x/tools"
-      - dependency-name: "google.golang.org/grpc"
-      - dependency-name: "google.golang.org/protobuf"
-    schedule:
-      interval: "daily"
-
-  - package-ecosystem: "gomod"
-    directory: "/skaff"
-    ignore:
-      - dependency-name: "golang.org/x/tools"
-      - dependency-name: "google.golang.org/grpc"
-      - dependency-name: "google.golang.org/protobuf"
-    schedule:
-      interval: "daily"
-
-  - package-ecosystem: "gomod"
-    directory: "/tools/awssdkpatch"
-    allow:
-      - dependency-type: direct
-    schedule:
-      interval: "daily"
-
-  - package-ecosystem: "gomod"
-    directory: "/tools/tfsdk2fw"
-    allow:
-      - dependency-type: direct
-    ignore:
-      # terraform-plugin-sdk/v2 should only be updated via terraform-provider-aws
-      - dependency-name: "github.com/hashicorp/terraform-plugin-sdk/v2"
-      - dependency-name: "golang.org/x/tools"
-      - dependency-name: "google.golang.org/grpc"
-      - dependency-name: "google.golang.org/protobuf"
-    schedule:
-      interval: "daily"
 
   - package-ecosystem: "terraform"
     directory: "/infrastructure/repository"
