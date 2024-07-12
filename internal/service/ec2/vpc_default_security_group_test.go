@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -104,9 +103,9 @@ func TestAccVPCDefaultSecurityGroup_empty(t *testing.T) {
 	})
 }
 
-func testAccCheckDefaultSecurityGroupARN(resourceName string, group *ec2.SecurityGroup) resource.TestCheckFunc {
+func testAccCheckDefaultSecurityGroupARN(resourceName string, group *awstypes.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", fmt.Sprintf("security-group/%s", aws.StringValue(group.GroupId)))(s)
+		return acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", fmt.Sprintf("security-group/%s", aws.ToString(group.GroupId)))(s)
 	}
 }
 
