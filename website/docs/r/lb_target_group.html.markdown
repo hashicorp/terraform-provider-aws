@@ -202,7 +202,7 @@ This resource supports the following arguments:
 The `target_group_health` block supports the following:
 
 * `dns_failover` - (Optional) Block to configure DNS Failover requirements. See [DNS Failover](#dns_failover) below for details on attributes.
-* `unhealthy_state_routing` - (Optional) Block to configure Unhealthy State Routing requirements. See [Unhealthy State Routing](#spot-unhealthy_state_routing) below for details on attributes.
+* `unhealthy_state_routing` - (Optional) Block to configure Unhealthy State Routing requirements. See [Unhealthy State Routing](#unhealthy_state_routing) below for details on attributes.
 
 ### dns_failover
 
