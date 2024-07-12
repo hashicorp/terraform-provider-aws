@@ -117,7 +117,7 @@ func (r *workspaceServiceAccountTokenResource) Create(ctx context.Context, reque
 
 	name := data.Name.ValueString()
 	input := &grafana.CreateWorkspaceServiceAccountTokenInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -202,7 +202,7 @@ func (r *workspaceServiceAccountTokenResource) Delete(ctx context.Context, reque
 	conn := r.Meta().GrafanaClient(ctx)
 
 	input := &grafana.DeleteWorkspaceServiceAccountTokenInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}

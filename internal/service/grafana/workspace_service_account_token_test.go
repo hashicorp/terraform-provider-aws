@@ -27,7 +27,11 @@ func TestAccGrafanaWorkspaceServiceAccountToken_basic(t *testing.T) {
 	var v types.ServiceAccountTokenSummary
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.Grafana) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, grafana.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkspaceServiceAccountTokenDestroy(ctx),
@@ -53,7 +57,8 @@ func TestAccGrafanaWorkspaceServiceAccountToken_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.Grafana)
+			acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

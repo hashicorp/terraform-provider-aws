@@ -27,7 +27,11 @@ func TestAccGrafanaWorkspaceServiceAccount_basic(t *testing.T) {
 	var v types.ServiceAccountSummary
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.Grafana) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, grafana.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkspaceServiceAccountDestroy(ctx),
@@ -56,7 +60,8 @@ func TestAccGrafanaWorkspaceServiceAccount_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.Grafana)
+			acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -83,7 +88,7 @@ func testAccCheckWorkspaceServiceAccountExists(ctx context.Context, n string, v 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaClient(ctx)
 
-		output, err := tfgrafana.FindWorkspaceServiceAccountByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["workspace_id"])
+		output, err := tfgrafana.FindWorkspaceServiceAccountByTwoPartKey(ctx, conn, rs.Primary.Attributes["workspace_id"], rs.Primary.Attributes["service_account_id"])
 
 		if err != nil {
 			return err
@@ -104,7 +109,7 @@ func testAccCheckWorkspaceServiceAccountDestroy(ctx context.Context) resource.Te
 				continue
 			}
 
-			_, err := tfgrafana.FindWorkspaceServiceAccountByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["workspace_id"])
+			_, err := tfgrafana.FindWorkspaceServiceAccountByTwoPartKey(ctx, conn, rs.Primary.Attributes["workspace_id"], rs.Primary.Attributes["service_account_id"])
 
 			if tfresource.NotFound(err) {
 				continue
