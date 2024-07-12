@@ -1,5 +1,9 @@
 ## 5.59.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_rds_certificate` ([#35003](https://github.com/hashicorp/terraform-provider-aws/issues/35003))
+
 ENHANCEMENTS:
 
 * resource/aws_imagebuilder_image_pipeline: Add `execution_role` and `workflow` arguments ([#37317](https://github.com/hashicorp/terraform-provider-aws/issues/37317))
