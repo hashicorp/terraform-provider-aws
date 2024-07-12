@@ -87,7 +87,7 @@ var (
 				return json
 			},
 		},
-		"display_name": {
+		names.AttrDisplayName: {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
@@ -151,16 +151,16 @@ var (
 			Optional:      true,
 			Computed:      true,
 			ForceNew:      true,
-			ConflictsWith: []string{"name_prefix"},
+			ConflictsWith: []string{names.AttrNamePrefix},
 		},
-		"name_prefix": {
+		names.AttrNamePrefix: {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Computed:      true,
 			ForceNew:      true,
 			ConflictsWith: []string{names.AttrName},
 		},
-		"owner": {
+		names.AttrOwner: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -216,7 +216,7 @@ var (
 		"beginning_archive_time":                   topicAttributeNameBeginningArchiveTime,
 		"content_based_deduplication":              topicAttributeNameContentBasedDeduplication,
 		"delivery_policy":                          topicAttributeNameDeliveryPolicy,
-		"display_name":                             topicAttributeNameDisplayName,
+		names.AttrDisplayName:                      topicAttributeNameDisplayName,
 		"fifo_topic":                               topicAttributeNameFIFOTopic,
 		"firehose_failure_feedback_role_arn":       topicAttributeNameFirehoseFailureFeedbackRoleARN,
 		"firehose_success_feedback_role_arn":       topicAttributeNameFirehoseSuccessFeedbackRoleARN,
@@ -228,7 +228,7 @@ var (
 		"lambda_failure_feedback_role_arn":         topicAttributeNameLambdaFailureFeedbackRoleARN,
 		"lambda_success_feedback_role_arn":         topicAttributeNameLambdaSuccessFeedbackRoleARN,
 		"lambda_success_feedback_sample_rate":      topicAttributeNameLambdaSuccessFeedbackSampleRate,
-		"owner":                                    topicAttributeNameOwner,
+		names.AttrOwner:                            topicAttributeNameOwner,
 		names.AttrPolicy:                           topicAttributeNamePolicy,
 		"signature_version":                        topicAttributeNameSignatureVersion,
 		"sqs_failure_feedback_role_arn":            topicAttributeNameSQSFailureFeedbackRoleARN,
@@ -240,6 +240,7 @@ var (
 
 // @SDKResource("aws_sns_topic", name="Topic")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="map[string]string")
 func resourceTopic() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicCreate,
@@ -272,7 +273,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	attributes, err := topicAttributeMap.ResourceDataToAPIAttributesCreate(d)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// The FifoTopic attribute must be passed in the call to CreateTopic.
@@ -336,7 +337,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SNS Topic (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SNS Topic (%s): %s", d.Id(), err)
@@ -344,44 +345,46 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	err = topicAttributeMap.APIAttributesToResourceData(attributes, d)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	arn, err := arn.Parse(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	name := arn.Resource
 	d.Set(names.AttrName, name)
 	if d.Get("fifo_topic").(bool) {
-		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, fifoTopicNameSuffix))
+		d.Set(names.AttrNamePrefix, create.NamePrefixFromNameWithSuffix(name, fifoTopicNameSuffix))
 	} else {
-		d.Set("name_prefix", create.NamePrefixFromName(name))
+		d.Set(names.AttrNamePrefix, create.NamePrefixFromName(name))
 	}
 
-	return nil
+	return diags
 }
 
 func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		attributes, err := topicAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		err = putTopicAttributes(ctx, conn, d.Id(), attributes)
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return resourceTopicRead(ctx, d, meta)
+	return append(diags, resourceTopicRead(ctx, d, meta)...)
 }
 
 func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SNS Topic: %s", d.Id())
@@ -390,14 +393,14 @@ func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting SNS Topic (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SNS Topic (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
@@ -472,7 +475,7 @@ func putTopicAttribute(ctx context.Context, conn *sns.Client, arn string, name, 
 }
 
 func topicName(d sdkv2.ResourceDiffer) string {
-	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrName).(string)), create.WithConfiguredPrefix(d.Get("name_prefix").(string))}
+	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrName).(string)), create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string))}
 	if d.Get("fifo_topic").(bool) {
 		optFns = append(optFns, create.WithSuffix(fifoTopicNameSuffix))
 	}

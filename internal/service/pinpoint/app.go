@@ -36,7 +36,7 @@ func ResourceApp() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +55,7 @@ func ResourceApp() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(pinpoint.Mode_Values(), false),
@@ -107,9 +107,9 @@ func ResourceApp() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -146,7 +146,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &pinpoint.CreateAppInput{
 		CreateApplicationRequest: &pinpoint.CreateApplicationRequest{
 			Name: aws.String(name),
@@ -187,7 +187,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "reading Pinpoint App (%s) settings: %s", d.Id(), err)
 	}
 
-	d.Set("application_id", app.Id)
+	d.Set(names.AttrApplicationID, app.Id)
 	d.Set(names.AttrARN, app.Arn)
 	if err := d.Set("campaign_hook", flattenCampaignHook(settings.CampaignHook)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting campaign_hook: %s", err)
@@ -196,7 +196,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "setting limits: %s", err)
 	}
 	d.Set(names.AttrName, app.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(app.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(app.Name)))
 	if err := d.Set("quiet_time", flattenQuietTime(settings.QuietTime)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting quiet_time: %s", err)
 	}
@@ -313,7 +313,7 @@ func findAppSettingsByID(ctx context.Context, conn *pinpoint.Pinpoint, id string
 }
 
 func expandCampaignHook(configs []interface{}) *pinpoint.CampaignHook {
-	if len(configs) == 0 {
+	if len(configs) == 0 || configs[0] == nil {
 		return nil
 	}
 
@@ -325,7 +325,7 @@ func expandCampaignHook(configs []interface{}) *pinpoint.CampaignHook {
 		ch.LambdaFunctionName = aws.String(v.(string))
 	}
 
-	if v, ok := m["mode"]; ok {
+	if v, ok := m[names.AttrMode]; ok {
 		ch.Mode = aws.String(v.(string))
 	}
 
@@ -342,7 +342,7 @@ func flattenCampaignHook(ch *pinpoint.CampaignHook) []interface{} {
 	m := map[string]interface{}{}
 
 	m["lambda_function_name"] = aws.StringValue(ch.LambdaFunctionName)
-	m["mode"] = aws.StringValue(ch.Mode)
+	m[names.AttrMode] = aws.StringValue(ch.Mode)
 	m["web_url"] = aws.StringValue(ch.WebUrl)
 
 	l = append(l, m)
@@ -351,7 +351,7 @@ func flattenCampaignHook(ch *pinpoint.CampaignHook) []interface{} {
 }
 
 func expandCampaignLimits(configs []interface{}) *pinpoint.CampaignLimits {
-	if len(configs) == 0 {
+	if len(configs) == 0 || configs[0] == nil {
 		return nil
 	}
 
@@ -394,7 +394,7 @@ func flattenCampaignLimits(cl *pinpoint.CampaignLimits) []interface{} {
 }
 
 func expandQuietTime(configs []interface{}) *pinpoint.QuietTime {
-	if len(configs) == 0 {
+	if len(configs) == 0 || configs[0] == nil {
 		return nil
 	}
 

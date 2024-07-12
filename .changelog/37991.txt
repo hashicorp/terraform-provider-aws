@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_dynamodb_table: Fixes perpetual diff when `ttl.attribute_name` is set when `ttl.enabled` is not set.
+```
+
+```release-note:enhancement
+resource/aws_dynamodb_table: Adds validation for `ttl` values.
+```

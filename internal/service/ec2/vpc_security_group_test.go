@@ -59,7 +59,7 @@ func TestProtocolStateFunc(t *testing.T) {
 			expected: "",
 		},
 		{
-			input:    "1",
+			input:    acctest.Ct1,
 			expected: "icmp",
 		},
 		{
@@ -147,7 +147,7 @@ func TestProtocolForValue(t *testing.T) {
 			expected: "icmp",
 		},
 		{
-			input:    "1",
+			input:    acctest.Ct1,
 			expected: "icmp",
 		},
 		{
@@ -181,7 +181,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 
 	expected_compact_list := []interface{}{
 		map[string]interface{}{
-			"protocol":            "tcp",
+			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with description",
@@ -193,7 +193,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "tcp",
+			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with another description",
@@ -204,7 +204,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "-1",
+			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
@@ -213,14 +213,14 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 				"fd00::1/128",
 				"fd00::2/128",
 			},
-			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
 				"sg-11111",
 				"sg-22222",
 				"sg-33333",
 			}),
 		},
 		map[string]interface{}{
-			"protocol":            "udp",
+			names.AttrProtocol:    "udp",
 			"from_port":           int(10000),
 			"to_port":             int(10000),
 			names.AttrDescription: "",
@@ -234,14 +234,14 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 
 	expected_expanded_list := []interface{}{
 		map[string]interface{}{
-			"protocol":            "tcp",
+			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with description",
 			"self":                true,
 		},
 		map[string]interface{}{
-			"protocol":            "tcp",
+			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with description",
@@ -251,7 +251,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "tcp",
+			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with description",
@@ -261,7 +261,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "tcp",
+			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with description",
@@ -271,7 +271,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "tcp",
+			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with another description",
@@ -281,7 +281,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "tcp",
+			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with another description",
@@ -291,7 +291,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "-1",
+			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
@@ -301,7 +301,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "-1",
+			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
@@ -311,37 +311,37 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "-1",
+			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
 			"self":                false,
-			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
 				"sg-11111",
 			}),
 		},
 		map[string]interface{}{
-			"protocol":            "-1",
+			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
 			"self":                false,
-			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
 				"sg-22222",
 			}),
 		},
 		map[string]interface{}{
-			"protocol":            "-1",
+			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
 			"self":                false,
-			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
 				"sg-33333",
 			}),
 		},
 		map[string]interface{}{
-			"protocol":            "udp",
+			names.AttrProtocol:    "udp",
 			"from_port":           int(10000),
 			"to_port":             int(10000),
 			names.AttrDescription: "",
@@ -351,7 +351,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "udp",
+			names.AttrProtocol:    "udp",
 			"from_port":           int(10000),
 			"to_port":             int(10000),
 			names.AttrDescription: "",
@@ -436,7 +436,7 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 
 	local := []map[string]interface{}{
 		{
-			"protocol":            "tcp",
+			names.AttrProtocol:    "tcp",
 			"from_port":           int64(1),
 			"to_port":             int64(-1),
 			"cidr_blocks":         []string{"0.0.0.0/0"},
@@ -444,19 +444,19 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 			names.AttrDescription: "desc",
 		},
 		{
-			"protocol":  "tcp",
-			"from_port": int64(80),
-			"to_port":   int64(80),
-			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+			names.AttrProtocol: "tcp",
+			"from_port":        int64(80),
+			"to_port":          int64(80),
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
 				"sg-22222",
 			}),
 		},
 		{
-			"protocol":        "-1",
-			"from_port":       int64(0),
-			"to_port":         int64(0),
-			"prefix_list_ids": []string{"pl-12345678"},
-			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+			names.AttrProtocol: "-1",
+			"from_port":        int64(0),
+			"to_port":          int64(0),
+			"prefix_list_ids":  []string{"pl-12345678"},
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
 				"sg-22222",
 			}),
 			names.AttrDescription: "desc",
@@ -478,9 +478,9 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 					}
 				}
 
-				if _, ok := i["security_groups"]; ok {
-					outSet := i["security_groups"].(*schema.Set)
-					localSet := l["security_groups"].(*schema.Set)
+				if _, ok := i[names.AttrSecurityGroups]; ok {
+					outSet := i[names.AttrSecurityGroups].(*schema.Set)
+					localSet := l[names.AttrSecurityGroups].(*schema.Set)
 
 					if !outSet.Equal(localSet) {
 						t.Fatalf("Security Group sets are not equal")
@@ -498,21 +498,21 @@ func TestExpandIPPerms(t *testing.T) {
 
 	expanded := []interface{}{
 		map[string]interface{}{
-			"protocol":    "icmp",
-			"from_port":   1,
-			"to_port":     -1,
-			"cidr_blocks": []interface{}{"0.0.0.0/0"},
-			"security_groups": schema.NewSet(hash, []interface{}{
+			names.AttrProtocol: "icmp",
+			"from_port":        1,
+			"to_port":          -1,
+			"cidr_blocks":      []interface{}{"0.0.0.0/0"},
+			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
 				"sg-11111",
 				"foo/sg-22222",
 			}),
 			names.AttrDescription: "desc",
 		},
 		map[string]interface{}{
-			"protocol":  "icmp",
-			"from_port": 1,
-			"to_port":   -1,
-			"self":      true,
+			names.AttrProtocol: "icmp",
+			"from_port":        1,
+			"to_port":          -1,
+			"self":             true,
 		},
 	}
 	group := &ec2.SecurityGroup{
@@ -615,11 +615,11 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 
 	expanded := []interface{}{
 		map[string]interface{}{
-			"protocol":    "-1",
-			"from_port":   0,
-			"to_port":     0,
-			"cidr_blocks": []interface{}{"0.0.0.0/0"},
-			"security_groups": schema.NewSet(hash, []interface{}{
+			names.AttrProtocol: "-1",
+			"from_port":        0,
+			"to_port":          0,
+			"cidr_blocks":      []interface{}{"0.0.0.0/0"},
+			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
 				"sg-11111",
 				"foo/sg-22222",
 			}),
@@ -681,11 +681,11 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 	// or to_port is not zero, but protocol is "-1".
 	errorCase := []interface{}{
 		map[string]interface{}{
-			"protocol":    "-1",
-			"from_port":   0,
-			"to_port":     65535,
-			"cidr_blocks": []interface{}{"0.0.0.0/0"},
-			"security_groups": schema.NewSet(hash, []interface{}{
+			names.AttrProtocol: "-1",
+			"from_port":        0,
+			"to_port":          65535,
+			"cidr_blocks":      []interface{}{"0.0.0.0/0"},
+			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
 				"sg-11111",
 				"foo/sg-22222",
 			}),
@@ -709,11 +709,11 @@ func TestExpandIPPerms_AllProtocol(t *testing.T) {
 
 	expanded := []interface{}{
 		map[string]interface{}{
-			"protocol":    "all",
-			"from_port":   0,
-			"to_port":     0,
-			"cidr_blocks": []interface{}{"0.0.0.0/0"},
-			"security_groups": schema.NewSet(hash, []interface{}{
+			names.AttrProtocol: "all",
+			"from_port":        0,
+			"to_port":          0,
+			"cidr_blocks":      []interface{}{"0.0.0.0/0"},
+			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
 				"sg-11111",
 				"foo/sg-22222",
 			}),
@@ -775,11 +775,11 @@ func TestExpandIPPerms_AllProtocol(t *testing.T) {
 	// or to_port is not zero, but protocol is "all".
 	errorCase := []interface{}{
 		map[string]interface{}{
-			"protocol":    "all",
-			"from_port":   0,
-			"to_port":     65535,
-			"cidr_blocks": []interface{}{"0.0.0.0/0"},
-			"security_groups": schema.NewSet(hash, []interface{}{
+			names.AttrProtocol: "all",
+			"from_port":        0,
+			"to_port":          65535,
+			"cidr_blocks":      []interface{}{"0.0.0.0/0"},
+			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
 				"sg-11111",
 				"foo/sg-22222",
 			}),
@@ -891,13 +891,13 @@ func TestAccVPCSecurityGroup_basic(t *testing.T) {
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`security-group/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "revoke_rules_on_delete", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "revoke_rules_on_delete", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 				),
 			},
@@ -989,7 +989,7 @@ func TestAccVPCSecurityGroup_nameGenerated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -1020,7 +1020,7 @@ func TestAccVPCSecurityGroup_nameTerraformPrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 				),
 			},
 			{
@@ -1050,7 +1050,7 @@ func TestAccVPCSecurityGroup_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -1081,7 +1081,7 @@ func TestAccVPCSecurityGroup_namePrefixTerraform(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "terraform-test"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-test"),
 				),
 			},
 			{
@@ -1089,53 +1089,6 @@ func TestAccVPCSecurityGroup_namePrefixTerraform(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
-			},
-		},
-	})
-}
-
-func TestAccVPCSecurityGroup_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
-	resourceName := "aws_security_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCSecurityGroupConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
-			},
-			{
-				Config: testAccVPCSecurityGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccVPCSecurityGroupConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
 			},
 		},
 	})
@@ -1269,7 +1222,7 @@ func TestAccVPCSecurityGroup_egressMode(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_egressModeBlocks(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &securityGroup1),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct2),
 				),
 			},
 			{
@@ -1282,14 +1235,14 @@ func TestAccVPCSecurityGroup_egressMode(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_egressModeNoBlocks(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &securityGroup2),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccVPCSecurityGroupConfig_egressModeZeroed(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &securityGroup3),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct0),
 				),
 			},
 		},
@@ -1312,7 +1265,7 @@ func TestAccVPCSecurityGroup_ingressMode(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_ingressModeBlocks(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &securityGroup1),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct2),
 				),
 			},
 			{
@@ -1325,14 +1278,14 @@ func TestAccVPCSecurityGroup_ingressMode(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_ingressModeNoBlocks(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &securityGroup2),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccVPCSecurityGroupConfig_ingressModeZeroed(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &securityGroup3),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct0),
 				),
 			},
 		},
@@ -1356,76 +1309,76 @@ func TestAccVPCSecurityGroup_ruleGathering(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						"cidr_blocks.#":       "0",
+						"cidr_blocks.#":       acctest.Ct0,
 						names.AttrDescription: "egress for all ipv6",
-						"from_port":           "0",
-						"ipv6_cidr_blocks.#":  "1",
+						"from_port":           acctest.Ct0,
+						"ipv6_cidr_blocks.#":  acctest.Ct1,
 						"ipv6_cidr_blocks.0":  "::/0",
-						"prefix_list_ids.#":   "0",
-						"protocol":            "-1",
-						"security_groups.#":   "0",
-						"self":                "false",
-						"to_port":             "0",
+						"prefix_list_ids.#":   acctest.Ct0,
+						names.AttrProtocol:    "-1",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
+						"to_port":             acctest.Ct0,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						"cidr_blocks.#":       "1",
+						"cidr_blocks.#":       acctest.Ct1,
 						"cidr_blocks.0":       "0.0.0.0/0",
 						names.AttrDescription: "egress for all ipv4",
-						"from_port":           "0",
-						"ipv6_cidr_blocks.#":  "0",
-						"prefix_list_ids.#":   "0",
-						"protocol":            "-1",
-						"security_groups.#":   "0",
-						"self":                "false",
-						"to_port":             "0",
+						"from_port":           acctest.Ct0,
+						"ipv6_cidr_blocks.#":  acctest.Ct0,
+						"prefix_list_ids.#":   acctest.Ct0,
+						names.AttrProtocol:    "-1",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
+						"to_port":             acctest.Ct0,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "5"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"cidr_blocks.#":       "1",
+						"cidr_blocks.#":       acctest.Ct1,
 						"cidr_blocks.0":       "192.168.0.0/16",
 						names.AttrDescription: "ingress from 192.168.0.0/16",
 						"from_port":           "80",
-						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						"ipv6_cidr_blocks.#":  acctest.Ct0,
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "80",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"cidr_blocks.#":       "0",
+						"cidr_blocks.#":       acctest.Ct0,
 						names.AttrDescription: "ingress from all ipv6",
 						"from_port":           "80",
-						"ipv6_cidr_blocks.#":  "1",
+						"ipv6_cidr_blocks.#":  acctest.Ct1,
 						"ipv6_cidr_blocks.0":  "::/0",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "80",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"cidr_blocks.#":       "2",
+						"cidr_blocks.#":       acctest.Ct2,
 						"cidr_blocks.0":       "10.0.2.0/24",
 						"cidr_blocks.1":       "10.0.3.0/24",
 						names.AttrDescription: "ingress from 10.0.0.0/16",
 						"from_port":           "80",
-						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						"ipv6_cidr_blocks.#":  acctest.Ct0,
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "80",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"cidr_blocks.#":       "2",
+						"cidr_blocks.#":       acctest.Ct2,
 						"cidr_blocks.0":       "10.0.0.0/24",
 						"cidr_blocks.1":       "10.0.1.0/24",
 						names.AttrDescription: "",
 						"from_port":           "80",
-						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "true",
+						"ipv6_cidr_blocks.#":  acctest.Ct0,
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtTrue,
 						"to_port":             "80",
 					}),
 				),
@@ -1622,40 +1575,40 @@ func TestAccVPCSecurityGroup_change(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_changed(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						"cidr_blocks.#":       "1",
+						"cidr_blocks.#":       acctest.Ct1,
 						"cidr_blocks.0":       "10.0.0.0/8",
 						names.AttrDescription: "",
 						"from_port":           "80",
-						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						"ipv6_cidr_blocks.#":  acctest.Ct0,
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "8000",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"cidr_blocks.#":       "1",
+						"cidr_blocks.#":       acctest.Ct1,
 						"cidr_blocks.0":       "10.0.0.0/8",
 						names.AttrDescription: "",
 						"from_port":           "80",
-						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						"ipv6_cidr_blocks.#":  acctest.Ct0,
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "9000",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"cidr_blocks.#":       "2",
+						"cidr_blocks.#":       acctest.Ct2,
 						"cidr_blocks.0":       "0.0.0.0/0",
 						"cidr_blocks.1":       "10.0.0.0/8",
 						names.AttrDescription: "",
 						"from_port":           "80",
-						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						"ipv6_cidr_blocks.#":  acctest.Ct0,
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "8000",
 					}),
 				),
@@ -1681,28 +1634,28 @@ func TestAccVPCSecurityGroup_ipv6(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						"cidr_blocks.#":       "0",
+						"cidr_blocks.#":       acctest.Ct0,
 						names.AttrDescription: "",
 						"from_port":           "80",
-						"ipv6_cidr_blocks.#":  "1",
+						"ipv6_cidr_blocks.#":  acctest.Ct1,
 						"ipv6_cidr_blocks.0":  "::/0",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "8000",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"cidr_blocks.#":       "0",
+						"cidr_blocks.#":       acctest.Ct0,
 						names.AttrDescription: "",
 						"from_port":           "80",
-						"ipv6_cidr_blocks.#":  "1",
+						"ipv6_cidr_blocks.#":  acctest.Ct1,
 						"ipv6_cidr_blocks.0":  "::/0",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "8000",
 					}),
 				),
@@ -1743,12 +1696,12 @@ func TestAccVPCSecurityGroup_self(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_self(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"protocol":  "tcp",
-						"from_port": "80",
-						"to_port":   "8000",
-						"self":      "true",
+						names.AttrProtocol: "tcp",
+						"from_port":        "80",
+						"to_port":          "8000",
+						"self":             acctest.CtTrue,
 					}),
 					checkSelf,
 				),
@@ -1779,21 +1732,21 @@ func TestAccVPCSecurityGroup_vpc(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_vpc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"protocol":      "tcp",
-						"from_port":     "80",
-						"to_port":       "8000",
-						"cidr_blocks.#": "1",
-						"cidr_blocks.0": "10.0.0.0/8",
+						names.AttrProtocol: "tcp",
+						"from_port":        "80",
+						"to_port":          "8000",
+						"cidr_blocks.#":    acctest.Ct1,
+						"cidr_blocks.0":    "10.0.0.0/8",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						"protocol":      "tcp",
-						"from_port":     "80",
-						"to_port":       "8000",
-						"cidr_blocks.#": "1",
-						"cidr_blocks.0": "10.0.0.0/8",
+						names.AttrProtocol: "tcp",
+						"from_port":        "80",
+						"to_port":          "8000",
+						"cidr_blocks.#":    acctest.Ct1,
+						"cidr_blocks.0":    "10.0.0.0/8",
 					}),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 				),
@@ -1824,13 +1777,13 @@ func TestAccVPCSecurityGroup_vpcNegOneIngress(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_vpcNegativeOneIngress(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"protocol":      "-1",
-						"from_port":     "0",
-						"to_port":       "0",
-						"cidr_blocks.#": "1",
-						"cidr_blocks.0": "10.0.0.0/8",
+						names.AttrProtocol: "-1",
+						"from_port":        acctest.Ct0,
+						"to_port":          acctest.Ct0,
+						"cidr_blocks.#":    acctest.Ct1,
+						"cidr_blocks.0":    "10.0.0.0/8",
 					}),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 				),
@@ -1861,13 +1814,13 @@ func TestAccVPCSecurityGroup_vpcProtoNumIngress(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_vpcProtocolNumberIngress(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"protocol":      "50",
-						"from_port":     "0",
-						"to_port":       "0",
-						"cidr_blocks.#": "1",
-						"cidr_blocks.0": "10.0.0.0/8",
+						names.AttrProtocol: "50",
+						"from_port":        acctest.Ct0,
+						"to_port":          acctest.Ct0,
+						"cidr_blocks.#":    acctest.Ct1,
+						"cidr_blocks.0":    "10.0.0.0/8",
 					}),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 				),
@@ -1926,13 +1879,13 @@ func TestAccVPCSecurityGroup_vpcAllEgress(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_vpcAllEgress(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						"protocol":      "-1",
-						"from_port":     "0",
-						"to_port":       "0",
-						"cidr_blocks.#": "1",
-						"cidr_blocks.0": "10.0.0.0/8",
+						names.AttrProtocol: "-1",
+						"from_port":        acctest.Ct0,
+						"to_port":          acctest.Ct0,
+						"cidr_blocks.#":    acctest.Ct1,
+						"cidr_blocks.0":    "10.0.0.0/8",
 					}),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 				),
@@ -1963,29 +1916,29 @@ func TestAccVPCSecurityGroup_ruleDescription(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_ruleDescription(rName, "Egress description", "Ingress description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						"cidr_blocks.#":       "1",
+						"cidr_blocks.#":       acctest.Ct1,
 						"cidr_blocks.0":       "10.0.0.0/8",
 						names.AttrDescription: "Egress description",
 						"from_port":           "80",
-						"ipv6_cidr_blocks.#":  "0",
-						"prefix_list_ids.#":   "0",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						"ipv6_cidr_blocks.#":  acctest.Ct0,
+						"prefix_list_ids.#":   acctest.Ct0,
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "8000",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"cidr_blocks.#":       "1",
+						"cidr_blocks.#":       acctest.Ct1,
 						"cidr_blocks.0":       "10.0.0.0/8",
 						names.AttrDescription: "Ingress description",
 						"from_port":           "80",
-						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						"ipv6_cidr_blocks.#":  acctest.Ct0,
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "8000",
 					}),
 				),
@@ -2001,29 +1954,29 @@ func TestAccVPCSecurityGroup_ruleDescription(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_ruleDescription(rName, "New egress description", "New ingress description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						"cidr_blocks.#":       "1",
+						"cidr_blocks.#":       acctest.Ct1,
 						"cidr_blocks.0":       "10.0.0.0/8",
 						names.AttrDescription: "New egress description",
 						"from_port":           "80",
-						"ipv6_cidr_blocks.#":  "0",
-						"prefix_list_ids.#":   "0",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						"ipv6_cidr_blocks.#":  acctest.Ct0,
+						"prefix_list_ids.#":   acctest.Ct0,
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "8000",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"cidr_blocks.#":       "1",
+						"cidr_blocks.#":       acctest.Ct1,
 						"cidr_blocks.0":       "10.0.0.0/8",
 						names.AttrDescription: "New ingress description",
 						"from_port":           "80",
-						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						"ipv6_cidr_blocks.#":  acctest.Ct0,
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "8000",
 					}),
 				),
@@ -2033,26 +1986,26 @@ func TestAccVPCSecurityGroup_ruleDescription(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_emptyRuleDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						"cidr_blocks.#":       "1",
+						"cidr_blocks.#":       acctest.Ct1,
 						"cidr_blocks.0":       "10.0.0.0/8",
 						names.AttrDescription: "",
 						"from_port":           "80",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "8000",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"cidr_blocks.#":       "1",
+						"cidr_blocks.#":       acctest.Ct1,
 						"cidr_blocks.0":       "10.0.0.0/8",
 						names.AttrDescription: "",
 						"from_port":           "80",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "8000",
 					}),
 				),
@@ -2077,8 +2030,8 @@ func TestAccVPCSecurityGroup_defaultEgressVPC(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_defaultEgress(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct0),
 				),
 			},
 			{
@@ -2108,52 +2061,52 @@ func TestAccVPCSecurityGroup_driftComplex(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_driftComplex(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						"cidr_blocks.#":       "1",
+						"cidr_blocks.#":       acctest.Ct1,
 						"cidr_blocks.0":       "10.0.0.0/8",
 						names.AttrDescription: "",
 						"from_port":           "80",
-						"ipv6_cidr_blocks.#":  "0",
-						"prefix_list_ids.#":   "0",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						"ipv6_cidr_blocks.#":  acctest.Ct0,
+						"prefix_list_ids.#":   acctest.Ct0,
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "8000",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						"cidr_blocks.#":       "1",
+						"cidr_blocks.#":       acctest.Ct1,
 						"cidr_blocks.0":       "206.0.0.0/8",
 						names.AttrDescription: "",
 						"from_port":           "80",
-						"ipv6_cidr_blocks.#":  "0",
-						"prefix_list_ids.#":   "0",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						"ipv6_cidr_blocks.#":  acctest.Ct0,
+						"prefix_list_ids.#":   acctest.Ct0,
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "8000",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"cidr_blocks.#":       "1",
+						"cidr_blocks.#":       acctest.Ct1,
 						"cidr_blocks.0":       "10.0.0.0/8",
 						names.AttrDescription: "",
 						"from_port":           "80",
-						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						"ipv6_cidr_blocks.#":  acctest.Ct0,
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "8000",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"cidr_blocks.#":       "1",
+						"cidr_blocks.#":       acctest.Ct1,
 						"cidr_blocks.0":       "206.0.0.0/8",
 						names.AttrDescription: "",
 						"from_port":           "80",
-						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						"ipv6_cidr_blocks.#":  acctest.Ct0,
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "8000",
 					}),
 				),
@@ -2243,29 +2196,29 @@ func TestAccVPCSecurityGroup_ingressWithCIDRAndSGsVPC(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_ingressWithCIDRAndSGs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						"cidr_blocks.#":       "1",
+						"cidr_blocks.#":       acctest.Ct1,
 						"cidr_blocks.0":       "10.0.0.0/8",
 						names.AttrDescription: "",
 						"from_port":           "80",
-						"ipv6_cidr_blocks.#":  "0",
-						"prefix_list_ids.#":   "0",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						"ipv6_cidr_blocks.#":  acctest.Ct0,
+						"prefix_list_ids.#":   acctest.Ct0,
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "8000",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"cidr_blocks.#":       "1",
+						"cidr_blocks.#":       acctest.Ct1,
 						"cidr_blocks.0":       "192.168.0.1/32",
 						names.AttrDescription: "",
 						"from_port":           "22",
-						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
-						"security_groups.#":   "0",
-						"self":                "false",
+						"ipv6_cidr_blocks.#":  acctest.Ct0,
+						names.AttrProtocol:    "tcp",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
 						"to_port":             "22",
 					}),
 				),
@@ -2296,7 +2249,7 @@ func TestAccVPCSecurityGroup_egressWithPrefixList(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_prefixListEgress(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct1),
 				),
 			},
 			{
@@ -2325,7 +2278,7 @@ func TestAccVPCSecurityGroup_ingressWithPrefixList(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_prefixListIngress(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct1),
 				),
 			},
 			{
@@ -2354,32 +2307,32 @@ func TestAccVPCSecurityGroup_ipv4AndIPv6Egress(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_ipv4andIPv6Egress(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						"cidr_blocks.#":       "1",
+						"cidr_blocks.#":       acctest.Ct1,
 						"cidr_blocks.0":       "0.0.0.0/0",
 						names.AttrDescription: "",
-						"from_port":           "0",
-						"ipv6_cidr_blocks.#":  "0",
-						"prefix_list_ids.#":   "0",
-						"protocol":            "-1",
-						"security_groups.#":   "0",
-						"self":                "false",
-						"to_port":             "0",
+						"from_port":           acctest.Ct0,
+						"ipv6_cidr_blocks.#":  acctest.Ct0,
+						"prefix_list_ids.#":   acctest.Ct0,
+						names.AttrProtocol:    "-1",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
+						"to_port":             acctest.Ct0,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						"cidr_blocks.#":       "0",
+						"cidr_blocks.#":       acctest.Ct0,
 						names.AttrDescription: "",
-						"from_port":           "0",
-						"ipv6_cidr_blocks.#":  "1",
+						"from_port":           acctest.Ct0,
+						"ipv6_cidr_blocks.#":  acctest.Ct1,
 						"ipv6_cidr_blocks.0":  "::/0",
-						"prefix_list_ids.#":   "0",
-						"protocol":            "-1",
-						"security_groups.#":   "0",
-						"self":                "false",
-						"to_port":             "0",
+						"prefix_list_ids.#":   acctest.Ct0,
+						names.AttrProtocol:    "-1",
+						"security_groups.#":   acctest.Ct0,
+						"self":                acctest.CtFalse,
+						"to_port":             acctest.Ct0,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct0),
 				),
 			},
 			{
@@ -2408,8 +2361,8 @@ func TestAccVPCSecurityGroup_failWithDiffMismatch(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_failWithDiffMismatch(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct2),
 				),
 			},
 		},
@@ -2710,11 +2663,11 @@ func TestAccVPCSecurityGroup_emrDependencyViolation(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`security-group/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct1),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "revoke_rules_on_delete", "true"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revoke_rules_on_delete", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 				),
 				ExpectError: regexache.MustCompile("unexpected state"),
@@ -2995,49 +2948,6 @@ data "aws_vpc" "default" {
   default = true
 }
 `, rName)
-}
-
-func testAccVPCSecurityGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccVPCSecurityGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccVPCSecurityGroupConfig_getLimit() string {

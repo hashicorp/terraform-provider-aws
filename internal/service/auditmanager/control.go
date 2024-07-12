@@ -98,7 +98,7 @@ func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest
 						"source_set_up_option": schema.StringAttribute{
 							Required: true,
 						},
-						"source_type": schema.StringAttribute{
+						names.AttrSourceType: schema.StringAttribute{
 							Required: true,
 						},
 						"troubleshooting_text": schema.StringAttribute{
@@ -373,7 +373,7 @@ var (
 		"source_keyword":       types.ListType{ElemType: types.ObjectType{AttrTypes: sourceKeywordAttrTypes}},
 		"source_name":          types.StringType,
 		"source_set_up_option": types.StringType,
-		"source_type":          types.StringType,
+		names.AttrSourceType:   types.StringType,
 		"troubleshooting_text": types.StringType,
 	}
 
@@ -527,7 +527,7 @@ func flattenControlMappingSources(ctx context.Context, apiObject []awstypes.Cont
 			"source_keyword":       sk,
 			"source_name":          types.StringValue(aws.ToString(source.SourceName)),
 			"source_set_up_option": types.StringValue(string(source.SourceSetUpOption)),
-			"source_type":          types.StringValue(string(source.SourceType)),
+			names.AttrSourceType:   types.StringValue(string(source.SourceType)),
 			"troubleshooting_text": flex.StringToFramework(ctx, source.TroubleshootingText),
 		}
 		objVal, d := types.ObjectValue(controlMappingSourceAttrTypes, obj)

@@ -29,7 +29,7 @@ func dataSourceVPCLink() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -62,7 +62,7 @@ func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(vpcLinkID)
 	d.Set(names.AttrARN, vpcLinkARN(meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrName, output.Name)
-	d.Set("security_group_ids", output.SecurityGroupIds)
+	d.Set(names.AttrSecurityGroupIDs, output.SecurityGroupIds)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)
 
 	setTagsOut(ctx, output.Tags)

@@ -44,7 +44,7 @@ func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_logs": {
+						names.AttrCloudWatchLogs: {
 							Type:             schema.TypeList,
 							MaxItems:         1,
 							Optional:         true,
@@ -97,7 +97,7 @@ func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -111,7 +111,7 @@ func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 										Type:     schema.TypeBool,
 										Required: true,
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -163,8 +163,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationRead(ctx context.Context,
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	vaiID := d.Id()
-
-	output, err := FindVerifiedAccessInstanceLoggingConfigurationByInstanceID(ctx, conn, vaiID)
+	output, err := findVerifiedAccessInstanceLoggingConfigurationByInstanceID(ctx, conn, vaiID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Verified Access Instance Logging Configuration (%s) not found, removing from state", vaiID)
@@ -278,7 +277,7 @@ func expandVerifiedAccessInstanceAccessLogs(accessLogs []interface{}) *types.Ver
 
 	result := &types.VerifiedAccessLogOptions{}
 
-	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 {
 		result.CloudWatchLogs = expandVerifiedAccessLogCloudWatchLogs(v)
 	}
 
@@ -357,7 +356,7 @@ func expandVerifiedAccessLogS3(s3 []interface{}) *types.VerifiedAccessLogS3Desti
 		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		result.BucketName = aws.String(v)
 	}
 
@@ -369,7 +368,7 @@ func expandVerifiedAccessLogS3(s3 []interface{}) *types.VerifiedAccessLogS3Desti
 		}
 	}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		result.Prefix = aws.String(v)
 	}
 
@@ -380,7 +379,7 @@ func flattenVerifiedAccessInstanceAccessLogs(apiObject *types.VerifiedAccessLogs
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CloudWatchLogs; v != nil {
-		tfMap["cloudwatch_logs"] = flattenVerifiedAccessLogCloudWatchLogs(v)
+		tfMap[names.AttrCloudWatchLogs] = flattenVerifiedAccessLogCloudWatchLogs(v)
 	}
 
 	if v := apiObject.IncludeTrustContext; v != nil {
@@ -432,7 +431,7 @@ func flattenVerifiedAccessLogS3(apiObject *types.VerifiedAccessLogS3Destination)
 	}
 
 	if v := apiObject.BucketName; v != nil {
-		tfMap["bucket_name"] = aws.ToString(v)
+		tfMap[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	if v := apiObject.BucketOwner; v != nil {
@@ -440,7 +439,7 @@ func flattenVerifiedAccessLogS3(apiObject *types.VerifiedAccessLogS3Destination)
 	}
 
 	if v := apiObject.Prefix; v != nil {
-		tfMap["prefix"] = aws.ToString(v)
+		tfMap[names.AttrPrefix] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}

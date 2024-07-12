@@ -102,7 +102,7 @@ func ResourceFleet() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidCIDRNetworkAddress,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(gamelift.IpProtocol_Values(), false),
@@ -484,7 +484,7 @@ func expandIPPermission(cfg map[string]interface{}) *gamelift.IpPermission {
 	return &gamelift.IpPermission{
 		FromPort: aws.Int64(int64(cfg["from_port"].(int))),
 		IpRange:  aws.String(cfg["ip_range"].(string)),
-		Protocol: aws.String(cfg["protocol"].(string)),
+		Protocol: aws.String(cfg[names.AttrProtocol].(string)),
 		ToPort:   aws.Int64(int64(cfg["to_port"].(int))),
 	}
 }
@@ -517,7 +517,7 @@ func flattenIPPermission(apiObject *gamelift.IpPermission) map[string]interface{
 
 	tfMap["from_port"] = aws.Int64Value(apiObject.FromPort)
 	tfMap["to_port"] = aws.Int64Value(apiObject.ToPort)
-	tfMap["protocol"] = aws.StringValue(apiObject.Protocol)
+	tfMap[names.AttrProtocol] = aws.StringValue(apiObject.Protocol)
 	tfMap["ip_range"] = aws.StringValue(apiObject.IpRange)
 
 	return tfMap

@@ -37,10 +37,10 @@ func TestAccMemoryDBACL_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "acl/"+rName),
 					resource.TestCheckResourceAttrSet(resourceName, "minimum_engine_version"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
-					resource.TestCheckResourceAttr(resourceName, "user_names.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "user_names.*", "aws_memorydb_user.test.0", "user_name"),
+					resource.TestCheckResourceAttr(resourceName, "user_names.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "user_names.*", "aws_memorydb_user.test.0", names.AttrUserName),
 				),
 			},
 			{
@@ -90,7 +90,7 @@ func TestAccMemoryDBACL_nameGenerated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 				),
 			},
 		},
@@ -112,7 +112,7 @@ func TestAccMemoryDBACL_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tftest-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tftest-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tftest-"),
 				),
 			},
 		},
@@ -134,8 +134,8 @@ func TestAccMemoryDBACL_update_tags(t *testing.T) {
 				Config: testAccACLConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -144,15 +144,15 @@ func TestAccMemoryDBACL_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccACLConfig_tags2(rName, "Key1", "value1", "Key2", "value2"),
+				Config: testAccACLConfig_tags2(rName, "Key1", acctest.CtValue1, "Key2", acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "value2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", acctest.CtValue2),
 				),
 			},
 			{
@@ -161,13 +161,13 @@ func TestAccMemoryDBACL_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccACLConfig_tags1(rName, "Key1", "value1"),
+				Config: testAccACLConfig_tags1(rName, "Key1", acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -179,8 +179,8 @@ func TestAccMemoryDBACL_update_tags(t *testing.T) {
 				Config: testAccACLConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -211,7 +211,7 @@ func TestAccMemoryDBACL_update_userNames(t *testing.T) {
 				Config: testAccACLConfig_basic(rName, []string{}, []string{}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "user_names.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "user_names.#", acctest.Ct0),
 				),
 			},
 			{
@@ -224,7 +224,7 @@ func TestAccMemoryDBACL_update_userNames(t *testing.T) {
 				Config: testAccACLConfig_basic(rName, []string{user1, user2}, []string{user1, user2}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "user_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "user_names.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "user_names.*", user1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "user_names.*", user2),
 				),
@@ -239,7 +239,7 @@ func TestAccMemoryDBACL_update_userNames(t *testing.T) {
 				Config: testAccACLConfig_basic(rName, []string{user1, user2, user3}, []string{user1, user3}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "user_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "user_names.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "user_names.*", user1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "user_names.*", user3),
 				),
@@ -254,7 +254,7 @@ func TestAccMemoryDBACL_update_userNames(t *testing.T) {
 				Config: testAccACLConfig_basic(rName, []string{user1, user2, user3}, []string{user1}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "user_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_names.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "user_names.*", user1),
 				),
 			},
@@ -267,7 +267,7 @@ func TestAccMemoryDBACL_update_userNames(t *testing.T) {
 				Config: testAccACLConfig_basic(rName, []string{user1, user2}, []string{user1, user2}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "user_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "user_names.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "user_names.*", user1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "user_names.*", user2),
 				),
@@ -282,7 +282,7 @@ func TestAccMemoryDBACL_update_userNames(t *testing.T) {
 				Config: testAccACLConfig_basic(rName, []string{user1}, []string{user1}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "user_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_names.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "user_names.*", user1),
 				),
 			},

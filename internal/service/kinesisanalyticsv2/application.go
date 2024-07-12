@@ -385,7 +385,7 @@ func ResourceApplication() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"resource_arn": {
+																		names.AttrResourceARN: {
 																			Type:         schema.TypeString,
 																			Required:     true,
 																			ValidateFunc: verify.ValidARN,
@@ -523,7 +523,7 @@ func ResourceApplication() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"resource_arn": {
+															names.AttrResourceARN: {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: verify.ValidARN,
@@ -542,7 +542,7 @@ func ResourceApplication() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"resource_arn": {
+															names.AttrResourceARN: {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: verify.ValidARN,
@@ -555,7 +555,7 @@ func ResourceApplication() *schema.Resource {
 													},
 												},
 
-												"name_prefix": {
+												names.AttrNamePrefix: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -594,7 +594,7 @@ func ResourceApplication() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"resource_arn": {
+															names.AttrResourceARN: {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: verify.ValidARN,
@@ -609,7 +609,7 @@ func ResourceApplication() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"resource_arn": {
+															names.AttrResourceARN: {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: verify.ValidARN,
@@ -624,7 +624,7 @@ func ResourceApplication() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"resource_arn": {
+															names.AttrResourceARN: {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: verify.ValidARN,
@@ -785,7 +785,7 @@ func ResourceApplication() *schema.Resource {
 													},
 												},
 
-												"table_name": {
+												names.AttrTableName: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 32),
@@ -804,13 +804,13 @@ func ResourceApplication() *schema.Resource {
 							},
 						},
 
-						"vpc_configuration": {
+						names.AttrVPCConfiguration: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"security_group_ids": {
+									names.AttrSecurityGroupIDs: {
 										Type:     schema.TypeSet,
 										Required: true,
 										MinItems: 1,
@@ -846,6 +846,14 @@ func ResourceApplication() *schema.Resource {
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"application_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(kinesisanalyticsv2.ApplicationMode_Values(), false),
 			},
 
 			"cloudwatch_logging_options": {
@@ -949,6 +957,10 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		Tags:                     getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("application_mode"); ok {
+		input.ApplicationMode = aws.String(v.(string))
+	}
+
 	outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {
 		return conn.CreateApplicationWithContext(ctx, input)
 	})
@@ -992,6 +1004,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrARN, arn)
 	d.Set("create_timestamp", aws.TimeValue(application.CreateTimestamp).Format(time.RFC3339))
 	d.Set(names.AttrDescription, application.ApplicationDescription)
+	d.Set("application_mode", application.ApplicationMode)
 	d.Set("last_update_timestamp", aws.TimeValue(application.LastUpdateTimestamp).Format(time.RFC3339))
 	d.Set(names.AttrName, application.ApplicationName)
 	d.Set("runtime_environment", application.RuntimeEnvironment)
@@ -1793,7 +1806,7 @@ func expandApplicationConfiguration(vApplicationConfiguration []interface{}) *ki
 		applicationConfiguration.SqlApplicationConfiguration = sqlApplicationConfiguration
 	}
 
-	if vVpcConfiguration, ok := mApplicationConfiguration["vpc_configuration"].([]interface{}); ok && len(vVpcConfiguration) > 0 && vVpcConfiguration[0] != nil {
+	if vVpcConfiguration, ok := mApplicationConfiguration[names.AttrVPCConfiguration].([]interface{}); ok && len(vVpcConfiguration) > 0 && vVpcConfiguration[0] != nil {
 		applicationConfiguration.VpcConfigurations = []*kinesisanalyticsv2.VpcConfiguration{expandVPCConfiguration(vVpcConfiguration)}
 	}
 
@@ -2010,7 +2023,7 @@ func expandInput(vInput []interface{}) *kinesisanalyticsv2.Input {
 
 		mKinesisFirehoseInput := vKinesisFirehoseInput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mKinesisFirehoseInput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mKinesisFirehoseInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisFirehoseInput.ResourceARN = aws.String(vResourceArn)
 		}
 
@@ -2022,14 +2035,14 @@ func expandInput(vInput []interface{}) *kinesisanalyticsv2.Input {
 
 		mKinesisStreamsInput := vKinesisStreamsInput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mKinesisStreamsInput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mKinesisStreamsInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisStreamsInput.ResourceARN = aws.String(vResourceArn)
 		}
 
 		input.KinesisStreamsInput = kinesisStreamsInput
 	}
 
-	if vNamePrefix, ok := mInput["name_prefix"].(string); ok && vNamePrefix != "" {
+	if vNamePrefix, ok := mInput[names.AttrNamePrefix].(string); ok && vNamePrefix != "" {
 		input.NamePrefix = aws.String(vNamePrefix)
 	}
 
@@ -2050,7 +2063,7 @@ func expandInputProcessingConfiguration(vInputProcessingConfiguration []interfac
 
 		mInputLambdaProcessor := vInputLambdaProcessor[0].(map[string]interface{})
 
-		if vResourceArn, ok := mInputLambdaProcessor["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mInputLambdaProcessor[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			inputLambdaProcessor.ResourceARN = aws.String(vResourceArn)
 		}
 
@@ -2095,7 +2108,7 @@ func expandInputUpdate(vInput []interface{}) *kinesisanalyticsv2.InputUpdate {
 
 			mInputLambdaProcessor := vInputLambdaProcessor[0].(map[string]interface{})
 
-			if vResourceArn, ok := mInputLambdaProcessor["resource_arn"].(string); ok && vResourceArn != "" {
+			if vResourceArn, ok := mInputLambdaProcessor[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 				inputLambdaProcessorUpdate.ResourceARNUpdate = aws.String(vResourceArn)
 			}
 
@@ -2130,7 +2143,7 @@ func expandInputUpdate(vInput []interface{}) *kinesisanalyticsv2.InputUpdate {
 
 		mKinesisFirehoseInput := vKinesisFirehoseInput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mKinesisFirehoseInput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mKinesisFirehoseInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisFirehoseInputUpdate.ResourceARNUpdate = aws.String(vResourceArn)
 		}
 
@@ -2142,14 +2155,14 @@ func expandInputUpdate(vInput []interface{}) *kinesisanalyticsv2.InputUpdate {
 
 		mKinesisStreamsInput := vKinesisStreamsInput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mKinesisStreamsInput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mKinesisStreamsInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisStreamsInputUpdate.ResourceARNUpdate = aws.String(vResourceArn)
 		}
 
 		inputUpdate.KinesisStreamsInputUpdate = kinesisStreamsInputUpdate
 	}
 
-	if vNamePrefix, ok := mInput["name_prefix"].(string); ok && vNamePrefix != "" {
+	if vNamePrefix, ok := mInput[names.AttrNamePrefix].(string); ok && vNamePrefix != "" {
 		inputUpdate.NamePrefixUpdate = aws.String(vNamePrefix)
 	}
 
@@ -2182,7 +2195,7 @@ func expandOutput(vOutput interface{}) *kinesisanalyticsv2.Output {
 
 		mKinesisFirehoseOutput := vKinesisFirehoseOutput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mKinesisFirehoseOutput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mKinesisFirehoseOutput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisFirehoseOutput.ResourceARN = aws.String(vResourceArn)
 		}
 
@@ -2194,7 +2207,7 @@ func expandOutput(vOutput interface{}) *kinesisanalyticsv2.Output {
 
 		mKinesisStreamsOutput := vKinesisStreamsOutput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mKinesisStreamsOutput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mKinesisStreamsOutput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisStreamsOutput.ResourceARN = aws.String(vResourceArn)
 		}
 
@@ -2206,7 +2219,7 @@ func expandOutput(vOutput interface{}) *kinesisanalyticsv2.Output {
 
 		mLambdaOutput := vLambdaOutput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mLambdaOutput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mLambdaOutput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			lambdaOutput.ResourceARN = aws.String(vResourceArn)
 		}
 
@@ -2366,7 +2379,7 @@ func expandReferenceDataSource(vReferenceDataSource []interface{}) *kinesisanaly
 		referenceDataSource.S3ReferenceDataSource = s3ReferenceDataSource
 	}
 
-	if vTableName, ok := mReferenceDataSource["table_name"].(string); ok && vTableName != "" {
+	if vTableName, ok := mReferenceDataSource[names.AttrTableName].(string); ok && vTableName != "" {
 		referenceDataSource.TableName = aws.String(vTableName)
 	}
 
@@ -2405,7 +2418,7 @@ func expandReferenceDataSourceUpdate(vReferenceDataSource []interface{}) *kinesi
 		referenceDataSourceUpdate.S3ReferenceDataSourceUpdate = s3ReferenceDataSourceUpdate
 	}
 
-	if vTableName, ok := mReferenceDataSource["table_name"].(string); ok && vTableName != "" {
+	if vTableName, ok := mReferenceDataSource[names.AttrTableName].(string); ok && vTableName != "" {
 		referenceDataSourceUpdate.TableNameUpdate = aws.String(vTableName)
 	}
 
@@ -2445,7 +2458,7 @@ func expandVPCConfiguration(vVpcConfiguration []interface{}) *kinesisanalyticsv2
 
 	mVpcConfiguration := vVpcConfiguration[0].(map[string]interface{})
 
-	if vSecurityGroupIds, ok := mVpcConfiguration["security_group_ids"].(*schema.Set); ok && vSecurityGroupIds.Len() > 0 {
+	if vSecurityGroupIds, ok := mVpcConfiguration[names.AttrSecurityGroupIDs].(*schema.Set); ok && vSecurityGroupIds.Len() > 0 {
 		vpcConfiguration.SecurityGroupIds = flex.ExpandStringSet(vSecurityGroupIds)
 	}
 
@@ -2465,7 +2478,7 @@ func expandVPCConfigurationUpdate(vVpcConfiguration []interface{}) *kinesisanaly
 
 	mVpcConfiguration := vVpcConfiguration[0].(map[string]interface{})
 
-	if vSecurityGroupIds, ok := mVpcConfiguration["security_group_ids"].(*schema.Set); ok && vSecurityGroupIds.Len() > 0 {
+	if vSecurityGroupIds, ok := mVpcConfiguration[names.AttrSecurityGroupIDs].(*schema.Set); ok && vSecurityGroupIds.Len() > 0 {
 		vpcConfigurationUpdate.SecurityGroupIdUpdates = flex.ExpandStringSet(vSecurityGroupIds)
 	}
 
@@ -2652,7 +2665,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 			mInput := map[string]interface{}{
 				"in_app_stream_names": flex.FlattenStringList(inputDescription.InAppStreamNames),
 				"input_id":            aws.StringValue(inputDescription.InputId),
-				"name_prefix":         aws.StringValue(inputDescription.NamePrefix),
+				names.AttrNamePrefix:  aws.StringValue(inputDescription.NamePrefix),
 			}
 
 			if inputParallelism := inputDescription.InputParallelism; inputParallelism != nil {
@@ -2672,7 +2685,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 
 				if inputLambdaProcessorDescription := inputProcessingConfigurationDescription.InputLambdaProcessorDescription; inputLambdaProcessorDescription != nil {
 					mInputLambdaProcessor := map[string]interface{}{
-						"resource_arn": aws.StringValue(inputLambdaProcessorDescription.ResourceARN),
+						names.AttrResourceARN: aws.StringValue(inputLambdaProcessorDescription.ResourceARN),
 					}
 
 					mInputProcessingConfiguration["input_lambda_processor"] = []interface{}{mInputLambdaProcessor}
@@ -2691,7 +2704,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 
 			if kinesisFirehoseInputDescription := inputDescription.KinesisFirehoseInputDescription; kinesisFirehoseInputDescription != nil {
 				mKinesisFirehoseInput := map[string]interface{}{
-					"resource_arn": aws.StringValue(kinesisFirehoseInputDescription.ResourceARN),
+					names.AttrResourceARN: aws.StringValue(kinesisFirehoseInputDescription.ResourceARN),
 				}
 
 				mInput["kinesis_firehose_input"] = []interface{}{mKinesisFirehoseInput}
@@ -2699,7 +2712,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 
 			if kinesisStreamsInputDescription := inputDescription.KinesisStreamsInputDescription; kinesisStreamsInputDescription != nil {
 				mKinesisStreamsInput := map[string]interface{}{
-					"resource_arn": aws.StringValue(kinesisStreamsInputDescription.ResourceARN),
+					names.AttrResourceARN: aws.StringValue(kinesisStreamsInputDescription.ResourceARN),
 				}
 
 				mInput["kinesis_streams_input"] = []interface{}{mKinesisStreamsInput}
@@ -2728,7 +2741,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 
 					if kinesisFirehoseOutputDescription := outputDescription.KinesisFirehoseOutputDescription; kinesisFirehoseOutputDescription != nil {
 						mKinesisFirehoseOutput := map[string]interface{}{
-							"resource_arn": aws.StringValue(kinesisFirehoseOutputDescription.ResourceARN),
+							names.AttrResourceARN: aws.StringValue(kinesisFirehoseOutputDescription.ResourceARN),
 						}
 
 						mOutput["kinesis_firehose_output"] = []interface{}{mKinesisFirehoseOutput}
@@ -2736,7 +2749,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 
 					if kinesisStreamsOutputDescription := outputDescription.KinesisStreamsOutputDescription; kinesisStreamsOutputDescription != nil {
 						mKinesisStreamsOutput := map[string]interface{}{
-							"resource_arn": aws.StringValue(kinesisStreamsOutputDescription.ResourceARN),
+							names.AttrResourceARN: aws.StringValue(kinesisStreamsOutputDescription.ResourceARN),
 						}
 
 						mOutput["kinesis_streams_output"] = []interface{}{mKinesisStreamsOutput}
@@ -2744,7 +2757,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 
 					if lambdaOutputDescription := outputDescription.LambdaOutputDescription; lambdaOutputDescription != nil {
 						mLambdaOutput := map[string]interface{}{
-							"resource_arn": aws.StringValue(lambdaOutputDescription.ResourceARN),
+							names.AttrResourceARN: aws.StringValue(lambdaOutputDescription.ResourceARN),
 						}
 
 						mOutput["lambda_output"] = []interface{}{mLambdaOutput}
@@ -2761,8 +2774,8 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 			referenceDataSourceDescription := referenceDataSourceDescriptions[0]
 
 			mReferenceDataSource := map[string]interface{}{
-				"reference_id": aws.StringValue(referenceDataSourceDescription.ReferenceId),
-				"table_name":   aws.StringValue(referenceDataSourceDescription.TableName),
+				"reference_id":      aws.StringValue(referenceDataSourceDescription.ReferenceId),
+				names.AttrTableName: aws.StringValue(referenceDataSourceDescription.TableName),
 			}
 
 			if referenceSchema := referenceDataSourceDescription.ReferenceSchema; referenceSchema != nil {
@@ -2788,13 +2801,13 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 		vpcConfigurationDescription := vpcConfigurationDescriptions[0]
 
 		mVpcConfiguration := map[string]interface{}{
-			"security_group_ids":   flex.FlattenStringSet(vpcConfigurationDescription.SecurityGroupIds),
-			names.AttrSubnetIDs:    flex.FlattenStringSet(vpcConfigurationDescription.SubnetIds),
-			"vpc_configuration_id": aws.StringValue(vpcConfigurationDescription.VpcConfigurationId),
-			names.AttrVPCID:        aws.StringValue(vpcConfigurationDescription.VpcId),
+			names.AttrSecurityGroupIDs: flex.FlattenStringSet(vpcConfigurationDescription.SecurityGroupIds),
+			names.AttrSubnetIDs:        flex.FlattenStringSet(vpcConfigurationDescription.SubnetIds),
+			"vpc_configuration_id":     aws.StringValue(vpcConfigurationDescription.VpcConfigurationId),
+			names.AttrVPCID:            aws.StringValue(vpcConfigurationDescription.VpcId),
 		}
 
-		mApplicationConfiguration["vpc_configuration"] = []interface{}{mVpcConfiguration}
+		mApplicationConfiguration[names.AttrVPCConfiguration] = []interface{}{mVpcConfiguration}
 	}
 
 	return []interface{}{mApplicationConfiguration}

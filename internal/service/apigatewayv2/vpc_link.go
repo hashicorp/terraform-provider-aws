@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_apigatewayv2_vpc_link", name="VPC Link")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigatewayv2;apigatewayv2.GetVpcLinkOutput")
 func resourceVPCLink() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCLinkCreate,
@@ -51,7 +52,7 @@ func resourceVPCLink() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
@@ -78,7 +79,7 @@ func resourceVPCLinkCreate(ctx context.Context, d *schema.ResourceData, meta int
 	name := d.Get(names.AttrName).(string)
 	input := &apigatewayv2.CreateVpcLinkInput{
 		Name:             aws.String(name),
-		SecurityGroupIds: flex.ExpandStringValueSet(d.Get("security_group_ids").(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroupIDs).(*schema.Set)),
 		SubnetIds:        flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		Tags:             getTagsIn(ctx),
 	}
@@ -116,7 +117,7 @@ func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set(names.AttrARN, vpcLinkARN(meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrName, output.Name)
-	d.Set("security_group_ids", output.SecurityGroupIds)
+	d.Set(names.AttrSecurityGroupIDs, output.SecurityGroupIds)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)
 
 	setTagsOut(ctx, output.Tags)

@@ -55,7 +55,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_logs": {
+						names.AttrCloudWatchLogs: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
@@ -70,7 +70,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"log_group_name": {
+									names.AttrLogGroupName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_./#-]{1,512}$`), "must contain only lowercase alphanumeric characters, hyphen, dot, underscore, forward slash, or hash sign, and between 1 and 512 characters"),
@@ -116,7 +116,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z.-]{3,63}$`), "must contain only lowercase alphanumeric characters, hyphen, or dot, and between 3 and 63 characters"),
@@ -282,7 +282,7 @@ func flattenDestinationConfiguration(apiObject types.DestinationConfiguration) [
 
 	switch v := apiObject.(type) {
 	case *types.DestinationConfigurationMemberCloudWatchLogs:
-		m["cloudwatch_logs"] = flattenCloudWatchDestinationConfiguration(v.Value)
+		m[names.AttrCloudWatchLogs] = flattenCloudWatchDestinationConfiguration(v.Value)
 
 	case *types.DestinationConfigurationMemberFirehose:
 		m["firehose"] = flattenFirehoseDestinationConfiguration(v.Value)
@@ -304,7 +304,7 @@ func flattenCloudWatchDestinationConfiguration(apiObject types.CloudWatchLogsDes
 	m := map[string]interface{}{}
 
 	if v := apiObject.LogGroupName; v != nil {
-		m["log_group_name"] = aws.ToString(v)
+		m[names.AttrLogGroupName] = aws.ToString(v)
 	}
 
 	return []interface{}{m}
@@ -324,7 +324,7 @@ func flattenS3DestinationConfiguration(apiObject types.S3DestinationConfiguratio
 	m := map[string]interface{}{}
 
 	if v := apiObject.BucketName; v != nil {
-		m["bucket_name"] = aws.ToString(v)
+		m[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	return []interface{}{m}
@@ -337,7 +337,7 @@ func expandDestinationConfiguration(vSettings []interface{}) types.DestinationCo
 
 	tfMap := vSettings[0].(map[string]interface{})
 
-	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 {
 		return &types.DestinationConfigurationMemberCloudWatchLogs{
 			Value: *expandCloudWatchLogsDestinationConfiguration(v),
 		}
@@ -363,7 +363,7 @@ func expandCloudWatchLogsDestinationConfiguration(vSettings []interface{}) *type
 
 	tfMap := vSettings[0].(map[string]interface{})
 
-	if v, ok := tfMap["log_group_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
 		a.LogGroupName = aws.String(v)
 	}
 
@@ -395,7 +395,7 @@ func expandS3DestinationConfiguration(vSettings []interface{}) *types.S3Destinat
 
 	tfMap := vSettings[0].(map[string]interface{})
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		a.BucketName = aws.String(v)
 	}
 

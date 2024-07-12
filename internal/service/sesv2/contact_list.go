@@ -77,7 +77,7 @@ func ResourceContactList() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"display_name": {
+						names.AttrDisplayName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -99,6 +99,7 @@ const (
 )
 
 func resourceContactListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	in := &sesv2.CreateContactListInput{
@@ -116,19 +117,20 @@ func resourceContactListCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	out, err := conn.CreateContactList(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameContactList, d.Get("contact_list_name").(string), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameContactList, d.Get("contact_list_name").(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameContactList, d.Get("contact_list_name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameContactList, d.Get("contact_list_name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(d.Get("contact_list_name").(string))
 
-	return resourceContactListRead(ctx, d, meta)
+	return append(diags, resourceContactListRead(ctx, d, meta)...)
 }
 
 func resourceContactListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	out, err := FindContactListByID(ctx, conn, d.Id())
@@ -136,11 +138,11 @@ func resourceContactListRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SESV2 ContactList (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameContactList, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameContactList, d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -158,13 +160,14 @@ func resourceContactListRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("last_updated_timestamp", aws.ToTime(out.LastUpdatedTimestamp).Format(time.RFC3339))
 
 	if err := d.Set("topic", flattenTopics(out.Topics)); err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameContactList, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, ResNameContactList, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceContactListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	in := &sesv2.UpdateContactListInput{
@@ -177,14 +180,15 @@ func resourceContactListUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		log.Printf("[DEBUG] Updating SESV2 ContactList (%s): %#v", d.Id(), in)
 		if _, err := conn.UpdateContactList(ctx, in); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameContactList, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, ResNameContactList, d.Id(), err)
 		}
 	}
 
-	return resourceContactListRead(ctx, d, meta)
+	return append(diags, resourceContactListRead(ctx, d, meta)...)
 }
 
 func resourceContactListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	log.Printf("[INFO] Deleting SESV2 ContactList %s", d.Id())
@@ -196,13 +200,13 @@ func resourceContactListDelete(ctx context.Context, d *schema.ResourceData, meta
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.SESV2, create.ErrActionDeleting, ResNameContactList, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, ResNameContactList, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindContactListByID(ctx context.Context, conn *sesv2.Client, id string) (*sesv2.GetContactListOutput, error) {
@@ -270,7 +274,7 @@ func expandTopic(tfMap map[string]interface{}) *types.Topic {
 		apiObject.Description = aws.String(v)
 	}
 
-	if v, ok := tfMap["display_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDisplayName].(string); ok && v != "" {
 		apiObject.DisplayName = aws.String(v)
 	}
 
@@ -309,7 +313,7 @@ func flattenTopic(apiObject *types.Topic) map[string]interface{} {
 	}
 
 	if v := apiObject.DisplayName; v != nil {
-		tfMap["display_name"] = aws.ToString(v)
+		tfMap[names.AttrDisplayName] = aws.ToString(v)
 	}
 
 	if v := apiObject.TopicName; v != nil {

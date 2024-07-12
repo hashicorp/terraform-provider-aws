@@ -34,8 +34,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Scraper")
+// @FrameworkResource("aws_prometheus_scraper", name="Scraper")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp/types;types.ScraperDescription")
 func newScraperResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &scraperResource{}
 
@@ -62,7 +63,7 @@ func (r *scraperResource) Metadata(_ context.Context, req resource.MetadataReque
 func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"alias": schema.StringAttribute{
+			names.AttrAlias: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -86,7 +87,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"destination": schema.ListNestedBlock{
+			names.AttrDestination: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[scraperDestinationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
@@ -121,7 +122,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 					},
 				},
 			},
-			"source": schema.ListNestedBlock{
+			names.AttrSource: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[scraperSourceModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
@@ -150,7 +151,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
-									"security_group_ids": schema.SetAttribute{
+									names.AttrSecurityGroupIDs: schema.SetAttribute{
 										CustomType:  fwtypes.SetOfStringType,
 										ElementType: types.StringType,
 										Optional:    true,

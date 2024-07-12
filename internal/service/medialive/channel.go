@@ -130,11 +130,11 @@ func ResourceChannel() *schema.Resource {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"url": {
+										names.AttrURL: {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"username": {
+										names.AttrUsername: {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
@@ -291,7 +291,7 @@ func ResourceChannel() *schema.Resource {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"language_code": {
+																			names.AttrLanguageCode: {
 																				Type:     schema.TypeString,
 																				Required: true,
 																			},
@@ -366,7 +366,7 @@ func ResourceChannel() *schema.Resource {
 														Type:     schema.TypeString,
 														Required: true,
 													},
-													"language_code": {
+													names.AttrLanguageCode: {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
@@ -695,7 +695,7 @@ func ResourceChannel() *schema.Resource {
 					ForceNew: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"availability_zones": {
+							names.AttrAvailabilityZones: {
 								Type:     schema.TypeSet,
 								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
@@ -710,7 +710,7 @@ func ResourceChannel() *schema.Resource {
 								Required: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"security_group_ids": {
+							names.AttrSecurityGroupIDs: {
 								Type:     schema.TypeSet,
 								Optional: true,
 								Computed: true,
@@ -1302,7 +1302,7 @@ func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioLangua
 	m := tfList[0].(map[string]interface{})
 
 	var out types.AudioLanguageSelection
-	if v, ok := m["language_code"].(string); ok && len(v) > 0 {
+	if v, ok := m[names.AttrLanguageCode].(string); ok && len(v) > 0 {
 		out.LanguageCode = aws.String(v)
 	}
 	if v, ok := m["language_selection_policy"].(string); ok && len(v) > 0 {
@@ -1399,7 +1399,7 @@ func expandInputAttachmentInputSettingsCaptionSelectors(tfList []interface{}) []
 		if v, ok := m[names.AttrName].(string); ok && v != "" {
 			o.Name = aws.String(v)
 		}
-		if v, ok := m["language_code"].(string); ok && v != "" {
+		if v, ok := m[names.AttrLanguageCode].(string); ok && v != "" {
 			o.LanguageCode = aws.String(v)
 		}
 		if v, ok := m["selector_settings"].([]interface{}); ok && len(v) > 0 {
@@ -1836,7 +1836,7 @@ func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioLang
 	}
 
 	m := map[string]interface{}{
-		"language_code":             aws.ToString(in.LanguageCode),
+		names.AttrLanguageCode:      aws.ToString(in.LanguageCode),
 		"language_selection_policy": string(in.LanguageSelectionPolicy),
 	}
 
@@ -1907,9 +1907,9 @@ func flattenInputAttachmentsInputSettingsCaptionSelectors(tfList []types.Caption
 
 	for _, v := range tfList {
 		m := map[string]interface{}{
-			names.AttrName:      aws.ToString(v.Name),
-			"language_code":     aws.ToString(v.LanguageCode),
-			"selector_settings": flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettings(v.SelectorSettings),
+			names.AttrName:         aws.ToString(v.Name),
+			names.AttrLanguageCode: aws.ToString(v.LanguageCode),
+			"selector_settings":    flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettings(v.SelectorSettings),
 		}
 
 		out = append(out, m)
@@ -2259,10 +2259,10 @@ func expandChannelDestinationsSettings(tfList []interface{}) []types.OutputDesti
 		if v, ok := m["stream_name"].(string); ok {
 			s.StreamName = aws.String(v)
 		}
-		if v, ok := m["url"].(string); ok {
+		if v, ok := m[names.AttrURL].(string); ok {
 			s.Url = aws.String(v)
 		}
-		if v, ok := m["username"].(string); ok {
+		if v, ok := m[names.AttrUsername].(string); ok {
 			s.Username = aws.String(v)
 		}
 
@@ -2330,10 +2330,10 @@ func flattenChannelDestinationsSettings(apiObject []types.OutputDestinationSetti
 	var tfList []interface{}
 	for _, v := range apiObject {
 		m := map[string]interface{}{
-			"password_param": aws.ToString(v.PasswordParam),
-			"stream_name":    aws.ToString(v.StreamName),
-			"url":            aws.ToString(v.Url),
-			"username":       aws.ToString(v.Username),
+			"password_param":   aws.ToString(v.PasswordParam),
+			"stream_name":      aws.ToString(v.StreamName),
+			names.AttrURL:      aws.ToString(v.Url),
+			names.AttrUsername: aws.ToString(v.Username),
 		}
 
 		tfList = append(tfList, m)
@@ -2435,7 +2435,7 @@ func expandChannelVPC(tfList []interface{}) *types.VpcOutputSettings {
 	m := tfList[0].(map[string]interface{})
 
 	settings := &types.VpcOutputSettings{}
-	if v, ok := m["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		settings.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 	if v, ok := m[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
@@ -2454,10 +2454,10 @@ func flattenChannelVPC(apiObject *types.VpcOutputSettingsDescription) []interfac
 	}
 
 	m := map[string]interface{}{
-		"availability_zones":    flex.FlattenStringValueSet(apiObject.AvailabilityZones),
-		"network_interface_ids": flex.FlattenStringValueSet(apiObject.NetworkInterfaceIds),
-		"security_group_ids":    flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
-		names.AttrSubnetIDs:     flex.FlattenStringValueSet(apiObject.SubnetIds),
+		names.AttrAvailabilityZones: flex.FlattenStringValueSet(apiObject.AvailabilityZones),
+		"network_interface_ids":     flex.FlattenStringValueSet(apiObject.NetworkInterfaceIds),
+		names.AttrSecurityGroupIDs:  flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
+		names.AttrSubnetIDs:         flex.FlattenStringValueSet(apiObject.SubnetIds),
 		// public_address_allocation_ids is not included in the output struct
 	}
 

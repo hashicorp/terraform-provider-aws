@@ -15,8 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acm/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfacm "github.com/hashicorp/terraform-provider-aws/internal/service/acm"
@@ -42,22 +46,22 @@ func TestAccACMCertificate_emailValidation(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
 					resource.TestCheckResourceAttr(resourceName, "not_after", ""),
 					resource.TestCheckResourceAttr(resourceName, "not_before", ""),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypeAmazonIssued)),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "validation_emails.#", 0),
 					resource.TestMatchResourceAttr(resourceName, "validation_emails.0", regexache.MustCompile(`^[^@]+@.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodEmail)),
-					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_option.#", acctest.Ct0),
 				),
 			},
 			{
@@ -87,25 +91,25 @@ func TestAccACMCertificate_dnsValidation(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          domain,
+						names.AttrDomainName:   domain,
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
 					resource.TestCheckResourceAttr(resourceName, "not_after", ""),
 					resource.TestCheckResourceAttr(resourceName, "not_before", ""),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypeAmazonIssued)),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
-					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_option.#", acctest.Ct0),
 				),
 			},
 			{
@@ -134,18 +138,18 @@ func TestAccACMCertificate_root(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", rootDomain),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          rootDomain,
+						names.AttrDomainName:   rootDomain,
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", rootDomain),
-					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
-					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_option.#", acctest.Ct0),
 				),
 			},
 			{
@@ -175,15 +179,15 @@ func TestAccACMCertificate_validationOptions(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domain),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "validation_emails.#", 0),
 					resource.TestMatchResourceAttr(resourceName, "validation_emails.0", regexache.MustCompile(`^[^@]+@.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodEmail)),
-					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "validation_option.#", acctest.Ct1),
 				),
 			},
 			{
@@ -216,21 +220,21 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 					testAccCheckCertificateExists(ctx, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", certificateAuthorityResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", certificateDomainName),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, certificateDomainName),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", certificateDomainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypePrivate)),
-					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_option.#", acctest.Ct0),
 				),
 			},
 			{
@@ -254,9 +258,9 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v2),
 					testAccCheckCertificateNotRenewed(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityEligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypePrivate)),
 				),
@@ -280,9 +284,9 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityEligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.0.renewal_status", string(types.RenewalStatusPendingAutoRenewal)),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.0.renewal_status_reason", ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "renewal_summary.0.updated_at"),
@@ -303,9 +307,9 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v4),
 					testAccCheckCertificateRenewed(&v3, &v4),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.0.renewal_status", string(types.RenewalStatusSuccess)),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.0.renewal_status_reason", ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "renewal_summary.0.updated_at"),
@@ -342,21 +346,21 @@ func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) 
 					testAccCheckCertificateExists(ctx, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", certificateAuthorityResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", certificateDomainName),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, certificateDomainName),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", certificateDomainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypePrivate)),
-					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_option.#", acctest.Ct0),
 				),
 			},
 			{
@@ -380,8 +384,8 @@ func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityEligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypePrivate)),
 				),
@@ -405,9 +409,9 @@ func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) 
 				Config: testAccCertificateConfig_privateCertificate_noRenewalPermission(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityEligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.0.renewal_status", string(types.RenewalStatusPendingAutoRenewal)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "renewal_summary.0.updated_at"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
@@ -421,9 +425,9 @@ func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) 
 				Config: testAccCertificateConfig_privateCertificate_noRenewalPermission(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityEligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.0.renewal_status", string(types.RenewalStatusPendingAutoRenewal)),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.0.renewal_status_reason", string(types.FailureReasonPcaAccessDenied)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "renewal_summary.0.updated_at"),
@@ -460,9 +464,9 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalGoDuration(t *testin
 					testAccCheckCertificateExists(ctx, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", certificateDomainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypePrivate)),
@@ -494,9 +498,9 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalGoDuration(t *testin
 					testAccCheckCertificateExists(ctx, resourceName, &v2),
 					testAccCheckCertificateRenewed(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.0.renewal_status", string(types.RenewalStatusSuccess)),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.0.renewal_status_reason", ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "renewal_summary.0.updated_at"),
@@ -534,9 +538,9 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalRFC3339Duration(t *t
 					testAccCheckCertificateExists(ctx, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", certificateDomainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypePrivate)),
@@ -568,9 +572,9 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalRFC3339Duration(t *t
 					testAccCheckCertificateExists(ctx, resourceName, &v2),
 					testAccCheckCertificateRenewed(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.0.renewal_status", string(types.RenewalStatusSuccess)),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.0.renewal_status_reason", ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "renewal_summary.0.updated_at"),
@@ -608,9 +612,9 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalPast(t *testing.T) 
 					testAccCheckCertificateExists(ctx, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", certificateDomainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypePrivate)),
@@ -641,9 +645,9 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalPast(t *testing.T) 
 					testAccCheckCertificateExists(ctx, resourceName, &v2),
 					testAccCheckCertificateNotRenewed(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityEligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypePrivate)),
 				),
@@ -662,9 +666,9 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalPast(t *testing.T) 
 					testAccCheckCertificateExists(ctx, resourceName, &v3),
 					testAccCheckCertificateRenewed(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.0.renewal_status", string(types.RenewalStatusSuccess)),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.0.renewal_status_reason", ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "renewal_summary.0.updated_at"),
@@ -696,9 +700,9 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalPastIneligible(t *t
 					testAccCheckCertificateExists(ctx, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", certificateDomainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypePrivate)),
@@ -718,9 +722,9 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalPastIneligible(t *t
 					testAccCheckCertificateExists(ctx, resourceName, &v2),
 					testAccCheckCertificateNotRenewed(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypePrivate)),
 				),
@@ -749,9 +753,9 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalFuture(t *testing.T
 					testAccCheckCertificateExists(ctx, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", certificateDomainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypePrivate)),
@@ -782,9 +786,9 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalFuture(t *testing.T
 					testAccCheckCertificateExists(ctx, resourceName, &v2),
 					testAccCheckCertificateNotRenewed(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityEligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypePrivate)),
 				),
@@ -803,9 +807,9 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalFuture(t *testing.T
 					testAccCheckCertificateExists(ctx, resourceName, &v3),
 					testAccCheckCertificateNotRenewed(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityEligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypePrivate)),
 				),
@@ -835,9 +839,9 @@ func TestAccACMCertificate_privateCertificate_updateEarlyRenewalFuture(t *testin
 					testAccCheckCertificateExists(ctx, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", certificateDomainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypePrivate)),
@@ -868,9 +872,9 @@ func TestAccACMCertificate_privateCertificate_updateEarlyRenewalFuture(t *testin
 					testAccCheckCertificateExists(ctx, resourceName, &v2),
 					testAccCheckCertificateNotRenewed(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", durationUpdated),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityEligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypePrivate)),
 				),
@@ -905,9 +909,9 @@ func TestAccACMCertificate_privateCertificate_removeEarlyRenewal(t *testing.T) {
 					testAccCheckCertificateExists(ctx, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", certificateDomainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypePrivate)),
@@ -938,9 +942,9 @@ func TestAccACMCertificate_privateCertificate_removeEarlyRenewal(t *testing.T) {
 					testAccCheckCertificateExists(ctx, resourceName, &v2),
 					testAccCheckCertificateNotRenewed(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityEligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypePrivate)),
 				),
@@ -994,21 +998,21 @@ func TestAccACMCertificate_rootAndWildcardSan(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", rootDomain),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          rootDomain,
+						names.AttrDomainName:   rootDomain,
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          wildcardDomain,
+						names.AttrDomainName:   wildcardDomain,
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", rootDomain),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", wildcardDomain),
-					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
 				),
 			},
@@ -1059,21 +1063,21 @@ func TestAccACMCertificate_San_single(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          domain,
+						names.AttrDomainName:   domain,
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          sanDomain,
+						names.AttrDomainName:   sanDomain,
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domain),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", sanDomain),
-					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
 				),
 			},
@@ -1106,26 +1110,26 @@ func TestAccACMCertificate_San_multiple(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          domain,
+						names.AttrDomainName:   domain,
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          sanDomain1,
+						names.AttrDomainName:   sanDomain1,
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          sanDomain2,
+						names.AttrDomainName:   sanDomain2,
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domain),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", sanDomain1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", sanDomain2),
-					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
 				),
 			},
@@ -1157,21 +1161,21 @@ func TestAccACMCertificate_San_trailingPeriod(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile(`certificate/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          domain,
+						names.AttrDomainName:   domain,
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          strings.TrimSuffix(sanDomain, "."),
+						names.AttrDomainName:   strings.TrimSuffix(sanDomain, "."),
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domain),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", strings.TrimSuffix(sanDomain, ".")),
-					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
 				),
 			},
@@ -1203,21 +1207,21 @@ func TestAccACMCertificate_San_matches_domain(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile(`certificate/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          domain,
+						names.AttrDomainName:   domain,
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          sanDomain,
+						names.AttrDomainName:   sanDomain,
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domain),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", sanDomain),
-					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
 				),
 			},
@@ -1248,16 +1252,16 @@ func TestAccACMCertificate_wildcard(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", wildcardDomain),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, wildcardDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          wildcardDomain,
+						names.AttrDomainName:   wildcardDomain,
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", wildcardDomain),
-					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
 				),
 			},
@@ -1288,21 +1292,21 @@ func TestAccACMCertificate_wildcardAndRootSan(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", wildcardDomain),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, wildcardDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          rootDomain,
+						names.AttrDomainName:   rootDomain,
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          wildcardDomain,
+						names.AttrDomainName:   wildcardDomain,
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", rootDomain),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", wildcardDomain),
-					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
 				),
 			},
@@ -1332,16 +1336,16 @@ func TestAccACMCertificate_keyAlgorithm(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", rootDomain),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          rootDomain,
+						names.AttrDomainName:   rootDomain,
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", rootDomain),
-					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
 					resource.TestCheckResourceAttr(resourceName, "key_algorithm", string(types.KeyAlgorithmEcPrime256v1)),
 				),
@@ -1372,18 +1376,18 @@ func TestAccACMCertificate_disableCTLogging(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", rootDomain),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          rootDomain,
+						names.AttrDomainName:   rootDomain,
 						"resource_record_type": "CNAME",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", rootDomain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
-					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
-					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.certificate_transparency_logging_preference", string(types.CertificateTransparencyLoggingPreferenceDisabled)),
 				),
 			},
@@ -1418,18 +1422,18 @@ func TestAccACMCertificate_disableReenableCTLogging(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", rootDomain),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          rootDomain,
+						names.AttrDomainName:   rootDomain,
 						"resource_record_type": "CNAME",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", rootDomain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
-					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
-					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.certificate_transparency_logging_preference", string(types.CertificateTransparencyLoggingPreferenceEnabled)),
 				),
 			},
@@ -1443,18 +1447,18 @@ func TestAccACMCertificate_disableReenableCTLogging(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", rootDomain),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          rootDomain,
+						names.AttrDomainName:   rootDomain,
 						"resource_record_type": "CNAME",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", rootDomain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
-					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
-					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.certificate_transparency_logging_preference", string(types.CertificateTransparencyLoggingPreferenceDisabled)),
 				),
 			},
@@ -1468,18 +1472,18 @@ func TestAccACMCertificate_disableReenableCTLogging(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", rootDomain),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          rootDomain,
+						names.AttrDomainName:   rootDomain,
 						"resource_record_type": "CNAME",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", rootDomain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
-					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
-					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.certificate_transparency_logging_preference", string(types.CertificateTransparencyLoggingPreferenceEnabled)),
 				),
 			},
@@ -1518,8 +1522,8 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", commonName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, commonName),
 				),
 			},
 			{
@@ -1528,8 +1532,8 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 					testAccCheckCertificateExists(ctx, resourceName, &v2),
 					testAccCheckCertficateNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", commonName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, commonName),
 				),
 			},
 			{
@@ -1538,8 +1542,8 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 					testAccCheckCertificateExists(ctx, resourceName, &v3),
 					testAccCheckCertficateNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", withoutChainDomain),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, withoutChainDomain),
 				),
 			},
 			{
@@ -1547,7 +1551,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// These are not returned by the API
-				ImportStateVerifyIgnore: []string{"private_key", "certificate_body", "certificate_chain"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, "certificate_body", names.AttrCertificateChain},
 			},
 		},
 	})
@@ -1577,9 +1581,9 @@ func TestAccACMCertificate_Imported_validityDates(t *testing.T) {
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
-					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", string(types.RenewalEligibilityIneligible)),
-					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.CertificateTypeImported)),
 				),
 			},
@@ -1588,7 +1592,7 @@ func TestAccACMCertificate_Imported_validityDates(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// These are not returned by the API
-				ImportStateVerifyIgnore: []string{"private_key", "certificate_body", "certificate_chain"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, "certificate_body", names.AttrCertificateChain},
 			},
 		},
 	})
@@ -1611,9 +1615,9 @@ func TestAccACMCertificate_Imported_ipAddress(t *testing.T) {
 				Config: testAccCertificateConfig_privateKeyNoChain(t, "1.2.3.4"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusIssued)),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct0),
 				),
 			},
 			{
@@ -1621,20 +1625,21 @@ func TestAccACMCertificate_Imported_ipAddress(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// These are not returned by the API
-				ImportStateVerifyIgnore: []string{"private_key", "certificate_body"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, "certificate_body"},
 			},
 		},
 	})
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/15055
-func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
+func TestAccACMCertificate_PrivateKey_ReimportWithTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
-	key1 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate1 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key1, "1.2.3.4")
-	key2 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate2 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key2, "5.6.7.8")
+	privateKeyPEM1 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificatePEM1 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM1, "1.2.3.4")
+
+	privateKeyPEM2 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificatePEM2 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM2, "5.6.7.8")
 	var v types.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1644,40 +1649,72 @@ func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateConfig_tags1(certificate1, key1, "key1", "value1"),
+				ConfigDirectory: config.StaticDirectory("testdata/Certificate/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+					}),
+					acctest.CtCertificatePEM: config.StringVariable(certificatePEM1),
+					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM1),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"private_key", "certificate_body"},
+				ConfigDirectory: config.StaticDirectory("testdata/Certificate/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+					}),
+					acctest.CtCertificatePEM: config.StringVariable(certificatePEM1),
+					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM1),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"certificate_body", names.AttrPrivateKey,
+				},
 			},
 			{
-				Config: testAccCertificateConfig_tags2(certificate1, key1, "key1", "value1updated", "key2", "value2"),
+				ConfigDirectory: config.StaticDirectory("testdata/Certificate/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
+					}),
+					acctest.CtCertificatePEM: config.StringVariable(certificatePEM2),
+					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM2),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckCertificateExists(ctx, resourceName, &v),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+					})),
+				},
 			},
 			{
-				Config: testAccCertificateConfig_tags1(certificate1, key1, "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccCertificateConfig_tags1(certificate2, key2, "key1", "value1"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
+				ConfigDirectory: config.StaticDirectory("testdata/Certificate/tags/"),
+				ConfigVariables: config.Variables{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
+					}),
+					acctest.CtCertificatePEM: config.StringVariable(certificatePEM2),
+					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM2),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"certificate_body", names.AttrPrivateKey,
+				},
 			},
 		},
 	})
@@ -1901,33 +1938,6 @@ resource "aws_acm_certificate" "test" {
   private_key      = "%[2]s"
 }
 `, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
-}
-
-func testAccCertificateConfig_tags1(certificate, key, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_acm_certificate" "test" {
-  certificate_body = "%[1]s"
-  private_key      = "%[2]s"
-
-  tags = {
-    %[3]q = %[4]q
-  }
-}
-`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagKey1, tagValue1)
-}
-
-func testAccCertificateConfig_tags2(certificate, key, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_acm_certificate" "test" {
-  certificate_body = "%[1]s"
-  private_key      = "%[2]s"
-
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-}
-`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccCertificateConfig_privateKey(certificate, privateKey, chain string) string {

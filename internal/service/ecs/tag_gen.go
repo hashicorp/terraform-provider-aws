@@ -28,7 +28,7 @@ func resourceTag() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,7 +50,7 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
-	identifier := d.Get("resource_arn").(string)
+	identifier := d.Get(names.AttrResourceARN).(string)
 	key := d.Get(names.AttrKey).(string)
 	value := d.Get(names.AttrValue).(string)
 
@@ -72,7 +72,7 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	value, err := GetTag(ctx, conn, identifier, key)
+	value, err := findTag(ctx, conn, identifier, key)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] %s resource (%s) tag (%s) not found, removing from state", names.ECS, identifier, key)
@@ -84,7 +84,7 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "reading %s resource (%s) tag (%s): %s", names.ECS, identifier, key, err)
 	}
 
-	d.Set("resource_arn", identifier)
+	d.Set(names.AttrResourceARN, identifier)
 	d.Set(names.AttrKey, key)
 	d.Set(names.AttrValue, value)
 

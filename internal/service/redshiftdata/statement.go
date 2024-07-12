@@ -40,12 +40,12 @@ func resourceStatement() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"database": {
+			names.AttrDatabase: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -110,12 +110,12 @@ func resourceStatementCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).RedshiftDataClient(ctx)
 
 	input := &redshiftdata.ExecuteStatementInput{
-		Database:  aws.String(d.Get("database").(string)),
+		Database:  aws.String(d.Get(names.AttrDatabase).(string)),
 		Sql:       aws.String(d.Get("sql").(string)),
 		WithEvent: aws.Bool(d.Get("with_event").(bool)),
 	}
 
-	if v, ok := d.GetOk("cluster_identifier"); ok {
+	if v, ok := d.GetOk(names.AttrClusterIdentifier); ok {
 		input.ClusterIdentifier = aws.String(v.(string))
 	}
 
@@ -170,8 +170,8 @@ func resourceStatementRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Data Statement (%s): %s", d.Id(), err)
 	}
 
-	d.Set("cluster_identifier", sub.ClusterIdentifier)
-	d.Set("database", d.Get("database").(string))
+	d.Set(names.AttrClusterIdentifier, sub.ClusterIdentifier)
+	d.Set(names.AttrDatabase, d.Get(names.AttrDatabase).(string))
 	d.Set("db_user", d.Get("db_user").(string))
 	if err := d.Set(names.AttrParameters, flattenParameters(sub.QueryParameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)

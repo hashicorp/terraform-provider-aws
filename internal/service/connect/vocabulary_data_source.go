@@ -29,7 +29,7 @@ func DataSourceVocabulary() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content": {
+			names.AttrContent: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -37,12 +37,12 @@ func DataSourceVocabulary() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"language_code": {
+			names.AttrLanguageCode: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -77,7 +77,7 @@ func dataSourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 
 	input := &connect.DescribeVocabularyInput{
 		InstanceId: aws.String(instanceID),
@@ -113,10 +113,10 @@ func dataSourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta 
 	vocabulary := resp.Vocabulary
 
 	d.Set(names.AttrARN, vocabulary.Arn)
-	d.Set("content", vocabulary.Content)
+	d.Set(names.AttrContent, vocabulary.Content)
 	d.Set("failure_reason", vocabulary.FailureReason)
-	d.Set("instance_id", instanceID)
-	d.Set("language_code", vocabulary.LanguageCode)
+	d.Set(names.AttrInstanceID, instanceID)
+	d.Set(names.AttrLanguageCode, vocabulary.LanguageCode)
 	d.Set("last_modified_time", vocabulary.LastModifiedTime.Format(time.RFC3339))
 	d.Set(names.AttrName, vocabulary.Name)
 	d.Set(names.AttrState, vocabulary.State)

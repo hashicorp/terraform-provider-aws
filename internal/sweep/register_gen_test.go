@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/applicationinsights"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
@@ -36,6 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarnotifications"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
@@ -90,6 +92,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalytics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
@@ -97,6 +100,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/m2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
@@ -165,6 +169,7 @@ func registerSweepers() {
 	apigateway.RegisterSweepers()
 	apigatewayv2.RegisterSweepers()
 	appconfig.RegisterSweepers()
+	appflow.RegisterSweepers()
 	applicationinsights.RegisterSweepers()
 	appmesh.RegisterSweepers()
 	apprunner.RegisterSweepers()
@@ -191,6 +196,7 @@ func registerSweepers() {
 	codepipeline.RegisterSweepers()
 	codestarconnections.RegisterSweepers()
 	codestarnotifications.RegisterSweepers()
+	cognitoidentity.RegisterSweepers()
 	cognitoidp.RegisterSweepers()
 	configservice.RegisterSweepers()
 	connect.RegisterSweepers()
@@ -245,6 +251,7 @@ func registerSweepers() {
 	kinesisanalytics.RegisterSweepers()
 	kinesisanalyticsv2.RegisterSweepers()
 	kms.RegisterSweepers()
+	lakeformation.RegisterSweepers()
 	lambda.RegisterSweepers()
 	lexmodels.RegisterSweepers()
 	lexv2models.RegisterSweepers()
@@ -252,6 +259,7 @@ func registerSweepers() {
 	lightsail.RegisterSweepers()
 	location.RegisterSweepers()
 	logs.RegisterSweepers()
+	m2.RegisterSweepers()
 	medialive.RegisterSweepers()
 	mediapackage.RegisterSweepers()
 	memorydb.RegisterSweepers()

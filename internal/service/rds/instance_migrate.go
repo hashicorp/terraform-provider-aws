@@ -33,32 +33,32 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			"username": {
+			names.AttrUsername: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			"password": {
+			names.AttrPassword: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
 			},
 
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
 
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -77,25 +77,25 @@ func resourceInstanceResourceV0() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
 			},
 
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
 
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 
-			"identifier": {
+			names.AttrIdentifier: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -114,7 +114,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Required: true,
 			},
 
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -133,7 +133,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			"iops": {
+			names.AttrIOPS: {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
@@ -167,13 +167,13 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
 
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -188,7 +188,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -203,12 +203,12 @@ func resourceInstanceResourceV0() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"bucket_prefix": {
+						names.AttrBucketPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -250,23 +250,23 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			"parameter_group_name": {
+			names.AttrParameterGroupName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -276,7 +276,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -299,13 +299,13 @@ func resourceInstanceResourceV0() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
 
-			"allow_major_version_upgrade": {
+			names.AttrAllowMajorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -347,7 +347,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Optional: true,
 			},
 
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -358,7 +358,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -404,11 +404,11 @@ func InstanceStateUpgradeV0(_ context.Context, rawState map[string]interface{}, 
 func resourceInstanceResourceV1() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -434,14 +434,14 @@ func resourceInstanceResourceV1() *schema.Resource {
 					return false
 				},
 			},
-			"allow_major_version_upgrade": {
+			names.AttrAllowMajorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			// apply_immediately is used to determine when the update modifications
 			// take place.
 			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -450,12 +450,12 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -531,11 +531,11 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -551,11 +551,11 @@ func resourceInstanceResourceV1() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(InstanceExportableLogType_Values(), false),
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -565,7 +565,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 					return strings.ToLower(value)
 				},
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -574,7 +574,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.All(
@@ -584,7 +584,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
 				),
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -592,7 +592,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"identifier": {
+			names.AttrIdentifier: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -603,14 +603,14 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"identifier"},
+				ConflictsWith: []string{names.AttrIdentifier},
 				ValidateFunc:  validIdentifierPrefix,
 			},
 			"instance_class": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"iops": {
+			names.AttrIOPS: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -636,11 +636,11 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"hosted_zone_id": {
+						names.AttrHostedZoneID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -667,7 +667,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 			"manage_master_user_password": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				ConflictsWith: []string{"password"},
+				ConflictsWith: []string{names.AttrPassword},
 			},
 			"master_user_secret": {
 				Type:     schema.TypeList,
@@ -699,7 +699,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "0" && new == fmt.Sprintf("%d", d.Get("allocated_storage").(int)) {
+					if old == "0" && new == fmt.Sprintf("%d", d.Get(names.AttrAllocatedStorage).(int)) {
 						return true
 					}
 					return false
@@ -739,12 +739,12 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"parameter_group_name": {
+			names.AttrParameterGroupName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
@@ -771,7 +771,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -791,7 +791,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -843,12 +843,12 @@ func resourceInstanceResourceV1() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"bucket_prefix": {
+						names.AttrBucketPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -886,7 +886,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
@@ -896,7 +896,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -910,14 +910,14 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"username": {
+			names.AttrUsername: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"replicate_source_db"},
 			},
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -932,7 +932,7 @@ func InstanceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, 
 		return nil, nil
 	}
 
-	rawState[names.AttrID] = rawState["resource_id"]
+	rawState[names.AttrID] = rawState[names.AttrResourceID]
 
 	return rawState, nil
 }

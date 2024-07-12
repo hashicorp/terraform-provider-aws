@@ -38,13 +38,36 @@ func resourceDeployment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"canary_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"percent_traffic": {
+							Type:     schema.TypeFloat,
+							Optional: true,
+							Default:  0.0,
+						},
+						"stage_variable_overrides": {
+							Type:     schema.TypeMap,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Optional: true,
+						},
+						"use_stage_cache": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
 			},
 			"execution_arn": {
 				Type:     schema.TypeString,
@@ -69,7 +92,7 @@ func resourceDeployment() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"triggers": {
+			names.AttrTriggers: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,
@@ -104,6 +127,9 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(aws.ToString(deployment.Id))
+	if v, ok := d.GetOk("canary_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.CanarySettings = expandDeploymentCanarySettings(v.([]interface{})[0].(map[string]interface{}))
+	}
 
 	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
 }
@@ -126,7 +152,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	stageName := d.Get("stage_name").(string)
-	d.Set("created_date", deployment.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, deployment.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, deployment.Description)
 	executionARN := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -260,4 +286,26 @@ func findDeploymentByTwoPartKey(ctx context.Context, conn *apigateway.Client, re
 	}
 
 	return output, nil
+}
+
+func expandDeploymentCanarySettings(tfMap map[string]interface{}) *types.DeploymentCanarySettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.DeploymentCanarySettings{}
+
+	if v, ok := tfMap["percent_traffic"].(float64); ok {
+		apiObject.PercentTraffic = v
+	}
+
+	if v, ok := tfMap["stage_variable_overrides"].(map[string]interface{}); ok && len(v) > 0 {
+		apiObject.StageVariableOverrides = flex.ExpandStringValueMap(v)
+	}
+
+	if v, ok := tfMap["use_stage_cache"].(bool); ok {
+		apiObject.UseStageCache = v
+	}
+
+	return apiObject
 }

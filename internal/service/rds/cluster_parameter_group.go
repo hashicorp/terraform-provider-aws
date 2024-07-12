@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_rds_cluster_parameter_group", name="Cluster Parameter Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterParameterGroupCreate,
@@ -52,7 +53,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				ForceNew: true,
 				Default:  "Managed by Terraform",
 			},
-			"family": {
+			names.AttrFamily: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -62,10 +63,10 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validParamGroupName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -73,7 +74,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validParamGroupNamePrefix,
 			},
-			"parameter": {
+			names.AttrParameter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -107,10 +108,10 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	groupName := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	groupName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &rds.CreateDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(groupName),
-		DBParameterGroupFamily:      aws.String(d.Get("family").(string)),
+		DBParameterGroupFamily:      aws.String(d.Get(names.AttrFamily).(string)),
 		Description:                 aws.String(d.Get(names.AttrDescription).(string)),
 		Tags:                        getTagsIn(ctx),
 	}
@@ -147,9 +148,9 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 	arn := aws.StringValue(dbClusterParameterGroup.DBClusterParameterGroupArn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, dbClusterParameterGroup.Description)
-	d.Set("family", dbClusterParameterGroup.DBParameterGroupFamily)
+	d.Set(names.AttrFamily, dbClusterParameterGroup.DBParameterGroupFamily)
 	d.Set(names.AttrName, dbClusterParameterGroup.DBClusterParameterGroupName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(dbClusterParameterGroup.DBClusterParameterGroupName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(dbClusterParameterGroup.DBClusterParameterGroupName)))
 
 	// Only include user customized parameters as there's hundreds of system/default ones
 	input := &rds.DescribeDBClusterParametersInput{
@@ -177,7 +178,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	// add only system parameters that are set in the config
-	p := d.Get("parameter")
+	p := d.Get(names.AttrParameter)
 	if p == nil {
 		p = new(schema.Set)
 	}
@@ -209,7 +210,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster Parameter Group (%s) parameters: %s", d.Id(), err)
 	}
 
-	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
+	if err := d.Set(names.AttrParameter, flattenParameters(parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 
@@ -223,8 +224,8 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	if d.HasChange("parameter") {
-		o, n := d.GetChange("parameter")
+	if d.HasChange(names.AttrParameter) {
+		o, n := d.GetChange(names.AttrParameter)
 		if o == nil {
 			o = new(schema.Set)
 		}

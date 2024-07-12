@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -53,7 +54,7 @@ func resourceStackSetInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -75,17 +76,44 @@ func resourceStackSetInstance() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"organizational_unit_ids": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MinItems: 1,
+							Type:          schema.TypeSet,
+							Optional:      true,
+							ForceNew:      true,
+							MinItems:      1,
+							ConflictsWith: []string{names.AttrAccountID},
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32}|r-[0-9a-z]{4,32})$`), ""),
 							},
 						},
+						"account_filter_type": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ForceNew:      true,
+							ValidateFunc:  validation.StringInSlice(enum.Slice(awstypes.AccountFilterType.Values("")...), false),
+							ConflictsWith: []string{names.AttrAccountID},
+						},
+						"accounts": {
+							Type:          schema.TypeSet,
+							Optional:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{names.AttrAccountID},
+							MinItems:      1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: verify.ValidAccountID,
+							},
+						},
+						"accounts_url": {
+							Type:          schema.TypeString,
+							ForceNew:      true,
+							Optional:      true,
+							ConflictsWith: []string{names.AttrAccountID},
+							ValidateFunc:  validation.StringMatch(regexache.MustCompile(`(s3://|http(s?)://).+`), ""),
+						},
 					},
 				},
-				ConflictsWith: []string{"account_id"},
+				ConflictsWith: []string{names.AttrAccountID},
 			},
 			"operation_preferences": {
 				Type:     schema.TypeList,
@@ -143,7 +171,7 @@ func resourceStackSetInstance() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -165,7 +193,7 @@ func resourceStackSetInstance() *schema.Resource {
 					"This will only be populated when `deployment_targets` is set.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"account_id": {
+						names.AttrAccountID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -195,7 +223,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	region := meta.(*conns.AWSClient).Region
-	if v, ok := d.GetOk("region"); ok {
+	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
 
@@ -206,7 +234,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	accountID := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
 	// accountOrOrgID will either be account_id or a slash-delimited list of
@@ -219,7 +247,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		accountOrOrgID = strings.Join(dt.OrganizationalUnitIds, "/")
 		input.DeploymentTargets = dt
 	} else {
-		d.Set("account_id", accountID)
+		d.Set(names.AttrAccountID, accountID)
 		input.Accounts = []string{accountID}
 	}
 
@@ -313,7 +341,7 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
-	d.Set("region", region)
+	d.Set(names.AttrRegion, region)
 	d.Set("stack_set_name", stackSetName)
 
 	callAs := d.Get("call_as").(string)
@@ -332,7 +360,7 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 			return sdkdiag.AppendErrorf(diags, "reading CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 		}
 
-		d.Set("account_id", stackInstance.Account)
+		d.Set(names.AttrAccountID, stackInstance.Account)
 		d.Set("organizational_unit_id", stackInstance.OrganizationalUnitId)
 		if err := d.Set("parameter_overrides", flattenAllParameters(stackInstance.ParameterOverrides)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
@@ -356,7 +384,6 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 			return sdkdiag.AppendErrorf(diags, "finding CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 		}
 
-		d.Set("deployment_targets", flattenDeploymentTargetsFromSlice(orgIDs))
 		d.Set("stack_instance_summaries", flattenStackInstanceSummaries(summaries))
 	}
 
@@ -367,7 +394,7 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	if d.HasChanges("deployment_targets", "parameter_overrides", "operation_preferences") {
+	if d.HasChanges("parameter_overrides", "operation_preferences") {
 		parts, err := flex.ExpandResourceId(d.Id(), stackSetInstanceResourceIDPartCount, false)
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -385,13 +412,6 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 		callAs := d.Get("call_as").(string)
 		if v, ok := d.GetOk("call_as"); ok {
 			input.CallAs = awstypes.CallAs(v.(string))
-		}
-
-		if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			dt := expandDeploymentTargets(v.([]interface{}))
-			// reset input Accounts as the API accepts only 1 of Accounts and DeploymentTargets
-			input.Accounts = nil
-			input.DeploymentTargets = dt
 		}
 
 		if v, ok := d.GetOk("parameter_overrides"); ok {
@@ -559,24 +579,17 @@ func expandDeploymentTargets(tfList []interface{}) *awstypes.DeploymentTargets {
 	if v, ok := tfMap["organizational_unit_ids"].(*schema.Set); ok && v.Len() > 0 {
 		dt.OrganizationalUnitIds = flex.ExpandStringValueSet(v)
 	}
+	if v, ok := tfMap["account_filter_type"].(string); ok && len(v) > 0 {
+		dt.AccountFilterType = awstypes.AccountFilterType(v)
+	}
+	if v, ok := tfMap["accounts"].(*schema.Set); ok && v.Len() > 0 {
+		dt.Accounts = flex.ExpandStringValueSet(v)
+	}
+	if v, ok := tfMap["accounts_url"].(string); ok && len(v) > 0 {
+		dt.AccountsUrl = aws.String(v)
+	}
 
 	return dt
-}
-
-// flattenDeployment targets converts a list of organizational units (typically
-// parsed from the resource ID) into the Terraform representation of the
-// deployment_targets attribute.
-func flattenDeploymentTargetsFromSlice(orgIDs []string) []interface{} {
-	tfList := []interface{}{}
-	for _, ou := range orgIDs {
-		tfList = append(tfList, ou)
-	}
-
-	m := map[string]interface{}{
-		"organizational_unit_ids": tfList,
-	}
-
-	return []interface{}{m}
 }
 
 func flattenStackInstanceSummaries(apiObject []awstypes.StackInstanceSummary) []interface{} {
@@ -587,7 +600,7 @@ func flattenStackInstanceSummaries(apiObject []awstypes.StackInstanceSummary) []
 	tfList := []interface{}{}
 	for _, obj := range apiObject {
 		m := map[string]interface{}{
-			"account_id":             obj.Account,
+			names.AttrAccountID:      obj.Account,
 			"organizational_unit_id": obj.OrganizationalUnitId,
 			"stack_id":               obj.StackId,
 		}

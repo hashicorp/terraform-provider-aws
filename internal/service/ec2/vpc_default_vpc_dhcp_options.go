@@ -19,6 +19,7 @@ import (
 
 // @SDKResource("aws_default_vpc_dhcp_options", name="DHCP Options")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -46,7 +47,7 @@ func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

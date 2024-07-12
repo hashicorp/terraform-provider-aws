@@ -53,7 +53,7 @@ func resourceCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -62,13 +62,13 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:         nullable.TypeNullableBool,
 				Optional:     true,
 				Default:      "true",
 				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -85,11 +85,11 @@ func resourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"availability_zone": {
+						names.AttrAvailabilityZone: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -134,15 +134,15 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"engine", "replication_group_id"},
+				ExactlyOneOf: []string{names.AttrEngine, "replication_group_id"},
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -151,7 +151,7 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -167,7 +167,7 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"destination": {
+						names.AttrDestination: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -228,7 +228,7 @@ func resourceCluster() *schema.Resource {
 				RequiredWith: []string{"preferred_outpost_arn"},
 				ValidateFunc: validation.StringInSlice(elasticache.OutpostMode_Values(), false),
 			},
-			"parameter_group_name": {
+			names.AttrParameterGroupName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -263,18 +263,18 @@ func resourceCluster() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"replication_group_id", "engine"},
+				ExactlyOneOf: []string{"replication_group_id", names.AttrEngine},
 				ValidateFunc: validateReplicationGroupID,
 				ConflictsWith: []string{
 					"az_mode",
-					"engine_version",
+					names.AttrEngineVersion,
 					"maintenance_window",
 					"node_type",
 					"notification_topic_arn",
 					"num_cache_nodes",
-					"parameter_group_name",
+					names.AttrParameterGroupName,
 					names.AttrPort,
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"snapshot_arns",
 					"snapshot_name",
 					"snapshot_retention_limit",
@@ -282,7 +282,7 @@ func resourceCluster() *schema.Resource {
 					"subnet_group_name",
 				},
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -358,7 +358,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("replication_group_id"); ok {
 		input.ReplicationGroupId = aws.String(v.(string))
 	} else {
-		input.SecurityGroupIds = flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set))
+		input.SecurityGroupIds = flex.ExpandStringSet(d.Get(names.AttrSecurityGroupIDs).(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("node_type"); ok {
@@ -377,16 +377,16 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.PreferredOutpostArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine"); ok {
+	if v, ok := d.GetOk(names.AttrEngine); ok {
 		input.Engine = aws.String(v.(string))
 	}
 
-	version := d.Get("engine_version").(string)
+	version := d.Get(names.AttrEngineVersion).(string)
 	if version != "" {
 		input.EngineVersion = aws.String(version)
 	}
 
-	if v, ok := d.GetOk("auto_minor_version_upgrade"); ok {
+	if v, ok := d.GetOk(names.AttrAutoMinorVersionUpgrade); ok {
 		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 			input.AutoMinorVersionUpgrade = aws.Bool(v)
 		}
@@ -401,7 +401,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// parameter groups are optional and can be defaulted by AWS
-	if v, ok := d.GetOk("parameter_group_name"); ok {
+	if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 		input.CacheParameterGroupName = aws.String(v.(string))
 	}
 
@@ -448,7 +448,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.AZMode = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.PreferredAvailabilityZone = aws.String(v.(string))
 	}
 
@@ -539,7 +539,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 			d.Set("notification_topic_arn", c.NotificationConfiguration.TopicArn)
 		}
 	}
-	d.Set("availability_zone", c.PreferredAvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, c.PreferredAvailabilityZone)
 	if aws.StringValue(c.PreferredAvailabilityZone) == "Multiple" {
 		d.Set("az_mode", "cross-az")
 	} else {
@@ -567,19 +567,19 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &elasticache.ModifyCacheClusterInput{
 			CacheClusterId:   aws.String(d.Id()),
-			ApplyImmediately: aws.Bool(d.Get("apply_immediately").(bool)),
+			ApplyImmediately: aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 		}
 
 		requestUpdate := false
-		if d.HasChange("security_group_ids") {
-			if attr := d.Get("security_group_ids").(*schema.Set); attr.Len() > 0 {
+		if d.HasChange(names.AttrSecurityGroupIDs) {
+			if attr := d.Get(names.AttrSecurityGroupIDs).(*schema.Set); attr.Len() > 0 {
 				input.SecurityGroupIds = flex.ExpandStringSet(attr)
 				requestUpdate = true
 			}
 		}
 
-		if d.HasChange("parameter_group_name") {
-			input.CacheParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
+		if d.HasChange(names.AttrParameterGroupName) {
+			input.CacheParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
 			requestUpdate = true
 		}
 
@@ -628,13 +628,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			requestUpdate = true
 		}
 
-		if d.HasChange("engine_version") {
-			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+		if d.HasChange(names.AttrEngineVersion) {
+			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 			requestUpdate = true
 		}
 
-		if d.HasChange("auto_minor_version_upgrade") {
-			v := d.Get("auto_minor_version_upgrade")
+		if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
+			v := d.Get(names.AttrAutoMinorVersionUpgrade)
 			if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 				input.AutoMinorVersionUpgrade = aws.Bool(v)
 			}
@@ -715,7 +715,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
+	var finalSnapshotID = d.Get(names.AttrFinalSnapshotIdentifier).(string)
 	err := DeleteCacheCluster(ctx, conn, d.Id(), finalSnapshotID)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheClusterNotFoundFault) {
@@ -948,11 +948,11 @@ func setCacheNodeData(d *schema.ResourceData, c *elasticache.CacheCluster) error
 			return fmt.Errorf("Unexpected nil pointer in: %s", node)
 		}
 		cacheNodeData = append(cacheNodeData, map[string]interface{}{
-			names.AttrID:        aws.StringValue(node.CacheNodeId),
-			"address":           aws.StringValue(node.Endpoint.Address),
-			names.AttrPort:      aws.Int64Value(node.Endpoint.Port),
-			"availability_zone": aws.StringValue(node.CustomerAvailabilityZone),
-			"outpost_arn":       aws.StringValue(node.CustomerOutpostArn),
+			names.AttrID:               aws.StringValue(node.CacheNodeId),
+			names.AttrAddress:          aws.StringValue(node.Endpoint.Address),
+			names.AttrPort:             aws.Int64Value(node.Endpoint.Port),
+			names.AttrAvailabilityZone: aws.StringValue(node.CustomerAvailabilityZone),
+			"outpost_arn":              aws.StringValue(node.CustomerOutpostArn),
 		})
 	}
 
@@ -971,7 +971,7 @@ func (b byCacheNodeId) Less(i, j int) bool {
 func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) error {
 	d.Set("node_type", c.CacheNodeType)
 
-	d.Set("engine", c.Engine)
+	d.Set(names.AttrEngine, c.Engine)
 	if aws.StringValue(c.Engine) == engineRedis {
 		if err := setEngineVersionRedis(d, c.EngineVersion); err != nil {
 			return err // nosemgrep:ci.bare-error-returns
@@ -979,15 +979,15 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 	} else {
 		setEngineVersionMemcached(d, c.EngineVersion)
 	}
-	d.Set("auto_minor_version_upgrade", strconv.FormatBool(aws.BoolValue(c.AutoMinorVersionUpgrade)))
+	d.Set(names.AttrAutoMinorVersionUpgrade, strconv.FormatBool(aws.BoolValue(c.AutoMinorVersionUpgrade)))
 
 	d.Set("subnet_group_name", c.CacheSubnetGroupName)
-	if err := d.Set("security_group_ids", flattenSecurityGroupIDs(c.SecurityGroups)); err != nil {
+	if err := d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIDs(c.SecurityGroups)); err != nil {
 		return fmt.Errorf("setting security_group_ids: %w", err)
 	}
 
 	if c.CacheParameterGroup != nil {
-		d.Set("parameter_group_name", c.CacheParameterGroup.CacheParameterGroupName)
+		d.Set(names.AttrParameterGroupName, c.CacheParameterGroup.CacheParameterGroupName)
 	}
 
 	d.Set("maintenance_window", c.PreferredMaintenanceWindow)

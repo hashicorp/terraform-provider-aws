@@ -53,10 +53,10 @@ func ResourceSubnetGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validateResourceName(subnetGroupNameMaxLength),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -85,7 +85,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &memorydb.CreateSubnetGroupInput{
 		Description:     aws.String(d.Get(names.AttrDescription).(string)),
 		SubnetGroupName: aws.String(name),
@@ -154,7 +154,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrDescription, group.Description)
 	d.Set(names.AttrSubnetIDs, flex.FlattenStringSet(subnetIds))
 	d.Set(names.AttrName, group.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(group.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(group.Name)))
 	d.Set(names.AttrVPCID, group.VpcId)
 
 	return diags

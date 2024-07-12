@@ -18,6 +18,8 @@ import (
 )
 
 // @SDKDataSource("aws_appmesh_virtual_gateway", name="Virtual Gateway")
+// @Tags
+// @Testing(serialize=true)
 func dataSourceVirtualGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVirtualGatewayRead,
@@ -28,11 +30,11 @@ func dataSourceVirtualGateway() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"created_date": {
+				names.AttrCreatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"last_updated_date": {
+				names.AttrLastUpdatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -48,7 +50,7 @@ func dataSourceVirtualGateway() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"resource_owner": {
+				names.AttrResourceOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -62,7 +64,6 @@ func dataSourceVirtualGateway() *schema.Resource {
 func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	virtualGatewayName := d.Get(names.AttrName).(string)
 	virtualGateway, err := findVirtualGatewayByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualGatewayName)
@@ -74,13 +75,13 @@ func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(aws.StringValue(virtualGateway.VirtualGatewayName))
 	arn := aws.StringValue(virtualGateway.Metadata.Arn)
 	d.Set(names.AttrARN, arn)
-	d.Set("created_date", virtualGateway.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", virtualGateway.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, virtualGateway.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, virtualGateway.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", virtualGateway.MeshName)
 	meshOwner := aws.StringValue(virtualGateway.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
 	d.Set(names.AttrName, virtualGateway.VirtualGatewayName)
-	d.Set("resource_owner", virtualGateway.Metadata.ResourceOwner)
+	d.Set(names.AttrResourceOwner, virtualGateway.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenVirtualGatewaySpec(virtualGateway.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
@@ -98,9 +99,7 @@ func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setKeyValueTagsOut(ctx, tags)
 
 	return diags
 }

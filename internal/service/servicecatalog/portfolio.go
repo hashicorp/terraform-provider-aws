@@ -50,7 +50,7 @@ func ResourcePortfolio() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,7 +65,7 @@ func ResourcePortfolio() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"provider_name": {
+			names.AttrProviderName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 50),
@@ -93,7 +93,7 @@ func resourcePortfolioCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("provider_name"); ok {
+	if v, ok := d.GetOk(names.AttrProviderName); ok {
 		input.ProviderName = aws.String(v.(string))
 	}
 
@@ -126,10 +126,10 @@ func resourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	portfolioDetail := output.PortfolioDetail
 	d.Set(names.AttrARN, portfolioDetail.ARN)
-	d.Set("created_time", portfolioDetail.CreatedTime.Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, portfolioDetail.CreatedTime.Format(time.RFC3339))
 	d.Set(names.AttrDescription, portfolioDetail.Description)
 	d.Set(names.AttrName, portfolioDetail.DisplayName)
-	d.Set("provider_name", portfolioDetail.ProviderName)
+	d.Set(names.AttrProviderName, portfolioDetail.ProviderName)
 
 	setTagsOut(ctx, output.Tags)
 
@@ -157,8 +157,8 @@ func resourcePortfolioUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		input.DisplayName = aws.String(d.Get(names.AttrName).(string))
 	}
 
-	if d.HasChange("provider_name") {
-		input.ProviderName = aws.String(d.Get("provider_name").(string))
+	if d.HasChange(names.AttrProviderName) {
+		input.ProviderName = aws.String(d.Get(names.AttrProviderName).(string))
 	}
 
 	if d.HasChange(names.AttrTagsAll) {

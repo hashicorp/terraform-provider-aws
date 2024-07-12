@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_db_proxy", name="DB Proxy")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceProxy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProxyCreate,
@@ -81,19 +82,19 @@ func resourceProxy() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"username": {
+						names.AttrUsername: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 					},
 				},
-				Set: sdkv2.SimpleSchemaSetFunc("auth_scheme", names.AttrDescription, "iam_auth", "secret_arn", "username"),
+				Set: sdkv2.SimpleSchemaSetFunc("auth_scheme", names.AttrDescription, "iam_auth", "secret_arn", names.AttrUsername),
 			},
 			"debug_logging": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -124,7 +125,7 @@ func resourceProxy() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -168,7 +169,7 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.RequireTLS = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
@@ -212,8 +213,8 @@ func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("require_tls", dbProxy.RequireTLS)
 	d.Set(names.AttrRoleARN, dbProxy.RoleArn)
 	d.Set("vpc_subnet_ids", dbProxy.VpcSubnetIds)
-	d.Set("vpc_security_group_ids", dbProxy.VpcSecurityGroupIds)
-	d.Set("endpoint", dbProxy.Endpoint)
+	d.Set(names.AttrVPCSecurityGroupIDs, dbProxy.VpcSecurityGroupIds)
+	d.Set(names.AttrEndpoint, dbProxy.Endpoint)
 
 	return diags
 }
@@ -237,7 +238,7 @@ func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.IdleClientTimeout = aws.Int32(int32(v.(int)))
 		}
 
-		if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 			input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
@@ -443,7 +444,7 @@ func expandUserAuthConfigs(tfList []interface{}) []types.UserAuthConfig {
 			apiObject.SecretArn = aws.String(v)
 		}
 
-		if v, ok := tfMap["username"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrUsername].(string); ok && v != "" {
 			apiObject.UserName = aws.String(v)
 		}
 
@@ -469,7 +470,7 @@ func flattenUserAuthConfigInfo(apiObject types.UserAuthConfigInfo) map[string]in
 	}
 
 	if v := apiObject.UserName; v != nil {
-		tfMap["username"] = aws.ToString(v)
+		tfMap[names.AttrUsername] = aws.ToString(v)
 	}
 
 	return tfMap

@@ -11,15 +11,16 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -52,7 +53,7 @@ func ResourcePlan() *schema.Resource {
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -71,7 +72,7 @@ func ResourcePlan() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -152,7 +153,7 @@ func ResourcePlan() *schema.Resource {
 								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
 							),
 						},
-						"schedule": {
+						names.AttrSchedule: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -187,32 +188,32 @@ func ResourcePlan() *schema.Resource {
 
 func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &backup.CreateBackupPlanInput{
-		BackupPlan: &backup.PlanInput{
+		BackupPlan: &awstypes.BackupPlanInput{
 			AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 			BackupPlanName:         aws.String(name),
-			Rules:                  expandPlanRules(ctx, d.Get("rule").(*schema.Set)),
+			Rules:                  expandPlanRules(ctx, d.Get(names.AttrRule).(*schema.Set)),
 		},
 		BackupPlanTags: getTagsIn(ctx),
 	}
 
-	output, err := conn.CreateBackupPlanWithContext(ctx, input)
+	output, err := conn.CreateBackupPlan(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Backup Plan (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.BackupPlanId))
+	d.SetId(aws.ToString(output.BackupPlanId))
 
 	return append(diags, resourcePlanRead(ctx, d, meta)...)
 }
 
 func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	output, err := FindPlanByID(ctx, conn, d.Id())
 
@@ -233,7 +234,7 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set(names.AttrARN, output.BackupPlanArn)
 	d.Set(names.AttrName, output.BackupPlan.BackupPlanName)
-	if err := d.Set("rule", flattenPlanRules(ctx, output.BackupPlan.Rules)); err != nil {
+	if err := d.Set(names.AttrRule, flattenPlanRules(ctx, output.BackupPlan.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 	d.Set(names.AttrVersion, output.VersionId)
@@ -243,19 +244,19 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	if d.HasChanges("rule", "advanced_backup_setting") {
+	if d.HasChanges(names.AttrRule, "advanced_backup_setting") {
 		input := &backup.UpdateBackupPlanInput{
 			BackupPlanId: aws.String(d.Id()),
-			BackupPlan: &backup.PlanInput{
+			BackupPlan: &awstypes.BackupPlanInput{
 				AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 				BackupPlanName:         aws.String(d.Get(names.AttrName).(string)),
-				Rules:                  expandPlanRules(ctx, d.Get("rule").(*schema.Set)),
+				Rules:                  expandPlanRules(ctx, d.Get(names.AttrRule).(*schema.Set)),
 			},
 		}
 
-		_, err := conn.UpdateBackupPlanWithContext(ctx, input)
+		_, err := conn.UpdateBackupPlan(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Backup Plan (%s): %s", d.Id(), err)
@@ -267,19 +268,19 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Backup Plan: %s", d.Id())
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (interface{}, error) {
-		return conn.DeleteBackupPlanWithContext(ctx, &backup.DeleteBackupPlanInput{
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteBackupPlan(ctx, &backup.DeleteBackupPlanInput{
 			BackupPlanId: aws.String(d.Id()),
 		})
-	}, backup.ErrCodeInvalidRequestException, "Related backup plan selections must be deleted prior to backup")
+	}, "Related backup plan selections must be deleted prior to backup")
 
-	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -290,14 +291,14 @@ func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func FindPlanByID(ctx context.Context, conn *backup.Backup, id string) (*backup.GetBackupPlanOutput, error) {
+func FindPlanByID(ctx context.Context, conn *backup.Client, id string) (*backup.GetBackupPlanOutput, error) {
 	input := &backup.GetBackupPlanInput{
 		BackupPlanId: aws.String(id),
 	}
 
-	output, err := conn.GetBackupPlanWithContext(ctx, input)
+	output, err := conn.GetBackupPlan(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -315,11 +316,11 @@ func FindPlanByID(ctx context.Context, conn *backup.Backup, id string) (*backup.
 	return output, nil
 }
 
-func expandPlanRules(ctx context.Context, vRules *schema.Set) []*backup.RuleInput {
-	rules := []*backup.RuleInput{}
+func expandPlanRules(ctx context.Context, vRules *schema.Set) []awstypes.BackupRuleInput {
+	rules := []awstypes.BackupRuleInput{}
 
 	for _, vRule := range vRules.List() {
-		rule := &backup.RuleInput{}
+		rule := awstypes.BackupRuleInput{}
 
 		mRule := vRule.(map[string]interface{})
 
@@ -331,7 +332,7 @@ func expandPlanRules(ctx context.Context, vRules *schema.Set) []*backup.RuleInpu
 		if vTargetVaultName, ok := mRule["target_vault_name"].(string); ok && vTargetVaultName != "" {
 			rule.TargetBackupVaultName = aws.String(vTargetVaultName)
 		}
-		if vSchedule, ok := mRule["schedule"].(string); ok && vSchedule != "" {
+		if vSchedule, ok := mRule[names.AttrSchedule].(string); ok && vSchedule != "" {
 			rule.ScheduleExpression = aws.String(vSchedule)
 		}
 		if vEnableContinuousBackup, ok := mRule["enable_continuous_backup"].(bool); ok {
@@ -362,18 +363,18 @@ func expandPlanRules(ctx context.Context, vRules *schema.Set) []*backup.RuleInpu
 	return rules
 }
 
-func expandPlanAdvancedSettings(vAdvancedBackupSettings *schema.Set) []*backup.AdvancedBackupSetting {
-	advancedBackupSettings := []*backup.AdvancedBackupSetting{}
+func expandPlanAdvancedSettings(vAdvancedBackupSettings *schema.Set) []awstypes.AdvancedBackupSetting {
+	advancedBackupSettings := []awstypes.AdvancedBackupSetting{}
 
 	for _, vAdvancedBackupSetting := range vAdvancedBackupSettings.List() {
-		advancedBackupSetting := &backup.AdvancedBackupSetting{}
+		advancedBackupSetting := awstypes.AdvancedBackupSetting{}
 
 		mAdvancedBackupSetting := vAdvancedBackupSetting.(map[string]interface{})
 
 		if v, ok := mAdvancedBackupSetting["backup_options"].(map[string]interface{}); ok && v != nil {
-			advancedBackupSetting.BackupOptions = flex.ExpandStringMap(v)
+			advancedBackupSetting.BackupOptions = flex.ExpandStringValueMap(v)
 		}
-		if v, ok := mAdvancedBackupSetting["resource_type"].(string); ok && v != "" {
+		if v, ok := mAdvancedBackupSetting[names.AttrResourceType].(string); ok && v != "" {
 			advancedBackupSetting.ResourceType = aws.String(v)
 		}
 
@@ -389,12 +390,12 @@ func expandPlanAdvancedSettings(vAdvancedBackupSettings *schema.Set) []*backup.A
 	return advancedBackupSettings
 }
 
-func expandPlanCopyActions(actionList []interface{}) []*backup.CopyAction {
-	actions := []*backup.CopyAction{}
+func expandPlanCopyActions(actionList []interface{}) []awstypes.CopyAction {
+	actions := []awstypes.CopyAction{}
 
 	for _, i := range actionList {
 		item := i.(map[string]interface{})
-		action := &backup.CopyAction{}
+		action := awstypes.CopyAction{}
 
 		action.DestinationBackupVaultArn = aws.String(item["destination_vault_arn"].(string))
 
@@ -408,12 +409,12 @@ func expandPlanCopyActions(actionList []interface{}) []*backup.CopyAction {
 	return actions
 }
 
-func expandPlanLifecycle(tfMap map[string]interface{}) *backup.Lifecycle {
+func expandPlanLifecycle(tfMap map[string]interface{}) *awstypes.Lifecycle {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &backup.Lifecycle{}
+	apiObject := &awstypes.Lifecycle{}
 
 	if v, ok := tfMap["delete_after"].(int); ok && v != 0 {
 		apiObject.DeleteAfterDays = aws.Int64(int64(v))
@@ -430,17 +431,17 @@ func expandPlanLifecycle(tfMap map[string]interface{}) *backup.Lifecycle {
 	return apiObject
 }
 
-func flattenPlanRules(ctx context.Context, rules []*backup.Rule) *schema.Set {
+func flattenPlanRules(ctx context.Context, rules []awstypes.BackupRule) *schema.Set {
 	vRules := []interface{}{}
 
 	for _, rule := range rules {
 		mRule := map[string]interface{}{
-			"rule_name":                aws.StringValue(rule.RuleName),
-			"target_vault_name":        aws.StringValue(rule.TargetBackupVaultName),
-			"schedule":                 aws.StringValue(rule.ScheduleExpression),
-			"enable_continuous_backup": aws.BoolValue(rule.EnableContinuousBackup),
-			"start_window":             int(aws.Int64Value(rule.StartWindowMinutes)),
-			"completion_window":        int(aws.Int64Value(rule.CompletionWindowMinutes)),
+			"rule_name":                aws.ToString(rule.RuleName),
+			"target_vault_name":        aws.ToString(rule.TargetBackupVaultName),
+			names.AttrSchedule:         aws.ToString(rule.ScheduleExpression),
+			"enable_continuous_backup": aws.ToBool(rule.EnableContinuousBackup),
+			"start_window":             int(aws.ToInt64(rule.StartWindowMinutes)),
+			"completion_window":        int(aws.ToInt64(rule.CompletionWindowMinutes)),
 			"recovery_point_tags":      KeyValueTags(ctx, rule.RecoveryPointTags).IgnoreAWS().Map(),
 		}
 
@@ -456,13 +457,13 @@ func flattenPlanRules(ctx context.Context, rules []*backup.Rule) *schema.Set {
 	return schema.NewSet(planHash, vRules)
 }
 
-func flattenPlanAdvancedSettings(advancedBackupSettings []*backup.AdvancedBackupSetting) *schema.Set {
+func flattenPlanAdvancedSettings(advancedBackupSettings []awstypes.AdvancedBackupSetting) *schema.Set {
 	vAdvancedBackupSettings := []interface{}{}
 
 	for _, advancedBackupSetting := range advancedBackupSettings {
 		mAdvancedBackupSetting := map[string]interface{}{
-			"backup_options": aws.StringValueMap(advancedBackupSetting.BackupOptions),
-			"resource_type":  aws.StringValue(advancedBackupSetting.ResourceType),
+			"backup_options":       advancedBackupSetting.BackupOptions,
+			names.AttrResourceType: aws.ToString(advancedBackupSetting.ResourceType),
 		}
 
 		vAdvancedBackupSettings = append(vAdvancedBackupSettings, mAdvancedBackupSetting)
@@ -471,7 +472,7 @@ func flattenPlanAdvancedSettings(advancedBackupSettings []*backup.AdvancedBackup
 	return schema.NewSet(planHash, vAdvancedBackupSettings)
 }
 
-func flattenPlanCopyActions(copyActions []*backup.CopyAction) []interface{} {
+func flattenPlanCopyActions(copyActions []awstypes.CopyAction) []interface{} {
 	if len(copyActions) == 0 {
 		return nil
 	}
@@ -479,12 +480,8 @@ func flattenPlanCopyActions(copyActions []*backup.CopyAction) []interface{} {
 	var tfList []interface{}
 
 	for _, copyAction := range copyActions {
-		if copyAction == nil {
-			continue
-		}
-
 		tfMap := map[string]interface{}{
-			"destination_vault_arn": aws.StringValue(copyAction.DestinationBackupVaultArn),
+			"destination_vault_arn": aws.ToString(copyAction.DestinationBackupVaultArn),
 		}
 
 		if copyAction.Lifecycle != nil {
@@ -497,15 +494,15 @@ func flattenPlanCopyActions(copyActions []*backup.CopyAction) []interface{} {
 	return tfList
 }
 
-func flattenPlanCopyActionLifecycle(copyActionLifecycle *backup.Lifecycle) []interface{} {
+func flattenPlanCopyActionLifecycle(copyActionLifecycle *awstypes.Lifecycle) []interface{} {
 	if copyActionLifecycle == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"delete_after":       aws.Int64Value(copyActionLifecycle.DeleteAfterDays),
-		"cold_storage_after": aws.Int64Value(copyActionLifecycle.MoveToColdStorageAfterDays),
-		"opt_in_to_archive_for_supported_resources": aws.BoolValue(copyActionLifecycle.OptInToArchiveForSupportedResources),
+		"delete_after":       aws.ToInt64(copyActionLifecycle.DeleteAfterDays),
+		"cold_storage_after": aws.ToInt64(copyActionLifecycle.MoveToColdStorageAfterDays),
+		"opt_in_to_archive_for_supported_resources": aws.ToBool(copyActionLifecycle.OptInToArchiveForSupportedResources),
 	}
 
 	return []interface{}{m}
@@ -522,7 +519,7 @@ func planHash(vRule interface{}) int {
 	if v, ok := mRule["target_vault_name"].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
-	if v, ok := mRule["schedule"].(string); ok {
+	if v, ok := mRule[names.AttrSchedule].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 	if v, ok := mRule["enable_continuous_backup"].(bool); ok {

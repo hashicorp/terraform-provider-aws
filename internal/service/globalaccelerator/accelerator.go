@@ -47,7 +47,7 @@ func resourceAccelerator() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"attributes": {
+			names.AttrAttributes: {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
@@ -72,7 +72,7 @@ func resourceAccelerator() *schema.Resource {
 					},
 				},
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -85,17 +85,17 @@ func resourceAccelerator() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ip_address_type": {
+			names.AttrIPAddressType: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          awstypes.IpAddressTypeIpv4,
 				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
 			},
-			"ip_addresses": {
+			names.AttrIPAddresses: {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -106,7 +106,7 @@ func resourceAccelerator() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ip_addresses": {
+						names.AttrIPAddresses: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -148,11 +148,11 @@ func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta
 		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("ip_address_type"); ok {
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
 		input.IpAddressType = awstypes.IpAddressType(v.(string))
 	}
 
-	if v, ok := d.GetOk("ip_addresses"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrIPAddresses); ok && len(v.([]interface{})) > 0 {
 		input.IpAddresses = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
@@ -168,7 +168,7 @@ func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deploy: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrAttributes); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input := expandUpdateAcceleratorAttributesInput(v.([]interface{})[0].(map[string]interface{}))
 		input.AcceleratorArn = aws.String(d.Id())
 
@@ -202,11 +202,11 @@ func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Accelerator (%s): %s", d.Id(), err)
 	}
 
-	d.Set("dns_name", accelerator.DnsName)
+	d.Set(names.AttrDNSName, accelerator.DnsName)
 	d.Set("dual_stack_dns_name", accelerator.DualStackDnsName)
 	d.Set(names.AttrEnabled, accelerator.Enabled)
-	d.Set("hosted_zone_id", meta.(*conns.AWSClient).GlobalAcceleratorHostedZoneID(ctx))
-	d.Set("ip_address_type", accelerator.IpAddressType)
+	d.Set(names.AttrHostedZoneID, meta.(*conns.AWSClient).GlobalAcceleratorHostedZoneID(ctx))
+	d.Set(names.AttrIPAddressType, accelerator.IpAddressType)
 	if err := d.Set("ip_sets", flattenIPSets(accelerator.IpSets)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ip_sets: %s", err)
 	}
@@ -218,7 +218,7 @@ func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Accelerator (%s) attributes: %s", d.Id(), err)
 	}
 
-	if err := d.Set("attributes", []interface{}{flattenAcceleratorAttributes(acceleratorAttributes)}); err != nil {
+	if err := d.Set(names.AttrAttributes, []interface{}{flattenAcceleratorAttributes(acceleratorAttributes)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting attributes: %s", err)
 	}
 
@@ -229,14 +229,14 @@ func resourceAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
-	if d.HasChanges(names.AttrName, "ip_address_type", names.AttrEnabled) {
+	if d.HasChanges(names.AttrName, names.AttrIPAddressType, names.AttrEnabled) {
 		input := &globalaccelerator.UpdateAcceleratorInput{
 			AcceleratorArn: aws.String(d.Id()),
 			Enabled:        aws.Bool(d.Get(names.AttrEnabled).(bool)),
 			Name:           aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		if v, ok := d.GetOk("ip_address_type"); ok {
+		if v, ok := d.GetOk(names.AttrIPAddressType); ok {
 			input.IpAddressType = awstypes.IpAddressType(v.(string))
 		}
 
@@ -251,8 +251,8 @@ func resourceAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChange("attributes") {
-		o, n := d.GetChange("attributes")
+	if d.HasChange(names.AttrAttributes) {
+		o, n := d.GetChange(names.AttrAttributes)
 		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
 			if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
 				oInput := expandUpdateAcceleratorAttributesInput(o.([]interface{})[0].(map[string]interface{}))
@@ -443,7 +443,7 @@ func flattenIPSet(apiObject *awstypes.IpSet) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.IpAddresses; v != nil {
-		tfMap["ip_addresses"] = v
+		tfMap[names.AttrIPAddresses] = v
 	}
 
 	if v := apiObject.IpFamily; v != nil {

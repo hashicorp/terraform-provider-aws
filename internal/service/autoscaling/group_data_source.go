@@ -24,7 +24,7 @@ func dataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -78,7 +78,7 @@ func dataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"launch_template": {
+			names.AttrLaunchTemplate: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -154,7 +154,7 @@ func dataSourceGroup() *schema.Resource {
 								},
 							},
 						},
-						"launch_template": {
+						names.AttrLaunchTemplate: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -194,11 +194,11 @@ func dataSourceGroup() *schema.Resource {
 																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:     schema.TypeInt,
 																			Computed: true,
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:     schema.TypeInt,
 																			Computed: true,
 																		},
@@ -220,11 +220,11 @@ func dataSourceGroup() *schema.Resource {
 																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:     schema.TypeInt,
 																			Computed: true,
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:     schema.TypeInt,
 																			Computed: true,
 																		},
@@ -250,11 +250,11 @@ func dataSourceGroup() *schema.Resource {
 																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:     schema.TypeInt,
 																			Computed: true,
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:     schema.TypeInt,
 																			Computed: true,
 																		},
@@ -289,16 +289,20 @@ func dataSourceGroup() *schema.Resource {
 																Computed: true,
 																Elem:     &schema.Schema{Type: schema.TypeString},
 															},
+															"max_spot_price_as_percentage_of_optimal_on_demand_price": {
+																Type:     schema.TypeInt,
+																Computed: true,
+															},
 															"memory_gib_per_vcpu": {
 																Type:     schema.TypeList,
 																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:     schema.TypeFloat,
 																			Computed: true,
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:     schema.TypeFloat,
 																			Computed: true,
 																		},
@@ -310,11 +314,11 @@ func dataSourceGroup() *schema.Resource {
 																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:     schema.TypeInt,
 																			Computed: true,
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:     schema.TypeInt,
 																			Computed: true,
 																		},
@@ -326,11 +330,11 @@ func dataSourceGroup() *schema.Resource {
 																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:     schema.TypeFloat,
 																			Computed: true,
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:     schema.TypeFloat,
 																			Computed: true,
 																		},
@@ -342,11 +346,11 @@ func dataSourceGroup() *schema.Resource {
 																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:     schema.TypeInt,
 																			Computed: true,
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:     schema.TypeInt,
 																			Computed: true,
 																		},
@@ -370,11 +374,11 @@ func dataSourceGroup() *schema.Resource {
 																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:     schema.TypeFloat,
 																			Computed: true,
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:     schema.TypeFloat,
 																			Computed: true,
 																		},
@@ -386,11 +390,11 @@ func dataSourceGroup() *schema.Resource {
 																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:     schema.TypeInt,
 																			Computed: true,
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:     schema.TypeInt,
 																			Computed: true,
 																		},
@@ -400,7 +404,7 @@ func dataSourceGroup() *schema.Resource {
 														},
 													},
 												},
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -505,7 +509,7 @@ func dataSourceGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"identifier": {
+						names.AttrIdentifier: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -574,7 +578,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.ToString(group.AutoScalingGroupName))
 	d.Set(names.AttrARN, group.AutoScalingGroupARN)
-	d.Set("availability_zones", group.AvailabilityZones)
+	d.Set(names.AttrAvailabilityZones, group.AvailabilityZones)
 	d.Set("default_cooldown", group.DefaultCooldown)
 	d.Set("desired_capacity", group.DesiredCapacity)
 	d.Set("desired_capacity_type", group.DesiredCapacityType)
@@ -586,11 +590,11 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("launch_configuration", group.LaunchConfigurationName)
 	if group.LaunchTemplate != nil {
-		if err := d.Set("launch_template", []interface{}{flattenLaunchTemplateSpecification(group.LaunchTemplate)}); err != nil {
+		if err := d.Set(names.AttrLaunchTemplate, []interface{}{flattenLaunchTemplateSpecification(group.LaunchTemplate)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
 		}
 	} else {
-		d.Set("launch_template", nil)
+		d.Set(names.AttrLaunchTemplate, nil)
 	}
 	d.Set("load_balancers", group.LoadBalancerNames)
 	d.Set("max_instance_lifetime", group.MaxInstanceLifetime)

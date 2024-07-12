@@ -81,7 +81,7 @@ func ResourceIntent() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -144,7 +144,7 @@ func ResourceIntent() *schema.Resource {
 					},
 				},
 			},
-			"last_updated_date": {
+			names.AttrLastUpdatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -200,7 +200,7 @@ func ResourceIntent() *schema.Resource {
 								validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
 							),
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      0,
@@ -390,9 +390,9 @@ func resourceIntentRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrARN, arn.String())
 
 	d.Set("checksum", resp.Checksum)
-	d.Set("created_date", resp.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, resp.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, resp.Description)
-	d.Set("last_updated_date", resp.LastUpdatedDate.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, resp.LastUpdatedDate.Format(time.RFC3339))
 	d.Set(names.AttrName, resp.Name)
 
 	version, err := FindLatestIntentVersionByName(ctx, conn, d.Id())
@@ -552,7 +552,7 @@ var codeHookResource = &schema.Resource{
 			Required:     true,
 			ValidateFunc: validation.StringLenBetween(1, 5),
 		},
-		"uri": {
+		names.AttrURI: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ValidateFunc: verify.ValidARN,
@@ -562,12 +562,12 @@ var codeHookResource = &schema.Resource{
 
 var messageResource = &schema.Resource{
 	Schema: map[string]*schema.Schema{
-		"content": {
+		names.AttrContent: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringLenBetween(1, 1000),
 		},
-		"content_type": {
+		names.AttrContentType: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringInSlice(lexmodelbuildingservice.ContentType_Values(), false),
@@ -587,7 +587,7 @@ var promptResource = &schema.Resource{
 			Required:     true,
 			ValidateFunc: validation.IntBetween(1, 5),
 		},
-		"message": {
+		names.AttrMessage: {
 			Type:     schema.TypeSet,
 			Required: true,
 			MinItems: 1,
@@ -604,7 +604,7 @@ var promptResource = &schema.Resource{
 
 var statementResource = &schema.Resource{
 	Schema: map[string]*schema.Schema{
-		"message": {
+		names.AttrMessage: {
 			Type:     schema.TypeSet,
 			Required: true,
 			MinItems: 1,
@@ -623,7 +623,7 @@ func flattenCodeHook(hook *lexmodelbuildingservice.CodeHook) (flattened []map[st
 	return []map[string]interface{}{
 		{
 			"message_version": aws.StringValue(hook.MessageVersion),
-			"uri":             aws.StringValue(hook.Uri),
+			names.AttrURI:     aws.StringValue(hook.Uri),
 		},
 	}
 }
@@ -633,7 +633,7 @@ func expandCodeHook(rawObject interface{}) (hook *lexmodelbuildingservice.CodeHo
 
 	return &lexmodelbuildingservice.CodeHook{
 		MessageVersion: aws.String(m["message_version"].(string)),
-		Uri:            aws.String(m["uri"].(string)),
+		Uri:            aws.String(m[names.AttrURI].(string)),
 	}
 }
 
@@ -685,9 +685,9 @@ func expandFulfilmentActivity(rawObject interface{}) (activity *lexmodelbuilding
 func flattenMessages(messages []*lexmodelbuildingservice.Message) (flattenedMessages []map[string]interface{}) {
 	for _, message := range messages {
 		flattenedMessages = append(flattenedMessages, map[string]interface{}{
-			"content":      aws.StringValue(message.Content),
-			"content_type": aws.StringValue(message.ContentType),
-			"group_number": aws.Int64Value(message.GroupNumber),
+			names.AttrContent:     aws.StringValue(message.Content),
+			names.AttrContentType: aws.StringValue(message.ContentType),
+			"group_number":        aws.Int64Value(message.GroupNumber),
 		})
 	}
 
@@ -707,8 +707,8 @@ func expandMessages(rawValues []interface{}) []*lexmodelbuildingservice.Message 
 		}
 
 		message := &lexmodelbuildingservice.Message{
-			Content:     aws.String(value["content"].(string)),
-			ContentType: aws.String(value["content_type"].(string)),
+			Content:     aws.String(value[names.AttrContent].(string)),
+			ContentType: aws.String(value[names.AttrContentType].(string)),
 		}
 
 		if v, ok := value["group_number"]; ok && v != 0 {
@@ -724,8 +724,8 @@ func expandMessages(rawValues []interface{}) []*lexmodelbuildingservice.Message 
 func flattenPrompt(prompt *lexmodelbuildingservice.Prompt) (flattened []map[string]interface{}) {
 	flattened = []map[string]interface{}{
 		{
-			"max_attempts": aws.Int64Value(prompt.MaxAttempts),
-			"message":      flattenMessages(prompt.Messages),
+			"max_attempts":    aws.Int64Value(prompt.MaxAttempts),
+			names.AttrMessage: flattenMessages(prompt.Messages),
 		},
 	}
 
@@ -741,7 +741,7 @@ func expandPrompt(rawObject interface{}) (prompt *lexmodelbuildingservice.Prompt
 
 	prompt = &lexmodelbuildingservice.Prompt{}
 	prompt.MaxAttempts = aws.Int64(int64(m["max_attempts"].(int)))
-	prompt.Messages = expandMessages(m["message"].(*schema.Set).List())
+	prompt.Messages = expandMessages(m[names.AttrMessage].(*schema.Set).List())
 
 	if v, ok := m["response_card"]; ok && v != "" {
 		prompt.ResponseCard = aws.String(v.(string))
@@ -753,10 +753,10 @@ func expandPrompt(rawObject interface{}) (prompt *lexmodelbuildingservice.Prompt
 func flattenSlots(slots []*lexmodelbuildingservice.Slot) (flattenedSlots []map[string]interface{}) {
 	for _, slot := range slots {
 		flattenedSlot := map[string]interface{}{
-			names.AttrName:    aws.StringValue(slot.Name),
-			"priority":        aws.Int64Value(slot.Priority),
-			"slot_constraint": aws.StringValue(slot.SlotConstraint),
-			"slot_type":       aws.StringValue(slot.SlotType),
+			names.AttrName:     aws.StringValue(slot.Name),
+			names.AttrPriority: aws.Int64Value(slot.Priority),
+			"slot_constraint":  aws.StringValue(slot.SlotConstraint),
+			"slot_type":        aws.StringValue(slot.SlotType),
 		}
 
 		if slot.Description != nil {
@@ -799,7 +799,7 @@ func expandSlots(rawValues []interface{}) []*lexmodelbuildingservice.Slot {
 
 		slot := &lexmodelbuildingservice.Slot{
 			Name:           aws.String(value[names.AttrName].(string)),
-			Priority:       aws.Int64(int64(value["priority"].(int))),
+			Priority:       aws.Int64(int64(value[names.AttrPriority].(int))),
 			SlotConstraint: aws.String(value["slot_constraint"].(string)),
 			SlotType:       aws.String(value["slot_type"].(string)),
 		}
@@ -837,7 +837,7 @@ func expandSlots(rawValues []interface{}) []*lexmodelbuildingservice.Slot {
 func flattenStatement(statement *lexmodelbuildingservice.Statement) (flattened []map[string]interface{}) {
 	flattened = []map[string]interface{}{
 		{
-			"message": flattenMessages(statement.Messages),
+			names.AttrMessage: flattenMessages(statement.Messages),
 		},
 	}
 
@@ -852,7 +852,7 @@ func expandStatement(rawObject interface{}) (statement *lexmodelbuildingservice.
 	m := rawObject.([]interface{})[0].(map[string]interface{})
 
 	statement = &lexmodelbuildingservice.Statement{}
-	statement.Messages = expandMessages(m["message"].(*schema.Set).List())
+	statement.Messages = expandMessages(m[names.AttrMessage].(*schema.Set).List())
 
 	if v, ok := m["response_card"]; ok && v != "" {
 		statement.ResponseCard = aws.String(v.(string))

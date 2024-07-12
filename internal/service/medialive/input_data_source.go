@@ -76,7 +76,7 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 			names.AttrRoleARN: schema.StringAttribute{
 				Computed: true,
 			},
-			"security_groups": schema.ListAttribute{
+			names.AttrSecurityGroups: schema.ListAttribute{
 				CustomType: fwtypes.ListOfStringType,
 				Computed:   true,
 			},

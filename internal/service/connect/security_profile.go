@@ -45,7 +45,7 @@ func ResourceSecurityProfile() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 250),
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -59,7 +59,7 @@ func ResourceSecurityProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"permissions": {
+			names.AttrPermissions: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 500,
@@ -83,7 +83,7 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 	securityProfileName := d.Get(names.AttrName).(string)
 	input := &connect.CreateSecurityProfileInput{
 		InstanceId:          aws.String(instanceID),
@@ -95,7 +95,7 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("permissions"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrPermissions); ok && v.(*schema.Set).Len() > 0 {
 		input.Permissions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -147,7 +147,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.Set(names.AttrARN, resp.SecurityProfile.Arn)
 	d.Set(names.AttrDescription, resp.SecurityProfile.Description)
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrInstanceID, instanceID)
 	d.Set("organization_resource_id", resp.SecurityProfile.OrganizationResourceId)
 	d.Set("security_profile_id", resp.SecurityProfile.Id)
 	d.Set(names.AttrName, resp.SecurityProfile.SecurityProfileName)
@@ -160,7 +160,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if permissions != nil {
-		d.Set("permissions", flex.FlattenStringSet(permissions))
+		d.Set(names.AttrPermissions, flex.FlattenStringSet(permissions))
 	}
 
 	setTagsOut(ctx, resp.SecurityProfile.Tags)
@@ -188,8 +188,8 @@ func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 		input.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
-	if d.HasChange("permissions") {
-		input.Permissions = flex.ExpandStringSet(d.Get("permissions").(*schema.Set))
+	if d.HasChange(names.AttrPermissions) {
+		input.Permissions = flex.ExpandStringSet(d.Get(names.AttrPermissions).(*schema.Set))
 	}
 
 	_, err = conn.UpdateSecurityProfileWithContext(ctx, input)

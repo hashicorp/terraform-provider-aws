@@ -41,7 +41,7 @@ func resourcePublicKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -59,10 +59,10 @@ func resourcePublicKey() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validPublicKeyName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -80,7 +80,7 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	name := create.NewNameGenerator(
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
-		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
 	input := &cloudfront.CreatePublicKeyInput{
@@ -96,7 +96,7 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.PublicKeyConfig.CallerReference = aws.String(id.UniqueId())
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		input.PublicKeyConfig.Comment = aws.String(v.(string))
 	}
 
@@ -129,11 +129,11 @@ func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	publicKeyConfig := output.PublicKey.PublicKeyConfig
 	d.Set("caller_reference", publicKeyConfig.CallerReference)
-	d.Set("comment", publicKeyConfig.Comment)
+	d.Set(names.AttrComment, publicKeyConfig.Comment)
 	d.Set("encoded_key", publicKeyConfig.EncodedKey)
 	d.Set("etag", output.ETag)
 	d.Set(names.AttrName, publicKeyConfig.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(publicKeyConfig.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(publicKeyConfig.Name)))
 
 	return diags
 }
@@ -157,7 +157,7 @@ func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		input.PublicKeyConfig.CallerReference = aws.String(id.UniqueId())
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		input.PublicKeyConfig.Comment = aws.String(v.(string))
 	}
 

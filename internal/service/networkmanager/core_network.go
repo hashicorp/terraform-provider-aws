@@ -102,7 +102,7 @@ func ResourceCoreNetwork() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -245,9 +245,9 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set(names.AttrARN, coreNetwork.CoreNetworkArn)
 	if coreNetwork.CreatedAt != nil {
-		d.Set("created_at", aws.TimeValue(coreNetwork.CreatedAt).Format(time.RFC3339))
+		d.Set(names.AttrCreatedAt, aws.TimeValue(coreNetwork.CreatedAt).Format(time.RFC3339))
 	} else {
-		d.Set("created_at", nil)
+		d.Set(names.AttrCreatedAt, nil)
 	}
 	d.Set(names.AttrDescription, coreNetwork.Description)
 	if err := d.Set("edges", flattenCoreNetworkEdges(coreNetwork.Edges)); err != nil {
@@ -625,18 +625,18 @@ func waitCoreNetworkPolicyCreated(ctx context.Context, conn *networkmanager.Netw
 
 // buildCoreNetworkBasePolicyDocument returns a base policy document
 func buildCoreNetworkBasePolicyDocument(regions []interface{}) (string, error) {
-	edgeLocations := make([]*CoreNetworkEdgeLocation, len(regions))
+	edgeLocations := make([]*coreNetworkPolicyCoreNetworkEdgeLocation, len(regions))
 	for i, location := range regions {
-		edgeLocations[i] = &CoreNetworkEdgeLocation{Location: location.(string)}
+		edgeLocations[i] = &coreNetworkPolicyCoreNetworkEdgeLocation{Location: location.(string)}
 	}
 
-	basePolicy := &CoreNetworkPolicyDoc{
+	basePolicy := &coreNetworkPolicyDocument{
 		Version: "2021.12",
-		CoreNetworkConfiguration: &CoreNetworkPolicyCoreNetworkConfiguration{
-			AsnRanges:     CoreNetworkPolicyDecodeConfigStringList([]interface{}{"64512-65534"}),
+		CoreNetworkConfiguration: &coreNetworkPolicyCoreNetworkConfiguration{
+			AsnRanges:     coreNetworkPolicyExpandStringList([]interface{}{"64512-65534"}),
 			EdgeLocations: edgeLocations,
 		},
-		Segments: []*CoreNetworkPolicySegment{
+		Segments: []*coreNetworkPolicySegment{
 			{
 				Name:        "segment",
 				Description: "base-policy",

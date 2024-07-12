@@ -34,18 +34,18 @@ func TestAccSageMakerEndpointConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.variant_name", "variant-1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.model_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_instance_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_instance_count", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_type", "ml.t2.medium"),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_variant_weight", "1"),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.core_dump_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.enable_ssm_access", "false"),
-					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_variant_weight", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.core_dump_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.enable_ssm_access", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.#", acctest.Ct0),
 				),
 			},
 			{
@@ -73,7 +73,7 @@ func TestAccSageMakerEndpointConfiguration_nameGenerated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 				),
 			},
 			{
@@ -101,7 +101,7 @@ func TestAccSageMakerEndpointConfiguration_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, rName),
 				),
 			},
 			{
@@ -129,20 +129,20 @@ func TestAccSageMakerEndpointConfiguration_shadowProductionVariants(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.variant_name", "variant-1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.model_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_instance_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_instance_count", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_type", "ml.t2.medium"),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_variant_weight", "1"),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_variant_weight", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.variant_name", "variant-2"),
 					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.model_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.initial_instance_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.initial_instance_count", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.instance_type", "ml.t2.medium"),
-					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.initial_variant_weight", "1"),
-					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.serverless_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.initial_variant_weight", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.0.serverless_config.#", acctest.Ct0),
 				),
 			},
 			{
@@ -169,8 +169,8 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_routing(t *testing
 				Config: testAccEndpointConfigurationConfig_routing(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.routing_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.routing_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.routing_config.0.routing_strategy", "RANDOM"),
 				),
 			},
@@ -198,11 +198,39 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_serverless(t *test
 				Config: testAccEndpointConfigurationConfig_serverless(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.max_concurrency", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.max_concurrency", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.memory_size_in_mb", "1024"),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.provisioned_concurrency", "0"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.provisioned_concurrency", acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerEndpointConfiguration_ProductionVariants_ami(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_ami(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.inference_ami_version", "al2-ami-sagemaker-inference-gpu-2"), //lintignore:AWSAT002
 				),
 			},
 			{
@@ -229,8 +257,8 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_serverlessProvisio
 				Config: testAccEndpointConfigurationConfig_serverlessProvisionedConcurrency(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.max_concurrency", "200"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.memory_size_in_mb", "5120"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.provisioned_concurrency", "100"),
@@ -366,11 +394,11 @@ func TestAccSageMakerEndpointConfiguration_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfigurationConfig_tags1(rName, "key1", "value1"),
+				Config: testAccEndpointConfigurationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -379,20 +407,20 @@ func TestAccSageMakerEndpointConfiguration_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEndpointConfigurationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccEndpointConfigurationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccEndpointConfigurationConfig_tags1(rName, "key2", "value2"),
+				Config: testAccEndpointConfigurationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -414,13 +442,46 @@ func TestAccSageMakerEndpointConfiguration_dataCapture(t *testing.T) {
 				Config: testAccEndpointConfigurationConfig_dataCapture(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.enable_capture", "true"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.enable_capture", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.initial_sampling_percentage", "50"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.destination_s3_uri", fmt.Sprintf("s3://%s/", rName)),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.0.capture_mode", "Input"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.1.capture_mode", "Output"),
-					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_content_type_header.0.json_content_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_content_type_header.0.json_content_types.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "data_capture_config.0.capture_content_type_header.0.json_content_types.*", "application/json"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerEndpointConfiguration_dataCapture_inputAndOutput(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_dataCapture_inputAndOutput(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.enable_capture", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.initial_sampling_percentage", "50"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.destination_s3_uri", fmt.Sprintf("s3://%s/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.0.capture_mode", "InputAndOutput"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_content_type_header.0.json_content_types.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "data_capture_config.0.capture_content_type_header.0.json_content_types.*", "application/json"),
 				),
 			},
@@ -473,11 +534,11 @@ func TestAccSageMakerEndpointConfiguration_async(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "async_inference_config.0.output_config.0.s3_output_path"),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.0.notification_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.0.notification_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.0.kms_key_id", ""),
 				),
 			},
@@ -506,12 +567,12 @@ func TestAccSageMakerEndpointConfiguration_async_includeInference(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.0.notification_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.0.notification_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "async_inference_config.0.output_config.0.notification_config.0.error_topic", "aws_sns_topic.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "async_inference_config.0.output_config.0.notification_config.0.success_topic", "aws_sns_topic.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.0.notification_config.0.include_inference_response_in.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.0.notification_config.0.include_inference_response_in.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "async_inference_config.0.output_config.0.notification_config.0.include_inference_response_in.*", "SUCCESS_NOTIFICATION_TOPIC"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "async_inference_config.0.output_config.0.notification_config.0.include_inference_response_in.*", "ERROR_NOTIFICATION_TOPIC"),
 				),
@@ -541,11 +602,11 @@ func TestAccSageMakerEndpointConfiguration_async_kms(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "async_inference_config.0.output_config.0.s3_output_path"),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.0.notification_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.0.notification_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, "async_inference_config.0.output_config.0.kms_key_id", "aws_kms_key.test", names.AttrARN),
 				),
 			},
@@ -574,11 +635,11 @@ func TestAccSageMakerEndpointConfiguration_Async_notif(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "async_inference_config.0.output_config.0.s3_output_path"),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.0.notification_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.0.notification_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "async_inference_config.0.output_config.0.notification_config.0.error_topic", "aws_sns_topic.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "async_inference_config.0.output_config.0.notification_config.0.success_topic", "aws_sns_topic.test", names.AttrARN),
 				),
@@ -608,10 +669,10 @@ func TestAccSageMakerEndpointConfiguration_Async_client(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.0.max_concurrent_invocations_per_instance", "1"),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.0.max_concurrent_invocations_per_instance", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "async_inference_config.0.output_config.0.s3_output_path"),
 				),
 			},
@@ -640,10 +701,10 @@ func TestAccSageMakerEndpointConfiguration_Async_client_failurePath(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.0.max_concurrent_invocations_per_instance", "1"),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.0.max_concurrent_invocations_per_instance", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "async_inference_config.0.output_config.0.s3_output_path"),
 					resource.TestCheckResourceAttrSet(resourceName, "async_inference_config.0.output_config.0.s3_failure_path"),
 				),
@@ -678,18 +739,18 @@ func TestAccSageMakerEndpointConfiguration_upgradeToEnableSSMAccess(t *testing.T
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.variant_name", "variant-1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.model_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_instance_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_instance_count", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_type", "ml.t2.medium"),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_variant_weight", "1"),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.core_dump_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_variant_weight", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.core_dump_config.#", acctest.Ct0),
 					resource.TestCheckNoResourceAttr(resourceName, "production_variants.0.enable_ssm_access"),
-					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.#", acctest.Ct0),
 				),
 			},
 			{
@@ -1006,6 +1067,41 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 `, rName))
 }
 
+func testAccEndpointConfigurationConfig_dataCapture_inputAndOutput(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.test.name
+    initial_instance_count = 2
+    instance_type          = "ml.t2.medium"
+    initial_variant_weight = 1
+  }
+
+  data_capture_config {
+    enable_capture              = true
+    initial_sampling_percentage = 50
+    destination_s3_uri          = "s3://${aws_s3_bucket.test.bucket}/"
+
+    capture_options {
+      capture_mode = "InputAndOutput"
+    }
+
+    capture_content_type_header {
+      json_content_types = ["application/json"]
+    }
+  }
+}
+`, rName))
+}
+
 func testAccEndpointConfigurationConfig_asyncKMS(rName string) string {
 	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -1259,6 +1355,24 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
       max_concurrency   = 1
       memory_size_in_mb = 1024
     }
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfigurationConfig_ami(rName string) string {
+	//lintignore:AWSAT002
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.test.name
+    inference_ami_version  = "al2-ami-sagemaker-inference-gpu-2"
+    instance_type          = "ml.t2.medium"
+    initial_instance_count = 2
+    initial_variant_weight = 1
   }
 }
 `, rName))

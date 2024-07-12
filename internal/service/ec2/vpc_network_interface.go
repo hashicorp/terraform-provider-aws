@@ -34,6 +34,7 @@ import (
 
 // @SDKResource("aws_network_interface", name="Network Interface")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceNetworkInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkInterfaceCreate,
@@ -188,7 +189,7 @@ func resourceNetworkInterface() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -199,7 +200,7 @@ func resourceNetworkInterface() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -343,7 +344,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 	input := &ec2.CreateNetworkInterfaceInput{
 		ClientToken: aws.String(id.UniqueId()),
-		SubnetId:    aws.String(d.Get("subnet_id").(string)),
+		SubnetId:    aws.String(d.Get(names.AttrSubnetID).(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -412,7 +413,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSecurityGroups); ok && v.(*schema.Set).Len() > 0 {
 		input.Groups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
@@ -430,7 +431,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.ToString(output.NetworkInterface.NetworkInterfaceId))
 
-	if _, err := waitNetworkInterfaceCreatedV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitNetworkInterfaceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Network Interface (%s) create: %s", d.Id(), err)
 	}
 
@@ -493,7 +494,7 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return findNetworkInterfaceByIDV2(ctx, conn, d.Id())
+		return findNetworkInterfaceByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -553,11 +554,11 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("private_ip_list", flattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting private_ip_list: %s", err)
 	}
-	if err := d.Set("security_groups", flattenGroupIdentifiers(eni.Groups)); err != nil {
+	if err := d.Set(names.AttrSecurityGroups, flattenGroupIdentifiers(eni.Groups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting security_groups: %s", err)
 	}
 	d.Set("source_dest_check", eni.SourceDestCheck)
-	d.Set("subnet_id", eni.SubnetId)
+	d.Set(names.AttrSubnetID, eni.SubnetId)
 
 	setTagsOutV2(ctx, eni.TagSet)
 
@@ -1006,10 +1007,10 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if d.HasChange("security_groups") {
+	if d.HasChange(names.AttrSecurityGroups) {
 		input := &ec2.ModifyNetworkInterfaceAttributeInput{
 			NetworkInterfaceId: aws.String(d.Id()),
-			Groups:             flex.ExpandStringValueSet(d.Get("security_groups").(*schema.Set)),
+			Groups:             flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		}
 
 		_, err := conn.ModifyNetworkInterfaceAttribute(ctx, input)
@@ -1068,7 +1069,7 @@ func attachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterf
 
 	attachmentID := aws.ToString(output.AttachmentId)
 
-	if _, err := waitNetworkInterfaceAttachedV2(ctx, conn, attachmentID, timeout); err != nil {
+	if _, err := waitNetworkInterfaceAttached(ctx, conn, attachmentID, timeout); err != nil {
 		return "", fmt.Errorf("waiting for EC2 Network Interface (%s/%s) attach: %w", networkInterfaceID, instanceID, err)
 	}
 
@@ -1107,7 +1108,7 @@ func detachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterf
 		return fmt.Errorf("detaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, attachmentID, err)
 	}
 
-	_, err = waitNetworkInterfaceDetachedV2(ctx, conn, attachmentID, timeout)
+	_, err = waitNetworkInterfaceDetached(ctx, conn, attachmentID, timeout)
 
 	if tfresource.NotFound(err) {
 		return nil
@@ -1132,7 +1133,7 @@ func flattenNetworkInterfaceAssociation(apiObject *types.NetworkInterfaceAssocia
 	}
 
 	if v := apiObject.AssociationId; v != nil {
-		tfMap["association_id"] = aws.ToString(v)
+		tfMap[names.AttrAssociationID] = aws.ToString(v)
 	}
 
 	if v := apiObject.CarrierIp; v != nil {
@@ -1455,7 +1456,7 @@ func deleteLingeringENIs(ctx context.Context, conn *ec2.Client, filterName, reso
 
 	tflog.Trace(ctx, "Checking for lingering ENIs")
 
-	enis, err := findNetworkInterfacesV2(ctx, conn, &ec2.DescribeNetworkInterfacesInput{
+	enis, err := findNetworkInterfaces(ctx, conn, &ec2.DescribeNetworkInterfacesInput{
 		Filters: newAttributeFilterListV2(map[string]string{
 			filterName: resourceId,
 		}),
@@ -1495,7 +1496,7 @@ func deleteLingeringLambdaENI(ctx context.Context, g *multierror.Group, conn *ec
 		networkInterfaceID := aws.ToString(eni.NetworkInterfaceId)
 
 		if eni.Attachment != nil && aws.ToString(eni.Attachment.InstanceOwnerId) == "amazon-aws" {
-			networkInterface, err := waitNetworkInterfaceAvailableAfterUseV2(ctx, conn, networkInterfaceID, timeout)
+			networkInterface, err := waitNetworkInterfaceAvailableAfterUse(ctx, conn, networkInterfaceID, timeout)
 			if tfresource.NotFound(err) {
 				return nil
 			}

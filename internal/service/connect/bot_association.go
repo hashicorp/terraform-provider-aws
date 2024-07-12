@@ -29,7 +29,7 @@ func ResourceBotAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -84,7 +84,7 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceId := d.Get("instance_id").(string)
+	instanceId := d.Get(names.AttrInstanceID).(string)
 
 	input := &connect.AssociateBotInput{
 		InstanceId: aws.String(instanceId),
@@ -155,7 +155,7 @@ func resourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Connect Bot Association (%s): empty output", d.Id())
 	}
 
-	d.Set("instance_id", instanceId)
+	d.Set(names.AttrInstanceID, instanceId)
 	if err := d.Set("lex_bot", flattenLexBot(lexBot)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lex_bot: %s", err)
 	}

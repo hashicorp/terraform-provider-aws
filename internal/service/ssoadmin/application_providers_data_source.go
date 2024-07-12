@@ -57,7 +57,7 @@ func (d *dataSourceApplicationProviders) Schema(ctx context.Context, req datasou
 									names.AttrDescription: schema.StringAttribute{
 										Computed: true,
 									},
-									"display_name": schema.StringAttribute{
+									names.AttrDisplayName: schema.StringAttribute{
 										Computed: true,
 									},
 									"icon_url": schema.StringAttribute{
@@ -121,7 +121,7 @@ var applicationProviderAttrTypes = map[string]attr.Type{
 
 var displayDataAttrTypes = map[string]attr.Type{
 	names.AttrDescription: types.StringType,
-	"display_name":        types.StringType,
+	names.AttrDisplayName: types.StringType,
 	"icon_url":            types.StringType,
 }
 
@@ -165,7 +165,7 @@ func flattenDisplayData(ctx context.Context, apiObject *awstypes.DisplayData) (t
 
 	obj := map[string]attr.Value{
 		names.AttrDescription: flex.StringToFramework(ctx, apiObject.Description),
-		"display_name":        flex.StringToFramework(ctx, apiObject.DisplayName),
+		names.AttrDisplayName: flex.StringToFramework(ctx, apiObject.DisplayName),
 		"icon_url":            flex.StringToFramework(ctx, apiObject.IconUrl),
 	}
 	objVal, d := types.ObjectValue(displayDataAttrTypes, obj)

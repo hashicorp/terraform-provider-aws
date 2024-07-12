@@ -34,7 +34,7 @@ func TestAccLicenseManagerAssociation_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "license_configuration_arn", "aws_licensemanager_license_configuration.test", names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_instance.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_instance.test", names.AttrARN),
 				),
 			},
 			{

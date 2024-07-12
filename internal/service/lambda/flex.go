@@ -30,7 +30,7 @@ func flattenVPCConfigResponse(apiObject *awstypes.VpcConfigResponse) []interface
 
 	tfMap["ipv6_allowed_for_dual_stack"] = aws.ToBool(apiObject.Ipv6AllowedForDualStack)
 	tfMap[names.AttrSubnetIDs] = apiObject.SubnetIds
-	tfMap["security_group_ids"] = apiObject.SecurityGroupIds
+	tfMap[names.AttrSecurityGroupIDs] = apiObject.SecurityGroupIds
 	if apiObject.VpcId != nil {
 		tfMap[names.AttrVPCID] = aws.ToString(apiObject.VpcId)
 	}

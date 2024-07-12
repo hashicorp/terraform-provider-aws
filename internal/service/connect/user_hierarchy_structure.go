@@ -58,7 +58,7 @@ func ResourceUserHierarchyStructure() *schema.Resource {
 					},
 				},
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -99,7 +99,7 @@ func resourceUserHierarchyStructureCreate(ctx context.Context, d *schema.Resourc
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 
 	input := &connect.UpdateUserHierarchyStructureInput{
 		HierarchyStructure: expandUserHierarchyStructure(d.Get("hierarchy_structure").([]interface{})),
@@ -147,7 +147,7 @@ func resourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "setting Connect User Hierarchy Structure hierarchy_structure for Connect instance: (%s)", d.Id())
 	}
 
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrInstanceID, instanceID)
 
 	return diags
 }

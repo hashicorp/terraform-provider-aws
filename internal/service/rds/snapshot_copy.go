@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_db_snapshot_copy", name="DB Snapshot")
 // @Tags(identifierAttribute="db_snapshot_arn")
+// @Testing(tagsTest=false)
 func ResourceSnapshotCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCopyCreate,
@@ -41,11 +42,11 @@ func ResourceSnapshotCopy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,19 +64,19 @@ func ResourceSnapshotCopy() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"iops": {
+			names.AttrIOPS: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -116,7 +117,7 @@ func ResourceSnapshotCopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -200,7 +201,7 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS DB Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -208,13 +209,13 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	arn := aws.StringValue(snapshot.DBSnapshotArn)
-	d.Set("allocated_storage", snapshot.AllocatedStorage)
-	d.Set("availability_zone", snapshot.AvailabilityZone)
+	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
+	d.Set(names.AttrAvailabilityZone, snapshot.AvailabilityZone)
 	d.Set("db_snapshot_arn", arn)
-	d.Set("encrypted", snapshot.Encrypted)
-	d.Set("engine", snapshot.Engine)
-	d.Set("engine_version", snapshot.EngineVersion)
-	d.Set("iops", snapshot.Iops)
+	d.Set(names.AttrEncrypted, snapshot.Encrypted)
+	d.Set(names.AttrEngine, snapshot.Engine)
+	d.Set(names.AttrEngineVersion, snapshot.EngineVersion)
+	d.Set(names.AttrIOPS, snapshot.Iops)
 	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
 	d.Set("license_model", snapshot.LicenseModel)
 	d.Set("option_group_name", snapshot.OptionGroupName)
@@ -222,7 +223,7 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("snapshot_type", snapshot.SnapshotType)
 	d.Set("source_db_snapshot_identifier", snapshot.SourceDBSnapshotIdentifier)
 	d.Set("source_region", snapshot.SourceRegion)
-	d.Set("storage_type", snapshot.StorageType)
+	d.Set(names.AttrStorageType, snapshot.StorageType)
 	d.Set("target_db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
 	d.Set(names.AttrVPCID, snapshot.VpcId)
 

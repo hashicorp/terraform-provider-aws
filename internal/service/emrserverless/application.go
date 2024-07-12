@@ -185,14 +185,14 @@ func resourceApplication() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
-			"network_configuration": {
+			names.AttrNetworkConfiguration: {
 				Type:             schema.TypeList,
 				Optional:         true,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				MaxItems:         1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: true,
@@ -262,7 +262,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.MaximumCapacity = expandMaximumCapacity(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("network_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -323,7 +323,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting maximum_capacity: %s", err)
 	}
 
-	if err := d.Set("network_configuration", []interface{}{flattenNetworkConfiguration(application.NetworkConfiguration)}); err != nil {
+	if err := d.Set(names.AttrNetworkConfiguration, []interface{}{flattenNetworkConfiguration(application.NetworkConfiguration)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
@@ -366,7 +366,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.MaximumCapacity = expandMaximumCapacity(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("network_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		}
 
@@ -624,7 +624,7 @@ func expandNetworkConfiguration(tfMap map[string]interface{}) *types.NetworkConf
 
 	apiObject := &types.NetworkConfiguration{}
 
-	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 
@@ -643,7 +643,7 @@ func flattenNetworkConfiguration(apiObject *types.NetworkConfiguration) map[stri
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
-		tfMap["security_group_ids"] = flex.FlattenStringValueSet(v)
+		tfMap[names.AttrSecurityGroupIDs] = flex.FlattenStringValueSet(v)
 	}
 
 	if v := apiObject.SubnetIds; v != nil {

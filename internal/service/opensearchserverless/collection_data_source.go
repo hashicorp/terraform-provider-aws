@@ -46,7 +46,7 @@ func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequ
 			"collection_endpoint": schema.StringAttribute{
 				Computed: true,
 			},
-			"created_date": schema.StringAttribute{
+			names.AttrCreatedDate: schema.StringAttribute{
 				Computed: true,
 			},
 			"dashboard_endpoint": schema.StringAttribute{

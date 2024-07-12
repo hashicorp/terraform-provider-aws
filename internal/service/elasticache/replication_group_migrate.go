@@ -31,7 +31,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -53,7 +53,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				ValidateFunc:  validReplicationGroupAuthToken,
 				ConflictsWith: []string{"user_group_ids"},
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:         nullable.TypeNullableBool,
 				Optional:     true,
 				Computed:     true,
@@ -84,14 +84,14 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				Default:      engineRedis,
 				ValidateFunc: validation.StringInSlice([]string{engineRedis}, true),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -108,9 +108,9 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Computed: true,
 				ConflictsWith: []string{
 					"num_node_groups",
-					"parameter_group_name",
-					"engine",
-					"engine_version",
+					names.AttrParameterGroupName,
+					names.AttrEngine,
+					names.AttrEngineVersion,
 					"node_type",
 					"security_group_names",
 					"transit_encryption_enabled",
@@ -136,7 +136,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(elasticache.DestinationType_Values(), false),
 						},
-						"destination": {
+						names.AttrDestination: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -203,7 +203,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"num_cache_clusters", "global_replication_group_id"},
 			},
-			"parameter_group_name": {
+			names.AttrParameterGroupName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -258,7 +258,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -321,7 +321,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},

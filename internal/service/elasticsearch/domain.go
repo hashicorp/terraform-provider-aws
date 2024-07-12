@@ -52,7 +52,7 @@ func ResourceDomain() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIf("elasticsearch_version", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				newVersion := d.Get("elasticsearch_version").(string)
-				domainName := d.Get("domain_name").(string)
+				domainName := d.Get(names.AttrDomainName).(string)
 
 				conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 				resp, err := conn.GetCompatibleElasticsearchVersionsWithContext(ctx, &elasticsearch.GetCompatibleElasticsearchVersionsInput{
@@ -180,13 +180,13 @@ func ResourceDomain() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"duration": {
+									names.AttrDuration: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"unit": {
+												names.AttrUnit: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(elasticsearch.TimeUnit_Values(), false),
@@ -252,12 +252,12 @@ func ResourceDomain() *schema.Resource {
 							Optional:         true,
 							DiffSuppressFunc: isDedicatedMasterDisabled,
 						},
-						"instance_count": {
+						names.AttrInstanceCount: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  1,
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  elasticsearch.ESPartitionInstanceTypeM3MediumElasticsearch,
@@ -324,7 +324,7 @@ func ResourceDomain() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"user_pool_id": {
+						names.AttrUserPoolID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -335,7 +335,7 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -391,22 +391,22 @@ func ResourceDomain() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"throughput": {
+						names.AttrThroughput: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validation.IntAtLeast(125),
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -441,7 +441,7 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -454,7 +454,7 @@ func ResourceDomain() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_log_group_arn": {
+						names.AttrCloudWatchLogGroupARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -509,13 +509,13 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zones": {
+						names.AttrAvailabilityZones: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -545,7 +545,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	// The API doesn't check for duplicate names
 	// so w/out this check Create would act as upsert
 	// and might cause duplicate domain to appear in state.
-	name := d.Get("domain_name").(string)
+	name := d.Get(names.AttrDomainName).(string)
 	_, err := FindDomainByName(ctx, conn, name)
 
 	if err == nil {
@@ -719,7 +719,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 
-	name := d.Get("domain_name").(string)
+	name := d.Get(names.AttrDomainName).(string)
 	ds, err := FindDomainByName(ctx, conn, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -758,7 +758,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("domain_id", ds.DomainId)
-	d.Set("domain_name", ds.DomainName)
+	d.Set(names.AttrDomainName, ds.DomainName)
 	d.Set("elasticsearch_version", ds.ElasticsearchVersion)
 
 	if err := d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions)); err != nil {
@@ -813,7 +813,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		endpoints := flex.FlattenStringMap(ds.Endpoints)
-		d.Set("endpoint", endpoints["vpc"])
+		d.Set(names.AttrEndpoint, endpoints["vpc"])
 
 		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
@@ -821,7 +821,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	} else {
 		if ds.Endpoint != nil {
-			d.Set("endpoint", ds.Endpoint)
+			d.Set(names.AttrEndpoint, ds.Endpoint)
 			d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		}
 		if ds.Endpoints != nil {
@@ -847,7 +847,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		name := d.Get("domain_name").(string)
+		name := d.Get(names.AttrDomainName).(string)
 		input := &elasticsearch.UpdateElasticsearchDomainConfigInput{
 			DomainName: aws.String(name),
 		}
@@ -988,7 +988,7 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 
-	name := d.Get("domain_name").(string)
+	name := d.Get(names.AttrDomainName).(string)
 
 	log.Printf("[DEBUG] Deleting Elasticsearch Domain: %s", d.Id())
 	_, err := conn.DeleteElasticsearchDomainWithContext(ctx, &elasticsearch.DeleteElasticsearchDomainInput{
@@ -1013,9 +1013,9 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceDomainImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 
-	d.Set("domain_name", d.Id())
+	d.Set(names.AttrDomainName, d.Id())
 
-	ds, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
+	ds, err := FindDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 
 	if err != nil {
 		return nil, err
@@ -1040,7 +1040,7 @@ func suppressEquivalentKMSKeyIDs(k, old, new string, d *schema.ResourceData) boo
 }
 
 func getKibanaEndpoint(d *schema.ResourceData) string {
-	return d.Get("endpoint").(string) + "/_plugin/kibana/"
+	return d.Get(names.AttrEndpoint).(string) + "/_plugin/kibana/"
 }
 
 func isDedicatedMasterDisabled(k, old, new string, d *schema.ResourceData) bool {
@@ -1104,10 +1104,10 @@ func expandClusterConfig(m map[string]interface{}) *elasticsearch.ElasticsearchC
 		}
 	}
 
-	if v, ok := m["instance_count"]; ok {
+	if v, ok := m[names.AttrInstanceCount]; ok {
 		config.InstanceCount = aws.Int64(int64(v.(int)))
 	}
-	if v, ok := m["instance_type"]; ok {
+	if v, ok := m[names.AttrInstanceType]; ok {
 		config.InstanceType = aws.String(v.(string))
 	}
 
@@ -1189,10 +1189,10 @@ func flattenClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[str
 		m["dedicated_master_type"] = aws.StringValue(c.DedicatedMasterType)
 	}
 	if c.InstanceCount != nil {
-		m["instance_count"] = aws.Int64Value(c.InstanceCount)
+		m[names.AttrInstanceCount] = aws.Int64Value(c.InstanceCount)
 	}
 	if c.InstanceType != nil {
-		m["instance_type"] = aws.StringValue(c.InstanceType)
+		m[names.AttrInstanceType] = aws.StringValue(c.InstanceType)
 	}
 	if c.WarmEnabled != nil {
 		m["warm_enabled"] = aws.BoolValue(c.WarmEnabled)

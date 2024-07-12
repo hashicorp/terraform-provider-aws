@@ -35,7 +35,7 @@ func TestAccRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
 				Config: testAccSnapshotScheduleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", clusterResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, clusterResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "schedule_identifier", snapshotScheduleResourceName, names.AttrID),
 				),
 			},

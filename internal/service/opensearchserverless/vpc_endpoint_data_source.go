@@ -23,11 +23,11 @@ func DataSourceVPCEndpoint() *schema.Resource {
 		ReadWithoutTimeout: dataSourceVPCEndpointRead,
 
 		Schema: map[string]*schema.Schema{
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_endpoint_id": {
+			names.AttrVPCEndpointID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -39,7 +39,7 @@ func DataSourceVPCEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -61,7 +61,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 
-	id := d.Get("vpc_endpoint_id").(string)
+	id := d.Get(names.AttrVPCEndpointID).(string)
 	vpcEndpoint, err := findVPCEndpointByID(ctx, conn, id)
 
 	if err != nil {
@@ -71,10 +71,10 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.ToString(vpcEndpoint.Id))
 
 	createdDate := time.UnixMilli(aws.ToInt64(vpcEndpoint.CreatedDate))
-	d.Set("created_date", createdDate.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, createdDate.Format(time.RFC3339))
 
 	d.Set(names.AttrName, vpcEndpoint.Name)
-	d.Set("security_group_ids", vpcEndpoint.SecurityGroupIds)
+	d.Set(names.AttrSecurityGroupIDs, vpcEndpoint.SecurityGroupIds)
 	d.Set(names.AttrSubnetIDs, vpcEndpoint.SubnetIds)
 	d.Set(names.AttrVPCID, vpcEndpoint.VpcId)
 

@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/efs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -31,10 +31,10 @@ func TestAccEFSFileSystemDataSource_id(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "performance_mode", resourceName, "performance_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "creation_token", resourceName, "creation_token"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "encrypted", resourceName, "encrypted"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEncrypted, resourceName, names.AttrEncrypted),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTags, resourceName, names.AttrTags),
-					resource.TestCheckResourceAttrPair(dataSourceName, "dns_name", resourceName, "dns_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDNSName, resourceName, names.AttrDNSName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "provisioned_throughput_in_mibps", resourceName, "provisioned_throughput_in_mibps"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "throughput_mode", resourceName, "throughput_mode"),
@@ -63,10 +63,10 @@ func TestAccEFSFileSystemDataSource_tags(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "performance_mode", resourceName, "performance_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "creation_token", resourceName, "creation_token"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "encrypted", resourceName, "encrypted"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEncrypted, resourceName, names.AttrEncrypted),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTags, resourceName, names.AttrTags),
-					resource.TestCheckResourceAttrPair(dataSourceName, "dns_name", resourceName, "dns_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDNSName, resourceName, names.AttrDNSName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "provisioned_throughput_in_mibps", resourceName, "provisioned_throughput_in_mibps"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "throughput_mode", resourceName, "throughput_mode"),
@@ -95,10 +95,10 @@ func TestAccEFSFileSystemDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "performance_mode", resourceName, "performance_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "creation_token", resourceName, "creation_token"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "encrypted", resourceName, "encrypted"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEncrypted, resourceName, names.AttrEncrypted),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTags, resourceName, names.AttrTags),
-					resource.TestCheckResourceAttrPair(dataSourceName, "dns_name", resourceName, "dns_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDNSName, resourceName, names.AttrDNSName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "provisioned_throughput_in_mibps", resourceName, "provisioned_throughput_in_mibps"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "throughput_mode", resourceName, "throughput_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "lifecycle_policy", resourceName, "lifecycle_policy"),
@@ -133,7 +133,7 @@ func TestAccEFSFileSystemDataSource_availabilityZone(t *testing.T) {
 
 func TestAccEFSFileSystemDataSource_nonExistent_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var desc efs.FileSystemDescription
+	var desc awstypes.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -150,7 +150,7 @@ func TestAccEFSFileSystemDataSource_nonExistent_tags(t *testing.T) {
 			},
 			{
 				Config:      testAccFileSystemDataSourceConfig_tagsNonExistent(rName),
-				ExpectError: regexache.MustCompile(`no matching EFS file system found`),
+				ExpectError: regexache.MustCompile(`no matching EFS File System found`),
 			},
 		},
 	})
@@ -213,16 +213,7 @@ data "aws_efs_file_system" "test" {
 }
 `
 
-const testAccFileSystemDataSourceConfig_availabilityZone = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccFileSystemDataSourceConfig_availabilityZone = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_efs_file_system" "test" {
   availability_zone_name = data.aws_availability_zones.available.names[0]
 }
@@ -230,4 +221,4 @@ resource "aws_efs_file_system" "test" {
 data "aws_efs_file_system" "test" {
   file_system_id = aws_efs_file_system.test.id
 }
-`
+`)

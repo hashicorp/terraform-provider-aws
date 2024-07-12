@@ -27,6 +27,9 @@ import (
 
 // @SDKResource("aws_appmesh_virtual_service", name="Virtual Service")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/appmesh;appmesh.VirtualServiceData")
+// @Testing(serialize=true)
+// @Testing(importStateIdFunc=testAccVirtualServiceImportStateIdFunc)
 func resourceVirtualService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualServiceCreate,
@@ -44,11 +47,11 @@ func resourceVirtualService() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"created_date": {
+				names.AttrCreatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"last_updated_date": {
+				names.AttrLastUpdatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -71,7 +74,7 @@ func resourceVirtualService() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
-				"resource_owner": {
+				names.AttrResourceOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -189,12 +192,12 @@ func resourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, met
 
 	arn := aws.StringValue(vs.Metadata.Arn)
 	d.Set(names.AttrARN, arn)
-	d.Set("created_date", vs.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", vs.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, vs.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, vs.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vs.MeshName)
 	d.Set("mesh_owner", vs.Metadata.MeshOwner)
 	d.Set(names.AttrName, vs.VirtualServiceName)
-	d.Set("resource_owner", vs.Metadata.ResourceOwner)
+	d.Set(names.AttrResourceOwner, vs.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenVirtualServiceSpec(vs.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}

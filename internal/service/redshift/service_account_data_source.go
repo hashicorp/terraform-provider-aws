@@ -54,7 +54,7 @@ func dataSourceServiceAccount() *schema.Resource {
 		ReadWithoutTimeout: dataSourceServiceAccountRead,
 
 		Schema: map[string]*schema.Schema{
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -71,7 +71,7 @@ func dataSourceServiceAccount() *schema.Resource {
 func dataSourceServiceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	region := meta.(*conns.AWSClient).Region
-	if v, ok := d.GetOk("region"); ok {
+	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
 

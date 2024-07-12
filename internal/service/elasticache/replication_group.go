@@ -49,7 +49,7 @@ func resourceReplicationGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -77,7 +77,7 @@ func resourceReplicationGroup() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(elasticache.AuthTokenUpdateStrategyType_Values(), true),
 				Default:      elasticache.AuthTokenUpdateStrategyTypeRotate,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:         nullable.TypeNullableBool,
 				Optional:     true,
 				Computed:     true,
@@ -108,14 +108,14 @@ func resourceReplicationGroup() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				Default:      engineRedis,
 				ValidateFunc: validation.StringInSlice([]string{engineRedis}, true),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -125,7 +125,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -136,9 +136,9 @@ func resourceReplicationGroup() *schema.Resource {
 				Computed: true,
 				ConflictsWith: []string{
 					"num_node_groups",
-					"parameter_group_name",
-					"engine",
-					"engine_version",
+					names.AttrParameterGroupName,
+					names.AttrEngine,
+					names.AttrEngineVersion,
 					"node_type",
 					"security_group_names",
 					"transit_encryption_enabled",
@@ -170,7 +170,7 @@ func resourceReplicationGroup() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(elasticache.DestinationType_Values(), false),
 						},
-						"destination": {
+						names.AttrDestination: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -236,7 +236,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"num_cache_clusters", "global_replication_group_id"},
 			},
-			"parameter_group_name": {
+			names.AttrParameterGroupName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -290,7 +290,7 @@ func resourceReplicationGroup() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -414,7 +414,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.AuthToken = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("auto_minor_version_upgrade"); ok {
+	if v, ok := d.GetOk(names.AttrAutoMinorVersionUpgrade); ok {
 		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 			input.AutoMinorVersionUpgrade = aws.Bool(v)
 		}
@@ -428,7 +428,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.ReplicationGroupDescription = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -442,7 +442,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		}
 		input.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
 		input.CacheNodeType = aws.String(nodeType)
-		input.Engine = aws.String(d.Get("engine").(string))
+		input.Engine = aws.String(d.Get(names.AttrEngine).(string))
 	}
 
 	if v, ok := d.GetOk("ip_discovery"); ok {
@@ -489,7 +489,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.NumNodeGroups = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("parameter_group_name"); ok {
+	if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 		input.CacheParameterGroupName = aws.String(v.(string))
 	}
 
@@ -509,7 +509,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.CacheSubnetGroupName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -752,12 +752,12 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 		requestUpdate := false
 		input := &elasticache.ModifyReplicationGroupInput{
-			ApplyImmediately:   aws.Bool(d.Get("apply_immediately").(bool)),
+			ApplyImmediately:   aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			ReplicationGroupId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("auto_minor_version_upgrade") {
-			if v, ok := d.GetOk("auto_minor_version_upgrade"); ok {
+		if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
+			if v, ok := d.GetOk(names.AttrAutoMinorVersionUpgrade); ok {
 				if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 					input.AutoMinorVersionUpgrade = aws.Bool(v)
 					requestUpdate = true
@@ -775,8 +775,8 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			requestUpdate = true
 		}
 
-		if d.HasChange("engine_version") {
-			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+		if d.HasChange(names.AttrEngineVersion) {
+			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 			requestUpdate = true
 		}
 
@@ -835,13 +835,13 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			requestUpdate = true
 		}
 
-		if d.HasChange("parameter_group_name") {
-			input.CacheParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
+		if d.HasChange(names.AttrParameterGroupName) {
+			input.CacheParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
 			requestUpdate = true
 		}
 
-		if d.HasChange("security_group_ids") {
-			if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		if d.HasChange(names.AttrSecurityGroupIDs) {
+			if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 				input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 				requestUpdate = true
 			}
@@ -970,7 +970,7 @@ func resourceReplicationGroupDelete(ctx context.Context, d *schema.ResourceData,
 		ReplicationGroupId: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("final_snapshot_identifier"); ok {
+	if v, ok := d.GetOk(names.AttrFinalSnapshotIdentifier); ok {
 		input.FinalSnapshotIdentifier = aws.String(v.(string))
 	}
 
@@ -995,7 +995,7 @@ func resourceReplicationGroupDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if hasGlobalReplicationGroupID {
-		if paramGroupName := d.Get("parameter_group_name").(string); paramGroupName != "" {
+		if paramGroupName := d.Get(names.AttrParameterGroupName).(string); paramGroupName != "" {
 			if err := deleteParameterGroup(ctx, conn, paramGroupName); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}

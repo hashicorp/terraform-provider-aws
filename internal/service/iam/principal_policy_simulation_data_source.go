@@ -55,7 +55,7 @@ func dataSourcePrincipalPolicySimulation() *schema.Resource {
 							Required:    true,
 							Description: `The type that the simulator should use to interpret the strings given in argument "values".`,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Schema{
@@ -152,7 +152,7 @@ func dataSourcePrincipalPolicySimulation() *schema.Resource {
 							},
 							Description: `A mapping of various additional details that are relevant to the decision, exactly as returned by the policy simulator.`,
 						},
-						"resource_arn": {
+						names.AttrResourceARN: {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: `ARN of the resource that the action was tested against.`,
@@ -233,7 +233,7 @@ func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.Reso
 		entry := awstypes.ContextEntry{
 			ContextKeyName:   aws.String(entryRaw[names.AttrKey].(string)),
 			ContextKeyType:   awstypes.ContextKeyTypeEnum(entryRaw[names.AttrType].(string)),
-			ContextKeyValues: setAsAWSStringSlice(entryRaw["values"]),
+			ContextKeyValues: setAsAWSStringSlice(entryRaw[names.AttrValues]),
 		}
 		input.ContextEntries = append(input.ContextEntries, entry)
 	}
@@ -295,7 +295,7 @@ func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.Reso
 			deniedCount++
 		}
 		if result.EvalResourceName != nil {
-			rawResult["resource_arn"] = aws.ToString(result.EvalResourceName)
+			rawResult[names.AttrResourceARN] = aws.ToString(result.EvalResourceName)
 		}
 
 		var missingContextKeys []string

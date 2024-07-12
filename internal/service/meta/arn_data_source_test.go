@@ -29,7 +29,7 @@ func TestAccMetaARNDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "account", "123456789012"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, arn),
 					resource.TestCheckResourceAttr(dataSourceName, "partition", "aws"),
-					resource.TestCheckResourceAttr(dataSourceName, "region", "eu-west-1"), // lintignore:AWSAT003
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, "eu-west-1"), // lintignore:AWSAT003
 					resource.TestCheckResourceAttr(dataSourceName, "resource", "db:mysql-db"),
 					resource.TestCheckResourceAttr(dataSourceName, "service", "rds"),
 				),
@@ -54,7 +54,7 @@ func TestAccMetaARNDataSource_s3Bucket(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "account", ""),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, arn),
 					resource.TestCheckResourceAttr(dataSourceName, "partition", "aws"),
-					resource.TestCheckResourceAttr(dataSourceName, "region", ""),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, ""),
 					resource.TestCheckResourceAttr(dataSourceName, "resource", "my_corporate_bucket/Development/*"),
 					resource.TestCheckResourceAttr(dataSourceName, "service", "s3"),
 				),

@@ -34,7 +34,7 @@ data "aws_connect_contact_flow_module" "example" {
 
 ~> **NOTE:** `instance_id` and one of either `name` or `contact_flow_module_id` is required.
 
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `contact_flow_module_id` - (Optional) Returns information on a specific Contact Flow Module by contact flow module id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance

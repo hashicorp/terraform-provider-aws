@@ -21,7 +21,7 @@ func DataSourceSite() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSiteRead,
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,7 +92,7 @@ func dataSourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interf
 	site := results[0]
 
 	d.SetId(aws.StringValue(site.SiteId))
-	d.Set("account_id", site.AccountId)
+	d.Set(names.AttrAccountID, site.AccountId)
 	d.Set(names.AttrDescription, site.Description)
 	d.Set(names.AttrName, site.Name)
 

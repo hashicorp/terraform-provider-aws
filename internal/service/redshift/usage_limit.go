@@ -51,7 +51,7 @@ func resourceUsageLimit() *schema.Resource {
 				Default:      redshift.UsageLimitBreachActionLog,
 				ValidateFunc: validation.StringInSlice(redshift.UsageLimitBreachAction_Values(), false),
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -87,7 +87,7 @@ func resourceUsageLimitCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	clusterId := d.Get("cluster_identifier").(string)
+	clusterId := d.Get(names.AttrClusterIdentifier).(string)
 	input := redshift.CreateUsageLimitInput{
 		Amount:            aws.Int64(int64(d.Get("amount").(int))),
 		ClusterIdentifier: aws.String(clusterId),
@@ -145,7 +145,7 @@ func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("limit_type", out.LimitType)
 	d.Set("feature_type", out.FeatureType)
 	d.Set("breach_action", out.BreachAction)
-	d.Set("cluster_identifier", out.ClusterIdentifier)
+	d.Set(names.AttrClusterIdentifier, out.ClusterIdentifier)
 
 	setTagsOut(ctx, out.Tags)
 

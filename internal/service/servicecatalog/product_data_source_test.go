@@ -9,6 +9,9 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,20 +34,21 @@ func TestAccServiceCatalogProductDataSource_basic(t *testing.T) {
 				Config: testAccProductDataSourceConfig_basic(rName, "beskrivning", "supportbeskrivning", domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedTime, dataSourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "distributor", dataSourceName, "distributor"),
 					resource.TestCheckResourceAttrPair(resourceName, "has_default_path", dataSourceName, "has_default_path"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(resourceName, "owner", dataSourceName, "owner"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrOwner, dataSourceName, names.AttrOwner),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrStatus, dataSourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrPair(resourceName, "support_description", dataSourceName, "support_description"),
 					resource.TestCheckResourceAttrPair(resourceName, "support_email", dataSourceName, "support_email"),
 					resource.TestCheckResourceAttrPair(resourceName, "support_url", dataSourceName, "support_url"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrType, dataSourceName, names.AttrType),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.Name", dataSourceName, "tags.Name"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 		},
 	})
@@ -68,20 +72,21 @@ func TestAccServiceCatalogProductDataSource_physicalID(t *testing.T) {
 				Config: testAccProductDataSourceConfig_physicalID(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedTime, dataSourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "distributor", dataSourceName, "distributor"),
 					resource.TestCheckResourceAttrPair(resourceName, "has_default_path", dataSourceName, "has_default_path"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(resourceName, "owner", dataSourceName, "owner"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrOwner, dataSourceName, names.AttrOwner),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrStatus, dataSourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrPair(resourceName, "support_description", dataSourceName, "support_description"),
 					resource.TestCheckResourceAttrPair(resourceName, "support_email", dataSourceName, "support_email"),
 					resource.TestCheckResourceAttrPair(resourceName, "support_url", dataSourceName, "support_url"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrType, dataSourceName, names.AttrType),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.Name", dataSourceName, "tags.Name"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 		},
 	})

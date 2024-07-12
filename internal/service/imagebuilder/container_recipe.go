@@ -52,7 +52,7 @@ func ResourceContainerRecipe() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"parameter": {
+						names.AttrParameter: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: true,
@@ -104,7 +104,7 @@ func ResourceContainerRecipe() *schema.Resource {
 				ExactlyOneOf: []string{"dockerfile_template_data", "dockerfile_template_uri"},
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -121,7 +121,7 @@ func ResourceContainerRecipe() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"device_name": {
+									names.AttrDeviceName: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -134,21 +134,21 @@ func ResourceContainerRecipe() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"delete_on_termination": {
+												names.AttrDeleteOnTermination: {
 													Type:             nullable.TypeNullableBool,
 													Optional:         true,
 													ForceNew:         true,
 													DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 													ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 												},
-												"encrypted": {
+												names.AttrEncrypted: {
 													Type:             nullable.TypeNullableBool,
 													Optional:         true,
 													ForceNew:         true,
 													DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 													ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 												},
-												"iops": {
+												names.AttrIOPS: {
 													Type:         schema.TypeInt,
 													Optional:     true,
 													ForceNew:     true,
@@ -160,25 +160,25 @@ func ResourceContainerRecipe() *schema.Resource {
 													ForceNew:     true,
 													ValidateFunc: validation.StringLenBetween(1, 1024),
 												},
-												"snapshot_id": {
+												names.AttrSnapshotID: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ForceNew:     true,
 													ValidateFunc: validation.StringLenBetween(1, 1024),
 												},
-												"throughput": {
+												names.AttrThroughput: {
 													Type:         schema.TypeInt,
 													Optional:     true,
 													ForceNew:     true,
 													ValidateFunc: validation.IntBetween(125, 1000),
 												},
-												"volume_size": {
+												names.AttrVolumeSize: {
 													Type:         schema.TypeInt,
 													Optional:     true,
 													ForceNew:     true,
 													ValidateFunc: validation.IntBetween(1, 16000),
 												},
-												"volume_type": {
+												names.AttrVolumeType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ForceNew:     true,
@@ -195,7 +195,7 @@ func ResourceContainerRecipe() *schema.Resource {
 										Optional: true,
 										ForceNew: true,
 									},
-									"virtual_name": {
+									names.AttrVirtualName: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -225,7 +225,7 @@ func ResourceContainerRecipe() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -254,7 +254,7 @@ func ResourceContainerRecipe() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"repository_name": {
+						names.AttrRepositoryName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -391,7 +391,7 @@ func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("date_created", containerRecipe.DateCreated)
 	d.Set(names.AttrDescription, containerRecipe.Description)
 	d.Set("dockerfile_template_data", containerRecipe.DockerfileTemplateData)
-	d.Set("encrypted", containerRecipe.Encrypted)
+	d.Set(names.AttrEncrypted, containerRecipe.Encrypted)
 
 	if containerRecipe.InstanceConfiguration != nil {
 		d.Set("instance_configuration", []interface{}{flattenInstanceConfiguration(containerRecipe.InstanceConfiguration)})
@@ -401,7 +401,7 @@ func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.Set(names.AttrKMSKeyID, containerRecipe.KmsKeyId)
 	d.Set(names.AttrName, containerRecipe.Name)
-	d.Set("owner", containerRecipe.Owner)
+	d.Set(names.AttrOwner, containerRecipe.Owner)
 	d.Set("parent_image", containerRecipe.ParentImage)
 	d.Set("platform", containerRecipe.Platform)
 

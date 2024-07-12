@@ -62,7 +62,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"create_time": schema.StringAttribute{
+			names.AttrCreateTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
@@ -83,7 +83,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"endpoint": schema.ListAttribute{
+			names.AttrEndpoint: schema.ListAttribute{
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[endpointModel](ctx),
 				ElementType: fwtypes.NewObjectTypeOf[endpointModel](ctx),
 				Computed:    true,
@@ -91,7 +91,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"engine": schema.StringAttribute{
+			names.AttrEngine: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -132,7 +132,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"security_group_ids": schema.SetAttribute{
+			names.AttrSecurityGroupIDs: schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
@@ -195,17 +195,11 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 								Attributes: map[string]schema.Attribute{
 									"maximum": schema.Int64Attribute{
 										Optional: true,
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.RequiresReplace(),
-										},
 									},
 									"minimum": schema.Int64Attribute{
 										Optional: true,
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.RequiresReplace(),
-										},
 									},
-									"unit": schema.StringAttribute{
+									names.AttrUnit: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.DataStorageUnit](),
 										Required:   true,
 									},
@@ -224,17 +218,11 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 										Validators: []validator.Int64{
 											int64validator.Between(1000, 15000000),
 										},
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.RequiresReplace(),
-										},
 									},
 									"minimum": schema.Int64Attribute{
 										Optional: true,
 										Validators: []validator.Int64{
 											int64validator.Between(1000, 15000000),
-										},
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.RequiresReplace(),
 										},
 									},
 								},

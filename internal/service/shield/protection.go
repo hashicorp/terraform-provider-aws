@@ -45,7 +45,7 @@ func resourceProtection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -66,7 +66,7 @@ func resourceProtectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	name := d.Get(names.AttrName).(string)
 	input := &shield.CreateProtectionInput{
 		Name:        aws.String(name),
-		ResourceArn: aws.String(d.Get("resource_arn").(string)),
+		ResourceArn: aws.String(d.Get(names.AttrResourceARN).(string)),
 		Tags:        getTagsIn(ctx),
 	}
 
@@ -99,7 +99,7 @@ func resourceProtectionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set(names.AttrARN, protection.ProtectionArn)
 	d.Set(names.AttrName, protection.Name)
-	d.Set("resource_arn", protection.ResourceArn)
+	d.Set(names.AttrResourceARN, protection.ResourceArn)
 
 	return diags
 }

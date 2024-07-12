@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_api_gateway_api_key", name="API Key")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetApiKeyOutput")
 func resourceAPIKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAPIKeyCreate,
@@ -44,7 +45,7 @@ func resourceAPIKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,7 +63,7 @@ func resourceAPIKey() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"last_updated_date": {
+			names.AttrLastUpdatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,11 +140,11 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		Resource:  fmt.Sprintf("/apikeys/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	d.Set("created_date", apiKey.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, apiKey.CreatedDate.Format(time.RFC3339))
 	d.Set("customer_id", apiKey.CustomerId)
 	d.Set(names.AttrDescription, apiKey.Description)
 	d.Set(names.AttrEnabled, apiKey.Enabled)
-	d.Set("last_updated_date", apiKey.LastUpdatedDate.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, apiKey.LastUpdatedDate.Format(time.RFC3339))
 	d.Set(names.AttrName, apiKey.Name)
 	d.Set(names.AttrValue, apiKey.Value)
 

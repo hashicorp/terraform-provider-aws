@@ -51,7 +51,7 @@ func (d *dataSourceARN) Schema(ctx context.Context, req datasource.SchemaRequest
 			"partition": schema.StringAttribute{
 				Computed: true,
 			},
-			"region": schema.StringAttribute{
+			names.AttrRegion: schema.StringAttribute{
 				Computed: true,
 			},
 			"resource": schema.StringAttribute{

@@ -68,14 +68,14 @@ func ResourceInstance() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(opsworks.AutoScalingType_Values(), false),
 			},
 
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -142,7 +142,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -228,7 +228,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -272,7 +272,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -306,41 +306,41 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
 							ForceNew: true,
 						},
 
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
 
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
 
-						"snapshot_id": {
+						names.AttrSnapshotID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
 
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
 
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -351,8 +351,8 @@ func ResourceInstance() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -363,12 +363,12 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -377,8 +377,8 @@ func ResourceInstance() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -397,28 +397,28 @@ func ResourceInstance() *schema.Resource {
 					// Termination flag on the block device mapping entry for the root
 					// device volume." - bit.ly/ec2bdmap
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
 							ForceNew: true,
 						},
 
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
 
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
 
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -496,8 +496,8 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("ami_id", instance.AmiId)
 	d.Set("architecture", instance.Architecture)
 	d.Set("auto_scaling_type", instance.AutoScalingType)
-	d.Set("availability_zone", instance.AvailabilityZone)
-	d.Set("created_at", instance.CreatedAt)
+	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
+	d.Set(names.AttrCreatedAt, instance.CreatedAt)
 	d.Set("ebs_optimized", instance.EbsOptimized)
 	d.Set("ec2_instance_id", instance.Ec2InstanceId)
 	d.Set("ecs_cluster_arn", instance.EcsClusterArn)
@@ -506,7 +506,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("infrastructure_class", instance.InfrastructureClass)
 	d.Set("install_updates_on_boot", instance.InstallUpdatesOnBoot)
 	d.Set("instance_profile_arn", instance.InstanceProfileArn)
-	d.Set("instance_type", instance.InstanceType)
+	d.Set(names.AttrInstanceType, instance.InstanceType)
 	d.Set("last_service_error_id", instance.LastServiceErrorId)
 	var layerIds []string
 	for _, v := range instance.LayerIds {
@@ -537,7 +537,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("ssh_key_name", instance.SshKeyName)
 	d.Set("stack_id", instance.StackId)
 	d.Set(names.AttrStatus, instance.Status)
-	d.Set("subnet_id", instance.SubnetId)
+	d.Set(names.AttrSubnetID, instance.SubnetId)
 	d.Set("tenancy", instance.Tenancy)
 	d.Set("virtualization_type", instance.VirtualizationType)
 
@@ -563,7 +563,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	for _, sg := range instance.SecurityGroupIds {
 		sgs = append(sgs, *sg)
 	}
-	if err := d.Set("security_group_ids", sgs); err != nil {
+	if err := d.Set(names.AttrSecurityGroupIDs, sgs); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Instance (%s): setting security_group_ids: %s", d.Id(), err)
 	}
 	return diags
@@ -583,7 +583,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Architecture:         aws.String(d.Get("architecture").(string)),
 		EbsOptimized:         aws.Bool(d.Get("ebs_optimized").(bool)),
 		InstallUpdatesOnBoot: aws.Bool(d.Get("install_updates_on_boot").(bool)),
-		InstanceType:         aws.String(d.Get("instance_type").(string)),
+		InstanceType:         aws.String(d.Get(names.AttrInstanceType).(string)),
 		LayerIds:             flex.ExpandStringList(d.Get("layer_ids").([]interface{})),
 		StackId:              aws.String(d.Get("stack_id").(string)),
 	}
@@ -597,7 +597,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		req.AutoScalingType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		req.AvailabilityZone = aws.String(v.(string))
 	}
 
@@ -617,7 +617,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		req.SshKeyName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("subnet_id"); ok {
+	if v, ok := d.GetOk(names.AttrSubnetID); ok {
 		req.SubnetId = aws.String(v.(string))
 	}
 
@@ -636,27 +636,27 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			ebs := &opsworks.EbsBlockDevice{
-				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
+				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
-			if v, ok := bd["snapshot_id"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrSnapshotID].(string); ok && v != "" {
 				ebs.SnapshotId = aws.String(v)
 			}
 
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
+			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
 			}
 
-			if v, ok := bd["iops"].(int); ok && v > 0 {
+			if v, ok := bd[names.AttrIOPS].(int); ok && v > 0 {
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
 			blockDevices = append(blockDevices, &opsworks.BlockDeviceMapping{
-				DeviceName: aws.String(bd["device_name"].(string)),
+				DeviceName: aws.String(bd[names.AttrDeviceName].(string)),
 				Ebs:        ebs,
 			})
 		}
@@ -667,8 +667,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			blockDevices = append(blockDevices, &opsworks.BlockDeviceMapping{
-				DeviceName:  aws.String(bd["device_name"].(string)),
-				VirtualName: aws.String(bd["virtual_name"].(string)),
+				DeviceName:  aws.String(bd[names.AttrDeviceName].(string)),
+				VirtualName: aws.String(bd[names.AttrVirtualName].(string)),
 			})
 		}
 	}
@@ -681,18 +681,18 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			ebs := &opsworks.EbsBlockDevice{
-				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
+				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
+			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
 			}
 
-			if v, ok := bd["iops"].(int); ok && v > 0 {
+			if v, ok := bd[names.AttrIOPS].(int); ok && v > 0 {
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
@@ -762,7 +762,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		req.Hostname = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("instance_type"); ok {
+	if v, ok := d.GetOk(names.AttrInstanceType); ok {
 		req.InstanceType = aws.String(v.(string))
 	}
 
@@ -988,29 +988,29 @@ func readBlockDevices(instance *opsworks.Instance) map[string]interface{} {
 	for _, bdm := range instance.BlockDeviceMappings {
 		bd := make(map[string]interface{})
 		if bdm.Ebs != nil && bdm.Ebs.DeleteOnTermination != nil {
-			bd["delete_on_termination"] = aws.BoolValue(bdm.Ebs.DeleteOnTermination)
+			bd[names.AttrDeleteOnTermination] = aws.BoolValue(bdm.Ebs.DeleteOnTermination)
 		}
 		if bdm.Ebs != nil && bdm.Ebs.VolumeSize != nil {
-			bd["volume_size"] = aws.Int64Value(bdm.Ebs.VolumeSize)
+			bd[names.AttrVolumeSize] = aws.Int64Value(bdm.Ebs.VolumeSize)
 		}
 		if bdm.Ebs != nil && bdm.Ebs.VolumeType != nil {
-			bd["volume_type"] = aws.StringValue(bdm.Ebs.VolumeType)
+			bd[names.AttrVolumeType] = aws.StringValue(bdm.Ebs.VolumeType)
 		}
 		if bdm.Ebs != nil && bdm.Ebs.Iops != nil {
-			bd["iops"] = aws.Int64Value(bdm.Ebs.Iops)
+			bd[names.AttrIOPS] = aws.Int64Value(bdm.Ebs.Iops)
 		}
 		if aws.StringValue(bdm.DeviceName) == "ROOT_DEVICE" {
 			blockDevices["root"] = bd
 		} else {
 			if bdm.DeviceName != nil {
-				bd["device_name"] = aws.StringValue(bdm.DeviceName)
+				bd[names.AttrDeviceName] = aws.StringValue(bdm.DeviceName)
 			}
 			if bdm.VirtualName != nil {
-				bd["virtual_name"] = aws.StringValue(bdm.VirtualName)
+				bd[names.AttrVirtualName] = aws.StringValue(bdm.VirtualName)
 				blockDevices["ephemeral"] = append(blockDevices["ephemeral"].([]map[string]interface{}), bd)
 			} else {
 				if bdm.Ebs != nil && bdm.Ebs.SnapshotId != nil {
-					bd["snapshot_id"] = aws.StringValue(bdm.Ebs.SnapshotId)
+					bd[names.AttrSnapshotID] = aws.StringValue(bdm.Ebs.SnapshotId)
 				}
 				blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
 			}

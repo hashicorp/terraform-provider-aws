@@ -73,11 +73,11 @@ func ResourceSiteToSiteVPNAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -159,8 +159,8 @@ func resourceSiteToSiteVPNAttachmentRead(ctx context.Context, d *schema.Resource
 	d.Set("core_network_arn", a.CoreNetworkArn)
 	d.Set("core_network_id", a.CoreNetworkId)
 	d.Set("edge_location", a.EdgeLocation)
-	d.Set("owner_account_id", a.OwnerAccountId)
-	d.Set("resource_arn", a.ResourceArn)
+	d.Set(names.AttrOwnerAccountID, a.OwnerAccountId)
+	d.Set(names.AttrResourceARN, a.ResourceArn)
 	d.Set("segment_name", a.SegmentName)
 	d.Set(names.AttrState, a.State)
 	d.Set("vpn_connection_arn", a.ResourceArn)

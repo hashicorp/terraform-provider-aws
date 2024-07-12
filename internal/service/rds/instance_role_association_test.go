@@ -42,7 +42,7 @@ func TestAccRDSInstanceRoleAssociation_basic(t *testing.T) {
 				Config: testAccInstanceRoleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceRoleAssociationExists(ctx, resourceName, &dbInstanceRole1),
-					resource.TestCheckResourceAttrPair(resourceName, "db_instance_identifier", dbInstanceResourceName, "identifier"),
+					resource.TestCheckResourceAttrPair(resourceName, "db_instance_identifier", dbInstanceResourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "feature_name", "S3_INTEGRATION"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName, names.AttrARN),
 				),
@@ -77,7 +77,7 @@ func TestAccRDSInstanceRoleAssociation_disappears(t *testing.T) {
 			{
 				Config: testAccInstanceRoleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, dbInstanceResourceName, &dbInstance1),
+					testAccCheckDBInstanceExists(ctx, dbInstanceResourceName, &dbInstance1),
 					testAccCheckInstanceRoleAssociationExists(ctx, resourceName, &dbInstanceRole1),
 					testAccCheckInstanceRoleAssociationDisappears(ctx, &dbInstance1, &dbInstanceRole1),
 				),

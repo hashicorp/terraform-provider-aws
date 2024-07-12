@@ -47,7 +47,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"association_id": {
+			names.AttrAssociationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -96,7 +96,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -131,7 +131,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
 										),
 									},
-									"owner": {
+									names.AttrOwner: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -180,7 +180,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
 										),
 									},
-									"owner": {
+									names.AttrOwner: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -191,14 +191,14 @@ func resourceRepositoryAssociation() *schema.Resource {
 								},
 							},
 						},
-						"s3_bucket": {
+						names.AttrS3Bucket: {
 							Type:     schema.TypeList,
 							ForceNew: true,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -225,7 +225,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -310,13 +310,13 @@ func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set(names.AttrARN, out.AssociationArn)
-	d.Set("association_id", out.AssociationId)
+	d.Set(names.AttrAssociationID, out.AssociationId)
 	d.Set("connection_arn", out.ConnectionArn)
 	if err := d.Set("kms_key_details", flattenKMSKeyDetails(out.KMSKeyDetails)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting kms_key_details: %s", err)
 	}
 	d.Set(names.AttrName, out.Name)
-	d.Set("owner", out.Owner)
+	d.Set(names.AttrOwner, out.Owner)
 	d.Set("provider_type", out.ProviderType)
 	if err := d.Set("s3_repository_details", flattenS3RepositoryDetails(out.S3RepositoryDetails)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting s3_repository_details: %s", err)
@@ -464,7 +464,7 @@ func flattenS3RepositoryDetails(s3RepositoryDetails *types.S3RepositoryDetails) 
 	values := map[string]interface{}{}
 
 	if v := s3RepositoryDetails.BucketName; v != nil {
-		values["bucket_name"] = aws.ToString(v)
+		values[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	if v := s3RepositoryDetails.CodeArtifacts; v != nil {
@@ -555,7 +555,7 @@ func expandRepository(repository []interface{}) *types.Repository {
 	if v, ok := tfMap["github_enterprise_server"]; ok {
 		result.GitHubEnterpriseServer = expandThirdPartySourceRepository(v.([]interface{}))
 	}
-	if v, ok := tfMap["s3_bucket"]; ok {
+	if v, ok := tfMap[names.AttrS3Bucket]; ok {
 		result.S3Bucket = expandS3Repository(v.([]interface{}))
 	}
 
@@ -574,7 +574,7 @@ func expandS3Repository(repository []interface{}) *types.S3Repository {
 
 	result := &types.S3Repository{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		result.BucketName = aws.String(v)
 	}
 
@@ -605,7 +605,7 @@ func expandThirdPartySourceRepository(repository []interface{}) *types.ThirdPart
 		result.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["owner"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrOwner].(string); ok && v != "" {
 		result.Owner = aws.String(v)
 	}
 

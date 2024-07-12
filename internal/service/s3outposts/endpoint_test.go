@@ -36,12 +36,12 @@ func TestAccS3OutpostsEndpoint_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-outposts", regexache.MustCompile(`outpost/[^/]+/endpoint/[0-9a-z]+`)),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
-					resource.TestCheckResourceAttrPair(resourceName, "cidr_block", "aws_vpc.test", "cidr_block"),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "4"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCIDRBlock, "aws_vpc.test", names.AttrCIDRBlock),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", acctest.Ct4),
 					resource.TestCheckResourceAttrPair(resourceName, "outpost_id", "data.aws_outposts_outpost.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", "aws_security_group.test", names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "access_type", "Private"),
 				),
 			},
@@ -72,12 +72,12 @@ func TestAccS3OutpostsEndpoint_private(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-outposts", regexache.MustCompile(`outpost/[^/]+/endpoint/[0-9a-z]+`)),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
-					resource.TestCheckResourceAttrPair(resourceName, "cidr_block", "aws_vpc.test", "cidr_block"),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "4"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCIDRBlock, "aws_vpc.test", names.AttrCIDRBlock),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", acctest.Ct4),
 					resource.TestCheckResourceAttrPair(resourceName, "outpost_id", "data.aws_outposts_outpost.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", "aws_security_group.test", names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "access_type", "Private"),
 				),
 			},
@@ -108,12 +108,12 @@ func TestAccS3OutpostsEndpoint_customerOwnedIPv4Pool(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-outposts", regexache.MustCompile(`outpost/[^/]+/endpoint/[0-9a-z]+`)),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
-					resource.TestCheckResourceAttrPair(resourceName, "cidr_block", "aws_vpc.test", "cidr_block"),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "4"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCIDRBlock, "aws_vpc.test", names.AttrCIDRBlock),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", acctest.Ct4),
 					resource.TestCheckResourceAttrPair(resourceName, "outpost_id", "data.aws_outposts_outpost.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", "aws_security_group.test", names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "access_type", "CustomerOwnedIp"),
 					resource.TestMatchResourceAttr(resourceName, "customer_owned_ipv4_pool", regexache.MustCompile(`^ipv4pool-coip-.+$`)),
 				),
@@ -203,7 +203,7 @@ func testAccEndpointImportStateIdFunc(resourceName string) resource.ImportStateI
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s,%s,%s", rs.Primary.ID, rs.Primary.Attributes["security_group_id"], rs.Primary.Attributes["subnet_id"]), nil
+		return fmt.Sprintf("%s,%s,%s", rs.Primary.ID, rs.Primary.Attributes["security_group_id"], rs.Primary.Attributes[names.AttrSubnetID]), nil
 	}
 }
 

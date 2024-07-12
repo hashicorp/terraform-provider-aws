@@ -42,7 +42,7 @@ func testAccSecurityGroupCheckDataSource(dataSourceName string) resource.TestChe
 		resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 		resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 		resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
-		resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+		resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 		resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
 	)
 }

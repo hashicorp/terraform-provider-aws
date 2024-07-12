@@ -41,7 +41,7 @@ func testAccPublishingDestination_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublishingDestinationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", bucketResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, bucketResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "destination_type", "S3")),
 			},

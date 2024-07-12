@@ -36,7 +36,7 @@ func DataSourceSubnet() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -50,7 +50,7 @@ func DataSourceSubnet() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -80,7 +80,7 @@ func DataSourceSubnet() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -156,14 +156,14 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	filters := map[string]string{
-		"availabilityZone":   d.Get("availability_zone").(string),
+		"availabilityZone":   d.Get(names.AttrAvailabilityZone).(string),
 		"availabilityZoneId": d.Get("availability_zone_id").(string),
 		"defaultForAz":       defaultForAzStr,
 		names.AttrState:      d.Get(names.AttrState).(string),
 		"vpc-id":             d.Get(names.AttrVPCID).(string),
 	}
 
-	if v, ok := d.GetOk("cidr_block"); ok {
+	if v, ok := d.GetOk(names.AttrCIDRBlock); ok {
 		filters["cidrBlock"] = v.(string)
 	}
 
@@ -180,7 +180,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
@@ -198,9 +198,9 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrARN, subnet.SubnetArn)
 	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
 	d.Set("availability_zone_id", subnet.AvailabilityZoneId)
-	d.Set("availability_zone", subnet.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, subnet.AvailabilityZone)
 	d.Set("available_ip_address_count", subnet.AvailableIpAddressCount)
-	d.Set("cidr_block", subnet.CidrBlock)
+	d.Set(names.AttrCIDRBlock, subnet.CidrBlock)
 	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
 	d.Set("default_for_az", subnet.DefaultForAz)
 	d.Set("enable_dns64", subnet.EnableDns64)

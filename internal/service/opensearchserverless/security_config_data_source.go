@@ -40,7 +40,7 @@ func (d *dataSourceSecurityConfig) Schema(ctx context.Context, req datasource.Sc
 			"config_version": schema.StringAttribute{
 				Computed: true,
 			},
-			"created_date": schema.StringAttribute{
+			names.AttrCreatedDate: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrDescription: schema.StringAttribute{

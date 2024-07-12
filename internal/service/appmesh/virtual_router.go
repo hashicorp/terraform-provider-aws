@@ -27,6 +27,9 @@ import (
 
 // @SDKResource("aws_appmesh_virtual_router", name="Virtual Router")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/appmesh;appmesh.VirtualRouterData")
+// @Testing(serialize=true)
+// @Testing(importStateIdFunc=testAccVirtualRouterImportStateIdFunc)
 func resourceVirtualRouter() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -48,11 +51,11 @@ func resourceVirtualRouter() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"created_date": {
+				names.AttrCreatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"last_updated_date": {
+				names.AttrLastUpdatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -75,7 +78,7 @@ func resourceVirtualRouter() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
-				"resource_owner": {
+				names.AttrResourceOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -115,7 +118,7 @@ func resourceVirtualRouterSpecSchema() *schema.Schema {
 											Required:     true,
 											ValidateFunc: validation.IsPortNumber,
 										},
-										"protocol": {
+										names.AttrProtocol: {
 											Type:         schema.TypeString,
 											Required:     true,
 											ValidateFunc: validation.StringInSlice(appmesh.PortProtocol_Values(), false),
@@ -180,12 +183,12 @@ func resourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, meta
 
 	arn := aws.StringValue(vr.Metadata.Arn)
 	d.Set(names.AttrARN, arn)
-	d.Set("created_date", vr.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", vr.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, vr.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, vr.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vr.MeshName)
 	d.Set("mesh_owner", vr.Metadata.MeshOwner)
 	d.Set(names.AttrName, vr.VirtualRouterName)
-	d.Set("resource_owner", vr.Metadata.ResourceOwner)
+	d.Set(names.AttrResourceOwner, vr.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenVirtualRouterSpec(vr.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}

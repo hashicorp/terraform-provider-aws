@@ -59,7 +59,7 @@ func resourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,7 +69,7 @@ func resourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -126,7 +126,7 @@ func resourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"uri": {
+			names.AttrURI: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -142,7 +142,7 @@ func resourceLocationFSxOpenZFSFileSystemCreate(ctx context.Context, d *schema.R
 
 	input := &datasync.CreateLocationFsxOpenZfsInput{
 		FsxFilesystemArn:  aws.String(d.Get("fsx_filesystem_arn").(string)),
-		Protocol:          expandProtocol(d.Get("protocol").([]interface{})),
+		Protocol:          expandProtocol(d.Get(names.AttrProtocol).([]interface{})),
 		SecurityGroupArns: flex.ExpandStringValueSet(d.Get("security_group_arns").(*schema.Set)),
 		Tags:              getTagsIn(ctx),
 	}
@@ -185,14 +185,14 @@ func resourceLocationFSxOpenZFSFileSystemRead(ctx context.Context, d *schema.Res
 	}
 
 	d.Set(names.AttrARN, output.LocationArn)
-	d.Set("creation_time", output.CreationTime.Format(time.RFC3339))
+	d.Set(names.AttrCreationTime, output.CreationTime.Format(time.RFC3339))
 	d.Set("fsx_filesystem_arn", d.Get("fsx_filesystem_arn"))
-	if err := d.Set("protocol", flattenProtocol(output.Protocol)); err != nil {
+	if err := d.Set(names.AttrProtocol, flattenProtocol(output.Protocol)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting protocol: %s", err)
 	}
 	d.Set("security_group_arns", output.SecurityGroupArns)
 	d.Set("subdirectory", subdirectory)
-	d.Set("uri", uri)
+	d.Set(names.AttrURI, uri)
 
 	return diags
 }

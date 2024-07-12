@@ -42,10 +42,10 @@ func TestAccAPIGatewayDomainName_certificateARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
 					testAccCheckResourceAttrRegionalARNEdgeDomainName(resourceName, names.AttrARN, "apigateway", domain),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", acmCertificateResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, acmCertificateResourceName, names.AttrARN),
 					resource.TestMatchResourceAttr(resourceName, "cloudfront_domain_name", regexache.MustCompile(`[0-9a-z]+.cloudfront.net`)),
 					resource.TestCheckResourceAttr(resourceName, "cloudfront_zone_id", "Z2FDTNDATAQYW2"),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_name", acmCertificateResourceName, "domain_name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, acmCertificateResourceName, names.AttrDomainName),
 				),
 			},
 			{
@@ -107,7 +107,7 @@ func TestAccAPIGatewayDomainName_certificateName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "certificate_name", "tf-acc-apigateway-domain-name"),
 					resource.TestCheckResourceAttrSet(resourceName, "cloudfront_domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "cloudfront_zone_id", "Z2FDTNDATAQYW2"),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_upload_date"),
 				),
 			},
@@ -115,7 +115,7 @@ func TestAccAPIGatewayDomainName_certificateName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"certificate_body", "certificate_chain", "certificate_private_key"},
+				ImportStateVerifyIgnore: []string{"certificate_body", names.AttrCertificateChain, "certificate_private_key"},
 			},
 		},
 	})
@@ -140,7 +140,7 @@ func TestAccAPIGatewayDomainName_regionalCertificateARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
 					testAccCheckResourceAttrRegionalARNRegionalDomainName(resourceName, names.AttrARN, "apigateway", rName),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, "regional_domain_name", "execute-api", regexache.MustCompile(`d-[0-9a-z]+`)),
 					resource.TestMatchResourceAttr(resourceName, "regional_zone_id", regexache.MustCompile(`^Z`)),
 				),
@@ -185,11 +185,11 @@ func TestAccAPIGatewayDomainName_regionalCertificateName(t *testing.T) {
 					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
 					testAccCheckResourceAttrRegionalARNRegionalDomainName(resourceName, names.AttrARN, "apigateway", rName),
 					resource.TestCheckResourceAttr(resourceName, "certificate_body", certificate),
-					resource.TestCheckResourceAttr(resourceName, "certificate_chain", caCertificate),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCertificateChain, caCertificate),
 					resource.TestCheckResourceAttr(resourceName, "certificate_name", "tf-acc-apigateway-domain-name"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_private_key", key),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_upload_date"),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, "regional_domain_name", "execute-api", regexache.MustCompile(`d-[0-9a-z]+`)),
 					resource.TestMatchResourceAttr(resourceName, "regional_zone_id", regexache.MustCompile(`^Z`)),
 				),
@@ -217,54 +217,6 @@ func TestAccAPIGatewayDomainName_securityPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
 					resource.TestCheckResourceAttr(resourceName, "security_policy", string(types.SecurityPolicyTls12)),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAPIGatewayDomainName_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var domainName apigateway.GetDomainNameOutput
-	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
-	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDomainNameConfig_tags1(rName, key, certificate, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				Config: testAccDomainNameConfig_tags2(rName, key, certificate, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccDomainNameConfig_tags1(rName, key, certificate, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
@@ -323,8 +275,8 @@ func TestAccAPIGatewayDomainName_MutualTLSAuthentication_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/domainnames/+.`)),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_name", acmCertificateResourceName, "domain_name"),
-					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, acmCertificateResourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_uri", fmt.Sprintf("s3://%s/%s", rName, rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "mutual_tls_authentication.0.truststore_version", s3ObjectResourceName, "version_id"),
 				),
@@ -339,8 +291,8 @@ func TestAccAPIGatewayDomainName_MutualTLSAuthentication_basic(t *testing.T) {
 				Config: testAccDomainNameConfig_mutualTLSAuthenticationMissing(rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_name", acmCertificateResourceName, "domain_name"),
-					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, acmCertificateResourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", acctest.Ct0),
 				),
 			},
 			{
@@ -348,8 +300,8 @@ func TestAccAPIGatewayDomainName_MutualTLSAuthentication_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/domainnames/+.`)),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_name", acmCertificateResourceName, "domain_name"),
-					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, acmCertificateResourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_uri", fmt.Sprintf("s3://%s/%s", rName, rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "mutual_tls_authentication.0.truststore_version", s3ObjectResourceName, "version_id"),
 				),
@@ -381,9 +333,9 @@ func TestAccAPIGatewayDomainName_MutualTLSAuthentication_ownership(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/domainnames/+.`)),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_name", publicAcmCertificateResourceName, "domain_name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, publicAcmCertificateResourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttrPair(resourceName, "ownership_verification_certificate_arn", publicAcmCertificateResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_uri", fmt.Sprintf("s3://%s/%s", rName, rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "mutual_tls_authentication.0.truststore_version", s3ObjectResourceName, "version_id"),
 				),
@@ -576,51 +528,6 @@ resource "aws_api_gateway_domain_name" "test" {
   }
 }
 `, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), securityPolicy)
-}
-
-func testAccDomainNameConfig_tags1(domainName, key, certificate, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_acm_certificate" "test" {
-  certificate_body = "%[2]s"
-  private_key      = "%[3]s"
-}
-
-resource "aws_api_gateway_domain_name" "test" {
-  domain_name              = %[1]q
-  regional_certificate_arn = aws_acm_certificate.test.arn
-
-  endpoint_configuration {
-    types = ["REGIONAL"]
-  }
-
-  tags = {
-    %[4]q = %[5]q
-  }
-}
-`, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagKey1, tagValue1)
-}
-
-func testAccDomainNameConfig_tags2(domainName, key, certificate, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_acm_certificate" "test" {
-  certificate_body = "%[2]s"
-  private_key      = "%[3]s"
-}
-
-resource "aws_api_gateway_domain_name" "test" {
-  domain_name              = %[1]q
-  regional_certificate_arn = aws_acm_certificate.test.arn
-
-  endpoint_configuration {
-    types = ["REGIONAL"]
-  }
-
-  tags = {
-    %[4]q = %[5]q
-    %[6]q = %[7]q
-  }
-}
-`, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccDomainNameConfig_mutualTLSAuthentication(rName, rootDomain, domain string) string {

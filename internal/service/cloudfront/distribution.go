@@ -64,7 +64,7 @@ func resourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 128),
@@ -188,7 +188,7 @@ func resourceDistribution() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.EventType](),
 									},
-									"function_arn": {
+									names.AttrFunctionARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -275,7 +275,7 @@ func resourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -287,7 +287,7 @@ func resourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -325,7 +325,7 @@ func resourceDistribution() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "",
@@ -421,7 +421,7 @@ func resourceDistribution() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.EventType](),
 									},
-									"function_arn": {
+									names.AttrFunctionARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -622,7 +622,7 @@ func resourceDistribution() *schema.Resource {
 								},
 							},
 						},
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.NoZeroValues,
@@ -904,7 +904,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrARN, output.Distribution.ARN)
 	d.Set("caller_reference", distributionConfig.CallerReference)
 	if aws.ToString(distributionConfig.Comment) != "" {
-		d.Set("comment", distributionConfig.Comment)
+		d.Set(names.AttrComment, distributionConfig.Comment)
 	}
 	// Not having this set for staging distributions causes IllegalUpdate errors when making updates of any kind.
 	// If this absolutely must not be optional/computed, the policy ID will need to be retrieved and set for each
@@ -919,11 +919,11 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting default_cache_behavior: %s", err)
 	}
 	d.Set("default_root_object", distributionConfig.DefaultRootObject)
-	d.Set("domain_name", output.Distribution.DomainName)
+	d.Set(names.AttrDomainName, output.Distribution.DomainName)
 	d.Set(names.AttrEnabled, distributionConfig.Enabled)
 	d.Set("etag", output.ETag)
 	d.Set("http_version", distributionConfig.HttpVersion)
-	d.Set("hosted_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
+	d.Set(names.AttrHostedZoneID, meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 	d.Set("in_progress_validation_batches", output.Distribution.InProgressInvalidationBatches)
 	d.Set("is_ipv6_enabled", distributionConfig.IsIPV6Enabled)
 	d.Set("last_modified_time", aws.String(output.Distribution.LastModifiedTime.String()))
@@ -1273,7 +1273,7 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 	apiObject := &awstypes.DistributionConfig{
 		CacheBehaviors:               expandCacheBehaviors(d.Get("ordered_cache_behavior").([]interface{})),
 		CallerReference:              aws.String(id.UniqueId()),
-		Comment:                      aws.String(d.Get("comment").(string)),
+		Comment:                      aws.String(d.Get(names.AttrComment).(string)),
 		ContinuousDeploymentPolicyId: aws.String(d.Get("continuous_deployment_policy_id").(string)),
 		CustomErrorResponses:         expandCustomErrorResponses(d.Get("custom_error_response").(*schema.Set).List()),
 		DefaultCacheBehavior:         expandDefaultCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{})),
@@ -1719,7 +1719,7 @@ func expandFunctionAssociation(tfMap map[string]interface{}) *awstypes.FunctionA
 		apiObject.EventType = awstypes.EventType(v.(string))
 	}
 
-	if v, ok := tfMap["function_arn"]; ok {
+	if v, ok := tfMap[names.AttrFunctionARN]; ok {
 		apiObject.FunctionARN = aws.String(v.(string))
 	}
 
@@ -1789,7 +1789,7 @@ func flattenFunctionAssociation(apiObject *awstypes.FunctionAssociation) map[str
 
 	if apiObject != nil {
 		tfMap["event_type"] = apiObject.EventType
-		tfMap["function_arn"] = aws.ToString(apiObject.FunctionARN)
+		tfMap[names.AttrFunctionARN] = aws.ToString(apiObject.FunctionARN)
 	}
 
 	return tfMap
@@ -2000,7 +2000,7 @@ func flattenOrigins(apiObject *awstypes.Origins) []interface{} {
 
 func expandOrigin(tfMap map[string]interface{}) *awstypes.Origin {
 	apiObject := &awstypes.Origin{
-		DomainName: aws.String(tfMap["domain_name"].(string)),
+		DomainName: aws.String(tfMap[names.AttrDomainName].(string)),
 		Id:         aws.String(tfMap["origin_id"].(string)),
 	}
 
@@ -2059,7 +2059,7 @@ func flattenOrigin(apiObject *awstypes.Origin) map[string]interface{} {
 	}
 
 	tfMap := make(map[string]interface{})
-	tfMap["domain_name"] = aws.ToString(apiObject.DomainName)
+	tfMap[names.AttrDomainName] = aws.ToString(apiObject.DomainName)
 	tfMap["origin_id"] = aws.ToString(apiObject.Id)
 
 	if apiObject.ConnectionAttempts != nil {
@@ -2482,7 +2482,7 @@ func expandLoggingConfig(tfMap map[string]interface{}) *awstypes.LoggingConfig {
 		apiObject.Bucket = aws.String(tfMap[names.AttrBucket].(string))
 		apiObject.Enabled = aws.Bool(true)
 		apiObject.IncludeCookies = aws.Bool(tfMap["include_cookies"].(bool))
-		apiObject.Prefix = aws.String(tfMap["prefix"].(string))
+		apiObject.Prefix = aws.String(tfMap[names.AttrPrefix].(string))
 	} else {
 		apiObject.Bucket = aws.String("")
 		apiObject.Enabled = aws.Bool(false)
@@ -2501,7 +2501,7 @@ func flattenLoggingConfig(apiObject *awstypes.LoggingConfig) []interface{} {
 	tfMap := map[string]interface{}{
 		names.AttrBucket:  aws.ToString(apiObject.Bucket),
 		"include_cookies": aws.ToBool(apiObject.IncludeCookies),
-		"prefix":          aws.ToString(apiObject.Prefix),
+		names.AttrPrefix:  aws.ToString(apiObject.Prefix),
 	}
 
 	return []interface{}{tfMap}

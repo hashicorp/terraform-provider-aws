@@ -46,7 +46,7 @@ func ResourceSipMediaApplication() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"endpoints": {
+			names.AttrEndpoints: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
@@ -79,7 +79,7 @@ func resourceSipMediaApplicationCreate(ctx context.Context, d *schema.ResourceDa
 	createInput := &chimesdkvoice.CreateSipMediaApplicationInput{
 		AwsRegion: aws.String(d.Get("aws_region").(string)),
 		Name:      aws.String(d.Get(names.AttrName).(string)),
-		Endpoints: expandSipMediaApplicationEndpoints(d.Get("endpoints").([]interface{})),
+		Endpoints: expandSipMediaApplicationEndpoints(d.Get(names.AttrEndpoints).([]interface{})),
 		Tags:      getTagsIn(ctx),
 	}
 
@@ -109,7 +109,7 @@ func resourceSipMediaApplicationRead(ctx context.Context, d *schema.ResourceData
 	d.Set(names.AttrARN, resp.SipMediaApplicationArn)
 	d.Set("aws_region", resp.AwsRegion)
 	d.Set(names.AttrName, resp.Name)
-	d.Set("endpoints", flattenSipMediaApplicationEndpoints(resp.Endpoints))
+	d.Set(names.AttrEndpoints, flattenSipMediaApplicationEndpoints(resp.Endpoints))
 
 	return diags
 }
@@ -118,11 +118,11 @@ func resourceSipMediaApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
-	if d.HasChanges(names.AttrName, "endpoints") {
+	if d.HasChanges(names.AttrName, names.AttrEndpoints) {
 		updateInput := &chimesdkvoice.UpdateSipMediaApplicationInput{
 			SipMediaApplicationId: aws.String(d.Id()),
 			Name:                  aws.String(d.Get(names.AttrName).(string)),
-			Endpoints:             expandSipMediaApplicationEndpoints(d.Get("endpoints").([]interface{})),
+			Endpoints:             expandSipMediaApplicationEndpoints(d.Get(names.AttrEndpoints).([]interface{})),
 		}
 
 		if _, err := conn.UpdateSipMediaApplication(ctx, updateInput); err != nil {

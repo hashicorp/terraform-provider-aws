@@ -52,7 +52,7 @@ func ResourceExtensionAssociation() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -72,7 +72,7 @@ func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceD
 
 	in := appconfig.CreateExtensionAssociationInput{
 		ExtensionIdentifier: aws.String(d.Get("extension_arn").(string)),
-		ResourceIdentifier:  aws.String(d.Get("resource_arn").(string)),
+		ResourceIdentifier:  aws.String(d.Get(names.AttrResourceARN).(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrParameters); ok {
@@ -114,7 +114,7 @@ func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceDat
 	d.Set(names.AttrARN, out.Arn)
 	d.Set("extension_arn", out.ExtensionArn)
 	d.Set(names.AttrParameters, out.Parameters)
-	d.Set("resource_arn", out.ResourceArn)
+	d.Set(names.AttrResourceARN, out.ResourceArn)
 	d.Set("extension_version", out.ExtensionVersionNumber)
 
 	return diags

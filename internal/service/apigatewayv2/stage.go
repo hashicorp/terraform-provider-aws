@@ -30,6 +30,8 @@ import (
 
 // @SDKResource("aws_apigatewayv2_stage", name="Stage")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigatewayv2;apigatewayv2.GetStageOutput")
+// @Testing(importStateIdFunc="testAccStageImportStateIdFunc")
 func resourceStage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStageCreate,
@@ -49,12 +51,12 @@ func resourceStage() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"destination_arn": {
+						names.AttrDestinationARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"format": {
+						names.AttrFormat: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -477,10 +479,10 @@ func expandAccessLogSettings(vSettings []interface{}) *awstypes.AccessLogSetting
 	}
 	mSettings := vSettings[0].(map[string]interface{})
 
-	if vDestinationArn, ok := mSettings["destination_arn"].(string); ok && vDestinationArn != "" {
+	if vDestinationArn, ok := mSettings[names.AttrDestinationARN].(string); ok && vDestinationArn != "" {
 		settings.DestinationArn = aws.String(vDestinationArn)
 	}
-	if vFormat, ok := mSettings["format"].(string); ok && vFormat != "" {
+	if vFormat, ok := mSettings[names.AttrFormat].(string); ok && vFormat != "" {
 		settings.Format = aws.String(vFormat)
 	}
 
@@ -493,8 +495,8 @@ func flattenAccessLogSettings(settings *awstypes.AccessLogSettings) []interface{
 	}
 
 	return []interface{}{map[string]interface{}{
-		"destination_arn": aws.ToString(settings.DestinationArn),
-		"format":          aws.ToString(settings.Format),
+		names.AttrDestinationARN: aws.ToString(settings.DestinationArn),
+		names.AttrFormat:         aws.ToString(settings.Format),
 	}}
 }
 

@@ -214,14 +214,14 @@ func TestAccEventsRule_basic(t *testing.T) {
 					testAccCheckRuleExists(ctx, resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf(`rule/%s$`, rName1))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "rate(1 hour)"),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
 					resource.TestCheckNoResourceAttr(resourceName, "event_pattern"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
 				),
@@ -230,14 +230,14 @@ func TestAccEventsRule_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateIdFunc:       testAccRuleNoBusNameImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccRuleConfig_basic(rName2),
@@ -247,10 +247,10 @@ func TestAccEventsRule_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf(`rule/%s$`, rName2))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "rate(1 hour)"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
 				),
@@ -297,7 +297,7 @@ func TestAccEventsRule_eventBusName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccRuleConfig_busName(rName1, busName1, "description 2"),
@@ -347,7 +347,7 @@ func TestAccEventsRule_role(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -377,7 +377,7 @@ func TestAccEventsRule_description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccRuleConfig_description(rName, "description2"),
@@ -408,7 +408,7 @@ func TestAccEventsRule_pattern(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, ""),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
 				),
 			},
@@ -416,7 +416,7 @@ func TestAccEventsRule_pattern(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccRuleConfig_pattern(rName, "{\"source\":[\"aws.lambda\"]}"),
@@ -447,7 +447,7 @@ func TestAccEventsRule_patternJSONEncoder(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, ""),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", `{"detail":{"count":[{"numeric":[">",0,"<",5]}]}}`),
 				),
 			},
@@ -472,7 +472,7 @@ func TestAccEventsRule_scheduleAndPattern(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "rate(1 hour)"),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
 				),
 			},
@@ -480,7 +480,7 @@ func TestAccEventsRule_scheduleAndPattern(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -503,14 +503,14 @@ func TestAccEventsRule_namePrefix(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, rName),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -532,14 +532,14 @@ func TestAccEventsRule_Name_generated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -558,34 +558,34 @@ func TestAccEventsRule_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig_tags1(rName, "key1", "value1"),
+				Config: testAccRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
-				Config: testAccRuleConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRuleConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccRuleConfig_tags1(rName, "key2", "value2"),
+				Config: testAccRuleConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -608,7 +608,7 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 				Config: testAccRuleConfig_isEnabled(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "DISABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "DISABLED"),
 				),
@@ -617,13 +617,13 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccRuleConfig_isEnabled(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
 				),
@@ -632,13 +632,13 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccRuleConfig_isEnabled(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "DISABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "DISABLED"),
 				),
@@ -663,7 +663,7 @@ func TestAccEventsRule_state(t *testing.T) {
 				Config: testAccRuleConfig_state(rName, string(types.RuleStateDisabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.RuleStateDisabled)),
 					testAccCheckRuleEnabled(ctx, resourceName, types.RuleStateDisabled),
 				),
@@ -672,13 +672,13 @@ func TestAccEventsRule_state(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccRuleConfig_state(rName, string(types.RuleStateEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.RuleStateEnabled)),
 					testAccCheckRuleEnabled(ctx, resourceName, types.RuleStateEnabled),
 				),
@@ -687,7 +687,7 @@ func TestAccEventsRule_state(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -719,19 +719,19 @@ func TestAccEventsRule_partnerEventBus(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -758,19 +758,19 @@ func TestAccEventsRule_eventBusARN(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "event_bus_name", "aws_cloudwatch_event_bus.test", names.AttrARN),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -786,21 +786,21 @@ func TestAccEventsRule_migrateV0(t *testing.T) {
 		expectedIsEnabled string
 		expectedState     types.RuleState
 	}{
-		"basic": {
+		acctest.CtBasic: {
 			config:            testAccRuleConfig_basic(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)),
-			expectedIsEnabled: "true",
+			expectedIsEnabled: acctest.CtTrue,
 			expectedState:     "ENABLED",
 		},
 
 		names.AttrEnabled: {
 			config:            testAccRuleConfig_isEnabled(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), true),
-			expectedIsEnabled: "true",
+			expectedIsEnabled: acctest.CtTrue,
 			expectedState:     "ENABLED",
 		},
 
 		"disabled": {
 			config:            testAccRuleConfig_isEnabled(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), false),
-			expectedIsEnabled: "false",
+			expectedIsEnabled: acctest.CtFalse,
 			expectedState:     "DISABLED",
 		},
 	}
@@ -865,14 +865,14 @@ func TestAccEventsRule_migrateV0_Equivalent(t *testing.T) {
 		names.AttrEnabled: {
 			enabled:           true,
 			state:             string(types.RuleStateEnabled),
-			expectedIsEnabled: "true",
+			expectedIsEnabled: acctest.CtTrue,
 			expectedState:     types.RuleStateEnabled,
 		},
 
 		"disabled": {
 			enabled:           false,
 			state:             string(types.RuleStateDisabled),
-			expectedIsEnabled: "false",
+			expectedIsEnabled: acctest.CtFalse,
 			expectedState:     types.RuleStateDisabled,
 		},
 	}

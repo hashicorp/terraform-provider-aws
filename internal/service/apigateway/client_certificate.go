@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_api_gateway_client_certificate", name="Client Certificate")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetClientCertificateOutput", generator=false)
 func resourceClientCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientCertificateCreate,
@@ -42,7 +43,7 @@ func resourceClientCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -112,7 +113,7 @@ func resourceClientCertificateRead(ctx context.Context, d *schema.ResourceData, 
 		Resource:  fmt.Sprintf("/clientcertificates/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	d.Set("created_date", cert.CreatedDate.String())
+	d.Set(names.AttrCreatedDate, cert.CreatedDate.String())
 	d.Set(names.AttrDescription, cert.Description)
 	d.Set("expiration_date", cert.ExpirationDate.String())
 	d.Set("pem_encoded_certificate", cert.PemEncodedCertificate)

@@ -246,7 +246,7 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 					},
 				},
 			},
-			"vpc_config": schema.ListNestedBlock{
+			names.AttrVPCConfig: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelVPCConfigModel](ctx),
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
@@ -256,7 +256,7 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"security_group_ids": schema.SetAttribute{
+						names.AttrSecurityGroupIDs: schema.SetAttribute{
 							CustomType:  fwtypes.SetOfStringType,
 							Required:    true,
 							ElementType: types.StringType,

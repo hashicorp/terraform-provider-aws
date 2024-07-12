@@ -64,7 +64,7 @@ func resourceFileCache() *schema.Resource {
 				MaxItems: 8,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"association_id": {
+						names.AttrAssociationID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -97,7 +97,7 @@ func resourceFileCache() *schema.Resource {
 								validation.StringLenBetween(1, 4096),
 							),
 						},
-						"file_system_id": {
+						names.AttrFileSystemID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -136,7 +136,7 @@ func resourceFileCache() *schema.Resource {
 								},
 							},
 						},
-						"resource_arn": {
+						names.AttrResourceARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -151,7 +151,7 @@ func resourceFileCache() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -201,7 +201,7 @@ func resourceFileCache() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"destination": {
+									names.AttrDestination: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -264,7 +264,7 @@ func resourceFileCache() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -326,7 +326,7 @@ func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.LustreConfiguration = expandCreateFileCacheLustreConfiguration(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -364,7 +364,7 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrARN, filecache.ResourceARN)
 	dataRepositoryAssociationIDs := aws.StringValueSlice(filecache.DataRepositoryAssociationIds)
 	d.Set("data_repository_association_ids", dataRepositoryAssociationIDs)
-	d.Set("dns_name", filecache.DNSName)
+	d.Set(names.AttrDNSName, filecache.DNSName)
 	d.Set("file_cache_id", filecache.FileCacheId)
 	d.Set("file_cache_type", filecache.FileCacheType)
 	d.Set("file_cache_type_version", filecache.FileCacheTypeVersion)
@@ -596,14 +596,14 @@ func flattenDataRepositoryAssociations(ctx context.Context, dataRepositoryAssoci
 		tags := KeyValueTags(ctx, dataRepositoryAssociation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		values := map[string]interface{}{
-			"association_id":                 dataRepositoryAssociation.AssociationId,
+			names.AttrAssociationID:          dataRepositoryAssociation.AssociationId,
 			"data_repository_path":           dataRepositoryAssociation.DataRepositoryPath,
 			"data_repository_subdirectories": aws.StringValueSlice(dataRepositoryAssociation.DataRepositorySubdirectories),
 			"file_cache_id":                  dataRepositoryAssociation.FileCacheId,
 			"file_cache_path":                dataRepositoryAssociation.FileCachePath,
 			"imported_file_chunk_size":       dataRepositoryAssociation.ImportedFileChunkSize,
 			"nfs":                            flattenNFSDataRepositoryConfiguration(dataRepositoryAssociation.NFS),
-			"resource_arn":                   dataRepositoryAssociation.ResourceARN,
+			names.AttrResourceARN:            dataRepositoryAssociation.ResourceARN,
 			names.AttrTags:                   tags.RemoveDefaultConfig(defaultTagsConfig).Map(),
 		}
 		flattenedDataRepositoryAssociations = append(flattenedDataRepositoryAssociations, values)

@@ -48,7 +48,7 @@ func ResourceQuickConnect() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -144,7 +144,7 @@ func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, met
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 	name := d.Get(names.AttrName).(string)
 	quickConnectConfig := expandQuickConnectConfig(d.Get("quick_connect_config").([]interface{}))
 	input := &connect.CreateQuickConnectInput{
@@ -208,7 +208,7 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrInstanceID, instanceID)
 	d.Set(names.AttrDescription, resp.QuickConnect.Description)
 	d.Set(names.AttrName, resp.QuickConnect.Name)
 	d.Set(names.AttrARN, resp.QuickConnect.QuickConnectARN)

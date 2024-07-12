@@ -64,7 +64,7 @@ func (r *resourceVPCConnection) Schema(ctx context.Context, req resource.SchemaR
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"aws_account_id": schema.StringAttribute{
+			names.AttrAWSAccountID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -97,7 +97,7 @@ func (r *resourceVPCConnection) Schema(ctx context.Context, req resource.SchemaR
 					stringvalidator.LengthBetween(20, 2048),
 				},
 			},
-			"security_group_ids": schema.SetAttribute{
+			names.AttrSecurityGroupIDs: schema.SetAttribute{
 				Required:    true,
 				ElementType: types.StringType,
 				Validators: []validator.Set{

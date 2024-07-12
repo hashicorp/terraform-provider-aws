@@ -39,7 +39,7 @@ func flattenNetworkConfigResponse(c *worklink.DescribeCompanyNetworkConfiguratio
 	}
 
 	config[names.AttrSubnetIDs] = flex.FlattenStringSet(c.SubnetIds)
-	config["security_group_ids"] = flex.FlattenStringSet(c.SecurityGroupIds)
+	config[names.AttrSecurityGroupIDs] = flex.FlattenStringSet(c.SecurityGroupIds)
 	config[names.AttrVPCID] = aws.StringValue(c.VpcId)
 
 	return []map[string]interface{}{config}

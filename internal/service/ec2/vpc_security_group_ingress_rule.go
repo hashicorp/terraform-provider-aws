@@ -40,8 +40,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Security Group Ingress Rule")
+// @FrameworkResource("aws_vpc_security_group_ingress_rule", name="Security Group Ingress Rule")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/ec2;ec2.SecurityGroupRule")
 func newSecurityGroupIngressRuleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupIngressRuleResource{}
 	r.securityGroupRule = r
@@ -672,7 +673,7 @@ func legacySecurityGroupRuleResourceSchemaV2(ctx context.Context) *schema.Schema
 					listplanmodifier.RequiresReplace(),
 				},
 			},
-			"protocol": schema.StringAttribute{
+			names.AttrProtocol: schema.StringAttribute{
 				CustomType: ipProtocolType{},
 				Required:   true,
 				PlanModifiers: []planmodifier.String{

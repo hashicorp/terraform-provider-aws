@@ -76,7 +76,7 @@ func ResourceKxDataview() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -155,7 +155,7 @@ func resourceKxDataviewCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	environmentID := d.Get("environment_id").(string)
-	databaseName := d.Get("database_name").(string)
+	databaseName := d.Get(names.AttrDatabaseName).(string)
 	name := d.Get(names.AttrName).(string)
 
 	idParts := []string{
@@ -236,7 +236,7 @@ func resourceKxDataviewRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrStatus, out.Status)
 	d.Set("created_timestamp", out.CreatedTimestamp.String())
 	d.Set("last_modified_timestamp", out.LastModifiedTimestamp.String())
-	d.Set("database_name", out.DatabaseName)
+	d.Set(names.AttrDatabaseName, out.DatabaseName)
 	d.Set("environment_id", out.EnvironmentId)
 	d.Set("az_mode", out.AzMode)
 	d.Set("read_write", out.ReadWrite)
@@ -265,7 +265,7 @@ func resourceKxDataviewUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 	in := &finspace.UpdateKxDataviewInput{
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
-		DatabaseName:  aws.String(d.Get("database_name").(string)),
+		DatabaseName:  aws.String(d.Get(names.AttrDatabaseName).(string)),
 		DataviewName:  aws.String(d.Get(names.AttrName).(string)),
 		ClientToken:   aws.String(id.UniqueId()),
 	}
@@ -295,7 +295,7 @@ func resourceKxDataviewDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	_, err := conn.DeleteKxDataview(ctx, &finspace.DeleteKxDataviewInput{
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
-		DatabaseName:  aws.String(d.Get("database_name").(string)),
+		DatabaseName:  aws.String(d.Get(names.AttrDatabaseName).(string)),
 		DataviewName:  aws.String(d.Get(names.AttrName).(string)),
 		ClientToken:   aws.String(id.UniqueId()),
 	})

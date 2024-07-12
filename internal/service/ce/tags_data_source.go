@@ -28,7 +28,7 @@ func dataSourceTags() *schema.Resource {
 		ReadWithoutTimeout: dataSourceTagsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -102,7 +102,7 @@ func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		TimePeriod: expandTagsTimePeriod(d.Get("time_period").([]interface{})[0].(map[string]interface{})),
 	}
 
-	if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Filter = expandExpression(v.([]interface{})[0].(map[string]interface{}))
 	}
 

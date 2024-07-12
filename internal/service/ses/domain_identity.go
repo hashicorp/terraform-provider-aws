@@ -35,7 +35,7 @@ func ResourceDomainIdentity() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -53,7 +53,7 @@ func resourceDomainIdentityCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	domainName := d.Get("domain").(string)
+	domainName := d.Get(names.AttrDomain).(string)
 
 	createOpts := &ses.VerifyDomainIdentityInput{
 		Domain: aws.String(domainName),
@@ -74,7 +74,7 @@ func resourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	domainName := d.Id()
-	d.Set("domain", domainName)
+	d.Set(names.AttrDomain, domainName)
 
 	readOpts := &ses.GetIdentityVerificationAttributesInput{
 		Identities: []*string{
@@ -110,7 +110,7 @@ func resourceDomainIdentityDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	domainName := d.Get("domain").(string)
+	domainName := d.Get(names.AttrDomain).(string)
 
 	deleteOpts := &ses.DeleteIdentityInput{
 		Identity: aws.String(domainName),

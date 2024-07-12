@@ -50,10 +50,10 @@ func ResourceSigningProfile() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]{0,64}$`), "must be alphanumeric with max length of 64 characters"),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -121,7 +121,7 @@ func ResourceSigningProfile() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"certificate_arn": {
+						names.AttrCertificateARN: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -155,7 +155,7 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 
 	name := create.NewNameGenerator(
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
-		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("terraform_"),
 	).Generate()
 	input := &signer.PutSigningProfileInput{
@@ -205,7 +205,7 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set(names.AttrARN, output.Arn)
 	d.Set(names.AttrName, output.ProfileName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.ProfileName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.ProfileName)))
 	d.Set("platform_display_name", output.PlatformDisplayName)
 	d.Set("platform_id", output.PlatformId)
 	if err := d.Set("revocation_record", flattenSigningProfileRevocationRecord(output.RevocationRecord)); err != nil {
@@ -271,7 +271,7 @@ func expandSigningMaterial(in []interface{}) *types.SigningMaterial {
 	m := in[0].(map[string]interface{})
 	var out types.SigningMaterial
 
-	if v, ok := m["certificate_arn"].(string); ok && v != "" {
+	if v, ok := m[names.AttrCertificateARN].(string); ok && v != "" {
 		out.CertificateArn = aws.String(v)
 	}
 
@@ -284,7 +284,7 @@ func flattenSigningMaterial(apiObject *types.SigningMaterial) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"certificate_arn": aws.ToString(apiObject.CertificateArn),
+		names.AttrCertificateARN: aws.ToString(apiObject.CertificateArn),
 	}
 
 	return []interface{}{m}

@@ -80,7 +80,7 @@ func resourceEventDataStore() *schema.Resource {
 											ValidateFunc: validation.StringLenBetween(1, 2048),
 										},
 									},
-									"field": {
+									names.AttrField: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
@@ -142,6 +142,12 @@ func resourceEventDataStore() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"billing_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          types.BillingModeExtendableRetentionPricing,
+				ValidateDiagFunc: enum.Validate[types.BillingMode](),
+			},
 			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -163,7 +169,7 @@ func resourceEventDataStore() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"retention_period": {
+			names.AttrRetentionPeriod: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  2555,
@@ -188,10 +194,11 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 
 	name := d.Get(names.AttrName).(string)
 	input := &cloudtrail.CreateEventDataStoreInput{
+		BillingMode:                  types.BillingMode(d.Get("billing_mode").(string)),
 		MultiRegionEnabled:           aws.Bool(d.Get("multi_region_enabled").(bool)),
 		Name:                         aws.String(name),
 		OrganizationEnabled:          aws.Bool(d.Get("organization_enabled").(bool)),
-		RetentionPeriod:              aws.Int32(int32(d.Get("retention_period").(int))),
+		RetentionPeriod:              aws.Int32(int32(d.Get(names.AttrRetentionPeriod).(int))),
 		TagsList:                     getTagsIn(ctx),
 		TerminationProtectionEnabled: aws.Bool(d.Get("termination_protection_enabled").(bool)),
 	}
@@ -240,10 +247,11 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set(names.AttrARN, output.EventDataStoreArn)
 	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
+	d.Set("billing_mode", output.BillingMode)
 	d.Set("multi_region_enabled", output.MultiRegionEnabled)
 	d.Set(names.AttrName, output.Name)
 	d.Set("organization_enabled", output.OrganizationEnabled)
-	d.Set("retention_period", output.RetentionPeriod)
+	d.Set(names.AttrRetentionPeriod, output.RetentionPeriod)
 	d.Set("termination_protection_enabled", output.TerminationProtectionEnabled)
 
 	return diags
@@ -262,6 +270,10 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
 		}
 
+		if d.HasChange("billing_mode") {
+			input.BillingMode = types.BillingMode(d.Get("billing_mode").(string))
+		}
+
 		if d.HasChange("multi_region_enabled") {
 			input.MultiRegionEnabled = aws.Bool(d.Get("multi_region_enabled").(bool))
 		}
@@ -274,8 +286,8 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.OrganizationEnabled = aws.Bool(d.Get("organization_enabled").(bool))
 		}
 
-		if d.HasChange("retention_period") {
-			input.RetentionPeriod = aws.Int32(int32(d.Get("retention_period").(int)))
+		if d.HasChange(names.AttrRetentionPeriod) {
+			input.RetentionPeriod = aws.Int32(int32(d.Get(names.AttrRetentionPeriod).(int)))
 		}
 
 		if d.HasChange("termination_protection_enabled") {

@@ -54,7 +54,7 @@ func ResourceFeature() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,7 +104,7 @@ func ResourceFeature() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.FeatureEvaluationStrategy](),
 			},
-			"last_updated_time": {
+			names.AttrLastUpdatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -280,12 +280,12 @@ func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set(names.AttrARN, feature.Arn)
-	d.Set("created_time", aws.ToTime(feature.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, aws.ToTime(feature.CreatedTime).Format(time.RFC3339))
 	d.Set("default_variation", feature.DefaultVariation)
 	d.Set(names.AttrDescription, feature.Description)
 	d.Set("entity_overrides", feature.EntityOverrides)
 	d.Set("evaluation_strategy", feature.EvaluationStrategy)
-	d.Set("last_updated_time", aws.ToTime(feature.LastUpdatedTime).Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedTime, aws.ToTime(feature.LastUpdatedTime).Format(time.RFC3339))
 	d.Set(names.AttrName, feature.Name)
 	d.Set("project", feature.Project)
 	d.Set(names.AttrStatus, feature.Status)

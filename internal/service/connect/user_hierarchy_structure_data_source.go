@@ -49,7 +49,7 @@ func DataSourceUserHierarchyStructure() *schema.Resource {
 					},
 				},
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -87,7 +87,7 @@ func dataSourceUserHierarchyStructureRead(ctx context.Context, d *schema.Resourc
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 
 	resp, err := conn.DescribeUserHierarchyStructureWithContext(ctx, &connect.DescribeUserHierarchyStructureInput{
 		InstanceId: aws.String(instanceID),

@@ -88,21 +88,21 @@ func TestAccSNSTopicSubscription_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sns", regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, "confirmation_timeout_in_minutes", "1"),
-					resource.TestCheckResourceAttr(resourceName, "confirmation_was_authenticated", "true"),
+					resource.TestCheckResourceAttr(resourceName, "confirmation_timeout_in_minutes", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "confirmation_was_authenticated", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint", "aws_sqs_queue.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_auto_confirms", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEndpoint, "aws_sqs_queue.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_auto_confirms", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", ""),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "pending_confirmation", "false"),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "sqs"),
-					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "false"),
+					resource.TestCheckResourceAttr(resourceName, "pending_confirmation", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "sqs"),
+					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "redrive_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "replay_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "subscription_role_arn", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "topic_arn", "aws_sns_topic.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTopicARN, "aws_sns_topic.test", names.AttrARN),
 				),
 			},
 			{
@@ -495,7 +495,7 @@ func TestAccSNSTopicSubscription_rawMessageDelivery(t *testing.T) {
 				Config: testAccTopicSubscriptionConfig_rawMessageDelivery(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "true"),
+					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", acctest.CtTrue),
 				),
 			},
 			{
@@ -512,7 +512,7 @@ func TestAccSNSTopicSubscription_rawMessageDelivery(t *testing.T) {
 				Config: testAccTopicSubscriptionConfig_rawMessageDelivery(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "false"),
+					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", acctest.CtFalse),
 				),
 			},
 			// Test attribute removal
@@ -520,7 +520,7 @@ func TestAccSNSTopicSubscription_rawMessageDelivery(t *testing.T) {
 				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "false"),
+					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", acctest.CtFalse),
 				),
 			},
 		},
@@ -606,14 +606,14 @@ func TestAccSNSTopicSubscription_email(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sns", regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, "confirmation_was_authenticated", "false"),
+					resource.TestCheckResourceAttr(resourceName, "confirmation_was_authenticated", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
-					resource.TestCheckResourceAttr(resourceName, "endpoint", acctest.DefaultEmailAddress),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpoint, acctest.DefaultEmailAddress),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy", ""),
-					resource.TestCheckResourceAttr(resourceName, "pending_confirmation", "true"),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "email"),
-					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "topic_arn", "aws_sns_topic.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "pending_confirmation", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, names.AttrEmail),
+					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTopicARN, "aws_sns_topic.test", names.AttrARN),
 				),
 			},
 		},
@@ -638,11 +638,11 @@ func TestAccSNSTopicSubscription_firehose(t *testing.T) {
 					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sns", regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint", "aws_kinesis_firehose_delivery_stream.test_stream", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEndpoint, "aws_kinesis_firehose_delivery_stream.test_stream", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy", ""),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "firehose"),
-					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "topic_arn", "aws_sns_topic.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "firehose"),
+					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTopicARN, "aws_sns_topic.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "subscription_role_arn", "aws_iam_role.firehose_role", names.AttrARN),
 				),
 			},
@@ -717,7 +717,7 @@ func testAccCheckTopicSubscriptionDestroy(ctx context.Context) resource.TestChec
 				return err
 			}
 
-			if output["Protocol"] == "email" {
+			if output["Protocol"] == names.AttrEmail {
 				continue
 			}
 

@@ -48,7 +48,7 @@ func ResourceContainer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,7 +104,7 @@ func resourceContainerRead(ctx context.Context, d *schema.ResourceData, meta int
 	arn := aws.ToString(resp.ARN)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrName, resp.Name)
-	d.Set("endpoint", resp.Endpoint)
+	d.Set(names.AttrEndpoint, resp.Endpoint)
 
 	return diags
 }

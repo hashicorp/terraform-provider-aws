@@ -52,7 +52,7 @@ func ResourceQueue() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -118,7 +118,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 	name := d.Get(names.AttrName).(string)
 	input := &connect.CreateQueueInput{
 		InstanceId: aws.String(instanceID),
@@ -199,7 +199,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrARN, resp.Queue.QueueArn)
 	d.Set(names.AttrDescription, resp.Queue.Description)
 	d.Set("hours_of_operation_id", resp.Queue.HoursOfOperationId)
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrInstanceID, instanceID)
 	d.Set("max_contacts", resp.Queue.MaxContacts)
 	d.Set(names.AttrName, resp.Queue.Name)
 	d.Set("queue_id", resp.Queue.QueueId)

@@ -21,6 +21,7 @@ import (
 
 // @SDKDataSource("aws_eip", name="EIP)
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceEIP() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEIPRead,
@@ -34,7 +35,7 @@ func dataSourceEIP() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"association_id": {
+			names.AttrAssociationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,21 +51,21 @@ func dataSourceEIP() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -121,7 +122,7 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterListV2(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -155,13 +156,13 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set(names.AttrARN, nil)
 		d.Set("ptr_record", nil)
 	}
-	d.Set("association_id", eip.AssociationId)
+	d.Set(names.AttrAssociationID, eip.AssociationId)
 	d.Set("carrier_ip", eip.CarrierIp)
 	d.Set("customer_owned_ip", eip.CustomerOwnedIp)
 	d.Set("customer_owned_ipv4_pool", eip.CustomerOwnedIpv4Pool)
-	d.Set("domain", eip.Domain)
-	d.Set("instance_id", eip.InstanceId)
-	d.Set("network_interface_id", eip.NetworkInterfaceId)
+	d.Set(names.AttrDomain, eip.Domain)
+	d.Set(names.AttrInstanceID, eip.InstanceId)
+	d.Set(names.AttrNetworkInterfaceID, eip.NetworkInterfaceId)
 	d.Set("network_interface_owner_id", eip.NetworkInterfaceOwnerId)
 	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
 	d.Set("private_ip", eip.PrivateIpAddress)

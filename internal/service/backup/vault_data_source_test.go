@@ -31,7 +31,7 @@ func TestAccBackupVaultDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrKMSKeyARN, resourceName, names.AttrKMSKeyARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "recovery_points", resourceName, "recovery_points"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

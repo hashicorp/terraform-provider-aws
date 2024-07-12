@@ -45,7 +45,7 @@ func resourceWorkGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
@@ -65,7 +65,7 @@ func resourceWorkGroup() *schema.Resource {
 							Optional: true,
 							Default:  true,
 						},
-						"engine_version": {
+						names.AttrEngineVersion: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -113,7 +113,7 @@ func resourceWorkGroup() *schema.Resource {
 											},
 										},
 									},
-									"encryption_configuration": {
+									names.AttrEncryptionConfiguration: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -132,7 +132,7 @@ func resourceWorkGroup() *schema.Resource {
 											},
 										},
 									},
-									"expected_bucket_owner": {
+									names.AttrExpectedBucketOwner: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -156,7 +156,7 @@ func resourceWorkGroup() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -190,7 +190,7 @@ func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	name := d.Get(names.AttrName).(string)
 	input := &athena.CreateWorkGroupInput{
-		Configuration: expandWorkGroupConfiguration(d.Get("configuration").([]interface{})),
+		Configuration: expandWorkGroupConfiguration(d.Get(names.AttrConfiguration).([]interface{})),
 		Name:          aws.String(name),
 		Tags:          getTagsIn(ctx),
 	}
@@ -247,11 +247,11 @@ func resourceWorkGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		Resource:  fmt.Sprintf("workgroup/%s", d.Id()),
 	}
 	d.Set(names.AttrARN, arn.String())
-	if err := d.Set("configuration", flattenWorkGroupConfiguration(wg.Configuration)); err != nil {
+	if err := d.Set(names.AttrConfiguration, flattenWorkGroupConfiguration(wg.Configuration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
 	d.Set(names.AttrDescription, wg.Description)
-	d.Set("force_destroy", d.Get("force_destroy"))
+	d.Set(names.AttrForceDestroy, d.Get(names.AttrForceDestroy))
 	d.Set(names.AttrName, wg.Name)
 	d.Set(names.AttrState, wg.State)
 
@@ -267,8 +267,8 @@ func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			WorkGroup: aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		if d.HasChange("configuration") {
-			input.ConfigurationUpdates = expandWorkGroupConfigurationUpdates(d.Get("configuration").([]interface{}))
+		if d.HasChange(names.AttrConfiguration) {
+			input.ConfigurationUpdates = expandWorkGroupConfigurationUpdates(d.Get(names.AttrConfiguration).([]interface{}))
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -297,7 +297,7 @@ func resourceWorkGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 		WorkGroup: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("force_destroy"); ok {
+	if v, ok := d.GetOk(names.AttrForceDestroy); ok {
 		input.RecursiveDeleteOption = aws.Bool(v.(bool))
 	}
 
@@ -352,7 +352,7 @@ func expandWorkGroupConfiguration(l []interface{}) *types.WorkGroupConfiguration
 		configuration.EnforceWorkGroupConfiguration = aws.Bool(v)
 	}
 
-	if v, ok := m["engine_version"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m[names.AttrEngineVersion].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		configuration.EngineVersion = expandWorkGroupEngineVersion(v)
 	}
 
@@ -410,7 +410,7 @@ func expandWorkGroupConfigurationUpdates(l []interface{}) *types.WorkGroupConfig
 		configurationUpdates.EnforceWorkGroupConfiguration = aws.Bool(v)
 	}
 
-	if v, ok := m["engine_version"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m[names.AttrEngineVersion].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		configurationUpdates.EngineVersion = expandWorkGroupEngineVersion(v)
 	}
 
@@ -442,7 +442,7 @@ func expandWorkGroupResultConfiguration(l []interface{}) *types.ResultConfigurat
 
 	resultConfiguration := &types.ResultConfiguration{}
 
-	if v, ok := m["encryption_configuration"]; ok {
+	if v, ok := m[names.AttrEncryptionConfiguration]; ok {
 		resultConfiguration.EncryptionConfiguration = expandWorkGroupEncryptionConfiguration(v.([]interface{}))
 	}
 
@@ -450,7 +450,7 @@ func expandWorkGroupResultConfiguration(l []interface{}) *types.ResultConfigurat
 		resultConfiguration.OutputLocation = aws.String(v)
 	}
 
-	if v, ok := m["expected_bucket_owner"].(string); ok && v != "" {
+	if v, ok := m[names.AttrExpectedBucketOwner].(string); ok && v != "" {
 		resultConfiguration.ExpectedBucketOwner = aws.String(v)
 	}
 
@@ -470,7 +470,7 @@ func expandWorkGroupResultConfigurationUpdates(l []interface{}) *types.ResultCon
 
 	resultConfigurationUpdates := &types.ResultConfigurationUpdates{}
 
-	if v, ok := m["encryption_configuration"]; ok {
+	if v, ok := m[names.AttrEncryptionConfiguration]; ok {
 		resultConfigurationUpdates.EncryptionConfiguration = expandWorkGroupEncryptionConfiguration(v.([]interface{}))
 	} else {
 		resultConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
@@ -482,7 +482,7 @@ func expandWorkGroupResultConfigurationUpdates(l []interface{}) *types.ResultCon
 		resultConfigurationUpdates.RemoveOutputLocation = aws.Bool(true)
 	}
 
-	if v, ok := m["expected_bucket_owner"].(string); ok && v != "" {
+	if v, ok := m[names.AttrExpectedBucketOwner].(string); ok && v != "" {
 		resultConfigurationUpdates.ExpectedBucketOwner = aws.String(v)
 	} else {
 		resultConfigurationUpdates.RemoveExpectedBucketOwner = aws.Bool(true)
@@ -525,7 +525,7 @@ func flattenWorkGroupConfiguration(configuration *types.WorkGroupConfiguration) 
 	m := map[string]interface{}{
 		"bytes_scanned_cutoff_per_query":     aws.ToInt64(configuration.BytesScannedCutoffPerQuery),
 		"enforce_workgroup_configuration":    aws.ToBool(configuration.EnforceWorkGroupConfiguration),
-		"engine_version":                     flattenWorkGroupEngineVersion(configuration.EngineVersion),
+		names.AttrEngineVersion:              flattenWorkGroupEngineVersion(configuration.EngineVersion),
 		"execution_role":                     aws.ToString(configuration.ExecutionRole),
 		"publish_cloudwatch_metrics_enabled": aws.ToBool(configuration.PublishCloudWatchMetricsEnabled),
 		"result_configuration":               flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
@@ -554,12 +554,12 @@ func flattenWorkGroupResultConfiguration(resultConfiguration *types.ResultConfig
 	}
 
 	m := map[string]interface{}{
-		"encryption_configuration": flattenWorkGroupEncryptionConfiguration(resultConfiguration.EncryptionConfiguration),
-		"output_location":          aws.ToString(resultConfiguration.OutputLocation),
+		names.AttrEncryptionConfiguration: flattenWorkGroupEncryptionConfiguration(resultConfiguration.EncryptionConfiguration),
+		"output_location":                 aws.ToString(resultConfiguration.OutputLocation),
 	}
 
 	if resultConfiguration.ExpectedBucketOwner != nil {
-		m["expected_bucket_owner"] = aws.ToString(resultConfiguration.ExpectedBucketOwner)
+		m[names.AttrExpectedBucketOwner] = aws.ToString(resultConfiguration.ExpectedBucketOwner)
 	}
 
 	if resultConfiguration.AclConfiguration != nil {

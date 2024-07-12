@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -25,7 +25,8 @@ import (
 
 // @SDKResource("aws_ami_copy", name="AMI")
 // @Tags(identifierAttribute="id")
-func ResourceAMICopy() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceAMICopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAMICopyCreate,
 		// The remaining operations are shared with the generic aws_ami resource,
@@ -82,19 +83,19 @@ func ResourceAMICopy() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"encrypted": {
+						names.AttrEncrypted: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -102,19 +103,19 @@ func ResourceAMICopy() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"snapshot_id": {
+						names.AttrSnapshotID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"throughput": {
+						names.AttrThroughput: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -123,8 +124,8 @@ func ResourceAMICopy() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -132,7 +133,7 @@ func ResourceAMICopy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -145,11 +146,11 @@ func ResourceAMICopy() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -158,8 +159,8 @@ func ResourceAMICopy() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -271,14 +272,14 @@ func ResourceAMICopy() *schema.Resource {
 
 func resourceAMICopyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	sourceImageID := d.Get("source_ami_id").(string)
 	input := &ec2.CopyImageInput{
 		ClientToken:   aws.String(id.UniqueId()),
 		Description:   aws.String(d.Get(names.AttrDescription).(string)),
-		Encrypted:     aws.Bool(d.Get("encrypted").(bool)),
+		Encrypted:     aws.Bool(d.Get(names.AttrEncrypted).(bool)),
 		Name:          aws.String(name),
 		SourceImageId: aws.String(sourceImageID),
 		SourceRegion:  aws.String(d.Get("source_ami_region").(string)),
@@ -292,20 +293,20 @@ func resourceAMICopyCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	output, err := conn.CopyImageWithContext(ctx, input)
+	output, err := conn.CopyImage(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s) from source EC2 AMI (%s): %s", name, sourceImageID, err)
 	}
 
-	d.SetId(aws.StringValue(output.ImageId))
+	d.SetId(aws.ToString(output.ImageId))
 	d.Set("manage_ebs_snapshots", true)
 
-	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+	if err := createTagsV2(ctx, conn, d.Id(), getTagsInV2(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting EC2 AMI (%s) tags: %s", d.Id(), err)
 	}
 
-	if _, err := WaitImageAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitImageAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s) from source EC2 AMI (%s): waiting for completion: %s", name, sourceImageID, err)
 	}
 

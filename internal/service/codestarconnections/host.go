@@ -65,13 +65,13 @@ func resourceHost() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_configuration": {
+			names.AttrVPCConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
@@ -107,7 +107,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		Name:             aws.String(name),
 		ProviderEndpoint: aws.String(d.Get("provider_endpoint").(string)),
 		ProviderType:     types.ProviderType(d.Get("provider_type").(string)),
-		VpcConfiguration: expandHostVPCConfiguration(d.Get("vpc_configuration").([]interface{})),
+		VpcConfiguration: expandHostVPCConfiguration(d.Get(names.AttrVPCConfiguration).([]interface{})),
 	}
 
 	output, err := conn.CreateHost(ctx, input)
@@ -146,7 +146,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("provider_endpoint", output.ProviderEndpoint)
 	d.Set("provider_type", output.ProviderType)
 	d.Set(names.AttrStatus, output.Status)
-	if err := d.Set("vpc_configuration", flattenHostVPCConfiguration(output.VpcConfiguration)); err != nil {
+	if err := d.Set(names.AttrVPCConfiguration, flattenHostVPCConfiguration(output.VpcConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_configuration: %s", err)
 	}
 
@@ -157,11 +157,11 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsClient(ctx)
 
-	if d.HasChanges("provider_endpoint", "vpc_configuration") {
+	if d.HasChanges("provider_endpoint", names.AttrVPCConfiguration) {
 		input := &codestarconnections.UpdateHostInput{
 			HostArn:          aws.String(d.Id()),
 			ProviderEndpoint: aws.String(d.Get("provider_endpoint").(string)),
-			VpcConfiguration: expandHostVPCConfiguration(d.Get("vpc_configuration").([]interface{})),
+			VpcConfiguration: expandHostVPCConfiguration(d.Get(names.AttrVPCConfiguration).([]interface{})),
 		}
 
 		_, err := conn.UpdateHost(ctx, input)
@@ -206,7 +206,7 @@ func expandHostVPCConfiguration(l []interface{}) *types.VpcConfiguration {
 	m := l[0].(map[string]interface{})
 
 	vc := &types.VpcConfiguration{
-		SecurityGroupIds: flex.ExpandStringValueSet(m["security_group_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
 		SubnetIds:        flex.ExpandStringValueSet(m[names.AttrSubnetIDs].(*schema.Set)),
 		VpcId:            aws.String(m[names.AttrVPCID].(string)),
 	}
@@ -224,9 +224,9 @@ func flattenHostVPCConfiguration(vpcConfig *types.VpcConfiguration) []interface{
 	}
 
 	m := map[string]interface{}{
-		"security_group_ids": vpcConfig.SecurityGroupIds,
-		names.AttrSubnetIDs:  vpcConfig.SubnetIds,
-		names.AttrVPCID:      aws.ToString(vpcConfig.VpcId),
+		names.AttrSecurityGroupIDs: vpcConfig.SecurityGroupIds,
+		names.AttrSubnetIDs:        vpcConfig.SubnetIds,
+		names.AttrVPCID:            aws.ToString(vpcConfig.VpcId),
 	}
 
 	if vpcConfig.TlsCertificate != nil {

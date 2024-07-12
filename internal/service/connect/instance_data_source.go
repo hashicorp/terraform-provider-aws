@@ -38,7 +38,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,13 +58,13 @@ func DataSourceInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"instance_alias", "instance_id"},
+				ExactlyOneOf: []string{"instance_alias", names.AttrInstanceID},
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"instance_id", "instance_alias"},
+				ExactlyOneOf: []string{names.AttrInstanceID, "instance_alias"},
 			},
 			"multi_party_conference_enabled": {
 				Type:     schema.TypeBool,
@@ -78,7 +78,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"service_role": {
+			names.AttrServiceRole: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -97,7 +97,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	var matchedInstance *connect.Instance
 
-	if v, ok := d.GetOk("instance_id"); ok {
+	if v, ok := d.GetOk(names.AttrInstanceID); ok {
 		instanceID := v.(string)
 		instance, err := FindInstanceByID(ctx, conn, instanceID)
 
@@ -139,13 +139,13 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(aws.StringValue(matchedInstance.Id))
 	d.Set(names.AttrARN, matchedInstance.Arn)
 	if matchedInstance.CreatedTime != nil {
-		d.Set("created_time", matchedInstance.CreatedTime.Format(time.RFC3339))
+		d.Set(names.AttrCreatedTime, matchedInstance.CreatedTime.Format(time.RFC3339))
 	}
 	d.Set("identity_management_type", matchedInstance.IdentityManagementType)
 	d.Set("inbound_calls_enabled", matchedInstance.InboundCallsEnabled)
 	d.Set("instance_alias", matchedInstance.InstanceAlias)
 	d.Set("outbound_calls_enabled", matchedInstance.OutboundCallsEnabled)
-	d.Set("service_role", matchedInstance.ServiceRole)
+	d.Set(names.AttrServiceRole, matchedInstance.ServiceRole)
 	d.Set(names.AttrStatus, matchedInstance.InstanceStatus)
 
 	for att := range InstanceAttributeMapping() {

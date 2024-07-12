@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/appsync"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,7 +26,7 @@ func testAccDataSource_basic(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -38,14 +37,14 @@ func testAccDataSource_basic(t *testing.T) {
 					testAccCheckExistsDataSource(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile(fmt.Sprintf("apis/.+/datasources/%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "event_bridge_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "http_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "event_bridge_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "http_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "relational_database_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "relational_database_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "NONE"),
 				),
 			},
@@ -64,7 +63,7 @@ func testAccDataSource_description(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -98,7 +97,7 @@ func testAccDataSource_DynamoDB_region(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -107,7 +106,7 @@ func testAccDataSource_DynamoDB_region(t *testing.T) {
 				Config: testAccDataSourceConfig_dynamoDBRegion(rName, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.0.region", acctest.Region()),
 				),
 			},
@@ -115,7 +114,7 @@ func testAccDataSource_DynamoDB_region(t *testing.T) {
 				Config: testAccDataSourceConfig_typeDynamoDB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.0.region", acctest.Region()),
 				),
 			},
@@ -134,7 +133,7 @@ func testAccDataSource_DynamoDB_useCallerCredentials(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -143,16 +142,16 @@ func testAccDataSource_DynamoDB_useCallerCredentials(t *testing.T) {
 				Config: testAccDataSourceConfig_dynamoDBUseCallerCredentials(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.0.use_caller_credentials", "true"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.0.use_caller_credentials", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccDataSourceConfig_dynamoDBUseCallerCredentials(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.0.use_caller_credentials", "false"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.0.use_caller_credentials", acctest.CtFalse),
 				),
 			},
 			{
@@ -171,7 +170,7 @@ func TestAccAppSyncDataSource_Elasticsearch_region(t *testing.T) {
 
 	// Keep this test Parallel as it takes considerably longer to run than any non-Elasticsearch tests.
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -180,7 +179,7 @@ func TestAccAppSyncDataSource_Elasticsearch_region(t *testing.T) {
 				Config: testAccDataSourceConfig_elasticSearchRegion(rName, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.0.region", acctest.Region()),
 				),
 			},
@@ -188,7 +187,7 @@ func TestAccAppSyncDataSource_Elasticsearch_region(t *testing.T) {
 				Config: testAccDataSourceConfig_typeElasticsearch(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.0.region", acctest.Region()),
 				),
 			},
@@ -208,7 +207,7 @@ func TestAccAppSyncDataSource_OpenSearchService_region(t *testing.T) {
 
 	// Keep this test Parallel as it takes considerably longer to run than any non-OpenSearchService tests.
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -217,7 +216,7 @@ func TestAccAppSyncDataSource_OpenSearchService_region(t *testing.T) {
 				Config: testAccDataSourceConfig_openSearchServiceRegion(rName, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.0.region", acctest.Region()),
 				),
 			},
@@ -225,7 +224,7 @@ func TestAccAppSyncDataSource_OpenSearchService_region(t *testing.T) {
 				Config: testAccDataSourceConfig_typeOpenSearchService(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.0.region", acctest.Region()),
 				),
 			},
@@ -244,7 +243,7 @@ func testAccDataSource_HTTP_endpoint(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -253,7 +252,7 @@ func testAccDataSource_HTTP_endpoint(t *testing.T) {
 				Config: testAccDataSourceConfig_httpEndpoint(rName, "http://example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "http_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "http_config.0.endpoint", "http://example.com"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 				),
@@ -262,7 +261,7 @@ func testAccDataSource_HTTP_endpoint(t *testing.T) {
 				Config: testAccDataSourceConfig_httpEndpoint(rName, "http://example.org"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "http_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "http_config.0.endpoint", "http://example.org"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 				),
@@ -282,7 +281,7 @@ func testAccDataSource_type(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -313,7 +312,7 @@ func testAccDataSource_Type_dynamoDB(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -322,10 +321,10 @@ func testAccDataSource_Type_dynamoDB(t *testing.T) {
 				Config: testAccDataSourceConfig_typeDynamoDB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "dynamodb_config.0.table_name", dynamodbTableResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.0.region", acctest.Region()),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRoleARN, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AMAZON_DYNAMODB"),
 				),
 			},
@@ -346,7 +345,7 @@ func TestAccAppSyncDataSource_Type_elasticSearch(t *testing.T) {
 
 	// Keep this test Parallel as it takes considerably longer to run than any non-Elasticsearch tests.
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -355,10 +354,10 @@ func TestAccAppSyncDataSource_Type_elasticSearch(t *testing.T) {
 				Config: testAccDataSourceConfig_typeElasticsearch(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "elasticsearch_config.0.endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.0.region", acctest.Region()),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRoleARN, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AMAZON_ELASTICSEARCH"),
 				),
 			},
@@ -379,7 +378,7 @@ func TestAccAppSyncDataSource_Type_openSearchService(t *testing.T) {
 
 	// Keep this test Parallel as it takes considerably longer to run than any non-OpenSearchService tests.
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -388,10 +387,10 @@ func TestAccAppSyncDataSource_Type_openSearchService(t *testing.T) {
 				Config: testAccDataSourceConfig_typeOpenSearchService(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "opensearchservice_config.0.endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.0.region", acctest.Region()),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRoleARN, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AMAZON_OPENSEARCH_SERVICE"),
 				),
 			},
@@ -410,7 +409,7 @@ func testAccDataSource_Type_http(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -419,7 +418,7 @@ func testAccDataSource_Type_http(t *testing.T) {
 				Config: testAccDataSourceConfig_typeHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "http_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "http_config.0.endpoint", "http://example.com"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 				),
@@ -439,7 +438,7 @@ func testAccDataSource_Type_httpAuth(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -448,11 +447,11 @@ func testAccDataSource_Type_httpAuth(t *testing.T) {
 				Config: testAccDataSourceConfig_typeHTTPAuth(rName, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "http_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "http_config.0.endpoint", fmt.Sprintf("https://appsync.%s.amazonaws.com/", acctest.Region())),
-					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.authorization_type", "AWS_IAM"),
-					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.aws_iam_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.aws_iam_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.aws_iam_config.0.signing_region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.aws_iam_config.0.signing_service_name", "appsync"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
@@ -473,7 +472,7 @@ func testAccDataSource_Type_relationalDatabase(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -502,7 +501,7 @@ func testAccDataSource_Type_relationalDatabaseWithOptions(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -514,7 +513,7 @@ func testAccDataSource_Type_relationalDatabaseWithOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "relational_database_config.0.http_endpoint_config.0.schema", "mydb"),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_config.0.http_endpoint_config.0.region", acctest.Region()),
 					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.db_cluster_identifier", "aws_rds_cluster.test", names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.database_name", "aws_rds_cluster.test", "database_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.database_name", "aws_rds_cluster.test", names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.aws_secret_store_arn", "aws_secretsmanager_secret.test", names.AttrARN),
 				),
 			},
@@ -535,7 +534,7 @@ func testAccDataSource_Type_lambda(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -544,9 +543,9 @@ func testAccDataSource_Type_lambda(t *testing.T) {
 				Config: testAccDataSourceConfig_typeLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.function_arn", lambdaFunctionResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRoleARN, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AWS_LAMBDA"),
 				),
 			},
@@ -567,7 +566,7 @@ func testAccDataSource_Type_eventBridge(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -576,9 +575,9 @@ func testAccDataSource_Type_eventBridge(t *testing.T) {
 				Config: testAccDataSourceConfig_typeEventBridge(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "event_bridge_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_bridge_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "event_bridge_config.0.event_bus_arn", eventBusResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRoleARN, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AMAZON_EVENTBRIDGE"),
 				),
 			},
@@ -597,7 +596,7 @@ func testAccDataSource_Type_none(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -620,19 +619,14 @@ func testAccDataSource_Type_none(t *testing.T) {
 
 func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
+
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appsync_datasource" {
 				continue
 			}
 
-			apiID, name, err := tfappsync.DecodeID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfappsync.FindDataSourceByTwoPartKey(ctx, conn, apiID, name)
+			_, err := tfappsync.FindDataSourceByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -649,26 +643,16 @@ func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckExistsDataSource(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckExistsDataSource(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Appsync Data Source ID found: %s", name)
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
 
-		apiID, name, err := tfappsync.DecodeID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
-
-		_, err = tfappsync.FindDataSourceByTwoPartKey(ctx, conn, apiID, name)
+		_, err := tfappsync.FindDataSourceByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.Attributes[names.AttrName])
 
 		return err
 	}

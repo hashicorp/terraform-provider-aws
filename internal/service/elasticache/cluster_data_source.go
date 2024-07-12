@@ -30,7 +30,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,11 +39,11 @@ func dataSourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"availability_zone": {
+						names.AttrAvailabilityZone: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -78,11 +78,11 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,7 +95,7 @@ func dataSourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"destination": {
+						names.AttrDestination: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -134,7 +134,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"parameter_group_name": {
+			names.AttrParameterGroupName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -150,7 +150,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -186,7 +186,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(cluster.CacheClusterId))
 	d.Set(names.AttrARN, cluster.ARN)
-	d.Set("availability_zone", cluster.PreferredAvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, cluster.PreferredAvailabilityZone)
 	if cluster.ConfigurationEndpoint != nil {
 		clusterAddress, port := aws.StringValue(cluster.ConfigurationEndpoint.Address), aws.Int64Value(cluster.ConfigurationEndpoint.Port)
 		d.Set("cluster_address", clusterAddress)
@@ -194,8 +194,8 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set(names.AttrPort, port)
 	}
 	d.Set("cluster_id", cluster.CacheClusterId)
-	d.Set("engine", cluster.Engine)
-	d.Set("engine_version", cluster.EngineVersion)
+	d.Set(names.AttrEngine, cluster.Engine)
+	d.Set(names.AttrEngineVersion, cluster.EngineVersion)
 	d.Set("ip_discovery", cluster.IpDiscovery)
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(cluster.LogDeliveryConfigurations))
 	d.Set("maintenance_window", cluster.PreferredMaintenanceWindow)
@@ -208,11 +208,11 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("num_cache_nodes", cluster.NumCacheNodes)
 	if cluster.CacheParameterGroup != nil {
-		d.Set("parameter_group_name", cluster.CacheParameterGroup.CacheParameterGroupName)
+		d.Set(names.AttrParameterGroupName, cluster.CacheParameterGroup.CacheParameterGroupName)
 	}
 	d.Set("preferred_outpost_arn", cluster.PreferredOutpostArn)
 	d.Set("replication_group_id", cluster.ReplicationGroupId)
-	d.Set("security_group_ids", flattenSecurityGroupIDs(cluster.SecurityGroups))
+	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIDs(cluster.SecurityGroups))
 	d.Set("snapshot_retention_limit", cluster.SnapshotRetentionLimit)
 	d.Set("snapshot_window", cluster.SnapshotWindow)
 	d.Set("subnet_group_name", cluster.CacheSubnetGroupName)

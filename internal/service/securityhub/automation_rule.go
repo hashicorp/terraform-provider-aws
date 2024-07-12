@@ -78,7 +78,7 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"actions": schema.SetNestedBlock{
+			names.AttrActions: schema.SetNestedBlock{
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[automationRulesActionModel](ctx),
 				Validators: []validator.Set{
 					setvalidator.IsRequired(),
@@ -198,14 +198,14 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"aws_account_id":                     stringFilterSchemaFramework(ctx),
+						names.AttrAWSAccountID:               stringFilterSchemaFramework(ctx),
 						"aws_account_name":                   stringFilterSchemaFramework(ctx),
 						"company_name":                       stringFilterSchemaFramework(ctx),
 						"compliance_associated_standards_id": stringFilterSchemaFramework(ctx),
 						"compliance_security_control_id":     stringFilterSchemaFramework(ctx),
 						"compliance_status":                  stringFilterSchemaFramework(ctx),
 						"confidence":                         numberFilterSchemaFramework(ctx),
-						"created_at":                         dateFilterSchemaFramework(ctx),
+						names.AttrCreatedAt:                  dateFilterSchemaFramework(ctx),
 						"criticality":                        numberFilterSchemaFramework(ctx),
 						names.AttrDescription:                stringFilterSchemaFramework(ctx),
 						"first_observed_at":                  dateFilterSchemaFramework(ctx),
@@ -223,11 +223,11 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 						"resource_application_arn":           stringFilterSchemaFramework(ctx),
 						"resource_application_name":          stringFilterSchemaFramework(ctx),
 						"resource_details_other":             mapFilterSchemaFramework(ctx),
-						"resource_id":                        stringFilterSchemaFramework(ctx),
+						names.AttrResourceID:                 stringFilterSchemaFramework(ctx),
 						"resource_partition":                 stringFilterSchemaFramework(ctx),
 						"resource_region":                    stringFilterSchemaFramework(ctx),
-						"resource_tags":                      mapFilterSchemaFramework(ctx),
-						"resource_type":                      stringFilterSchemaFramework(ctx),
+						names.AttrResourceTags:               mapFilterSchemaFramework(ctx),
+						names.AttrResourceType:               stringFilterSchemaFramework(ctx),
 						"severity_label":                     stringFilterSchemaFramework(ctx),
 						"source_url":                         stringFilterSchemaFramework(ctx),
 						"title":                              stringFilterSchemaFramework(ctx),
@@ -268,7 +268,7 @@ func dateFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
 					},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"unit": schema.StringAttribute{
+							names.AttrUnit: schema.StringAttribute{
 								CustomType: fwtypes.StringEnumType[awstypes.DateRangeUnit](),
 								Required:   true,
 							},

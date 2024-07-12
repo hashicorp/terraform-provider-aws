@@ -101,7 +101,7 @@ func resourceLustreFileSystem() *schema.Resource {
 				Default:      fsx.LustreDeploymentTypeScratch1,
 				ValidateFunc: validation.StringInSlice(fsx.LustreDeploymentType_Values(), false),
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -161,7 +161,7 @@ func resourceLustreFileSystem() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"destination": {
+						names.AttrDestination: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -175,6 +175,28 @@ func resourceLustreFileSystem() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(fsx.LustreAccessAuditLogLevel_Values(), false),
+						},
+					},
+				},
+			},
+			"metadata_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrMode: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(fsx.MetadataConfigurationMode_Values(), false)),
+						},
+						names.AttrIOPS: {
+							Type:             schema.TypeInt,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: validation.ToDiagFunc(validation.IntInSlice([]int{1500, 3000, 6000, 12000, 24000, 36000, 48000, 60000, 72000, 84000, 96000, 108000, 120000, 132000, 144000, 156000, 168000, 180000, 192000})),
 						},
 					},
 				},
@@ -231,7 +253,7 @@ func resourceLustreFileSystem() *schema.Resource {
 					},
 				},
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -243,7 +265,7 @@ func resourceLustreFileSystem() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(1200),
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -277,18 +299,64 @@ func resourceLustreFileSystem() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
-			resourceLustreFileSystemSchemaCustomizeDiff,
+			resourceLustreFileSystemStorageCapacityCustomizeDiff,
+			resourceLustreFileSystemMetadataConfigCustomizeDiff,
 		),
 	}
 }
 
-func resourceLustreFileSystemSchemaCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func resourceLustreFileSystemStorageCapacityCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
 	// we want to force a new resource if the new storage capacity is less than the old one
 	if d.HasChange("storage_capacity") {
 		o, n := d.GetChange("storage_capacity")
 		if n.(int) < o.(int) || d.Get("deployment_type").(string) == fsx.LustreDeploymentTypeScratch1 {
 			if err := d.ForceNew("storage_capacity"); err != nil {
 				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func resourceLustreFileSystemMetadataConfigCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
+	//metadata_configuration is only supported when deployment_type is persistent2
+	if v, ok := d.GetOk("metadata_configuration"); ok {
+		if len(v.([]any)) > 0 {
+			deploymentType := d.Get("deployment_type").(string)
+			if deploymentType != fsx.LustreDeploymentTypePersistent2 {
+				return fmt.Errorf("metadata_configuration can only be set when deployment type is " + fsx.LustreDeploymentTypePersistent2)
+			}
+		}
+	}
+
+	// we want to force a new resource if the new Iops is less than the old one
+	if d.HasChange("metadata_configuration") {
+		if v, ok := d.GetOk("metadata_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			if mode := d.Get("metadata_configuration.0.mode"); mode == fsx.MetadataConfigurationModeUserProvisioned {
+				o, n := d.GetChange("metadata_configuration")
+
+				oldV := o.([]interface{})
+				newV := n.([]interface{})
+				var metaOld map[string]interface{}
+				var metaNew map[string]interface{}
+
+				for _, v := range oldV {
+					metaOld = v.(map[string]interface{})
+				}
+
+				for _, v := range newV {
+					metaNew = v.(map[string]interface{})
+				}
+
+				if len(metaNew) > 0 && len(metaOld) > 0 {
+					if metaNew[names.AttrIOPS].(int) < metaOld[names.AttrIOPS].(int) {
+						log.Printf("[DEBUG] Forcing new due to metadata iops decrease. old iops: %d new iops: %d", metaOld[names.AttrIOPS].(int), metaNew[names.AttrIOPS].(int))
+						if err := d.ForceNew("metadata_configuration.0.iops"); err != nil {
+							return err
+						}
+					}
+				}
 			}
 		}
 	}
@@ -307,7 +375,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 			DeploymentType: aws.String(d.Get("deployment_type").(string)),
 		},
 		StorageCapacity: aws.Int64(int64(d.Get("storage_capacity").(int))),
-		StorageType:     aws.String(d.Get("storage_type").(string)),
+		StorageType:     aws.String(d.Get(names.AttrStorageType).(string)),
 		SubnetIds:       flex.ExpandStringList(d.Get(names.AttrSubnetIDs).([]interface{})),
 		Tags:            getTagsIn(ctx),
 	}
@@ -316,7 +384,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		LustreConfiguration: &fsx.CreateFileSystemLustreConfiguration{
 			DeploymentType: aws.String(d.Get("deployment_type").(string)),
 		},
-		StorageType: aws.String(d.Get("storage_type").(string)),
+		StorageType: aws.String(d.Get(names.AttrStorageType).(string)),
 		SubnetIds:   flex.ExpandStringList(d.Get(names.AttrSubnetIDs).([]interface{})),
 		Tags:        getTagsIn(ctx),
 	}
@@ -382,6 +450,11 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		inputB.LustreConfiguration.LogConfiguration = expandLustreLogCreateConfiguration(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("metadata_configuration"); ok && len(v.([]interface{})) > 0 {
+		inputC.LustreConfiguration.MetadataConfiguration = expandLustreMetadataCreateConfiguration(v.([]interface{}))
+		inputB.LustreConfiguration.MetadataConfiguration = expandLustreMetadataCreateConfiguration(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("per_unit_storage_throughput"); ok {
 		inputC.LustreConfiguration.PerUnitStorageThroughput = aws.Int64(int64(v.(int)))
 		inputB.LustreConfiguration.PerUnitStorageThroughput = aws.Int64(int64(v.(int)))
@@ -392,7 +465,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		inputB.LustreConfiguration.RootSquashConfiguration = expandLustreRootSquashConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
 		inputC.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		inputB.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
@@ -459,7 +532,7 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("daily_automatic_backup_start_time", lustreConfig.DailyAutomaticBackupStartTime)
 	d.Set("data_compression_type", lustreConfig.DataCompressionType)
 	d.Set("deployment_type", lustreConfig.DeploymentType)
-	d.Set("dns_name", filesystem.DNSName)
+	d.Set(names.AttrDNSName, filesystem.DNSName)
 	d.Set("drive_cache_type", lustreConfig.DriveCacheType)
 	d.Set("export_path", lustreConfig.DataRepositoryConfiguration.ExportPath)
 	d.Set("file_system_type_version", filesystem.FileSystemTypeVersion)
@@ -469,6 +542,9 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("log_configuration", flattenLustreLogConfiguration(lustreConfig.LogConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting log_configuration: %s", err)
 	}
+	if err := d.Set("metadata_configuration", flattenLustreMetadataConfiguration(lustreConfig.MetadataConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting metadata_configuration: %s", err)
+	}
 	d.Set("mount_name", lustreConfig.MountName)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
 	d.Set(names.AttrOwnerID, filesystem.OwnerId)
@@ -477,7 +553,7 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting root_squash_configuration: %s", err)
 	}
 	d.Set("storage_capacity", filesystem.StorageCapacity)
-	d.Set("storage_type", filesystem.StorageType)
+	d.Set(names.AttrStorageType, filesystem.StorageType)
 	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(filesystem.SubnetIds))
 	d.Set(names.AttrVPCID, filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", lustreConfig.WeeklyMaintenanceStartTime)
@@ -516,6 +592,10 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if d.HasChange("log_configuration") {
 			input.LustreConfiguration.LogConfiguration = expandLustreLogCreateConfiguration(d.Get("log_configuration").([]interface{}))
+		}
+
+		if d.HasChange("metadata_configuration") {
+			input.LustreConfiguration.MetadataConfiguration = expandLustreMetadataUpdateConfiguration(d.Get("metadata_configuration").([]interface{}))
 		}
 
 		if d.HasChange("per_unit_storage_throughput") {
@@ -624,7 +704,7 @@ func expandLustreLogCreateConfiguration(l []interface{}) *fsx.LustreLogCreateCon
 		Level: aws.String(data["level"].(string)),
 	}
 
-	if v, ok := data["destination"].(string); ok && v != "" {
+	if v, ok := data[names.AttrDestination].(string); ok && v != "" {
 		req.Destination = aws.String(logStateFunc(v))
 	}
 
@@ -641,7 +721,57 @@ func flattenLustreLogConfiguration(adopts *fsx.LustreLogConfiguration) []map[str
 	}
 
 	if adopts.Destination != nil {
-		m["destination"] = aws.StringValue(adopts.Destination)
+		m[names.AttrDestination] = aws.StringValue(adopts.Destination)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandLustreMetadataCreateConfiguration(l []interface{}) *fsx.CreateFileSystemLustreMetadataConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	data := l[0].(map[string]interface{})
+	req := &fsx.CreateFileSystemLustreMetadataConfiguration{
+		Mode: aws.String(data[names.AttrMode].(string)),
+	}
+
+	if v, ok := data[names.AttrIOPS].(int); ok && v != 0 {
+		req.Iops = aws.Int64(int64(v))
+	}
+
+	return req
+}
+
+func expandLustreMetadataUpdateConfiguration(l []interface{}) *fsx.UpdateFileSystemLustreMetadataConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	data := l[0].(map[string]interface{})
+	req := &fsx.UpdateFileSystemLustreMetadataConfiguration{
+		Mode: aws.String(data[names.AttrMode].(string)),
+	}
+
+	if v, ok := data[names.AttrIOPS].(int); ok && v != 0 {
+		req.Iops = aws.Int64(int64(v))
+	}
+
+	return req
+}
+
+func flattenLustreMetadataConfiguration(adopts *fsx.FileSystemLustreMetadataConfiguration) []map[string]interface{} {
+	if adopts == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		names.AttrMode: aws.StringValue(adopts.Mode),
+	}
+
+	if adopts.Iops != nil {
+		m[names.AttrIOPS] = aws.Int64Value(adopts.Iops)
 	}
 
 	return []map[string]interface{}{m}
@@ -759,6 +889,9 @@ func waitFileSystemCreated(ctx context.Context, conn *fsx.FSx, id string, timeou
 		Refresh: statusFileSystem(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
+
+		// When the filesystem is used by another service, e.g. an M2 Environment, it is not immediately available
+		ContinuousTargetOccurence: 3,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

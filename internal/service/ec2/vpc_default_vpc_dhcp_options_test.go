@@ -17,7 +17,7 @@ func TestAccVPCDefaultVPCDHCPOptions_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":              testAccDefaultVPCDHCPOptions_basic,
+		acctest.CtBasic:      testAccDefaultVPCDHCPOptions_basic,
 		"owner":              testAccDefaultVPCDHCPOptions_owner,
 		"v4.20.0_regression": testAccDefaultVPCDHCPOptions_v420Regression,
 	}
@@ -41,10 +41,10 @@ func testAccDefaultVPCDHCPOptions_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`dhcp-options/dopt-.+`)),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers", "AmazonProvidedDNS"),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Default DHCP Option Set"),
 				),
 			},
@@ -68,10 +68,10 @@ func testAccDefaultVPCDHCPOptions_owner(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`dhcp-options/dopt-.+`)),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers", "AmazonProvidedDNS"),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Default DHCP Option Set"),
 				),
 			},

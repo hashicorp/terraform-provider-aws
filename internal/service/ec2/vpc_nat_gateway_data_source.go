@@ -32,7 +32,7 @@ func DataSourceNATGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"association_id": {
+			names.AttrAssociationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -40,13 +40,13 @@ func DataSourceNATGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -77,7 +77,7 @@ func DataSourceNATGateway() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -102,7 +102,7 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 		Filter: newAttributeFilterList(
 			map[string]string{
 				names.AttrState: d.Get(names.AttrState).(string),
-				"subnet-id":     d.Get("subnet_id").(string),
+				"subnet-id":     d.Get(names.AttrSubnetID).(string),
 				"vpc-id":        d.Get(names.AttrVPCID).(string),
 			},
 		),
@@ -119,7 +119,7 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	input.Filter = append(input.Filter, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 	if len(input.Filter) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
@@ -135,7 +135,7 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.SetId(aws.StringValue(ngw.NatGatewayId))
 	d.Set("connectivity_type", ngw.ConnectivityType)
 	d.Set(names.AttrState, ngw.State)
-	d.Set("subnet_id", ngw.SubnetId)
+	d.Set(names.AttrSubnetID, ngw.SubnetId)
 	d.Set(names.AttrVPCID, ngw.VpcId)
 
 	var secondaryAllocationIDs, secondaryPrivateIPAddresses []string
@@ -144,8 +144,8 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 		// Length check guarantees the attributes are always set (#30865).
 		if isPrimary := aws.BoolValue(address.IsPrimary); isPrimary || len(ngw.NatGatewayAddresses) == 1 {
 			d.Set("allocation_id", address.AllocationId)
-			d.Set("association_id", address.AssociationId)
-			d.Set("network_interface_id", address.NetworkInterfaceId)
+			d.Set(names.AttrAssociationID, address.AssociationId)
+			d.Set(names.AttrNetworkInterfaceID, address.NetworkInterfaceId)
 			d.Set("private_ip", address.PrivateIp)
 			d.Set("public_ip", address.PublicIp)
 		} else if !isPrimary {

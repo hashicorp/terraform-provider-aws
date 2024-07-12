@@ -49,7 +49,7 @@ func resourceRuleV0() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -60,7 +60,7 @@ func resourceRuleV0() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"schedule_expression": {
+			names.AttrScheduleExpression: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},

@@ -57,7 +57,7 @@ func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaReque
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"aws_account_id": schema.StringAttribute{
+			names.AttrAWSAccountID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -86,7 +86,7 @@ func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"namespace": schema.StringAttribute{
+			names.AttrNamespace: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

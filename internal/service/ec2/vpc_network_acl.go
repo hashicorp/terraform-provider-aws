@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_network_acl", name="Network ACL")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceNetworkACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkACLCreate,
@@ -105,7 +106,7 @@ func resourceNetworkACL() *schema.Resource {
 func networkACLRuleNestedBlock() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:     schema.TypeString,
 				Required: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -113,7 +114,7 @@ func networkACLRuleNestedBlock() *schema.Resource {
 				},
 				ValidateFunc: validation.StringInSlice(ec2.RuleAction_Values(), true),
 			},
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
@@ -136,7 +137,7 @@ func networkACLRuleNestedBlock() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
@@ -386,14 +387,14 @@ func networkACLRuleHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%d-", tfMap["from_port"].(int)))
 	buf.WriteString(fmt.Sprintf("%d-", tfMap["to_port"].(int)))
 	buf.WriteString(fmt.Sprintf("%d-", tfMap["rule_no"].(int)))
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(tfMap["action"].(string))))
+	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(tfMap[names.AttrAction].(string))))
 
 	// The AWS network ACL API only speaks protocol numbers, and that's
 	// all we store. Never hash a protocol name.
-	protocolNumber, _ := networkACLProtocolNumber(tfMap["protocol"].(string))
+	protocolNumber, _ := networkACLProtocolNumber(tfMap[names.AttrProtocol].(string))
 	buf.WriteString(fmt.Sprintf("%d-", protocolNumber))
 
-	if v, ok := tfMap["cidr_block"]; ok {
+	if v, ok := tfMap[names.AttrCIDRBlock]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 	if v, ok := tfMap["ipv6_cidr_block"]; ok {
@@ -511,11 +512,11 @@ func expandNetworkACLEntry(tfMap map[string]interface{}, egress bool) *ec2.Netwo
 		apiObject.RuleNumber = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["action"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrAction].(string); ok && v != "" {
 		apiObject.RuleAction = aws.String(v)
 	}
 
-	if v, ok := tfMap["cidr_block"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCIDRBlock].(string); ok && v != "" {
 		apiObject.CidrBlock = aws.String(v)
 	}
 
@@ -531,7 +532,7 @@ func expandNetworkACLEntry(tfMap map[string]interface{}, egress bool) *ec2.Netwo
 		apiObject.PortRange.To = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		protocolNumber, err := networkACLProtocolNumber(v)
 
 		if err != nil {
@@ -596,11 +597,11 @@ func flattenNetworkACLEntry(apiObject *ec2.NetworkAclEntry) map[string]interface
 	}
 
 	if v := apiObject.RuleAction; v != nil {
-		tfMap["action"] = aws.StringValue(v)
+		tfMap[names.AttrAction] = aws.StringValue(v)
 	}
 
 	if v := apiObject.CidrBlock; v != nil {
-		tfMap["cidr_block"] = aws.StringValue(v)
+		tfMap[names.AttrCIDRBlock] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Ipv6CidrBlock; v != nil {
@@ -627,7 +628,7 @@ func flattenNetworkACLEntry(apiObject *ec2.NetworkAclEntry) map[string]interface
 			return nil
 		}
 
-		tfMap["protocol"] = strconv.Itoa(protocolNumber)
+		tfMap[names.AttrProtocol] = strconv.Itoa(protocolNumber)
 	}
 
 	if apiObject := apiObject.IcmpTypeCode; apiObject != nil {

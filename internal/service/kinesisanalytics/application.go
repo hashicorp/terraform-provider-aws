@@ -131,7 +131,7 @@ func ResourceApplication() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"resource_arn": {
+									names.AttrResourceARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -152,7 +152,7 @@ func ResourceApplication() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"resource_arn": {
+									names.AttrResourceARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -167,7 +167,7 @@ func ResourceApplication() *schema.Resource {
 							},
 						},
 
-						"name_prefix": {
+						names.AttrNamePrefix: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -205,7 +205,7 @@ func ResourceApplication() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"resource_arn": {
+												names.AttrResourceARN: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: verify.ValidARN,
@@ -223,7 +223,7 @@ func ResourceApplication() *schema.Resource {
 							},
 						},
 
-						"schema": {
+						names.AttrSchema: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -294,7 +294,7 @@ func ResourceApplication() *schema.Resource {
 																},
 															},
 
-															"json": {
+															names.AttrJSON: {
 																Type:     schema.TypeList,
 																Optional: true,
 																MaxItems: 1,
@@ -368,7 +368,7 @@ func ResourceApplication() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"resource_arn": {
+									names.AttrResourceARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -389,7 +389,7 @@ func ResourceApplication() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"resource_arn": {
+									names.AttrResourceARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -410,7 +410,7 @@ func ResourceApplication() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"resource_arn": {
+									names.AttrResourceARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -434,7 +434,7 @@ func ResourceApplication() *schema.Resource {
 							),
 						},
 
-						"schema": {
+						names.AttrSchema: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -489,7 +489,7 @@ func ResourceApplication() *schema.Resource {
 							},
 						},
 
-						"schema": {
+						names.AttrSchema: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -560,7 +560,7 @@ func ResourceApplication() *schema.Resource {
 																},
 															},
 
-															"json": {
+															names.AttrJSON: {
 																Type:     schema.TypeList,
 																Optional: true,
 																MaxItems: 1,
@@ -592,7 +592,7 @@ func ResourceApplication() *schema.Resource {
 							},
 						},
 
-						"table_name": {
+						names.AttrTableName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 32),
@@ -1302,7 +1302,7 @@ func expandInput(vInput []interface{}) *kinesisanalytics.Input {
 		input.InputProcessingConfiguration = expandInputProcessingConfiguration(vInputProcessingConfiguration)
 	}
 
-	if vInputSchema, ok := mInput["schema"].([]interface{}); ok {
+	if vInputSchema, ok := mInput[names.AttrSchema].([]interface{}); ok {
 		input.InputSchema = expandSourceSchema(vInputSchema)
 	}
 
@@ -1311,7 +1311,7 @@ func expandInput(vInput []interface{}) *kinesisanalytics.Input {
 
 		mKinesisFirehoseInput := vKinesisFirehoseInput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mKinesisFirehoseInput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mKinesisFirehoseInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisFirehoseInput.ResourceARN = aws.String(vResourceArn)
 		}
 		if vRoleArn, ok := mKinesisFirehoseInput[names.AttrRoleARN].(string); ok && vRoleArn != "" {
@@ -1326,7 +1326,7 @@ func expandInput(vInput []interface{}) *kinesisanalytics.Input {
 
 		mKinesisStreamsInput := vKinesisStreamsInput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mKinesisStreamsInput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mKinesisStreamsInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisStreamsInput.ResourceARN = aws.String(vResourceArn)
 		}
 		if vRoleArn, ok := mKinesisStreamsInput[names.AttrRoleARN].(string); ok && vRoleArn != "" {
@@ -1336,7 +1336,7 @@ func expandInput(vInput []interface{}) *kinesisanalytics.Input {
 		input.KinesisStreamsInput = kinesisStreamsInput
 	}
 
-	if vNamePrefix, ok := mInput["name_prefix"].(string); ok && vNamePrefix != "" {
+	if vNamePrefix, ok := mInput[names.AttrNamePrefix].(string); ok && vNamePrefix != "" {
 		input.NamePrefix = aws.String(vNamePrefix)
 	}
 
@@ -1357,7 +1357,7 @@ func expandInputProcessingConfiguration(vInputProcessingConfiguration []interfac
 
 		mInputLambdaProcessor := vInputLambdaProcessor[0].(map[string]interface{})
 
-		if vResourceArn, ok := mInputLambdaProcessor["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mInputLambdaProcessor[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			inputLambdaProcessor.ResourceARN = aws.String(vResourceArn)
 		}
 		if vRoleArn, ok := mInputLambdaProcessor[names.AttrRoleARN].(string); ok && vRoleArn != "" {
@@ -1405,7 +1405,7 @@ func expandInputUpdate(vInput []interface{}) *kinesisanalytics.InputUpdate {
 
 			mInputLambdaProcessor := vInputLambdaProcessor[0].(map[string]interface{})
 
-			if vResourceArn, ok := mInputLambdaProcessor["resource_arn"].(string); ok && vResourceArn != "" {
+			if vResourceArn, ok := mInputLambdaProcessor[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 				inputLambdaProcessorUpdate.ResourceARNUpdate = aws.String(vResourceArn)
 			}
 			if vRoleArn, ok := mInputLambdaProcessor[names.AttrRoleARN].(string); ok && vRoleArn != "" {
@@ -1418,7 +1418,7 @@ func expandInputUpdate(vInput []interface{}) *kinesisanalytics.InputUpdate {
 		inputUpdate.InputProcessingConfigurationUpdate = inputProcessingConfigurationUpdate
 	}
 
-	if vInputSchema, ok := mInput["schema"].([]interface{}); ok && len(vInputSchema) > 0 && vInputSchema[0] != nil {
+	if vInputSchema, ok := mInput[names.AttrSchema].([]interface{}); ok && len(vInputSchema) > 0 && vInputSchema[0] != nil {
 		inputSchemaUpdate := &kinesisanalytics.InputSchemaUpdate{}
 
 		mInputSchema := vInputSchema[0].(map[string]interface{})
@@ -1443,7 +1443,7 @@ func expandInputUpdate(vInput []interface{}) *kinesisanalytics.InputUpdate {
 
 		mKinesisFirehoseInput := vKinesisFirehoseInput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mKinesisFirehoseInput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mKinesisFirehoseInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisFirehoseInputUpdate.ResourceARNUpdate = aws.String(vResourceArn)
 		}
 		if vRoleArn, ok := mKinesisFirehoseInput[names.AttrRoleARN].(string); ok && vRoleArn != "" {
@@ -1458,7 +1458,7 @@ func expandInputUpdate(vInput []interface{}) *kinesisanalytics.InputUpdate {
 
 		mKinesisStreamsInput := vKinesisStreamsInput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mKinesisStreamsInput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mKinesisStreamsInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisStreamsInputUpdate.ResourceARNUpdate = aws.String(vResourceArn)
 		}
 		if vRoleArn, ok := mKinesisStreamsInput[names.AttrRoleARN].(string); ok && vRoleArn != "" {
@@ -1468,7 +1468,7 @@ func expandInputUpdate(vInput []interface{}) *kinesisanalytics.InputUpdate {
 		inputUpdate.KinesisStreamsInputUpdate = kinesisStreamsInputUpdate
 	}
 
-	if vNamePrefix, ok := mInput["name_prefix"].(string); ok && vNamePrefix != "" {
+	if vNamePrefix, ok := mInput[names.AttrNamePrefix].(string); ok && vNamePrefix != "" {
 		inputUpdate.NamePrefixUpdate = aws.String(vNamePrefix)
 	}
 
@@ -1484,7 +1484,7 @@ func expandOutput(vOutput interface{}) *kinesisanalytics.Output {
 
 	mOutput := vOutput.(map[string]interface{})
 
-	if vDestinationSchema, ok := mOutput["schema"].([]interface{}); ok && len(vDestinationSchema) > 0 && vDestinationSchema[0] != nil {
+	if vDestinationSchema, ok := mOutput[names.AttrSchema].([]interface{}); ok && len(vDestinationSchema) > 0 && vDestinationSchema[0] != nil {
 		destinationSchema := &kinesisanalytics.DestinationSchema{}
 
 		mDestinationSchema := vDestinationSchema[0].(map[string]interface{})
@@ -1501,7 +1501,7 @@ func expandOutput(vOutput interface{}) *kinesisanalytics.Output {
 
 		mKinesisFirehoseOutput := vKinesisFirehoseOutput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mKinesisFirehoseOutput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mKinesisFirehoseOutput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisFirehoseOutput.ResourceARN = aws.String(vResourceArn)
 		}
 		if vRoleArn, ok := mKinesisFirehoseOutput[names.AttrRoleARN].(string); ok && vRoleArn != "" {
@@ -1516,7 +1516,7 @@ func expandOutput(vOutput interface{}) *kinesisanalytics.Output {
 
 		mKinesisStreamsOutput := vKinesisStreamsOutput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mKinesisStreamsOutput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mKinesisStreamsOutput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisStreamsOutput.ResourceARN = aws.String(vResourceArn)
 		}
 		if vRoleArn, ok := mKinesisStreamsOutput[names.AttrRoleARN].(string); ok && vRoleArn != "" {
@@ -1531,7 +1531,7 @@ func expandOutput(vOutput interface{}) *kinesisanalytics.Output {
 
 		mLambdaOutput := vLambdaOutput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mLambdaOutput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mLambdaOutput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			lambdaOutput.ResourceARN = aws.String(vResourceArn)
 		}
 		if vRoleArn, ok := mLambdaOutput[names.AttrRoleARN].(string); ok && vRoleArn != "" {
@@ -1621,7 +1621,7 @@ func expandRecordFormat(vRecordFormat []interface{}) *kinesisanalytics.RecordFor
 			recordFormat.RecordFormatType = aws.String(kinesisanalytics.RecordFormatTypeCsv)
 		}
 
-		if vJsonMappingParameters, ok := mMappingParameters["json"].([]interface{}); ok && len(vJsonMappingParameters) > 0 && vJsonMappingParameters[0] != nil {
+		if vJsonMappingParameters, ok := mMappingParameters[names.AttrJSON].([]interface{}); ok && len(vJsonMappingParameters) > 0 && vJsonMappingParameters[0] != nil {
 			jsonMappingParameters := &kinesisanalytics.JSONMappingParameters{}
 
 			mJsonMappingParameters := vJsonMappingParameters[0].(map[string]interface{})
@@ -1650,7 +1650,7 @@ func expandReferenceDataSource(vReferenceDataSource []interface{}) *kinesisanaly
 
 	mReferenceDataSource := vReferenceDataSource[0].(map[string]interface{})
 
-	if vReferenceSchema, ok := mReferenceDataSource["schema"].([]interface{}); ok {
+	if vReferenceSchema, ok := mReferenceDataSource[names.AttrSchema].([]interface{}); ok {
 		referenceDataSource.ReferenceSchema = expandSourceSchema(vReferenceSchema)
 	}
 
@@ -1672,7 +1672,7 @@ func expandReferenceDataSource(vReferenceDataSource []interface{}) *kinesisanaly
 		referenceDataSource.S3ReferenceDataSource = s3ReferenceDataSource
 	}
 
-	if vTableName, ok := mReferenceDataSource["table_name"].(string); ok && vTableName != "" {
+	if vTableName, ok := mReferenceDataSource[names.AttrTableName].(string); ok && vTableName != "" {
 		referenceDataSource.TableName = aws.String(vTableName)
 	}
 
@@ -1692,7 +1692,7 @@ func expandReferenceDataSourceUpdate(vReferenceDataSource []interface{}) *kinesi
 		referenceDataSourceUpdate.ReferenceId = aws.String(vReferenceId)
 	}
 
-	if vReferenceSchema, ok := mReferenceDataSource["schema"].([]interface{}); ok {
+	if vReferenceSchema, ok := mReferenceDataSource[names.AttrSchema].([]interface{}); ok {
 		referenceDataSourceUpdate.ReferenceSchemaUpdate = expandSourceSchema(vReferenceSchema)
 	}
 
@@ -1714,7 +1714,7 @@ func expandReferenceDataSourceUpdate(vReferenceDataSource []interface{}) *kinesi
 		referenceDataSourceUpdate.S3ReferenceDataSourceUpdate = s3ReferenceDataSourceUpdate
 	}
 
-	if vTableName, ok := mReferenceDataSource["table_name"].(string); ok && vTableName != "" {
+	if vTableName, ok := mReferenceDataSource[names.AttrTableName].(string); ok && vTableName != "" {
 		referenceDataSourceUpdate.TableNameUpdate = aws.String(vTableName)
 	}
 
@@ -1769,9 +1769,9 @@ func flattenInputDescriptions(inputDescriptions []*kinesisanalytics.InputDescrip
 	inputDescription := inputDescriptions[0]
 
 	mInput := map[string]interface{}{
-		names.AttrID:   aws.StringValue(inputDescription.InputId),
-		"name_prefix":  aws.StringValue(inputDescription.NamePrefix),
-		"stream_names": flex.FlattenStringList(inputDescription.InAppStreamNames),
+		names.AttrID:         aws.StringValue(inputDescription.InputId),
+		names.AttrNamePrefix: aws.StringValue(inputDescription.NamePrefix),
+		"stream_names":       flex.FlattenStringList(inputDescription.InAppStreamNames),
 	}
 
 	if inputParallelism := inputDescription.InputParallelism; inputParallelism != nil {
@@ -1783,7 +1783,7 @@ func flattenInputDescriptions(inputDescriptions []*kinesisanalytics.InputDescrip
 	}
 
 	if inputSchema := inputDescription.InputSchema; inputSchema != nil {
-		mInput["schema"] = flattenSourceSchema(inputSchema)
+		mInput[names.AttrSchema] = flattenSourceSchema(inputSchema)
 	}
 
 	if inputProcessingConfigurationDescription := inputDescription.InputProcessingConfigurationDescription; inputProcessingConfigurationDescription != nil {
@@ -1791,8 +1791,8 @@ func flattenInputDescriptions(inputDescriptions []*kinesisanalytics.InputDescrip
 
 		if inputLambdaProcessorDescription := inputProcessingConfigurationDescription.InputLambdaProcessorDescription; inputLambdaProcessorDescription != nil {
 			mInputLambdaProcessor := map[string]interface{}{
-				"resource_arn":    aws.StringValue(inputLambdaProcessorDescription.ResourceARN),
-				names.AttrRoleARN: aws.StringValue(inputLambdaProcessorDescription.RoleARN),
+				names.AttrResourceARN: aws.StringValue(inputLambdaProcessorDescription.ResourceARN),
+				names.AttrRoleARN:     aws.StringValue(inputLambdaProcessorDescription.RoleARN),
 			}
 
 			mInputProcessingConfiguration["lambda"] = []interface{}{mInputLambdaProcessor}
@@ -1811,8 +1811,8 @@ func flattenInputDescriptions(inputDescriptions []*kinesisanalytics.InputDescrip
 
 	if kinesisFirehoseInputDescription := inputDescription.KinesisFirehoseInputDescription; kinesisFirehoseInputDescription != nil {
 		mKinesisFirehoseInput := map[string]interface{}{
-			"resource_arn":    aws.StringValue(kinesisFirehoseInputDescription.ResourceARN),
-			names.AttrRoleARN: aws.StringValue(kinesisFirehoseInputDescription.RoleARN),
+			names.AttrResourceARN: aws.StringValue(kinesisFirehoseInputDescription.ResourceARN),
+			names.AttrRoleARN:     aws.StringValue(kinesisFirehoseInputDescription.RoleARN),
 		}
 
 		mInput["kinesis_firehose"] = []interface{}{mKinesisFirehoseInput}
@@ -1820,8 +1820,8 @@ func flattenInputDescriptions(inputDescriptions []*kinesisanalytics.InputDescrip
 
 	if kinesisStreamsInputDescription := inputDescription.KinesisStreamsInputDescription; kinesisStreamsInputDescription != nil {
 		mKinesisStreamsInput := map[string]interface{}{
-			"resource_arn":    aws.StringValue(kinesisStreamsInputDescription.ResourceARN),
-			names.AttrRoleARN: aws.StringValue(kinesisStreamsInputDescription.RoleARN),
+			names.AttrResourceARN: aws.StringValue(kinesisStreamsInputDescription.ResourceARN),
+			names.AttrRoleARN:     aws.StringValue(kinesisStreamsInputDescription.RoleARN),
 		}
 
 		mInput["kinesis_stream"] = []interface{}{mKinesisStreamsInput}
@@ -1849,13 +1849,13 @@ func flattenOutputDescriptions(outputDescriptions []*kinesisanalytics.OutputDesc
 					"record_format_type": aws.StringValue(destinationSchema.RecordFormatType),
 				}
 
-				mOutput["schema"] = []interface{}{mDestinationSchema}
+				mOutput[names.AttrSchema] = []interface{}{mDestinationSchema}
 			}
 
 			if kinesisFirehoseOutputDescription := outputDescription.KinesisFirehoseOutputDescription; kinesisFirehoseOutputDescription != nil {
 				mKinesisFirehoseOutput := map[string]interface{}{
-					"resource_arn":    aws.StringValue(kinesisFirehoseOutputDescription.ResourceARN),
-					names.AttrRoleARN: aws.StringValue(kinesisFirehoseOutputDescription.RoleARN),
+					names.AttrResourceARN: aws.StringValue(kinesisFirehoseOutputDescription.ResourceARN),
+					names.AttrRoleARN:     aws.StringValue(kinesisFirehoseOutputDescription.RoleARN),
 				}
 
 				mOutput["kinesis_firehose"] = []interface{}{mKinesisFirehoseOutput}
@@ -1863,8 +1863,8 @@ func flattenOutputDescriptions(outputDescriptions []*kinesisanalytics.OutputDesc
 
 			if kinesisStreamsOutputDescription := outputDescription.KinesisStreamsOutputDescription; kinesisStreamsOutputDescription != nil {
 				mKinesisStreamsOutput := map[string]interface{}{
-					"resource_arn":    aws.StringValue(kinesisStreamsOutputDescription.ResourceARN),
-					names.AttrRoleARN: aws.StringValue(kinesisStreamsOutputDescription.RoleARN),
+					names.AttrResourceARN: aws.StringValue(kinesisStreamsOutputDescription.ResourceARN),
+					names.AttrRoleARN:     aws.StringValue(kinesisStreamsOutputDescription.RoleARN),
 				}
 
 				mOutput["kinesis_stream"] = []interface{}{mKinesisStreamsOutput}
@@ -1872,8 +1872,8 @@ func flattenOutputDescriptions(outputDescriptions []*kinesisanalytics.OutputDesc
 
 			if lambdaOutputDescription := outputDescription.LambdaOutputDescription; lambdaOutputDescription != nil {
 				mLambdaOutput := map[string]interface{}{
-					"resource_arn":    aws.StringValue(lambdaOutputDescription.ResourceARN),
-					names.AttrRoleARN: aws.StringValue(lambdaOutputDescription.RoleARN),
+					names.AttrResourceARN: aws.StringValue(lambdaOutputDescription.ResourceARN),
+					names.AttrRoleARN:     aws.StringValue(lambdaOutputDescription.RoleARN),
 				}
 
 				mOutput["lambda"] = []interface{}{mLambdaOutput}
@@ -1894,12 +1894,12 @@ func flattenReferenceDataSourceDescriptions(referenceDataSourceDescriptions []*k
 	referenceDataSourceDescription := referenceDataSourceDescriptions[0]
 
 	mReferenceDataSource := map[string]interface{}{
-		names.AttrID: aws.StringValue(referenceDataSourceDescription.ReferenceId),
-		"table_name": aws.StringValue(referenceDataSourceDescription.TableName),
+		names.AttrID:        aws.StringValue(referenceDataSourceDescription.ReferenceId),
+		names.AttrTableName: aws.StringValue(referenceDataSourceDescription.TableName),
 	}
 
 	if referenceSchema := referenceDataSourceDescription.ReferenceSchema; referenceSchema != nil {
-		mReferenceDataSource["schema"] = flattenSourceSchema(referenceSchema)
+		mReferenceDataSource[names.AttrSchema] = flattenSourceSchema(referenceSchema)
 	}
 
 	if s3ReferenceDataSource := referenceDataSourceDescription.S3ReferenceDataSourceDescription; s3ReferenceDataSource != nil {
@@ -1964,7 +1964,7 @@ func flattenSourceSchema(sourceSchema *kinesisanalytics.SourceSchema) []interfac
 					"record_row_path": aws.StringValue(jsonMappingParameters.RecordRowPath),
 				}
 
-				mMappingParameters["json"] = []interface{}{mJsonMappingParameters}
+				mMappingParameters[names.AttrJSON] = []interface{}{mJsonMappingParameters}
 			}
 
 			mRecordFormat["mapping_parameters"] = []interface{}{mMappingParameters}

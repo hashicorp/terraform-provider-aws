@@ -31,6 +31,7 @@ import (
 
 // @SDKResource("aws_db_parameter_group", name="DB Parameter Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,
@@ -53,7 +54,7 @@ func ResourceParameterGroup() *schema.Resource {
 				ForceNew: true,
 				Default:  "Managed by Terraform",
 			},
-			"family": {
+			names.AttrFamily: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -63,10 +64,10 @@ func ResourceParameterGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validParamGroupName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -74,7 +75,7 @@ func ResourceParameterGroup() *schema.Resource {
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validParamGroupNamePrefix,
 			},
-			"parameter": {
+			names.AttrParameter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -108,9 +109,9 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &rds.CreateDBParameterGroupInput{
-		DBParameterGroupFamily: aws.String(d.Get("family").(string)),
+		DBParameterGroupFamily: aws.String(d.Get(names.AttrFamily).(string)),
 		DBParameterGroupName:   aws.String(name),
 		Description:            aws.String(d.Get(names.AttrDescription).(string)),
 		Tags:                   getTagsIn(ctx),
@@ -148,14 +149,14 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	arn := aws.StringValue(dbParameterGroup.DBParameterGroupArn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, dbParameterGroup.Description)
-	d.Set("family", dbParameterGroup.DBParameterGroupFamily)
+	d.Set(names.AttrFamily, dbParameterGroup.DBParameterGroupFamily)
 	d.Set(names.AttrName, dbParameterGroup.DBParameterGroupName)
 
 	input := &rds.DescribeDBParametersInput{
 		DBParameterGroupName: aws.String(d.Id()),
 	}
 
-	configParams := d.Get("parameter").(*schema.Set)
+	configParams := d.Get(names.AttrParameter).(*schema.Set)
 	if configParams.Len() < 1 {
 		// if we don't have any params in the ResourceData already, two possibilities
 		// first, we don't have a config available to us. Second, we do, but it has
@@ -219,7 +220,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if err := d.Set("parameter", flattenParameters(userParams)); err != nil {
+	if err := d.Set(names.AttrParameter, flattenParameters(userParams)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 
@@ -233,8 +234,8 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	if d.HasChange("parameter") {
-		o, n := d.GetChange("parameter")
+	if d.HasChange(names.AttrParameter) {
+		o, n := d.GetChange(names.AttrParameter)
 		if o == nil {
 			o = new(schema.Set)
 		}
@@ -338,7 +339,7 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Parameter Group (%s): %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }
 
 func FindDBParameterGroupByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DBParameterGroup, error) {

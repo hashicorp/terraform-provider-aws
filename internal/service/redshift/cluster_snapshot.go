@@ -40,7 +40,7 @@ func resourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -76,7 +76,7 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 
 	input := redshift.CreateClusterSnapshotInput{
 		SnapshotIdentifier: aws.String(d.Get("snapshot_identifier").(string)),
-		ClusterIdentifier:  aws.String(d.Get("cluster_identifier").(string)),
+		ClusterIdentifier:  aws.String(d.Get(names.AttrClusterIdentifier).(string)),
 		Tags:               getTagsIn(ctx),
 	}
 
@@ -123,7 +123,7 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 		Resource:  fmt.Sprintf("snapshot:%s/%s", aws.StringValue(snapshot.ClusterIdentifier), d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	d.Set("cluster_identifier", snapshot.ClusterIdentifier)
+	d.Set(names.AttrClusterIdentifier, snapshot.ClusterIdentifier)
 	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
 	d.Set("manual_snapshot_retention_period", snapshot.ManualSnapshotRetentionPeriod)
 	d.Set("owner_account", snapshot.OwnerAccount)

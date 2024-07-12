@@ -176,7 +176,7 @@ func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRe
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"security_group_ids": schema.SetAttribute{
+						names.AttrSecurityGroupIDs: schema.SetAttribute{
 							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
 							ElementType: types.StringType,

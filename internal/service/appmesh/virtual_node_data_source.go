@@ -18,6 +18,8 @@ import (
 )
 
 // @SDKDataSource("aws_appmesh_virtual_node", name="Virtual Node")
+// @Tags
+// @Testing(serialize=true)
 func dataSourceVirtualNode() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVirtualNodeRead,
@@ -28,11 +30,11 @@ func dataSourceVirtualNode() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"created_date": {
+				names.AttrCreatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"last_updated_date": {
+				names.AttrLastUpdatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -49,7 +51,7 @@ func dataSourceVirtualNode() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"resource_owner": {
+				names.AttrResourceOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -63,7 +65,6 @@ func dataSourceVirtualNode() *schema.Resource {
 func dataSourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	virtualNodeName := d.Get(names.AttrName).(string)
 	vn, err := findVirtualNodeByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualNodeName)
@@ -75,13 +76,13 @@ func dataSourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.StringValue(vn.VirtualNodeName))
 	arn := aws.StringValue(vn.Metadata.Arn)
 	d.Set(names.AttrARN, arn)
-	d.Set("created_date", vn.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", vn.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, vn.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, vn.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vn.MeshName)
 	meshOwner := aws.StringValue(vn.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
 	d.Set(names.AttrName, vn.VirtualNodeName)
-	d.Set("resource_owner", vn.Metadata.ResourceOwner)
+	d.Set(names.AttrResourceOwner, vn.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenVirtualNodeSpec(vn.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
@@ -99,9 +100,7 @@ func dataSourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setKeyValueTagsOut(ctx, tags)
 
 	return diags
 }

@@ -21,12 +21,12 @@ func DataSourceOutposts() *schema.Resource { // nosemgrep:ci.outposts-in-func-na
 		ReadWithoutTimeout: dataSourceOutpostsRead,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -36,7 +36,7 @@ func DataSourceOutposts() *schema.Resource { // nosemgrep:ci.outposts-in-func-na
 				Optional: true,
 				Computed: true,
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -73,7 +73,7 @@ func dataSourceOutpostsRead(ctx context.Context, d *schema.ResourceData, meta in
 				continue
 			}
 
-			if v, ok := d.GetOk("availability_zone"); ok && v.(string) != aws.StringValue(outpost.AvailabilityZone) {
+			if v, ok := d.GetOk(names.AttrAvailabilityZone); ok && v.(string) != aws.StringValue(outpost.AvailabilityZone) {
 				continue
 			}
 
@@ -100,11 +100,11 @@ func dataSourceOutpostsRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "listing Outposts Outposts: %s", err)
 	}
 
-	if err := d.Set("arns", arns); err != nil {
+	if err := d.Set(names.AttrARNs, arns); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting arns: %s", err)
 	}
 
-	if err := d.Set("ids", ids); err != nil {
+	if err := d.Set(names.AttrIDs, ids); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ids: %s", err)
 	}
 

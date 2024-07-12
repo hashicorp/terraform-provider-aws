@@ -29,7 +29,7 @@ func DataSourceOutpost() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -132,7 +132,7 @@ func dataSourceOutpostRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(outpost.OutpostId))
 	d.Set(names.AttrARN, outpost.OutpostArn)
-	d.Set("availability_zone", outpost.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, outpost.AvailabilityZone)
 	d.Set("availability_zone_id", outpost.AvailabilityZoneId)
 	d.Set(names.AttrDescription, outpost.Description)
 	d.Set("lifecycle_status", outpost.LifeCycleStatus)

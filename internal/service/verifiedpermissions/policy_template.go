@@ -52,7 +52,7 @@ func (r *resourcePolicyTemplate) Metadata(_ context.Context, request resource.Me
 func (r *resourcePolicyTemplate) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"created_date": schema.StringAttribute{
+			names.AttrCreatedDate: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{

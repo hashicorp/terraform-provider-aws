@@ -35,7 +35,7 @@ func TestAccOpenSearchServerlessVPCEndpointDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCEndpointDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "security_group_ids.#", resourceName, "security_group_ids.#"),

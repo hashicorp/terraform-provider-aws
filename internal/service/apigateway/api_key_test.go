@@ -39,12 +39,12 @@ func TestAccAPIGatewayAPIKey_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey1),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/apikeys/+.`)),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(resourceName, "customer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrValue),
 				),
 			},
@@ -58,60 +58,14 @@ func TestAccAPIGatewayAPIKey_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey2),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/apikeys/+.`)),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(resourceName, "customer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrValue),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAPIGatewayAPIKey_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var apiKey1 apigateway.GetApiKeyOutput
-	resourceName := "aws_api_gateway_api_key.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAPIKeyConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				Config: testAccAPIKeyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccAPIKeyConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -205,7 +159,7 @@ func TestAccAPIGatewayAPIKey_enabled(t *testing.T) {
 				Config: testAccAPIKeyConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
@@ -218,7 +172,7 @@ func TestAccAPIGatewayAPIKey_enabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey2),
 					testAccCheckAPIKeyNotRecreated(&apiKey1, &apiKey2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 		},
@@ -340,31 +294,6 @@ resource "aws_api_gateway_api_key" "test" {
   name = %[1]q
 }
 `, rName)
-}
-
-func testAccAPIKeyConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_api_gateway_api_key" "test" {
-  name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccAPIKeyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_api_gateway_api_key" "test" {
-  name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccAPIKeyConfig_customerID(rName, customerID string) string {

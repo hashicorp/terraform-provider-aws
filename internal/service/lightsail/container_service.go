@@ -26,7 +26,7 @@ import (
 )
 
 // @SDKResource("aws_lightsail_container_service", name="Container Service")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="id", resourceType="ContainerService")
 func ResourceContainerService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContainerServiceCreate,
@@ -50,11 +50,11 @@ func ResourceContainerService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,7 +95,7 @@ func ResourceContainerService() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"certificate": {
+						names.AttrCertificate: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Resource{
@@ -146,7 +146,7 @@ func ResourceContainerService() *schema.Resource {
 					},
 				},
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -161,7 +161,7 @@ func ResourceContainerService() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -250,14 +250,14 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting private_registry_access for Lightsail Container Service (%s): %s", d.Id(), err)
 	}
 	d.Set(names.AttrARN, cs.Arn)
-	d.Set("availability_zone", cs.Location.AvailabilityZone)
-	d.Set("created_at", aws.ToTime(cs.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrAvailabilityZone, cs.Location.AvailabilityZone)
+	d.Set(names.AttrCreatedAt, aws.ToTime(cs.CreatedAt).Format(time.RFC3339))
 	d.Set("power_id", cs.PowerId)
 	d.Set("principal_arn", cs.PrincipalArn)
 	d.Set("private_domain_name", cs.PrivateDomainName)
-	d.Set("resource_type", cs.ResourceType)
+	d.Set(names.AttrResourceType, cs.ResourceType)
 	d.Set(names.AttrState, cs.State)
-	d.Set("url", cs.Url)
+	d.Set(names.AttrURL, cs.Url)
 
 	setTagsOut(ctx, cs.Tags)
 
@@ -335,7 +335,7 @@ func expandContainerServicePublicDomainNames(rawPublicDomainNames []interface{})
 	for _, rpdn := range rawPublicDomainNames {
 		rpdnMap := rpdn.(map[string]interface{})
 
-		rawCertificates := rpdnMap["certificate"].(*schema.Set).List()
+		rawCertificates := rpdnMap[names.AttrCertificate].(*schema.Set).List()
 
 		for _, rc := range rawCertificates {
 			rcMap := rc.(map[string]interface{})
@@ -432,7 +432,7 @@ func flattenContainerServicePublicDomainNames(domainNames map[string][]string) [
 
 	return []interface{}{
 		map[string]interface{}{
-			"certificate": rawCertificates,
+			names.AttrCertificate: rawCertificates,
 		},
 	}
 }

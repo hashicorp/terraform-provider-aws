@@ -54,7 +54,7 @@ func ResourceKxVolume() *schema.Resource {
 				Type: schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cluster_name": {
+						names.AttrClusterName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -76,7 +76,7 @@ func ResourceKxVolume() *schema.Resource {
 				},
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type: schema.TypeList,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -116,7 +116,7 @@ func ResourceKxVolume() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"size": {
+						names.AttrSize: {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ForceNew:     true,
@@ -141,7 +141,7 @@ func ResourceKxVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -181,7 +181,7 @@ func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	in := &finspace.CreateKxVolumeInput{
 		ClientToken:         aws.String(id.UniqueId()),
-		AvailabilityZoneIds: flex.ExpandStringValueList(d.Get("availability_zones").([]interface{})),
+		AvailabilityZoneIds: flex.ExpandStringValueList(d.Get(names.AttrAvailabilityZones).([]interface{})),
 		EnvironmentId:       aws.String(environmentId),
 		VolumeType:          types.KxVolumeType(d.Get(names.AttrType).(string)),
 		VolumeName:          aws.String(volumeName),
@@ -240,12 +240,12 @@ func resourceKxVolumeRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrDescription, out.Description)
 	d.Set(names.AttrType, out.VolumeType)
 	d.Set(names.AttrStatus, out.Status)
-	d.Set("status_reason", out.StatusReason)
+	d.Set(names.AttrStatusReason, out.StatusReason)
 	d.Set("az_mode", out.AzMode)
 	d.Set(names.AttrDescription, out.Description)
 	d.Set("created_timestamp", out.CreatedTimestamp.String())
 	d.Set("last_modified_timestamp", out.LastModifiedTimestamp.String())
-	d.Set("availability_zones", aws.StringSlice(out.AvailabilityZoneIds))
+	d.Set(names.AttrAvailabilityZones, aws.StringSlice(out.AvailabilityZoneIds))
 
 	if err := d.Set("nas1_configuration", flattenNas1Configuration(out.Nas1Configuration)); err != nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxVolume, d.Id(), err)
@@ -435,7 +435,7 @@ func expandNas1Configuration(tfList []interface{}) *types.KxNAS1Configuration {
 
 	a := &types.KxNAS1Configuration{}
 
-	if v, ok := tfMap["size"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrSize].(int); ok && v != 0 {
 		a.Size = aws.Int32(int32(v))
 	}
 
@@ -453,7 +453,7 @@ func flattenNas1Configuration(apiObject *types.KxNAS1Configuration) []interface{
 	m := map[string]interface{}{}
 
 	if v := apiObject.Size; v != nil {
-		m["size"] = aws.ToInt32(v)
+		m[names.AttrSize] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.Type; v != "" {
@@ -471,7 +471,7 @@ func flattenCluster(apiObject *types.KxAttachedCluster) map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if v := apiObject.ClusterName; aws.ToString(v) != "" {
-		m["cluster_name"] = aws.ToString(v)
+		m[names.AttrClusterName] = aws.ToString(v)
 	}
 
 	if v := apiObject.ClusterStatus; v != "" {

@@ -41,7 +41,7 @@ func (d *dataSourceLifecyclePolicy) Metadata(_ context.Context, _ datasource.Met
 func (d *dataSourceLifecyclePolicy) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"created_date": schema.StringAttribute{
+			names.AttrCreatedDate: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrDescription: schema.StringAttribute{

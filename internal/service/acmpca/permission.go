@@ -37,7 +37,7 @@ func resourcePermission() *schema.Resource {
 		DeleteWithoutTimeout: resourcePermissionDelete,
 
 		Schema: map[string]*schema.Schema{
-			"actions": {
+			names.AttrActions: {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
@@ -56,7 +56,7 @@ func resourcePermission() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"principal": {
+			names.AttrPrincipal: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -79,11 +79,11 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	caARN := d.Get("certificate_authority_arn").(string)
-	principal := d.Get("principal").(string)
+	principal := d.Get(names.AttrPrincipal).(string)
 	sourceAccount := d.Get("source_account").(string)
 	id := errs.Must(flex.FlattenResourceId([]string{caARN, principal, sourceAccount}, permissionResourceIDPartCount, true))
 	input := &acmpca.CreatePermissionInput{
-		Actions:                 expandPermissionActions(d.Get("actions").(*schema.Set)),
+		Actions:                 expandPermissionActions(d.Get(names.AttrActions).(*schema.Set)),
 		CertificateAuthorityArn: aws.String(caARN),
 		Principal:               aws.String(principal),
 	}
@@ -125,10 +125,10 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Permission (%s): %s", d.Id(), err)
 	}
 
-	d.Set("actions", flattenPermissionActions(permission.Actions))
+	d.Set(names.AttrActions, flattenPermissionActions(permission.Actions))
 	d.Set("certificate_authority_arn", permission.CertificateAuthorityArn)
 	d.Set(names.AttrPolicy, permission.Policy)
-	d.Set("principal", permission.Principal)
+	d.Set(names.AttrPrincipal, permission.Principal)
 	d.Set("source_account", permission.SourceAccount)
 
 	return diags

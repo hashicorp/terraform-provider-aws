@@ -35,7 +35,7 @@ func dataSourceSource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -53,7 +53,7 @@ func dataSourceSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	input := &eventbridge.ListEventSourcesInput{}
 
-	if v, ok := d.GetOk("name_prefix"); ok {
+	if v, ok := d.GetOk(names.AttrNamePrefix); ok {
 		input.NamePrefix = aws.String(v.(string))
 	}
 

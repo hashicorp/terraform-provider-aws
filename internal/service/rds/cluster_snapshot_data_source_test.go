@@ -27,13 +27,13 @@ func TestAccRDSClusterSnapshotDataSource_dbClusterSnapshotIdentifier(t *testing.
 			{
 				Config: testAccClusterSnapshotDataSourceConfig_clusterSnapshotIdentifier(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "allocated_storage", resourceName, "allocated_storage"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAllocatedStorage, resourceName, names.AttrAllocatedStorage),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zones.#", resourceName, "availability_zones.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_identifier", resourceName, "db_cluster_identifier"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_snapshot_arn", resourceName, "db_cluster_snapshot_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_snapshot_identifier", resourceName, "db_cluster_snapshot_identifier"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "engine", resourceName, "engine"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", resourceName, "engine_version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngine, resourceName, names.AttrEngine),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngineVersion, resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "license_model", resourceName, "license_model"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPort, resourceName, names.AttrPort),
@@ -41,8 +41,8 @@ func TestAccRDSClusterSnapshotDataSource_dbClusterSnapshotIdentifier(t *testing.
 					resource.TestCheckResourceAttrPair(dataSourceName, "snapshot_type", resourceName, "snapshot_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "source_db_cluster_snapshot_arn", resourceName, "source_db_cluster_snapshot_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStatus, resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrPair(dataSourceName, "storage_encrypted", resourceName, "storage_encrypted"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStorageEncrypted, resourceName, names.AttrStorageEncrypted),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
 				),
 			},
@@ -64,13 +64,13 @@ func TestAccRDSClusterSnapshotDataSource_dbClusterIdentifier(t *testing.T) {
 			{
 				Config: testAccClusterSnapshotDataSourceConfig_clusterIdentifier(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "allocated_storage", resourceName, "allocated_storage"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAllocatedStorage, resourceName, names.AttrAllocatedStorage),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zones.#", resourceName, "availability_zones.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_identifier", resourceName, "db_cluster_identifier"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_snapshot_arn", resourceName, "db_cluster_snapshot_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_snapshot_identifier", resourceName, "db_cluster_snapshot_identifier"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "engine", resourceName, "engine"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", resourceName, "engine_version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngine, resourceName, names.AttrEngine),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngineVersion, resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "license_model", resourceName, "license_model"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPort, resourceName, names.AttrPort),
@@ -78,8 +78,8 @@ func TestAccRDSClusterSnapshotDataSource_dbClusterIdentifier(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "snapshot_type", resourceName, "snapshot_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "source_db_cluster_snapshot_arn", resourceName, "source_db_cluster_snapshot_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStatus, resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrPair(dataSourceName, "storage_encrypted", resourceName, "storage_encrypted"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStorageEncrypted, resourceName, names.AttrStorageEncrypted),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
 				),
 			},
@@ -109,7 +109,7 @@ func TestAccRDSClusterSnapshotDataSource_mostRecent(t *testing.T) {
 	})
 }
 
-func TestAccRDSClusterSnapshotDataSource_tags(t *testing.T) {
+func TestAccRDSClusterSnapshotDataSource_matchTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_db_cluster_snapshot.test"
@@ -121,12 +121,12 @@ func TestAccRDSClusterSnapshotDataSource_tags(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterSnapshotDataSourceConfig_tags(rName),
+				Config: testAccClusterSnapshotDataSourceConfig_matchTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_identifier", resourceName, "db_cluster_identifier"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_snapshot_arn", resourceName, "db_cluster_snapshot_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_snapshot_identifier", resourceName, "db_cluster_snapshot_identifier"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.Name", rName),
 				),
 			},
@@ -187,7 +187,7 @@ data "aws_db_cluster_snapshot" "test" {
 `, rName))
 }
 
-func testAccClusterSnapshotDataSourceConfig_tags(rName string) string {
+func testAccClusterSnapshotDataSourceConfig_matchTags(rName string) string {
 	return acctest.ConfigCompose(testAccClusterSnapshotConfig_base(rName), fmt.Sprintf(`
 resource "aws_db_cluster_snapshot" "incorrect" {
   db_cluster_identifier          = aws_rds_cluster.test.id

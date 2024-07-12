@@ -38,7 +38,7 @@ func TestAccKendraThesaurusDataSource_basic(t *testing.T) {
 				Config: testAccThesaurusDataSourceConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(datasourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrSet(datasourceName, "file_size_bytes"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
@@ -53,7 +53,7 @@ func TestAccKendraThesaurusDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(datasourceName, "term_count"),
 					resource.TestCheckResourceAttrPair(datasourceName, "thesaurus_id", resourceName, "thesaurus_id"),
 					resource.TestCheckResourceAttrSet(datasourceName, "updated_at"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Key1", resourceName, "tags.Key1")),
 			},
 		},

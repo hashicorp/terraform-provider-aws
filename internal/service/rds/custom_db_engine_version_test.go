@@ -54,8 +54,8 @@ func TestAccRDSCustomDBEngineVersion_sqlServer(t *testing.T) {
 				Config: testAccCustomDBEngineVersionConfig_sqlServer(rName, ami),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "create_time"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds",
 						regexache.MustCompile(fmt.Sprintf(`cev:custom-sqlserver.+%s.+`, rName))),
 				),
@@ -102,9 +102,9 @@ func TestAccRDSCustomDBEngineVersion_sqlServerUpdate(t *testing.T) {
 				Config: testAccCustomDBEngineVersionConfig_sqlServer(rName, ami),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, status),
-					resource.TestCheckResourceAttrSet(resourceName, "create_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
 				),
 			},
 			{
@@ -117,7 +117,7 @@ func TestAccRDSCustomDBEngineVersion_sqlServerUpdate(t *testing.T) {
 				Config: testAccCustomDBEngineVersionConfig_sqlServerUpdate(rName, ami, description2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description2),
 				),
 			},
@@ -156,8 +156,8 @@ func TestAccRDSCustomDBEngineVersion_oracle(t *testing.T) {
 				Config: testAccCustomDBEngineVersionConfig_oracle(rName, bucket),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "create_time"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf(`cev:custom-oracle.+%s.+`, rName))),
 				),
 			},
@@ -203,8 +203,8 @@ func TestAccRDSCustomDBEngineVersion_manifestFile(t *testing.T) {
 				Config: testAccCustomDBEngineVersionConfig_manifestFile(rName, bucket, filename),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "create_time"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf(`cev:custom-oracle.+%s.+`, rName))),
 				),
 			},
@@ -245,11 +245,11 @@ func TestAccRDSCustomDBEngineVersion_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckCustomDBEngineVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomDBEngineVersionConfig_tags(rName, ami, "key1", "value1"),
+				Config: testAccCustomDBEngineVersionConfig_tags(rName, ami, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 		},

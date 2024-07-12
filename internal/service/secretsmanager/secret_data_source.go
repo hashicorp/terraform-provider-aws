@@ -18,6 +18,7 @@ import (
 )
 
 // @SDKDataSource("aws_secretsmanager_secret", name="Secret")
+// @Tags(identifierAttribute="arn")
 func dataSourceSecret() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecretRead,
@@ -30,7 +31,7 @@ func dataSourceSecret() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 				ExactlyOneOf: []string{names.AttrARN, names.AttrName},
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,7 +65,6 @@ func dataSourceSecret() *schema.Resource {
 func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var secretID string
 	if v, ok := d.GetOk(names.AttrARN); ok {
@@ -82,7 +82,7 @@ func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta inte
 	arn := aws.ToString(secret.ARN)
 	d.SetId(arn)
 	d.Set(names.AttrARN, arn)
-	d.Set("created_date", aws.String(secret.CreatedDate.Format(time.RFC3339)))
+	d.Set(names.AttrCreatedDate, aws.String(secret.CreatedDate.Format(time.RFC3339)))
 	d.Set(names.AttrDescription, secret.Description)
 	d.Set(names.AttrKMSKeyID, secret.KmsKeyId)
 	d.Set("last_changed_date", aws.String(secret.LastChangedDate.Format(time.RFC3339)))
@@ -103,9 +103,7 @@ func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set(names.AttrPolicy, "")
 	}
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, secret.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, secret.Tags)
 
 	return diags
 }

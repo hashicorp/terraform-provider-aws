@@ -195,7 +195,7 @@ func resourceOpenZFSVolume() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"volume_type": {
+			names.AttrVolumeType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -258,7 +258,7 @@ func resourceOpenZFSVolumeCreate(ctx context.Context, d *schema.ResourceData, me
 		Name:                 aws.String(name),
 		OpenZFSConfiguration: openzfsConfig,
 		Tags:                 getTagsIn(ctx),
-		VolumeType:           aws.String(d.Get("volume_type").(string)),
+		VolumeType:           aws.String(d.Get(names.AttrVolumeType).(string)),
 	}
 
 	output, err := conn.CreateVolumeWithContext(ctx, input)
@@ -312,7 +312,7 @@ func resourceOpenZFSVolumeRead(ctx context.Context, d *schema.ResourceData, meta
 	if err := d.Set("user_and_group_quotas", flattenOpenZFSUserOrGroupQuotas(openzfsConfig.UserAndGroupQuotas)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting user_and_group_quotas: %s", err)
 	}
-	d.Set("volume_type", volume.VolumeType)
+	d.Set(names.AttrVolumeType, volume.VolumeType)
 
 	setTagsOut(ctx, volume.Tags)
 

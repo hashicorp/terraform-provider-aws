@@ -61,7 +61,7 @@ func TestValidLogGroupNamePrefix(t *testing.T) {
 		strings.Repeat("W", 483),
 	}
 	for _, v := range validNames {
-		_, errors := validLogGroupNamePrefix(v, "name_prefix")
+		_, errors := validLogGroupNamePrefix(v, names.AttrNamePrefix)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid Log Group name prefix: %q", v, errors)
 		}
@@ -78,7 +78,7 @@ func TestValidLogGroupNamePrefix(t *testing.T) {
 		strings.Repeat("W", 484),
 	}
 	for _, v := range invalidNames {
-		_, errors := validLogGroupNamePrefix(v, "name_prefix")
+		_, errors := validLogGroupNamePrefix(v, names.AttrNamePrefix)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Log Group name prefix", v)
 		}

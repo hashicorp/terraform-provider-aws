@@ -23,12 +23,12 @@ func dataSourceWorkgroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -46,11 +46,11 @@ func dataSourceWorkgroup() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"availability_zone": {
+												names.AttrAvailabilityZone: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"network_interface_id": {
+												names.AttrNetworkInterfaceID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -58,14 +58,14 @@ func dataSourceWorkgroup() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"subnet_id": {
+												names.AttrSubnetID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
 											},
 										},
 									},
-									"vpc_endpoint_id": {
+									names.AttrVPCEndpointID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -87,11 +87,11 @@ func dataSourceWorkgroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -131,13 +131,13 @@ func dataSourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(workgroupName)
 	d.Set(names.AttrARN, resource.WorkgroupArn)
-	if err := d.Set("endpoint", []interface{}{flattenEndpoint(resource.Endpoint)}); err != nil {
+	if err := d.Set(names.AttrEndpoint, []interface{}{flattenEndpoint(resource.Endpoint)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 	}
 	d.Set("enhanced_vpc_routing", resource.EnhancedVpcRouting)
 	d.Set("namespace_name", resource.NamespaceName)
-	d.Set("publicly_accessible", resource.PubliclyAccessible)
-	d.Set("security_group_ids", resource.SecurityGroupIds)
+	d.Set(names.AttrPubliclyAccessible, resource.PubliclyAccessible)
+	d.Set(names.AttrSecurityGroupIDs, resource.SecurityGroupIds)
 	d.Set(names.AttrSubnetIDs, resource.SubnetIds)
 	d.Set("workgroup_id", resource.WorkgroupId)
 

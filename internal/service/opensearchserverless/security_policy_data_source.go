@@ -25,7 +25,7 @@ func DataSourceSecurityPolicy() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSecurityPolicyRead,
 
 		Schema: map[string]*schema.Schema{
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,7 +87,7 @@ func dataSourceSecurityPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrType, securityPolicy.Type)
 
 	createdDate := time.UnixMilli(aws.ToInt64(securityPolicy.CreatedDate))
-	d.Set("created_date", createdDate.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, createdDate.Format(time.RFC3339))
 
 	lastModifiedDate := time.UnixMilli(aws.ToInt64(securityPolicy.LastModifiedDate))
 	d.Set("last_modified_date", lastModifiedDate.Format(time.RFC3339))

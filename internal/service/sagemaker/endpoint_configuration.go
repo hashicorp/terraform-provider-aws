@@ -235,10 +235,10 @@ func ResourceEndpointConfiguration() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -295,6 +295,12 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
+						"inference_ami_version": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(sagemaker.ProductionVariantInferenceAmiVersion_Values(), false),
+						},
 						"initial_instance_count": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -308,7 +314,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							ValidateFunc: validation.FloatAtLeast(0),
 							Default:      1,
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -433,6 +439,12 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
+						"inference_ami_version": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(sagemaker.ProductionVariantInferenceAmiVersion_Values(), false),
+						},
 						"initial_instance_count": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -446,7 +458,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							ValidateFunc: validation.FloatAtLeast(0),
 							Default:      1,
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -533,7 +545,7 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 
 	createOpts := &sagemaker.CreateEndpointConfigInput{
 		EndpointConfigName: aws.String(name),
@@ -585,7 +597,7 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 
 	d.Set(names.AttrARN, endpointConfig.EndpointConfigArn)
 	d.Set(names.AttrName, endpointConfig.EndpointConfigName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(endpointConfig.EndpointConfigName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(endpointConfig.EndpointConfigName)))
 	d.Set(names.AttrKMSKeyARN, endpointConfig.KmsKeyId)
 
 	if err := d.Set("production_variants", flattenProductionVariants(endpointConfig.ProductionVariants)); err != nil {
@@ -663,7 +675,7 @@ func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionV
 			l.VolumeSizeInGB = aws.Int64(int64(v))
 		}
 
-		if v, ok := data["instance_type"].(string); ok && v != "" {
+		if v, ok := data[names.AttrInstanceType].(string); ok && v != "" {
 			l.InstanceType = aws.String(v)
 		}
 
@@ -695,6 +707,10 @@ func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionV
 
 		if v, ok := data["enable_ssm_access"].(bool); ok {
 			l.EnableSSMAccess = aws.Bool(v)
+		}
+
+		if v, ok := data["inference_ami_version"].(string); ok && v != "" {
+			l.InferenceAmiVersion = aws.String(v)
 		}
 
 		containers = append(containers, l)
@@ -731,7 +747,7 @@ func flattenProductionVariants(list []*sagemaker.ProductionVariant) []map[string
 		}
 
 		if i.InstanceType != nil {
-			l["instance_type"] = aws.StringValue(i.InstanceType)
+			l[names.AttrInstanceType] = aws.StringValue(i.InstanceType)
 		}
 
 		if i.RoutingConfig != nil {
@@ -748,6 +764,10 @@ func flattenProductionVariants(list []*sagemaker.ProductionVariant) []map[string
 
 		if i.EnableSSMAccess != nil {
 			l["enable_ssm_access"] = aws.BoolValue(i.EnableSSMAccess)
+		}
+
+		if i.InferenceAmiVersion != nil {
+			l["inference_ami_version"] = aws.StringValue(i.InferenceAmiVersion)
 		}
 
 		result = append(result, l)

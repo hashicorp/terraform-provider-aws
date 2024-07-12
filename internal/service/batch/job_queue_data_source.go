@@ -17,7 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_batch_job_queue")
+// @SDKDataSource("aws_batch_job_queue", name="Job Queue")
+// @Tags
 func DataSourceJobQueue() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceJobQueueRead,
@@ -43,7 +44,7 @@ func DataSourceJobQueue() *schema.Resource {
 				Computed: true,
 			},
 
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +56,7 @@ func DataSourceJobQueue() *schema.Resource {
 
 			names.AttrTags: tftags.TagsSchemaComputed(),
 
-			"priority": {
+			names.AttrPriority: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -83,7 +84,6 @@ func DataSourceJobQueue() *schema.Resource {
 func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &batch.DescribeJobQueuesInput{
 		JobQueues: []*string{aws.String(d.Get(names.AttrName).(string))},
@@ -107,9 +107,9 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrName, jobQueue.JobQueueName)
 	d.Set("scheduling_policy_arn", jobQueue.SchedulingPolicyArn)
 	d.Set(names.AttrStatus, jobQueue.Status)
-	d.Set("status_reason", jobQueue.StatusReason)
+	d.Set(names.AttrStatusReason, jobQueue.StatusReason)
 	d.Set(names.AttrState, jobQueue.State)
-	d.Set("priority", jobQueue.Priority)
+	d.Set(names.AttrPriority, jobQueue.Priority)
 
 	ceos := make([]map[string]interface{}, 0)
 	for _, v := range jobQueue.ComputeEnvironmentOrder {
@@ -122,9 +122,7 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting compute_environment_order: %s", err)
 	}
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, jobQueue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, jobQueue.Tags)
 
 	return diags
 }

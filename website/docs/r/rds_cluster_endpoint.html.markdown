@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_rds_cluster_endpoint
 
-Manages an RDS Aurora Cluster Endpoint.
+Manages an RDS Aurora Cluster Custom Endpoint.
 You can refer to the [User Guide][1].
 
 ## Example Usage
@@ -79,7 +79,7 @@ resource "aws_rds_cluster_endpoint" "static" {
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster-endpoint.html).
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `cluster_identifier` - (Required, Forces new resources) The cluster identifier.
 * `cluster_endpoint_identifier` - (Required, Forces new resources) The identifier to use for the new endpoint. This parameter is stored as a lowercase string.

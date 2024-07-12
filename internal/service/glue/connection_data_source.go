@@ -34,7 +34,7 @@ func DataSourceConnection() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -68,7 +68,7 @@ func DataSourceConnection() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zone": {
+						names.AttrAvailabilityZone: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -77,7 +77,7 @@ func DataSourceConnection() *schema.Resource {
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -110,7 +110,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(id)
-	d.Set("catalog_id", catalogID)
+	d.Set(names.AttrCatalogID, catalogID)
 	d.Set("connection_type", connection.ConnectionType)
 	d.Set(names.AttrName, connection.Name)
 	d.Set(names.AttrDescription, connection.Description)

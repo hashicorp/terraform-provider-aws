@@ -76,7 +76,7 @@ func (r *resourceVpcEndpoint) Schema(ctx context.Context, req resource.SchemaReq
 					stringvalidator.LengthBetween(3, 32),
 				},
 			},
-			"security_group_ids": schema.SetAttribute{
+			names.AttrSecurityGroupIDs: schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
@@ -181,6 +181,14 @@ func (r *resourceVpcEndpoint) Read(ctx context.Context, req resource.ReadRequest
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameVPCEndpoint, state.ID.ValueString(), err),
+			err.Error(),
+		)
 		return
 	}
 

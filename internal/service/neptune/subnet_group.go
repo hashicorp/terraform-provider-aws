@@ -51,10 +51,10 @@ func ResourceSubnetGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validSubnetGroupName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -80,7 +80,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &neptune.CreateDBSubnetGroupInput{
 		DBSubnetGroupName:        aws.String(name),
 		DBSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
@@ -119,7 +119,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, subnetGroup.DBSubnetGroupDescription)
 	d.Set(names.AttrName, subnetGroup.DBSubnetGroupName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(subnetGroup.DBSubnetGroupName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(subnetGroup.DBSubnetGroupName)))
 	var subnetIDs []string
 	for _, v := range subnetGroup.Subnets {
 		subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetIdentifier))

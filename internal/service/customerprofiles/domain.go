@@ -42,7 +42,7 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -139,7 +139,7 @@ func ResourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"address": {
+									names.AttrAddress: {
 										Type:     schema.TypeList,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -173,7 +173,7 @@ func ResourceDomain() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"rule": {
+									names.AttrRule: {
 										Type:     schema.TypeList,
 										Required: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -240,7 +240,7 @@ func exportingConfigSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"s3_bucket_name": {
+							names.AttrS3BucketName: {
 								Type:     schema.TypeString,
 								Required: true,
 							},
@@ -260,7 +260,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
-	name := d.Get("domain_name").(string)
+	name := d.Get(names.AttrDomainName).(string)
 	input := &customerprofiles.CreateDomainInput{
 		DomainName: aws.String(name),
 		Tags:       getTagsIn(ctx),
@@ -314,7 +314,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set(names.AttrARN, buildDomainARN(meta.(*conns.AWSClient), d.Id()))
-	d.Set("domain_name", output.DomainName)
+	d.Set(names.AttrDomainName, output.DomainName)
 	d.Set("dead_letter_queue_url", output.DeadLetterQueueUrl)
 	d.Set("default_encryption_key", output.DefaultEncryptionKey)
 	d.Set("default_expiration_days", output.DefaultExpirationDays)
@@ -332,7 +332,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &customerprofiles.UpdateDomainInput{
-			DomainName: aws.String(d.Get("domain_name").(string)),
+			DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 		}
 
 		if d.HasChange("dead_letter_queue_url") {
@@ -545,7 +545,7 @@ func expandS3ExportingConfig(tfMap []interface{}) *types.S3ExportingConfig {
 
 	apiObject := &types.S3ExportingConfig{}
 
-	if v, ok := tfList["s3_bucket_name"]; ok {
+	if v, ok := tfList[names.AttrS3BucketName]; ok {
 		apiObject.S3BucketName = aws.String(v.(string))
 	}
 
@@ -638,7 +638,7 @@ func expandAttributesTypesSelector(tfMap []interface{}) *types.AttributeTypesSel
 		apiObject.AttributeMatchingModel = types.AttributeMatchingModel(v.(string))
 	}
 
-	if v, ok := tfList["address"]; ok {
+	if v, ok := tfList[names.AttrAddress]; ok {
 		apiObject.Address = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
@@ -686,7 +686,7 @@ func expandMatchingRules(tfMap []interface{}) []types.MatchingRule {
 
 		apiObject := types.MatchingRule{}
 
-		if v, ok := matchingRule["rule"]; ok {
+		if v, ok := matchingRule[names.AttrRule]; ok {
 			apiObject.Rule = flex.ExpandStringValueList(v.([]interface{}))
 		}
 
@@ -840,7 +840,7 @@ func flattenS3Exporting(apiObject *types.S3ExportingConfig) []interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.S3BucketName; v != nil {
-		tfMap["s3_bucket_name"] = aws.ToString(v)
+		tfMap[names.AttrS3BucketName] = aws.ToString(v)
 	}
 
 	if v := apiObject.S3KeyName; v != nil {
@@ -874,7 +874,7 @@ func flattenAttributeTypesSelector(apiObject *types.AttributeTypesSelector) []in
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Address; v != nil {
-		tfMap["address"] = flex.FlattenStringValueList(v)
+		tfMap[names.AttrAddress] = flex.FlattenStringValueList(v)
 	}
 
 	tfMap["attribute_matching_model"] = apiObject.AttributeMatchingModel
@@ -900,7 +900,7 @@ func flattenMatchingRules(apiObject []types.MatchingRule) []interface{} {
 	for _, matchingRule := range apiObject {
 		if v := matchingRule.Rule; v != nil {
 			tfMap := map[string]interface{}{}
-			tfMap["rule"] = flex.FlattenStringValueList(v)
+			tfMap[names.AttrRule] = flex.FlattenStringValueList(v)
 			tfList = append(tfList, tfMap)
 		}
 	}

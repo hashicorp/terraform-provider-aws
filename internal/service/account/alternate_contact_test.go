@@ -38,7 +38,7 @@ func testAccAlternateContact_basic(t *testing.T) {
 				Config: testAccAlternateContactConfig_basic(rName1, emailAddress1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAlternateContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
 					resource.TestCheckResourceAttr(resourceName, "alternate_contact_type", "OPERATIONS"),
 					resource.TestCheckResourceAttr(resourceName, "email_address", emailAddress1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
@@ -55,7 +55,7 @@ func testAccAlternateContact_basic(t *testing.T) {
 				Config: testAccAlternateContactConfig_basic(rName2, emailAddress2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAlternateContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
 					resource.TestCheckResourceAttr(resourceName, "alternate_contact_type", "OPERATIONS"),
 					resource.TestCheckResourceAttr(resourceName, "email_address", emailAddress2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
@@ -116,7 +116,7 @@ func testAccAlternateContact_accountID(t *testing.T) { // nosemgrep:ci.account-i
 				Config: testAccAlternateContactConfig_organization(rName1, emailAddress1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAlternateContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "alternate_contact_type", "OPERATIONS"),
 					resource.TestCheckResourceAttr(resourceName, "email_address", emailAddress1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
@@ -133,7 +133,7 @@ func testAccAlternateContact_accountID(t *testing.T) { // nosemgrep:ci.account-i
 				Config: testAccAlternateContactConfig_organization(rName2, emailAddress2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAlternateContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "alternate_contact_type", "OPERATIONS"),
 					resource.TestCheckResourceAttr(resourceName, "email_address", emailAddress2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),

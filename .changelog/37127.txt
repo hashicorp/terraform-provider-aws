@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ec2_capacity_reservation: Fix `InvalidCapacityReservationId.NotFound` errors during Read and Delete when resource is manually deleted
+```

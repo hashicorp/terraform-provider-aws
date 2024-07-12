@@ -35,9 +35,9 @@ func TestAccVPCSubnetCIDRReservation_basic(t *testing.T) {
 				Config: testAccVPCSubnetCIDRReservationConfig_testIPv4(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetCIDRReservationExists(ctx, resourceName, &res),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.1.16/28"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "10.1.1.16/28"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
-					resource.TestCheckResourceAttr(resourceName, "reservation_type", "prefix"),
+					resource.TestCheckResourceAttr(resourceName, "reservation_type", names.AttrPrefix),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 				),
 			},
@@ -118,7 +118,7 @@ func testAccCheckSubnetCIDRReservationExists(ctx context.Context, n string, v *e
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
-		output, err := tfec2.FindSubnetCIDRReservationBySubnetIDAndReservationID(ctx, conn, rs.Primary.Attributes["subnet_id"], rs.Primary.ID)
+		output, err := tfec2.FindSubnetCIDRReservationBySubnetIDAndReservationID(ctx, conn, rs.Primary.Attributes[names.AttrSubnetID], rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -139,7 +139,7 @@ func testAccCheckSubnetCIDRReservationDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			_, err := tfec2.FindSubnetCIDRReservationBySubnetIDAndReservationID(ctx, conn, rs.Primary.Attributes["subnet_id"], rs.Primary.ID)
+			_, err := tfec2.FindSubnetCIDRReservationBySubnetIDAndReservationID(ctx, conn, rs.Primary.Attributes[names.AttrSubnetID], rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -162,7 +162,7 @@ func testAccSubnetCIDRReservationImportStateIdFunc(resourceName string) resource
 		if !ok {
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
-		subnetId := rs.Primary.Attributes["subnet_id"]
+		subnetId := rs.Primary.Attributes[names.AttrSubnetID]
 		return fmt.Sprintf("%s:%s", subnetId, rs.Primary.ID), nil
 	}
 }

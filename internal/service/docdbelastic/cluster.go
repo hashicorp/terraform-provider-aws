@@ -81,7 +81,7 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 					enum.FrameworkValidate[awstypes.Auth](),
 				},
 			},
-			"endpoint": schema.StringAttribute{
+			names.AttrEndpoint: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -102,7 +102,7 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"preferred_maintenance_window": schema.StringAttribute{
+			names.AttrPreferredMaintenanceWindow: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -128,7 +128,7 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"vpc_security_group_ids": schema.SetAttribute{
+			names.AttrVPCSecurityGroupIDs: schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,

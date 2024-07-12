@@ -48,7 +48,7 @@ func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEncryptionConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "KMS"),
-					resource.TestCheckResourceAttrPair(resourceName, "key_id", keyResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKeyID, keyResourceName, names.AttrARN),
 				),
 			},
 			{

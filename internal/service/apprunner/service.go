@@ -51,14 +51,14 @@ func resourceService() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"encryption_configuration": {
+			names.AttrEncryptionConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key": {
+						names.AttrKMSKey: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -80,25 +80,25 @@ func resourceService() *schema.Resource {
 							Default:      1,
 							ValidateFunc: validation.IntBetween(1, 20),
 						},
-						"interval": {
+						names.AttrInterval: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      5,
 							ValidateFunc: validation.IntBetween(1, 20),
 						},
-						"path": {
+						names.AttrPath: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "/",
 							ValidateFunc: validation.StringLenBetween(0, 51200),
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          types.HealthCheckProtocolTcp,
 							ValidateDiagFunc: enum.Validate[types.HealthCheckProtocol](),
 						},
-						"timeout": {
+						names.AttrTimeout: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      2,
@@ -148,7 +148,7 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
-			"network_configuration": {
+			names.AttrNetworkConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -190,7 +190,7 @@ func resourceService() *schema.Resource {
 								},
 							},
 						},
-						"ip_address_type": {
+						names.AttrIPAddressType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          types.IpAddressTypeIpv4,
@@ -221,7 +221,7 @@ func resourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"service_name": {
+			names.AttrServiceName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -436,7 +436,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	name := d.Get("service_name").(string)
+	name := d.Get(names.AttrServiceName).(string)
 	input := &apprunner.CreateServiceInput{
 		ServiceName:         aws.String(name),
 		SourceConfiguration: expandServiceSourceConfiguration(d.Get("source_configuration").([]interface{})),
@@ -447,7 +447,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.AutoScalingConfigurationArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("encryption_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.EncryptionConfiguration = expandServiceEncryptionConfiguration(v.([]interface{}))
 	}
 
@@ -459,7 +459,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.InstanceConfiguration = expandServiceInstanceConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("network_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{}))
 	}
 
@@ -524,7 +524,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	} else {
 		d.Set("auto_scaling_configuration_arn", nil)
 	}
-	if err := d.Set("encryption_configuration", flattenServiceEncryptionConfiguration(service.EncryptionConfiguration)); err != nil {
+	if err := d.Set(names.AttrEncryptionConfiguration, flattenServiceEncryptionConfiguration(service.EncryptionConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
 	if err := d.Set("health_check_configuration", flattenServiceHealthCheckConfiguration(service.HealthCheckConfiguration)); err != nil {
@@ -533,14 +533,14 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("instance_configuration", flattenServiceInstanceConfiguration(service.InstanceConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting instance_configuration: %s", err)
 	}
-	if err := d.Set("network_configuration", flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
+	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 	if err := d.Set("observability_configuration", flattenServiceObservabilityConfiguration(service.ObservabilityConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting observability_configuration: %s", err)
 	}
 	d.Set("service_id", service.ServiceId)
-	d.Set("service_name", service.ServiceName)
+	d.Set(names.AttrServiceName, service.ServiceName)
 	d.Set("service_url", serviceURL)
 	if err := d.Set("source_configuration", flattenServiceSourceConfiguration(service.SourceConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting source_configuration: %s", err)
@@ -572,8 +572,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.InstanceConfiguration = expandServiceInstanceConfiguration(d.Get("instance_configuration").([]interface{}))
 		}
 
-		if d.HasChange("network_configuration") {
-			input.NetworkConfiguration = expandNetworkConfiguration(d.Get("network_configuration").([]interface{}))
+		if d.HasChange(names.AttrNetworkConfiguration) {
+			input.NetworkConfiguration = expandNetworkConfiguration(d.Get(names.AttrNetworkConfiguration).([]interface{}))
 		}
 
 		if d.HasChange("observability_configuration") {
@@ -744,7 +744,7 @@ func expandServiceEncryptionConfiguration(l []interface{}) *types.EncryptionConf
 
 	result := &types.EncryptionConfiguration{}
 
-	if v, ok := tfMap["kms_key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKMSKey].(string); ok && v != "" {
 		result.KmsKey = aws.String(v)
 	}
 
@@ -768,19 +768,19 @@ func expandServiceHealthCheckConfiguration(l []interface{}) *types.HealthCheckCo
 		result.HealthyThreshold = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["interval"].(int); ok {
+	if v, ok := tfMap[names.AttrInterval].(int); ok {
 		result.Interval = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["path"].(string); ok {
+	if v, ok := tfMap[names.AttrPath].(string); ok {
 		result.Path = aws.String(v)
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok {
 		result.Protocol = types.HealthCheckProtocol(v)
 	}
 
-	if v, ok := tfMap["timeout"].(int); ok {
+	if v, ok := tfMap[names.AttrTimeout].(int); ok {
 		result.Timeout = aws.Int32(int32(v))
 	}
 
@@ -840,7 +840,7 @@ func expandNetworkConfiguration(l []interface{}) *types.NetworkConfiguration {
 		result.EgressConfiguration = expandNetworkEgressConfiguration(v)
 	}
 
-	if v, ok := tfMap["ip_address_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIPAddressType].(string); ok && v != "" {
 		result.IpAddressType = types.IpAddressType(v)
 	}
 
@@ -1157,7 +1157,7 @@ func flattenServiceEncryptionConfiguration(config *types.EncryptionConfiguration
 	}
 
 	m := map[string]interface{}{
-		"kms_key": aws.ToString(config.KmsKey),
+		names.AttrKMSKey: aws.ToString(config.KmsKey),
 	}
 
 	return []interface{}{m}
@@ -1170,10 +1170,10 @@ func flattenServiceHealthCheckConfiguration(config *types.HealthCheckConfigurati
 
 	m := map[string]interface{}{
 		"healthy_threshold":   config.HealthyThreshold,
-		"interval":            config.Interval,
-		"path":                aws.ToString(config.Path),
-		"protocol":            string(config.Protocol),
-		"timeout":             config.Timeout,
+		names.AttrInterval:    config.Interval,
+		names.AttrPath:        aws.ToString(config.Path),
+		names.AttrProtocol:    string(config.Protocol),
+		names.AttrTimeout:     config.Timeout,
 		"unhealthy_threshold": config.UnhealthyThreshold,
 	}
 
@@ -1202,7 +1202,7 @@ func flattenNetworkConfiguration(config *types.NetworkConfiguration) []interface
 	m := map[string]interface{}{
 		"ingress_configuration": flattenNetworkIngressConfiguration(config.IngressConfiguration),
 		"egress_configuration":  flattenNetworkEgressConfiguration(config.EgressConfiguration),
-		"ip_address_type":       config.IpAddressType,
+		names.AttrIPAddressType: config.IpAddressType,
 	}
 
 	return []interface{}{m}

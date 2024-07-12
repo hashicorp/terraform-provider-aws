@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_db_event_subscription", name="Event Subscription")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceEventSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventSubscriptionCreate,
@@ -70,10 +71,10 @@ func resourceEventSubscription() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validEventSubscriptionName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -91,7 +92,7 @@ func resourceEventSubscription() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"source_type": {
+			names.AttrSourceType: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.SourceType](),
@@ -108,7 +109,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &rds.CreateEventSubscriptionInput{
 		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic").(string)),
@@ -124,7 +125,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 		input.SourceIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("source_type"); ok {
+	if v, ok := d.GetOk(names.AttrSourceType); ok {
 		input.SourceType = aws.String(v.(string))
 	}
 
@@ -164,10 +165,10 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrEnabled, sub.Enabled)
 	d.Set("event_categories", sub.EventCategoriesList)
 	d.Set(names.AttrName, sub.CustSubscriptionId)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(sub.CustSubscriptionId)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(sub.CustSubscriptionId)))
 	d.Set("sns_topic", sub.SnsTopicArn)
 	d.Set("source_ids", sub.SourceIdsList)
-	d.Set("source_type", sub.SourceType)
+	d.Set(names.AttrSourceType, sub.SourceType)
 
 	return diags
 }
@@ -185,11 +186,11 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 
 		if d.HasChange("event_categories") {
 			input.EventCategories = flex.ExpandStringValueSet(d.Get("event_categories").(*schema.Set))
-			input.SourceType = aws.String(d.Get("source_type").(string))
+			input.SourceType = aws.String(d.Get(names.AttrSourceType).(string))
 		}
 
-		if d.HasChange("source_type") {
-			input.SourceType = aws.String(d.Get("source_type").(string))
+		if d.HasChange(names.AttrSourceType) {
+			input.SourceType = aws.String(d.Get(names.AttrSourceType).(string))
 		}
 
 		if d.HasChange("sns_topic") {

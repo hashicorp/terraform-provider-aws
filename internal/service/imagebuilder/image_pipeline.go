@@ -78,6 +78,11 @@ func ResourceImagePipeline() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"execution_role": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"image_recipe_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -106,7 +111,7 @@ func ResourceImagePipeline() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
-									"repository_name": {
+									names.AttrRepositoryName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -157,7 +162,7 @@ func ResourceImagePipeline() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -169,7 +174,7 @@ func ResourceImagePipeline() *schema.Resource {
 							Default:      imagebuilder.PipelineExecutionStartConditionExpressionMatchAndDependencyUpdatesAvailable,
 							ValidateFunc: validation.StringInSlice(imagebuilder.PipelineExecutionStartCondition_Values(), false),
 						},
-						"schedule_expression": {
+						names.AttrScheduleExpression: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -193,6 +198,47 @@ func ResourceImagePipeline() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"workflow": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"on_failure": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(imagebuilder.OnWorkflowFailure_Values(), false),
+						},
+						"parallel_group": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 100),
+						},
+						names.AttrParameter: {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrName: {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 128),
+									},
+									names.AttrValue: {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"workflow_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -221,6 +267,10 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 		input.DistributionConfigurationArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("execution_role"); ok {
+		input.ExecutionRole = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("image_recipe_arn"); ok {
 		input.ImageRecipeArn = aws.String(v.(string))
 	}
@@ -241,12 +291,16 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 		input.Name = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("schedule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrSchedule); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Schedule = expandPipelineSchedule(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk(names.AttrStatus); ok {
 		input.Status = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("workflow"); ok && len(v.([]interface{})) > 0 {
+		input.Workflows = expandWorkflowConfigurations(v.([]interface{}))
 	}
 
 	output, err := conn.CreateImagePipelineWithContext(ctx, input)
@@ -299,6 +353,7 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrDescription, imagePipeline.Description)
 	d.Set("distribution_configuration_arn", imagePipeline.DistributionConfigurationArn)
 	d.Set("enhanced_image_metadata_enabled", imagePipeline.EnhancedImageMetadataEnabled)
+	d.Set("execution_role", imagePipeline.ExecutionRole)
 	d.Set("image_recipe_arn", imagePipeline.ImageRecipeArn)
 	if imagePipeline.ImageScanningConfiguration != nil {
 		d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(imagePipeline.ImageScanningConfiguration)})
@@ -314,11 +369,12 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrName, imagePipeline.Name)
 	d.Set("platform", imagePipeline.Platform)
 	if imagePipeline.Schedule != nil {
-		d.Set("schedule", []interface{}{flattenSchedule(imagePipeline.Schedule)})
+		d.Set(names.AttrSchedule, []interface{}{flattenSchedule(imagePipeline.Schedule)})
 	} else {
-		d.Set("schedule", nil)
+		d.Set(names.AttrSchedule, nil)
 	}
 	d.Set(names.AttrStatus, imagePipeline.Status)
+	d.Set("workflow", flattenWorkflowConfigurations(imagePipeline.Workflows))
 
 	setTagsOut(ctx, imagePipeline.Tags)
 
@@ -333,11 +389,13 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 		names.AttrDescription,
 		"distribution_configuration_arn",
 		"enhanced_image_metadata_enabled",
+		"execution_role",
 		"image_scanning_configuration",
 		"image_tests_configuration",
 		"infrastructure_configuration_arn",
-		"schedule",
+		names.AttrSchedule,
 		names.AttrStatus,
+		"workflow",
 	) {
 		input := &imagebuilder.UpdateImagePipelineInput{
 			ClientToken:                  aws.String(id.UniqueId()),
@@ -357,6 +415,10 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.DistributionConfigurationArn = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("execution_role"); ok {
+			input.ExecutionRole = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("image_recipe_arn"); ok {
 			input.ImageRecipeArn = aws.String(v.(string))
 		}
@@ -373,12 +435,16 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.InfrastructureConfigurationArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("schedule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk(names.AttrSchedule); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.Schedule = expandPipelineSchedule(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk(names.AttrStatus); ok {
 			input.Status = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("workflow"); ok && len(v.([]interface{})) > 0 {
+			input.Workflows = expandWorkflowConfigurations(v.([]interface{}))
 		}
 
 		_, err := conn.UpdateImagePipelineWithContext(ctx, input)
@@ -441,7 +507,7 @@ func expandECRConfiguration(tfMap map[string]interface{}) *imagebuilder.EcrConfi
 		apiObject.ContainerTags = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["repository_name"].(string); ok {
+	if v, ok := tfMap[names.AttrRepositoryName].(string); ok {
 		apiObject.RepositoryName = aws.String(v)
 	}
 
@@ -477,7 +543,7 @@ func expandPipelineSchedule(tfMap map[string]interface{}) *imagebuilder.Schedule
 		apiObject.PipelineExecutionStartCondition = aws.String(v)
 	}
 
-	if v, ok := tfMap["schedule_expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrScheduleExpression].(string); ok && v != "" {
 		apiObject.ScheduleExpression = aws.String(v)
 	}
 
@@ -514,7 +580,7 @@ func flattenECRConfiguration(apiObject *imagebuilder.EcrConfiguration) map[strin
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.RepositoryName; v != nil {
-		tfMap["repository_name"] = aws.StringValue(v)
+		tfMap[names.AttrRepositoryName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.ContainerTags; v != nil {
@@ -554,7 +620,7 @@ func flattenSchedule(apiObject *imagebuilder.Schedule) map[string]interface{} {
 	}
 
 	if v := apiObject.ScheduleExpression; v != nil {
-		tfMap["schedule_expression"] = aws.StringValue(v)
+		tfMap[names.AttrScheduleExpression] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Timezone; v != nil {
