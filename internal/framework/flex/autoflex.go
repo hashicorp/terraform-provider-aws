@@ -71,29 +71,6 @@ var (
 // AutoFlexOptionsFunc is a type alias for an autoFlexer functional option.
 type AutoFlexOptionsFunc func(*AutoFlexOptions)
 
-// autoFlexConvert converts `from` to `to` using the specified auto-flexer.
-func autoFlexConvert(ctx context.Context, from, to any, flexer autoFlexer) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	valFrom, valTo, d := autoFlexValues(ctx, from, to)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-
-	// Top-level struct to struct conversion.
-	if valFrom.IsValid() && valTo.IsValid() {
-		if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct {
-			diags.Append(autoFlexConvertStruct(ctx, from, to, flexer)...)
-			return diags
-		}
-	}
-
-	// Anything else.
-	diags.Append(flexer.convert(ctx, valFrom, valTo)...)
-	return diags
-}
-
 // autoFlexValues returns the underlying `reflect.Value`s of `from` and `to`.
 func autoFlexValues(_ context.Context, from, to any) (reflect.Value, reflect.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
