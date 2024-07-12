@@ -15,7 +15,12 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newDataSourceOriginAccessControl,
+			Name:    "Origin Access Control",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
@@ -55,10 +60,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceLogDeliveryCanonicalUserID,
 			TypeName: "aws_cloudfront_log_delivery_canonical_user_id",
 			Name:     "Log Delivery Canonical User ID",
-		},
-		{
-			Factory:  DataSourceOriginAccessControl,
-			TypeName: "aws_cloudfront_origin_access_control",
 		},
 		{
 			Factory:  dataSourceOriginAccessIdentities,

@@ -6,15 +6,14 @@ package cloudfront
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_cloudfront_origin_access_control")
 func DataSourceOriginAccessControl() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOriginAccessControlRead,
@@ -55,19 +54,19 @@ func DataSourceOriginAccessControl() *schema.Resource {
 
 func dataSourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 	id := d.Get("id").(string)
 	params := &cloudfront.GetOriginAccessControlInput{
 		Id: aws.String(id),
 	}
 
-	resp, err := conn.GetOriginAccessControlWithContext(ctx, params)
+	resp, err := conn.GetOriginAccessControl(ctx, params)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Origin Access Control (%s): %s", id, err)
 	}
 
 	// Update other attributes outside DistributionConfig
-	d.SetId(aws.StringValue(resp.OriginAccessControl.Id))
+	d.SetId(aws.ToString(resp.OriginAccessControl.Id))
 	d.Set("etag", resp.ETag)
 	d.Set("description", resp.OriginAccessControl.OriginAccessControlConfig.Description)
 	d.Set("name", resp.OriginAccessControl.OriginAccessControlConfig.Name)
