@@ -40,7 +40,7 @@ func TestAccGrafanaWorkspaceServiceAccountToken_basic(t *testing.T) {
 				Config: testAccWorkspaceServiceAccountTokenConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceServiceAccountTokenExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_account_token_id"),
 				),
