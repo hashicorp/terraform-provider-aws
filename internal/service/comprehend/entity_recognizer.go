@@ -599,7 +599,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 
 			modelVPCENILock.Unlock()
 
-			_, err = ec2Conn.CreateTags(waitCtx, &ec2.CreateTagsInput{
+			_, err = ec2Conn.CreateTags(waitCtx, &ec2.CreateTagsInput{ // nosemgrep:ci.semgrep.migrate.aws-api-context
 				Resources: []string{aws.ToString(newENI.NetworkInterfaceId)},
 				Tags: []ec2types.Tag{
 					{
