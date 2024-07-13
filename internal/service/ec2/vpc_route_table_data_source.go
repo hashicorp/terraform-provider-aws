@@ -22,9 +22,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_route_table")
+// @SDKDataSource("aws_route_table", name="Route Table")
 // @Testing(tagsTest=true)
-func DataSourceRouteTable() *schema.Resource {
+func dataSourceRouteTable() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouteTableRead,
 
