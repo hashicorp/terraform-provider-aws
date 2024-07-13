@@ -55,7 +55,7 @@ func TestNewAttributeFilterList(t *testing.T) {
 	for _, testCase := range testCases {
 		result := tfec2.NewAttributeFilterList(testCase.Attrs)
 
-		if diff := cmp.Diff(result, testCase.Expected); diff != "" {
+		if diff := cmp.Diff(result, testCase.Expected, cmp.AllowUnexported(awstypes.Filter{})); diff != "" {
 			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 	}
@@ -96,7 +96,7 @@ func TestNewTagFilterList(t *testing.T) {
 	for _, testCase := range testCases {
 		result := tfec2.NewTagFilterList(testCase.Tags)
 
-		if diff := cmp.Diff(result, testCase.Expected); diff != "" {
+		if diff := cmp.Diff(result, testCase.Expected, cmp.AllowUnexported(awstypes.Filter{})); diff != "" {
 			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 	}
@@ -152,7 +152,7 @@ func TestNewCustomFilterList(t *testing.T) {
 	}
 	result := tfec2.NewCustomFilterList(filters)
 
-	if diff := cmp.Diff(result, expected); diff != "" {
+	if diff := cmp.Diff(result, expected, cmp.AllowUnexported(awstypes.Filter{})); diff != "" {
 		t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 	}
 }
