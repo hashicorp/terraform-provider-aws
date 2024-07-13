@@ -29,6 +29,7 @@ var (
 	ResourceEIPAssociation                           = resourceEIPAssociation
 	ResourceEIPDomainName                            = newEIPDomainNameResource
 	ResourceFleet                                    = resourceFleet
+	ResourceFlowLog                                  = resourceFlowLog
 	ResourceHost                                     = resourceHost
 	ResourceIPAM                                     = resourceIPAM
 	ResourceIPAMOrganizationAdminAccount             = resourceIPAMOrganizationAdminAccount
@@ -51,6 +52,8 @@ var (
 	ResourceLocalGatewayRoute                        = resourceLocalGatewayRoute
 	ResourceLocalGatewayRouteTableVPCAssociation     = resourceLocalGatewayRouteTableVPCAssociation
 	ResourceMainRouteTableAssociation                = resourceMainRouteTableAssociation
+	ResourceManagedPrefixList                        = resourceManagedPrefixList
+	ResourceManagedPrefixListEntry                   = resourceManagedPrefixListEntry
 	ResourceNATGateway                               = resourceNATGateway
 	ResourceNetworkACL                               = resourceNetworkACL
 	ResourceNetworkACLAssociation                    = resourceNetworkACLAssociation
@@ -96,6 +99,7 @@ var (
 	ResourceVerifiedAccessGroup                      = resourceVerifiedAccessGroup
 	ResourceVPC                                      = resourceVPC
 	ResourceVPCDHCPOptions                           = resourceVPCDHCPOptions
+	ResourceVPCDHCPOptionsAssociation                = resourceVPCDHCPOptionsAssociation
 	ResourceVPCEndpoint                              = resourceVPCEndpoint
 	ResourceVPCIPv4CIDRBlockAssociation              = resourceVPCIPv4CIDRBlockAssociation
 	ResourceVPCPeeringConnection                     = resourceVPCPeeringConnection
@@ -122,11 +126,13 @@ var (
 	FindDHCPOptionsByID                                        = findDHCPOptionsByID
 	FindEBSVolumeAttachment                                    = findVolumeAttachment
 	FindEBSVolumeByID                                          = findEBSVolumeByID
+	FindEgressOnlyInternetGatewayByID                          = findEgressOnlyInternetGatewayByID
 	FindEIPByAllocationID                                      = findEIPByAllocationID
 	FindEIPByAssociationID                                     = findEIPByAssociationID
 	FindEIPDomainNameAttributeByAllocationID                   = findEIPDomainNameAttributeByAllocationID
 	FindFastSnapshotRestoreByTwoPartKey                        = findFastSnapshotRestoreByTwoPartKey
 	FindFleetByID                                              = findFleetByID
+	FindFlowLogByID                                            = findFlowLogByID
 	FindHostByID                                               = findHostByID
 	FindInternetGateway                                        = findInternetGateway
 	FindInternetGatewayAttachment                              = findInternetGatewayAttachment
@@ -147,6 +153,8 @@ var (
 	FindLocalGatewayRouteByTwoPartKey                          = findLocalGatewayRouteByTwoPartKey
 	FindLocalGatewayRouteTableVPCAssociationByID               = findLocalGatewayRouteTableVPCAssociationByID
 	FindMainRouteTableAssociationByID                          = findMainRouteTableAssociationByID
+	FindManagedPrefixListByID                                  = findManagedPrefixListByID
+	FindManagedPrefixListEntryByIDAndCIDR                      = findManagedPrefixListEntryByIDAndCIDR
 	FindNATGatewayByID                                         = findNATGatewayByID
 	FindNetworkACLAssociationByID                              = findNetworkACLAssociationByID
 	FindNetworkACLByID                                         = findNetworkACLByID
@@ -196,6 +204,7 @@ var (
 	FindTransitGatewayStaticRoute                              = findTransitGatewayStaticRoute
 	FindTransitGatewayVPCAttachmentByID                        = findTransitGatewayVPCAttachmentByID
 	FindVPCCIDRBlockAssociationByID                            = findVPCCIDRBlockAssociationByID
+	FindVPCDHCPOptionsAssociation                              = findVPCDHCPOptionsAssociation
 	FindVPCEndpointConnectionByServiceIDAndVPCEndpointID       = findVPCEndpointConnectionByServiceIDAndVPCEndpointID
 	FindVPCEndpointConnectionNotificationByID                  = findVPCEndpointConnectionNotificationByID
 	FindVPCEndpointRouteTableAssociationExists                 = findVPCEndpointRouteTableAssociationExists
@@ -203,7 +212,7 @@ var (
 	FindVPCEndpointServiceConfigurationByID                    = findVPCEndpointServiceConfigurationByID
 	FindVPCEndpointServicePermission                           = findVPCEndpointServicePermission
 	FindVPCEndpointSubnetAssociationExists                     = findVPCEndpointSubnetAssociationExists
-	FindVPCIPv6CIDRBlockAssociationByIDV2                      = findVPCIPv6CIDRBlockAssociationByID
+	FindVPCIPv6CIDRBlockAssociationByID                        = findVPCIPv6CIDRBlockAssociationByID
 	FindVPCPeeringConnectionByID                               = findVPCPeeringConnectionByID
 	FindVPNConnectionByID                                      = findVPNConnectionByID
 	FindVPNConnectionRouteByTwoPartKey                         = findVPNConnectionRouteByTwoPartKey
@@ -221,6 +230,8 @@ var (
 	FlattenSecurityGroups                                      = flattenSecurityGroups
 	InternetGatewayAttachmentParseResourceID                   = internetGatewayAttachmentParseResourceID
 	IPAMServicePrincipal                                       = ipamServicePrincipal
+	ManagedPrefixListEntryCreateResourceID                     = managedPrefixListEntryCreateResourceID
+	ManagedPrefixListEntryParseResourceID                      = managedPrefixListEntryParseResourceID
 	MatchRules                                                 = matchRules
 	NewAttributeFilterList                                     = newAttributeFilterList
 	NewAttributeFilterListV2                                   = newAttributeFilterListV2
@@ -233,10 +244,14 @@ var (
 	SecurityGroupMigrateState                                  = securityGroupMigrateState
 	SecurityGroupRuleCreateID                                  = securityGroupRuleCreateID
 	SecurityGroupRuleMigrateState                              = securityGroupRuleMigrateState
+	SpotFleetRequestMigrateState                               = spotFleetRequestMigrateState
 	StopEBSVolumeAttachmentInstance                            = stopVolumeAttachmentInstance
 	StopInstance                                               = stopInstance
+	UnsuccessfulItemError                                      = unsuccessfulItemError
+	UnsuccessfulItemsError                                     = unsuccessfulItemsError
 	UpdateTags                                                 = updateTags
 	UpdateTagsV2                                               = updateTagsV2
+	VPCDHCPOptionsAssociationParseResourceID                   = vpcDHCPOptionsAssociationParseResourceID
 	VPCMigrateState                                            = vpcMigrateState
 	WaitVolumeAttachmentCreated                                = waitVolumeAttachmentCreated
 )
