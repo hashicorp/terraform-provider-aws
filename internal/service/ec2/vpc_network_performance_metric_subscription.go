@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_network_performance_metric_subscription")
-func ResourceNetworkPerformanceMetricSubscription() *schema.Resource {
+// @SDKResource("aws_vpc_network_performance_metric_subscription", name="VPC Network Performance Metric Subscription")
+func resourceNetworkPerformanceMetricSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkPerformanceMetricSubscriptionCreate,
 		ReadWithoutTimeout:   resourceNetworkPerformanceMetricSubscriptionRead,
