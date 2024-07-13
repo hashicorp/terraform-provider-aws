@@ -5719,7 +5719,7 @@ func defaultSubnetCount(ctx context.Context, t *testing.T) int {
 		),
 	}
 
-	subnets, err := tfec2.FindSubnetsV2(ctx, conn, input)
+	subnets, err := tfec2.FindSubnets(ctx, conn, input)
 
 	if acctest.PreCheckSkipError(err) {
 		return 0
