@@ -26,7 +26,7 @@ const (
 )
 
 // @SDKResource("aws_verifiedaccess_instance_logging_configuration", name="Verified Access Instance Logging Configuration")
-func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
+func resourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessInstanceLoggingConfigurationCreate,
 		ReadWithoutTimeout:   resourceVerifiedAccessInstanceLoggingConfigurationRead,

@@ -99,6 +99,7 @@ var (
 	ResourceVerifiedAccessEndpoint                        = resourceVerifiedAccessEndpoint
 	ResourceVerifiedAccessGroup                           = resourceVerifiedAccessGroup
 	ResourceVerifiedAccessInstance                        = resourceVerifiedAccessInstance
+	ResourceVerifiedAccessInstanceLoggingConfiguration    = resourceVerifiedAccessInstanceLoggingConfiguration
 	ResourceVerifiedAccessInstanceTrustProviderAttachment = resourceVerifiedAccessInstanceTrustProviderAttachment
 	ResourceVerifiedAccessTrustProvider                   = resourceVerifiedAccessTrustProvider
 	ResourceVPC                                           = resourceVPC
