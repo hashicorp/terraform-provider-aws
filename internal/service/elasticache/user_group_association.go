@@ -63,7 +63,10 @@ func resourceUserGroupAssociationCreate(ctx context.Context, d *schema.ResourceD
 		UserIdsToAdd: []string{userID},
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidUserGroupStateFault](ctx, 10*time.Minute, func() (interface{}, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidUserGroupStateFault](ctx, timeout, func() (interface{}, error) {
 		return conn.ModifyUserGroup(ctx, input)
 	})
 
@@ -88,8 +91,8 @@ func resourceUserGroupAssociationRead(ctx context.Context, d *schema.ResourceDat
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-
 	userGroupID, userID := parts[0], parts[1]
+
 	err = findUserGroupAssociationByTwoPartKey(ctx, conn, userGroupID, userID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -116,10 +119,13 @@ func resourceUserGroupAssociationDelete(ctx context.Context, d *schema.ResourceD
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+	userGroupID, userID := parts[0], parts[1]
 
 	log.Printf("[INFO] Deleting ElastiCache User Group Association: %s", d.Id())
-	userGroupID, userID := parts[0], parts[1]
-	_, err = tfresource.RetryWhenIsA[*awstypes.InvalidUserGroupStateFault](ctx, 10*time.Minute, func() (interface{}, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
+	_, err = tfresource.RetryWhenIsA[*awstypes.InvalidUserGroupStateFault](ctx, timeout, func() (interface{}, error) {
 		return conn.ModifyUserGroup(ctx, &elasticache.ModifyUserGroupInput{
 			UserGroupId:     aws.String(userGroupID),
 			UserIdsToRemove: []string{userID},
