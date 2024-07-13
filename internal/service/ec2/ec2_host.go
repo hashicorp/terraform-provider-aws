@@ -212,7 +212,7 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		output, err := conn.ModifyHosts(ctx, input)
 
 		if err == nil && output != nil {
-			err = unsuccessfulItemsErrorV2(output.Unsuccessful)
+			err = unsuccessfulItemsError(output.Unsuccessful)
 		}
 
 		if err != nil {
@@ -237,7 +237,7 @@ func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if err == nil && output != nil {
-		err = unsuccessfulItemsErrorV2(output.Unsuccessful)
+		err = unsuccessfulItemsError(output.Unsuccessful)
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeClientInvalidHostIDNotFound) {

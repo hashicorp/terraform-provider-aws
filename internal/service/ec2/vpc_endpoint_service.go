@@ -325,7 +325,7 @@ func resourceVPCEndpointServiceDelete(ctx context.Context, d *schema.ResourceDat
 	})
 
 	if err == nil && output != nil {
-		err = unsuccessfulItemsErrorV2(output.Unsuccessful)
+		err = unsuccessfulItemsError(output.Unsuccessful)
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceNotFound) {

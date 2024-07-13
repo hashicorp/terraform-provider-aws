@@ -496,7 +496,7 @@ func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if err == nil && output != nil {
-		err = unsuccessfulItemsErrorV2(output.Unsuccessful)
+		err = unsuccessfulItemsError(output.Unsuccessful)
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointNotFound) {

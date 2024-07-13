@@ -6,16 +6,16 @@ package ec2_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestUnsuccessfulItemError(t *testing.T) {
 	t.Parallel()
 
-	unsuccessfulItemError := &ec2.UnsuccessfulItemError{
+	unsuccessfulItemError := &awstypes.UnsuccessfulItemError{
 		Code:    aws.String("test code"),
 		Message: aws.String("test message"),
 	}
@@ -36,7 +36,7 @@ func TestUnsuccessfulItemsError(t *testing.T) {
 
 	testCases := []struct {
 		Name     string
-		Items    []*ec2.UnsuccessfulItem
+		Items    []awstypes.UnsuccessfulItem
 		Expected bool
 	}{
 		{
@@ -44,7 +44,7 @@ func TestUnsuccessfulItemsError(t *testing.T) {
 		},
 		{
 			Name: "one item no error",
-			Items: []*ec2.UnsuccessfulItem{
+			Items: []awstypes.UnsuccessfulItem{
 				{
 					ResourceId: aws.String("test resource"),
 				},
@@ -52,9 +52,9 @@ func TestUnsuccessfulItemsError(t *testing.T) {
 		},
 		{
 			Name: "one item",
-			Items: []*ec2.UnsuccessfulItem{
+			Items: []awstypes.UnsuccessfulItem{
 				{
-					Error: &ec2.UnsuccessfulItemError{
+					Error: &awstypes.UnsuccessfulItemError{
 						Code:    aws.String("test code"),
 						Message: aws.String("test message"),
 					},
@@ -65,12 +65,12 @@ func TestUnsuccessfulItemsError(t *testing.T) {
 		},
 		{
 			Name: "two items, first no error",
-			Items: []*ec2.UnsuccessfulItem{
+			Items: []awstypes.UnsuccessfulItem{
 				{
 					ResourceId: aws.String("test resource 1"),
 				},
 				{
-					Error: &ec2.UnsuccessfulItemError{
+					Error: &awstypes.UnsuccessfulItemError{
 						Code:    aws.String("test code"),
 						Message: aws.String("test message"),
 					},
@@ -81,16 +81,16 @@ func TestUnsuccessfulItemsError(t *testing.T) {
 		},
 		{
 			Name: "two items, first not as expected",
-			Items: []*ec2.UnsuccessfulItem{
+			Items: []awstypes.UnsuccessfulItem{
 				{
-					Error: &ec2.UnsuccessfulItemError{
+					Error: &awstypes.UnsuccessfulItemError{
 						Code:    aws.String("not what is required"),
 						Message: aws.String("not what is wanted"),
 					},
 					ResourceId: aws.String("test resource 1"),
 				},
 				{
-					Error: &ec2.UnsuccessfulItemError{
+					Error: &awstypes.UnsuccessfulItemError{
 						Code:    aws.String("test code"),
 						Message: aws.String("test message"),
 					},
@@ -100,16 +100,16 @@ func TestUnsuccessfulItemsError(t *testing.T) {
 		},
 		{
 			Name: "two items, first as expected",
-			Items: []*ec2.UnsuccessfulItem{
+			Items: []awstypes.UnsuccessfulItem{
 				{
-					Error: &ec2.UnsuccessfulItemError{
+					Error: &awstypes.UnsuccessfulItemError{
 						Code:    aws.String("test code"),
 						Message: aws.String("test message"),
 					},
 					ResourceId: aws.String("test resource 1"),
 				},
 				{
-					Error: &ec2.UnsuccessfulItemError{
+					Error: &awstypes.UnsuccessfulItemError{
 						Code:    aws.String("not what is required"),
 						Message: aws.String("not what is wanted"),
 					},
