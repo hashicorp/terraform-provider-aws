@@ -125,7 +125,7 @@ func resourceVPCPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 		input.PeerRegion = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 VPC Peering Connection: %s", input)
+	log.Printf("[DEBUG] Creating EC2 VPC Peering Connection: %#v", input)
 	output, err := conn.CreateVpcPeeringConnection(ctx, input)
 
 	if err != nil {
@@ -319,7 +319,7 @@ func modifyVPCPeeringConnectionOptions(ctx context.Context, conn *ec2.Client, d 
 		VpcPeeringConnectionId:            aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Modifying VPC Peering Connection Options: %s", input)
+	log.Printf("[DEBUG] Modifying VPC Peering Connection Options: %s", aws.ToString(input.VpcPeeringConnectionId))
 	if _, err := conn.ModifyVpcPeeringConnectionOptions(ctx, input); err != nil {
 		return fmt.Errorf("modifying EC2 VPC Peering Connection (%s) Options: %w", d.Id(), err)
 	}

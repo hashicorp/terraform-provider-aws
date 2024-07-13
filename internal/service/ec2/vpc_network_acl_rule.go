@@ -175,7 +175,7 @@ func resourceNetworkACLRuleCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Network ACL Rule: %s", input)
+	log.Printf("[DEBUG] Creating EC2 Network ACL Rule: %#v", input)
 	_, err = conn.CreateNetworkAclEntry(ctx, input)
 
 	if err != nil {

@@ -130,7 +130,7 @@ func networkACLAssociationCreate(ctx context.Context, conn *ec2.Client, naclID, 
 		NetworkAclId:  aws.String(naclID),
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Network ACL Association: %s", input)
+	log.Printf("[DEBUG] Creating EC2 Network ACL Association: %#v", input)
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return conn.ReplaceNetworkAclAssociation(ctx, input)
 	}, errCodeInvalidAssociationIDNotFound)

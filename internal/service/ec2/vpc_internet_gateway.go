@@ -74,7 +74,7 @@ func resourceInternetGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeInternetGateway),
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Internet Gateway: %s", input)
+	log.Printf("[DEBUG] Creating EC2 Internet Gateway: %#v", input)
 	output, err := conn.CreateInternetGateway(ctx, input)
 
 	if err != nil {
@@ -194,7 +194,7 @@ func attachInternetGateway(ctx context.Context, conn *ec2.Client, internetGatewa
 		VpcId:             aws.String(vpcID),
 	}
 
-	log.Printf("[INFO] Attaching EC2 Internet Gateway: %s", input)
+	log.Printf("[INFO] Attaching EC2 Internet Gateway: %#v", input)
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
 		return conn.AttachInternetGateway(ctx, input)
 	}, errCodeInvalidInternetGatewayIDNotFound)
@@ -218,7 +218,7 @@ func detachInternetGateway(ctx context.Context, conn *ec2.Client, internetGatewa
 		VpcId:             aws.String(vpcID),
 	}
 
-	log.Printf("[INFO] Detaching EC2 Internet Gateway: %s", input)
+	log.Printf("[INFO] Detaching EC2 Internet Gateway: %#v", input)
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
 		return conn.DetachInternetGateway(ctx, input)
 	}, errCodeDependencyViolation)

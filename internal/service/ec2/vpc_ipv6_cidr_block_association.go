@@ -104,7 +104,7 @@ func resourceVPCIPv6CIDRBlockAssociationCreate(ctx context.Context, d *schema.Re
 		input.Ipv6NetmaskLength = aws.Int32(int32(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 VPC IPv6 CIDR Block Association: %s", input)
+	log.Printf("[DEBUG] Creating EC2 VPC IPv6 CIDR Block Association: %#v", input)
 	output, err := conn.AssociateVpcCidrBlock(ctx, input)
 
 	if err != nil {

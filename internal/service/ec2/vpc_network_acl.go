@@ -438,7 +438,7 @@ func createNetworkACLEntries(ctx context.Context, conn *ec2.Client, naclID strin
 			RuleNumber:    naclEntry.RuleNumber,
 		}
 
-		log.Printf("[INFO] Creating EC2 Network ACL Entry: %s", input)
+		log.Printf("[INFO] Creating EC2 Network ACL Entry: %#v", input)
 		_, err := conn.CreateNetworkAclEntry(ctx, input)
 
 		if err != nil {
@@ -469,7 +469,7 @@ func deleteNetworkACLEntries(ctx context.Context, conn *ec2.Client, naclID strin
 			RuleNumber:   naclEntry.RuleNumber,
 		}
 
-		log.Printf("[INFO] Deleting EC2 Network ACL Entry: %s", input)
+		log.Printf("[INFO] Deleting EC2 Network ACL Entry: %#v", input)
 		_, err := conn.DeleteNetworkAclEntry(ctx, input)
 
 		if err != nil {

@@ -87,7 +87,7 @@ func resourceNetworkInterfaceSGAttachmentCreate(ctx context.Context, d *schema.R
 		Groups:             groupIDs,
 	}
 
-	log.Printf("[INFO] Modifying EC2 Network Interface: %s", input)
+	log.Printf("[INFO] Modifying EC2 Network Interface: %#v", input)
 	_, err = conn.ModifyNetworkInterfaceAttribute(ctx, input)
 
 	if err != nil {
@@ -172,7 +172,7 @@ func resourceNetworkInterfaceSGAttachmentDelete(ctx context.Context, d *schema.R
 		Groups:             groupIDs,
 	}
 
-	log.Printf("[INFO] Modifying EC2 Network Interface: %s", input)
+	log.Printf("[INFO] Modifying EC2 Network Interface: %#v", input)
 	_, err = conn.ModifyNetworkInterfaceAttribute(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInterfaceIDNotFound) {

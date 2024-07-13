@@ -197,7 +197,7 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 			input.Ipv6Native = aws.Bool(ipv6Native)
 		}
 
-		log.Printf("[DEBUG] Creating EC2 Default Subnet: %s", input)
+		log.Printf("[DEBUG] Creating EC2 Default Subnet: %#v", input)
 		output, err := conn.CreateDefaultSubnet(ctx, input)
 
 		if err != nil {

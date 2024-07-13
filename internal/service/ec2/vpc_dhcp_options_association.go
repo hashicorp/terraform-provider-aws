@@ -58,7 +58,7 @@ func resourceVPCDHCPOptionsAssociationPut(ctx context.Context, d *schema.Resourc
 		VpcId:         aws.String(vpcID),
 	}
 
-	log.Printf("[DEBUG] Creating EC2 VPC DHCP Options Set Association: %s", input)
+	log.Printf("[DEBUG] Creating EC2 VPC DHCP Options Set Association: %#v", input)
 	_, err := conn.AssociateDhcpOptions(ctx, input)
 
 	if err != nil {
