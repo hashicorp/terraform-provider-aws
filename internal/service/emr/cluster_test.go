@@ -9,9 +9,10 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -541,7 +542,7 @@ func TestAccEMRCluster_CoreInstanceGroup_name(t *testing.T) {
 func TestAccEMRCluster_EC2Attributes_defaultManagedSecurityGroups(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster emr.Cluster
-	var vpc ec2.Vpc
+	var vpc ec2types.Vpc
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_cluster.test"
@@ -557,7 +558,7 @@ func TestAccEMRCluster_EC2Attributes_defaultManagedSecurityGroups(t *testing.T) 
 				Config: testAccClusterConfig_ec2AttributesDefaultManagedSecurityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExistsV2(ctx, vpcResourceName, &vpc),
 				),
 			},
 			{
@@ -567,7 +568,7 @@ func TestAccEMRCluster_EC2Attributes_defaultManagedSecurityGroups(t *testing.T) 
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 					err := testAccDeleteManagedSecurityGroups(ctx, conn, &vpc)
 
@@ -1823,9 +1824,9 @@ func testAccCheckClusterRecreated(i, j *emr.Cluster) resource.TestCheckFunc {
 	}
 }
 
-func testAccDeleteManagedSecurityGroups(ctx context.Context, conn *ec2.EC2, vpc *ec2.Vpc) error {
+func testAccDeleteManagedSecurityGroups(ctx context.Context, conn *ec2.Client, vpc *ec2types.Vpc) error {
 	// Reference: https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-man-sec-groups.html
-	managedSecurityGroups := map[string]*ec2.SecurityGroup{
+	managedSecurityGroups := map[string]*ec2types.SecurityGroup{
 		"ElasticMapReduce-master": nil,
 		"ElasticMapReduce-slave":  nil,
 	}
@@ -1869,23 +1870,23 @@ func testAccDeleteManagedSecurityGroups(ctx context.Context, conn *ec2.EC2, vpc 
 	return nil
 }
 
-func testAccRevokeManagedSecurityGroup(ctx context.Context, conn *ec2.EC2, securityGroup *ec2.SecurityGroup) error {
+func testAccRevokeManagedSecurityGroup(ctx context.Context, conn *ec2.Client, securityGroup *ec2types.SecurityGroup) error {
 	input := &ec2.RevokeSecurityGroupIngressInput{
 		GroupId:       securityGroup.GroupId,
 		IpPermissions: securityGroup.IpPermissions,
 	}
 
-	_, err := conn.RevokeSecurityGroupIngressWithContext(ctx, input)
+	_, err := conn.RevokeSecurityGroupIngress(ctx, input)
 
 	return err
 }
 
-func testAccDeleteManagedSecurityGroup(ctx context.Context, conn *ec2.EC2, securityGroup *ec2.SecurityGroup) error {
+func testAccDeleteManagedSecurityGroup(ctx context.Context, conn *ec2.Client, securityGroup *ec2types.SecurityGroup) error {
 	input := &ec2.DeleteSecurityGroupInput{
 		GroupId: securityGroup.GroupId,
 	}
 
-	_, err := conn.DeleteSecurityGroupWithContext(ctx, input)
+	_, err := conn.DeleteSecurityGroup(ctx, input)
 
 	return err
 }
