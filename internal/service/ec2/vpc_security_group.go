@@ -982,7 +982,7 @@ func matchRules(rType string, local []interface{}, remote []map[string]interface
 		// matching against self is required to detect rules that only include self
 		// as the rule. SecurityGroupIPPermGather parses the group out
 		// and replaces it with self if it's ID is found
-		localHash := idHash(rType, l[names.AttrProtocol].(string), int64(l["to_port"].(int)), int64(l["from_port"].(int)), selfVal)
+		localHash := idHash(rType, l[names.AttrProtocol].(string), int32(l["to_port"].(int)), int32(l["from_port"].(int)), selfVal)
 
 		// loop remote rules, looking for a matching hash
 		for _, r := range remote {
@@ -993,7 +993,7 @@ func matchRules(rType string, local []interface{}, remote []map[string]interface
 
 			// hash this remote rule and compare it for a match consideration with the
 			// local rule we're examining
-			rHash := idHash(rType, r[names.AttrProtocol].(string), r["to_port"].(int64), r["from_port"].(int64), remoteSelfVal)
+			rHash := idHash(rType, r[names.AttrProtocol].(string), r["to_port"].(int32), r["from_port"].(int32), remoteSelfVal)
 			if rHash == localHash {
 				var numExpectedCidrs, numExpectedIpv6Cidrs, numExpectedPrefixLists, numExpectedSGs, numRemoteCidrs, numRemoteIpv6Cidrs, numRemotePrefixLists, numRemoteSGs int
 				var matchingCidrs []string
@@ -1310,7 +1310,7 @@ func securityGroupCollapseRules(ruleset string, rules []interface{}) []interface
 	for _, rule := range rules {
 		r := rule.(map[string]interface{})
 
-		ruleHash := idCollapseHash(ruleset, r[names.AttrProtocol].(string), int64(r["to_port"].(int)), int64(r["from_port"].(int)), r[names.AttrDescription].(string))
+		ruleHash := idCollapseHash(ruleset, r[names.AttrProtocol].(string), int32(r["to_port"].(int)), int32(r["from_port"].(int)), r[names.AttrDescription].(string))
 
 		if _, ok := collapsed[ruleHash]; ok {
 			if v, ok := r["self"]; ok && v.(bool) {
@@ -1431,7 +1431,7 @@ func securityGroupExpandRules(rules *schema.Set) *schema.Set {
 
 // Convert type-to_port-from_port-protocol-description tuple
 // to a hash to use as a key in Set.
-func idCollapseHash(rType, protocol string, toPort, fromPort int64, description string) string {
+func idCollapseHash(rType, protocol string, toPort, fromPort int32, description string) string {
 	var buf bytes.Buffer
 	buf.WriteString(fmt.Sprintf("%s-", rType))
 	buf.WriteString(fmt.Sprintf("%d-", toPort))
@@ -1444,7 +1444,7 @@ func idCollapseHash(rType, protocol string, toPort, fromPort int64, description 
 
 // Creates a unique hash for the type, ports, and protocol, used as a key in
 // maps
-func idHash(rType, protocol string, toPort, fromPort int64, self bool) string {
+func idHash(rType, protocol string, toPort, fromPort int32, self bool) string {
 	var buf bytes.Buffer
 	buf.WriteString(fmt.Sprintf("%s-", rType))
 	buf.WriteString(fmt.Sprintf("%d-", toPort))
