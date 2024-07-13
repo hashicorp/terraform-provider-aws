@@ -10,11 +10,12 @@ var (
 	DetachNetworkInterface                                         = detachNetworkInterface
 	FindImageByID                                                  = findImageByID
 	FindInstanceByID                                               = findInstanceByID
+	FindNetworkInterfaces                                          = findNetworkInterfaces
 	FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription = findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription
-	FindNetworkInterfacesV2                                        = findNetworkInterfaces
 	FindSecurityGroupByDescriptionAndVPCID                         = findSecurityGroupByDescriptionAndVPCID
 	FindSecurityGroupByNameAndVPCID                                = findSecurityGroupByNameAndVPCID
 	FindSecurityGroupByNameAndVPCIDAndOwnerID                      = findSecurityGroupByNameAndVPCIDAndOwnerID
+	FindSecurityGroups                                             = findSecurityGroups
 	FindSubnetByID                                                 = findSubnetByID
 	FindVPCByIDV2                                                  = findVPCByID
 	FindVPCEndpointByID                                            = findVPCEndpointByID
