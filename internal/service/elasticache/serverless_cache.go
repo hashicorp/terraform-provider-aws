@@ -195,15 +195,9 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 								Attributes: map[string]schema.Attribute{
 									"maximum": schema.Int64Attribute{
 										Optional: true,
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.RequiresReplace(),
-										},
 									},
 									"minimum": schema.Int64Attribute{
 										Optional: true,
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.RequiresReplace(),
-										},
 									},
 									names.AttrUnit: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.DataStorageUnit](),
@@ -224,17 +218,11 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 										Validators: []validator.Int64{
 											int64validator.Between(1000, 15000000),
 										},
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.RequiresReplace(),
-										},
 									},
 									"minimum": schema.Int64Attribute{
 										Optional: true,
 										Validators: []validator.Int64{
 											int64validator.Between(1000, 15000000),
-										},
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.RequiresReplace(),
 										},
 									},
 								},

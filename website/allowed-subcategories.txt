@@ -5,8 +5,6 @@ AMP (Managed Prometheus)
 API Gateway
 API Gateway V2
 Account Management
-Agents for Amazon Bedrock
-Amazon Bedrock
 Amazon Q Business
 Amplify
 App Mesh
@@ -18,6 +16,7 @@ AppIntegrations
 AppStream 2.0
 AppSync
 Application Auto Scaling
+Application Signals
 Athena
 Audit Manager
 Auto Scaling
@@ -25,6 +24,8 @@ Auto Scaling Plans
 BCM Data Exports
 Backup
 Batch
+Bedrock
+Bedrock Agents
 CE (Cost Explorer)
 Chatbot
 Chime
@@ -45,6 +46,7 @@ CloudWatch Application Insights
 CloudWatch Evidently
 CloudWatch Internet Monitor
 CloudWatch Logs
+CloudWatch Network Monitor
 CloudWatch Observability Access Manager
 CloudWatch RUM
 CloudWatch Synthetics
@@ -119,6 +121,7 @@ FinSpace
 GameLift
 Global Accelerator
 Glue
+Glue DataBrew
 Ground Station
 GuardDuty
 HealthLake

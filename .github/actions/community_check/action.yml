@@ -1,0 +1,53 @@
+name: Community Check
+description: Check a username against our lists of groups within the community
+
+inputs:
+  user_login:
+    description: The GitHub username to check
+    required: true
+
+  core_contributors:
+    description: The base64 encoded list of Core Contributors
+    required: false
+
+  maintainers:
+    description: The base64 encoded list of maintainers
+    required: false
+
+  partners:
+    description: The base64 encoded list of partners
+    required: false
+
+outputs:
+  core_contributor:
+    description: Whether the user is a Core Contributor
+    value: ${{ steps.core_contributor.outputs.check }}
+
+  maintainer:
+    description: Whether the user is a maintainer
+    value: ${{ steps.maintainer.outputs.check }}
+
+  partner:
+    description: Whether the user is a partner
+    value: ${{ steps.partner.outputs.check }}
+
+runs:
+  using: composite
+  steps:
+    - name: Core Contributor
+      id: core_contributor
+      if: inputs.core_contributors != ''
+      shell: bash
+      run: echo "check=$(echo $INPUT_CORE_CONTRIBUTORS | base64 --decode | jq --arg u $INPUT_USER_LOGIN '. | contains([$u])')" >> "$GITHUB_OUTPUT"
+
+    - name: Maintainers
+      id: maintainer
+      if: inputs.maintainers != ''
+      shell: bash
+      run: echo "check=$(echo $INPUT_MAINTAINERS | base64 --decode | jq --arg u $INPUT_USER_LOGIN '. | contains([$u])')" >> "$GITHUB_OUTPUT"
+
+    - name: Partners
+      id: partner
+      if: inputs.partners != ''
+      shell: bash
+      run: echo "check=$(echo $INPUT_PARTNERS | base64 --decode | jq --arg u $INPUT_USER_LOGIN '. | contains([$u])')" >> "$GITHUB_OUTPUT"

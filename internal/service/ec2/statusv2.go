@@ -220,6 +220,38 @@ func statusInstanceRootBlockDeviceDeleteOnTermination(ctx context.Context, conn 
 	}
 }
 
+func statusLocalGatewayRoute(ctx context.Context, conn *ec2.Client, localGatewayRouteTableID, destinationCIDRBlock string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findLocalGatewayRouteByTwoPartKey(ctx, conn, localGatewayRouteTableID, destinationCIDRBlock)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusLocalGatewayRouteTableVPCAssociation(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findLocalGatewayRouteTableVPCAssociationByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.State), nil
+	}
+}
+
 func statusPlacementGroup(ctx context.Context, conn *ec2.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findPlacementGroupByName(ctx, conn, name)

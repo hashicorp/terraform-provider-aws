@@ -171,6 +171,7 @@ This resource supports the following arguments:
 * `airflowConfigurationOptions` - (Optional) The `airflowConfigurationOptions` parameter specifies airflow override options. Check the [Official documentation](https://docs.aws.amazon.com/mwaa/latest/userguide/configuring-env-variables.html#configuring-env-variables-reference) for all possible configuration options.
 * `airflowVersion` - (Optional) Airflow version of your environment, will be set by default to the latest version that MWAA supports.
 * `dagS3Path` - (Required) The relative path to the DAG folder on your Amazon S3 storage bucket. For example, dags. For more information, see [Importing DAGs on Amazon MWAA](https://docs.aws.amazon.com/mwaa/latest/userguide/configuring-dag-import.html).
+* `endpointManagement` - (Optional) Defines whether the VPC endpoints configured for the environment are created and managed by the customer or by AWS. If set to `SERVICE`, Amazon MWAA will create and manage the required VPC endpoints in your VPC. If set to `CUSTOMER`, you must create, and manage, the VPC endpoints for your VPC. Defaults to `SERVICE` if not set.
 * `environmentClass` - (Optional) Environment class for the cluster. Possible options are `mw1.small`, `mw1.medium`, `mw1.large`. Will be set by default to `mw1.small`. Please check the [AWS Pricing](https://aws.amazon.com/de/managed-workflows-for-apache-airflow/pricing/) for more information about the environment classes.
 * `executionRoleArn` - (Required) The Amazon Resource Name (ARN) of the task execution role that the Amazon MWAA and its environment can assume. Check the [official AWS documentation](https://docs.aws.amazon.com/mwaa/latest/userguide/mwaa-create-role.html) for the detailed role specification.
 * `kmsKey` - (Optional) The Amazon Resource Name (ARN) of your KMS key that you want to use for encryption. Will be set to the ARN of the managed KMS key `aws/airflow` by default. Please check the [Official Documentation](https://docs.aws.amazon.com/mwaa/latest/userguide/custom-keys-certs.html) for more information.
@@ -269,4 +270,4 @@ Using `terraform import`, import MWAA Environment using `Name`. For example:
 % terraform import aws_mwaa_environment.example MyAirflowEnvironment
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f3032b5c334354869ce0492d3bfd6d449896c7d74ae6a29ae1886460b06c798a -->
+<!-- cache-key: cdktf-0.20.1 input-f69431a66584f3b7ce44897f9170d4fef55abb535800b273825f8f8a097d9b8f -->
