@@ -12,13 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -61,18 +61,18 @@ func resourceOpenZFSVolume() *schema.Resource {
 				ForceNew: true,
 			},
 			"data_compression_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      awstypes.OpenZFSDataCompressionTypeNone,
-				ValidateFunc: enum.Validate[awstypes.OpenZFSDataCompressionType](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.OpenZFSDataCompressionTypeNone,
+				ValidateDiagFunc: enum.Validate[awstypes.OpenZFSDataCompressionType](),
 			},
 			"delete_volume_options": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: enum.Validate[awstypes.DeleteFileSystemOpenZFSOption](),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[awstypes.DeleteFileSystemOpenZFSOption](),
 				},
 			},
 			names.AttrName: {
@@ -124,9 +124,9 @@ func resourceOpenZFSVolume() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"copy_strategy": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: enum.Validate[awstypes.OpenZFSCopyStrategy](),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.OpenZFSCopyStrategy](),
 						},
 						"snapshot_arn": {
 							Type:     schema.TypeString,
@@ -188,9 +188,9 @@ func resourceOpenZFSVolume() *schema.Resource {
 							ValidateFunc: validation.IntBetween(0, 2147483647),
 						},
 						names.AttrType: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: enum.Validate[awstypes.OpenZFSQuotaType](),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.OpenZFSQuotaType](),
 						},
 					},
 				},
@@ -198,11 +198,11 @@ func resourceOpenZFSVolume() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrVolumeType: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      awstypes.VolumeTypeOpenzfs,
-				ValidateFunc: enum.Validate[awstypes.VolumeType](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.VolumeTypeOpenzfs,
+				ValidateDiagFunc: enum.Validate[awstypes.VolumeType](),
 			},
 		},
 
@@ -223,7 +223,7 @@ func resourceOpenZFSVolumeCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if v, ok := d.GetOk("data_compression_type"); ok {
-		openzfsConfig.DataCompressionType = awstypes.DataCompressionType(v.(string))
+		openzfsConfig.DataCompressionType = awstypes.OpenZFSDataCompressionType(v.(string))
 	}
 
 	if v, ok := d.GetOk("nfs_exports"); ok {
@@ -239,15 +239,15 @@ func resourceOpenZFSVolumeCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if v, ok := d.GetOk("record_size_kib"); ok {
-		openzfsConfig.RecordSizeKiB = aws.Int64(int64(v.(int)))
+		openzfsConfig.RecordSizeKiB = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("storage_capacity_quota_gib"); ok {
-		openzfsConfig.StorageCapacityQuotaGiB = aws.Int64(int64(v.(int)))
+		openzfsConfig.StorageCapacityQuotaGiB = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("storage_capacity_reservation_gib"); ok {
-		openzfsConfig.StorageCapacityReservationGiB = aws.Int64(int64(v.(int)))
+		openzfsConfig.StorageCapacityReservationGiB = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("user_and_group_quotas"); ok {
@@ -260,7 +260,7 @@ func resourceOpenZFSVolumeCreate(ctx context.Context, d *schema.ResourceData, me
 		Name:                 aws.String(name),
 		OpenZFSConfiguration: openzfsConfig,
 		Tags:                 getTagsIn(ctx),
-		VolumeType:           aws.String(d.Get(names.AttrVolumeType).(string)),
+		VolumeType:           awstypes.VolumeType(d.Get(names.AttrVolumeType).(string)),
 	}
 
 	output, err := conn.CreateVolume(ctx, input)
@@ -329,7 +329,7 @@ func resourceOpenZFSVolumeUpdate(ctx context.Context, d *schema.ResourceData, me
 		openzfsConfig := &awstypes.UpdateOpenZFSVolumeConfiguration{}
 
 		if d.HasChange("data_compression_type") {
-			openzfsConfig.DataCompressionType = awstypes.DataCompressionType(d.Get("data_compression_type").(string))
+			openzfsConfig.DataCompressionType = awstypes.OpenZFSDataCompressionType(d.Get("data_compression_type").(string))
 		}
 
 		if d.HasChange("nfs_exports") {
@@ -341,15 +341,15 @@ func resourceOpenZFSVolumeUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if d.HasChange("record_size_kib") {
-			openzfsConfig.RecordSizeKiB = aws.Int64(int64(d.Get("record_size_kib").(int)))
+			openzfsConfig.RecordSizeKiB = aws.Int32(int32(d.Get("record_size_kib").(int)))
 		}
 
 		if d.HasChange("storage_capacity_quota_gib") {
-			openzfsConfig.StorageCapacityQuotaGiB = aws.Int64(int64(d.Get("storage_capacity_quota_gib").(int)))
+			openzfsConfig.StorageCapacityQuotaGiB = aws.Int32(int32(d.Get("storage_capacity_quota_gib").(int)))
 		}
 
 		if d.HasChange("storage_capacity_reservation_gib") {
-			openzfsConfig.StorageCapacityReservationGiB = aws.Int64(int64(d.Get("storage_capacity_reservation_gib").(int)))
+			openzfsConfig.StorageCapacityReservationGiB = aws.Int32(int32(d.Get("storage_capacity_reservation_gib").(int)))
 		}
 
 		if d.HasChange("user_and_group_quotas") {
@@ -395,14 +395,14 @@ func resourceOpenZFSVolumeDelete(ctx context.Context, d *schema.ResourceData, me
 
 	if v, ok := d.GetOk("delete_volume_options"); ok && len(v.([]interface{})) > 0 {
 		input.OpenZFSConfiguration = &awstypes.DeleteVolumeOpenZFSConfiguration{
-			Options: flex.ExpandStringList(v.([]interface{})),
+			Options: flex.ExpandStringyValueList[awstypes.DeleteOpenZFSVolumeOption](v.([]interface{})),
 		}
 	}
 
 	log.Printf("[DEBUG] Deleting FSx for OpenZFS Volume: %s", d.Id())
 	_, err := conn.DeleteVolume(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeVolumeNotFound) {
+	if errs.IsA[*awstypes.VolumeNotFound](err) {
 		return diags
 	}
 
@@ -417,13 +417,13 @@ func resourceOpenZFSVolumeDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func expandOpenZFSUserOrGroupQuotas(cfg []interface{}) []*awstypes.OpenZFSUserOrGroupQuota {
-	quotas := []*awstypes.OpenZFSUserOrGroupQuota{}
+func expandOpenZFSUserOrGroupQuotas(cfg []interface{}) []awstypes.OpenZFSUserOrGroupQuota {
+	quotas := []awstypes.OpenZFSUserOrGroupQuota{}
 
 	for _, quota := range cfg {
 		expandedQuota := expandOpenZFSUserOrGroupQuota(quota.(map[string]interface{}))
 		if expandedQuota != nil {
-			quotas = append(quotas, expandedQuota)
+			quotas = append(quotas, *expandedQuota)
 		}
 	}
 
@@ -438,27 +438,27 @@ func expandOpenZFSUserOrGroupQuota(conf map[string]interface{}) *awstypes.OpenZF
 	out := awstypes.OpenZFSUserOrGroupQuota{}
 
 	if v, ok := conf[names.AttrID].(int); ok {
-		out.Id = aws.Int64(int64(v))
+		out.Id = aws.Int32(int32(v))
 	}
 
 	if v, ok := conf["storage_capacity_quota_gib"].(int); ok {
-		out.StorageCapacityQuotaGiB = aws.Int64(int64(v))
+		out.StorageCapacityQuotaGiB = aws.Int32(int32(v))
 	}
 
 	if v, ok := conf[names.AttrType].(string); ok {
-		out.Type = aws.String(v)
+		out.Type = awstypes.OpenZFSQuotaType(v)
 	}
 
 	return &out
 }
 
-func expandOpenZFSNfsExports(cfg []interface{}) []*awstypes.OpenZFSNfsExport { // nosemgrep:ci.caps4-in-func-name
-	exports := []*awstypes.OpenZFSNfsExport{}
+func expandOpenZFSNfsExports(cfg []interface{}) []awstypes.OpenZFSNfsExport { // nosemgrep:ci.caps4-in-func-name
+	exports := []awstypes.OpenZFSNfsExport{}
 
 	for _, export := range cfg {
 		expandedExport := expandOpenZFSNfsExport(export.(map[string]interface{}))
 		if expandedExport != nil {
-			exports = append(exports, expandedExport)
+			exports = append(exports, *expandedExport)
 		}
 	}
 
@@ -475,13 +475,13 @@ func expandOpenZFSNfsExport(cfg map[string]interface{}) *awstypes.OpenZFSNfsExpo
 	return &out
 }
 
-func expandOpenZFSClientConfigurations(cfg []interface{}) []*awstypes.OpenZFSClientConfiguration {
-	configurations := []*awstypes.OpenZFSClientConfiguration{}
+func expandOpenZFSClientConfigurations(cfg []interface{}) []awstypes.OpenZFSClientConfiguration {
+	configurations := []awstypes.OpenZFSClientConfiguration{}
 
 	for _, configuration := range cfg {
 		expandedConfiguration := expandOpenZFSClientConfiguration(configuration.(map[string]interface{}))
 		if expandedConfiguration != nil {
-			configurations = append(configurations, expandedConfiguration)
+			configurations = append(configurations, *expandedConfiguration)
 		}
 	}
 
@@ -496,7 +496,7 @@ func expandOpenZFSClientConfiguration(conf map[string]interface{}) *awstypes.Ope
 	}
 
 	if v, ok := conf["options"].([]interface{}); ok {
-		out.Options = flex.ExpandStringList(v)
+		out.Options = flex.ExpandStringValueList(v)
 	}
 
 	return &out
@@ -512,7 +512,7 @@ func expandCreateOpenZFSOriginSnapshotConfiguration(cfg []interface{}) *awstypes
 	out := awstypes.CreateOpenZFSOriginSnapshotConfiguration{}
 
 	if v, ok := conf["copy_strategy"].(string); ok {
-		out.CopyStrategy = aws.String(v)
+		out.CopyStrategy = awstypes.OpenZFSCopyStrategy(v)
 	}
 
 	if v, ok := conf["snapshot_arn"].(string); ok {
@@ -522,15 +522,13 @@ func expandCreateOpenZFSOriginSnapshotConfiguration(cfg []interface{}) *awstypes
 	return &out
 }
 
-func flattenOpenZFSNfsExports(rs []*awstypes.OpenZFSNfsExport) []map[string]interface{} { // nosemgrep:ci.caps4-in-func-name
+func flattenOpenZFSNfsExports(rs []awstypes.OpenZFSNfsExport) []map[string]interface{} { // nosemgrep:ci.caps4-in-func-name
 	exports := make([]map[string]interface{}, 0)
 
 	for _, export := range rs {
-		if export != nil {
-			cfg := make(map[string]interface{})
-			cfg["client_configurations"] = flattenOpenZFSClientConfigurations(export.ClientConfigurations)
-			exports = append(exports, cfg)
-		}
+		cfg := make(map[string]interface{})
+		cfg["client_configurations"] = flattenOpenZFSClientConfigurations(export.ClientConfigurations)
+		exports = append(exports, cfg)
 	}
 
 	if len(exports) > 0 {
@@ -540,16 +538,14 @@ func flattenOpenZFSNfsExports(rs []*awstypes.OpenZFSNfsExport) []map[string]inte
 	return nil
 }
 
-func flattenOpenZFSClientConfigurations(rs []*awstypes.OpenZFSClientConfiguration) []map[string]interface{} {
+func flattenOpenZFSClientConfigurations(rs []awstypes.OpenZFSClientConfiguration) []map[string]interface{} {
 	configurations := make([]map[string]interface{}, 0)
 
 	for _, configuration := range rs {
-		if configuration != nil {
-			cfg := make(map[string]interface{})
-			cfg["clients"] = aws.ToString(configuration.Clients)
-			cfg["options"] = flex.FlattenStringList(configuration.Options)
-			configurations = append(configurations, cfg)
-		}
+		cfg := make(map[string]interface{})
+		cfg["clients"] = aws.ToString(configuration.Clients)
+		cfg["options"] = flex.FlattenStringValueList(configuration.Options)
+		configurations = append(configurations, cfg)
 	}
 
 	if len(configurations) > 0 {
@@ -559,17 +555,15 @@ func flattenOpenZFSClientConfigurations(rs []*awstypes.OpenZFSClientConfiguratio
 	return nil
 }
 
-func flattenOpenZFSUserOrGroupQuotas(rs []*awstypes.OpenZFSUserOrGroupQuota) []map[string]interface{} {
+func flattenOpenZFSUserOrGroupQuotas(rs []awstypes.OpenZFSUserOrGroupQuota) []map[string]interface{} {
 	quotas := make([]map[string]interface{}, 0)
 
 	for _, quota := range rs {
-		if quota != nil {
-			cfg := make(map[string]interface{})
-			cfg[names.AttrID] = aws.ToInt64(quota.Id)
-			cfg["storage_capacity_quota_gib"] = aws.ToInt64(quota.StorageCapacityQuotaGiB)
-			cfg[names.AttrType] = aws.ToString(quota.Type)
-			quotas = append(quotas, cfg)
-		}
+		cfg := make(map[string]interface{})
+		cfg[names.AttrID] = aws.ToInt32(quota.Id)
+		cfg["storage_capacity_quota_gib"] = aws.ToInt32(quota.StorageCapacityQuotaGiB)
+		cfg[names.AttrType] = string(quota.Type)
+		quotas = append(quotas, cfg)
 	}
 
 	if len(quotas) > 0 {
@@ -585,9 +579,7 @@ func flattenOpenZFSOriginSnapshotConfiguration(rs *awstypes.OpenZFSOriginSnapsho
 	}
 
 	m := make(map[string]interface{})
-	if rs.CopyStrategy != nil {
-		m["copy_strategy"] = aws.ToString(rs.CopyStrategy)
-	}
+	m["copy_strategy"] = string(rs.CopyStrategy)
 	if rs.SnapshotARN != nil {
 		m["snapshot_arn"] = aws.ToString(rs.SnapshotARN)
 	}
