@@ -1124,7 +1124,7 @@ func sweepInternetGateways(region string) error {
 				continue
 			}
 
-			r := ResourceInternetGateway()
+			r := resourceInternetGateway()
 			d := r.Data(nil)
 			d.SetId(internetGatewayID)
 			if len(internetGateway.Attachments) > 0 {
@@ -1247,7 +1247,7 @@ func sweepNATGateways(region string) error {
 		}
 
 		for _, v := range page.NatGateways {
-			r := ResourceNATGateway()
+			r := resourceNATGateway()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.NatGatewayId))
 
@@ -1819,7 +1819,7 @@ func sweepSubnets(region string) error {
 				continue
 			}
 
-			r := ResourceSubnet()
+			r := resourceSubnet()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.SubnetId))
 
@@ -2282,7 +2282,7 @@ func sweepVPCDHCPOptions(region string) error {
 				continue
 			}
 
-			r := ResourceVPCDHCPOptions()
+			r := resourceVPCDHCPOptions()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.DhcpOptionsId))
 
@@ -2475,7 +2475,7 @@ func sweepVPCPeeringConnections(region string) error {
 		}
 
 		for _, v := range page.VpcPeeringConnections {
-			r := ResourceVPCPeeringConnection()
+			r := resourceVPCPeeringConnection()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.VpcPeeringConnectionId))
 
@@ -2523,7 +2523,7 @@ func sweepVPCs(region string) error {
 				continue
 			}
 
-			r := ResourceVPC()
+			r := resourceVPC()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.VpcId))
 
@@ -2837,7 +2837,7 @@ func sweepNetworkPerformanceMetricSubscriptions(region string) error {
 		}
 
 		for _, v := range page.Subscriptions {
-			r := ResourceNetworkPerformanceMetricSubscription()
+			r := resourceNetworkPerformanceMetricSubscription()
 			id := NetworkPerformanceMetricSubscriptionCreateResourceID(aws.ToString(v.Source), aws.ToString(v.Destination), string(v.Metric), string(v.Statistic))
 			d := r.Data(nil)
 			d.SetId(id)
@@ -2967,7 +2967,7 @@ func sweepVerifiedAccessGroups(region string) error {
 		}
 
 		for _, v := range page.VerifiedAccessGroups {
-			r := ResourceVerifiedAccessGroup()
+			r := resourceVerifiedAccessGroup()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.VerifiedAccessGroupId))
 
