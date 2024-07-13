@@ -123,7 +123,6 @@ func sweepClusters(region string) error {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting ElastiCache Cache Cluster (%s): waiting for completion: %w", id, err))
 			}
 		}
-
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -173,7 +172,6 @@ func sweepGlobalReplicationGroups(region string) error {
 				return err
 			})
 		}
-
 	}
 
 	grgErrs = multierror.Append(grgErrs, grgGroup.Wait())
