@@ -820,7 +820,7 @@ func sweepEgressOnlyInternetGateways(region string) error {
 		}
 
 		for _, v := range page.EgressOnlyInternetGateways {
-			r := ResourceEgressOnlyInternetGateway()
+			r := resourceEgressOnlyInternetGateway()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.EgressOnlyInternetGatewayId))
 
@@ -952,7 +952,7 @@ func sweepFlowLogs(region string) error {
 		}
 
 		for _, flowLog := range page.FlowLogs {
-			r := ResourceFlowLog()
+			r := resourceFlowLog()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(flowLog.FlowLogId))
 
@@ -1393,7 +1393,7 @@ func sweepManagedPrefixLists(region string) error {
 				continue
 			}
 
-			r := ResourceManagedPrefixList()
+			r := resourceManagedPrefixList()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.PrefixListId))
 
