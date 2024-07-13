@@ -301,7 +301,7 @@ func testAccCheckDefaultNetworkACLExists(ctx context.Context, n string, v *types
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindNetworkACLByIDV2(ctx, conn, rs.Primary.ID)
+		output, err := tfec2.FindNetworkACLByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
