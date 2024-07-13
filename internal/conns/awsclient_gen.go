@@ -209,7 +209,6 @@ import (
 	datapipeline_sdkv1 "github.com/aws/aws-sdk-go/service/datapipeline"
 	detective_sdkv1 "github.com/aws/aws-sdk-go/service/detective"
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
-	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
 	elasticache_sdkv1 "github.com/aws/aws-sdk-go/service/elasticache"
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
@@ -587,10 +586,6 @@ func (c *AWSClient) DocDBElasticClient(ctx context.Context) *docdbelastic_sdkv2.
 
 func (c *AWSClient) DynamoDBClient(ctx context.Context) *dynamodb_sdkv2.Client {
 	return errs.Must(client[*dynamodb_sdkv2.Client](ctx, c, names.DynamoDB, make(map[string]any)))
-}
-
-func (c *AWSClient) EC2Conn(ctx context.Context) *ec2_sdkv1.EC2 {
-	return errs.Must(conn[*ec2_sdkv1.EC2](ctx, c, names.EC2, make(map[string]any)))
 }
 
 func (c *AWSClient) EC2Client(ctx context.Context) *ec2_sdkv2.Client {
