@@ -2494,32 +2494,7 @@ resource "aws_subnet" "test" {
 	)
 }
 
-func CheckVPCExists(ctx context.Context, n string, v *ec2.Vpc) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no VPC ID is set")
-		}
-
-		conn := Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
-
-		output, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
-	}
-}
-
-func CheckVPCExistsV2(ctx context.Context, n string, v *ec2types.Vpc) resource.TestCheckFunc {
+func CheckVPCExists(ctx context.Context, n string, v *ec2types.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -2532,7 +2507,7 @@ func CheckVPCExistsV2(ctx context.Context, n string, v *ec2types.Vpc) resource.T
 
 		conn := Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindVPCByIDV2(ctx, conn, rs.Primary.ID)
+		output, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -208,8 +208,8 @@ func TestAccSiteVPNGateway_reattach(t *testing.T) {
 			{
 				Config: testAccSiteVPNGatewayConfig_reattach(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName1, &vpc1),
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName2, &vpc2),
+					acctest.CheckVPCExists(ctx, vpcResourceName1, &vpc1),
+					acctest.CheckVPCExists(ctx, vpcResourceName2, &vpc2),
 					testAccCheckVPNGatewayExists(ctx, resourceName1, &vgw1),
 					testAccCheckVPNGatewayExists(ctx, resourceName2, &vgw2),
 					testAttachmentFunc(&vgw1, &vpc1),

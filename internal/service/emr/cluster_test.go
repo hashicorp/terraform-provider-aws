@@ -558,7 +558,7 @@ func TestAccEMRCluster_EC2Attributes_defaultManagedSecurityGroups(t *testing.T) 
 				Config: testAccClusterConfig_ec2AttributesDefaultManagedSecurityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 				),
 			},
 			{
