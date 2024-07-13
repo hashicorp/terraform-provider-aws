@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_endpoint_subnet_association")
-func ResourceVPCEndpointSubnetAssociation() *schema.Resource {
+// @SDKResource("aws_vpc_endpoint_subnet_association", name="VPC Endpoint Subnet Association")
+func resourceVPCEndpointSubnetAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointSubnetAssociationCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointSubnetAssociationRead,
