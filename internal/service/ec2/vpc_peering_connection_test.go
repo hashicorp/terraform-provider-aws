@@ -10,8 +10,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -25,7 +26,7 @@ import (
 
 func TestAccVPCPeeringConnection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.VpcPeeringConnection
+	var v awstypes.VpcPeeringConnection
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection.test"
 
@@ -56,7 +57,7 @@ func TestAccVPCPeeringConnection_basic(t *testing.T) {
 
 func TestAccVPCPeeringConnection_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.VpcPeeringConnection
+	var v awstypes.VpcPeeringConnection
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection.test"
 
@@ -80,7 +81,7 @@ func TestAccVPCPeeringConnection_disappears(t *testing.T) {
 
 func TestAccVPCPeeringConnection_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.VpcPeeringConnection
+	var v awstypes.VpcPeeringConnection
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection.test"
 
@@ -129,17 +130,17 @@ func TestAccVPCPeeringConnection_tags(t *testing.T) {
 
 func TestAccVPCPeeringConnection_options(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.VpcPeeringConnection
+	var v awstypes.VpcPeeringConnection
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection.test"
 
 	testAccepterChange := func(*terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 		log.Printf("[DEBUG] Test change to the VPC Peering Connection Options.")
 
-		_, err := conn.ModifyVpcPeeringConnectionOptionsWithContext(ctx, &ec2.ModifyVpcPeeringConnectionOptionsInput{
+		_, err := conn.ModifyVpcPeeringConnectionOptions(ctx, &ec2.ModifyVpcPeeringConnectionOptionsInput{
 			VpcPeeringConnectionId: v.VpcPeeringConnectionId,
-			AccepterPeeringConnectionOptions: &ec2.PeeringConnectionOptionsRequest{
+			AccepterPeeringConnectionOptions: &awstypes.PeeringConnectionOptionsRequest{
 				AllowDnsResolutionFromRemoteVpc: aws.Bool(false),
 			},
 		})
@@ -268,7 +269,7 @@ func TestAccVPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
 
 func TestAccVPCPeeringConnection_region(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.VpcPeeringConnection
+	var v awstypes.VpcPeeringConnection
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection.test"
 
@@ -301,7 +302,7 @@ func TestAccVPCPeeringConnection_region(t *testing.T) {
 // Tests the peering connection acceptance functionality for same region, same account.
 func TestAccVPCPeeringConnection_accept(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.VpcPeeringConnection
+	var v awstypes.VpcPeeringConnection
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection.test"
 
@@ -384,7 +385,7 @@ func TestAccVPCPeeringConnection_optionsNoAutoAccept(t *testing.T) {
 
 func testAccCheckVPCPeeringConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_peering_connection" {
@@ -408,11 +409,11 @@ func testAccCheckVPCPeeringConnectionDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccCheckVPCPeeringConnectionExists(ctx context.Context, n string, v *ec2.VpcPeeringConnection) resource.TestCheckFunc {
+func testAccCheckVPCPeeringConnectionExists(ctx context.Context, n string, v *awstypes.VpcPeeringConnection) resource.TestCheckFunc {
 	return testAccCheckVPCPeeringConnectionExistsWithProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
 }
 
-func testAccCheckVPCPeeringConnectionExistsWithProvider(ctx context.Context, n string, v *ec2.VpcPeeringConnection, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckVPCPeeringConnectionExistsWithProvider(ctx context.Context, n string, v *awstypes.VpcPeeringConnection, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -423,7 +424,7 @@ func testAccCheckVPCPeeringConnectionExistsWithProvider(ctx context.Context, n s
 			return fmt.Errorf("No EC2 VPC Peering Connection ID is set.")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := providerF().Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindVPCPeeringConnectionByID(ctx, conn, rs.Primary.ID)
 
