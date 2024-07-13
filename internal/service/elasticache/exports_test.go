@@ -42,3 +42,7 @@ var (
 	ValidMemcachedVersionString               = validMemcachedVersionString
 	ValidRedisVersionString                   = validRedisVersionString
 )
+
+type (
+	VersionDiff = versionDiff
+)

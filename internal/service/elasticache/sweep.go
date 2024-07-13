@@ -165,7 +165,7 @@ func sweepGlobalReplicationGroups(region string) error {
 			grgGroup.Go(func() error {
 				id := aws.ToString(globalReplicationGroup.GlobalReplicationGroupId)
 
-				disassociationErrors := DisassociateMembers(ctx, conn, globalReplicationGroup)
+				disassociationErrors := disassociateMembers(ctx, conn, globalReplicationGroup)
 				if disassociationErrors != nil {
 					return fmt.Errorf("disassociating ElastiCache Global Replication Group (%s) members: %w", id, disassociationErrors)
 				}
@@ -415,7 +415,7 @@ func sweepUserGroups(region string) error {
 	return nil
 }
 
-func DisassociateMembers(ctx context.Context, conn *elasticache.Client, globalReplicationGroup awstypes.GlobalReplicationGroup) error {
+func disassociateMembers(ctx context.Context, conn *elasticache.Client, globalReplicationGroup awstypes.GlobalReplicationGroup) error {
 	var membersGroup multierror.Group
 
 	for _, member := range globalReplicationGroup.Members {
