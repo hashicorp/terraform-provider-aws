@@ -96,6 +96,7 @@ var (
 	ResourceTransitGatewayRouteTablePropagation      = resourceTransitGatewayRouteTablePropagation
 	ResourceTransitGatewayVPCAttachment              = resourceTransitGatewayVPCAttachment
 	ResourceTransitGatewayVPCAttachmentAccepter      = resourceTransitGatewayVPCAttachmentAccepter
+	ResourceVerifiedAccessEndpoint                   = resourceVerifiedAccessEndpoint
 	ResourceVerifiedAccessGroup                      = resourceVerifiedAccessGroup
 	ResourceVPC                                      = resourceVPC
 	ResourceVPCDHCPOptions                           = resourceVPCDHCPOptions

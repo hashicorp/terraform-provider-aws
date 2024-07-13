@@ -2924,7 +2924,7 @@ func sweepVerifiedAccessEndpoints(region string) error {
 		}
 
 		for _, v := range page.VerifiedAccessEndpoints {
-			r := ResourceVerifiedAccessEndpoint()
+			r := resourceVerifiedAccessEndpoint()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.VerifiedAccessEndpointId))
 
