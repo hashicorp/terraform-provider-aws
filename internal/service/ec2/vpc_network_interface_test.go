@@ -41,7 +41,7 @@ func TestAccVPCNetworkInterface_basic(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-interface/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -85,7 +85,7 @@ func TestAccVPCNetworkInterface_ipv6(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", acctest.Ct1),
 				),
@@ -99,7 +99,7 @@ func TestAccVPCNetworkInterface_ipv6(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6Multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", acctest.Ct2),
 				),
@@ -107,7 +107,7 @@ func TestAccVPCNetworkInterface_ipv6(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", acctest.Ct1),
 				),
@@ -131,7 +131,7 @@ func TestAccVPCNetworkInterface_tags(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -145,7 +145,7 @@ func TestAccVPCNetworkInterface_tags(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -154,7 +154,7 @@ func TestAccVPCNetworkInterface_tags(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -178,7 +178,7 @@ func TestAccVPCNetworkInterface_ipv6Count(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6Count(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", acctest.Ct1),
 				),
 			},
@@ -191,21 +191,21 @@ func TestAccVPCNetworkInterface_ipv6Count(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6Count(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6Count(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6Count(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", acctest.Ct1),
 				),
 			},
@@ -228,7 +228,7 @@ func TestAccVPCNetworkInterface_disappears(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkInterface(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -254,7 +254,7 @@ func TestAccVPCNetworkInterface_description(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_description(rName, "description 1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "attachment.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 1"),
 					resource.TestCheckResourceAttr(resourceName, "interface_type", "interface"),
@@ -283,7 +283,7 @@ func TestAccVPCNetworkInterface_description(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_description(rName, "description 2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "attachment.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 2"),
 					resource.TestCheckResourceAttr(resourceName, "interface_type", "interface"),
@@ -326,7 +326,7 @@ func TestAccVPCNetworkInterface_attachment(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_attachment(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "attachment.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attachment.*", map[string]string{
 						"device_index": acctest.Ct1,
@@ -361,7 +361,7 @@ func TestAccVPCNetworkInterface_ignoreExternalAttachment(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_externalAttachment(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					testAccCheckENIMakeExternalAttachment(ctx, "aws_instance.test", &conf),
 				),
 			},
@@ -394,7 +394,7 @@ func TestAccVPCNetworkInterface_sourceDestCheck(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_sourceDestCheck(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "source_dest_check", acctest.CtFalse),
 				),
 			},
@@ -407,14 +407,14 @@ func TestAccVPCNetworkInterface_sourceDestCheck(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_sourceDestCheck(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "source_dest_check", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccVPCNetworkInterfaceConfig_sourceDestCheck(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "source_dest_check", acctest.CtFalse),
 				),
 			},
@@ -437,7 +437,7 @@ func TestAccVPCNetworkInterface_privateIPsCount(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_privateIPsCount(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "private_ips_count", acctest.Ct1),
 				),
 			},
@@ -450,7 +450,7 @@ func TestAccVPCNetworkInterface_privateIPsCount(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_privateIPsCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "private_ips_count", acctest.Ct2),
 				),
 			},
@@ -463,7 +463,7 @@ func TestAccVPCNetworkInterface_privateIPsCount(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_privateIPsCount(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "private_ips_count", acctest.Ct0),
 				),
 			},
@@ -476,7 +476,7 @@ func TestAccVPCNetworkInterface_privateIPsCount(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_privateIPsCount(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "private_ips_count", acctest.Ct1),
 				),
 			},
@@ -505,7 +505,7 @@ func TestAccVPCNetworkInterface_ENIInterfaceType_efa(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_type(rName, "efa"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "interface_type", "efa"),
 				),
 			},
@@ -534,7 +534,7 @@ func TestAccVPCNetworkInterface_ENI_ipv4Prefix(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv4Prefix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefixes.#", acctest.Ct1),
 				),
@@ -548,7 +548,7 @@ func TestAccVPCNetworkInterface_ENI_ipv4Prefix(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv4PrefixMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefixes.#", acctest.Ct2),
 				),
@@ -556,7 +556,7 @@ func TestAccVPCNetworkInterface_ENI_ipv4Prefix(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv4Prefix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefixes.#", acctest.Ct1),
 				),
@@ -580,7 +580,7 @@ func TestAccVPCNetworkInterface_ENI_ipv4PrefixCount(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv4PrefixCount(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", acctest.Ct1),
 				),
 			},
@@ -593,21 +593,21 @@ func TestAccVPCNetworkInterface_ENI_ipv4PrefixCount(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv4PrefixCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv4PrefixCount(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv4PrefixCount(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", acctest.Ct1),
 				),
 			},
@@ -630,7 +630,7 @@ func TestAccVPCNetworkInterface_ENI_ipv6Prefix(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6Prefix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefixes.#", acctest.Ct1),
 				),
@@ -644,7 +644,7 @@ func TestAccVPCNetworkInterface_ENI_ipv6Prefix(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6PrefixMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefixes.#", acctest.Ct2),
 				),
@@ -652,7 +652,7 @@ func TestAccVPCNetworkInterface_ENI_ipv6Prefix(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6Prefix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefixes.#", acctest.Ct1),
 				),
@@ -676,7 +676,7 @@ func TestAccVPCNetworkInterface_ENI_ipv6PrefixCount(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6PrefixCount(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", acctest.Ct1),
 				),
 			},
@@ -689,21 +689,21 @@ func TestAccVPCNetworkInterface_ENI_ipv6PrefixCount(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6PrefixCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6PrefixCount(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6PrefixCount(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", acctest.Ct1),
 				),
 			},
@@ -726,9 +726,9 @@ func TestAccVPCNetworkInterface_privateIPSet(t *testing.T) {
 			{ // Configuration with three private_ips
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.44", "172.16.10.59", "172.16.10.123"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.44", "172.16.10.59", "172.16.10.123"}, &networkInterface),
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{
@@ -740,63 +740,63 @@ func TestAccVPCNetworkInterface_privateIPSet(t *testing.T) {
 			{ // Change order of private_ips
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.123", "172.16.10.44", "172.16.10.59"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.44", "172.16.10.59", "172.16.10.123"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Add secondaries to private_ips
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.123", "172.16.10.12", "172.16.10.44", "172.16.10.59"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.44", "172.16.10.12", "172.16.10.59", "172.16.10.123"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Remove secondary to private_ips
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.123", "172.16.10.44", "172.16.10.59"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.44", "172.16.10.59", "172.16.10.123"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Remove primary
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.123", "172.16.10.59", "172.16.10.57"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.57", "172.16.10.59", "172.16.10.123"}, &networkInterface),
 					testAccCheckENIDifferent(&lastInterface, &networkInterface), // different
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Use count to add IPs
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSetCount(rName, 4),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Change list, retain primary
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.44", "172.16.10.57"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.44", "172.16.10.57"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // New list
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.17"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.17"}, &networkInterface),
 					testAccCheckENIDifferent(&lastInterface, &networkInterface), // different
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 		},
@@ -822,9 +822,9 @@ func TestAccVPCNetworkInterface_privateIPList(t *testing.T) {
 			{ // Build a set incrementally in order
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.17"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.17"}, &networkInterface),
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{
@@ -836,117 +836,117 @@ func TestAccVPCNetworkInterface_privateIPList(t *testing.T) {
 			{ // Add to set
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.17", "172.16.10.45"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.17", "172.16.10.45"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Add to set
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.17", "172.16.10.45", "172.16.10.89"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.17", "172.16.10.45", "172.16.10.89"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Add to set
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.17", "172.16.10.45", "172.16.10.89", "172.16.10.122"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.17", "172.16.10.45", "172.16.10.89", "172.16.10.122"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Change from set to list using same order
 				Config: testAccVPCNetworkInterfaceConfig_privateIPList(rName, []string{"172.16.10.17", "172.16.10.45", "172.16.10.89", "172.16.10.122"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPList([]string{"172.16.10.17", "172.16.10.45", "172.16.10.89", "172.16.10.122"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Change order of private_ip_list
 				Config: testAccVPCNetworkInterfaceConfig_privateIPList(rName, []string{"172.16.10.17", "172.16.10.89", "172.16.10.45", "172.16.10.122"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPList([]string{"172.16.10.17", "172.16.10.89", "172.16.10.45", "172.16.10.122"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Remove secondaries from end
 				Config: testAccVPCNetworkInterfaceConfig_privateIPList(rName, []string{"172.16.10.17", "172.16.10.89", "172.16.10.45"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPList([]string{"172.16.10.17", "172.16.10.89", "172.16.10.45"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Add secondaries to end
 				Config: testAccVPCNetworkInterfaceConfig_privateIPList(rName, []string{"172.16.10.17", "172.16.10.89", "172.16.10.45", "172.16.10.123"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPList([]string{"172.16.10.17", "172.16.10.89", "172.16.10.45", "172.16.10.123"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Add secondaries to middle
 				Config: testAccVPCNetworkInterfaceConfig_privateIPList(rName, []string{"172.16.10.17", "172.16.10.89", "172.16.10.77", "172.16.10.45", "172.16.10.123"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPList([]string{"172.16.10.17", "172.16.10.89", "172.16.10.77", "172.16.10.45", "172.16.10.123"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Remove secondaries from middle
 				Config: testAccVPCNetworkInterfaceConfig_privateIPList(rName, []string{"172.16.10.17", "172.16.10.89", "172.16.10.123"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPList([]string{"172.16.10.17", "172.16.10.89", "172.16.10.123"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Use count to add IPs
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSetCount(rName, 4),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Change to specific list - forces new
 				Config: testAccVPCNetworkInterfaceConfig_privateIPList(rName, []string{"172.16.10.59", "172.16.10.123", "172.16.10.38"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPList([]string{"172.16.10.59", "172.16.10.123", "172.16.10.38"}, &networkInterface),
 					testAccCheckENIDifferent(&lastInterface, &networkInterface), // different
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Change first of private_ip_list - forces new
 				Config: testAccVPCNetworkInterfaceConfig_privateIPList(rName, []string{"172.16.10.123", "172.16.10.59", "172.16.10.38"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPList([]string{"172.16.10.123", "172.16.10.59", "172.16.10.38"}, &networkInterface),
 					testAccCheckENIDifferent(&lastInterface, &networkInterface), // different
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Change from list to set using same set
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.123", "172.16.10.59", "172.16.10.38"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.123", "172.16.10.59", "172.16.10.38"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
+					testAccCheckENIExists(ctx, resourceName, &lastInterface),
 				),
 			},
 		},
@@ -977,27 +977,6 @@ func regionalPrivateDNSSuffix(region string) string {
 }
 
 func testAccCheckENIExists(ctx context.Context, n string, v *types.NetworkInterface) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-
-		output, err := tfec2.FindNetworkInterfaceByID(ctx, conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
-	}
-}
-
-func testAccCheckENIExistsV2(ctx context.Context, n string, v *types.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
