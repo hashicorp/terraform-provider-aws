@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
@@ -96,7 +95,7 @@ func TestAccMetaRegionDataSource_basic(t *testing.T) {
 				Config: testAccRegionDataSourceConfig_empty,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrDescription, regexache.MustCompile(`^.+$`)),
-					acctest.CheckResourceAttrRegionalHostnameService(dataSourceName, names.AttrEndpoint, ec2.EndpointsID),
+					acctest.CheckResourceAttrRegionalHostnameService(dataSourceName, names.AttrEndpoint, names.EC2),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, acctest.Region()),
 				),
 			},
@@ -117,7 +116,7 @@ func TestAccMetaRegionDataSource_endpoint(t *testing.T) {
 				Config: testAccRegionDataSourceConfig_endpoint(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrDescription, regexache.MustCompile(`^.+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrEndpoint, regexache.MustCompile(fmt.Sprintf("^%s\\.[^.]+\\.%s$", ec2.EndpointsID, acctest.PartitionDNSSuffix()))),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrEndpoint, regexache.MustCompile(fmt.Sprintf("^%s\\.[^.]+\\.%s$", names.EC2, acctest.PartitionDNSSuffix()))),
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrName, regexache.MustCompile(`^.+$`)),
 				),
 			},
