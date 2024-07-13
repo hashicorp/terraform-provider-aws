@@ -21,7 +21,7 @@ import (
 )
 
 // @SDKResource("aws_verifiedaccess_instance_trust_provider_attachment", name="Verified Access Instance Trust Provider Attachment")
-func ResourceVerifiedAccessInstanceTrustProviderAttachment() *schema.Resource {
+func resourceVerifiedAccessInstanceTrustProviderAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessInstanceTrustProviderAttachmentCreate,
 		ReadWithoutTimeout:   resourceVerifiedAccessInstanceTrustProviderAttachmentRead,

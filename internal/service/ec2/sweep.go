@@ -3101,7 +3101,7 @@ func sweepVerifiedAccessTrustProviderAttachments(region string) error {
 			for _, v := range v.VerifiedAccessTrustProviders {
 				vatpID := aws.ToString(v.VerifiedAccessTrustProviderId)
 
-				r := ResourceVerifiedAccessInstanceTrustProviderAttachment()
+				r := resourceVerifiedAccessInstanceTrustProviderAttachment()
 				d := r.Data(nil)
 				d.SetId(VerifiedAccessInstanceTrustProviderAttachmentCreateResourceID(vaiID, vatpID))
 
