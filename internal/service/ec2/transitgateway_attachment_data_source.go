@@ -126,7 +126,7 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 	d.Set(names.AttrTransitGatewayID, transitGatewayAttachment.TransitGatewayId)
 	d.Set("transit_gateway_owner_id", transitGatewayAttachment.TransitGatewayOwnerId)
 
-	setTagsOutV2(ctx, transitGatewayAttachment.Tags)
+	setTagsOut(ctx, transitGatewayAttachment.Tags)
 
 	return diags
 }

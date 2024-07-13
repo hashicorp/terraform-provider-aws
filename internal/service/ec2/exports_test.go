@@ -260,7 +260,6 @@ var (
 	UnsuccessfulItemError                                      = unsuccessfulItemError
 	UnsuccessfulItemsError                                     = unsuccessfulItemsError
 	UpdateTags                                                 = updateTags
-	UpdateTagsV2                                               = updateTagsV2
 	VPCDHCPOptionsAssociationParseResourceID                   = vpcDHCPOptionsAssociationParseResourceID
 	VPCMigrateState                                            = vpcMigrateState
 	WaitVolumeAttachmentCreated                                = waitVolumeAttachmentCreated

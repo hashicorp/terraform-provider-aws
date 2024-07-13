@@ -114,7 +114,7 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	if tags, ok := d.GetOk(names.AttrTags); ok {
 		input.Filter = append(input.Filter, newTagFilterListV2(
-			TagsV2(tftags.New(ctx, tags.(map[string]interface{}))),
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
@@ -162,7 +162,7 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("secondary_private_ip_address_count", len(secondaryPrivateIPAddresses))
 	d.Set("secondary_private_ip_addresses", secondaryPrivateIPAddresses)
 
-	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, ngw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, ngw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

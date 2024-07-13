@@ -1418,7 +1418,7 @@ func resourceNetworkInsightsAnalysisCreate(ctx context.Context, d *schema.Resour
 
 	input := &ec2.StartNetworkInsightsAnalysisInput{
 		NetworkInsightsPathId: aws.String(d.Get("network_insights_path_id").(string)),
-		TagSpecifications:     getTagSpecificationsInV2(ctx, awstypes.ResourceTypeNetworkInsightsAnalysis),
+		TagSpecifications:     getTagSpecificationsIn(ctx, awstypes.ResourceTypeNetworkInsightsAnalysis),
 	}
 
 	if v, ok := d.GetOk("filter_in_arns"); ok && v.(*schema.Set).Len() > 0 {
@@ -1479,7 +1479,7 @@ func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resource
 	d.Set(names.AttrStatusMessage, output.StatusMessage)
 	d.Set("warning_message", output.WarningMessage)
 
-	setTagsOutV2(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }

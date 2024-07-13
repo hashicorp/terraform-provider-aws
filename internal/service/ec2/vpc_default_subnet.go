@@ -243,11 +243,11 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 
 	// Configure tags.
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := keyValueTagsV2(ctx, getTagsInV2(ctx))
-	oldTags := keyValueTagsV2(ctx, subnet.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
+	newTags := keyValueTags(ctx, getTagsIn(ctx))
+	oldTags := keyValueTags(ctx, subnet.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
-		if err := updateTagsV2(ctx, conn, d.Id(), oldTags, newTags); err != nil {
+		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Default Subnet (%s) tags: %s", d.Id(), err)
 		}
 	}

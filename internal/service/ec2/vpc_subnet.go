@@ -165,7 +165,7 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateSubnetInput{
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeSubnet),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSubnet),
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 

@@ -73,7 +73,7 @@ func dataSourceCoIPPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterListV2(
-			TagsV2(tftags.New(ctx, tags.(map[string]interface{}))),
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
@@ -98,7 +98,7 @@ func dataSourceCoIPPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("pool_cidrs", coip.PoolCidrs)
 	d.Set("pool_id", coip.PoolId)
 
-	setTagsOutV2(ctx, coip.Tags)
+	setTagsOut(ctx, coip.Tags)
 
 	return diags
 }

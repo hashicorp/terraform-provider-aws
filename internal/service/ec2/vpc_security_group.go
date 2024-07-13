@@ -195,7 +195,7 @@ func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	inputC := &ec2.CreateSecurityGroupInput{
 		GroupName:         aws.String(name),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeSecurityGroup),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSecurityGroup),
 	}
 
 	if v := d.Get(names.AttrDescription); v != nil {

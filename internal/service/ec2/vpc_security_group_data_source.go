@@ -79,7 +79,7 @@ func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	input.Filters = append(input.Filters, newTagFilterListV2(
-		TagsV2(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterListV2(
@@ -111,7 +111,7 @@ func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrName, sg.GroupName)
 	d.Set(names.AttrVPCID, sg.VpcId)
 
-	setTagsOutV2(ctx, sg.Tags)
+	setTagsOut(ctx, sg.Tags)
 
 	return diags
 }

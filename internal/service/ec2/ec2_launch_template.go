@@ -999,7 +999,7 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 	input := &ec2.CreateLaunchTemplateInput{
 		ClientToken:        aws.String(id.UniqueId()),
 		LaunchTemplateName: aws.String(name),
-		TagSpecifications:  getTagSpecificationsInV2(ctx, awstypes.ResourceTypeLaunchTemplate),
+		TagSpecifications:  getTagSpecificationsIn(ctx, awstypes.ResourceTypeLaunchTemplate),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -1064,7 +1064,7 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	setTagsOutV2(ctx, lt.Tags)
+	setTagsOut(ctx, lt.Tags)
 
 	return diags
 }
@@ -2129,7 +2129,7 @@ func expandLaunchTemplateTagSpecificationRequest(ctx context.Context, tfMap map[
 
 	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
 		if v := tftags.New(ctx, v).IgnoreAWS(); len(v) > 0 {
-			apiObject.Tags = TagsV2(v)
+			apiObject.Tags = Tags(v)
 		}
 	}
 
@@ -3075,7 +3075,7 @@ func flattenLaunchTemplateTagSpecification(ctx context.Context, apiObject awstyp
 	}
 
 	if v := apiObject.Tags; len(v) > 0 {
-		tfMap[names.AttrTags] = keyValueTagsV2(ctx, v).IgnoreAWS().Map()
+		tfMap[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return tfMap

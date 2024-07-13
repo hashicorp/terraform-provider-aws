@@ -140,7 +140,7 @@ func resourceCapacityReservationCreate(ctx context.Context, d *schema.ResourceDa
 		InstanceCount:     aws.Int32(int32(d.Get(names.AttrInstanceCount).(int))),
 		InstancePlatform:  awstypes.CapacityReservationInstancePlatform(d.Get("instance_platform").(string)),
 		InstanceType:      aws.String(d.Get(names.AttrInstanceType).(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeCapacityReservation),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeCapacityReservation),
 	}
 
 	if v, ok := d.GetOk("ebs_optimized"); ok {
@@ -223,7 +223,7 @@ func resourceCapacityReservationRead(ctx context.Context, d *schema.ResourceData
 	d.Set("placement_group_arn", reservation.PlacementGroupArn)
 	d.Set("tenancy", reservation.Tenancy)
 
-	setTagsOutV2(ctx, reservation.Tags)
+	setTagsOut(ctx, reservation.Tags)
 
 	return diags
 }

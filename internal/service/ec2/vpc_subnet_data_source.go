@@ -176,7 +176,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterListV2(
-			TagsV2(tftags.New(ctx, tags.(map[string]interface{}))),
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
@@ -235,7 +235,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("private_dns_hostname_type_on_launch", nil)
 	}
 
-	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

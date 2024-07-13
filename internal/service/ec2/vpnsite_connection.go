@@ -684,7 +684,7 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 	input := &ec2.CreateVpnConnectionInput{
 		CustomerGatewayId: aws.String(d.Get("customer_gateway_id").(string)),
 		Options:           expandVPNConnectionOptionsSpecification(d),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeVpnConnection),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpnConnection),
 		Type:              aws.String(d.Get(names.AttrType).(string)),
 	}
 
@@ -772,7 +772,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting vgw_telemetry: %s", err)
 	}
 
-	setTagsOutV2(ctx, vpnConnection.Tags)
+	setTagsOut(ctx, vpnConnection.Tags)
 
 	if v := vpnConnection.Options; v != nil {
 		d.Set("enable_acceleration", v.EnableAcceleration)

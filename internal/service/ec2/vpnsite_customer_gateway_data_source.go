@@ -129,7 +129,7 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrIPAddress, cgw.IpAddress)
 	d.Set(names.AttrType, cgw.Type)
 
-	setTagsOutV2(ctx, cgw.Tags)
+	setTagsOut(ctx, cgw.Tags)
 
 	return diags
 }

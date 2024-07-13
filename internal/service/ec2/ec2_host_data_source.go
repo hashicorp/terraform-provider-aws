@@ -136,7 +136,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("sockets", host.HostProperties.Sockets)
 	d.Set("total_vcpus", host.HostProperties.TotalVCpus)
 
-	setTagsOutV2(ctx, host.Tags)
+	setTagsOut(ctx, host.Tags)
 
 	return diags
 }

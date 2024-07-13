@@ -651,7 +651,7 @@ func testAccCheckVPCUpdateTags(ctx context.Context, vpc *awstypes.Vpc, oldTags, 
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		return tfec2.UpdateTagsV2(ctx, conn, aws.ToString(vpc.VpcId), oldTags, newTags)
+		return tfec2.UpdateTags(ctx, conn, aws.ToString(vpc.VpcId), oldTags, newTags)
 	}
 }
 

@@ -413,7 +413,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if tags, tagsOk := d.GetOk("instance_tags"); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterListV2(
-			TagsV2(tftags.New(ctx, tags.(map[string]interface{}))),
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
@@ -546,7 +546,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 		d.Set("monitoring", monitoringState == names.AttrEnabled || monitoringState == "pending")
 	}
 
-	setTagsOutV2(ctx, instance.Tags)
+	setTagsOut(ctx, instance.Tags)
 
 	// Security Groups
 	if err := readSecurityGroups(ctx, d, instance, conn); err != nil {

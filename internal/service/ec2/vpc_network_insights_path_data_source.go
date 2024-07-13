@@ -110,7 +110,7 @@ func dataSourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("source_arn", nip.SourceArn)
 	d.Set("source_ip", nip.SourceIp)
 
-	setTagsOutV2(ctx, nip.Tags)
+	setTagsOut(ctx, nip.Tags)
 
 	return diags
 }

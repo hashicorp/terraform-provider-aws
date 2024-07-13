@@ -75,7 +75,7 @@ func dataSourceLocalGatewayRouteTableRead(ctx context.Context, d *schema.Resourc
 	)
 
 	input.Filters = append(input.Filters, newTagFilterListV2(
-		TagsV2(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterListV2(
@@ -99,7 +99,7 @@ func dataSourceLocalGatewayRouteTableRead(ctx context.Context, d *schema.Resourc
 	d.Set("outpost_arn", localGatewayRouteTable.OutpostArn)
 	d.Set(names.AttrState, localGatewayRouteTable.State)
 
-	setTagsOutV2(ctx, localGatewayRouteTable.Tags)
+	setTagsOut(ctx, localGatewayRouteTable.Tags)
 
 	return diags
 }

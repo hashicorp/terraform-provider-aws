@@ -118,7 +118,7 @@ func resourceVPCDHCPOptionsCreate(ctx context.Context, d *schema.ResourceData, m
 
 	input := &ec2.CreateDhcpOptionsInput{
 		DhcpConfigurations: dhcpConfigurations,
-		TagSpecifications:  getTagSpecificationsInV2(ctx, awstypes.ResourceTypeDhcpOptions),
+		TagSpecifications:  getTagSpecificationsIn(ctx, awstypes.ResourceTypeDhcpOptions),
 	}
 
 	output, err := conn.CreateDhcpOptions(ctx, input)

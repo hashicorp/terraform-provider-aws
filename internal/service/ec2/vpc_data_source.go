@@ -224,7 +224,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("ipv6_cidr_block", nil)
 	}
 
-	setTagsOutV2(ctx, vpc.Tags)
+	setTagsOut(ctx, vpc.Tags)
 
 	return diags
 }

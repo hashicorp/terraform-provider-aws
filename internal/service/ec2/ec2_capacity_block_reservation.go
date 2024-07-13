@@ -189,7 +189,7 @@ func (r *resourceCapacityBlockReservation) Create(ctx context.Context, request r
 		return
 	}
 
-	input.TagSpecifications = getTagSpecificationsInV2(ctx, awstypes.ResourceTypeCapacityReservation)
+	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeCapacityReservation)
 
 	output, err := conn.PurchaseCapacityBlock(ctx, input)
 	if err != nil {

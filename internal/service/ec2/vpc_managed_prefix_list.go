@@ -111,7 +111,7 @@ func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData
 		ClientToken:       aws.String(id.UniqueId()),
 		MaxEntries:        aws.Int32(int32(d.Get("max_entries").(int))),
 		PrefixListName:    aws.String(name),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypePrefixList),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypePrefixList),
 	}
 
 	if v, ok := d.GetOk("entry"); ok && v.(*schema.Set).Len() > 0 {

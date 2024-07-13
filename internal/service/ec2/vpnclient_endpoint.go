@@ -240,7 +240,7 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 		ClientToken:          aws.String(id.UniqueId()),
 		ServerCertificateArn: aws.String(d.Get("server_certificate_arn").(string)),
 		SplitTunnel:          aws.Bool(d.Get("split_tunnel").(bool)),
-		TagSpecifications:    getTagSpecificationsInV2(ctx, awstypes.ResourceTypeClientVpnEndpoint),
+		TagSpecifications:    getTagSpecificationsIn(ctx, awstypes.ResourceTypeClientVpnEndpoint),
 		TransportProtocol:    awstypes.TransportProtocol(d.Get("transport_protocol").(string)),
 		VpnPort:              aws.Int32(int32(d.Get("vpn_port").(int))),
 	}
@@ -362,7 +362,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrVPCID, ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)
 
-	setTagsOutV2(ctx, ep.Tags)
+	setTagsOut(ctx, ep.Tags)
 
 	return diags
 }

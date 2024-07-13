@@ -109,7 +109,7 @@ func resourceVPCPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 
 	input := &ec2.CreateVpcPeeringConnectionInput{
 		PeerVpcId:         aws.String(d.Get("peer_vpc_id").(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeVpcPeeringConnection),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpcPeeringConnection),
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 

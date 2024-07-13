@@ -129,7 +129,7 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 	d.Set(names.AttrOwnerID, pl.OwnerId)
 	d.Set(names.AttrVersion, pl.Version)
 
-	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, pl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, pl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

@@ -210,7 +210,7 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		},
 	)
 	req.Filters = append(req.Filters, newTagFilterListV2(
-		TagsV2(tftags.New(ctx, tags.(map[string]interface{}))),
+		Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 	)...)
 	req.Filters = append(req.Filters, newCustomFilterListV2(
 		filter.(*schema.Set),
@@ -246,7 +246,7 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrVPCID, rt.VpcId)
 
 	//Ignore the AmazonFSx service tag in addition to standard ignores
-	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, rt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New(ctx, []string{"AmazonFSx"})).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, rt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New(ctx, []string{"AmazonFSx"})).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

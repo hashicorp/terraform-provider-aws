@@ -969,7 +969,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	// instance itself
-	tagSpecifications := getTagSpecificationsInV2(ctx, awstypes.ResourceTypeInstance)
+	tagSpecifications := getTagSpecificationsIn(ctx, awstypes.ResourceTypeInstance)
 
 	// block devices
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -1106,7 +1106,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	for vol, blockDeviceTags := range blockDeviceTagsToCreate {
-		if err := createTagsV2(ctx, conn, vol, TagsV2(tftags.New(ctx, blockDeviceTags))); err != nil {
+		if err := createTags(ctx, conn, vol, Tags(tftags.New(ctx, blockDeviceTags))); err != nil {
 			log.Printf("[ERR] Error creating tags for EBS volume %s: %s", vol, err)
 		}
 	}
@@ -1322,7 +1322,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("monitoring", monitoringState == awstypes.MonitoringStateEnabled || monitoringState == awstypes.MonitoringStatePending)
 	}
 
-	setTagsOutV2(ctx, instance.Tags)
+	setTagsOut(ctx, instance.Tags)
 
 	if _, ok := d.GetOk("volume_tags"); ok && !blockDeviceTagsDefined(d) {
 		volumeTags, err := readVolumeTags(ctx, conn, d.Id())
@@ -1332,7 +1332,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 		defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 		ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-		tags := keyValueTagsV2(ctx, volumeTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+		tags := keyValueTags(ctx, volumeTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		if err := d.Set("volume_tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting volume_tags: %s", err)
@@ -1516,7 +1516,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		o, n := d.GetChange("volume_tags")
 
 		for _, volID := range volIDs {
-			if err := updateTagsV2(ctx, conn, volID, o, n); err != nil {
+			if err := updateTags(ctx, conn, volID, o, n); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating volume_tags (%s): %s", volID, err)
 			}
 		}
@@ -2041,7 +2041,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("root_block_device.0.tags") {
 			o, n := d.GetChange("root_block_device.0.tags")
 
-			if err := updateTagsV2(ctx, conn, volID, o, n); err != nil {
+			if err := updateTags(ctx, conn, volID, o, n); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating tags for volume (%s): %s", volID, err)
 			}
 		}
@@ -2049,7 +2049,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("root_block_device.0.tags_all") && !d.HasChange("root_block_device.0.tags") {
 			o, n := d.GetChange("root_block_device.0.tags_all")
 
-			if err := updateTagsV2(ctx, conn, volID, o, n); err != nil {
+			if err := updateTags(ctx, conn, volID, o, n); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating tags for volume (%s): %s", volID, err)
 			}
 		}
@@ -2353,9 +2353,9 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 		}
 		if v, ok := d.GetOk("volume_tags"); !ok || v == nil || len(v.(map[string]interface{})) == 0 {
 			if ds {
-				bd[names.AttrTags] = keyValueTagsV2(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
+				bd[names.AttrTags] = keyValueTags(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
 			} else {
-				tags := keyValueTagsV2(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+				tags := keyValueTags(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 				bd[names.AttrTags] = tags.RemoveDefaultConfig(defaultTagsConfig).Map()
 				bd[names.AttrTagsAll] = tags.Map()
 			}

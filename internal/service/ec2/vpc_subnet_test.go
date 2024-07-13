@@ -689,7 +689,7 @@ func testAccCheckSubnetUpdateTags(ctx context.Context, subnet *awstypes.Subnet, 
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		return tfec2.UpdateTagsV2(ctx, conn, aws.ToString(subnet.SubnetId), oldTags, newTags)
+		return tfec2.UpdateTags(ctx, conn, aws.ToString(subnet.SubnetId), oldTags, newTags)
 	}
 }
 

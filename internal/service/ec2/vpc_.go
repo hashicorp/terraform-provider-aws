@@ -183,7 +183,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	input := &ec2.CreateVpcInput{
 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
 		InstanceTenancy:             types.Tenancy(d.Get("instance_tenancy").(string)),
-		TagSpecifications:           getTagSpecificationsInV2(ctx, types.ResourceTypeVpc),
+		TagSpecifications:           getTagSpecificationsIn(ctx, types.ResourceTypeVpc),
 	}
 
 	if v, ok := d.GetOk(names.AttrCIDRBlock); ok {
@@ -374,7 +374,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		}
 	}
 
-	setTagsOutV2(ctx, vpc.Tags)
+	setTagsOut(ctx, vpc.Tags)
 
 	return diags
 }

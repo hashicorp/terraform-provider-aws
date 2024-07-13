@@ -72,7 +72,7 @@ func dataSourceLocalGatewayRead(ctx context.Context, d *schema.ResourceData, met
 
 	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterListV2(
-			TagsV2(tftags.New(ctx, tags.(map[string]interface{}))),
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
@@ -96,7 +96,7 @@ func dataSourceLocalGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrOwnerID, localGateway.OwnerId)
 	d.Set(names.AttrState, localGateway.State)
 
-	setTagsOutV2(ctx, localGateway.Tags)
+	setTagsOut(ctx, localGateway.Tags)
 
 	return diags
 }

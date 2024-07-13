@@ -134,7 +134,7 @@ func dataSourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("transit_gateway_cidr_blocks", transitGateway.Options.TransitGatewayCidrBlocks)
 	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
 
-	setTagsOutV2(ctx, transitGateway.Tags)
+	setTagsOut(ctx, transitGateway.Tags)
 
 	return diags
 }

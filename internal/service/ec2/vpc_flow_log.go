@@ -211,7 +211,7 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta int
 		LogDestinationType: awstypes.LogDestinationType(d.Get("log_destination_type").(string)),
 		ResourceIds:        []string{resourceID},
 		ResourceType:       resourceType,
-		TagSpecifications:  getTagSpecificationsInV2(ctx, awstypes.ResourceTypeVpcFlowLog),
+		TagSpecifications:  getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpcFlowLog),
 	}
 
 	if resourceType != awstypes.FlowLogsResourceTypeTransitGateway && resourceType != awstypes.FlowLogsResourceTypeTransitGatewayAttachment {

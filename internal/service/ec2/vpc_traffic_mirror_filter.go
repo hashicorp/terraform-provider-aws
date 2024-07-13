@@ -75,7 +75,7 @@ func resourceTrafficMirrorFilterCreate(ctx context.Context, d *schema.ResourceDa
 
 	input := &ec2.CreateTrafficMirrorFilterInput{
 		ClientToken:       aws.String(id.UniqueId()),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeTrafficMirrorFilter),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeTrafficMirrorFilter),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -133,7 +133,7 @@ func resourceTrafficMirrorFilterRead(ctx context.Context, d *schema.ResourceData
 	d.Set(names.AttrDescription, trafficMirrorFilter.Description)
 	d.Set("network_services", trafficMirrorFilter.NetworkServices)
 
-	setTagsOutV2(ctx, trafficMirrorFilter.Tags)
+	setTagsOut(ctx, trafficMirrorFilter.Tags)
 
 	return diags
 }

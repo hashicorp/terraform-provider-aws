@@ -420,7 +420,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 	// If IPv4 or IPv6 prefixes are specified, tag after create.
 	// Otherwise "An error occurred (InternalError) when calling the CreateNetworkInterface operation".
 	if !(ipv4PrefixesSpecified || ipv6PrefixesSpecified) {
-		input.TagSpecifications = getTagSpecificationsInV2(ctx, types.ResourceTypeNetworkInterface)
+		input.TagSpecifications = getTagSpecificationsIn(ctx, types.ResourceTypeNetworkInterface)
 	}
 
 	output, err := conn.CreateNetworkInterface(ctx, input)
@@ -457,7 +457,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if ipv4PrefixesSpecified || ipv6PrefixesSpecified {
-		if err := createTagsV2(ctx, conn, d.Id(), getTagsInV2(ctx)); err != nil {
+		if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting EC2 Network Interface (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -560,7 +560,7 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("source_dest_check", eni.SourceDestCheck)
 	d.Set(names.AttrSubnetID, eni.SubnetId)
 
-	setTagsOutV2(ctx, eni.TagSet)
+	setTagsOut(ctx, eni.TagSet)
 
 	return diags
 }

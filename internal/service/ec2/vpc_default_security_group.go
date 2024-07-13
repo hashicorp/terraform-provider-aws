@@ -118,11 +118,11 @@ func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceD
 	d.SetId(aws.ToString(sg.GroupId))
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := keyValueTagsV2(ctx, getTagsInV2(ctx))
-	oldTags := keyValueTagsV2(ctx, sg.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
+	newTags := keyValueTags(ctx, getTagsIn(ctx))
+	oldTags := keyValueTags(ctx, sg.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
 	if !newTags.Equal(oldTags) {
-		if err := updateTagsV2(ctx, conn, d.Id(), oldTags, newTags); err != nil {
+		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Default Security Group (%s) tags: %s", d.Id(), err)
 		}
 	}

@@ -339,7 +339,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("usage_operation", image.UsageOperation)
 	d.Set("virtualization_type", image.VirtualizationType)
 
-	setTagsOutV2(ctx, image.Tags)
+	setTagsOut(ctx, image.Tags)
 
 	return diags
 }

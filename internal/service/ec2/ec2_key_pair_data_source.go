@@ -116,7 +116,7 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("key_type", keyPair.KeyType)
 	d.Set(names.AttrPublicKey, keyPair.PublicKey)
 
-	setTagsOutV2(ctx, keyPair.Tags)
+	setTagsOut(ctx, keyPair.Tags)
 
 	return diags
 }

@@ -71,7 +71,7 @@ func resourceInternetGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateInternetGatewayInput{
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeInternetGateway),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeInternetGateway),
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Internet Gateway: %s", input)

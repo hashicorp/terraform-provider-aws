@@ -123,7 +123,7 @@ func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &ec2.CreateNatGatewayInput{
 		ClientToken:       aws.String(id.UniqueId()),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeNatgateway),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeNatgateway),
 	}
 
 	if v, ok := d.GetOk("allocation_id"); ok {

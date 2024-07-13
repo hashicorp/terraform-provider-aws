@@ -112,7 +112,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		ClientToken:       aws.String(id.UniqueId()),
 		HostRecovery:      awstypes.HostRecovery(d.Get("host_recovery").(string)),
 		Quantity:          aws.Int32(1),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeDedicatedHost),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeDedicatedHost),
 	}
 
 	if v, ok := d.GetOk("asset_id"); ok {
@@ -179,7 +179,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("outpost_arn", host.OutpostArn)
 	d.Set(names.AttrOwnerID, host.OwnerId)
 
-	setTagsOutV2(ctx, host.Tags)
+	setTagsOut(ctx, host.Tags)
 
 	return diags
 }

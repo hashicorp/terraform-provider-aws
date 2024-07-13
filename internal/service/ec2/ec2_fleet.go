@@ -721,7 +721,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		ClientToken:                 aws.String(id.UniqueId()),
 		LaunchTemplateConfigs:       expandFleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
 		TargetCapacitySpecification: expandTargetCapacitySpecificationRequest(d.Get("target_capacity_specification").([]interface{})[0].(map[string]interface{})),
-		TagSpecifications:           getTagSpecificationsInV2(ctx, awstypes.ResourceTypeFleet),
+		TagSpecifications:           getTagSpecificationsIn(ctx, awstypes.ResourceTypeFleet),
 		Type:                        fleetType,
 	}
 
@@ -858,7 +858,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("valid_until", aws.ToTime(fleet.ValidUntil).Format(time.RFC3339))
 	}
 
-	setTagsOutV2(ctx, fleet.Tags)
+	setTagsOut(ctx, fleet.Tags)
 
 	return diags
 }

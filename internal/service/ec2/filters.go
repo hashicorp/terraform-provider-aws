@@ -92,7 +92,7 @@ func attributeFiltersFromMultimap(m map[string][]string) []awstypes.Filter {
 
 // tagFilters returns an array of EC2 Filter objects to be used when listing resources by tag.
 func tagFilters(ctx context.Context) []awstypes.Filter {
-	return newTagFilterListV2(getTagsInV2(ctx))
+	return newTagFilterListV2(getTagsIn(ctx))
 }
 
 // customFiltersSchema returns a *schema.Schema that represents
