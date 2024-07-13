@@ -1696,7 +1696,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_basic(t *testing.T) 
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailoverDisabled(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_NumberCacheClusters_autoFailoverDisabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1754,7 +1754,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailoverEnabled(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_NumberCacheClusters_autoFailoverEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1812,6 +1812,33 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", acctest.Ct2),
 				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_autoFailoverEnabled_validateNumberCacheClusters(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	const (
+		autoFailoverEnabled = true
+		multiAZDisabled     = false
+	)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccReplicationGroupConfig_failoverMultiAZ(rName, 1, autoFailoverEnabled, multiAZDisabled),
+				ExpectError: regexache.MustCompile(`"num_cache_clusters": must be at least 2 if automatic_failover_enabled is true`),
 			},
 		},
 	})

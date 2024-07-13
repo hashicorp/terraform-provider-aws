@@ -58,8 +58,8 @@ func customizeDiffValidateClusterMemcachedSnapshotIdentifier(_ context.Context, 
 	return errors.New(`engine "memcached" does not support final_snapshot_identifier`)
 }
 
-// customizeDiffValidateReplicationGroupAutomaticFailover validates that `automatic_failover_enabled` is set when `multi_az_enabled` is true
-func customizeDiffValidateReplicationGroupAutomaticFailover(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+// customizeDiffValidateReplicationGroupMultiAZAutomaticFailover validates that `automatic_failover_enabled` is set when `multi_az_enabled` is true
+func customizeDiffValidateReplicationGroupMultiAZAutomaticFailover(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	if v := diff.Get("multi_az_enabled").(bool); !v {
 		return nil
 	}
@@ -67,4 +67,15 @@ func customizeDiffValidateReplicationGroupAutomaticFailover(_ context.Context, d
 		return errors.New(`automatic_failover_enabled must be true if multi_az_enabled is true`)
 	}
 	return nil
+}
+
+// customizeDiffValidateReplicationGroupAutomaticFailoverNumCacheClusters validates that `automatic_failover_enabled` is set when `multi_az_enabled` is true
+func customizeDiffValidateReplicationGroupAutomaticFailoverNumCacheClusters(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if v := diff.Get("automatic_failover_enabled").(bool); !v {
+		return nil
+	}
+	if v, ok := diff.GetOk("num_cache_clusters"); !ok || v.(int) > 1 {
+		return nil
+	}
+	return errors.New(`num_cache_clusters: must be at least 2 if automatic_failover_enabled is true`)
 }

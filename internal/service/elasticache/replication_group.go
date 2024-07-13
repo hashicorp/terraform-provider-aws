@@ -384,8 +384,8 @@ func resourceReplicationGroup() *schema.Resource {
 			Delete: schema.DefaultTimeout(45 * time.Minute),
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			customizeDiffValidateReplicationGroupAutomaticFailover,
+		CustomizeDiff: customdiff.All(
+			customizeDiffValidateReplicationGroupMultiAZAutomaticFailover,
 			customizeDiffEngineVersionForceNewOnDowngrade,
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("num_cache_clusters") ||
@@ -397,6 +397,7 @@ func resourceReplicationGroup() *schema.Resource {
 				// be configured during creation of the cluster.
 				return semver.LessThan(d.Get("engine_version_actual").(string), "7.0.5")
 			}),
+			customizeDiffValidateReplicationGroupAutomaticFailoverNumCacheClusters,
 			verify.SetTagsDiff,
 		),
 	}
