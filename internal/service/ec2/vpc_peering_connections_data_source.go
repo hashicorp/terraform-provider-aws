@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_vpc_peering_connections")
-func DataSourceVPCPeeringConnections() *schema.Resource {
+// @SDKDataSource("aws_vpc_peering_connections", name="VPC Peering Connections")
+func dataSourceVPCPeeringConnections() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCPeeringConnectionsRead,
 
@@ -40,21 +40,21 @@ func DataSourceVPCPeeringConnections() *schema.Resource {
 
 func dataSourceVPCPeeringConnectionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeVpcPeeringConnectionsInput{}
 
-	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterListV2(
+		TagsV2(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
-	input.Filters = append(input.Filters, newCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterListV2(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {
 		input.Filters = nil
 	}
 
-	output, err := FindVPCPeeringConnections(ctx, conn, input)
+	output, err := findVPCPeeringConnections(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Peering Connections: %s", err)
@@ -63,7 +63,7 @@ func dataSourceVPCPeeringConnectionsRead(ctx context.Context, d *schema.Resource
 	var vpcPeeringConnectionIDs []string
 
 	for _, v := range output {
-		vpcPeeringConnectionIDs = append(vpcPeeringConnectionIDs, aws.StringValue(v.VpcPeeringConnectionId))
+		vpcPeeringConnectionIDs = append(vpcPeeringConnectionIDs, aws.ToString(v.VpcPeeringConnectionId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
