@@ -187,7 +187,7 @@ func resourceVPCDHCPOptionsDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	vpcs, err := findVPCs(ctx, conn, &ec2.DescribeVpcsInput{
-		Filters: newAttributeFilterListV2(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"dhcp-options-id": d.Id(),
 		}),
 	})

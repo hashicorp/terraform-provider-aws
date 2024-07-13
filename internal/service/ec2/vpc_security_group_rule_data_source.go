@@ -93,7 +93,7 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
 
 	input := &ec2.DescribeSecurityGroupRulesInput{
-		Filters: newCustomFilterListFrameworkV2(ctx, data.Filters),
+		Filters: newCustomFilterListFramework(ctx, data.Filters),
 	}
 
 	if !data.SecurityGroupRuleID.IsNull() {

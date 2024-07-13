@@ -76,7 +76,7 @@ func dataSourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Re
 
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 

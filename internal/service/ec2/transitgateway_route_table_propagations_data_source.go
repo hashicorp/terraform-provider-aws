@@ -52,7 +52,7 @@ func dataSourceTransitGatewayRouteTablePropagationsRead(ctx context.Context, d *
 		input.TransitGatewayRouteTableId = aws.String(v.(string))
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 

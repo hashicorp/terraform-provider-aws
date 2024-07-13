@@ -453,7 +453,7 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 			ec2Conn := meta.(*conns.AWSClient).EC2Client(ctx)
 			networkInterfaces, err := tfec2.FindNetworkInterfaces(ctx, ec2Conn, &ec2.DescribeNetworkInterfacesInput{
 				Filters: []ec2types.Filter{
-					tfec2.NewFilterV2("tag:"+entityRecognizerTagKey, []string{aws.ToString(v.EntityRecognizerArn)}),
+					tfec2.NewFilter("tag:"+entityRecognizerTagKey, []string{aws.ToString(v.EntityRecognizerArn)}),
 				},
 			})
 			if err != nil {

@@ -66,7 +66,7 @@ func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeSecurityGroupsInput{
-		Filters: newAttributeFilterListV2(
+		Filters: newAttributeFilterList(
 			map[string]string{
 				"group-name": d.Get(names.AttrName).(string),
 				"vpc-id":     d.Get(names.AttrVPCID).(string),
@@ -78,11 +78,11 @@ func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, me
 		input.GroupIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newTagFilterListV2(
+	input.Filters = append(input.Filters, newTagFilterList(
 		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 

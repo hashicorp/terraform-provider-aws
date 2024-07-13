@@ -64,19 +64,19 @@ func dataSourceLocalGatewayRead(ctx context.Context, d *schema.ResourceData, met
 		input.LocalGatewayIds = []string{v.(string)}
 	}
 
-	input.Filters = newAttributeFilterListV2(
+	input.Filters = newAttributeFilterList(
 		map[string]string{
 			names.AttrState: d.Get(names.AttrState).(string),
 		},
 	)
 
 	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
-		input.Filters = append(input.Filters, newTagFilterListV2(
+		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 

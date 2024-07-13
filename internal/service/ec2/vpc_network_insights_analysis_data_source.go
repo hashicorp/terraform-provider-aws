@@ -101,7 +101,7 @@ func dataSourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resour
 		input.NetworkInsightsAnalysisIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 

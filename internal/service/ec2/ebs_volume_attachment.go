@@ -210,7 +210,7 @@ func volumeAttachmentID(name, volumeID, instanceID string) string {
 
 func findVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string) (*awstypes.VolumeAttachment, error) {
 	input := &ec2.DescribeVolumesInput{
-		Filters: newAttributeFilterListV2(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"attachment.device":      deviceName,
 			"attachment.instance-id": instanceID,
 		}),

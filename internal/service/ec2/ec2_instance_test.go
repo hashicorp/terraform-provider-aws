@@ -5712,7 +5712,7 @@ func defaultSubnetCount(ctx context.Context, t *testing.T) int {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeSubnetsInput{
-		Filters: tfec2.NewAttributeFilterListV2(
+		Filters: tfec2.NewAttributeFilterList(
 			map[string]string{
 				"defaultForAz": acctest.CtTrue,
 			},

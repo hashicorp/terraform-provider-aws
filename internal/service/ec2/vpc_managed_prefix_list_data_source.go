@@ -87,7 +87,7 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeManagedPrefixListsInput{
-		Filters: newAttributeFilterListV2(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"prefix-list-name": d.Get(names.AttrName).(string),
 		}),
 	}
@@ -96,7 +96,7 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 		input.PrefixListIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 

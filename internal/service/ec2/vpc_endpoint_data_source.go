@@ -153,7 +153,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeVpcEndpointsInput{
-		Filters: newAttributeFilterListV2(
+		Filters: newAttributeFilterList(
 			map[string]string{
 				"vpc-endpoint-state": d.Get(names.AttrState).(string),
 				"vpc-id":             d.Get(names.AttrVPCID).(string),
@@ -166,10 +166,10 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 		input.VpcEndpointIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newTagFilterListV2(
+	input.Filters = append(input.Filters, newTagFilterList(
 		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {

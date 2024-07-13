@@ -116,7 +116,7 @@ func dataSourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 		input.IpamPoolIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 

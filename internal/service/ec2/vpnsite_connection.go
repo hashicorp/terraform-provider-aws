@@ -744,7 +744,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	if v := vpnConnection.TransitGatewayId; v != nil {
 		input := &ec2.DescribeTransitGatewayAttachmentsInput{
-			Filters: newAttributeFilterListV2(map[string]string{
+			Filters: newAttributeFilterList(map[string]string{
 				"resource-id":        d.Id(),
 				"resource-type":      string(awstypes.TransitGatewayAttachmentResourceTypeVpn),
 				"transit-gateway-id": aws.ToString(v),

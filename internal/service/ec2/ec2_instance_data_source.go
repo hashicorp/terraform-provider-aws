@@ -412,12 +412,12 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	input := &ec2.DescribeInstancesInput{}
 
 	if tags, tagsOk := d.GetOk("instance_tags"); tagsOk {
-		input.Filters = append(input.Filters, newTagFilterListV2(
+		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {

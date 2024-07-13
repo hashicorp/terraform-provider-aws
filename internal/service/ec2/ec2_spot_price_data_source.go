@@ -70,7 +70,7 @@ func dataSourceSpotPriceRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = newCustomFilterListV2(v.(*schema.Set))
+		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
 	resultSpotPrice, err := findSpotPrice(ctx, conn, input)

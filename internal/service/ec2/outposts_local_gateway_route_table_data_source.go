@@ -66,7 +66,7 @@ func dataSourceLocalGatewayRouteTableRead(ctx context.Context, d *schema.Resourc
 		input.LocalGatewayRouteTableIds = []string{v.(string)}
 	}
 
-	input.Filters = newAttributeFilterListV2(
+	input.Filters = newAttributeFilterList(
 		map[string]string{
 			"local-gateway-id": d.Get("local_gateway_id").(string),
 			"outpost-arn":      d.Get("outpost_arn").(string),
@@ -74,11 +74,11 @@ func dataSourceLocalGatewayRouteTableRead(ctx context.Context, d *schema.Resourc
 		},
 	)
 
-	input.Filters = append(input.Filters, newTagFilterListV2(
+	input.Filters = append(input.Filters, newTagFilterList(
 		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 

@@ -67,7 +67,7 @@ func dataSourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schem
 
 	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -76,7 +76,7 @@ func dataSourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schem
 	}
 
 	if v, ok := d.GetOk(names.AttrTags); ok {
-		input.Filters = append(input.Filters, newTagFilterListV2(
+		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, v.(map[string]interface{}))),
 		)...)
 	}

@@ -102,7 +102,6 @@ var (
 	ResourceVerifiedAccessInstanceLoggingConfiguration    = resourceVerifiedAccessInstanceLoggingConfiguration
 	ResourceVerifiedAccessInstanceTrustProviderAttachment = resourceVerifiedAccessInstanceTrustProviderAttachment
 	ResourceVerifiedAccessTrustProvider                   = resourceVerifiedAccessTrustProvider
-	ResourceVPC                                           = resourceVPC
 	ResourceVPCDHCPOptions                                = resourceVPCDHCPOptions
 	ResourceVPCDHCPOptionsAssociation                     = resourceVPCDHCPOptionsAssociation
 	ResourceVPCEndpoint                                   = resourceVPCEndpoint
@@ -244,7 +243,6 @@ var (
 	ManagedPrefixListEntryParseResourceID                      = managedPrefixListEntryParseResourceID
 	MatchRules                                                 = matchRules
 	NewAttributeFilterList                                     = newAttributeFilterList
-	NewAttributeFilterListV2                                   = newAttributeFilterListV2
 	NewCustomFilterList                                        = newCustomFilterList
 	NewTagFilterList                                           = newTagFilterList
 	ProtocolForValue                                           = protocolForValue

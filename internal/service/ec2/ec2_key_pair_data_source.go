@@ -77,7 +77,7 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 	input := &ec2.DescribeKeyPairsInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = newCustomFilterListV2(v.(*schema.Set))
+		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("key_name"); ok {

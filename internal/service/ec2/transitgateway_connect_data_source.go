@@ -63,7 +63,7 @@ func dataSourceTransitGatewayConnectRead(ctx context.Context, d *schema.Resource
 		input.TransitGatewayAttachmentIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 

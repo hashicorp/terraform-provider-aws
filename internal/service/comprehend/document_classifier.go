@@ -423,7 +423,7 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 			ec2Conn := meta.(*conns.AWSClient).EC2Client(ctx)
 			networkInterfaces, err := tfec2.FindNetworkInterfaces(ctx, ec2Conn, &ec2.DescribeNetworkInterfacesInput{
 				Filters: []ec2types.Filter{
-					tfec2.NewFilterV2("tag:"+documentClassifierTagKey, []string{aws.ToString(v.DocumentClassifierArn)}),
+					tfec2.NewFilter("tag:"+documentClassifierTagKey, []string{aws.ToString(v.DocumentClassifierArn)}),
 				},
 			})
 			if err != nil {

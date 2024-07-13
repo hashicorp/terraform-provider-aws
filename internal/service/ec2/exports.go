@@ -19,13 +19,13 @@ var (
 	FindSubnetByID                                                 = findSubnetByID
 	FindVPCByID                                                    = findVPCByID
 	FindVPCEndpointByID                                            = findVPCEndpointByID
-	NewCustomFilterListFrameworkV2                                 = newCustomFilterListFrameworkV2
+	NewCustomFilterListFramework                                   = newCustomFilterListFramework
 	NewFilter                                                      = newFilter
-	NewFilterV2                                                    = newFilterV2
 	ResourceAMI                                                    = resourceAMI
 	ResourceSecurityGroup                                          = resourceSecurityGroup
 	ResourceTransitGateway                                         = resourceTransitGateway
 	ResourceTransitGatewayConnectPeer                              = resourceTransitGatewayConnectPeer
+	ResourceVPC                                                    = resourceVPC
 	VPCEndpointCreationTimeout                                     = vpcEndpointCreationTimeout
 	WaitVPCEndpointAvailable                                       = waitVPCEndpointAvailable
 )

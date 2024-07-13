@@ -153,7 +153,7 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 		input.VpcPeeringConnectionIds = []string{v.(string)}
 	}
 
-	input.Filters = newAttributeFilterListV2(
+	input.Filters = newAttributeFilterList(
 		map[string]string{
 			"status-code":                   d.Get(names.AttrStatus).(string),
 			"requester-vpc-info.vpc-id":     d.Get(names.AttrVPCID).(string),
@@ -166,12 +166,12 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 	)
 
 	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
-		input.Filters = append(input.Filters, newTagFilterListV2(
+		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 

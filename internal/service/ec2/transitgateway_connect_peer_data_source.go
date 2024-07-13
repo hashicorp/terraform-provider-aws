@@ -90,7 +90,7 @@ func dataSourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Reso
 		input.TransitGatewayConnectPeerIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 

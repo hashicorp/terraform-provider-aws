@@ -99,7 +99,7 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeNatGatewaysInput{
-		Filter: newAttributeFilterListV2(
+		Filter: newAttributeFilterList(
 			map[string]string{
 				names.AttrState: d.Get(names.AttrState).(string),
 				"subnet-id":     d.Get(names.AttrSubnetID).(string),
@@ -113,12 +113,12 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if tags, ok := d.GetOk(names.AttrTags); ok {
-		input.Filter = append(input.Filter, newTagFilterListV2(
+		input.Filter = append(input.Filter, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
-	input.Filter = append(input.Filter, newCustomFilterListV2(
+	input.Filter = append(input.Filter, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 	if len(input.Filter) == 0 {

@@ -27,7 +27,7 @@ func testAccPreCheckDefaultSubnetExists(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeSubnetsInput{
-		Filters: tfec2.NewAttributeFilterListV2(
+		Filters: tfec2.NewAttributeFilterList(
 			map[string]string{
 				"defaultForAz": acctest.CtTrue,
 			},
@@ -49,7 +49,7 @@ func testAccPreCheckDefaultSubnetNotFound(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeSubnetsInput{
-		Filters: tfec2.NewAttributeFilterListV2(
+		Filters: tfec2.NewAttributeFilterList(
 			map[string]string{
 				"defaultForAz": acctest.CtTrue,
 			},
@@ -394,7 +394,7 @@ func testAccCreateMissingDefaultSubnets(ctx context.Context) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	output, err := conn.DescribeAvailabilityZones(ctx, &ec2.DescribeAvailabilityZonesInput{
-		Filters: tfec2.NewAttributeFilterListV2(
+		Filters: tfec2.NewAttributeFilterList(
 			map[string]string{
 				"opt-in-status": "opt-in-not-required",
 				names.AttrState: "available",

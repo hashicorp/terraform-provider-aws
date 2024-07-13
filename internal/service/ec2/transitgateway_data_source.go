@@ -100,7 +100,7 @@ func dataSourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, m
 
 	input := &ec2.DescribeTransitGatewaysInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 

@@ -44,10 +44,10 @@ func dataSourceVPCPeeringConnectionsRead(ctx context.Context, d *schema.Resource
 
 	input := &ec2.DescribeVpcPeeringConnectionsInput{}
 
-	input.Filters = append(input.Filters, newTagFilterListV2(
+	input.Filters = append(input.Filters, newTagFilterList(
 		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {

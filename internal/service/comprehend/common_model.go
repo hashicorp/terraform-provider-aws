@@ -43,8 +43,8 @@ var modelVPCENILock safeMutex
 func findNetworkInterfaces(ctx context.Context, conn *ec2.Client, securityGroups []string, subnets []string) ([]awstypes.NetworkInterface, error) {
 	networkInterfaces, err := tfec2.FindNetworkInterfaces(ctx, conn, &ec2.DescribeNetworkInterfacesInput{
 		Filters: []awstypes.Filter{
-			tfec2.NewFilterV2("group-id", securityGroups),
-			tfec2.NewFilterV2("subnet-id", subnets),
+			tfec2.NewFilter("group-id", securityGroups),
+			tfec2.NewFilter("subnet-id", subnets),
 		},
 	})
 	if err != nil {

@@ -50,7 +50,7 @@ func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta
 	input := &ec2.DescribeNatGatewaysInput{}
 
 	if v, ok := d.GetOk(names.AttrVPCID); ok {
-		input.Filter = append(input.Filter, newAttributeFilterListV2(
+		input.Filter = append(input.Filter, newAttributeFilterList(
 			map[string]string{
 				"vpc-id": v.(string),
 			},
@@ -58,12 +58,12 @@ func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if tags, ok := d.GetOk(names.AttrTags); ok {
-		input.Filter = append(input.Filter, newTagFilterListV2(
+		input.Filter = append(input.Filter, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
-	input.Filter = append(input.Filter, newCustomFilterListV2(
+	input.Filter = append(input.Filter, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 

@@ -480,7 +480,7 @@ func testAccEmptyDefaultVPC(ctx context.Context, vpcID string) error {
 
 	// Delete the default IGW.
 	igw, err := tfec2.FindInternetGateway(ctx, conn, &ec2.DescribeInternetGatewaysInput{
-		Filters: tfec2.NewAttributeFilterListV2(
+		Filters: tfec2.NewAttributeFilterList(
 			map[string]string{
 				"attachment.state":  "available",
 				"attachment.vpc-id": vpcID,
@@ -505,7 +505,7 @@ func testAccEmptyDefaultVPC(ctx context.Context, vpcID string) error {
 
 	// Delete default subnets.
 	subnets, err := tfec2.FindSubnets(ctx, conn, &ec2.DescribeSubnetsInput{
-		Filters: tfec2.NewAttributeFilterListV2(
+		Filters: tfec2.NewAttributeFilterList(
 			map[string]string{
 				"defaultForAz": acctest.CtTrue,
 			},

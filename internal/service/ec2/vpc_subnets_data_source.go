@@ -45,14 +45,14 @@ func dataSourceSubnetsRead(ctx context.Context, d *schema.ResourceData, meta int
 	input := &ec2.DescribeSubnetsInput{}
 
 	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
-		input.Filters = append(input.Filters, newTagFilterListV2(
+		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
 	if filters, filtersOk := d.GetOk(names.AttrFilter); filtersOk {
 		input.Filters = append(input.Filters,
-			newCustomFilterListV2(filters.(*schema.Set))...)
+			newCustomFilterList(filters.(*schema.Set))...)
 	}
 
 	if len(input.Filters) == 0 {

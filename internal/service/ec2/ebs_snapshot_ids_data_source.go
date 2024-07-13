@@ -62,7 +62,7 @@ func dataSourceEBSSnapshotIDsRead(ctx context.Context, d *schema.ResourceData, m
 		input.RestorableByUserIds = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 

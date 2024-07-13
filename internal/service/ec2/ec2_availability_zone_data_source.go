@@ -102,13 +102,13 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 		input.ZoneNames = []string{v.(string)}
 	}
 
-	input.Filters = newAttributeFilterListV2(
+	input.Filters = newAttributeFilterList(
 		map[string]string{
 			names.AttrState: d.Get(names.AttrState).(string),
 		},
 	)
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
