@@ -466,7 +466,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_subnets",
 		},
 		{
-			Factory:  DataSourceVPC,
+			Factory:  dataSourceVPC,
 			TypeName: "aws_vpc",
 			Name:     "VPC",
 			Tags:     &types.ServicePackageResourceTags{},
@@ -476,12 +476,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_vpc_dhcp_options",
 		},
 		{
-			Factory:  DataSourceVPCEndpoint,
+			Factory:  dataSourceVPCEndpoint,
 			TypeName: "aws_vpc_endpoint",
+			Name:     "Endpoint",
 		},
 		{
-			Factory:  DataSourceVPCEndpointService,
+			Factory:  dataSourceVPCEndpointService,
 			TypeName: "aws_vpc_endpoint_service",
+			Name:     "Endpoint Service",
 		},
 		{
 			Factory:  dataSourceIPAMPool,
@@ -600,9 +602,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceDefaultVPC,
+			Factory:  resourceDefaultVPC,
 			TypeName: "aws_default_vpc",
-			Name:     "VPC",
+			Name:     "Default VPC",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
@@ -1121,7 +1123,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVerifiedAccessEndpoint,
+			Factory:  resourceVerifiedAccessEndpoint,
 			TypeName: "aws_verifiedaccess_endpoint",
 			Name:     "Verified Access Endpoint",
 			Tags: &types.ServicePackageResourceTags{
@@ -1137,7 +1139,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVerifiedAccessInstance,
+			Factory:  resourceVerifiedAccessInstance,
 			TypeName: "aws_verifiedaccess_instance",
 			Name:     "Verified Access Instance",
 			Tags: &types.ServicePackageResourceTags{
@@ -1145,17 +1147,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVerifiedAccessInstanceLoggingConfiguration,
+			Factory:  resourceVerifiedAccessInstanceLoggingConfiguration,
 			TypeName: "aws_verifiedaccess_instance_logging_configuration",
 			Name:     "Verified Access Instance Logging Configuration",
 		},
 		{
-			Factory:  ResourceVerifiedAccessInstanceTrustProviderAttachment,
+			Factory:  resourceVerifiedAccessInstanceTrustProviderAttachment,
 			TypeName: "aws_verifiedaccess_instance_trust_provider_attachment",
 			Name:     "Verified Access Instance Trust Provider Attachment",
 		},
 		{
-			Factory:  ResourceVerifiedAccessTrustProvider,
+			Factory:  resourceVerifiedAccessTrustProvider,
 			TypeName: "aws_verifiedaccess_trust_provider",
 			Name:     "Verified Access Trust Provider",
 			Tags: &types.ServicePackageResourceTags{
@@ -1197,28 +1199,31 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVPCEndpointConnectionAccepter,
+			Factory:  resourceVPCEndpointConnectionAccepter,
 			TypeName: "aws_vpc_endpoint_connection_accepter",
+			Name:     "Endpoint Connection Accepter",
 		},
 		{
-			Factory:  ResourceVPCEndpointConnectionNotification,
+			Factory:  resourceVPCEndpointConnectionNotification,
 			TypeName: "aws_vpc_endpoint_connection_notification",
 			Name:     "VPC Endpoint Connection Notification",
 		},
 		{
-			Factory:  ResourceVPCEndpointPolicy,
+			Factory:  resourceVPCEndpointPolicy,
 			TypeName: "aws_vpc_endpoint_policy",
 		},
 		{
-			Factory:  ResourceVPCEndpointRouteTableAssociation,
+			Factory:  resourceVPCEndpointRouteTableAssociation,
 			TypeName: "aws_vpc_endpoint_route_table_association",
+			Name:     "VPC Endpoint Route Table Association",
 		},
 		{
-			Factory:  ResourceVPCEndpointSecurityGroupAssociation,
+			Factory:  resourceVPCEndpointSecurityGroupAssociation,
 			TypeName: "aws_vpc_endpoint_security_group_association",
+			Name:     "VPC Endpoint Security Group Association",
 		},
 		{
-			Factory:  ResourceVPCEndpointService,
+			Factory:  resourceVPCEndpointService,
 			TypeName: "aws_vpc_endpoint_service",
 			Name:     "VPC Endpoint Service",
 			Tags: &types.ServicePackageResourceTags{
@@ -1226,12 +1231,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVPCEndpointServiceAllowedPrincipal,
+			Factory:  resourceVPCEndpointServiceAllowedPrincipal,
 			TypeName: "aws_vpc_endpoint_service_allowed_principal",
+			Name:     "Endpoint Service Allowed Principal",
 		},
 		{
-			Factory:  ResourceVPCEndpointSubnetAssociation,
+			Factory:  resourceVPCEndpointSubnetAssociation,
 			TypeName: "aws_vpc_endpoint_subnet_association",
+			Name:     "VPC Endpoint Subnet Association",
 		},
 		{
 			Factory:  resourceIPAM,
