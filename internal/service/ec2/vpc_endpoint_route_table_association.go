@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_endpoint_route_table_association")
-func ResourceVPCEndpointRouteTableAssociation() *schema.Resource {
+// @SDKResource("aws_vpc_endpoint_route_table_association", name="VPC Endpoint Route Table Association")
+func resourceVPCEndpointRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointRouteTableAssociationCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointRouteTableAssociationRead,

@@ -107,6 +107,7 @@ var (
 	ResourceVPCDHCPOptionsAssociation                     = resourceVPCDHCPOptionsAssociation
 	ResourceVPCEndpoint                                   = resourceVPCEndpoint
 	ResourceVPCEndpointPolicy                             = resourceVPCEndpointPolicy
+	ResourceVPCEndpointRouteTableAssociation              = resourceVPCEndpointRouteTableAssociation
 	ResourceVPCEndpointService                            = resourceVPCEndpointService
 	ResourceVPCIPv4CIDRBlockAssociation                   = resourceVPCIPv4CIDRBlockAssociation
 	ResourceVPCPeeringConnection                          = resourceVPCPeeringConnection
