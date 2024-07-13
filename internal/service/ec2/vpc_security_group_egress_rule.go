@@ -6,15 +6,16 @@ package ec2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
 // @FrameworkResource("aws_vpc_security_group_egress_rule", name="Security Group Egress Rule")
 // @Tags(identifierAttribute="id")
-// @Testing(existsType="github.com/aws/aws-sdk-go/service/ec2;ec2.SecurityGroupRule")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.SecurityGroupRule")
 func newSecurityGroupEgressRuleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupEgressRuleResource{}
 	r.securityGroupRule = r
@@ -35,35 +36,35 @@ func (*securityGroupEgressRuleResource) MoveState(ctx context.Context) []resourc
 }
 
 func (r *securityGroupEgressRuleResource) create(ctx context.Context, data *securityGroupRuleResourceModel) (string, error) {
-	conn := r.Meta().EC2Conn(ctx)
+	conn := r.Meta().EC2Client(ctx)
 
 	input := &ec2.AuthorizeSecurityGroupEgressInput{
 		GroupId:       fwflex.StringFromFramework(ctx, data.SecurityGroupID),
-		IpPermissions: []*ec2.IpPermission{data.expandIPPermission(ctx)},
+		IpPermissions: []awstypes.IpPermission{data.expandIPPermission(ctx)},
 	}
 
-	output, err := conn.AuthorizeSecurityGroupEgressWithContext(ctx, input)
+	output, err := conn.AuthorizeSecurityGroupEgress(ctx, input)
 
 	if err != nil {
 		return "", err
 	}
 
-	return aws.StringValue(output.SecurityGroupRules[0].SecurityGroupRuleId), nil
+	return aws.ToString(output.SecurityGroupRules[0].SecurityGroupRuleId), nil
 }
 
 func (r *securityGroupEgressRuleResource) delete(ctx context.Context, data *securityGroupRuleResourceModel) error {
-	conn := r.Meta().EC2Conn(ctx)
+	conn := r.Meta().EC2Client(ctx)
 
-	_, err := conn.RevokeSecurityGroupEgressWithContext(ctx, &ec2.RevokeSecurityGroupEgressInput{
+	_, err := conn.RevokeSecurityGroupEgress(ctx, &ec2.RevokeSecurityGroupEgressInput{
 		GroupId:              fwflex.StringFromFramework(ctx, data.SecurityGroupID),
-		SecurityGroupRuleIds: fwflex.StringSliceFromFramework(ctx, data.ID),
-	})
+		SecurityGroupRuleIds: fwflex.StringSliceValueFromFramework(ctx, data.ID)},
+	)
 
 	return err
 }
 
-func (r *securityGroupEgressRuleResource) findByID(ctx context.Context, id string) (*ec2.SecurityGroupRule, error) {
-	conn := r.Meta().EC2Conn(ctx)
+func (r *securityGroupEgressRuleResource) findByID(ctx context.Context, id string) (*awstypes.SecurityGroupRule, error) {
+	conn := r.Meta().EC2Client(ctx)
 
-	return FindSecurityGroupEgressRuleByID(ctx, conn, id)
+	return findSecurityGroupEgressRuleByID(ctx, conn, id)
 }
