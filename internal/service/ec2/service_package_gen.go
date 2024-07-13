@@ -226,12 +226,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Local Gateways",
 		},
 		{
-			Factory:  DataSourceManagedPrefixList,
+			Factory:  dataSourceManagedPrefixList,
 			TypeName: "aws_ec2_managed_prefix_list",
+			Name:     "Managed Prefix List",
 		},
 		{
-			Factory:  DataSourceManagedPrefixLists,
+			Factory:  dataSourceManagedPrefixLists,
 			TypeName: "aws_ec2_managed_prefix_lists",
+			Name:     "Managed Prefix Lists",
 		},
 		{
 			Factory:  dataSourceNetworkInsightsAnalysis,
@@ -513,8 +515,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "VPC Peering Connections",
 		},
 		{
-			Factory:  DataSourceVPCs,
+			Factory:  dataSourceVPCs,
 			TypeName: "aws_vpcs",
+			Name:     "VPCs",
 		},
 		{
 			Factory:  dataSourceVPNGateway,
@@ -737,7 +740,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceManagedPrefixList,
+			Factory:  resourceManagedPrefixList,
 			TypeName: "aws_ec2_managed_prefix_list",
 			Name:     "Managed Prefix List",
 			Tags: &types.ServicePackageResourceTags{
@@ -745,8 +748,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceManagedPrefixListEntry,
+			Factory:  resourceManagedPrefixListEntry,
 			TypeName: "aws_ec2_managed_prefix_list_entry",
+			Name:     "Managed Prefix List Entry",
 		},
 		{
 			Factory:  resourceNetworkInsightsAnalysis,
@@ -929,7 +933,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceEgressOnlyInternetGateway,
+			Factory:  resourceEgressOnlyInternetGateway,
 			TypeName: "aws_egress_only_internet_gateway",
 			Name:     "Egress-Only Internet Gateway",
 			Tags: &types.ServicePackageResourceTags{
@@ -950,7 +954,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "EIP Association",
 		},
 		{
-			Factory:  ResourceFlowLog,
+			Factory:  resourceFlowLog,
 			TypeName: "aws_flow_log",
 			Name:     "Flow Log",
 			Tags: &types.ServicePackageResourceTags{
@@ -1180,8 +1184,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVPCDHCPOptionsAssociation,
+			Factory:  resourceVPCDHCPOptionsAssociation,
 			TypeName: "aws_vpc_dhcp_options_association",
+			Name:     "VPC DHCP Options Association",
 		},
 		{
 			Factory:  resourceVPCEndpoint,
@@ -1294,8 +1299,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "VPC IPV4 CIDR Block Association",
 		},
 		{
-			Factory:  ResourceVPCIPv6CIDRBlockAssociation,
+			Factory:  resourceVPCIPv6CIDRBlockAssociation,
 			TypeName: "aws_vpc_ipv6_cidr_block_association",
+			Name:     "VPC IPV6 CIDR Block Association",
 		},
 		{
 			Factory:  resourceNetworkPerformanceMetricSubscription,
