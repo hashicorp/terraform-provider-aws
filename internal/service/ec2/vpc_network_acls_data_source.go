@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_network_acls")
-func DataSourceNetworkACLs() *schema.Resource {
+// @SDKDataSource("aws_network_acls", name="Network ACLs")
+func dataSourceNetworkACLs() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNetworkACLsRead,
 
@@ -44,23 +44,23 @@ func DataSourceNetworkACLs() *schema.Resource {
 
 func dataSourceNetworkACLsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeNetworkAclsInput{}
 
 	if v, ok := d.GetOk(names.AttrVPCID); ok {
-		input.Filters = append(input.Filters, newAttributeFilterList(
+		input.Filters = append(input.Filters, newAttributeFilterListV2(
 			map[string]string{
 				"vpc-id": v.(string),
 			},
 		)...)
 	}
 
-	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterListV2(
+		TagsV2(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, newCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterListV2(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -68,7 +68,7 @@ func dataSourceNetworkACLsRead(ctx context.Context, d *schema.ResourceData, meta
 		input.Filters = nil
 	}
 
-	output, err := FindNetworkACLs(ctx, conn, input)
+	output, err := findNetworkACLs(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACLs: %s", err)
@@ -77,7 +77,7 @@ func dataSourceNetworkACLsRead(ctx context.Context, d *schema.ResourceData, meta
 	var naclIDs []string
 
 	for _, v := range output {
-		naclIDs = append(naclIDs, aws.StringValue(v.NetworkAclId))
+		naclIDs = append(naclIDs, aws.ToString(v.NetworkAclId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
