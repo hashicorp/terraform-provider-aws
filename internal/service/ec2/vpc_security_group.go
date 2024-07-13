@@ -36,7 +36,7 @@ import (
 
 // @SDKResource("aws_security_group", name="Security Group")
 // @Tags(identifierAttribute="id")
-// @Testing(existsType="github.com/aws/aws-sdk-go/service/ec2;ec2.SecurityGroup")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.SecurityGroup")
 // @Testing(importIgnore="revoke_rules_on_delete")
 func resourceSecurityGroup() *schema.Resource {
 	//lintignore:R011
@@ -56,7 +56,7 @@ func resourceSecurityGroup() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  SecurityGroupMigrateState,
+		MigrateState:  securityGroupMigrateState,
 
 		// Keep in sync with aws_default_security_group's schema.
 		// See notes in vpc_default_security_group.go.
