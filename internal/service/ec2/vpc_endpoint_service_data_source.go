@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_vpc_endpoint_service")
-func DataSourceVPCEndpointService() *schema.Resource {
+// @SDKDataSource("aws_vpc_endpoint_service", name="Endpoint Service")
+func dataSourceVPCEndpointService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCEndpointServiceRead,
 
