@@ -98,6 +98,7 @@ var (
 	ResourceTransitGatewayVPCAttachmentAccepter      = resourceTransitGatewayVPCAttachmentAccepter
 	ResourceVerifiedAccessEndpoint                   = resourceVerifiedAccessEndpoint
 	ResourceVerifiedAccessGroup                      = resourceVerifiedAccessGroup
+	ResourceVerifiedAccessInstance                   = resourceVerifiedAccessInstance
 	ResourceVPC                                      = resourceVPC
 	ResourceVPCDHCPOptions                           = resourceVPCDHCPOptions
 	ResourceVPCDHCPOptionsAssociation                = resourceVPCDHCPOptionsAssociation

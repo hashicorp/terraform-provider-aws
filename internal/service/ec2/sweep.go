@@ -3010,7 +3010,7 @@ func sweepVerifiedAccessInstances(region string) error {
 		}
 
 		for _, v := range page.VerifiedAccessInstances {
-			r := ResourceVerifiedAccessInstance()
+			r := resourceVerifiedAccessInstance()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.VerifiedAccessInstanceId))
 
