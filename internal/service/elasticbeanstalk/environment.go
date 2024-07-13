@@ -15,10 +15,10 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -400,7 +400,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 		if value := aws.ToString(optionSetting.Value); value != "" {
 			switch aws.ToString(optionSetting.OptionName) {
 			case "SecurityGroups":
-				m[names.AttrValue] = dropGeneratedSecurityGroup(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), value)
+				m[names.AttrValue] = dropGeneratedSecurityGroup(ctx, meta.(*conns.AWSClient).EC2Client(ctx), value)
 			case "Subnets", "ELBSubnets":
 				m[names.AttrValue] = sortValues(value)
 			default:
@@ -838,9 +838,9 @@ func extractOptionSettings(s *schema.Set) []awstypes.ConfigurationOptionSetting 
 	return settings
 }
 
-func dropGeneratedSecurityGroup(ctx context.Context, conn *ec2.EC2, settingValue string) string {
+func dropGeneratedSecurityGroup(ctx context.Context, conn *ec2.Client, settingValue string) string {
 	input := &ec2.DescribeSecurityGroupsInput{
-		GroupIds: aws.StringSlice(strings.Split(settingValue, ",")),
+		GroupIds: strings.Split(settingValue, ","),
 	}
 
 	securityGroup, err := tfec2.FindSecurityGroups(ctx, conn, input)
