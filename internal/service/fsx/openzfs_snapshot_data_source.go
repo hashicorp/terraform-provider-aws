@@ -71,7 +71,7 @@ func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	input := &fsx.DescribeSnapshotsInput{}
 
 	if v, ok := d.GetOk("snapshot_ids"); ok && len(v.([]interface{})) > 0 {
-		input.SnapshotIds = flex.ExpandStringList(v.([]interface{}))
+		input.SnapshotIds = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	input.Filters = append(input.Filters, newSnapshotFilterList(
@@ -99,7 +99,7 @@ func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		sort.Slice(snapshots, func(i, j int) bool {
-			return aws.TimeValue(snapshots[i].CreationTime).Unix() > aws.TimeValue(snapshots[j].CreationTime).Unix()
+			return aws.ToTime(snapshots[i].CreationTime).Unix() > aws.ToTime(snapshots[j].CreationTime).Unix()
 		})
 	}
 
