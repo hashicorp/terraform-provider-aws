@@ -435,9 +435,9 @@ func waitSubnetAssignIPv6AddressOnCreationUpdated(ctx context.Context, conn *ec2
 	return nil, err
 }
 
-func waitSubnetEnableLniAtDeviceIndexUpdated(ctx context.Context, conn *ec2.Client, subnetID string, expectedValue int64) (*awstypes.Subnet, error) {
+func waitSubnetEnableLniAtDeviceIndexUpdated(ctx context.Context, conn *ec2.Client, subnetID string, expectedValue int32) (*awstypes.Subnet, error) {
 	stateConf := &retry.StateChangeConf{
-		Target:     enum.Slice(strconv.FormatInt(expectedValue, 10)),
+		Target:     enum.Slice(strconv.FormatInt(int64(expectedValue), 10)),
 		Refresh:    statusSubnetEnableLniAtDeviceIndex(ctx, conn, subnetID),
 		Timeout:    ec2PropagationTimeout,
 		Delay:      10 * time.Second,
@@ -561,6 +561,10 @@ func waitSubnetPrivateDNSHostnameTypeOnLaunchUpdated(ctx context.Context, conn *
 	return nil, err
 }
 
+const (
+	vpcCreatedTimeout = 10 * time.Minute
+)
+
 func waitVPCCreated(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Vpc, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VpcStatePending),
@@ -572,6 +576,52 @@ func waitVPCCreated(ctx context.Context, conn *ec2.Client, id string) (*awstypes
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Vpc); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCCIDRBlockAssociationCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcCidrBlockState, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.VpcCidrBlockStateCodeAssociating, awstypes.VpcCidrBlockStateCodeDisassociated, awstypes.VpcCidrBlockStateCodeFailing),
+		Target:     enum.Slice(awstypes.VpcCidrBlockStateCodeAssociated),
+		Refresh:    statusVPCCIDRBlockAssociationState(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcCidrBlockState); ok {
+		if state := output.State; state == awstypes.VpcCidrBlockStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCCIDRBlockAssociationDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcCidrBlockState, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.VpcCidrBlockStateCodeAssociated, awstypes.VpcCidrBlockStateCodeDisassociating, awstypes.VpcCidrBlockStateCodeFailing),
+		Target:     []string{},
+		Refresh:    statusVPCCIDRBlockAssociationState(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcCidrBlockState); ok {
+		if state := output.State; state == awstypes.VpcCidrBlockStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		}
+
 		return output, err
 	}
 
@@ -641,6 +691,139 @@ func waitVPCAttributeUpdated(ctx context.Context, conn *ec2.Client, vpcID string
 
 	return nil, err
 }
+
+func waitNATGatewayCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.NatGateway, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.NatGatewayStatePending),
+		Target:  enum.Slice(awstypes.NatGatewayStateAvailable),
+		Refresh: statusNATGatewayState(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NatGateway); ok {
+		if output.State == awstypes.NatGatewayStateFailed {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitNATGatewayDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.NatGateway, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.NatGatewayStateDeleting),
+		Target:     []string{},
+		Refresh:    statusNATGatewayState(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NatGateway); ok {
+		if output.State == awstypes.NatGatewayStateFailed {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitNATGatewayAddressAssigned(ctx context.Context, conn *ec2.Client, natGatewayID, privateIP string, timeout time.Duration) (*awstypes.NatGatewayAddress, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.NatGatewayAddressStatusAssigning),
+		Target:  enum.Slice(awstypes.NatGatewayAddressStatusSucceeded),
+		Refresh: statusNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx, conn, natGatewayID, privateIP),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NatGatewayAddress); ok {
+		if output.Status == awstypes.NatGatewayAddressStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitNATGatewayAddressAssociated(ctx context.Context, conn *ec2.Client, natGatewayID, allocationID string, timeout time.Duration) (*awstypes.NatGatewayAddress, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.NatGatewayAddressStatusAssociating),
+		Target:  enum.Slice(awstypes.NatGatewayAddressStatusSucceeded),
+		Refresh: statusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NatGatewayAddress); ok {
+		if output.Status == awstypes.NatGatewayAddressStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.Client, natGatewayID, allocationID string, timeout time.Duration) (*awstypes.NatGatewayAddress, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.NatGatewayAddressStatusSucceeded, awstypes.NatGatewayAddressStatusDisassociating),
+		Target:  []string{},
+		Refresh: statusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NatGatewayAddress); ok {
+		if output.Status == awstypes.NatGatewayAddressStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitNATGatewayAddressUnassigned(ctx context.Context, conn *ec2.Client, natGatewayID, privateIP string, timeout time.Duration) (*awstypes.NatGatewayAddress, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.NatGatewayAddressStatusUnassigning),
+		Target:  []string{},
+		Refresh: statusNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx, conn, natGatewayID, privateIP),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NatGatewayAddress); ok {
+		if output.Status == awstypes.NatGatewayAddressStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	networkInterfaceAttachedTimeout = 5 * time.Minute
+	NetworkInterfaceDetachedTimeout = 10 * time.Minute
+)
 
 func waitNetworkInterfaceAvailableAfterUse(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.NetworkInterface, error) {
 	// Hyperplane attached ENI.
@@ -1193,6 +1376,48 @@ func waitVPCEndpointServicePrivateDNSNameVerified(ctx context.Context, conn *ec2
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*awstypes.PrivateDnsNameConfiguration); ok {
 		return out, err
+	}
+
+	return nil, err
+}
+
+func waitVPCPeeringConnectionActive(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcPeeringConnection, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.VpcPeeringConnectionStateReasonCodeInitiatingRequest, awstypes.VpcPeeringConnectionStateReasonCodeProvisioning),
+		Target:  enum.Slice(awstypes.VpcPeeringConnectionStateReasonCodeActive, awstypes.VpcPeeringConnectionStateReasonCodePendingAcceptance),
+		Refresh: statusVPCPeeringConnectionActive(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcPeeringConnection); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCPeeringConnectionDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcPeeringConnection, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.VpcPeeringConnectionStateReasonCodeActive,
+			awstypes.VpcPeeringConnectionStateReasonCodeDeleting,
+			awstypes.VpcPeeringConnectionStateReasonCodePendingAcceptance,
+		),
+		Target:  []string{},
+		Refresh: statusVPCPeeringConnectionDeleted(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcPeeringConnection); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+
+		return output, err
 	}
 
 	return nil, err
@@ -2792,6 +3017,41 @@ func waitInstanceConnectEndpointDeleted(ctx context.Context, conn *ec2.Client, i
 	if output, ok := outputRaw.(*awstypes.Ec2InstanceConnectEndpoint); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitInternetGatewayAttached(ctx context.Context, conn *ec2.Client, internetGatewayID, vpcID string, timeout time.Duration) (*awstypes.InternetGatewayAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:        enum.Slice(awstypes.AttachmentStatusAttaching),
+		Target:         enum.Slice(InternetGatewayAttachmentStateAvailable),
+		Timeout:        timeout,
+		NotFoundChecks: InternetGatewayNotFoundChecks,
+		Refresh:        statusInternetGatewayAttachmentState(ctx, conn, internetGatewayID, vpcID),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.InternetGatewayAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitInternetGatewayDetached(ctx context.Context, conn *ec2.Client, internetGatewayID, vpcID string, timeout time.Duration) (*awstypes.InternetGatewayAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(InternetGatewayAttachmentStateAvailable, awstypes.AttachmentStatusDetaching),
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: statusInternetGatewayAttachmentState(ctx, conn, internetGatewayID, vpcID),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.InternetGatewayAttachment); ok {
 		return output, err
 	}
 
