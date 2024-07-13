@@ -985,7 +985,7 @@ func testAccCheckENIExists(ctx context.Context, n string, v *types.NetworkInterf
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindNetworkInterfaceByIDV2(ctx, conn, rs.Primary.ID)
+		output, err := tfec2.FindNetworkInterfaceByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -1010,7 +1010,7 @@ func testAccCheckENIExistsV2(ctx context.Context, n string, v *types.NetworkInte
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindNetworkInterfaceByIDV2(ctx, conn, rs.Primary.ID)
+		output, err := tfec2.FindNetworkInterfaceByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -1031,7 +1031,7 @@ func testAccCheckENIDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfec2.FindNetworkInterfaceByIDV2(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindNetworkInterfaceByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
