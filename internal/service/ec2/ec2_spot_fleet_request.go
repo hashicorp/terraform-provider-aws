@@ -56,7 +56,7 @@ func resourceSpotFleetRequest() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  SpotFleetRequestMigrateState,
+		MigrateState:  spotFleetRequestMigrateState,
 
 		Schema: map[string]*schema.Schema{
 			"allocation_strategy": {
