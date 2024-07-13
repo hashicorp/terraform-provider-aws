@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -54,7 +53,7 @@ func TestAccFSxOpenZFSFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_volumes", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", ""),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", awstypes.OpenZFSDeploymentTypeSingleAz1),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.OpenZFSDeploymentTypeSingleAz1)),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "192"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "AUTOMATIC"),
@@ -81,7 +80,7 @@ func TestAccFSxOpenZFSFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "64"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, awstypes.StorageTypeSsd),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, string(awstypes.StorageTypeSsd)),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
@@ -867,7 +866,7 @@ func TestAccFSxOpenZFSFileSystem_multiAZ(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_volumes", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", ""),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", awstypes.OpenZFSDeploymentTypeMultiAz1),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.OpenZFSDeploymentTypeMultiAz1)),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "192"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "AUTOMATIC"),
@@ -894,7 +893,7 @@ func TestAccFSxOpenZFSFileSystem_multiAZ(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "64"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, awstypes.StorageTypeSsd),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, string(awstypes.StorageTypeSsd)),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", names.AttrID),
