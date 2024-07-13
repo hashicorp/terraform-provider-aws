@@ -11,10 +11,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	serverlessrepo "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -551,7 +551,7 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
 
 func testAccCheckAMIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ami" {
@@ -561,9 +561,9 @@ func testAccCheckAMIDestroy(ctx context.Context) resource.TestCheckFunc {
 			// Try to find the AMI
 			log.Printf("AMI-ID: %s", rs.Primary.ID)
 			DescribeAmiOpts := &ec2.DescribeImagesInput{
-				ImageIds: []*string{aws.String(rs.Primary.ID)},
+				ImageIds: []string{rs.Primary.ID},
 			}
-			resp, err := conn.DescribeImagesWithContext(ctx, DescribeAmiOpts)
+			resp, err := conn.DescribeImages(ctx, DescribeAmiOpts)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidAMIID", "NotFound") {
 					log.Printf("[DEBUG] AMI not found, passing")
@@ -575,7 +575,7 @@ func testAccCheckAMIDestroy(ctx context.Context) resource.TestCheckFunc {
 			if len(resp.Images) > 0 {
 				state := resp.Images[0].State
 				return fmt.Errorf("AMI %s still exists in the state: %s.", aws.StringValue(resp.Images[0].ImageId),
-					aws.StringValue(state))
+					string(state))
 			}
 		}
 		return nil
