@@ -28,7 +28,7 @@ import (
 // @SDKResource("aws_verifiedaccess_trust_provider", name="Verified Access Trust Provider")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceVerifiedAccessTrustProvider() *schema.Resource {
+func resourceVerifiedAccessTrustProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessTrustProviderCreate,
 		ReadWithoutTimeout:   resourceVerifiedAccessTrustProviderRead,

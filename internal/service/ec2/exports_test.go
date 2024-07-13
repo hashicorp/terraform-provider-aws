@@ -99,6 +99,7 @@ var (
 	ResourceVerifiedAccessEndpoint                   = resourceVerifiedAccessEndpoint
 	ResourceVerifiedAccessGroup                      = resourceVerifiedAccessGroup
 	ResourceVerifiedAccessInstance                   = resourceVerifiedAccessInstance
+	ResourceVerifiedAccessTrustProvider              = resourceVerifiedAccessTrustProvider
 	ResourceVPC                                      = resourceVPC
 	ResourceVPCDHCPOptions                           = resourceVPCDHCPOptions
 	ResourceVPCDHCPOptionsAssociation                = resourceVPCDHCPOptionsAssociation

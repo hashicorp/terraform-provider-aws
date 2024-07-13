@@ -3053,7 +3053,7 @@ func sweepVerifiedAccessTrustProviders(region string) error {
 		}
 
 		for _, v := range page.VerifiedAccessTrustProviders {
-			r := ResourceVerifiedAccessTrustProvider()
+			r := resourceVerifiedAccessTrustProvider()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.VerifiedAccessTrustProviderId))
 
