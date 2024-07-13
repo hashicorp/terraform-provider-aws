@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccVPCNATGateway_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var natGateway ec2.NatGateway
+	var natGateway awstypes.NatGateway
 	resourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -59,7 +59,7 @@ func TestAccVPCNATGateway_basic(t *testing.T) {
 
 func TestAccVPCNATGateway_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var natGateway ec2.NatGateway
+	var natGateway awstypes.NatGateway
 	resourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -83,7 +83,7 @@ func TestAccVPCNATGateway_disappears(t *testing.T) {
 
 func TestAccVPCNATGateway_ConnectivityType_private(t *testing.T) {
 	ctx := acctest.Context(t)
-	var natGateway ec2.NatGateway
+	var natGateway awstypes.NatGateway
 	resourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -119,7 +119,7 @@ func TestAccVPCNATGateway_ConnectivityType_private(t *testing.T) {
 
 func TestAccVPCNATGateway_privateIP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var natGateway ec2.NatGateway
+	var natGateway awstypes.NatGateway
 	resourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -155,7 +155,7 @@ func TestAccVPCNATGateway_privateIP(t *testing.T) {
 
 func TestAccVPCNATGateway_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var natGateway ec2.NatGateway
+	var natGateway awstypes.NatGateway
 	resourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -201,7 +201,7 @@ func TestAccVPCNATGateway_tags(t *testing.T) {
 
 func TestAccVPCNATGateway_secondaryAllocationIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var natGateway ec2.NatGateway
+	var natGateway awstypes.NatGateway
 	resourceName := "aws_nat_gateway.test"
 	eipResourceName := "aws_eip.secondary"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -252,7 +252,7 @@ func TestAccVPCNATGateway_secondaryAllocationIDs(t *testing.T) {
 
 func TestAccVPCNATGateway_secondaryPrivateIPAddressCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var natGateway ec2.NatGateway
+	var natGateway awstypes.NatGateway
 	resourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -284,7 +284,7 @@ func TestAccVPCNATGateway_secondaryPrivateIPAddressCount(t *testing.T) {
 
 func TestAccVPCNATGateway_secondaryPrivateIPAddresses(t *testing.T) {
 	ctx := acctest.Context(t)
-	var natGateway ec2.NatGateway
+	var natGateway awstypes.NatGateway
 	resourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	eipResourceName := "aws_eip.secondary"
@@ -337,7 +337,7 @@ func TestAccVPCNATGateway_secondaryPrivateIPAddresses(t *testing.T) {
 
 func TestAccVPCNATGateway_SecondaryPrivateIPAddresses_private(t *testing.T) {
 	ctx := acctest.Context(t)
-	var natGateway ec2.NatGateway
+	var natGateway awstypes.NatGateway
 	resourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -401,7 +401,7 @@ func TestAccVPCNATGateway_SecondaryPrivateIPAddresses_private(t *testing.T) {
 
 func testAccCheckNATGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_nat_gateway" {
@@ -425,7 +425,7 @@ func testAccCheckNATGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckNATGatewayExists(ctx context.Context, n string, v *ec2.NatGateway) resource.TestCheckFunc {
+func testAccCheckNATGatewayExists(ctx context.Context, n string, v *awstypes.NatGateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -436,7 +436,7 @@ func testAccCheckNATGatewayExists(ctx context.Context, n string, v *ec2.NatGatew
 			return fmt.Errorf("No EC2 NAT Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindNATGatewayByID(ctx, conn, rs.Primary.ID)
 
