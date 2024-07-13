@@ -21,10 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_default_vpc", name="VPC")
+// @SDKResource("aws_default_vpc", name="Default VPC")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceDefaultVPC() *schema.Resource {
+func resourceDefaultVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultVPCCreate,
