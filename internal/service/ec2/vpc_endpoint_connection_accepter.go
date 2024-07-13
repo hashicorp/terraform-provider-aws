@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_endpoint_connection_accepter")
-func ResourceVPCEndpointConnectionAccepter() *schema.Resource {
+// @SDKResource("aws_vpc_endpoint_connection_accepter", name="Endpoint Connection Accepter")
+func resourceVPCEndpointConnectionAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointConnectionAccepterCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointConnectionAccepterRead,

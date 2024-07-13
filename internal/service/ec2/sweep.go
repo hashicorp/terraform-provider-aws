@@ -2382,7 +2382,7 @@ func sweepVPCEndpointConnectionAccepters(region string) error {
 		for _, v := range page.VpcEndpointConnections {
 			id := VPCEndpointConnectionAccepterCreateResourceID(aws.ToString(v.ServiceId), aws.ToString(v.VpcEndpointId))
 
-			r := ResourceVPCEndpointConnectionAccepter()
+			r := resourceVPCEndpointConnectionAccepter()
 			d := r.Data(nil)
 			d.SetId(id)
 
