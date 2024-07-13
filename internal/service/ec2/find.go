@@ -1913,8 +1913,8 @@ func findSecurityGroupByNameAndVPCID(ctx context.Context, conn *ec2.Client, name
 			},
 		),
 	}
-	return findSecurityGroup(ctx, conn, input)
 
+	return findSecurityGroup(ctx, conn, input)
 }
 
 func findSecurityGroupByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecurityGroup, error) {

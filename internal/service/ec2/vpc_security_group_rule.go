@@ -515,7 +515,7 @@ func resourceSecurityGroupRuleImport(_ context.Context, d *schema.ResourceData, 
 }
 
 func findRuleMatch(p awstypes.IpPermission, rules []awstypes.IpPermission) (*awstypes.IpPermission, string) {
-	var rule *awstypes.IpPermission
+	var rule awstypes.IpPermission
 	var description string
 
 	for _, r := range rules {
@@ -613,10 +613,10 @@ func findRuleMatch(p awstypes.IpPermission, rules []awstypes.IpPermission) (*aws
 			continue
 		}
 
-		rule = &r
+		rule = r
 	}
 
-	return rule, description
+	return &rule, description
 }
 
 func findSecurityGroupRuleMatch(p awstypes.IpPermission, securityGroupRules []awstypes.SecurityGroupRule, ruleType securityGroupRuleType) string {

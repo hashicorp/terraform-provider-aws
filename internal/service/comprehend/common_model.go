@@ -87,15 +87,15 @@ func statusNetworkInterfaces(ctx context.Context, conn *ec2.Client, initialENIs 
 			return nil, "", err
 		}
 
-		var added *awstypes.NetworkInterface
+		var added awstypes.NetworkInterface
 		for _, v := range out {
 			if _, ok := initialENIs[aws.ToString(v.NetworkInterfaceId)]; !ok {
-				added = &v
+				added = v
 				break
 			}
 		}
 
-		if added == nil {
+		if added.NetworkInterfaceId == nil {
 			return nil, "", nil
 		}
 

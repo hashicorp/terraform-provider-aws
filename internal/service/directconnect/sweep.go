@@ -292,7 +292,6 @@ func sweepGatewayAssociations(region string) error {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Direct Connect Gateway Associations (%s): %w", region, err))
 			}
 		}
-
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
