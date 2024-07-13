@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_prefix_list")
-func DataSourcePrefixList() *schema.Resource {
+// @SDKDataSource("aws_prefix_list", name="Prefix List")
+func dataSourcePrefixList() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePrefixListRead,
 
