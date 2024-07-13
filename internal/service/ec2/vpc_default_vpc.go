@@ -39,7 +39,7 @@ func ResourceDefaultVPC() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaVersion: 1,
-		MigrateState:  VPCMigrateState,
+		MigrateState:  vpcMigrateState,
 
 		// Keep in sync with aws_vpc's schema with the following changes:
 		//   - cidr_block is Computed-only

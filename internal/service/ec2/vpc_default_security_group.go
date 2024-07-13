@@ -33,7 +33,7 @@ func resourceDefaultSecurityGroup() *schema.Resource {
 		},
 
 		SchemaVersion: 1, // Keep in sync with aws_security_group's schema version.
-		MigrateState:  SecurityGroupMigrateState,
+		MigrateState:  securityGroupMigrateState,
 
 		// Keep in sync with aws_security_group's schema with the following changes:
 		//   - description is Computed-only
