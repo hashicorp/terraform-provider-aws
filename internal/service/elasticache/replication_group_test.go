@@ -2914,10 +2914,10 @@ func testCheckRedisParameterGroupDefault(ctx context.Context, version *awstypes.
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
 		output, err := tfelasticache.FindCacheParameterGroup(ctx, conn, &elasticache.DescribeCacheParameterGroupsInput{}, tfslices.PredicateAnd(
-			func(v awstypes.CacheParameterGroup) bool {
+			func(v *awstypes.CacheParameterGroup) bool {
 				return aws.ToString(v.CacheParameterGroupFamily) == aws.ToString(version.CacheParameterGroupFamily)
 			},
-			func(v awstypes.CacheParameterGroup) bool {
+			func(v *awstypes.CacheParameterGroup) bool {
 				name := aws.ToString(v.CacheParameterGroupName)
 				return strings.HasPrefix(name, "default.") && !strings.HasSuffix(name, ".cluster.on")
 			},
@@ -2961,10 +2961,10 @@ func testCheckRedisParameterGroupClusterEnabledDefault(ctx context.Context, vers
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
 		output, err := tfelasticache.FindCacheParameterGroup(ctx, conn, &elasticache.DescribeCacheParameterGroupsInput{}, tfslices.PredicateAnd(
-			func(v awstypes.CacheParameterGroup) bool {
+			func(v *awstypes.CacheParameterGroup) bool {
 				return aws.ToString(v.CacheParameterGroupFamily) == aws.ToString(version.CacheParameterGroupFamily)
 			},
-			func(v awstypes.CacheParameterGroup) bool {
+			func(v *awstypes.CacheParameterGroup) bool {
 				name := aws.ToString(v.CacheParameterGroupName)
 				return strings.HasPrefix(name, "default.") && strings.HasSuffix(name, ".cluster.on")
 			},

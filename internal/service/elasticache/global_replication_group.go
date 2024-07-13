@@ -626,10 +626,10 @@ func findGlobalReplicationGroupByID(ctx context.Context, conn *elasticache.Clien
 		ShowMemberInfo:           aws.Bool(true),
 	}
 
-	return findGlobalReplicationGroup(ctx, conn, input, tfslices.PredicateTrue[awstypes.GlobalReplicationGroup]())
+	return findGlobalReplicationGroup(ctx, conn, input, tfslices.PredicateTrue[*awstypes.GlobalReplicationGroup]())
 }
 
-func findGlobalReplicationGroup(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeGlobalReplicationGroupsInput, filter tfslices.Predicate[awstypes.GlobalReplicationGroup]) (*awstypes.GlobalReplicationGroup, error) {
+func findGlobalReplicationGroup(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeGlobalReplicationGroupsInput, filter tfslices.Predicate[*awstypes.GlobalReplicationGroup]) (*awstypes.GlobalReplicationGroup, error) {
 	output, err := findGlobalReplicationGroups(ctx, conn, input, filter)
 
 	if err != nil {
@@ -639,7 +639,7 @@ func findGlobalReplicationGroup(ctx context.Context, conn *elasticache.Client, i
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findGlobalReplicationGroups(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeGlobalReplicationGroupsInput, filter tfslices.Predicate[awstypes.GlobalReplicationGroup]) ([]awstypes.GlobalReplicationGroup, error) {
+func findGlobalReplicationGroups(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeGlobalReplicationGroupsInput, filter tfslices.Predicate[*awstypes.GlobalReplicationGroup]) ([]awstypes.GlobalReplicationGroup, error) {
 	var output []awstypes.GlobalReplicationGroup
 
 	pages := elasticache.NewDescribeGlobalReplicationGroupsPaginator(conn, input)
@@ -659,7 +659,7 @@ func findGlobalReplicationGroups(ctx context.Context, conn *elasticache.Client, 
 		}
 
 		for _, v := range page.GlobalReplicationGroups {
-			if filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}

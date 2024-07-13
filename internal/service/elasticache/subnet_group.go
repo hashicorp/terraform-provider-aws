@@ -217,10 +217,10 @@ func findCacheSubnetGroupByName(ctx context.Context, conn *elasticache.Client, n
 		CacheSubnetGroupName: aws.String(name),
 	}
 
-	return findCacheSubnetGroup(ctx, conn, input, tfslices.PredicateTrue[awstypes.CacheSubnetGroup]())
+	return findCacheSubnetGroup(ctx, conn, input, tfslices.PredicateTrue[*awstypes.CacheSubnetGroup]())
 }
 
-func findCacheSubnetGroup(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheSubnetGroupsInput, filter tfslices.Predicate[awstypes.CacheSubnetGroup]) (*awstypes.CacheSubnetGroup, error) {
+func findCacheSubnetGroup(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheSubnetGroupsInput, filter tfslices.Predicate[*awstypes.CacheSubnetGroup]) (*awstypes.CacheSubnetGroup, error) {
 	output, err := findCacheSubnetGroups(ctx, conn, input, filter)
 
 	if err != nil {
@@ -230,7 +230,7 @@ func findCacheSubnetGroup(ctx context.Context, conn *elasticache.Client, input *
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findCacheSubnetGroups(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheSubnetGroupsInput, filter tfslices.Predicate[awstypes.CacheSubnetGroup]) ([]awstypes.CacheSubnetGroup, error) {
+func findCacheSubnetGroups(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheSubnetGroupsInput, filter tfslices.Predicate[*awstypes.CacheSubnetGroup]) ([]awstypes.CacheSubnetGroup, error) {
 	var output []awstypes.CacheSubnetGroup
 
 	pages := elasticache.NewDescribeCacheSubnetGroupsPaginator(conn, input)
@@ -250,7 +250,7 @@ func findCacheSubnetGroups(ctx context.Context, conn *elasticache.Client, input 
 		}
 
 		for _, v := range page.CacheSubnetGroups {
-			if filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}

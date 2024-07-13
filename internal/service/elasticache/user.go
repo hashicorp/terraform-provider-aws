@@ -306,11 +306,11 @@ func findUser(ctx context.Context, conn *elasticache.Client, input *elasticache.
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findUsers(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeUsersInput, filter tfslices.Predicate[*awstypes.User]) ([]*awstypes.User, error) {
-	var output []*awstypes.User
+func findUsers(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeUsersInput, filter tfslices.Predicate[*awstypes.User]) ([]awstypes.User, error) {
+	var output []awstypes.User
 
 	pages := elasticache.NewDescribeUsersPaginator(conn, input)
 
@@ -330,7 +330,7 @@ func findUsers(ctx context.Context, conn *elasticache.Client, input *elasticache
 
 		for _, v := range page.Users {
 			if filter(&v) {
-				output = append(output, &v)
+				output = append(output, v)
 			}
 		}
 	}

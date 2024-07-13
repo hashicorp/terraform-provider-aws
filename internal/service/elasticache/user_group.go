@@ -223,11 +223,11 @@ func findUserGroup(ctx context.Context, conn *elasticache.Client, input *elastic
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findUserGroups(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeUserGroupsInput, filter tfslices.Predicate[*awstypes.UserGroup]) ([]*awstypes.UserGroup, error) {
-	var output []*awstypes.UserGroup
+func findUserGroups(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeUserGroupsInput, filter tfslices.Predicate[*awstypes.UserGroup]) ([]awstypes.UserGroup, error) {
+	var output []awstypes.UserGroup
 
 	pages := elasticache.NewDescribeUserGroupsPaginator(conn, input)
 
@@ -247,7 +247,7 @@ func findUserGroups(ctx context.Context, conn *elasticache.Client, input *elasti
 
 		for _, v := range page.UserGroups {
 			if filter(&v) {
-				output = append(output, &v)
+				output = append(output, v)
 			}
 		}
 	}

@@ -387,10 +387,10 @@ func findCacheParameterGroupByName(ctx context.Context, conn *elasticache.Client
 		CacheParameterGroupName: aws.String(name),
 	}
 
-	return findCacheParameterGroup(ctx, conn, input, tfslices.PredicateTrue[awstypes.CacheParameterGroup]())
+	return findCacheParameterGroup(ctx, conn, input, tfslices.PredicateTrue[*awstypes.CacheParameterGroup]())
 }
 
-func findCacheParameterGroup(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheParameterGroupsInput, filter tfslices.Predicate[awstypes.CacheParameterGroup]) (*awstypes.CacheParameterGroup, error) {
+func findCacheParameterGroup(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheParameterGroupsInput, filter tfslices.Predicate[*awstypes.CacheParameterGroup]) (*awstypes.CacheParameterGroup, error) {
 	output, err := findCacheParameterGroups(ctx, conn, input, filter)
 
 	if err != nil {
@@ -400,7 +400,7 @@ func findCacheParameterGroup(ctx context.Context, conn *elasticache.Client, inpu
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findCacheParameterGroups(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheParameterGroupsInput, filter tfslices.Predicate[awstypes.CacheParameterGroup]) ([]awstypes.CacheParameterGroup, error) {
+func findCacheParameterGroups(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheParameterGroupsInput, filter tfslices.Predicate[*awstypes.CacheParameterGroup]) ([]awstypes.CacheParameterGroup, error) {
 	var output []awstypes.CacheParameterGroup
 
 	pages := elasticache.NewDescribeCacheParameterGroupsPaginator(conn, input)
@@ -420,7 +420,7 @@ func findCacheParameterGroups(ctx context.Context, conn *elasticache.Client, inp
 		}
 
 		for _, v := range page.CacheParameterGroups {
-			if filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}

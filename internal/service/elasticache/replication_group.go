@@ -687,9 +687,8 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	const (
 		delay = 0 * time.Second
 	)
-	_, err = waitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), delay)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group to be available (%s): %s", aws.ToString(rgp.ARN), err)
+	if _, err := waitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), delay); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) create: %s", aws.ToString(rgp.ARN), err)
 	}
 
 	log.Printf("[DEBUG] ElastiCache Replication Group (%s): Checking underlying cache clusters", d.Id())
@@ -697,20 +696,22 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	// This section reads settings that require checking the underlying cache clusters
 	if rgp.NodeGroups != nil && len(rgp.NodeGroups[0].NodeGroupMembers) != 0 {
 		cacheCluster := rgp.NodeGroups[0].NodeGroupMembers[0]
-
-		res, err := conn.DescribeCacheClusters(ctx, &elasticache.DescribeCacheClustersInput{
+		input := &elasticache.DescribeCacheClustersInput{
 			CacheClusterId:    cacheCluster.CacheClusterId,
 			ShowCacheNodeInfo: aws.Bool(true),
-		})
+		}
+
+		output, err := conn.DescribeCacheClusters(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading ElastiCache Replication Group (%s): reading Cache Cluster (%s): %s", d.Id(), aws.ToString(cacheCluster.CacheClusterId), err)
 		}
 
-		if len(res.CacheClusters) == 0 {
+		if len(output.CacheClusters) == 0 {
 			return diags
 		}
 
-		c := res.CacheClusters[0]
+		c := output.CacheClusters[0]
 
 		if err := setFromCacheCluster(d, &c); err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading ElastiCache Replication Group (%s): reading Cache Cluster (%s): %s", d.Id(), aws.ToString(cacheCluster.CacheClusterId), err)
@@ -1178,10 +1179,10 @@ func findReplicationGroupByID(ctx context.Context, conn *elasticache.Client, id 
 		ReplicationGroupId: aws.String(id),
 	}
 
-	return findReplicationGroup(ctx, conn, input, tfslices.PredicateTrue[awstypes.ReplicationGroup]())
+	return findReplicationGroup(ctx, conn, input, tfslices.PredicateTrue[*awstypes.ReplicationGroup]())
 }
 
-func findReplicationGroup(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeReplicationGroupsInput, filter tfslices.Predicate[awstypes.ReplicationGroup]) (*awstypes.ReplicationGroup, error) {
+func findReplicationGroup(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeReplicationGroupsInput, filter tfslices.Predicate[*awstypes.ReplicationGroup]) (*awstypes.ReplicationGroup, error) {
 	output, err := findReplicationGroups(ctx, conn, input, filter)
 
 	if err != nil {
@@ -1191,7 +1192,7 @@ func findReplicationGroup(ctx context.Context, conn *elasticache.Client, input *
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findReplicationGroups(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeReplicationGroupsInput, filter tfslices.Predicate[awstypes.ReplicationGroup]) ([]awstypes.ReplicationGroup, error) {
+func findReplicationGroups(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeReplicationGroupsInput, filter tfslices.Predicate[*awstypes.ReplicationGroup]) ([]awstypes.ReplicationGroup, error) {
 	var output []awstypes.ReplicationGroup
 
 	pages := elasticache.NewDescribeReplicationGroupsPaginator(conn, input)
@@ -1211,7 +1212,7 @@ func findReplicationGroups(ctx context.Context, conn *elasticache.Client, input 
 		}
 
 		for _, v := range page.ReplicationGroups {
-			if filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}
