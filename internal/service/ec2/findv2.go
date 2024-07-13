@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -595,6 +596,85 @@ func findInstanceTypeOfferings(ctx context.Context, conn *ec2.Client, input *ec2
 	}
 
 	return output, nil
+}
+
+func findInternetGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInternetGatewaysInput) (*awstypes.InternetGateway, error) {
+	output, err := findInternetGateways(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findInternetGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInternetGatewaysInput) ([]awstypes.InternetGateway, error) {
+	var output []awstypes.InternetGateway
+
+	pages := ec2.NewDescribeInternetGatewaysPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidInternetGatewayIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.InternetGateways...)
+	}
+
+	return output, nil
+}
+
+func findInternetGatewayByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.InternetGateway, error) {
+	input := &ec2.DescribeInternetGatewaysInput{
+		InternetGatewayIds: []string{id},
+	}
+
+	output, err := findInternetGateway(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.InternetGatewayId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findInternetGatewayAttachment(ctx context.Context, conn *ec2.Client, internetGatewayID, vpcID string) (*awstypes.InternetGatewayAttachment, error) {
+	internetGateway, err := findInternetGatewayByID(ctx, conn, internetGatewayID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(internetGateway.Attachments) == 0 {
+		return nil, tfresource.NewEmptyResultError(internetGatewayID)
+	}
+
+	if count := len(internetGateway.Attachments); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, internetGatewayID)
+	}
+
+	attachment := internetGateway.Attachments[0]
+
+	if aws.ToString(attachment.VpcId) != vpcID {
+		return nil, tfresource.NewEmptyResultError(vpcID)
+	}
+
+	return &attachment, nil
 }
 
 func findLaunchTemplate(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLaunchTemplatesInput) (*awstypes.LaunchTemplate, error) {
@@ -1234,6 +1314,44 @@ func findSubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubne
 	return output, nil
 }
 
+func findSubnetCIDRReservationBySubnetIDAndReservationID(ctx context.Context, conn *ec2.Client, subnetID, reservationID string) (*awstypes.SubnetCidrReservation, error) {
+	input := &ec2.GetSubnetCidrReservationsInput{
+		SubnetId: aws.String(subnetID),
+	}
+
+	output, err := conn.GetSubnetCidrReservations(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || (len(output.SubnetIpv4CidrReservations) == 0 && len(output.SubnetIpv6CidrReservations) == 0) {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	for _, r := range output.SubnetIpv4CidrReservations {
+		if aws.ToString(r.SubnetCidrReservationId) == reservationID {
+			return &r, nil
+		}
+	}
+	for _, r := range output.SubnetIpv6CidrReservations {
+		if aws.ToString(r.SubnetCidrReservationId) == reservationID {
+			return &r, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{
+		LastError:   err,
+		LastRequest: input,
+	}
+}
+
 func findSubnetIPv6CIDRBlockAssociationByID(ctx context.Context, conn *ec2.Client, associationID string) (*awstypes.SubnetIpv6CidrBlockAssociation, error) {
 	input := &ec2.DescribeSubnetsInput{
 		Filters: newAttributeFilterListV2(map[string]string{
@@ -1399,6 +1517,32 @@ func findVPCByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Vp
 	return findVPC(ctx, conn, input)
 }
 
+func findVPCCIDRBlockAssociationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcCidrBlockAssociation, *awstypes.Vpc, error) {
+	input := &ec2.DescribeVpcsInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"cidr-block-association.association-id": id,
+		}),
+	}
+
+	vpc, err := findVPC(ctx, conn, input)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for _, association := range vpc.CidrBlockAssociationSet {
+		if aws.ToString(association.AssociationId) == id {
+			if state := association.CidrBlockState.State; state == awstypes.VpcCidrBlockStateCodeDisassociated {
+				return nil, nil, &retry.NotFoundError{Message: string(state)}
+			}
+
+			return &association, vpc, nil
+		}
+	}
+
+	return nil, nil, &retry.NotFoundError{}
+}
+
 func findVPCIPv6CIDRBlockAssociationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcIpv6CidrBlockAssociation, *awstypes.Vpc, error) {
 	input := &ec2.DescribeVpcsInput{
 		Filters: newAttributeFilterListV2(map[string]string{
@@ -1434,6 +1578,100 @@ func findVPCDefaultNetworkACL(ctx context.Context, conn *ec2.Client, id string) 
 	}
 
 	return findNetworkACL(ctx, conn, input)
+}
+
+func findNATGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNatGatewaysInput) (*awstypes.NatGateway, error) {
+	output, err := findNATGateways(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findNATGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNatGatewaysInput) ([]awstypes.NatGateway, error) {
+	var output []awstypes.NatGateway
+
+	pages := ec2.NewDescribeNatGatewaysPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeNatGatewayNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.NatGateways...)
+	}
+
+	return output, nil
+}
+
+func findNATGatewayByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NatGateway, error) {
+	input := &ec2.DescribeNatGatewaysInput{
+		NatGatewayIds: []string{id},
+	}
+
+	output, err := findNATGateway(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.NatGatewayStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.NatGatewayId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findNATGatewayAddressByNATGatewayIDAndAllocationID(ctx context.Context, conn *ec2.Client, natGatewayID, allocationID string) (*awstypes.NatGatewayAddress, error) {
+	output, err := findNATGatewayByID(ctx, conn, natGatewayID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output.NatGatewayAddresses {
+		if aws.ToString(v.AllocationId) == allocationID {
+			return &v, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}
+
+func findNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx context.Context, conn *ec2.Client, natGatewayID, privateIP string) (*awstypes.NatGatewayAddress, error) {
+	output, err := findNATGatewayByID(ctx, conn, natGatewayID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output.NatGatewayAddresses {
+		if aws.ToString(v.PrivateIp) == privateIP {
+			return &v, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
 }
 
 func findNetworkACLByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkAcl, error) {
@@ -1489,6 +1727,74 @@ func findNetworkACLs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeN
 	}
 
 	return output, nil
+}
+
+func findNetworkACLAssociationByID(ctx context.Context, conn *ec2.Client, associationID string) (*awstypes.NetworkAclAssociation, error) {
+	input := &ec2.DescribeNetworkAclsInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"association.association-id": associationID,
+		}),
+	}
+
+	output, err := findNetworkACL(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output.Associations {
+		if aws.ToString(v.NetworkAclAssociationId) == associationID {
+			return &v, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}
+
+func findNetworkACLAssociationBySubnetID(ctx context.Context, conn *ec2.Client, subnetID string) (*awstypes.NetworkAclAssociation, error) {
+	input := &ec2.DescribeNetworkAclsInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"association.subnet-id": subnetID,
+		}),
+	}
+
+	output, err := findNetworkACL(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output.Associations {
+		if aws.ToString(v.SubnetId) == subnetID {
+			return &v, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}
+
+func findNetworkACLEntryByThreePartKey(ctx context.Context, conn *ec2.Client, naclID string, egress bool, ruleNumber int) (*awstypes.NetworkAclEntry, error) {
+	input := &ec2.DescribeNetworkAclsInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"entry.egress":      strconv.FormatBool(egress),
+			"entry.rule-number": strconv.Itoa(ruleNumber),
+		}),
+		NetworkAclIds: []string{naclID},
+	}
+
+	output, err := findNetworkACL(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output.Entries {
+		if aws.ToBool(v.Egress) == egress && aws.ToInt32(v.RuleNumber) == int32(ruleNumber) {
+			return &v, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
 }
 
 func findVPCDefaultSecurityGroup(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecurityGroup, error) {
@@ -1818,6 +2124,44 @@ func findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx context.
 	}
 
 	return findNetworkInterfaces(ctx, conn, input)
+}
+
+func findNetworkInterfaceByAttachmentID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInterface, error) {
+	input := &ec2.DescribeNetworkInterfacesInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"attachment.attachment-id": id,
+		}),
+	}
+
+	networkInterface, err := findNetworkInterface(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if networkInterface == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return networkInterface, nil
+}
+
+func findNetworkInterfaceSecurityGroup(ctx context.Context, conn *ec2.Client, networkInterfaceID string, securityGroupID string) (*awstypes.GroupIdentifier, error) {
+	networkInterface, err := findNetworkInterfaceByID(ctx, conn, networkInterfaceID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, groupIdentifier := range networkInterface.Groups {
+		if aws.ToString(groupIdentifier.GroupId) == securityGroupID {
+			return &groupIdentifier, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{
+		LastError: fmt.Errorf("Network Interface (%s) Security Group (%s) not found", networkInterfaceID, securityGroupID),
+	}
 }
 
 func findEBSVolumes(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVolumesInput) ([]awstypes.Volume, error) {
@@ -2589,6 +2933,73 @@ func findVPCEndpointServicePermission(ctx context.Context, conn *ec2.Client, ser
 	})
 
 	return tfresource.AssertSingleValueResult(allowedPrincipals)
+}
+
+func findVPCPeeringConnection(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcPeeringConnectionsInput) (*awstypes.VpcPeeringConnection, error) {
+	output, err := findVPCPeeringConnections(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.VpcPeeringConnection) bool { return v.Status != nil })
+}
+
+func findVPCPeeringConnections(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcPeeringConnectionsInput) ([]awstypes.VpcPeeringConnection, error) {
+	var output []awstypes.VpcPeeringConnection
+
+	pages := ec2.NewDescribeVpcPeeringConnectionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCPeeringConnectionIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.VpcPeeringConnections...)
+	}
+
+	return output, nil
+}
+
+func findVPCPeeringConnectionByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcPeeringConnection, error) {
+	input := &ec2.DescribeVpcPeeringConnectionsInput{
+		VpcPeeringConnectionIds: []string{id},
+	}
+
+	output, err := findVPCPeeringConnection(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// See https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-lifecycle.
+	switch statusCode := output.Status.Code; statusCode {
+	case awstypes.VpcPeeringConnectionStateReasonCodeDeleted,
+		awstypes.VpcPeeringConnectionStateReasonCodeExpired,
+		awstypes.VpcPeeringConnectionStateReasonCodeFailed,
+		awstypes.VpcPeeringConnectionStateReasonCodeRejected:
+		return nil, &retry.NotFoundError{
+			Message:     string(statusCode),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.VpcPeeringConnectionId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
 func findClientVPNEndpoint(ctx context.Context, conn *ec2.Client, input *ec2.DescribeClientVpnEndpointsInput) (*awstypes.ClientVpnEndpoint, error) {
