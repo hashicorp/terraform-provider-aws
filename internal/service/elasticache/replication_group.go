@@ -462,7 +462,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 				continue
 			}
 
-			apiObject := expandLogDeliveryConfigurations(tfMap)
+			apiObject := expandLogDeliveryConfigurationRequests(tfMap)
 			input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, apiObject)
 		}
 	}
@@ -791,14 +791,14 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 			currentLogDeliveryConfig := n.(*schema.Set).List()
 			for _, current := range currentLogDeliveryConfig {
-				logDeliveryConfigurationRequest := expandLogDeliveryConfigurations(current.(map[string]interface{}))
+				logDeliveryConfigurationRequest := expandLogDeliveryConfigurationRequests(current.(map[string]interface{}))
 				logTypesToSubmit[logDeliveryConfigurationRequest.LogType] = true
 				input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, logDeliveryConfigurationRequest)
 			}
 
 			previousLogDeliveryConfig := o.(*schema.Set).List()
 			for _, previous := range previousLogDeliveryConfig {
-				logDeliveryConfigurationRequest := expandEmptyLogDeliveryConfigurations(previous.(map[string]interface{}))
+				logDeliveryConfigurationRequest := expandEmptyLogDeliveryConfigurationRequest(previous.(map[string]interface{}))
 				//if something was removed, send an empty request
 				if !logTypesToSubmit[logDeliveryConfigurationRequest.LogType] {
 					input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, logDeliveryConfigurationRequest)
@@ -1291,7 +1291,7 @@ func waitReplicationGroupDeleted(ctx context.Context, conn *elasticache.Client, 
 	return nil, err
 }
 
-func findReplicationGroupMemberClustersByID(ctx context.Context, conn *elasticache.Client, id string) ([]*awstypes.CacheCluster, error) {
+func findReplicationGroupMemberClustersByID(ctx context.Context, conn *elasticache.Client, id string) ([]awstypes.CacheCluster, error) {
 	rg, err := findReplicationGroupByID(ctx, conn, id)
 
 	if err != nil {

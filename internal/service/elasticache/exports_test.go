@@ -30,6 +30,7 @@ var (
 	WaitCacheClusterDeleted              = waitCacheClusterDeleted
 	WaitReplicationGroupAvailable        = waitReplicationGroupAvailable
 
+	DeleteCacheCluster                        = deleteCacheCluster
 	DiffVersion                               = diffVersion
 	EngineMemcached                           = engineMemcached
 	EngineRedis                               = engineRedis

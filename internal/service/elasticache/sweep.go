@@ -110,7 +110,7 @@ func sweepClusters(region string) error {
 			id := aws.ToString(cluster.CacheClusterId)
 
 			log.Printf("[INFO] Deleting ElastiCache Cluster: %s", id)
-			err := DeleteCacheCluster(ctx, conn, id, "")
+			err := deleteCacheCluster(ctx, conn, id, "")
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete ElastiCache Cache Cluster (%s): %s", id, err)
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting ElastiCache Cache Cluster (%s): %w", id, err))

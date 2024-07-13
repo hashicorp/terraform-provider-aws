@@ -219,7 +219,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("subnet_group_name", cluster.CacheSubnetGroupName)
 
 	if err := setCacheNodeData(d, cluster); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting cache_nodes: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	tags, err := listTags(ctx, conn, aws.ToString(cluster.ARN))

@@ -417,10 +417,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("log_delivery_configuration"); ok {
 		input.LogDeliveryConfigurations = []awstypes.LogDeliveryConfigurationRequest{}
-		v := v.(*schema.Set).List()
-		for _, v := range v {
-			logDeliveryConfigurationRequest := expandLogDeliveryConfigurations(v.(map[string]interface{}))
-			input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, logDeliveryConfigurationRequest)
+		for _, v := range v.(*schema.Set).List() {
+			input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, expandLogDeliveryConfigurationRequests(v.(map[string]interface{})))
 		}
 	}
 
@@ -432,10 +430,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.NotificationTopicArn = aws.String(v.(string))
 	}
 
-	snaps := d.Get("snapshot_arns").([]interface{})
-	if len(snaps) > 0 {
-		input.SnapshotArns = flex.ExpandStringValueList(snaps)
-		log.Printf("[DEBUG] Restoring Redis cluster from S3 snapshot: %#v", snaps)
+	if v := d.Get("snapshot_arns").([]interface{}); len(v) > 0 {
+		input.SnapshotArns = flex.ExpandStringValueList(v)
+		log.Printf("[DEBUG] Restoring Redis cluster from S3 snapshot: %#v", v)
 	}
 
 	if v, ok := d.GetOk("snapshot_name"); ok {
@@ -517,7 +514,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("cluster_id", c.CacheClusterId)
 
 	if err := setFromCacheCluster(d, c); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(c.LogDeliveryConfigurations))
@@ -549,7 +546,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err := setCacheNodeData(d, c); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set(names.AttrARN, c.ARN)
@@ -598,14 +595,14 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 			currentLogDeliveryConfig := newLogDeliveryConfig.(*schema.Set).List()
 			for _, current := range currentLogDeliveryConfig {
-				logDeliveryConfigurationRequest := expandLogDeliveryConfigurations(current.(map[string]interface{}))
+				logDeliveryConfigurationRequest := expandLogDeliveryConfigurationRequests(current.(map[string]interface{}))
 				logTypesToSubmit[string(logDeliveryConfigurationRequest.LogType)] = true
 				input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, logDeliveryConfigurationRequest)
 			}
 
 			previousLogDeliveryConfig := oldLogDeliveryConfig.(*schema.Set).List()
 			for _, previous := range previousLogDeliveryConfig {
-				logDeliveryConfigurationRequest := expandEmptyLogDeliveryConfigurations(previous.(map[string]interface{}))
+				logDeliveryConfigurationRequest := expandEmptyLogDeliveryConfigurationRequest(previous.(map[string]interface{}))
 				// if something was removed, send an empty request
 				if !logTypesToSubmit[string(logDeliveryConfigurationRequest.LogType)] {
 					input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, logDeliveryConfigurationRequest)
@@ -694,18 +691,17 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if requestUpdate {
-			log.Printf("[DEBUG] Modifying ElastiCache Cluster (%s), opts:\n%+v", d.Id(), input)
 			_, err := conn.ModifyCacheCluster(ctx, input)
+
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating ElastiCache cluster (%s), error: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "updating ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 			}
 
 			const (
 				timeout = 80 * time.Minute
 			)
-			_, err = waitCacheClusterAvailable(ctx, conn, d.Id(), timeout)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Cache Cluster (%s) to update: %s", d.Id(), err)
+			if _, err := waitCacheClusterAvailable(ctx, conn, d.Id(), timeout); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Cache Cluster (%s) update: %s", d.Id(), err)
 			}
 		}
 	}
@@ -718,19 +714,23 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	var finalSnapshotID = d.Get(names.AttrFinalSnapshotIdentifier).(string)
-	err := DeleteCacheCluster(ctx, conn, d.Id(), finalSnapshotID)
+	err := deleteCacheCluster(ctx, conn, d.Id(), finalSnapshotID)
+
+	if errs.IsA[*awstypes.CacheClusterNotFoundFault](err) {
+		return diags
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.CacheClusterNotFoundFault](err) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 	}
+
 	const (
 		timeout = 40 * time.Minute
 	)
 	_, err = waitCacheClusterDeleted(ctx, conn, d.Id(), timeout)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Cache Cluster (%s) to be deleted: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Cache Cluster (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -753,13 +753,14 @@ func createCacheCluster(ctx context.Context, conn *elasticache.Client, partition
 	if output == nil || output.CacheCluster == nil {
 		return "", "", errors.New("missing cluster ID after creation")
 	}
+
 	// ElastiCache always retains the id in lower case, so we have to
 	// mimic that or else we won't be able to refresh a resource whose
 	// name contained uppercase characters.
 	return strings.ToLower(aws.ToString(output.CacheCluster.CacheClusterId)), aws.ToString(output.CacheCluster.ARN), nil
 }
 
-func DeleteCacheCluster(ctx context.Context, conn *elasticache.Client, cacheClusterID string, finalSnapshotID string) error {
+func deleteCacheCluster(ctx context.Context, conn *elasticache.Client, cacheClusterID string, finalSnapshotID string) error {
 	input := &elasticache.DeleteCacheClusterInput{
 		CacheClusterId: aws.String(cacheClusterID),
 	}
@@ -767,7 +768,7 @@ func DeleteCacheCluster(ctx context.Context, conn *elasticache.Client, cacheClus
 		input.FinalSnapshotIdentifier = aws.String(finalSnapshotID)
 	}
 
-	log.Printf("[DEBUG] Deleting ElastiCache Cache Cluster: %+v", input)
+	log.Printf("[DEBUG] Deleting ElastiCache Cache Cluster: %s", cacheClusterID)
 	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteCacheCluster(ctx, input)
 		if err != nil {
@@ -799,6 +800,7 @@ func findCacheClusterByID(ctx context.Context, conn *elasticache.Client, id stri
 
 	return findCacheCluster(ctx, conn, input, tfslices.PredicateTrue[*awstypes.CacheCluster]())
 }
+
 func findCacheClusterWithNodeInfoByID(ctx context.Context, conn *elasticache.Client, id string) (*awstypes.CacheCluster, error) {
 	input := &elasticache.DescribeCacheClustersInput{
 		CacheClusterId:    aws.String(id),
@@ -815,11 +817,11 @@ func findCacheCluster(ctx context.Context, conn *elasticache.Client, input *elas
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findCacheClusters(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheClustersInput, filter tfslices.Predicate[*awstypes.CacheCluster]) ([]*awstypes.CacheCluster, error) {
-	var output []*awstypes.CacheCluster
+func findCacheClusters(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheClustersInput, filter tfslices.Predicate[*awstypes.CacheCluster]) ([]awstypes.CacheCluster, error) {
+	var output []awstypes.CacheCluster
 
 	pages := elasticache.NewDescribeCacheClustersPaginator(conn, input)
 
@@ -839,7 +841,7 @@ func findCacheClusters(ctx context.Context, conn *elasticache.Client, input *ela
 
 		for _, v := range page.CacheClusters {
 			if filter(&v) {
-				output = append(output, &v)
+				output = append(output, v)
 			}
 		}
 	}
