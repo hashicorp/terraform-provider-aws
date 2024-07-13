@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_route_tables")
-func DataSourceRouteTables() *schema.Resource {
+// @SDKDataSource("aws_route_tables", name="Route Tables")
+func dataSourceRouteTables() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouteTablesRead,
 
