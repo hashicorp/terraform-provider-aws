@@ -30,7 +30,7 @@ import (
 // @SDKResource("aws_vpc_endpoint_service", name="VPC Endpoint Service")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceVPCEndpointService() *schema.Resource {
+func resourceVPCEndpointService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointServiceCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointServiceRead,
