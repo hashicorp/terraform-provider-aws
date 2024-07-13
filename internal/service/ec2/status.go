@@ -1572,19 +1572,3 @@ func statusNetworkInsightsAnalysis(ctx context.Context, conn *ec2.Client, id str
 		return output, string(output.Status), nil
 	}
 }
-
-func statusNetworkInterfaceAttachmentStatus(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findNetworkInterfaceAttachmentByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.Status), nil
-	}
-}
