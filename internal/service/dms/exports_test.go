@@ -6,8 +6,10 @@ package dms
 // Exports for use in tests only.
 var (
 	ResourceCertificate = resourceCertificate
+	ResourceEndpoint    = resourceEndpoint
 
 	FindCertificateByID           = findCertificateByID
+	FindEndpointByID              = findEndpointByID
 	TaskSettingsEqual             = taskSettingsEqual
 	ValidEndpointID               = validEndpointID
 	ValidReplicationInstanceID    = validReplicationInstanceID

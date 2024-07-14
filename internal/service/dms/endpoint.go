@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -34,7 +33,7 @@ import (
 
 // @SDKResource("aws_dms_endpoint", name="Endpoint")
 // @Tags(identifierAttribute="endpoint_arn")
-func ResourceEndpoint() *schema.Resource {
+func resourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointCreate,
 		ReadWithoutTimeout:   resourceEndpointRead,
@@ -1035,7 +1034,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
-	endpoint, err := FindEndpointByID(ctx, conn, d.Id())
+	endpoint, err := findEndpointByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DMS Endpoint (%s) not found, removing from state", d.Id())
@@ -1436,7 +1435,7 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "deleting DMS Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err = waitEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for DMS Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
@@ -1691,6 +1690,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 
 func steadyEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn string) error {
 	tasks, err := findReplicationTasksByEndpointARN(ctx, conn, arn)
+
 	if err != nil {
 		return err
 	}
@@ -1716,6 +1716,7 @@ func stopEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn str
 	}
 
 	tasks, err := findReplicationTasksByEndpointARN(ctx, conn, arn)
+
 	if err != nil {
 		return nil, err
 	}
@@ -2616,7 +2617,7 @@ func flattenTopLevelConnectionInfo(d *schema.ResourceData, endpoint *awstypes.En
 	d.Set(names.AttrDatabaseName, endpoint.DatabaseName)
 }
 
-func FindEndpointByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.Endpoint, error) {
+func findEndpointByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.Endpoint, error) {
 	input := &dms.DescribeEndpointsInput{
 		Filters: []awstypes.Filter{
 			{
@@ -2636,14 +2637,13 @@ func findEndpoint(ctx context.Context, conn *dms.Client, input *dms.DescribeEndp
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findEndpoints(ctx context.Context, conn *dms.Client, input *dms.DescribeEndpointsInput) ([]*awstypes.Endpoint, error) {
+func findEndpoints(ctx context.Context, conn *dms.Client, input *dms.DescribeEndpointsInput) ([]awstypes.Endpoint, error) {
 	var output []awstypes.Endpoint
 
 	pages := dms.NewDescribeEndpointsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -2661,12 +2661,12 @@ func findEndpoints(ctx context.Context, conn *dms.Client, input *dms.DescribeEnd
 		output = append(output, page.Endpoints...)
 	}
 
-	return tfslices.ToPointers(output), nil
+	return output, nil
 }
 
 func statusEndpoint(ctx context.Context, conn *dms.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindEndpointByID(ctx, conn, id)
+		output, err := findEndpointByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -2680,7 +2680,7 @@ func statusEndpoint(ctx context.Context, conn *dms.Client, id string) retry.Stat
 	}
 }
 
-func waitEndpointDeleted(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) error {
+func waitEndpointDeleted(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.Endpoint, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{endpointStatusDeleting},
 		Target:  []string{},
@@ -2688,7 +2688,11 @@ func waitEndpointDeleted(ctx context.Context, conn *dms.Client, id string, timeo
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*awstypes.Endpoint); ok {
+		return output, err
+	}
+
+	return nil, err
 }

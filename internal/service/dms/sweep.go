@@ -75,7 +75,7 @@ func sweepEndpoints(region string) error {
 		}
 
 		for _, v := range page.Endpoints {
-			r := ResourceEndpoint()
+			r := resourceEndpoint()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.EndpointIdentifier))
 			d.Set("endpoint_arn", v.EndpointArn)
