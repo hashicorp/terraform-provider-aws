@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_dms_certificate", name="Certificate")
 // @Tags(identifierAttribute="certificate_arn")
-func ResourceCertificate() *schema.Resource {
+func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
 		ReadWithoutTimeout:   resourceCertificateRead,
@@ -114,7 +114,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
-	certificate, err := FindCertificateByID(ctx, conn, d.Id())
+	certificate, err := findCertificateByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DMS Certificate (%s) not found, removing from state", d.Id())
@@ -126,7 +126,15 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading DMS Certificate (%s): %s", d.Id(), err)
 	}
 
-	resourceCertificateSetState(d, certificate)
+	d.SetId(aws.ToString(certificate.CertificateIdentifier))
+	d.Set("certificate_id", certificate.CertificateIdentifier)
+	d.Set(names.AttrCertificateARN, certificate.CertificateArn)
+	if v := aws.ToString(certificate.CertificatePem); v != "" {
+		d.Set("certificate_pem", v)
+	}
+	if certificate.CertificateWallet != nil && len(certificate.CertificateWallet) != 0 {
+		d.Set("certificate_wallet", itypes.Base64EncodeOnce(certificate.CertificateWallet))
+	}
 
 	return diags
 }
@@ -159,21 +167,7 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceCertificateSetState(d *schema.ResourceData, cert *awstypes.Certificate) {
-	d.SetId(aws.ToString(cert.CertificateIdentifier))
-
-	d.Set("certificate_id", cert.CertificateIdentifier)
-	d.Set(names.AttrCertificateARN, cert.CertificateArn)
-
-	if aws.ToString(cert.CertificatePem) != "" {
-		d.Set("certificate_pem", cert.CertificatePem)
-	}
-	if cert.CertificateWallet != nil && len(cert.CertificateWallet) != 0 {
-		d.Set("certificate_wallet", itypes.Base64EncodeOnce(cert.CertificateWallet))
-	}
-}
-
-func FindCertificateByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.Certificate, error) {
+func findCertificateByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.Certificate, error) {
 	input := &dms.DescribeCertificatesInput{
 		Filters: []awstypes.Filter{
 			{
