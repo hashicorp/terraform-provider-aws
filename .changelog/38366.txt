@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_fsx_openzfs_file_system: Add `SINGLE_AZ_HA_1` as a valid value for `deployment_type`
+```
+
+```release-note:enhancement
+resource/aws_fsx_openzfs_file_system: Add `SINGLE_AZ_HA_2` as a valid value for `deployment_type`
+```
