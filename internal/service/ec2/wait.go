@@ -1668,9 +1668,11 @@ func waitImageDeleted(ctx context.Context, conn *ec2.Client, id string, timeout 
 
 func waitImageBlockPublicAccessState(ctx context.Context, conn *ec2.Client, target string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Target:  []string{target},
-		Refresh: statusImageBlockPublicAccess(ctx, conn),
-		Timeout: timeout,
+		Target:     []string{target},
+		Refresh:    statusImageBlockPublicAccess(ctx, conn),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 10 * time.Second,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
