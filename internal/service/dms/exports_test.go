@@ -7,6 +7,7 @@ package dms
 var (
 	ResourceCertificate = resourceCertificate
 	ResourceEndpoint    = resourceEndpoint
+	ResourceS3Endpoint  = resourceS3Endpoint
 
 	FindCertificateByID           = findCertificateByID
 	FindEndpointByID              = findEndpointByID

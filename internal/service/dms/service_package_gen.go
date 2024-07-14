@@ -108,7 +108,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceS3Endpoint,
+			Factory:  resourceS3Endpoint,
 			TypeName: "aws_dms_s3_endpoint",
 			Name:     "S3 Endpoint",
 			Tags: &types.ServicePackageResourceTags{

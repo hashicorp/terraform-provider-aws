@@ -5,7 +5,6 @@ package dms
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -14,16 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -32,7 +29,7 @@ import (
 
 // @SDKResource("aws_dms_s3_endpoint", name="S3 Endpoint")
 // @Tags(identifierAttribute="endpoint_arn")
-func ResourceS3Endpoint() *schema.Resource {
+func resourceS3Endpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceS3EndpointCreate,
 		ReadWithoutTimeout:   resourceS3EndpointRead,
@@ -324,16 +321,13 @@ func ResourceS3Endpoint() *schema.Resource {
 	}
 }
 
-const (
-	ResNameS3Endpoint = "S3 Endpoint"
-)
-
 func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
+	endpointID := d.Get("endpoint_id").(string)
 	input := &dms.CreateEndpointInput{
-		EndpointIdentifier: aws.String(d.Get("endpoint_id").(string)),
+		EndpointIdentifier: aws.String(endpointID),
 		EndpointType:       awstypes.ReplicationEndpointTypeValue(d.Get(names.AttrEndpointType).(string)),
 		EngineName:         aws.String("s3"),
 		Tags:               getTagsIn(ctx),
@@ -347,46 +341,28 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("ssl_mode"); ok {
-		input.SslMode = awstypes.DmsSslModeValue(v.(string))
-	}
-
 	if v, ok := d.GetOk("service_access_role_arn"); ok {
 		input.ServiceAccessRoleArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ssl_mode"); ok {
+		input.SslMode = awstypes.DmsSslModeValue(v.(string))
 	}
 
 	input.S3Settings = s3Settings(d, d.Get(names.AttrEndpointType).(string) == string(awstypes.ReplicationEndpointTypeValueTarget))
 
 	input.ExtraConnectionAttributes = extraConnectionAnomalies(d)
 
-	log.Println("[DEBUG] DMS create endpoint:", input)
-
-	var out *dms.CreateEndpointOutput
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
-		var err error
-		out, err = conn.CreateEndpoint(ctx, input)
-
-		if tfawserr.ErrCodeEquals(err, "AccessDeniedFault") {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.AccessDeniedFault](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return conn.CreateEndpoint(ctx, input)
 	})
 
-	if tfresource.TimedOut(err) {
-		out, err = conn.CreateEndpoint(ctx, input)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating DMS S3 Endpoint (%s): %s", endpointID, err)
 	}
 
-	if err != nil || out == nil || out.Endpoint == nil {
-		return create.AppendDiagError(diags, names.DMS, create.ErrActionCreating, ResNameS3Endpoint, d.Get("endpoint_id").(string), err)
-	}
-
-	d.SetId(d.Get("endpoint_id").(string))
-	d.Set("endpoint_arn", out.Endpoint.EndpointArn)
+	d.SetId(endpointID)
+	d.Set("endpoint_arn", outputRaw.(*dms.CreateEndpointOutput).Endpoint.EndpointArn)
 
 	// AWS bug? ssekki is ignored on create but sets on update
 	if _, ok := d.GetOk("server_side_encryption_kms_key_id"); ok {
@@ -400,7 +376,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
-	endpoint, err := FindEndpointByID(ctx, conn, d.Id())
+	endpoint, err := findEndpointByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DMS Endpoint (%s) not found, removing from state", d.Id())
@@ -408,16 +384,15 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diags
 	}
 
-	if err != nil {
-		return create.AppendDiagError(diags, names.DMS, create.ErrActionReading, ResNameS3Endpoint, d.Id(), err)
+	if err == nil && endpoint.S3Settings == nil {
+		err = tfresource.NewEmptyResultError(nil)
 	}
 
-	if endpoint.S3Settings == nil {
-		return create.AppendDiagError(diags, names.DMS, create.ErrActionReading, ResNameS3Endpoint, d.Id(), errors.New("no settings returned"))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating DMS S3 Endpoint (%s): %s", d.Id(), err)
 	}
 
 	d.Set("endpoint_arn", endpoint.EndpointArn)
-
 	d.Set(names.AttrCertificateARN, endpoint.CertificateArn)
 	d.Set("endpoint_id", endpoint.EndpointIdentifier)
 	d.Set(names.AttrEndpointType, strings.ToLower(string(endpoint.EndpointType))) // For some reason the AWS API only accepts lowercase type but returns it as uppercase
@@ -478,7 +453,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	p, err := structure.NormalizeJsonString(aws.ToString(s3settings.ExternalTableDefinition))
 	if err != nil {
-		return create.AppendDiagError(diags, names.DMS, create.ErrActionSetting, ResNameS3Endpoint, d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("external_table_definition", p)
@@ -520,28 +495,12 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			input.ExtraConnectionAttributes = extraConnectionAnomalies(d)
 		}
 
-		log.Println("[DEBUG] DMS update endpoint:", input)
-
-		err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
-			_, err := conn.ModifyEndpoint(ctx, input)
-
-			if tfawserr.ErrCodeEquals(err, "AccessDeniedFault") {
-				return retry.RetryableError(err)
-			}
-
-			if err != nil {
-				return retry.NonRetryableError(err)
-			}
-
-			return nil
+		_, err := tfresource.RetryWhenIsA[*awstypes.AccessDeniedFault](ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+			return conn.ModifyEndpoint(ctx, input)
 		})
 
-		if tfresource.TimedOut(err) {
-			_, err = conn.ModifyEndpoint(ctx, input)
-		}
-
 		if err != nil {
-			return create.AppendDiagError(diags, names.DMS, create.ErrActionUpdating, ResNameS3Endpoint, d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating DMS S3 Endpoint (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -562,11 +521,11 @@ func resourceS3EndpointDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.DMS, create.ErrActionDeleting, ResNameS3Endpoint, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating DMS S3 Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err = waitEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.AppendDiagError(diags, names.DMS, create.ErrActionWaitingForDeletion, ResNameS3Endpoint, d.Id(), err)
+	if _, err := waitEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS S3 Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
