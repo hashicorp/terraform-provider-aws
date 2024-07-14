@@ -36,7 +36,7 @@ func createTags(ctx context.Context, conn *ec2.Client, identifier string, tags [
 	return nil
 }
 
-// getTagSpecificationsInV2 returns AWS SDK for Go v2 EC2 service tags from Context.
+// getTagSpecificationsIn returns AWS SDK for Go v2 EC2 service tags from Context.
 // nil is returned if there are no input tags.
 func getTagSpecificationsIn(ctx context.Context, resourceType awstypes.ResourceType) []awstypes.TagSpecification {
 	tags := getTagsIn(ctx)
