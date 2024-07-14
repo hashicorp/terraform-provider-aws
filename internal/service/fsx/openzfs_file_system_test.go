@@ -840,6 +840,15 @@ func TestAccFSxOpenZFSFileSystem_deploymentType(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "160"),
 				),
 			},
+			{
+				Config: testAccOpenZFSFileSystemConfig_deploymentType(rName, "SINGLE_AZ_HA_2", 320),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckOpenZFSFileSystemRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", "SINGLE_AZ_HA_2"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "160"),
+				),
+			},
 		},
 	})
 }
