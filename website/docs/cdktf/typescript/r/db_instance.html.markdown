@@ -394,7 +394,7 @@ class MyConvertedCode extends TerraformStack {
 For more detailed documentation about each argument, refer to the [AWS official
 documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `allocatedStorage` - (Required unless a `snapshotIdentifier` or `replicateSourceDb` is provided) The allocated storage in gibibytes. If `maxAllocatedStorage` is configured, this argument represents the initial storage allocation and differences from the configuration will be ignored automatically when Storage Autoscaling occurs. If `replicateSourceDb` is set, the value is ignored during the creation of the instance.
 * `allowMajorVersionUpgrade` - (Optional) Indicates that major version
@@ -706,4 +706,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-19a084f1d95a764a60e49c2d9dda089e1b79e0ddbf988b584006fa874b9921cc -->
+<!-- cache-key: cdktf-0.20.1 input-bdb5abf13d6aa4c71c12b4842a5b31828587608e3321f860616855f6f2f7edb7 -->

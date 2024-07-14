@@ -39,6 +39,7 @@ const (
 
 // @SDKResource("aws_rds_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -71,7 +72,7 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"allow_major_version_upgrade": {
+			names.AttrAllowMajorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -111,6 +112,14 @@ func ResourceCluster() *schema.Resource {
 				ForceNew:      true,
 				ValidateFunc:  validIdentifier,
 				ConflictsWith: []string{"cluster_identifier_prefix"},
+			},
+			"ca_certificate_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"ca_certificate_valid_till": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"cluster_identifier_prefix": {
 				Type:          schema.TypeString,
@@ -235,7 +244,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
@@ -983,6 +992,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.BackupRetentionPeriod = aws.Int64(int64(v.(int)))
 		}
 
+		if v := d.Get("ca_certificate_identifier"); v.(string) != "" {
+			input.CACertificateIdentifier = aws.String(v.(string))
+		}
+
 		if v := d.Get(names.AttrDatabaseName); v.(string) != "" {
 			input.DatabaseName = aws.String(v.(string))
 		}
@@ -1159,7 +1172,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -1172,6 +1185,10 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(dbc.AvailabilityZones))
 	d.Set("backtrack_window", dbc.BacktrackWindow)
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
+	if dbc.CertificateDetails != nil {
+		d.Set("ca_certificate_identifier", dbc.CertificateDetails.CAIdentifier)
+		d.Set("ca_certificate_valid_till", dbc.CertificateDetails.ValidTill.Format(time.RFC3339))
+	}
 	d.Set(names.AttrClusterIdentifier, dbc.DBClusterIdentifier)
 	d.Set("cluster_identifier_prefix", create.NamePrefixFromName(aws.StringValue(dbc.DBClusterIdentifier)))
 	var clusterMembers []string
@@ -1282,16 +1299,16 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	setTagsOut(ctx, dbc.TagList)
 
-	return nil
+	return diags
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	if d.HasChangesExcept(
-		"allow_major_version_upgrade",
+		names.AttrAllowMajorVersionUpgrade,
 		"delete_automated_backups",
-		"final_snapshot_identifier",
+		names.AttrFinalSnapshotIdentifier,
 		"global_cluster_identifier",
 		"iam_roles",
 		"replication_source_identifier",
@@ -1306,7 +1323,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.AllocatedStorage = aws.Int64(int64(d.Get(names.AttrAllocatedStorage).(int)))
 		}
 
-		if v, ok := d.GetOk("allow_major_version_upgrade"); ok {
+		if v, ok := d.GetOk(names.AttrAllowMajorVersionUpgrade); ok {
 			input.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
 		}
 
@@ -1316,6 +1333,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("backup_retention_period") {
 			input.BackupRetentionPeriod = aws.Int64(int64(d.Get("backup_retention_period").(int)))
+		}
+
+		if d.HasChange("ca_certificate_identifier") {
+			input.CACertificateIdentifier = aws.String(d.Get("ca_certificate_identifier").(string))
 		}
 
 		if d.HasChange("copy_tags_to_snapshot") {
@@ -1557,7 +1578,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if !skipFinalSnapshot {
-		if v, ok := d.GetOk("final_snapshot_identifier"); ok {
+		if v, ok := d.GetOk(names.AttrFinalSnapshotIdentifier); ok {
 			input.FinalDBSnapshotIdentifier = aws.String(v.(string))
 		} else {
 			return sdkdiag.AppendErrorf(diags, "RDS Cluster final_snapshot_identifier is required when skip_final_snapshot is false")
@@ -1617,7 +1638,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -1628,7 +1649,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceClusterImport(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

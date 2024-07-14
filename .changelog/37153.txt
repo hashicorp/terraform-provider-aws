@@ -1,0 +1,8 @@
+
+```release-note:enhancement
+resource/aws_sagemaker_domain: Add `default_user_settings.code_editor_app_settings.custom_image` configuration block
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_user_profile: Add `user_settings.code_editor_app_settings.custom_image` configuration block
+```

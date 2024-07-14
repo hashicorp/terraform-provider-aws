@@ -71,6 +71,35 @@ func TestAccDSTrust_basic(t *testing.T) {
 	})
 }
 
+func TestAccDSTrust_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Trust
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_directory_service_trust.test"
+	domainName := acctest.RandomDomainName()
+	domainNameOther := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckDirectoryService(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrustDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrustConfig_basic(rName, domainName, domainNameOther),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrustExists(ctx, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfds.ResourceTrust, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccDSTrust_Domain_TrailingPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Trust
@@ -490,7 +519,7 @@ func testAccCheckTrustExists(ctx context.Context, n string, v *awstypes.Trust) r
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 
-		output, err := tfds.FindTrustByID(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.ID)
+		output, err := tfds.FindTrustByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -511,7 +540,7 @@ func testAccCheckTrustDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfds.FindTrustByID(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.ID)
+			_, err := tfds.FindTrustByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

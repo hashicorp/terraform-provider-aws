@@ -1,2 +1,3 @@
-# Note: Default owner is commented out in order to reduce review requested noise for maintainers.
-# *       @hashicorp/terraform-aws
+*                 @hashicorp/terraform-aws
+/.github/         @breathingdust @justinretzolk
+/.github/*.yml    @hashicorp/terraform-aws

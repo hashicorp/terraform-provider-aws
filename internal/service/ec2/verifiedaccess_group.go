@@ -24,6 +24,7 @@ import (
 
 // @SDKResource("aws_verifiedaccess_group", name="Verified Access Group")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceVerifiedAccessGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessGroupCreate,
@@ -137,7 +138,7 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	group, err := FindVerifiedAccessGroupByID(ctx, conn, d.Id())
+	group, err := findVerifiedAccessGroupByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Verified Access Group (%s) not found, removing from state", d.Id())
@@ -167,7 +168,7 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 
 	setTagsOutV2(ctx, group.Tags)
 
-	output, err := FindVerifiedAccessGroupPolicyByID(ctx, conn, d.Id())
+	output, err := findVerifiedAccessGroupPolicyByID(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Verified Access Group (%s) policy: %s", d.Id(), err)

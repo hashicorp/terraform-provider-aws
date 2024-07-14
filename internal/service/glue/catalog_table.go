@@ -110,6 +110,11 @@ func ResourceCatalogTable() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"additional_locations": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"bucket_columns": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -155,7 +160,7 @@ func ResourceCatalogTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"location": {
+						names.AttrLocation: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -698,11 +703,15 @@ func expandStorageDescriptor(l []interface{}) *glue.StorageDescriptor {
 	s := l[0].(map[string]interface{})
 	storageDescriptor := &glue.StorageDescriptor{}
 
+	if v, ok := s["additional_locations"]; ok {
+		storageDescriptor.AdditionalLocations = flex.ExpandStringList(v.([]interface{}))
+	}
+
 	if v, ok := s["columns"]; ok {
 		storageDescriptor.Columns = expandColumns(v.([]interface{}))
 	}
 
-	if v, ok := s["location"]; ok {
+	if v, ok := s[names.AttrLocation]; ok {
 		storageDescriptor.Location = aws.String(v.(string))
 	}
 
@@ -903,8 +912,9 @@ func flattenStorageDescriptor(s *glue.StorageDescriptor) []map[string]interface{
 
 	storageDescriptor := make(map[string]interface{})
 
+	storageDescriptor["additional_locations"] = flex.FlattenStringList(s.AdditionalLocations)
 	storageDescriptor["columns"] = flattenColumns(s.Columns)
-	storageDescriptor["location"] = aws.StringValue(s.Location)
+	storageDescriptor[names.AttrLocation] = aws.StringValue(s.Location)
 	storageDescriptor["input_format"] = aws.StringValue(s.InputFormat)
 	storageDescriptor["output_format"] = aws.StringValue(s.OutputFormat)
 	storageDescriptor["compressed"] = aws.BoolValue(s.Compressed)

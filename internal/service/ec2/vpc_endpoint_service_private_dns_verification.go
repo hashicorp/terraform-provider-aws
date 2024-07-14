@@ -104,7 +104,7 @@ func (r *resourceEndpointServicePrivateDNSVerification) Create(ctx context.Conte
 
 	if plan.WaitForVerification.ValueBool() {
 		createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-		_, err := waitVPCEndpointServicePrivateDNSNameVerifiedV2(ctx, conn, plan.ServiceID.ValueString(), createTimeout)
+		_, err := waitVPCEndpointServicePrivateDNSNameVerified(ctx, conn, plan.ServiceID.ValueString(), createTimeout)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForCreation, ResNameEndpointServicePrivateDNSVerification, plan.ServiceID.String(), err),

@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_eip", name="EIP")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceEIP() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEIPCreate,

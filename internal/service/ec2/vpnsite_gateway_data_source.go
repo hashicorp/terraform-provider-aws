@@ -24,6 +24,7 @@ import (
 
 // @SDKDataSource("aws_vpn_gateway", name="VPN Gateway")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceVPNGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPNGatewayRead,

@@ -156,6 +156,45 @@ func testAccDomainAssociation_update(t *testing.T) {
 	})
 }
 
+func testAccDomainAssociation_certificateSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	key := "AMPLIFY_DOMAIN_NAME"
+	domainName := os.Getenv(key)
+	if domainName == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	var domain types.DomainAssociation
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_amplify_domain_association.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainAssociationConfig_certificateSettings(rName, domainName, false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.0.type", "AMPLIFY_MANAGED"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate_settings.0.certificate_verification_dns_record"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_verification"},
+			},
+		},
+	})
+}
+
 func testAccCheckDomainAssociationExists(ctx context.Context, n string, v *types.DomainAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -257,6 +296,36 @@ resource "aws_amplify_domain_association" "test" {
   sub_domain {
     branch_name = aws_amplify_branch.test2.branch_name
     prefix      = "www"
+  }
+
+  enable_auto_sub_domain = %[3]t
+  wait_for_verification  = %[4]t
+}
+`, rName, domainName, enableAutoSubDomain, waitForVerification)
+}
+
+func testAccDomainAssociationConfig_certificateSettings(rName, domainName string, enableAutoSubDomain bool, waitForVerification bool) string {
+	return fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+}
+
+resource "aws_amplify_branch" "test" {
+  app_id      = aws_amplify_app.test.id
+  branch_name = %[1]q
+}
+
+resource "aws_amplify_domain_association" "test" {
+  app_id      = aws_amplify_app.test.id
+  domain_name = %[2]q
+
+  sub_domain {
+    branch_name = aws_amplify_branch.test.branch_name
+    prefix      = ""
+  }
+
+  certificate_settings {
+    type = "AMPLIFY_MANAGED"
   }
 
   enable_auto_sub_domain = %[3]t

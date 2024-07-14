@@ -11,8 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	acmpca_types "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -36,7 +35,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 
 func testAccServer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -117,7 +116,7 @@ func testAccServer_basic(t *testing.T) {
 
 func testAccServer_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 
 	resource.Test(t, resource.TestCase{
@@ -140,7 +139,7 @@ func testAccServer_disappears(t *testing.T) {
 
 func testAccServer_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 
 	resource.Test(t, resource.TestCase{
@@ -186,7 +185,7 @@ func testAccServer_tags(t *testing.T) {
 
 func testAccServer_domain(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -215,7 +214,7 @@ func testAccServer_domain(t *testing.T) {
 
 func testAccServer_securityPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -279,7 +278,7 @@ func testAccServer_securityPolicy(t *testing.T) {
 
 func testAccServer_securityPolicyFIPS(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -315,7 +314,7 @@ func testAccServer_securityPolicyFIPS(t *testing.T) {
 
 func testAccServer_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	defaultSecurityGroupResourceName := "aws_default_security_group.test"
 	subnetResourceName := "aws_subnet.test"
@@ -383,7 +382,7 @@ func testAccServer_vpc(t *testing.T) {
 
 func testAccServer_vpcAddressAllocationIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	eip1ResourceName := "aws_eip.test.0"
 	eip2ResourceName := "aws_eip.test.1"
@@ -456,7 +455,7 @@ func testAccServer_vpcAddressAllocationIDs(t *testing.T) {
 
 func testAccServer_vpcSecurityGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	securityGroup1ResourceName := "aws_security_group.test"
 	securityGroup2ResourceName := "aws_security_group.test2"
@@ -509,7 +508,7 @@ func testAccServer_vpcSecurityGroupIDs(t *testing.T) {
 
 func testAccServer_vpcAddressAllocationIds_securityGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	eip1ResourceName := "aws_eip.test.0"
 	eip2ResourceName := "aws_eip.test.1"
@@ -569,7 +568,7 @@ func testAccServer_vpcAddressAllocationIds_securityGroupIDs(t *testing.T) {
 
 func testAccServer_updateEndpointType_publicToVPC(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -607,7 +606,7 @@ func testAccServer_updateEndpointType_publicToVPC(t *testing.T) {
 
 func testAccServer_updateEndpointType_publicToVPC_addressAllocationIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -645,7 +644,7 @@ func testAccServer_updateEndpointType_publicToVPC_addressAllocationIDs(t *testin
 
 func testAccServer_updateEndpointType_vpcEndpointToVPC(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -683,7 +682,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC(t *testing.T) {
 
 func testAccServer_updateEndpointType_vpcEndpointToVPC_addressAllocationIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -721,7 +720,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC_addressAllocationIDs(t *t
 
 func testAccServer_updateEndpointType_vpcEndpointToVPC_securityGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -759,7 +758,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC_securityGroupIDs(t *testi
 
 func testAccServer_updateEndpointType_vpcToPublic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -797,7 +796,7 @@ func testAccServer_updateEndpointType_vpcToPublic(t *testing.T) {
 
 func testAccServer_structuredLogDestinations(t *testing.T) {
 	ctx := acctest.Context(t)
-	var s transfer.DescribedServer
+	var s awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	cloudwatchLogGroupName := "aws_cloudwatch_log_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -837,7 +836,7 @@ func testAccServer_structuredLogDestinations(t *testing.T) {
 
 func testAccServer_protocols(t *testing.T) {
 	ctx := acctest.Context(t)
-	var s transfer.DescribedServer
+	var s awstypes.DescribedServer
 	var ca acmpca_types.CertificateAuthority
 	resourceName := "aws_transfer_server.test"
 	acmCAResourceName := "aws_acmpca_certificate_authority.test"
@@ -903,7 +902,7 @@ func testAccServer_protocols(t *testing.T) {
 
 func testAccServer_protocolDetails(t *testing.T) {
 	ctx := acctest.Context(t)
-	var s transfer.DescribedServer
+	var s awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 
 	resource.Test(t, resource.TestCase{
@@ -946,7 +945,7 @@ func testAccServer_protocolDetails(t *testing.T) {
 
 func testAccServer_s3StorageOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var s transfer.DescribedServer
+	var s awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 
 	resource.Test(t, resource.TestCase{
@@ -989,7 +988,7 @@ func testAccServer_s3StorageOptions(t *testing.T) {
 
 func testAccServer_apiGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1020,7 +1019,7 @@ func testAccServer_apiGateway(t *testing.T) {
 
 func testAccServer_apiGateway_forceDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1050,7 +1049,7 @@ func testAccServer_apiGateway_forceDestroy(t *testing.T) {
 
 func testAccServer_directoryService(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
@@ -1085,9 +1084,9 @@ func testAccServer_directoryService(t *testing.T) {
 
 func testAccServer_forceDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var s transfer.DescribedServer
-	var u transfer.DescribedUser
-	var k transfer.SshPublicKey
+	var s awstypes.DescribedServer
+	var u awstypes.DescribedUser
+	var k awstypes.SshPublicKey
 	resourceName := "aws_transfer_server.test"
 	userResourceName := "aws_transfer_user.test"
 	sshKeyResourceName := "aws_transfer_ssh_key.test"
@@ -1125,7 +1124,7 @@ func testAccServer_forceDestroy(t *testing.T) {
 
 func testAccServer_hostKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	hostKey := "test-fixtures/transfer-ssh-rsa-key"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1155,7 +1154,7 @@ func testAccServer_hostKey(t *testing.T) {
 
 func testAccServer_vpcEndpointID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	vpcEndpointResourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1164,7 +1163,7 @@ func testAccServer_vpcEndpointID(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1195,7 +1194,7 @@ func testAccServer_vpcEndpointID(t *testing.T) {
 
 func testAccServer_lambdaFunction(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1226,7 +1225,7 @@ func testAccServer_lambdaFunction(t *testing.T) {
 
 func testAccServer_identityProviderType_sftpAuthenticationMethods(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1257,7 +1256,7 @@ func testAccServer_identityProviderType_sftpAuthenticationMethods(t *testing.T) 
 
 func testAccServer_updateIdentityProviderType_sftpAuthenticationMethods(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1297,7 +1296,7 @@ func testAccServer_updateIdentityProviderType_sftpAuthenticationMethods(t *testi
 
 func testAccServer_authenticationLoginBanners(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 
 	resource.Test(t, resource.TestCase{
@@ -1326,7 +1325,7 @@ func testAccServer_authenticationLoginBanners(t *testing.T) {
 
 func testAccServer_workflowDetails(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1379,7 +1378,7 @@ func testAccServer_workflowDetails(t *testing.T) {
 	})
 }
 
-func testAccCheckServerExists(ctx context.Context, n string, v *transfer.DescribedServer) resource.TestCheckFunc {
+func testAccCheckServerExists(ctx context.Context, n string, v *awstypes.DescribedServer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1390,7 +1389,7 @@ func testAccCheckServerExists(ctx context.Context, n string, v *transfer.Describ
 			return fmt.Errorf("No Transfer Server ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
 		output, err := tftransfer.FindServerByID(ctx, conn, rs.Primary.ID)
 
@@ -1406,7 +1405,7 @@ func testAccCheckServerExists(ctx context.Context, n string, v *transfer.Describ
 
 func testAccCheckServerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_server" {

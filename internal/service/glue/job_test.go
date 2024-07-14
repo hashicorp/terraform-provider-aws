@@ -388,6 +388,35 @@ func TestAccGlueJob_executionProperty(t *testing.T) {
 	})
 }
 
+func TestAccGlueJob_maintenanceWindow(t *testing.T) {
+	ctx := acctest.Context(t)
+	var job glue.Job
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_job.test"
+	maintenanceWindow := "Sun:23"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobConfig_maintenanceWindow(rName, maintenanceWindow),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "Sun:23"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccGlueJob_maxRetries(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job glue.Job
@@ -1042,6 +1071,23 @@ resource "aws_glue_job" "test" {
 `, rName, maxConcurrentRuns))
 }
 
+func testAccJobConfig_maintenanceWindow(rName, maintenanceWindow string) string {
+	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_glue_job" "test" {
+  name               = %[2]q
+  role_arn           = aws_iam_role.test.arn
+  maintenance_window = %[2]q
+
+  command {
+    name            = "gluestreaming"
+    script_location = "testscriptlocation"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, maintenanceWindow))
+}
+
 func testAccJobConfig_maxRetries(rName string, maxRetries int) string {
 	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_job" "test" {
@@ -1115,10 +1161,8 @@ resource "aws_glue_job" "test" {
 func testAccJobConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_job" "test" {
-  name              = %[1]q
-  number_of_workers = 1
-  role_arn          = aws_iam_role.test.arn
-  worker_type       = "Standard"
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
 
   command {
     script_location = "testscriptlocation"

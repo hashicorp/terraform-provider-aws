@@ -52,6 +52,8 @@ import (
 
 // @SDKResource("aws_db_instance", name="DB Instance")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/rds;rds.DBInstance")
+// @Testing(importIgnore="apply_immediately;password")
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
@@ -114,7 +116,7 @@ func ResourceInstance() *schema.Resource {
 					return false
 				},
 			},
-			"allow_major_version_upgrade": {
+			names.AttrAllowMajorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -315,7 +317,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.All(
@@ -864,20 +866,24 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-			func() (interface{}, error) {
-				return conn.CreateDBInstanceReadReplicaWithContext(ctx, input)
-			},
-			errCodeInvalidParameterValue, "ENHANCED_MONITORING")
+		output, err := dbInstanceCreateReadReplica(ctx, conn, input)
+
+		// Some engines (e.g. PostgreSQL) you cannot specify a custom parameter group for the read replica during creation.
+		// See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html#USER_ReadRepl.XRgn.Cnsdr.
+		if input.DBParameterGroupName != nil && tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "A parameter group can't be specified during Read Replica creation for the following DB engine") {
+			input.DBParameterGroupName = nil
+
+			output, err = dbInstanceCreateReadReplica(ctx, conn, input)
+		}
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (read replica) (%s): %s", identifier, err)
 		}
 
-		output := outputRaw.(*rds.CreateDBInstanceReadReplicaOutput)
-
 		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 
-		if v, ok := d.GetOk("allow_major_version_upgrade"); ok {
+		if v, ok := d.GetOk(names.AttrAllowMajorVersionUpgrade); ok {
 			// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
 			// "InvalidParameterCombination: No modifications were requested".
 			modifyDbInstanceInput.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
@@ -1104,10 +1110,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore from S3) (%s): %s", identifier, err)
 		}
 
-		if outputRaw != nil {
-			output := outputRaw.(*rds.RestoreDBInstanceFromS3Output)
-			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
-		}
+		output := outputRaw.(*rds.RestoreDBInstanceFromS3Output)
+
+		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 	} else if v, ok := d.GetOk("snapshot_identifier"); ok {
 		input := &rds.RestoreDBInstanceFromDBSnapshotInput{
 			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
@@ -1137,7 +1143,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 
-		if v, ok := d.GetOk("allow_major_version_upgrade"); ok {
+		if v, ok := d.GetOk(names.AttrAllowMajorVersionUpgrade); ok {
 			modifyDbInstanceInput.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
 			// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
 			// InvalidParameterCombination: No modifications were requested
@@ -1337,6 +1343,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			},
 		)
 
+		var output *rds.RestoreDBInstanceFromDBSnapshotOutput
+
+		if err == nil {
+			output = outputRaw.(*rds.RestoreDBInstanceFromDBSnapshotOutput)
+		}
+
 		// When using SQL Server engine with MultiAZ enabled, its not
 		// possible to immediately enable mirroring since
 		// BackupRetentionPeriod is not available as a parameter to
@@ -1349,17 +1361,15 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.MultiAZ = aws.Bool(false)
 			modifyDbInstanceInput.MultiAZ = aws.Bool(true)
 			requiresModifyDbInstance = true
-			_, err = conn.RestoreDBInstanceFromDBSnapshotWithContext(ctx, input)
+			output, err = conn.RestoreDBInstanceFromDBSnapshotWithContext(ctx, input)
 		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore from snapshot) (%s): %s", identifier, err)
 		}
 
-		if outputRaw != nil {
-			output := outputRaw.(*rds.RestoreDBInstanceFromDBSnapshotOutput)
-			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
-		}
+		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &rds.RestoreDBInstanceToPointInTimeInput{
@@ -1539,14 +1549,15 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				return false, err
 			},
 		)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore to point-in-time) (%s): %s", identifier, err)
 		}
 
-		if outputRaw != nil {
-			output := outputRaw.(*rds.RestoreDBInstanceToPointInTimeOutput)
-			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
-		}
+		output := outputRaw.(*rds.RestoreDBInstanceToPointInTimeOutput)
+
+		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 	} else {
 		if _, ok := d.GetOk(names.AttrAllocatedStorage); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"allocated_storage": required field is not set`)
@@ -1749,12 +1760,15 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				return false, err
 			},
 		)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (%s): %s", identifier, err)
 		}
 
 		output := outputRaw.(*rds.CreateDBInstanceOutput)
+
 		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		d.SetId(resourceID)
 
 		// This is added here to avoid unnecessary modification when ca_cert_identifier is the default one
 		if v, ok := d.GetOk("ca_cert_identifier"); ok && v.(string) != aws.StringValue(output.DBInstance.CACertificateIdentifier) {
@@ -1773,7 +1787,9 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		resourceID = aws.StringValue(instance.DbiResourceId)
 	}
 
-	d.SetId(resourceID)
+	if d.Id() == "" {
+		d.SetId(resourceID)
+	}
 
 	if requiresModifyDbInstance {
 		modifyDbInstanceInput.DBInstanceIdentifier = aws.String(identifier)
@@ -1817,12 +1833,13 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Id())
 	} else {
 		v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Id())
-		if tfresource.NotFound(err) {
+		if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
+			// Retry with `identifier`
 			v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Get(names.AttrIdentifier).(string))
-			if tfresource.NotFound(err) {
+			if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 				log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", d.Get(names.AttrIdentifier).(string))
 				d.SetId("")
-				return nil
+				return diags
 			}
 		}
 	}
@@ -1991,19 +2008,19 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
 	// as it results in "InvalidParameterCombination: No modifications were requested".
 	if d.HasChangesExcept(
-		"allow_major_version_upgrade",
+		names.AttrAllowMajorVersionUpgrade,
 		"blue_green_update",
 		"delete_automated_backups",
-		"final_snapshot_identifier",
+		names.AttrFinalSnapshotIdentifier,
 		"replicate_source_db",
 		"skip_final_snapshot",
 		names.AttrTags, names.AttrTagsAll,
 	) {
 		if d.Get("blue_green_update.0.enabled").(bool) && d.HasChangesExcept(
-			"allow_major_version_upgrade",
+			names.AttrAllowMajorVersionUpgrade,
 			"blue_green_update",
 			"delete_automated_backups",
-			"final_snapshot_identifier",
+			names.AttrFinalSnapshotIdentifier,
 			"replicate_source_db",
 			"skip_final_snapshot",
 			names.AttrTags, names.AttrTagsAll,
@@ -2167,7 +2184,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			if d.HasChange(names.AttrEngineVersion) {
 				input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
-				input.AllowMajorVersionUpgrade = aws.Bool(d.Get("allow_major_version_upgrade").(bool))
+				input.AllowMajorVersionUpgrade = aws.Bool(d.Get(names.AttrAllowMajorVersionUpgrade).(bool))
 				// if we were to make life easier for practitioners, we could loop through
 				// replicas at this point to update them first, prior to dbInstanceModify()
 				// for the source
@@ -2185,6 +2202,105 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
+}
+
+func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+
+	input := &rds.DeleteDBInstanceInput{
+		DBInstanceIdentifier:   aws.String(d.Get(names.AttrIdentifier).(string)),
+		DeleteAutomatedBackups: aws.Bool(d.Get("delete_automated_backups").(bool)),
+	}
+
+	if d.Get("skip_final_snapshot").(bool) {
+		input.SkipFinalSnapshot = aws.Bool(true)
+	} else {
+		input.SkipFinalSnapshot = aws.Bool(false)
+
+		if v, ok := d.GetOk(names.AttrFinalSnapshotIdentifier); ok {
+			input.FinalDBSnapshotIdentifier = aws.String(v.(string))
+		} else {
+			return sdkdiag.AppendErrorf(diags, "final_snapshot_identifier is required when skip_final_snapshot is false")
+		}
+	}
+
+	log.Printf("[DEBUG] Deleting RDS DB Instance: %s", d.Get(names.AttrIdentifier).(string))
+	_, err := conn.DeleteDBInstanceWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
+		if v, ok := d.GetOk(names.AttrDeletionProtection); (!ok || !v.(bool)) && d.Get(names.AttrApplyImmediately).(bool) {
+			_, ierr := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
+				func() (interface{}, error) {
+					return conn.ModifyDBInstanceWithContext(ctx, &rds.ModifyDBInstanceInput{
+						ApplyImmediately:     aws.Bool(true),
+						DBInstanceIdentifier: aws.String(d.Get(names.AttrIdentifier).(string)),
+						DeletionProtection:   aws.Bool(false),
+					})
+				},
+				func(err error) (bool, error) {
+					// Retry for IAM eventual consistency.
+					if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or") {
+						return true, err
+					}
+
+					// "InvalidDBInstanceState: RDS is configuring Enhanced Monitoring or Performance Insights for this DB instance. Try your request later."
+					if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "your request later") {
+						return true, err
+					}
+
+					return false, err
+				},
+			)
+
+			if ierr != nil {
+				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
+			}
+
+			if _, ierr := waitDBInstanceAvailableSDKv1(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); ierr != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) update: %s", d.Get(names.AttrIdentifier).(string), ierr)
+			}
+
+			_, err = conn.DeleteDBInstanceWithContext(ctx, input)
+		}
+	}
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
+		return diags
+	}
+
+	if err != nil && !tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
+		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
+	}
+
+	if _, err := waitDBInstanceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) delete: %s", d.Get(names.AttrIdentifier).(string), err)
+	}
+
+	return diags
+}
+
+func resourceInstanceImport(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
+	// from any API call, so we need to default skip_final_snapshot to true so
+	// that final_snapshot_identifier is not required.
+	d.Set("skip_final_snapshot", true)
+	d.Set("delete_automated_backups", true)
+	return []*schema.ResourceData{d}, nil
+}
+
+func dbInstanceCreateReadReplica(ctx context.Context, conn *rds.RDS, input *rds.CreateDBInstanceReadReplicaInput) (*rds.CreateDBInstanceReadReplicaOutput, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateDBInstanceReadReplicaWithContext(ctx, input)
+		},
+		errCodeInvalidParameterValue, "ENHANCED_MONITORING")
+
+	if err != nil {
+		return nil, err
+	}
+
+	return outputRaw.(*rds.CreateDBInstanceReadReplicaOutput), nil
 }
 
 func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.ResourceData) bool {
@@ -2452,91 +2568,6 @@ func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, resourceID st
 		return fmt.Errorf("waiting for completion: %w", err)
 	}
 	return nil
-}
-
-func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
-
-	input := &rds.DeleteDBInstanceInput{
-		DBInstanceIdentifier:   aws.String(d.Get(names.AttrIdentifier).(string)),
-		DeleteAutomatedBackups: aws.Bool(d.Get("delete_automated_backups").(bool)),
-	}
-
-	if d.Get("skip_final_snapshot").(bool) {
-		input.SkipFinalSnapshot = aws.Bool(true)
-	} else {
-		input.SkipFinalSnapshot = aws.Bool(false)
-
-		if v, ok := d.GetOk("final_snapshot_identifier"); ok {
-			input.FinalDBSnapshotIdentifier = aws.String(v.(string))
-		} else {
-			return sdkdiag.AppendErrorf(diags, "final_snapshot_identifier is required when skip_final_snapshot is false")
-		}
-	}
-
-	log.Printf("[DEBUG] Deleting RDS DB Instance: %s", d.Get(names.AttrIdentifier).(string))
-	_, err := conn.DeleteDBInstanceWithContext(ctx, input)
-
-	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
-		if v, ok := d.GetOk(names.AttrDeletionProtection); (!ok || !v.(bool)) && d.Get(names.AttrApplyImmediately).(bool) {
-			_, ierr := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
-				func() (interface{}, error) {
-					return conn.ModifyDBInstanceWithContext(ctx, &rds.ModifyDBInstanceInput{
-						ApplyImmediately:     aws.Bool(true),
-						DBInstanceIdentifier: aws.String(d.Get(names.AttrIdentifier).(string)),
-						DeletionProtection:   aws.Bool(false),
-					})
-				},
-				func(err error) (bool, error) {
-					// Retry for IAM eventual consistency.
-					if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or") {
-						return true, err
-					}
-
-					// "InvalidDBInstanceState: RDS is configuring Enhanced Monitoring or Performance Insights for this DB instance. Try your request later."
-					if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "your request later") {
-						return true, err
-					}
-
-					return false, err
-				},
-			)
-
-			if ierr != nil {
-				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
-			}
-
-			if _, ierr := waitDBInstanceAvailableSDKv1(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); ierr != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) update: %s", d.Get(names.AttrIdentifier).(string), ierr)
-			}
-
-			_, err = conn.DeleteDBInstanceWithContext(ctx, input)
-		}
-	}
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
-		return nil
-	}
-
-	if err != nil && !tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
-		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
-	}
-
-	if _, err := waitDBInstanceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) delete: %s", d.Get(names.AttrIdentifier).(string), err)
-	}
-
-	return nil
-}
-
-func resourceInstanceImport(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
-	// from any API call, so we need to default skip_final_snapshot to true so
-	// that final_snapshot_identifier is not required.
-	d.Set("skip_final_snapshot", true)
-	d.Set("delete_automated_backups", true)
-	return []*schema.ResourceData{d}, nil
 }
 
 // See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage.

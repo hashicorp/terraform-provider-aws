@@ -8,13 +8,15 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -49,8 +51,8 @@ func ResourceVaultNotifications() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(backup.VaultEvent_Values(), false),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[awstypes.BackupVaultEvent](),
 				},
 			},
 			"backup_vault_arn": {
@@ -63,15 +65,15 @@ func ResourceVaultNotifications() *schema.Resource {
 
 func resourceVaultNotificationsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	input := &backup.PutBackupVaultNotificationsInput{
 		BackupVaultName:   aws.String(d.Get("backup_vault_name").(string)),
 		SNSTopicArn:       aws.String(d.Get(names.AttrSNSTopicARN).(string)),
-		BackupVaultEvents: flex.ExpandStringSet(d.Get("backup_vault_events").(*schema.Set)),
+		BackupVaultEvents: flex.ExpandStringyValueSet[awstypes.BackupVaultEvent](d.Get("backup_vault_events").(*schema.Set)),
 	}
 
-	_, err := conn.PutBackupVaultNotificationsWithContext(ctx, input)
+	_, err := conn.PutBackupVaultNotifications(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Backup Vault Notifications (%s): %s", d.Id(), err)
 	}
@@ -83,14 +85,14 @@ func resourceVaultNotificationsCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceVaultNotificationsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	input := &backup.GetBackupVaultNotificationsInput{
 		BackupVaultName: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetBackupVaultNotificationsWithContext(ctx, input)
-	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
+	resp, err := conn.GetBackupVaultNotifications(ctx, input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Backup Vault Notifcations %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -102,7 +104,7 @@ func resourceVaultNotificationsRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("backup_vault_name", resp.BackupVaultName)
 	d.Set(names.AttrSNSTopicARN, resp.SNSTopicArn)
 	d.Set("backup_vault_arn", resp.BackupVaultArn)
-	if err := d.Set("backup_vault_events", flex.FlattenStringSet(resp.BackupVaultEvents)); err != nil {
+	if err := d.Set("backup_vault_events", flex.FlattenStringyValueSet(resp.BackupVaultEvents)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting backup_vault_events: %s", err)
 	}
 
@@ -111,15 +113,15 @@ func resourceVaultNotificationsRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceVaultNotificationsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	input := &backup.DeleteBackupVaultNotificationsInput{
 		BackupVaultName: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteBackupVaultNotificationsWithContext(ctx, input)
+	_, err := conn.DeleteBackupVaultNotifications(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting Backup Vault Notifications (%s): %s", d.Id(), err)

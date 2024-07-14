@@ -19,21 +19,21 @@ import (
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*fms.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return fms.NewFromConfig(cfg, func(o *fms.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			o.BaseEndpoint = aws.String(endpoint)
-		}
-
-		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
-			// Acceptance testing creates and deletes resources in quick succession.
-			// The FMS onboarding process into Organizations is opaque to consumers.
-			// Since we cannot reasonably check this status before receiving the error,
-			// set the operation as retryable.
-			if errs.IsAErrorMessageContains[*awstypes.InvalidOperationException](err, "Your AWS Organization is currently onboarding with AWS Firewall Manager and cannot be offboarded") ||
-				errs.IsAErrorMessageContains[*awstypes.InvalidOperationException](err, "Your AWS Organization is currently offboarding with AWS Firewall Manager. Please submit onboard request after offboarded") {
-				return aws.TrueTernary
-			}
-			return aws.UnknownTernary // Delegate to configured Retryer.
-		}))
-	}), nil
+	return fms.NewFromConfig(cfg,
+		fms.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *fms.Options) {
+			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+				// Acceptance testing creates and deletes resources in quick succession.
+				// The FMS onboarding process into Organizations is opaque to consumers.
+				// Since we cannot reasonably check this status before receiving the error,
+				// set the operation as retryable.
+				if errs.IsAErrorMessageContains[*awstypes.InvalidOperationException](err, "Your AWS Organization is currently onboarding with AWS Firewall Manager and cannot be offboarded") ||
+					errs.IsAErrorMessageContains[*awstypes.InvalidOperationException](err, "Your AWS Organization is currently offboarding with AWS Firewall Manager. Please submit onboard request after offboarded") {
+					return aws.TrueTernary
+				}
+				return aws.UnknownTernary // Delegate to configured Retryer.
+			}))
+		},
+	), nil
 }

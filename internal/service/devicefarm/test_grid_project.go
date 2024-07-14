@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,7 +26,7 @@ import (
 
 // @SDKResource("aws_devicefarm_test_grid_project", name="Test Grid Project")
 // @Tags(identifierAttribute="arn")
-func ResourceTestGridProject() *schema.Resource {
+func resourceTestGridProject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTestGridProjectCreate,
 		ReadWithoutTimeout:   resourceTestGridProjectRead,
@@ -118,7 +119,7 @@ func resourceTestGridProjectRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
-	project, err := FindTestGridProjectByARN(ctx, conn, d.Id())
+	project, err := findTestGridProjectByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Test Grid Project (%s) not found, removing from state", d.Id())
@@ -186,6 +187,30 @@ func resourceTestGridProjectDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return diags
+}
+
+func findTestGridProjectByARN(ctx context.Context, conn *devicefarm.Client, arn string) (*awstypes.TestGridProject, error) {
+	input := &devicefarm.GetTestGridProjectInput{
+		ProjectArn: aws.String(arn),
+	}
+	output, err := conn.GetTestGridProject(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.TestGridProject == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.TestGridProject, nil
 }
 
 func expandTestGridProjectVPCConfig(l []interface{}) *awstypes.TestGridVpcConfig {

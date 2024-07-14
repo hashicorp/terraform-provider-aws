@@ -50,6 +50,8 @@ var routeTableValidTargets = []string{
 
 // @SDKResource("aws_route_table", name="Route Table")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.RouteTable")
+// @Testing(generator=false)
 func resourceRouteTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteTableCreate,
@@ -504,6 +506,10 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.Client, routeTableID stri
 			return fmt.Errorf("local route cannot be created but must exist to be adopted, %s %s does not exist", target, destination)
 		}
 
+		if err != nil {
+			return fmt.Errorf("finding local route %s %s: %w", target, destination, err)
+		}
+
 		return nil
 	}
 
@@ -872,7 +878,7 @@ func flattenRoutes(ctx context.Context, conn *ec2.Client, d *schema.ResourceData
 
 		// Skip cross-account ENIs for AWS services.
 		if networkInterfaceID := aws.ToString(apiObject.NetworkInterfaceId); networkInterfaceID != "" {
-			networkInterface, err := findNetworkInterfaceByIDV2(ctx, conn, networkInterfaceID)
+			networkInterface, err := findNetworkInterfaceByID(ctx, conn, networkInterfaceID)
 
 			if err == nil && networkInterface.Attachment != nil {
 				if ownerID, instanceOwnerID := aws.ToString(networkInterface.OwnerId), aws.ToString(networkInterface.Attachment.InstanceOwnerId); ownerID != "" && instanceOwnerID != ownerID {
