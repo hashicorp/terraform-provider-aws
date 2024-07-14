@@ -30,8 +30,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Certificate",
 		},
 		{
-			Factory:  DataSourceEndpoint,
+			Factory:  dataSourceEndpoint,
 			TypeName: "aws_dms_endpoint",
+			Name:     "Endpoint",
 		},
 		{
 			Factory:  DataSourceReplicationInstance,

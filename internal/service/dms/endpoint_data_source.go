@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_dms_endpoint")
-func DataSourceEndpoint() *schema.Resource {
+// @SDKDataSource("aws_dms_endpoint", name="Endpoint")
+func dataSourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEndpointRead,
 
@@ -577,7 +577,7 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	endptID := d.Get("endpoint_id").(string)
-	out, err := FindEndpointByID(ctx, conn, endptID)
+	out, err := findEndpointByID(ctx, conn, endptID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DMS Endpoint (%s): %s", endptID, err)
@@ -600,6 +600,7 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	tags, err := listTags(ctx, conn, arn)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Endpoint (%s): %s", arn, err)
 	}
