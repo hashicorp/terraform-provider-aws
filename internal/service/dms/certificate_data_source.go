@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_dms_certificate")
-func DataSourceCertificate() *schema.Resource {
+// @SDKDataSource("aws_dms_certificate", name="Certificate")
+func dataSourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCertificateRead,
 
@@ -84,7 +84,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	certificateID := d.Get("certificate_id").(string)
-	out, err := FindCertificateByID(ctx, conn, certificateID)
+	out, err := findCertificateByID(ctx, conn, certificateID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DMS Certificate (%s): %s", certificateID, err)
@@ -104,6 +104,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("valid_to_date", out.ValidToDate.String())
 
 	tags, err := listTags(ctx, conn, arn)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Certificate (%s): %s", arn, err)
 	}
