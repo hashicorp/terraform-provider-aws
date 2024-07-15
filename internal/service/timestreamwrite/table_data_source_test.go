@@ -50,7 +50,7 @@ func TestAccTimestreamWriteTableDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(dataSourceName, "retention_properties.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "schema.#"),
-					resource.TestCheckResourceAttr(dataSourceName, "schema.0.composite_partition_key.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "schema.0.composite_partition_key.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(dataSourceName, "table_status", resourceName, names.AttrStatus),
 				),
 			},
@@ -162,7 +162,7 @@ func TestAccTimestreamWriteTableDataSource_retentionProperties(t *testing.T) {
 				Config: testAccTableDataSourceConfig_retentionProperties(rDatabaseName, rTableName, 30, 120),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableExistsNames(ctx, dataSourceName),
-					resource.TestCheckResourceAttr(dataSourceName, "retention_properties.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "retention_properties.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "retention_properties.0.magnetic_store_retention_period_in_days", "30"),
 					resource.TestCheckResourceAttr(dataSourceName, "retention_properties.0.memory_store_retention_period_in_hours", "120"),
 				),
