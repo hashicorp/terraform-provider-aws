@@ -545,7 +545,7 @@ func flattenClusterConfiguration(apiObject *ecs.ClusterConfiguration) []interfac
 	}
 
 	if apiObject.ManagedStorageConfiguration != nil {
-		tfMap["managed_storage_configuration"] = flattenClusterConfigurationManagedStorageConfiguration(apiObject.ManagedStorageConfiguration)
+		tfMap["managed_storage_configuration"] = flattenManagedStorageConfiguration(apiObject.ManagedStorageConfiguration)
 	}
 
 	return []interface{}{tfMap}
@@ -598,7 +598,7 @@ func flattenClusterConfigurationExecuteCommandConfigurationLogConfiguration(apiO
 	return []interface{}{tfMap}
 }
 
-func flattenClusterConfigurationManagedStorageConfiguration(apiObject *ecs.ManagedStorageConfiguration) []interface{} {
+func flattenManagedStorageConfiguration(apiObject *ecs.ManagedStorageConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -628,7 +628,7 @@ func expandClusterConfiguration(nc []interface{}) *ecs.ClusterConfiguration {
 	}
 
 	if v, ok := raw["managed_storage_configuration"].([]interface{}); ok && len(v) > 0 {
-		config.ManagedStorageConfiguration = expandClusterConfigurationManagedStorageConfiguration(v)
+		config.ManagedStorageConfiguration = expandManagedStorageConfiguration(v)
 	}
 
 	return config
@@ -687,20 +687,21 @@ func expandClusterConfigurationExecuteCommandLogConfiguration(nc []interface{}) 
 	return config
 }
 
-func expandClusterConfigurationManagedStorageConfiguration(nc []interface{}) *ecs.ManagedStorageConfiguration {
-	if len(nc) == 0 || nc[0] == nil {
+func expandManagedStorageConfiguration(tfList []interface{}) *ecs.ManagedStorageConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return &ecs.ManagedStorageConfiguration{}
 	}
-	raw := nc[0].(map[string]interface{})
 
-	config := &ecs.ManagedStorageConfiguration{}
-	if v, ok := raw["fargate_ephemeral_storage_kms_key_id"].(string); ok && v != "" {
-		config.FargateEphemeralStorageKmsKeyId = aws.String(v)
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &ecs.ManagedStorageConfiguration{}
+
+	if v, ok := tfMap["fargate_ephemeral_storage_kms_key_id"].(string); ok && v != "" {
+		apiObject.FargateEphemeralStorageKmsKeyId = aws.String(v)
 	}
 
-	if v, ok := raw[names.AttrKMSKeyID].(string); ok && v != "" {
-		config.KmsKeyId = aws.String(v)
+	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
+		apiObject.KmsKeyId = aws.String(v)
 	}
 
-	return config
+	return apiObject
 }
