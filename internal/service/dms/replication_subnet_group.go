@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_dms_replication_subnet_group", name="Replication Subnet Group")
 // @Tags(identifierAttribute="replication_subnet_group_arn")
-func ResourceReplicationSubnetGroup() *schema.Resource {
+func resourceReplicationSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationSubnetGroupCreate,
 		ReadWithoutTimeout:   resourceReplicationSubnetGroupRead,
@@ -100,7 +100,7 @@ func resourceReplicationSubnetGroupRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
-	group, err := FindReplicationSubnetGroupByID(ctx, conn, d.Id())
+	group, err := findReplicationSubnetGroupByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DMS Replication Subnet Group (%s) not found, removing from state", d.Id())
@@ -179,7 +179,7 @@ func resourceReplicationSubnetGroupDelete(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func FindReplicationSubnetGroupByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationSubnetGroup, error) {
+func findReplicationSubnetGroupByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationSubnetGroup, error) {
 	input := &dms.DescribeReplicationSubnetGroupsInput{
 		Filters: []awstypes.Filter{
 			{
@@ -199,14 +199,13 @@ func findReplicationSubnetGroup(ctx context.Context, conn *dms.Client, input *dm
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findReplicationSubnetGroups(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationSubnetGroupsInput) ([]*awstypes.ReplicationSubnetGroup, error) {
+func findReplicationSubnetGroups(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationSubnetGroupsInput) ([]awstypes.ReplicationSubnetGroup, error) {
 	var output []awstypes.ReplicationSubnetGroup
 
 	pages := dms.NewDescribeReplicationSubnetGroupsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -224,5 +223,5 @@ func findReplicationSubnetGroups(ctx context.Context, conn *dms.Client, input *d
 		output = append(output, page.ReplicationSubnetGroups...)
 	}
 
-	return tfslices.ToPointers(output), nil
+	return output, nil
 }

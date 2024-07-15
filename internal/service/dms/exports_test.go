@@ -5,21 +5,23 @@ package dms
 
 // Exports for use in tests only.
 var (
-	ResourceCertificate         = resourceCertificate
-	ResourceEndpoint            = resourceEndpoint
-	ResourceEventSubscription   = resourceEventSubscription
-	ResourceReplicationConfig   = resourceReplicationConfig
-	ResourceReplicationInstance = resourceReplicationInstance
-	ResourceS3Endpoint          = resourceS3Endpoint
+	ResourceCertificate            = resourceCertificate
+	ResourceEndpoint               = resourceEndpoint
+	ResourceEventSubscription      = resourceEventSubscription
+	ResourceReplicationConfig      = resourceReplicationConfig
+	ResourceReplicationInstance    = resourceReplicationInstance
+	ResourceReplicationSubnetGroup = resourceReplicationSubnetGroup
+	ResourceS3Endpoint             = resourceS3Endpoint
 
-	FindCertificateByID           = findCertificateByID
-	FindEndpointByID              = findEndpointByID
-	FindEventSubscriptionByName   = findEventSubscriptionByName
-	FindReplicationConfigByARN    = findReplicationConfigByARN
-	FindReplicationInstanceByID   = findReplicationInstanceByID
-	TaskSettingsEqual             = taskSettingsEqual
-	ValidEndpointID               = validEndpointID
-	ValidReplicationInstanceID    = validReplicationInstanceID
-	ValidReplicationSubnetGroupID = validReplicationSubnetGroupID
-	ValidReplicationTaskID        = validReplicationTaskID
+	FindCertificateByID            = findCertificateByID
+	FindEndpointByID               = findEndpointByID
+	FindEventSubscriptionByName    = findEventSubscriptionByName
+	FindReplicationConfigByARN     = findReplicationConfigByARN
+	FindReplicationInstanceByID    = findReplicationInstanceByID
+	FindReplicationSubnetGroupByID = findReplicationSubnetGroupByID
+	TaskSettingsEqual              = taskSettingsEqual
+	ValidEndpointID                = validEndpointID
+	ValidReplicationInstanceID     = validReplicationInstanceID
+	ValidReplicationSubnetGroupID  = validReplicationSubnetGroupID
+	ValidReplicationTaskID         = validReplicationTaskID
 )
