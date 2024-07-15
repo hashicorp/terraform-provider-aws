@@ -520,6 +520,10 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 		fprintf(e.SchemaWriter, "Optional:true,\n")
 	}
 
+	if def := property.Default; def != nil {
+		property.Computed = true
+	}
+
 	if property.Computed {
 		fprintf(e.SchemaWriter, "Computed:true,\n")
 	}
