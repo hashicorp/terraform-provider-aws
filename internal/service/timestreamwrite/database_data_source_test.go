@@ -22,8 +22,8 @@ func TestAccTimestreamWriteDatabaseDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	// var database types.Database
 	rDatabaseName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_timestreamwrite_database.test"
 	dataSourceName := "data.aws_timestreamwrite_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -35,11 +35,12 @@ func TestAccTimestreamWriteDatabaseDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDatabaseDataSourceConfig_basic(rDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(ctx, dataSourceName),
-					acctest.CheckResourceAttrRegionalARN(dataSourceName, "arn", "timestream", fmt.Sprintf("database/%s", rDatabaseName)),
-					resource.TestCheckResourceAttr(dataSourceName, "database_name", rDatabaseName),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
+					testAccCheckDatabaseExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrDatabaseName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreatedTime, resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "table_count", resourceName, "table_count"),
 				),
 			},
 		},
@@ -52,6 +53,7 @@ func TestAccTimestreamWriteDatabaseDataSource_kmsKey(t *testing.T) {
 	rKmsKeyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_timestreamwrite_database.test"
 	kmsResourceName := "aws_kms_key.test"
+	resourceName := "aws_timestreamwrite_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -62,9 +64,9 @@ func TestAccTimestreamWriteDatabaseDataSource_kmsKey(t *testing.T) {
 			{
 				Config: testAccDatabaseDataSourceConfig_kmsKey(rDatabaseName, rKmsKeyName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(ctx, dataSourceName),
-					resource.TestCheckResourceAttr(dataSourceName, "database_name", rDatabaseName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "kms_key_id", kmsResourceName, "arn"),
+					testAccCheckDatabaseExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrDatabaseName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, kmsResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -75,6 +77,7 @@ func TestAccTimestreamWriteDatabaseDataSource_updateKMSKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	rDatabaseName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rKmsKeyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_timestreamwrite_database.test"
 	dataSourceName := "data.aws_timestreamwrite_database.test"
 	kmsResourceName := "aws_kms_key.test"
 
@@ -87,69 +90,22 @@ func TestAccTimestreamWriteDatabaseDataSource_updateKMSKey(t *testing.T) {
 			{
 				Config: testAccDatabaseDataSourceConfig_basic(rDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(ctx, dataSourceName),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
+					testAccCheckDatabaseExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
 				),
 			},
 			{
 				Config: testAccDatabaseDataSourceConfig_kmsKey(rDatabaseName, rKmsKeyName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(ctx, dataSourceName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "kms_key_id", kmsResourceName, "arn"),
+					testAccCheckDatabaseExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, kmsResourceName, names.AttrARN),
 				),
 			},
 			{
 				Config: testAccDatabaseDataSourceConfig_basic(rDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(ctx, dataSourceName),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
-				),
-			},
-		},
-	})
-}
-
-func TestAccTimestreamWriteDatabaseDataSource_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rDatabaseName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_timestreamwrite_database.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDatabaseDataSourceConfig_tags1(rDatabaseName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(ctx, dataSourceName),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags_all.key1", "value1"),
-				),
-			},
-			{
-				Config: testAccDatabaseDataSourceConfig_tags2(rDatabaseName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(ctx, dataSourceName),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.key2", "value2"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags_all.%", "2"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags_all.key1", "value1updated"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags_all.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccDatabaseDataSourceConfig_tags1(rDatabaseName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(ctx, dataSourceName),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.key2", "value2"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags_all.key2", "value2"),
+					testAccCheckDatabaseExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
 				),
 			},
 		},
@@ -159,12 +115,12 @@ func TestAccTimestreamWriteDatabaseDataSource_tags(t *testing.T) {
 func testAccDatabaseDataSourceConfig_basic(rDatabaseName string) string {
 	return fmt.Sprintf(`
 resource "aws_timestreamwrite_database" "test" {
-		database_name = %[1]q
-  }
+  database_name = %[1]q
+}
 
 data "aws_timestreamwrite_database" "test" {
-	database_name = aws_timestreamwrite_database.test.database_name
-  }
+  name = aws_timestreamwrite_database.test.database_name
+}
 `, rDatabaseName)
 }
 
@@ -196,40 +152,7 @@ resource "aws_timestreamwrite_database" "test" {
 }
 
 data "aws_timestreamwrite_database" "test" {
-	database_name = aws_timestreamwrite_database.test.database_name
-  }
+  name = aws_timestreamwrite_database.test.database_name
+}
 `, rKmsKeyName, rDatabaseName)
-}
-
-func testAccDatabaseDataSourceConfig_tags1(rDatabaseName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_timestreamwrite_database" "test" {
-  database_name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-
-data "aws_timestreamwrite_database" "test" {
-	database_name = aws_timestreamwrite_database.test.database_name
-  }
-`, rDatabaseName, tagKey1, tagValue1)
-}
-
-func testAccDatabaseDataSourceConfig_tags2(rDatabaseName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_timestreamwrite_database" "test" {
-  database_name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-
-data "aws_timestreamwrite_database" "test" {
-	database_name = aws_timestreamwrite_database.test.database_name
-  }
-`, rDatabaseName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
