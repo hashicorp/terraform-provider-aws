@@ -45,7 +45,7 @@ func (d *dataSourceTable) Schema(ctx context.Context, request datasource.SchemaR
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
-			names.AttrTableName: schema.StringAttribute{ // this is the table name
+			names.AttrTableName: schema.StringAttribute{
 				Required: true,
 			},
 
