@@ -2844,7 +2844,7 @@ func TestAccCodeBuildProject_concurrentBuildLimit(t *testing.T) {
 				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckNoResourceAttr(resourceName, "concurrent_build_limit"),
+					resource.TestCheckResourceAttr(resourceName, "concurrent_build_limit", "0"),
 				),
 			},
 		},
