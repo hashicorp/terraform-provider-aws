@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sfn"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sfn"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -20,6 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -29,7 +31,7 @@ import (
 
 // @SDKResource("aws_sfn_state_machine", name="State Machine")
 // @Tags(identifierAttribute="id")
-func ResourceStateMachine() *schema.Resource {
+func resourceStateMachine() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStateMachineCreate,
 		ReadWithoutTimeout:   resourceStateMachineRead,
@@ -76,9 +78,9 @@ func ResourceStateMachine() *schema.Resource {
 							Optional: true,
 						},
 						"level": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(sfn.LogLevel_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LogLevel](),
 						},
 						"log_destination": {
 							Type:     schema.TypeString,
@@ -150,11 +152,11 @@ func ResourceStateMachine() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
 			names.AttrType: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      sfn.StateMachineTypeStandard,
-				ValidateFunc: validation.StringInSlice(sfn.StateMachineType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.StateMachineTypeStandard,
+				ValidateDiagFunc: enum.Validate[awstypes.StateMachineType](),
 			},
 			"version_description": {
 				Type:     schema.TypeString,
@@ -168,16 +170,16 @@ func ResourceStateMachine() *schema.Resource {
 
 func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SFNConn(ctx)
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &sfn.CreateStateMachineInput{
 		Definition: aws.String(d.Get("definition").(string)),
 		Name:       aws.String(name),
-		Publish:    aws.Bool(d.Get("publish").(bool)),
+		Publish:    d.Get("publish").(bool),
 		RoleArn:    aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:       getTagsIn(ctx),
-		Type:       aws.String(d.Get(names.AttrType).(string)),
+		Type:       awstypes.StateMachineType(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -193,14 +195,14 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 	// when creating the step function. This can happen when we are
 	// updating the resource (since there is no update API call).
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		return conn.CreateStateMachineWithContext(ctx, input)
-	}, sfn.ErrCodeStateMachineDeleting, "AccessDeniedException")
+		return conn.CreateStateMachine(ctx, input)
+	}, "StateMachineDeleting", "AccessDeniedException")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Step Functions State Machine (%s): %s", name, err)
 	}
 
-	arn := aws.StringValue(outputRaw.(*sfn.CreateStateMachineOutput).StateMachineArn)
+	arn := aws.ToString(outputRaw.(*sfn.CreateStateMachineOutput).StateMachineArn)
 	d.SetId(arn)
 
 	return append(diags, resourceStateMachineRead(ctx, d, meta)...)
@@ -208,9 +210,9 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SFNConn(ctx)
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
-	output, err := FindStateMachineByARN(ctx, conn, d.Id())
+	output, err := findStateMachineByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Step Functions State Machine (%s) not found, removing from state", d.Id())
@@ -224,7 +226,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.Set(names.AttrARN, output.StateMachineArn)
 	if output.CreationDate != nil {
-		d.Set(names.AttrCreationDate, aws.TimeValue(output.CreationDate).Format(time.RFC3339))
+		d.Set(names.AttrCreationDate, aws.ToTime(output.CreationDate).Format(time.RFC3339))
 	} else {
 		d.Set(names.AttrCreationDate, nil)
 	}
@@ -238,7 +240,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set(names.AttrLoggingConfiguration, nil)
 	}
 	d.Set(names.AttrName, output.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(output.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
 	d.Set("publish", d.Get("publish").(bool))
 	d.Set(names.AttrRoleARN, output.RoleArn)
 	d.Set("revision_id", output.RevisionId)
@@ -255,7 +257,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	input := &sfn.ListStateMachineVersionsInput{
 		StateMachineArn: aws.String(d.Id()),
 	}
-	listVersionsOutput, err := conn.ListStateMachineVersionsWithContext(ctx, input)
+	listVersionsOutput, err := conn.ListStateMachineVersions(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing Step Functions State Machine (%s) Versions: %s", d.Id(), err)
@@ -274,7 +276,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SFNConn(ctx)
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		// "You must include at least one of definition or roleArn or you will receive a MissingRequiredParameter error"
@@ -282,7 +284,7 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 			Definition:      aws.String(d.Get("definition").(string)),
 			RoleArn:         aws.String(d.Get(names.AttrRoleARN).(string)),
 			StateMachineArn: aws.String(d.Id()),
-			Publish:         aws.Bool(d.Get("publish").(bool)),
+			Publish:         d.Get("publish").(bool),
 		}
 
 		if v, ok := d.GetOk("publish"); ok && v == true {
@@ -301,7 +303,7 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 
-		_, err := conn.UpdateStateMachineWithContext(ctx, input)
+		_, err := conn.UpdateStateMachine(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Step Functions State Machine (%s): %s", d.Id(), err)
@@ -309,18 +311,18 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		// Handle eventual consistency after update.
 		err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError { // nosemgrep:ci.helper-schema-retry-RetryContext-without-TimeoutError-check
-			output, err := FindStateMachineByARN(ctx, conn, d.Id())
+			output, err := findStateMachineByARN(ctx, conn, d.Id())
 
 			if err != nil {
 				return retry.NonRetryableError(err)
 			}
 
-			if d.HasChange("definition") && !verify.JSONBytesEqual([]byte(aws.StringValue(output.Definition)), []byte(d.Get("definition").(string))) ||
-				d.HasChange(names.AttrRoleARN) && aws.StringValue(output.RoleArn) != d.Get(names.AttrRoleARN).(string) ||
+			if d.HasChange("definition") && !verify.JSONBytesEqual([]byte(aws.ToString(output.Definition)), []byte(d.Get("definition").(string))) ||
+				d.HasChange(names.AttrRoleARN) && aws.ToString(output.RoleArn) != d.Get(names.AttrRoleARN).(string) ||
 				//d.HasChange("publish") && aws.Bool(output.Publish) != d.Get("publish").(bool) ||
-				d.HasChange("tracing_configuration.0.enabled") && output.TracingConfiguration != nil && aws.BoolValue(output.TracingConfiguration.Enabled) != d.Get("tracing_configuration.0.enabled").(bool) ||
-				d.HasChange("logging_configuration.0.include_execution_data") && output.LoggingConfiguration != nil && aws.BoolValue(output.LoggingConfiguration.IncludeExecutionData) != d.Get("logging_configuration.0.include_execution_data").(bool) ||
-				d.HasChange("logging_configuration.0.level") && output.LoggingConfiguration != nil && aws.StringValue(output.LoggingConfiguration.Level) != d.Get("logging_configuration.0.level").(string) {
+				d.HasChange("tracing_configuration.0.enabled") && output.TracingConfiguration != nil && output.TracingConfiguration.Enabled != d.Get("tracing_configuration.0.enabled").(bool) ||
+				d.HasChange("logging_configuration.0.include_execution_data") && output.LoggingConfiguration != nil && output.LoggingConfiguration.IncludeExecutionData != d.Get("logging_configuration.0.include_execution_data").(bool) ||
+				d.HasChange("logging_configuration.0.level") && output.LoggingConfiguration != nil && string(output.LoggingConfiguration.Level) != d.Get("logging_configuration.0.level").(string) {
 				return retry.RetryableError(fmt.Errorf("Step Functions State Machine (%s) eventual consistency", d.Id()))
 			}
 
@@ -337,10 +339,10 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceStateMachineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SFNConn(ctx)
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Step Functions State Machine: %s", d.Id())
-	_, err := conn.DeleteStateMachineWithContext(ctx, &sfn.DeleteStateMachineInput{
+	_, err := conn.DeleteStateMachine(ctx, &sfn.DeleteStateMachineInput{
 		StateMachineArn: aws.String(d.Id()),
 	})
 
@@ -355,14 +357,14 @@ func resourceStateMachineDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func FindStateMachineByARN(ctx context.Context, conn *sfn.SFN, arn string) (*sfn.DescribeStateMachineOutput, error) {
+func findStateMachineByARN(ctx context.Context, conn *sfn.Client, arn string) (*sfn.DescribeStateMachineOutput, error) {
 	input := &sfn.DescribeStateMachineInput{
 		StateMachineArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeStateMachineWithContext(ctx, input)
+	output, err := conn.DescribeStateMachine(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, sfn.ErrCodeStateMachineDoesNotExist) {
+	if errs.IsA[*awstypes.StateMachineDoesNotExist](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -380,9 +382,9 @@ func FindStateMachineByARN(ctx context.Context, conn *sfn.SFN, arn string) (*sfn
 	return output, nil
 }
 
-func statusStateMachine(ctx context.Context, conn *sfn.SFN, stateMachineArn string) retry.StateRefreshFunc {
+func statusStateMachine(ctx context.Context, conn *sfn.Client, stateMachineArn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindStateMachineByARN(ctx, conn, stateMachineArn)
+		output, err := findStateMachineByARN(ctx, conn, stateMachineArn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -392,13 +394,13 @@ func statusStateMachine(ctx context.Context, conn *sfn.SFN, stateMachineArn stri
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func waitStateMachineDeleted(ctx context.Context, conn *sfn.SFN, stateMachineArn string, timeout time.Duration) (*sfn.DescribeStateMachineOutput, error) {
+func waitStateMachineDeleted(ctx context.Context, conn *sfn.Client, stateMachineArn string, timeout time.Duration) (*sfn.DescribeStateMachineOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{sfn.StateMachineStatusActive, sfn.StateMachineStatusDeleting},
+		Pending: enum.Slice(awstypes.StateMachineStatusActive, awstypes.StateMachineStatusDeleting),
 		Target:  []string{},
 		Refresh: statusStateMachine(ctx, conn, stateMachineArn),
 		Timeout: timeout,
@@ -413,24 +415,24 @@ func waitStateMachineDeleted(ctx context.Context, conn *sfn.SFN, stateMachineArn
 	return nil, err
 }
 
-func expandLoggingConfiguration(tfMap map[string]interface{}) *sfn.LoggingConfiguration {
+func expandLoggingConfiguration(tfMap map[string]interface{}) *awstypes.LoggingConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &sfn.LoggingConfiguration{}
+	apiObject := &awstypes.LoggingConfiguration{}
 
 	if v, ok := tfMap["include_execution_data"].(bool); ok {
-		apiObject.IncludeExecutionData = aws.Bool(v)
+		apiObject.IncludeExecutionData = v
 	}
 
 	if v, ok := tfMap["level"].(string); ok && v != "" {
-		apiObject.Level = aws.String(v)
+		apiObject.Level = awstypes.LogLevel(v)
 	}
 
 	if v, ok := tfMap["log_destination"].(string); ok && v != "" {
-		apiObject.Destinations = []*sfn.LogDestination{{
-			CloudWatchLogsLogGroup: &sfn.CloudWatchLogsLogGroup{
+		apiObject.Destinations = []awstypes.LogDestination{{
+			CloudWatchLogsLogGroup: &awstypes.CloudWatchLogsLogGroup{
 				LogGroupArn: aws.String(v),
 			},
 		}}
@@ -439,51 +441,44 @@ func expandLoggingConfiguration(tfMap map[string]interface{}) *sfn.LoggingConfig
 	return apiObject
 }
 
-func flattenLoggingConfiguration(apiObject *sfn.LoggingConfiguration) map[string]interface{} {
+func flattenLoggingConfiguration(apiObject *awstypes.LoggingConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.IncludeExecutionData; v != nil {
-		tfMap["include_execution_data"] = aws.BoolValue(v)
-	}
-
-	if v := apiObject.Level; v != nil {
-		tfMap["level"] = aws.StringValue(v)
+	tfMap := map[string]interface{}{
+		"include_execution_data": apiObject.IncludeExecutionData,
+		"level":                  apiObject.Level,
 	}
 
 	if v := apiObject.Destinations; len(v) > 0 {
-		tfMap["log_destination"] = aws.StringValue(v[0].CloudWatchLogsLogGroup.LogGroupArn)
+		tfMap["log_destination"] = aws.ToString(v[0].CloudWatchLogsLogGroup.LogGroupArn)
 	}
 
 	return tfMap
 }
 
-func expandTracingConfiguration(tfMap map[string]interface{}) *sfn.TracingConfiguration {
+func expandTracingConfiguration(tfMap map[string]interface{}) *awstypes.TracingConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &sfn.TracingConfiguration{}
+	apiObject := &awstypes.TracingConfiguration{}
 
 	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
-		apiObject.Enabled = aws.Bool(v)
+		apiObject.Enabled = v
 	}
 
 	return apiObject
 }
 
-func flattenTracingConfiguration(apiObject *sfn.TracingConfiguration) map[string]interface{} {
+func flattenTracingConfiguration(apiObject *awstypes.TracingConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Enabled; v != nil {
-		tfMap[names.AttrEnabled] = aws.BoolValue(v)
+	tfMap := map[string]interface{}{
+		names.AttrEnabled: apiObject.Enabled,
 	}
 
 	return tfMap

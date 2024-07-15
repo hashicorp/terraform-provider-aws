@@ -184,6 +184,14 @@ func (r *resourceVpcEndpoint) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameVPCEndpoint, state.ID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
 	state.refreshFromOutput(ctx, out)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

@@ -76,7 +76,7 @@ class MyConvertedCode extends TerraformStack {
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html).
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `applyImmediately` - (Optional) Specifies whether any database modifications are applied immediately, or during the next maintenance window. Default is`false`.
 * `autoMinorVersionUpgrade` - (Optional) Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window. Default `true`.
@@ -173,4 +173,4 @@ Using `terraform import`, import RDS Cluster Instances using the `identifier`. F
 % terraform import aws_rds_cluster_instance.prod_instance_1 aurora-cluster-instance-1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a7577eca806aa6342594b533604a4be72cb293c6d44a1db6c07c72d67075640a -->
+<!-- cache-key: cdktf-0.20.1 input-642cdfb497dfa63bd812cbb8469d2add6280112bff60519459faddbfe7149873 -->

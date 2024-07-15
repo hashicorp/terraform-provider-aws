@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_db_instance: Correctly mark incomplete instances as [tainted](https://developer.hashicorp.com/terraform/cli/state/taint#the-tainted-status) during creation
+```

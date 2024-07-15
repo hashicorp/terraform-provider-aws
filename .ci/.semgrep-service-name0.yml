@@ -4192,3 +4192,32 @@ rules:
       - focus-metavariable: $NAME
       - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
+  - id: configservice-in-test-name
+    languages:
+      - go
+    message: Include "ConfigService" in test name
+    paths:
+      include:
+        - internal/service/configservice/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccConfigService"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: configservice-in-const-name
+    languages:
+      - go
+    message: Do not use "ConfigService" in const name inside configservice package
+    paths:
+      include:
+        - internal/service/configservice
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConfigService"
+    severity: WARNING

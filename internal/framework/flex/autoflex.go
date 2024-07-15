@@ -12,6 +12,7 @@ import (
 	pluralize "github.com/gertd/go-pluralize"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 type ResourcePrefixCtxKey string
@@ -124,6 +125,19 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 		return diags
 	}
 
+	if fromExpander, ok := valFrom.Interface().(Expander); ok {
+		diags.Append(expandExpander(ctx, fromExpander, valTo)...)
+		return diags
+	}
+
+	if valTo.Kind() == reflect.Interface {
+		tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]any{
+			"from": valFrom.Type(),
+			"to":   valTo.Kind(),
+		})
+		return diags
+	}
+
 	opts := flexer.getOptions()
 	for i, typFrom := 0, valFrom.Type(); i < typFrom.NumField(); i++ {
 		field := typFrom.Field(i)
@@ -154,6 +168,16 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 	}
 
 	return diags
+}
+
+func fullTypeName(t reflect.Type) string {
+	if t.Kind() == reflect.Pointer {
+		return "*" + fullTypeName(t.Elem())
+	}
+	if path := t.PkgPath(); path != "" {
+		return fmt.Sprintf("%s.%s", path, t.Name())
+	}
+	return t.Name()
 }
 
 func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom reflect.Value, flexer autoFlexer) reflect.Value {
