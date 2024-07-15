@@ -10,6 +10,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_lakeformation_data_lake_settings: Add `allow_full_table_external_data_access` attribute ([#34474](https://github.com/hashicorp/terraform-provider-aws/issues/34474))
+* resource/aws_codebuild_webhook: Add `scope_configuration` argument ([#38199](https://github.com/hashicorp/terraform-provider-aws/issues/38199))
 * resource/aws_imagebuilder_image_pipeline: Add `execution_role` and `workflow` arguments ([#37317](https://github.com/hashicorp/terraform-provider-aws/issues/37317))
 * resource/aws_kinesisanalyticsv2_application: Support `FLINK-1_19` as a valid value for `runtime_environment` ([#38350](https://github.com/hashicorp/terraform-provider-aws/issues/38350))
 * resource/aws_lakeformation_data_lake_settings: Add `allow_full_table_external_data_access` attribute ([#34474](https://github.com/hashicorp/terraform-provider-aws/issues/34474))
@@ -19,6 +20,8 @@ BUG FIXES:
 
 * data-source/aws_efs_access_point: Set `id` the the access point ID, not the file system ID. This fixes a regression introduced in [v5.58.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5580-july-11-2024) ([#38372](https://github.com/hashicorp/terraform-provider-aws/issues/38372))
 * data-source/aws_lb_listener: Correctly set `default_action.target_group_arn` ([#37348](https://github.com/hashicorp/terraform-provider-aws/issues/37348))
+* resource/aws_codebuild_project: Fix unsetting `concurrent_build_limit` ([#37748](https://github.com/hashicorp/terraform-provider-aws/issues/37748))
+* resource/aws_ecs_service: Change `volume_configuration.managed_ebs_volume.throughput` from `TypeString` to `TypeInt` ([#38109](https://github.com/hashicorp/terraform-provider-aws/issues/38109))
 * resource/aws_lb_target_group: Use the configured `ip_address_type` value when `target_type` is `instance` ([#36423](https://github.com/hashicorp/terraform-provider-aws/issues/36423))
 * resource/aws_lb_trust_store: Wait until trust store is `ACTIVE` on resource Create ([#38332](https://github.com/hashicorp/terraform-provider-aws/issues/38332))
 * resource/aws_pinpoint_app: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panic when `campaign_hook` is empty (`{}`) ([#38323](https://github.com/hashicorp/terraform-provider-aws/issues/38323))
