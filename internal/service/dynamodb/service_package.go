@@ -19,16 +19,16 @@ import (
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*dynamodb.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return dynamodb.NewFromConfig(cfg, func(o *dynamodb.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			o.BaseEndpoint = aws.String(endpoint)
-		}
-
-		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
-			if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "Subscriber limit exceeded:") {
-				return aws.TrueTernary
-			}
-			return aws.UnknownTernary // Delegate to configured Retryer.
-		}))
-	}), nil
+	return dynamodb.NewFromConfig(cfg,
+		dynamodb.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *dynamodb.Options) {
+			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+				if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "Subscriber limit exceeded:") {
+					return aws.TrueTernary
+				}
+				return aws.UnknownTernary // Delegate to configured Retryer.
+			}))
+		},
+	), nil
 }

@@ -63,7 +63,7 @@ func ResourceCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"allow_major_version_upgrade": {
+			names.AttrAllowMajorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -119,7 +119,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -150,7 +150,7 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
@@ -338,7 +338,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	inputC := &neptune.CreateDBClusterInput{
 		CopyTagsToSnapshot:               aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		DBClusterIdentifier:              aws.String(clusterID),
-		DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
+		DeletionProtection:               aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 		Engine:                           aws.String(d.Get(names.AttrEngine).(string)),
 		Port:                             aws.Int64(int64(d.Get(names.AttrPort).(int))),
 		ServerlessV2ScalingConfiguration: serverlessConfiguration,
@@ -348,7 +348,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	inputR := &neptune.RestoreDBClusterFromSnapshotInput{
 		CopyTagsToSnapshot:               aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		DBClusterIdentifier:              aws.String(clusterID),
-		DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
+		DeletionProtection:               aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 		Engine:                           aws.String(d.Get(names.AttrEngine).(string)),
 		Port:                             aws.Int64(int64(d.Get(names.AttrPort).(int))),
 		ServerlessV2ScalingConfiguration: serverlessConfiguration,
@@ -546,7 +546,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("cluster_members", clusterMembers)
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
 	d.Set("copy_tags_to_snapshot", dbc.CopyTagsToSnapshot)
-	d.Set("deletion_protection", dbc.DeletionProtection)
+	d.Set(names.AttrDeletionProtection, dbc.DeletionProtection)
 	d.Set("enable_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
 	d.Set(names.AttrEndpoint, dbc.Endpoint)
 	d.Set(names.AttrEngineVersion, dbc.EngineVersion)
@@ -585,7 +585,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "global_cluster_identifier", "iam_roles", "skip_final_snapshot") {
-		allowMajorVersionUpgrade := d.Get("allow_major_version_upgrade").(bool)
+		allowMajorVersionUpgrade := d.Get(names.AttrAllowMajorVersionUpgrade).(bool)
 		input := &neptune.ModifyDBClusterInput{
 			AllowMajorVersionUpgrade: aws.Bool(allowMajorVersionUpgrade),
 			ApplyImmediately:         aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
@@ -600,8 +600,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
 		}
 
-		if d.HasChange("deletion_protection") {
-			input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+		if d.HasChange(names.AttrDeletionProtection) {
+			input.DeletionProtection = aws.Bool(d.Get(names.AttrDeletionProtection).(bool))
 		}
 
 		if d.HasChange("enable_cloudwatch_logs_exports") {
@@ -757,7 +757,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if !skipFinalSnapshot {
-		if v, ok := d.GetOk("final_snapshot_identifier"); ok {
+		if v, ok := d.GetOk(names.AttrFinalSnapshotIdentifier); ok {
 			input.FinalDBSnapshotIdentifier = aws.String(v.(string))
 		} else {
 			return sdkdiag.AppendErrorf(diags, "final_snapshot_identifier is required when skip_final_snapshot is false")

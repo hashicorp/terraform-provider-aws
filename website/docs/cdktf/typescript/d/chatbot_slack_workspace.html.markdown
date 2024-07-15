@@ -25,15 +25,11 @@ import { TerraformStack } from "cdktf";
  * See https://cdk.tf/provider-generation for more details.
  */
 import { DataAwsChatbotSlackWorkspace } from "./.gen/providers/aws/data-aws-chatbot-slack-workspace";
-interface MyConfig {
-  slackTeamName: any;
-}
 class MyConvertedCode extends TerraformStack {
-  constructor(scope: Construct, name: string, config: MyConfig) {
+  constructor(scope: Construct, name: string) {
     super(scope, name);
     new DataAwsChatbotSlackWorkspace(this, "example", {
-      team_slack_name: "abc",
-      slackTeamName: config.slackTeamName,
+      slackTeamName: "abc",
     });
   }
 }
@@ -44,7 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `slackTeamName` - (Required) Slack workspace name configured with AWS Chabot.
+* `slackTeamName` - (Required) Slack workspace name configured with AWS Chatbot.
 
 ## Attribute Reference
 
@@ -52,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `slackTeamId` - ID of the Slack Workspace assigned by AWS Chatbot.
 
-<!-- cache-key: cdktf-0.20.1 input-837eb56025e58d9b743ec29c05dba308029138b944df2bd4dcfcb96892e2f34c -->
+<!-- cache-key: cdktf-0.20.1 input-62340c1bdb1633b2d881f64f66520d98acaee101a0c84a3bd9b8c855bcc55fc4 -->

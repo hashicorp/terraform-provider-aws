@@ -4,8 +4,10 @@
 package flex
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
@@ -14,8 +16,10 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-log/tflogtest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
@@ -36,25 +40,37 @@ func TestFlatten(t *testing.T) {
 	testCases := autoFlexTestCases{
 		{
 			TestName: "nil Source and Target",
-			WantErr:  true,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "target (<nil>): invalid, want pointer"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[<nil>, <nil>]"),
+			},
 		},
 		{
 			TestName: "non-pointer Target",
 			Source:   TestFlex00{},
 			Target:   0,
-			WantErr:  true,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "target (int): int, want pointer"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[flex.TestFlex00, int]"),
+			},
 		},
 		{
 			TestName: "non-struct Source",
 			Source:   testString,
 			Target:   &TestFlex00{},
-			WantErr:  true,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: struct"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[string, *flex.TestFlex00]"),
+			},
 		},
 		{
 			TestName: "non-struct Target",
 			Source:   TestFlex00{},
 			Target:   &testString,
-			WantErr:  true,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[flex.TestFlex00, *string]"),
+			},
 		},
 		{
 			TestName: "json interface Source string Target",
@@ -92,7 +108,11 @@ func TestFlatten(t *testing.T) {
 			TestName: "does not implement attr.Value Target",
 			Source:   &TestFlexAWS01{Field1: "a"},
 			Target:   &TestFlexAWS01{},
-			WantErr:  true,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
+				diag.NewErrorDiagnostic("AutoFlEx", "convert (Field1)"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[*flex.TestFlexAWS01, *flex.TestFlexAWS01]"),
+			},
 		},
 		{
 			TestName:   "single empty string Source and single string Target",
@@ -123,6 +143,15 @@ func TestFlatten(t *testing.T) {
 			Source:     &TestFlexAWS01{Field1: "a"},
 			Target:     &TestFlexTF02{},
 			WantTarget: &TestFlexTF02{},
+			expectedLogLines: []map[string]any{
+				{
+					"@level":   "info",
+					"@module":  "provider",
+					"@message": "AutoFlex Flatten; incompatible types",
+					"from":     float64(reflect.String),
+					"to":       map[string]any{},
+				},
+			},
 		},
 		{
 			TestName: "zero value primtive types Source and primtive types Target",
@@ -375,8 +404,8 @@ func TestFlatten(t *testing.T) {
 			},
 		},
 		{
-			Context:  context.WithValue(ctx, ResourcePrefix, "Intent"),
-			TestName: "resource name prefix",
+			ContextFn: func(ctx context.Context) context.Context { return context.WithValue(ctx, ResourcePrefix, "Intent") },
+			TestName:  "resource name prefix",
 			Source: &TestFlexAWS18{
 				IntentName: aws.String("Ovodoghen"),
 			},
@@ -441,7 +470,7 @@ func TestFlatten(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenGeneric(t *testing.T) {
@@ -766,7 +795,7 @@ func TestFlattenGeneric(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenSimpleNestedBlockWithStringEnum(t *testing.T) {
@@ -781,7 +810,6 @@ func TestFlattenSimpleNestedBlockWithStringEnum(t *testing.T) {
 		Field2 TestEnum
 	}
 
-	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		{
 			TestName:   "single nested valid value",
@@ -796,7 +824,7 @@ func TestFlattenSimpleNestedBlockWithStringEnum(t *testing.T) {
 			WantTarget: &tf01{Field1: types.Int64Value(1), Field2: fwtypes.StringEnumNull[TestEnum]()},
 		},
 	}
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenComplexNestedBlockWithStringEnum(t *testing.T) {
@@ -839,7 +867,7 @@ func TestFlattenComplexNestedBlockWithStringEnum(t *testing.T) {
 			WantTarget: &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tf01{Field2: zero})},
 		},
 	}
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenSimpleSingleNestedBlock(t *testing.T) {
@@ -885,7 +913,7 @@ func TestFlattenSimpleSingleNestedBlock(t *testing.T) {
 			WantTarget: &tf02{Field1: fwtypes.NewObjectValueOfMust[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
 		},
 	}
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenComplexSingleNestedBlock(t *testing.T) {
@@ -937,7 +965,7 @@ func TestFlattenComplexSingleNestedBlock(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenSimpleNestedBlockWithFloat32(t *testing.T) {
@@ -952,7 +980,6 @@ func TestFlattenSimpleNestedBlockWithFloat32(t *testing.T) {
 		Field2 *float32
 	}
 
-	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		{
 			TestName:   "single nested valid value",
@@ -961,7 +988,7 @@ func TestFlattenSimpleNestedBlockWithFloat32(t *testing.T) {
 			WantTarget: &tf01{Field1: types.Int64Value(1), Field2: types.Float64Value(0.01)},
 		},
 	}
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenComplexNestedBlockWithFloat32(t *testing.T) {
@@ -993,7 +1020,7 @@ func TestFlattenComplexNestedBlockWithFloat32(t *testing.T) {
 			WantTarget: &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tf01{Field1: types.Float64Value(1.11), Field2: types.Float64Value(-2.22)})},
 		},
 	}
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenSimpleNestedBlockWithFloat64(t *testing.T) {
@@ -1008,7 +1035,6 @@ func TestFlattenSimpleNestedBlockWithFloat64(t *testing.T) {
 		Field2 *float64
 	}
 
-	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		{
 			TestName:   "single nested valid value",
@@ -1017,7 +1043,7 @@ func TestFlattenSimpleNestedBlockWithFloat64(t *testing.T) {
 			WantTarget: &tf01{Field1: types.Int64Value(1), Field2: types.Float64Value(0.01)},
 		},
 	}
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenComplexNestedBlockWithFloat64(t *testing.T) {
@@ -1049,7 +1075,7 @@ func TestFlattenComplexNestedBlockWithFloat64(t *testing.T) {
 			WantTarget: &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tf01{Field1: types.Float64Value(1.11), Field2: types.Float64Value(-2.22)})},
 		},
 	}
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenOptions(t *testing.T) {
@@ -1150,10 +1176,10 @@ func TestFlattenOptions(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
-func runAutoFlattenTestCases(ctx context.Context, t *testing.T, testCases autoFlexTestCases) {
+func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases) {
 	t.Helper()
 
 	for _, testCase := range testCases {
@@ -1161,27 +1187,34 @@ func runAutoFlattenTestCases(ctx context.Context, t *testing.T, testCases autoFl
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			testCtx := ctx //nolint:contextcheck // simplify use of testing context
-			if testCase.Context != nil {
-				testCtx = testCase.Context
+			ctx := context.Background()
+			if testCase.ContextFn != nil {
+				ctx = testCase.ContextFn(ctx)
 			}
 
-			err := Flatten(testCtx, testCase.Source, testCase.Target, testCase.Options...)
-			gotErr := err != nil
+			var buf bytes.Buffer
+			ctx = tflogtest.RootLogger(ctx, &buf)
 
-			if gotErr != testCase.WantErr {
-				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
+			diags := Flatten(ctx, testCase.Source, testCase.Target, testCase.Options...)
+
+			if diff := cmp.Diff(diags, testCase.expectedDiags); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
 			}
 
-			less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
+			lines, err := tflogtest.MultilineJSONDecode(&buf)
+			if err != nil {
+				t.Fatalf("Expand: decoding log lines: %s", err)
+			}
+			if diff := cmp.Diff(lines, testCase.expectedLogLines); diff != "" {
+				t.Errorf("unexpected log lines diff (+wanted, -got): %s", diff)
+			}
 
-			if gotErr {
-				if !testCase.WantErr {
-					t.Errorf("err = %q", err)
-				}
-			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget, cmpopts.SortSlices(less)); diff != "" {
-				if !testCase.WantDiff {
-					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			if !diags.HasError() {
+				less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
+				if diff := cmp.Diff(testCase.Target, testCase.WantTarget, cmpopts.SortSlices(less)); diff != "" {
+					if !testCase.WantDiff {
+						t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+					}
 				}
 			}
 		})

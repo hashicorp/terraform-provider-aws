@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	v1 "github.com/hashicorp/terraform-provider-aws/internal/generate/tags/templates/v1"
 	v2 "github.com/hashicorp/terraform-provider-aws/internal/generate/tags/templates/v2"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 const (
@@ -43,7 +43,7 @@ var (
 	waitForPropagation       = flag.Bool("Wait", false, "whether to generate WaitTagsPropagated")
 
 	createTagsFunc             = flag.String("CreateTagsFunc", "createTags", "createTagsFunc")
-	getTagFunc                 = flag.String("GetTagFunc", "GetTag", "getTagFunc")
+	getTagFunc                 = flag.String("GetTagFunc", "findTag", "getTagFunc")
 	getTagsInFunc              = flag.String("GetTagsInFunc", "getTagsIn", "getTagsInFunc")
 	keyValueTagsFunc           = flag.String("KeyValueTagsFunc", "KeyValueTags", "keyValueTagsFunc")
 	listTagsFunc               = flag.String("ListTagsFunc", defaultListTagsFunc, "listTagsFunc")
@@ -259,26 +259,16 @@ func main() {
 
 	g.Infof("Generating internal/service/%s/%s", servicePackage, filename)
 
-	awsPkg, err := names.AWSGoPackage(*sdkServicePackage, *sdkVersion)
+	service, err := data.LookupService(*sdkServicePackage)
 	if err != nil {
 		g.Fatalf("encountered: %s", err)
 	}
+
+	awsPkg := service.GoPackageName(*sdkVersion)
 
 	var awsIntfPkg string
 	if *sdkVersion == sdkV1 && (*getTag || *listTags || *updateTags) {
 		awsIntfPkg = fmt.Sprintf("%[1]s/%[1]siface", awsPkg)
-	}
-
-	clientTypeName, err := names.AWSGoClientTypeName(*sdkServicePackage, *sdkVersion)
-
-	if err != nil {
-		g.Fatalf("encountered: %s", err)
-	}
-
-	providerNameUpper, err := names.ProviderNameUpper(*sdkServicePackage)
-
-	if err != nil {
-		g.Fatalf("encountered: %s", err)
 	}
 
 	createTagsFunc := *createTagsFunc
@@ -289,6 +279,7 @@ func main() {
 		createTagsFunc = ""
 	}
 
+	clientTypeName := service.ClientTypeName(*sdkVersion)
 	var clientType string
 	if *sdkVersion == sdkV1 {
 		clientType = fmt.Sprintf("%siface.%sAPI", awsPkg, clientTypeName)
@@ -306,6 +297,8 @@ func main() {
 			cleanRetryErrorCodes = append(cleanRetryErrorCodes, fmt.Sprintf(`"%s"`, c))
 		}
 	}
+
+	providerNameUpper := service.ProviderNameUpper()
 
 	templateData := TemplateData{
 		AWSService:             awsPkg,

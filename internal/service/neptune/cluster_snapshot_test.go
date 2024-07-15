@@ -36,7 +36,7 @@ func TestAccNeptuneClusterSnapshot_basic(t *testing.T) {
 				Config: testAccClusterSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(ctx, resourceName, &dbClusterSnapshot),
-					resource.TestCheckResourceAttrSet(resourceName, "allocated_storage"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAllocatedStorage),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zones.#"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "db_cluster_snapshot_arn", "rds", fmt.Sprintf("cluster-snapshot:%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),

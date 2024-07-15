@@ -42,7 +42,7 @@ func TestAccDataSyncTask_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`task/task-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cloudwatch_log_group_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCloudWatchLogGroupARN, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_location_arn", dataSyncDestinationLocationResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "excludes.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "includes.#", acctest.Ct0),
@@ -161,7 +161,7 @@ func TestAccDataSyncTask_cloudWatchLogGroupARN(t *testing.T) {
 				Config: testAccTaskConfig_cloudWatchLogGroupARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", "aws_cloudwatch_log_group.test1", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCloudWatchLogGroupARN, "aws_cloudwatch_log_group.test1", names.AttrARN),
 				),
 			},
 			{
@@ -173,7 +173,7 @@ func TestAccDataSyncTask_cloudWatchLogGroupARN(t *testing.T) {
 				Config: testAccTaskConfig_cloudWatchLogGroupARN2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", "aws_cloudwatch_log_group.test2", names.AttrARN)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCloudWatchLogGroupARN, "aws_cloudwatch_log_group.test2", names.AttrARN)),
 			},
 		},
 	})

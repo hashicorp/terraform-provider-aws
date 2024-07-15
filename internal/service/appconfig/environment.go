@@ -36,7 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_appconfig_environment", name="Environment")
 // @Tags(identifierAttribute="arn")
 func newResourceEnvironment(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEnvironment{}

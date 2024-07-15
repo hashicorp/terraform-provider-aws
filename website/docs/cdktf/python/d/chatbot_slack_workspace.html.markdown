@@ -26,11 +26,10 @@ from cdktf import TerraformStack
 #
 from imports.aws.data_aws_chatbot_slack_workspace import DataAwsChatbotSlackWorkspace
 class MyConvertedCode(TerraformStack):
-    def __init__(self, scope, name, *, slackTeamName):
+    def __init__(self, scope, name):
         super().__init__(scope, name)
         DataAwsChatbotSlackWorkspace(self, "example",
-            team_slack_name="abc",
-            slack_team_name=slack_team_name
+            slack_team_name="abc"
         )
 ```
 
@@ -38,7 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are required:
 
-* `slack_team_name` - (Required) Slack workspace name configured with AWS Chabot.
+* `slack_team_name` - (Required) Slack workspace name configured with AWS Chatbot.
 
 ## Attribute Reference
 
@@ -46,4 +45,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `slack_team_id` - ID of the Slack Workspace assigned by AWS Chatbot.
 
-<!-- cache-key: cdktf-0.20.1 input-837eb56025e58d9b743ec29c05dba308029138b944df2bd4dcfcb96892e2f34c -->
+<!-- cache-key: cdktf-0.20.1 input-62340c1bdb1633b2d881f64f66520d98acaee101a0c84a3bd9b8c855bcc55fc4 -->

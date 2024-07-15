@@ -100,7 +100,7 @@ func resourceNetworkPerformanceMetricSubscriptionRead(ctx context.Context, d *sc
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	subscription, err := FindNetworkPerformanceMetricSubscriptionByFourPartKey(ctx, conn, source, destination, metric, statistic)
+	subscription, err := findNetworkPerformanceMetricSubscriptionByFourPartKey(ctx, conn, source, destination, metric, statistic)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 AWS Network Performance Metric Subscription (%s) not found, removing from state", d.Id())

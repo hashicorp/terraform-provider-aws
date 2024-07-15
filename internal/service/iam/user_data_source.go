@@ -18,6 +18,7 @@ import (
 )
 
 // @SDKDataSource("aws_iam_user", name="User")
+// @Tags
 func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
@@ -51,7 +52,6 @@ func dataSourceUser() *schema.Resource {
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	userName := d.Get(names.AttrUserName).(string)
 	req := &iam.GetUserInput{
@@ -74,12 +74,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("user_id", user.UserId)
 
-	tags := KeyValueTags(ctx, user.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, user.Tags)
 
 	return diags
 }

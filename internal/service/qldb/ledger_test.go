@@ -37,7 +37,7 @@ func TestAccQLDBLedger_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLedgerExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "qldb", regexache.MustCompile(`ledger/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKey, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "ALLOW_ALL"),
@@ -120,7 +120,7 @@ func TestAccQLDBLedger_update(t *testing.T) {
 				Config: testAccLedgerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLedgerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "ALLOW_ALL"),
 				),
 			},
@@ -133,7 +133,7 @@ func TestAccQLDBLedger_update(t *testing.T) {
 				Config: testAccLedgerConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLedgerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "STANDARD"),
 				),
 			},
@@ -141,7 +141,7 @@ func TestAccQLDBLedger_update(t *testing.T) {
 				Config: testAccLedgerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLedgerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "ALLOW_ALL"),
 				),
 			},
