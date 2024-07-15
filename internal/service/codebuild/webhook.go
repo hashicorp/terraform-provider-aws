@@ -387,9 +387,9 @@ func flattenWebhookFilter(apiObject types.WebhookFilter) map[string]interface{} 
 	return tfMap
 }
 
-func flattenScopeConfiguration(apiObject *types.ScopeConfiguration) map[string]interface{} {
+func flattenScopeConfiguration(apiObject *types.ScopeConfiguration) []interface{} {
 	if apiObject == nil {
-		return map[string]interface{}{}
+		return nil
 	}
 
 	tfMap := map[string]interface{}{
@@ -401,5 +401,5 @@ func flattenScopeConfiguration(apiObject *types.ScopeConfiguration) map[string]i
 		tfMap[names.AttrDomain] = apiObject.Domain
 	}
 
-	return tfMap
+	return []interface{}{tfMap}
 }
