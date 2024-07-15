@@ -4213,7 +4213,7 @@ service "glue" {
 
   sdk {
     id             = "Glue"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
