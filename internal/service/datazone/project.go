@@ -318,7 +318,7 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	in := &datazone.DeleteProjectInput{
-		DomainIdentifier: aws.String((*state.DomainId.ValueStringPointer())),
+		DomainIdentifier: state.DomainId.ValueStringPointer(),
 		Identifier:       aws.String((*state.ID.ValueStringPointer())),
 	}
 	if !state.SkipDeletionCheck.IsNull() {
