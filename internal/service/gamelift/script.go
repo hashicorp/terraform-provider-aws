@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -125,14 +124,14 @@ func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.ZipFile = file
 	}
 
-	log.Printf("[INFO] Creating GameLift Script: %s", input)
+	log.Printf("[INFO] Creating GameLift Script: %+v", input)
 	var out *gamelift.CreateScriptOutput
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 		out, err = conn.CreateScript(ctx, &input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidRequestException, "GameLift cannot assume the role") ||
-				tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidRequestException, "Provided resource is not accessible") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "GameLift cannot assume the role") ||
+				errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Provided resource is not accessible") {
 				return retry.RetryableError(err)
 			}
 			return retry.NonRetryableError(err)
