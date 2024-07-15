@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_dms_replication_subnet_group")
-func DataSourceReplicationSubnetGroup() *schema.Resource {
+// @SDKDataSource("aws_dms_replication_subnet_group", name="Replication Subnet Group")
+func dataSourceReplicationSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationSubnetGroupRead,
 
@@ -62,7 +62,7 @@ func dataSourceReplicationSubnetGroupRead(ctx context.Context, d *schema.Resourc
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	replicationSubnetGroupID := d.Get("replication_subnet_group_id").(string)
-	group, err := FindReplicationSubnetGroupByID(ctx, conn, replicationSubnetGroupID)
+	group, err := findReplicationSubnetGroupByID(ctx, conn, replicationSubnetGroupID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Subnet Group (%s): %s", replicationSubnetGroupID, err)
