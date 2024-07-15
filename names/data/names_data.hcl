@@ -3419,16 +3419,12 @@ service "elasticache" {
 
   sdk {
     id             = "ElastiCache"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
     provider_name_upper = "ElastiCache"
     human_friendly      = "ElastiCache"
-  }
-
-  client {
-    go_v1_client_typename = "ElastiCache"
   }
 
   endpoint_info {
@@ -3494,7 +3490,7 @@ service "elbv2" {
 
   sdk {
     id             = "Elastic Load Balancing v2"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -8364,7 +8360,7 @@ service "serverlessrepo" {
 
   sdk {
     id             = "ServerlessApplicationRepository"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
