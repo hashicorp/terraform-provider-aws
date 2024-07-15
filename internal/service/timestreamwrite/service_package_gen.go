@@ -15,7 +15,12 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newDataSourceTable,
+			Name:    "Table",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
@@ -23,13 +28,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
-		{
-			Factory:  DataSourceTable,
-			TypeName: "aws_timestreamwrite_table",
-			Name:     "Table",
-		},
-	}
+	return []*types.ServicePackageSDKDataSource{}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
