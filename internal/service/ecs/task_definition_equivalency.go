@@ -7,13 +7,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"log"
-	"reflect"
 	"sort"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
-	"github.com/mitchellh/copystructure"
 )
 
 // ContainerDefinitionsAreEquivalent determines equality between two ECS container definition JSON strings
@@ -78,15 +76,61 @@ func (cd containerDefinitions) Reduce(isAWSVPC bool) error {
 			}
 		}
 
-		// Create a mutable copy
-		defCopy, err := copystructure.Copy(def)
-		if err != nil {
-			return err
+		// Set all empty slices to nil.
+		if len(def.Command) == 0 {
+			cd[i].Command = nil
 		}
-
-		definition := reflect.ValueOf(defCopy)
-		iface := definition.Interface().(awstypes.ContainerDefinition)
-		cd[i] = iface
+		if len(def.CredentialSpecs) == 0 {
+			cd[i].CredentialSpecs = nil
+		}
+		if len(def.DependsOn) == 0 {
+			cd[i].DependsOn = nil
+		}
+		if len(def.DnsSearchDomains) == 0 {
+			cd[i].DnsSearchDomains = nil
+		}
+		if len(def.DnsServers) == 0 {
+			cd[i].DnsServers = nil
+		}
+		if len(def.DockerSecurityOptions) == 0 {
+			cd[i].DockerSecurityOptions = nil
+		}
+		if len(def.EntryPoint) == 0 {
+			cd[i].EntryPoint = nil
+		}
+		if len(def.Environment) == 0 {
+			cd[i].Environment = nil
+		}
+		if len(def.EnvironmentFiles) == 0 {
+			cd[i].EnvironmentFiles = nil
+		}
+		if len(def.ExtraHosts) == 0 {
+			cd[i].ExtraHosts = nil
+		}
+		if len(def.Links) == 0 {
+			cd[i].Links = nil
+		}
+		if len(def.MountPoints) == 0 {
+			cd[i].MountPoints = nil
+		}
+		if len(def.PortMappings) == 0 {
+			cd[i].PortMappings = nil
+		}
+		if len(def.ResourceRequirements) == 0 {
+			cd[i].ResourceRequirements = nil
+		}
+		if len(def.Secrets) == 0 {
+			cd[i].Secrets = nil
+		}
+		if len(def.SystemControls) == 0 {
+			cd[i].SystemControls = nil
+		}
+		if len(def.Ulimits) == 0 {
+			cd[i].Ulimits = nil
+		}
+		if len(def.VolumesFrom) == 0 {
+			cd[i].VolumesFrom = nil
+		}
 	}
 	return nil
 }
