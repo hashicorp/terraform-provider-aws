@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_dms_replication_task")
-func DataSourceReplicationTask() *schema.Resource {
+// @SDKDataSource("aws_dms_replication_task", name="Replication Task")
+func dataSourceReplicationTask() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationTaskRead,
 
@@ -82,8 +82,7 @@ func dataSourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	taskID := d.Get("replication_task_id").(string)
-
-	task, err := FindReplicationTaskByID(ctx, conn, taskID)
+	task, err := findReplicationTaskByID(ctx, conn, taskID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Task (%s): %s", taskID, err)
