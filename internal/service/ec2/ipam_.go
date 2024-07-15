@@ -240,7 +240,7 @@ func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	return diags
+	return append(diags, resourceIPAMRead(ctx, d, meta)...)
 }
 
 func resourceIPAMDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
