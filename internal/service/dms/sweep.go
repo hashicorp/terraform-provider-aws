@@ -61,7 +61,6 @@ func sweepEndpoints(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := dms.NewDescribeEndpointsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -104,7 +103,6 @@ func sweepReplicationConfigs(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := dms.NewDescribeReplicationConfigsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -118,7 +116,7 @@ func sweepReplicationConfigs(region string) error {
 		}
 
 		for _, v := range page.ReplicationConfigs {
-			r := ResourceReplicationConfig()
+			r := resourceReplicationConfig()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.ReplicationConfigArn))
 
@@ -146,7 +144,6 @@ func sweepReplicationInstances(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := dms.NewDescribeReplicationInstancesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -189,7 +186,6 @@ func sweepReplicationSubnetGroups(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := dms.NewDescribeReplicationSubnetGroupsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -233,7 +229,6 @@ func sweepReplicationTasks(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := dms.NewDescribeReplicationTasksPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

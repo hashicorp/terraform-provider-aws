@@ -76,7 +76,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceReplicationConfig,
+			Factory:  resourceReplicationConfig,
 			TypeName: "aws_dms_replication_config",
 			Name:     "Replication Config",
 			Tags: &types.ServicePackageResourceTags{

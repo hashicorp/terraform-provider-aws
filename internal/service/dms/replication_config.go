@@ -31,7 +31,7 @@ import (
 
 // @SDKResource("aws_dms_replication_config", name="Replication Config")
 // @Tags(identifierAttribute="id")
-func ResourceReplicationConfig() *schema.Resource {
+func resourceReplicationConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationConfigCreate,
 		ReadWithoutTimeout:   resourceReplicationConfigRead,
@@ -225,7 +225,7 @@ func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
-	replicationConfig, err := FindReplicationConfigByARN(ctx, conn, d.Id())
+	replicationConfig, err := findReplicationConfigByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DMS Replication Config (%s) not found, removing from state", d.Id())
@@ -351,7 +351,7 @@ func resourceReplicationConfigDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func FindReplicationConfigByARN(ctx context.Context, conn *dms.Client, arn string) (*awstypes.ReplicationConfig, error) {
+func findReplicationConfigByARN(ctx context.Context, conn *dms.Client, arn string) (*awstypes.ReplicationConfig, error) {
 	input := &dms.DescribeReplicationConfigsInput{
 		Filters: []awstypes.Filter{{
 			Name:   aws.String("replication-config-arn"),
@@ -369,10 +369,10 @@ func findReplicationConfig(ctx context.Context, conn *dms.Client, input *dms.Des
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findReplicationConfigs(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationConfigsInput) ([]*awstypes.ReplicationConfig, error) {
+func findReplicationConfigs(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationConfigsInput) ([]awstypes.ReplicationConfig, error) {
 	var output []awstypes.ReplicationConfig
 
 	pages := dms.NewDescribeReplicationConfigsPaginator(conn, input)
@@ -394,7 +394,7 @@ func findReplicationConfigs(ctx context.Context, conn *dms.Client, input *dms.De
 		output = append(output, page.ReplicationConfigs...)
 	}
 
-	return tfslices.ToPointers(output), nil
+	return output, nil
 }
 
 func findReplicationByReplicationConfigARN(ctx context.Context, conn *dms.Client, arn string) (*awstypes.Replication, error) {
@@ -415,10 +415,10 @@ func findReplication(ctx context.Context, conn *dms.Client, input *dms.DescribeR
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findReplications(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationsInput) ([]*awstypes.Replication, error) {
+func findReplications(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationsInput) ([]awstypes.Replication, error) {
 	var output []awstypes.Replication
 
 	pages := dms.NewDescribeReplicationsPaginator(conn, input)
@@ -440,7 +440,7 @@ func findReplications(ctx context.Context, conn *dms.Client, input *dms.Describe
 		output = append(output, page.Replications...)
 	}
 
-	return tfslices.ToPointers(output), nil
+	return output, nil
 }
 
 func statusReplication(ctx context.Context, conn *dms.Client, arn string) retry.StateRefreshFunc {
@@ -586,8 +586,7 @@ func stopReplication(ctx context.Context, conn *dms.Client, arn string, timeout 
 		return fmt.Errorf("reading DMS Replication Config (%s) replication: %s", arn, err)
 	}
 
-	replicationStatus := aws.ToString(replication.Status)
-	if replicationStatus == replicationStatusStopped || replicationStatus == replicationStatusCreated || replicationStatus == replicationStatusFailed {
+	if replicationStatus := aws.ToString(replication.Status); replicationStatus == replicationStatusStopped || replicationStatus == replicationStatusCreated || replicationStatus == replicationStatusFailed {
 		return nil
 	}
 
@@ -622,7 +621,7 @@ func flattenComputeConfig(apiObject *awstypes.ComputeConfig) []interface{} {
 		"multi_az":                           aws.ToBool(apiObject.MultiAZ),
 		names.AttrPreferredMaintenanceWindow: aws.ToString(apiObject.PreferredMaintenanceWindow),
 		"replication_subnet_group_id":        aws.ToString(apiObject.ReplicationSubnetGroupId),
-		names.AttrVPCSecurityGroupIDs:        flex.FlattenStringValueSet(apiObject.VpcSecurityGroupIds),
+		names.AttrVPCSecurityGroupIDs:        apiObject.VpcSecurityGroupIds,
 	}
 
 	return []interface{}{tfMap}

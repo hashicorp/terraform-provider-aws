@@ -8,11 +8,13 @@ var (
 	ResourceCertificate       = resourceCertificate
 	ResourceEndpoint          = resourceEndpoint
 	ResourceEventSubscription = resourceEventSubscription
+	ResourceReplicationConfig = resourceReplicationConfig
 	ResourceS3Endpoint        = resourceS3Endpoint
 
 	FindCertificateByID           = findCertificateByID
 	FindEndpointByID              = findEndpointByID
 	FindEventSubscriptionByName   = findEventSubscriptionByName
+	FindReplicationConfigByARN    = findReplicationConfigByARN
 	TaskSettingsEqual             = taskSettingsEqual
 	ValidEndpointID               = validEndpointID
 	ValidReplicationInstanceID    = validReplicationInstanceID
