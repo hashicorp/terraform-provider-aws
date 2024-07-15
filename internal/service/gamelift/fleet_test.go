@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -76,10 +75,10 @@ func TestDiffPortSettings(t *testing.T) {
 			},
 			ExpectedAuths: []*awstypes.IpPermission{
 				{
-					FromPort: aws.Int64(8888),
+					FromPort: aws.Int32(8888),
 					IpRange:  aws.String("192.168.0.0/24"),
-					Protocol: aws.String("TCP"),
-					ToPort:   aws.Int64(8888),
+					Protocol: awstypes.IpProtocolTcp,
+					ToPort:   aws.Int32(8888),
 				},
 			},
 			ExpectedRevs: []*awstypes.IpPermission{},
@@ -97,10 +96,10 @@ func TestDiffPortSettings(t *testing.T) {
 			ExpectedAuths: []*awstypes.IpPermission{},
 			ExpectedRevs: []*awstypes.IpPermission{
 				{
-					FromPort: aws.Int64(8443),
+					FromPort: aws.Int32(8443),
 					IpRange:  aws.String("192.168.0.0/24"),
-					Protocol: aws.String("TCP"),
-					ToPort:   aws.Int64(8443),
+					Protocol: awstypes.IpProtocolTcp,
+					ToPort:   aws.Int32(8443),
 				},
 			},
 		},
@@ -123,18 +122,18 @@ func TestDiffPortSettings(t *testing.T) {
 			},
 			ExpectedAuths: []*awstypes.IpPermission{
 				{
-					FromPort: aws.Int64(8443),
+					FromPort: aws.Int32(8443),
 					IpRange:  aws.String("192.168.0.0/24"),
-					Protocol: aws.String("UDP"),
-					ToPort:   aws.Int64(8443),
+					Protocol: awstypes.IpProtocolUdp,
+					ToPort:   aws.Int32(8443),
 				},
 			},
 			ExpectedRevs: []*awstypes.IpPermission{
 				{
-					FromPort: aws.Int64(8443),
+					FromPort: aws.Int32(8443),
 					IpRange:  aws.String("192.168.0.0/24"),
-					Protocol: aws.String("TCP"),
-					ToPort:   aws.Int64(8443),
+					Protocol: awstypes.IpProtocolTcp,
+					ToPort:   aws.Int32(8443),
 				},
 			},
 		},
