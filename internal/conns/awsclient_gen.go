@@ -97,6 +97,7 @@ import (
 	firehose_sdkv2 "github.com/aws/aws-sdk-go-v2/service/firehose"
 	fis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fis"
 	fms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fms"
+	gamelift_sdkv2 "github.com/aws/aws-sdk-go-v2/service/gamelift"
 	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
 	globalaccelerator_sdkv2 "github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
 	grafana_sdkv2 "github.com/aws/aws-sdk-go-v2/service/grafana"
@@ -217,7 +218,6 @@ import (
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	emrcontainers_sdkv1 "github.com/aws/aws-sdk-go/service/emrcontainers"
 	fsx_sdkv1 "github.com/aws/aws-sdk-go/service/fsx"
-	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
 	glue_sdkv1 "github.com/aws/aws-sdk-go/service/glue"
 	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
@@ -687,8 +687,8 @@ func (c *AWSClient) FirehoseClient(ctx context.Context) *firehose_sdkv2.Client {
 	return errs.Must(client[*firehose_sdkv2.Client](ctx, c, names.Firehose, make(map[string]any)))
 }
 
-func (c *AWSClient) GameLiftConn(ctx context.Context) *gamelift_sdkv1.GameLift {
-	return errs.Must(conn[*gamelift_sdkv1.GameLift](ctx, c, names.GameLift, make(map[string]any)))
+func (c *AWSClient) GameLiftClient(ctx context.Context) *gamelift_sdkv2.Client {
+	return errs.Must(client[*gamelift_sdkv2.Client](ctx, c, names.GameLift, make(map[string]any)))
 }
 
 func (c *AWSClient) GlacierClient(ctx context.Context) *glacier_sdkv2.Client {

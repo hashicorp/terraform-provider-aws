@@ -4154,7 +4154,7 @@ service "gamelift" {
 
   sdk {
     id             = "GameLift"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
