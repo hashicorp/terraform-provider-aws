@@ -208,7 +208,7 @@ func TestARNStringFromFramework(t *testing.T) {
 	}
 	tests := map[string]testCase{
 		"valid ARN": {
-			input:    fwtypes.ARNValueMust("arn:aws:iam::123456789012:user/David"),
+			input:    fwtypes.ARNValue("arn:aws:iam::123456789012:user/David"),
 			expected: aws.String("arn:aws:iam::123456789012:user/David"),
 		},
 		"null ARN": {
@@ -245,7 +245,7 @@ func TestStringToFrameworkARN(t *testing.T) {
 	tests := map[string]testCase{
 		"valid ARN": {
 			input:    aws.String("arn:aws:iam::123456789012:user/David"),
-			expected: fwtypes.ARNValueMust("arn:aws:iam::123456789012:user/David"),
+			expected: fwtypes.ARNValue("arn:aws:iam::123456789012:user/David"),
 		},
 		"null ARN": {
 			input:    nil,

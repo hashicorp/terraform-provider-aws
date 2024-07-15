@@ -6,21 +6,16 @@ package lambda
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-const (
-	DSNameFunctions = "Functions Data Source"
-)
-
-// @SDKDataSource("aws_lambda_functions")
-func DataSourceFunctions() *schema.Resource {
+// @SDKDataSource("aws_lambda_functions", name="Functions")
+func dataSourceFunctions() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFunctionsRead,
 
@@ -41,33 +36,24 @@ func DataSourceFunctions() *schema.Resource {
 
 func dataSourceFunctionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
-
-	input := &lambda.ListFunctionsInput{}
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	var functionARNs []string
 	var functionNames []string
 
-	err := conn.ListFunctionsPagesWithContext(ctx, input, func(page *lambda.ListFunctionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	input := &lambda.ListFunctionsInput{}
+	pages := lambda.NewListFunctionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing Lambda Functions: %s", err)
 		}
 
-		for _, function := range page.Functions {
-			if function == nil {
-				continue
-			}
-
-			functionARNs = append(functionARNs, aws.StringValue(function.FunctionArn))
-			functionNames = append(functionNames, aws.StringValue(function.FunctionName))
+		for _, v := range page.Functions {
+			functionARNs = append(functionARNs, aws.ToString(v.FunctionArn))
+			functionNames = append(functionNames, aws.ToString(v.FunctionName))
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return create.AppendDiagError(diags, names.Lambda, create.ErrActionReading, DSNameFunctions, "", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

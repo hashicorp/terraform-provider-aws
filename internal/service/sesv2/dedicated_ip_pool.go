@@ -46,7 +46,7 @@ func ResourceDedicatedIPPool() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -75,6 +75,7 @@ const (
 )
 
 func resourceDedicatedIPPoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	in := &sesv2.CreateDedicatedIpPoolInput{
@@ -87,34 +88,35 @@ func resourceDedicatedIPPoolCreate(ctx context.Context, d *schema.ResourceData, 
 
 	out, err := conn.CreateDedicatedIpPool(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameDedicatedIPPool, d.Get("pool_name").(string), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameDedicatedIPPool, d.Get("pool_name").(string), err)
 	}
 	if out == nil {
-		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameDedicatedIPPool, d.Get("pool_name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameDedicatedIPPool, d.Get("pool_name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(d.Get("pool_name").(string))
-	return resourceDedicatedIPPoolRead(ctx, d, meta)
+	return append(diags, resourceDedicatedIPPoolRead(ctx, d, meta)...)
 }
 
 func resourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	out, err := FindDedicatedIPPoolByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SESV2 DedicatedIPPool (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameDedicatedIPPool, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameDedicatedIPPool, d.Id(), err)
 	}
 	poolName := aws.ToString(out.DedicatedIpPool.PoolName)
 	d.Set("pool_name", poolName)
 	d.Set("scaling_mode", string(out.DedicatedIpPool.ScalingMode))
-	d.Set("arn", poolNameToARN(meta, poolName))
+	d.Set(names.AttrARN, poolNameToARN(meta, poolName))
 
-	return nil
+	return diags
 }
 
 func resourceDedicatedIPPoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -123,6 +125,7 @@ func resourceDedicatedIPPoolUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceDedicatedIPPoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	log.Printf("[INFO] Deleting SESV2 DedicatedIPPool %s", d.Id())
@@ -133,12 +136,12 @@ func resourceDedicatedIPPoolDelete(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
-		return create.DiagError(names.SESV2, create.ErrActionDeleting, ResNameDedicatedIPPool, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, ResNameDedicatedIPPool, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindDedicatedIPPoolByID(ctx context.Context, conn *sesv2.Client, id string) (*sesv2.GetDedicatedIpPoolOutput, error) {

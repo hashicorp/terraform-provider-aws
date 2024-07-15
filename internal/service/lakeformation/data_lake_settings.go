@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lakeformation_data_lake_settings")
@@ -60,13 +61,17 @@ func ResourceDataLakeSettings() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"allow_full_table_external_data_access": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"authorized_session_tag_value_list": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -78,7 +83,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 				MaxItems: 3,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"permissions": {
+						names.AttrPermissions: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
@@ -87,7 +92,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[awstypes.Permission](),
 							},
 						},
-						"principal": {
+						names.AttrPrincipal: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -103,7 +108,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 				MaxItems: 3,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"permissions": {
+						names.AttrPermissions: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
@@ -112,7 +117,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[awstypes.Permission](),
 							},
 						},
-						"principal": {
+						names.AttrPrincipal: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -149,7 +154,7 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 
 	input := &lakeformation.PutDataLakeSettingsInput{}
 
-	if v, ok := d.GetOk("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
@@ -185,6 +190,10 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("trusted_resource_owners"); ok {
 		settings.TrustedResourceOwners = flex.ExpandStringValueList(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("allow_full_table_external_data_access"); ok {
+		settings.AllowFullTableExternalDataAccess = aws.Bool(v.(bool))
 	}
 
 	input.DataLakeSettings = settings
@@ -230,7 +239,7 @@ func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, m
 
 	input := &lakeformation.GetDataLakeSettingsInput{}
 
-	if v, ok := d.GetOk("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
@@ -260,6 +269,7 @@ func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
 	d.Set("external_data_filtering_allow_list", flattenDataLakeSettingsDataFilteringAllowList(settings.ExternalDataFilteringAllowList))
 	d.Set("trusted_resource_owners", flex.FlattenStringValueList(settings.TrustedResourceOwners))
+	d.Set("allow_full_table_external_data_access", settings.AllowFullTableExternalDataAccess)
 
 	return diags
 }
@@ -278,7 +288,7 @@ func resourceDataLakeSettingsDelete(ctx context.Context, d *schema.ResourceData,
 		},
 	}
 
-	if v, ok := d.GetOk("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
@@ -308,9 +318,9 @@ func expandDataLakeSettingsCreateDefaultPermissions(tfMaps []interface{}) []awst
 
 func expandDataLakeSettingsCreateDefaultPermission(tfMap map[string]interface{}) awstypes.PrincipalPermissions {
 	apiObject := awstypes.PrincipalPermissions{
-		Permissions: flex.ExpandStringyValueList[awstypes.Permission](tfMap["permissions"].(*schema.Set).List()),
+		Permissions: flex.ExpandStringyValueList[awstypes.Permission](tfMap[names.AttrPermissions].(*schema.Set).List()),
 		Principal: &awstypes.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(tfMap["principal"].(string)),
+			DataLakePrincipalIdentifier: aws.String(tfMap[names.AttrPrincipal].(string)),
 		},
 	}
 
@@ -339,11 +349,11 @@ func flattenDataLakeSettingsCreateDefaultPermission(apiObject awstypes.Principal
 
 	if apiObject.Permissions != nil {
 		// tfMap["permissions"] = flex.FlattenStringValueSet(flattenPermissions(apiObject.Permissions))
-		tfMap["permissions"] = flex.FlattenStringyValueSet(apiObject.Permissions)
+		tfMap[names.AttrPermissions] = flex.FlattenStringyValueSet(apiObject.Permissions)
 	}
 
 	if v := aws.ToString(apiObject.Principal.DataLakePrincipalIdentifier); v != "" {
-		tfMap["principal"] = v
+		tfMap[names.AttrPrincipal] = v
 	}
 
 	return tfMap

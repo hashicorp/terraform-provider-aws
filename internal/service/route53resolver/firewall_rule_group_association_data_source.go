@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route53_resolver_firewall_rule_group_association")
@@ -18,11 +20,11 @@ func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
 		ReadWithoutTimeout: dataSourceRuleGroupAssociationRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,23 +52,23 @@ func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"priority": {
+			names.AttrPriority: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_message": {
+			names.AttrStatusMessage: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -75,29 +77,30 @@ func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
 }
 
 func dataSourceRuleGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	id := d.Get("firewall_rule_group_association_id").(string)
 	ruleGroupAssociation, err := FindFirewallRuleGroupAssociationByID(ctx, conn, id)
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Firewall Rule Group Association (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Firewall Rule Group Association (%s): %s", id, err)
 	}
 
 	d.SetId(aws.StringValue(ruleGroupAssociation.Id))
-	d.Set("arn", ruleGroupAssociation.Arn)
-	d.Set("creation_time", ruleGroupAssociation.CreationTime)
+	d.Set(names.AttrARN, ruleGroupAssociation.Arn)
+	d.Set(names.AttrCreationTime, ruleGroupAssociation.CreationTime)
 	d.Set("creator_request_id", ruleGroupAssociation.CreatorRequestId)
 	d.Set("firewall_rule_group_id", ruleGroupAssociation.FirewallRuleGroupId)
 	d.Set("firewall_rule_group_association_id", ruleGroupAssociation.Id)
 	d.Set("managed_owner_name", ruleGroupAssociation.ManagedOwnerName)
 	d.Set("modification_time", ruleGroupAssociation.ModificationTime)
 	d.Set("mutation_protection", ruleGroupAssociation.MutationProtection)
-	d.Set("name", ruleGroupAssociation.Name)
-	d.Set("priority", ruleGroupAssociation.Priority)
-	d.Set("status", ruleGroupAssociation.Status)
-	d.Set("status_message", ruleGroupAssociation.StatusMessage)
-	d.Set("vpc_id", ruleGroupAssociation.VpcId)
+	d.Set(names.AttrName, ruleGroupAssociation.Name)
+	d.Set(names.AttrPriority, ruleGroupAssociation.Priority)
+	d.Set(names.AttrStatus, ruleGroupAssociation.Status)
+	d.Set(names.AttrStatusMessage, ruleGroupAssociation.StatusMessage)
+	d.Set(names.AttrVPCID, ruleGroupAssociation.VpcId)
 
-	return nil
+	return diags
 }

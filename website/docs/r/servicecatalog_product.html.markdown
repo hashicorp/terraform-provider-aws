@@ -40,7 +40,7 @@ The following arguments are required:
 
 * `name` - (Required) Name of the product.
 * `owner` - (Required) Owner of the product.
-* `provisioning_artifact_parameters` - (Required) Configuration block for provisioning artifact (i.e., version) parameters. Detailed below.
+* `provisioning_artifact_parameters` - (Required) Configuration block for provisioning artifact (i.e., version) parameters. See [`provisioning_artifact_parameters` Block](#provisioning_artifact_parameters-block) for details.
 * `type` - (Required) Type of product. See [AWS Docs](https://docs.aws.amazon.com/servicecatalog/latest/dg/API_CreateProduct.html#API_CreateProduct_RequestSyntax) for valid list of values.
 
 The following arguments are optional:
@@ -53,9 +53,9 @@ The following arguments are optional:
 * `support_url` - (Optional) Contact URL for product support.
 * `tags` - (Optional) Tags to apply to the product. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### provisioning_artifact_parameters
+### `provisioning_artifact_parameters` Block
 
-This argument supports the following arguments:
+The `provisioning_artifact_parameters` configuration block supports the following arguments:
 
 * `description` - (Optional) Description of the provisioning artifact (i.e., version), including how it differs from the previous provisioning artifact.
 * `disable_template_validation` - (Optional) Whether AWS Service Catalog stops validating the specified provisioning artifact template even if it is invalid.

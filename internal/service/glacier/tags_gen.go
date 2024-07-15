@@ -80,12 +80,12 @@ func setTagsOut(ctx context.Context, tags map[string]string) {
 }
 
 // createTags creates glacier service tags for new resources.
-func createTags(ctx context.Context, conn *glacier.Client, identifier string, tags map[string]string) error {
+func createTags(ctx context.Context, conn *glacier.Client, identifier string, tags map[string]string, optFns ...func(*glacier.Options)) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, nil, tags)
+	return updateTags(ctx, conn, identifier, nil, tags, optFns...)
 }
 
 // updateTags updates glacier service tags.

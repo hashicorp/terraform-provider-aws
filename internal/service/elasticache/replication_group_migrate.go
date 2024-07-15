@@ -7,11 +7,12 @@ import (
 	"context"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -22,7 +23,7 @@ func replicationGroupStateUpgradeV1(ctx context.Context, rawState map[string]int
 	}
 
 	// Set auth_token_update_strategy to new default value
-	rawState["auth_token_update_strategy"] = elasticache.AuthTokenUpdateStrategyTypeRotate
+	rawState["auth_token_update_strategy"] = awstypes.AuthTokenUpdateStrategyTypeRotate
 
 	return rawState, nil
 }
@@ -31,12 +32,12 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +54,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				ValidateFunc:  validReplicationGroupAuthToken,
 				ConflictsWith: []string{"user_group_ids"},
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:         nullable.TypeNullableBool,
 				Optional:     true,
 				Computed:     true,
@@ -78,20 +79,20 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				Default:      engineRedis,
 				ValidateFunc: validation.StringInSlice([]string{engineRedis}, true),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -108,9 +109,9 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Computed: true,
 				ConflictsWith: []string{
 					"num_node_groups",
-					"parameter_group_name",
-					"engine",
-					"engine_version",
+					names.AttrParameterGroupName,
+					names.AttrEngine,
+					names.AttrEngineVersion,
 					"node_type",
 					"security_group_names",
 					"transit_encryption_enabled",
@@ -120,10 +121,10 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				},
 			},
 			"ip_discovery": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(elasticache.IpDiscovery_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.IpDiscovery](),
 			},
 			"log_delivery_configuration": {
 				Type:     schema.TypeSet,
@@ -132,23 +133,23 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"destination_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(elasticache.DestinationType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.DestinationType](),
 						},
-						"destination": {
+						names.AttrDestination: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 						"log_format": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(elasticache.LogFormat_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LogFormat](),
 						},
 						"log_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(elasticache.LogType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LogType](),
 						},
 					},
 				},
@@ -175,11 +176,11 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Default:  false,
 			},
 			"network_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(elasticache.NetworkType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
 			},
 			"node_type": {
 				Type:     schema.TypeString,
@@ -203,7 +204,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"num_cache_clusters", "global_replication_group_id"},
 			},
-			"parameter_group_name": {
+			names.AttrParameterGroupName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -211,7 +212,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 					return strings.HasPrefix(old, "global-datastore-")
 				},
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
@@ -258,7 +259,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -316,12 +317,12 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Set:           schema.HashString,
 				ConflictsWith: []string{"auth_token"},
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},

@@ -6,4 +6,6 @@ package ecs
 // Exports for use in tests only.
 var (
 	ResourceTag = resourceTag
+
+	FindTag = findTag
 )

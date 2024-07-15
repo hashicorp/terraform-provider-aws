@@ -38,11 +38,11 @@ func (r *resourceTemplateAssociation) Metadata(_ context.Context, req resource.M
 func (r *resourceTemplateAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
-			"skip_destroy": schema.BoolAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrSkipDestroy: schema.BoolAttribute{
 				Optional: true,
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
 		},
@@ -139,7 +139,7 @@ func (r *resourceTemplateAssociation) Delete(ctx context.Context, req resource.D
 }
 
 func (r *resourceTemplateAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 type resourceTemplateAssociationData struct {

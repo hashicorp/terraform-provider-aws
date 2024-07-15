@@ -34,8 +34,8 @@ func TestAccS3ControlAccessPointPolicy_basic(t *testing.T) {
 				Config: testAccAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`s3:GetObjectTagging`)),
+					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", acctest.CtFalse),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`s3:GetObjectTagging`)),
 				),
 			},
 			{
@@ -110,8 +110,8 @@ func TestAccS3ControlAccessPointPolicy_update(t *testing.T) {
 				Config: testAccAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`s3:GetObjectTagging`)),
+					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", acctest.CtFalse),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`s3:GetObjectTagging`)),
 				),
 			},
 			{
@@ -124,8 +124,8 @@ func TestAccS3ControlAccessPointPolicy_update(t *testing.T) {
 				Config: testAccAccessPointPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`s3:GetObjectLegalHold`)),
+					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", acctest.CtFalse),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`s3:GetObjectLegalHold`)),
 				),
 			},
 		},
