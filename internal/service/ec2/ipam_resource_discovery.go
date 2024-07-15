@@ -209,7 +209,7 @@ func resourceIPAMResourceDiscoveryUpdate(ctx context.Context, d *schema.Resource
 		}
 	}
 
-	return diags
+	return append(diags, resourceIPAMResourceDiscoveryRead(ctx, d, meta)...)
 }
 
 func resourceIPAMResourceDiscoveryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
