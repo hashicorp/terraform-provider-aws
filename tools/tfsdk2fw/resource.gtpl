@@ -31,7 +31,6 @@ import (
 // @FrameworkResource("{{ .TFTypeName }}")
 func newResource{{ .Name }}(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resource{{ .Name }}{}
-	r.SetMigratedFromPluginSDK(true)
 {{- if gt .DefaultCreateTimeout 0 }}
 	r.SetDefaultCreateTimeout({{ .DefaultCreateTimeout }} * time.Nanosecond) // TODO Convert to more human-friendly duration.
 {{- end}}
