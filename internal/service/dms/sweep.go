@@ -242,7 +242,7 @@ func sweepReplicationTasks(region string) error {
 		}
 
 		for _, v := range page.ReplicationTasks {
-			r := ResourceReplicationTask()
+			r := resourceReplicationTask()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.ReplicationTaskIdentifier))
 			d.Set("replication_task_arn", v.ReplicationTaskArn)

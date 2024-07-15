@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -32,7 +31,7 @@ import (
 
 // @SDKResource("aws_dms_replication_task", name="Replication Task")
 // @Tags(identifierAttribute="replication_task_arn")
-func ResourceReplicationTask() *schema.Resource {
+func resourceReplicationTask() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationTaskCreate,
 		ReadWithoutTimeout:   resourceReplicationTaskRead,
@@ -196,7 +195,7 @@ func resourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
-	task, err := FindReplicationTaskByID(ctx, conn, d.Id())
+	task, err := findReplicationTaskByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DMS Replication Task (%s) not found, removing from state", d.Id())
@@ -349,7 +348,7 @@ func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func FindReplicationTaskByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
+func findReplicationTaskByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
 	input := &dms.DescribeReplicationTasksInput{
 		Filters: []awstypes.Filter{
 			{
@@ -369,14 +368,13 @@ func findReplicationTask(ctx context.Context, conn *dms.Client, input *dms.Descr
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findReplicationTasks(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationTasksInput) ([]*awstypes.ReplicationTask, error) {
+func findReplicationTasks(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationTasksInput) ([]awstypes.ReplicationTask, error) {
 	var output []awstypes.ReplicationTask
 
 	pages := dms.NewDescribeReplicationTasksPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -394,12 +392,12 @@ func findReplicationTasks(ctx context.Context, conn *dms.Client, input *dms.Desc
 		output = append(output, page.ReplicationTasks...)
 	}
 
-	return tfslices.ToPointers(output), nil
+	return output, nil
 }
 
 func statusReplicationTask(ctx context.Context, conn *dms.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindReplicationTaskByID(ctx, conn, id)
+		output, err := findReplicationTaskByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -578,7 +576,7 @@ func waitReplicationTaskSteady(ctx context.Context, conn *dms.Client, id string)
 }
 
 func startReplicationTask(ctx context.Context, conn *dms.Client, id string) error {
-	task, err := FindReplicationTaskByID(ctx, conn, id)
+	task, err := findReplicationTaskByID(ctx, conn, id)
 
 	if err != nil {
 		return fmt.Errorf("reading DMS Replication Task (%s): %w", id, err)
@@ -612,7 +610,7 @@ func startReplicationTask(ctx context.Context, conn *dms.Client, id string) erro
 }
 
 func stopReplicationTask(ctx context.Context, conn *dms.Client, id string) error {
-	task, err := FindReplicationTaskByID(ctx, conn, id)
+	task, err := findReplicationTaskByID(ctx, conn, id)
 
 	if tfresource.NotFound(err) {
 		return nil

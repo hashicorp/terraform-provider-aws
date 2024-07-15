@@ -11,6 +11,7 @@ var (
 	ResourceReplicationConfig      = resourceReplicationConfig
 	ResourceReplicationInstance    = resourceReplicationInstance
 	ResourceReplicationSubnetGroup = resourceReplicationSubnetGroup
+	ResourceReplicationTask        = resourceReplicationTask
 	ResourceS3Endpoint             = resourceS3Endpoint
 
 	FindCertificateByID            = findCertificateByID
@@ -19,6 +20,7 @@ var (
 	FindReplicationConfigByARN     = findReplicationConfigByARN
 	FindReplicationInstanceByID    = findReplicationInstanceByID
 	FindReplicationSubnetGroupByID = findReplicationSubnetGroupByID
+	FindReplicationTaskByID        = findReplicationTaskByID
 	TaskSettingsEqual              = taskSettingsEqual
 	ValidEndpointID                = validEndpointID
 	ValidReplicationInstanceID     = validReplicationInstanceID
