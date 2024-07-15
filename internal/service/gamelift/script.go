@@ -8,14 +8,16 @@ import (
 	"log"
 	"os"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/gamelift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -97,7 +99,7 @@ func ResourceScript() *schema.Resource {
 
 func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
+	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
 	input := gamelift.CreateScriptInput{
 		Name: aws.String(d.Get(names.AttrName).(string)),
@@ -127,10 +129,10 @@ func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var out *gamelift.CreateScriptOutput
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
-		out, err = conn.CreateScriptWithContext(ctx, &input)
+		out, err = conn.CreateScript(ctx, &input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, "GameLift cannot assume the role") ||
-				tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, "Provided resource is not accessible") {
+			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidRequestException, "GameLift cannot assume the role") ||
+				tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidRequestException, "Provided resource is not accessible") {
 				return retry.RetryableError(err)
 			}
 			return retry.NonRetryableError(err)
@@ -138,20 +140,20 @@ func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		out, err = conn.CreateScriptWithContext(ctx, &input)
+		out, err = conn.CreateScript(ctx, &input)
 	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating GameLift script client: %s", err)
 	}
 
-	d.SetId(aws.StringValue(out.Script.ScriptId))
+	d.SetId(aws.ToString(out.Script.ScriptId))
 
 	return append(diags, resourceScriptRead(ctx, d, meta)...)
 }
 
 func resourceScriptRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
+	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
 	log.Printf("[INFO] Reading GameLift Script: %s", d.Id())
 	script, err := FindScriptByID(ctx, conn, d.Id())
@@ -172,7 +174,7 @@ func resourceScriptRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting storage_location: %s", err)
 	}
 
-	arn := aws.StringValue(script.ScriptArn)
+	arn := aws.ToString(script.ScriptArn)
 	d.Set(names.AttrARN, arn)
 
 	return diags
@@ -180,7 +182,7 @@ func resourceScriptRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceScriptUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
+	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		log.Printf("[INFO] Updating GameLift Script: %s", d.Id())
@@ -214,7 +216,7 @@ func resourceScriptUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}
 
-		_, err := conn.UpdateScriptWithContext(ctx, &input)
+		_, err := conn.UpdateScript(ctx, &input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating GameLift Script: %s", err)
 		}
@@ -225,15 +227,15 @@ func resourceScriptUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceScriptDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
+	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
 	log.Printf("[INFO] Deleting GameLift Script: %s", d.Id())
-	_, err := conn.DeleteScriptWithContext(ctx, &gamelift.DeleteScriptInput{
+	_, err := conn.DeleteScript(ctx, &gamelift.DeleteScriptInput{
 		ScriptId: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
+		if errs.IsA[*awstypes.NotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting GameLift script: %s", err)
@@ -242,16 +244,16 @@ func resourceScriptDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func flattenStorageLocation(sl *gamelift.S3Location) []interface{} {
+func flattenStorageLocation(sl *awstypes.S3Location) []interface{} {
 	if sl == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		names.AttrBucket:  aws.StringValue(sl.Bucket),
-		names.AttrKey:     aws.StringValue(sl.Key),
-		names.AttrRoleARN: aws.StringValue(sl.RoleArn),
-		"object_version":  aws.StringValue(sl.ObjectVersion),
+		names.AttrBucket:  aws.ToString(sl.Bucket),
+		names.AttrKey:     aws.ToString(sl.Key),
+		names.AttrRoleARN: aws.ToString(sl.RoleArn),
+		"object_version":  aws.ToString(sl.ObjectVersion),
 	}
 
 	return []interface{}{m}

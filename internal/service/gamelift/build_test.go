@@ -9,8 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/gamelift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +24,7 @@ import (
 
 func TestAccGameLiftBuild_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf gamelift.Build
+	var conf awstypes.Build
 	resourceName := "aws_gamelift_build.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -48,7 +49,7 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
@@ -95,7 +96,7 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 
 func TestAccGameLiftBuild_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf gamelift.Build
+	var conf awstypes.Build
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_build.test"
@@ -119,7 +120,7 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
@@ -163,7 +164,7 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 
 func TestAccGameLiftBuild_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf gamelift.Build
+	var conf awstypes.Build
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_build.test"
@@ -187,7 +188,7 @@ func TestAccGameLiftBuild_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
@@ -207,7 +208,7 @@ func TestAccGameLiftBuild_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckBuildExists(ctx context.Context, n string, res *gamelift.Build) resource.TestCheckFunc {
+func testAccCheckBuildExists(ctx context.Context, n string, res *awstypes.Build) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -218,14 +219,14 @@ func testAccCheckBuildExists(ctx context.Context, n string, res *gamelift.Build)
 			return fmt.Errorf("No GameLift Build ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
 
 		build, err := tfgamelift.FindBuildByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		if aws.StringValue(build.BuildId) != rs.Primary.ID {
+		if aws.ToString(build.BuildId) != rs.Primary.ID {
 			return fmt.Errorf("GameLift Build not found")
 		}
 
@@ -237,7 +238,7 @@ func testAccCheckBuildExists(ctx context.Context, n string, res *gamelift.Build)
 
 func testAccCheckBuildDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_gamelift_build" {
@@ -260,11 +261,11 @@ func testAccCheckBuildDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
 
 	input := &gamelift.ListBuildsInput{}
 
-	_, err := conn.ListBuildsWithContext(ctx, input)
+	_, err := conn.ListBuilds(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

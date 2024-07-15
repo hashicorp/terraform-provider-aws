@@ -5,9 +5,9 @@ package gamelift
 import (
 	"context"
 
+	gamelift_sdkv1 "github.com/aws/aws-sdk-go-v2/service/gamelift"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

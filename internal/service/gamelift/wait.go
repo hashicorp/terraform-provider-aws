@@ -9,63 +9,65 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/gamelift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 const (
 	buildReadyTimeout = 1 * time.Minute
 )
 
-func waitBuildReady(ctx context.Context, conn *gamelift.GameLift, id string) (*gamelift.Build, error) {
+func waitBuildReady(ctx context.Context, conn *gamelift.Client, id string) (*awstypes.Build, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{gamelift.BuildStatusInitialized},
-		Target:  []string{gamelift.BuildStatusReady},
+		Pending: []string{awstypes.BuildStatusInitialized},
+		Target:  []string{awstypes.BuildStatusReady},
 		Refresh: statusBuild(ctx, conn, id),
 		Timeout: buildReadyTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*gamelift.Build); ok {
+	if output, ok := outputRaw.(*awstypes.Build); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitFleetActive(ctx context.Context, conn *gamelift.GameLift, id string, timeout time.Duration) (*gamelift.FleetAttributes, error) {
+func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, timeout time.Duration) (*awstypes.FleetAttributes, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			gamelift.FleetStatusActivating,
-			gamelift.FleetStatusBuilding,
-			gamelift.FleetStatusDownloading,
-			gamelift.FleetStatusNew,
-			gamelift.FleetStatusValidating,
+			awstypes.FleetStatusActivating,
+			awstypes.FleetStatusBuilding,
+			awstypes.FleetStatusDownloading,
+			awstypes.FleetStatusNew,
+			awstypes.FleetStatusValidating,
 		},
-		Target:  []string{gamelift.FleetStatusActive},
+		Target:  []string{awstypes.FleetStatusActive},
 		Refresh: statusFleet(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*gamelift.FleetAttributes); ok {
+	if output, ok := outputRaw.(*awstypes.FleetAttributes); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitFleetTerminated(ctx context.Context, conn *gamelift.GameLift, id string, timeout time.Duration) (*gamelift.FleetAttributes, error) {
+func waitFleetTerminated(ctx context.Context, conn *gamelift.Client, id string, timeout time.Duration) (*awstypes.FleetAttributes, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			gamelift.FleetStatusActive,
-			gamelift.FleetStatusDeleting,
-			gamelift.FleetStatusError,
-			gamelift.FleetStatusTerminated,
+			awstypes.FleetStatusActive,
+			awstypes.FleetStatusDeleting,
+			awstypes.FleetStatusError,
+			awstypes.FleetStatusTerminated,
 		},
 		Target:  []string{},
 		Refresh: statusFleet(ctx, conn, id),
@@ -84,21 +86,21 @@ func waitFleetTerminated(ctx context.Context, conn *gamelift.GameLift, id string
 		}
 	}
 
-	if output, ok := outputRaw.(*gamelift.FleetAttributes); ok {
+	if output, ok := outputRaw.(*awstypes.FleetAttributes); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func getFleetFailures(ctx context.Context, conn *gamelift.GameLift, id string) ([]*gamelift.Event, error) {
-	var events []*gamelift.Event
+func getFleetFailures(ctx context.Context, conn *gamelift.Client, id string) ([]*awstypes.Event, error) {
+	var events []*awstypes.Event
 	err := _getFleetFailures(ctx, conn, id, nil, &events)
 	return events, err
 }
 
-func _getFleetFailures(ctx context.Context, conn *gamelift.GameLift, id string, nextToken *string, events *[]*gamelift.Event) error {
-	eOut, err := conn.DescribeFleetEventsWithContext(ctx, &gamelift.DescribeFleetEventsInput{
+func _getFleetFailures(ctx context.Context, conn *gamelift.Client, id string, nextToken *string, events *[]*awstypes.Event) error {
+	eOut, err := conn.DescribeFleetEvents(ctx, &gamelift.DescribeFleetEventsInput{
 		FleetId:   aws.String(id),
 		NextToken: nextToken,
 	})
@@ -122,59 +124,59 @@ func _getFleetFailures(ctx context.Context, conn *gamelift.GameLift, id string, 
 	return nil
 }
 
-func isEventFailure(event *gamelift.Event) bool {
+func isEventFailure(event *awstypes.Event) bool {
 	failureCodes := []string{
-		gamelift.EventCodeFleetActivationFailed,
-		gamelift.EventCodeFleetActivationFailedNoInstances,
-		gamelift.EventCodeFleetBinaryDownloadFailed,
-		gamelift.EventCodeFleetInitializationFailed,
-		gamelift.EventCodeFleetStateError,
-		gamelift.EventCodeFleetValidationExecutableRuntimeFailure,
-		gamelift.EventCodeFleetValidationLaunchPathNotFound,
-		gamelift.EventCodeFleetValidationTimedOut,
-		gamelift.EventCodeFleetVpcPeeringFailed,
-		gamelift.EventCodeGameSessionActivationTimeout,
-		gamelift.EventCodeServerProcessCrashed,
-		gamelift.EventCodeServerProcessForceTerminated,
-		gamelift.EventCodeServerProcessInvalidPath,
-		gamelift.EventCodeServerProcessProcessExitTimeout,
-		gamelift.EventCodeServerProcessProcessReadyTimeout,
-		gamelift.EventCodeServerProcessSdkInitializationTimeout,
-		gamelift.EventCodeServerProcessTerminatedUnhealthy,
+		awstypes.EventCodeFleetActivationFailed,
+		awstypes.EventCodeFleetActivationFailedNoInstances,
+		awstypes.EventCodeFleetBinaryDownloadFailed,
+		awstypes.EventCodeFleetInitializationFailed,
+		awstypes.EventCodeFleetStateError,
+		awstypes.EventCodeFleetValidationExecutableRuntimeFailure,
+		awstypes.EventCodeFleetValidationLaunchPathNotFound,
+		awstypes.EventCodeFleetValidationTimedOut,
+		awstypes.EventCodeFleetVpcPeeringFailed,
+		awstypes.EventCodeGameSessionActivationTimeout,
+		awstypes.EventCodeServerProcessCrashed,
+		awstypes.EventCodeServerProcessForceTerminated,
+		awstypes.EventCodeServerProcessInvalidPath,
+		awstypes.EventCodeServerProcessProcessExitTimeout,
+		awstypes.EventCodeServerProcessProcessReadyTimeout,
+		awstypes.EventCodeServerProcessSdkInitializationTimeout,
+		awstypes.EventCodeServerProcessTerminatedUnhealthy,
 	}
 	for _, fc := range failureCodes {
-		if aws.StringValue(event.EventCode) == fc {
+		if string(event.EventCode) == fc {
 			return true
 		}
 	}
 	return false
 }
 
-func waitGameServerGroupActive(ctx context.Context, conn *gamelift.GameLift, name string, timeout time.Duration) (*gamelift.GameServerGroup, error) {
+func waitGameServerGroupActive(ctx context.Context, conn *gamelift.Client, name string, timeout time.Duration) (*awstypes.GameServerGroup, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			gamelift.GameServerGroupStatusNew,
-			gamelift.GameServerGroupStatusActivating,
+			awstypes.GameServerGroupStatusNew,
+			awstypes.GameServerGroupStatusActivating,
 		},
-		Target:  []string{gamelift.GameServerGroupStatusActive},
+		Target:  []string{awstypes.GameServerGroupStatusActive},
 		Refresh: statusGameServerGroup(ctx, conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*gamelift.GameServerGroup); ok {
+	if output, ok := outputRaw.(*awstypes.GameServerGroup); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitGameServerGroupTerminated(ctx context.Context, conn *gamelift.GameLift, name string, timeout time.Duration) error {
+func waitGameServerGroupTerminated(ctx context.Context, conn *gamelift.Client, name string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			gamelift.GameServerGroupStatusDeleteScheduled,
-			gamelift.GameServerGroupStatusDeleting,
+			awstypes.GameServerGroupStatusDeleteScheduled,
+			awstypes.GameServerGroupStatusDeleting,
 		},
 		Target:  []string{},
 		Refresh: statusGameServerGroup(ctx, conn, name),
@@ -183,7 +185,7 @@ func waitGameServerGroupTerminated(ctx context.Context, conn *gamelift.GameLift,
 
 	_, err := stateConf.WaitForStateContext(ctx)
 
-	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil
 	}
 

@@ -6,21 +6,23 @@ package gamelift
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/gamelift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindBuildByID(ctx context.Context, conn *gamelift.GameLift, id string) (*gamelift.Build, error) {
+func FindBuildByID(ctx context.Context, conn *gamelift.Client, id string) (*awstypes.Build, error) {
 	input := &gamelift.DescribeBuildInput{
 		BuildId: aws.String(id),
 	}
 
-	output, err := conn.DescribeBuildWithContext(ctx, input)
+	output, err := conn.DescribeBuild(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -38,14 +40,14 @@ func FindBuildByID(ctx context.Context, conn *gamelift.GameLift, id string) (*ga
 	return output.Build, nil
 }
 
-func FindFleetByID(ctx context.Context, conn *gamelift.GameLift, id string) (*gamelift.FleetAttributes, error) {
+func FindFleetByID(ctx context.Context, conn *gamelift.Client, id string) (*awstypes.FleetAttributes, error) {
 	input := &gamelift.DescribeFleetAttributesInput{
-		FleetIds: aws.StringSlice([]string{id}),
+		FleetIds: []string{id},
 	}
 
-	output, err := conn.DescribeFleetAttributesWithContext(ctx, input)
+	output, err := conn.DescribeFleetAttributes(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -66,21 +68,21 @@ func FindFleetByID(ctx context.Context, conn *gamelift.GameLift, id string) (*ga
 
 	fleet := output.FleetAttributes[0]
 
-	if aws.StringValue(fleet.FleetId) != id {
+	if aws.ToString(fleet.FleetId) != id {
 		return nil, tfresource.NewEmptyResultError(id)
 	}
 
 	return fleet, nil
 }
 
-func FindGameServerGroupByName(ctx context.Context, conn *gamelift.GameLift, name string) (*gamelift.GameServerGroup, error) {
+func FindGameServerGroupByName(ctx context.Context, conn *gamelift.Client, name string) (*awstypes.GameServerGroup, error) {
 	input := &gamelift.DescribeGameServerGroupInput{
 		GameServerGroupName: aws.String(name),
 	}
 
-	output, err := conn.DescribeGameServerGroupWithContext(ctx, input)
+	output, err := conn.DescribeGameServerGroup(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -98,14 +100,14 @@ func FindGameServerGroupByName(ctx context.Context, conn *gamelift.GameLift, nam
 	return output.GameServerGroup, nil
 }
 
-func FindScriptByID(ctx context.Context, conn *gamelift.GameLift, id string) (*gamelift.Script, error) {
+func FindScriptByID(ctx context.Context, conn *gamelift.Client, id string) (*awstypes.Script, error) {
 	input := &gamelift.DescribeScriptInput{
 		ScriptId: aws.String(id),
 	}
 
-	output, err := conn.DescribeScriptWithContext(ctx, input)
+	output, err := conn.DescribeScript(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

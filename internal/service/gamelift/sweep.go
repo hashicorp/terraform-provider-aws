@@ -8,10 +8,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/gamelift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
@@ -60,7 +62,7 @@ func sweepAliases(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.GameLiftConn(ctx)
+	conn := client.GameLiftClient(ctx)
 
 	err = listAliases(ctx, &gamelift.ListAliasesInput{}, conn, func(resp *gamelift.ListAliasesOutput) error {
 		if len(resp.Aliases) == 0 {
@@ -72,7 +74,7 @@ func sweepAliases(region string) error {
 
 		for _, alias := range resp.Aliases {
 			log.Printf("[INFO] Deleting GameLift Alias %q", *alias.AliasId)
-			_, err := conn.DeleteAliasWithContext(ctx, &gamelift.DeleteAliasInput{
+			_, err := conn.DeleteAlias(ctx, &gamelift.DeleteAliasInput{
 				AliasId: alias.AliasId,
 			})
 			if err != nil {
@@ -99,9 +101,9 @@ func sweepBuilds(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.GameLiftConn(ctx)
+	conn := client.GameLiftClient(ctx)
 
-	resp, err := conn.ListBuildsWithContext(ctx, &gamelift.ListBuildsInput{})
+	resp, err := conn.ListBuilds(ctx, &gamelift.ListBuildsInput{})
 	if err != nil {
 		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Gamelife Build sweep for %s: %s", region, err)
@@ -119,7 +121,7 @@ func sweepBuilds(region string) error {
 
 	for _, build := range resp.Builds {
 		log.Printf("[INFO] Deleting GameLift Build %q", *build.BuildId)
-		_, err := conn.DeleteBuildWithContext(ctx, &gamelift.DeleteBuildInput{
+		_, err := conn.DeleteBuild(ctx, &gamelift.DeleteBuildInput{
 			BuildId: build.BuildId,
 		})
 		if err != nil {
@@ -137,9 +139,9 @@ func sweepScripts(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.GameLiftConn(ctx)
+	conn := client.GameLiftClient(ctx)
 
-	resp, err := conn.ListScriptsWithContext(ctx, &gamelift.ListScriptsInput{})
+	resp, err := conn.ListScripts(ctx, &gamelift.ListScriptsInput{})
 	if err != nil {
 		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Gamelife Script sweep for %s: %s", region, err)
@@ -157,7 +159,7 @@ func sweepScripts(region string) error {
 
 	for _, build := range resp.Scripts {
 		log.Printf("[INFO] Deleting GameLift Script %q", *build.ScriptId)
-		_, err := conn.DeleteScriptWithContext(ctx, &gamelift.DeleteScriptInput{
+		_, err := conn.DeleteScript(ctx, &gamelift.DeleteScriptInput{
 			ScriptId: build.ScriptId,
 		})
 		if err != nil {
@@ -175,20 +177,20 @@ func sweepFleets(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.GameLiftConn(ctx)
+	conn := client.GameLiftClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &gamelift.ListFleetsInput{}
 
 	for {
-		output, err := conn.ListFleetsWithContext(ctx, input)
+		output, err := conn.ListFleets(ctx, input)
 
 		for _, fleet := range output.FleetIds {
 			r := ResourceFleet()
 			d := r.Data(nil)
 
-			id := aws.StringValue(fleet)
+			id := aws.ToString(fleet)
 			d.SetId(id)
 
 			if err != nil {
@@ -201,7 +203,7 @@ func sweepFleets(region string) error {
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
+		if aws.ToString(output.NextToken) == "" {
 			break
 		}
 
@@ -230,20 +232,20 @@ func sweepGameServerGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.GameLiftConn(ctx)
+	conn := client.GameLiftClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &gamelift.ListGameServerGroupsInput{}
 
 	for {
-		output, err := conn.ListGameServerGroupsWithContext(ctx, input)
+		output, err := conn.ListGameServerGroups(ctx, input)
 
 		for _, gameServerGroup := range output.GameServerGroups {
 			r := ResourceGameServerGroup()
 			d := r.Data(nil)
 
-			id := aws.StringValue(gameServerGroup.GameServerGroupName)
+			id := aws.ToString(gameServerGroup.GameServerGroupName)
 			d.SetId(id)
 
 			if err != nil {
@@ -256,7 +258,7 @@ func sweepGameServerGroups(region string) error {
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
+		if aws.ToString(output.NextToken) == "" {
 			break
 		}
 
@@ -285,9 +287,9 @@ func sweepGameSessionQueue(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.GameLiftConn(ctx)
+	conn := client.GameLiftClient(ctx)
 
-	out, err := conn.DescribeGameSessionQueuesWithContext(ctx, &gamelift.DescribeGameSessionQueuesInput{})
+	out, err := conn.DescribeGameSessionQueues(ctx, &gamelift.DescribeGameSessionQueuesInput{})
 
 	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Gamelife Queue sweep for %s: %s", region, err)
@@ -307,7 +309,7 @@ func sweepGameSessionQueue(region string) error {
 
 	for _, queue := range out.GameSessionQueues {
 		log.Printf("[INFO] Deleting GameLift Session Queue %q", *queue.Name)
-		_, err := conn.DeleteGameSessionQueueWithContext(ctx, &gamelift.DeleteGameSessionQueueInput{
+		_, err := conn.DeleteGameSessionQueue(ctx, &gamelift.DeleteGameSessionQueueInput{
 			Name: aws.String(*queue.Name),
 		})
 		if err != nil {
@@ -319,8 +321,8 @@ func sweepGameSessionQueue(region string) error {
 	return nil
 }
 
-func listAliases(ctx context.Context, input *gamelift.ListAliasesInput, conn *gamelift.GameLift, f func(*gamelift.ListAliasesOutput) error) error {
-	resp, err := conn.ListAliasesWithContext(ctx, input)
+func listAliases(ctx context.Context, input *gamelift.ListAliasesInput, conn *gamelift.Client, f func(*gamelift.ListAliasesOutput) error) error {
+	resp, err := conn.ListAliases(ctx, input)
 	if err != nil {
 		return err
 	}

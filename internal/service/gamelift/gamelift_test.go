@@ -6,15 +6,16 @@ package gamelift_test
 import (
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/gamelift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 type testAccGame struct {
-	Location   *gamelift.S3Location
+	Location   *awstypes.S3Location
 	LaunchPath string
 }
 
@@ -36,7 +37,7 @@ func testAccSampleGame(region string) (*testAccGame, error) {
 	launchPath := `C:\game\Bin64.Release.Dedicated\MultiplayerProjectLauncher_Server.exe`
 
 	gg := &testAccGame{
-		Location: &gamelift.S3Location{
+		Location: &awstypes.S3Location{
 			Bucket:  aws.String(bucket),
 			Key:     aws.String(key),
 			RoleArn: aws.String(roleArn),

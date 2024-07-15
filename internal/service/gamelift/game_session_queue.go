@@ -8,14 +8,16 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/gamelift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -95,7 +97,7 @@ func ResourceGameSessionQueue() *schema.Resource {
 
 func resourceGameSessionQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
+	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &gamelift.CreateGameSessionQueueInput{
@@ -114,20 +116,20 @@ func resourceGameSessionQueueCreate(ctx context.Context, d *schema.ResourceData,
 		input.NotificationTarget = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateGameSessionQueueWithContext(ctx, input)
+	output, err := conn.CreateGameSessionQueue(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating GameLift Game Session Queue (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.GameSessionQueue.Name))
+	d.SetId(aws.ToString(output.GameSessionQueue.Name))
 
 	return append(diags, resourceGameSessionQueueRead(ctx, d, meta)...)
 }
 
 func resourceGameSessionQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
+	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
 	sessionQueue, err := FindGameSessionQueueByName(ctx, conn, d.Id())
 
@@ -141,7 +143,7 @@ func resourceGameSessionQueueRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading GameLift Game Session Queue (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(sessionQueue.GameSessionQueueArn)
+	arn := aws.ToString(sessionQueue.GameSessionQueueArn)
 	d.Set(names.AttrARN, arn)
 	d.Set("custom_event_data", sessionQueue.CustomEventData)
 	d.Set(names.AttrName, sessionQueue.Name)
@@ -159,7 +161,7 @@ func resourceGameSessionQueueRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceGameSessionQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
+	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &gamelift.UpdateGameSessionQueueInput{
@@ -177,7 +179,7 @@ func resourceGameSessionQueueUpdate(ctx context.Context, d *schema.ResourceData,
 			input.NotificationTarget = aws.String(v.(string))
 		}
 
-		_, err := conn.UpdateGameSessionQueueWithContext(ctx, input)
+		_, err := conn.UpdateGameSessionQueue(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating GameLift Game Session Queue (%s): %s", d.Id(), err)
@@ -189,14 +191,14 @@ func resourceGameSessionQueueUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceGameSessionQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
+	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
 	log.Printf("[INFO] Deleting GameLift Session Queue: %s", d.Id())
-	_, err := conn.DeleteGameSessionQueueWithContext(ctx, &gamelift.DeleteGameSessionQueueInput{
+	_, err := conn.DeleteGameSessionQueue(ctx, &gamelift.DeleteGameSessionQueueInput{
 		Name: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
@@ -216,14 +218,14 @@ func resourceGameSessionQueueDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func FindGameSessionQueueByName(ctx context.Context, conn *gamelift.GameLift, name string) (*gamelift.GameSessionQueue, error) {
+func FindGameSessionQueueByName(ctx context.Context, conn *gamelift.Client, name string) (*awstypes.GameSessionQueue, error) {
 	input := &gamelift.DescribeGameSessionQueuesInput{
-		Names: aws.StringSlice([]string{name}),
+		Names: []string{name},
 	}
 
-	output, err := conn.DescribeGameSessionQueuesWithContext(ctx, input)
+	output, err := conn.DescribeGameSessionQueues(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -245,56 +247,56 @@ func FindGameSessionQueueByName(ctx context.Context, conn *gamelift.GameLift, na
 	return output.GameSessionQueues[0], nil
 }
 
-func flattenGameSessionQueueDestinations(destinations []*gamelift.GameSessionQueueDestination) []interface{} {
+func flattenGameSessionQueueDestinations(destinations []*awstypes.GameSessionQueueDestination) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, destination := range destinations {
 		if destination == nil {
 			continue
 		}
-		l = append(l, aws.StringValue(destination.DestinationArn))
+		l = append(l, aws.ToString(destination.DestinationArn))
 	}
 
 	return l
 }
 
-func flattenPlayerLatencyPolicies(playerLatencyPolicies []*gamelift.PlayerLatencyPolicy) []interface{} {
+func flattenPlayerLatencyPolicies(playerLatencyPolicies []*awstypes.PlayerLatencyPolicy) []interface{} {
 	l := make([]interface{}, 0)
 	for _, policy := range playerLatencyPolicies {
 		m := map[string]interface{}{
-			"maximum_individual_player_latency_milliseconds": aws.Int64Value(policy.MaximumIndividualPlayerLatencyMilliseconds),
-			"policy_duration_seconds":                        aws.Int64Value(policy.PolicyDurationSeconds),
+			"maximum_individual_player_latency_milliseconds": aws.ToInt64(policy.MaximumIndividualPlayerLatencyMilliseconds),
+			"policy_duration_seconds":                        aws.ToInt64(policy.PolicyDurationSeconds),
 		}
 		l = append(l, m)
 	}
 	return l
 }
 
-func expandGameSessionQueueDestinations(destinationsMap []interface{}) []*gamelift.GameSessionQueueDestination {
+func expandGameSessionQueueDestinations(destinationsMap []interface{}) []*awstypes.GameSessionQueueDestination {
 	if len(destinationsMap) < 1 {
 		return nil
 	}
-	var destinations []*gamelift.GameSessionQueueDestination
+	var destinations []*awstypes.GameSessionQueueDestination
 	for _, destination := range destinationsMap {
 		destinations = append(
 			destinations,
-			&gamelift.GameSessionQueueDestination{
+			&awstypes.GameSessionQueueDestination{
 				DestinationArn: aws.String(destination.(string)),
 			})
 	}
 	return destinations
 }
 
-func expandGameSessionPlayerLatencyPolicies(destinationsPlayerLatencyPolicyMap []interface{}) []*gamelift.PlayerLatencyPolicy {
+func expandGameSessionPlayerLatencyPolicies(destinationsPlayerLatencyPolicyMap []interface{}) []*awstypes.PlayerLatencyPolicy {
 	if len(destinationsPlayerLatencyPolicyMap) < 1 {
 		return nil
 	}
-	var playerLatencyPolicies []*gamelift.PlayerLatencyPolicy
+	var playerLatencyPolicies []*awstypes.PlayerLatencyPolicy
 	for _, playerLatencyPolicy := range destinationsPlayerLatencyPolicyMap {
 		item := playerLatencyPolicy.(map[string]interface{})
 		playerLatencyPolicies = append(
 			playerLatencyPolicies,
-			&gamelift.PlayerLatencyPolicy{
+			&awstypes.PlayerLatencyPolicy{
 				MaximumIndividualPlayerLatencyMilliseconds: aws.Int64(int64(item["maximum_individual_player_latency_milliseconds"].(int))),
 				PolicyDurationSeconds:                      aws.Int64(int64(item["policy_duration_seconds"].(int))),
 			})

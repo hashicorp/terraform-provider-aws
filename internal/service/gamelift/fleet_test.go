@@ -9,8 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/gamelift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,8 +28,8 @@ func TestDiffPortSettings(t *testing.T) {
 	testCases := []struct {
 		Old           []interface{}
 		New           []interface{}
-		ExpectedAuths []*gamelift.IpPermission
-		ExpectedRevs  []*gamelift.IpPermission
+		ExpectedAuths []*awstypes.IpPermission
+		ExpectedRevs  []*awstypes.IpPermission
 	}{
 		{ // No change
 			Old: []interface{}{
@@ -47,8 +48,8 @@ func TestDiffPortSettings(t *testing.T) {
 					"to_port":          8443,
 				},
 			},
-			ExpectedAuths: []*gamelift.IpPermission{},
-			ExpectedRevs:  []*gamelift.IpPermission{},
+			ExpectedAuths: []*awstypes.IpPermission{},
+			ExpectedRevs:  []*awstypes.IpPermission{},
 		},
 		{ // Addition
 			Old: []interface{}{
@@ -73,7 +74,7 @@ func TestDiffPortSettings(t *testing.T) {
 					"to_port":          8888,
 				},
 			},
-			ExpectedAuths: []*gamelift.IpPermission{
+			ExpectedAuths: []*awstypes.IpPermission{
 				{
 					FromPort: aws.Int64(8888),
 					IpRange:  aws.String("192.168.0.0/24"),
@@ -81,7 +82,7 @@ func TestDiffPortSettings(t *testing.T) {
 					ToPort:   aws.Int64(8888),
 				},
 			},
-			ExpectedRevs: []*gamelift.IpPermission{},
+			ExpectedRevs: []*awstypes.IpPermission{},
 		},
 		{ // Removal
 			Old: []interface{}{
@@ -93,8 +94,8 @@ func TestDiffPortSettings(t *testing.T) {
 				},
 			},
 			New:           []interface{}{},
-			ExpectedAuths: []*gamelift.IpPermission{},
-			ExpectedRevs: []*gamelift.IpPermission{
+			ExpectedAuths: []*awstypes.IpPermission{},
+			ExpectedRevs: []*awstypes.IpPermission{
 				{
 					FromPort: aws.Int64(8443),
 					IpRange:  aws.String("192.168.0.0/24"),
@@ -120,7 +121,7 @@ func TestDiffPortSettings(t *testing.T) {
 					"to_port":          8443,
 				},
 			},
-			ExpectedAuths: []*gamelift.IpPermission{
+			ExpectedAuths: []*awstypes.IpPermission{
 				{
 					FromPort: aws.Int64(8443),
 					IpRange:  aws.String("192.168.0.0/24"),
@@ -128,7 +129,7 @@ func TestDiffPortSettings(t *testing.T) {
 					ToPort:   aws.Int64(8443),
 				},
 			},
-			ExpectedRevs: []*gamelift.IpPermission{
+			ExpectedRevs: []*awstypes.IpPermission{
 				{
 					FromPort: aws.Int64(8443),
 					IpRange:  aws.String("192.168.0.0/24"),
@@ -162,7 +163,7 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf gamelift.FleetAttributes
+	var conf awstypes.FleetAttributes
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -190,7 +191,7 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
@@ -257,7 +258,7 @@ func TestAccGameLiftFleet_tags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf gamelift.FleetAttributes
+	var conf awstypes.FleetAttributes
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -284,7 +285,7 @@ func TestAccGameLiftFleet_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
@@ -332,7 +333,7 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf gamelift.FleetAttributes
+	var conf awstypes.FleetAttributes
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -365,7 +366,7 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
@@ -479,7 +480,7 @@ func TestAccGameLiftFleet_cert(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf gamelift.FleetAttributes
+	var conf awstypes.FleetAttributes
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -506,7 +507,7 @@ func TestAccGameLiftFleet_cert(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
@@ -537,7 +538,7 @@ func TestAccGameLiftFleet_script(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf gamelift.FleetAttributes
+	var conf awstypes.FleetAttributes
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -546,7 +547,7 @@ func TestAccGameLiftFleet_script(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
@@ -591,7 +592,7 @@ func TestAccGameLiftFleet_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf gamelift.FleetAttributes
+	var conf awstypes.FleetAttributes
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -618,7 +619,7 @@ func TestAccGameLiftFleet_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
@@ -638,7 +639,7 @@ func TestAccGameLiftFleet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckFleetExists(ctx context.Context, n string, res *gamelift.FleetAttributes) resource.TestCheckFunc {
+func testAccCheckFleetExists(ctx context.Context, n string, res *awstypes.FleetAttributes) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -649,14 +650,14 @@ func testAccCheckFleetExists(ctx context.Context, n string, res *gamelift.FleetA
 			return fmt.Errorf("No GameLift Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
 
 		fleet, err := tfgamelift.FindFleetByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		if aws.StringValue(fleet.FleetId) != rs.Primary.ID {
+		if aws.ToString(fleet.FleetId) != rs.Primary.ID {
 			return fmt.Errorf("GameLift Fleet not found")
 		}
 
@@ -668,7 +669,7 @@ func testAccCheckFleetExists(ctx context.Context, n string, res *gamelift.FleetA
 
 func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_gamelift_fleet" {

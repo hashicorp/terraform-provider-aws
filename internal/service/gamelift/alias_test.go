@@ -9,21 +9,23 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/gamelift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGameLiftAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf gamelift.Alias
+	var conf awstypes.Alias
 
 	rString := sdkacctest.RandString(8)
 	resourceName := "aws_gamelift_alias.test"
@@ -39,7 +41,7 @@ func TestAccGameLiftAlias_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
@@ -83,7 +85,7 @@ func TestAccGameLiftAlias_basic(t *testing.T) {
 
 func TestAccGameLiftAlias_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf gamelift.Alias
+	var conf awstypes.Alias
 
 	resourceName := "aws_gamelift_alias.test"
 	aliasName := sdkacctest.RandomWithPrefix("tf-acc-alias")
@@ -91,7 +93,7 @@ func TestAccGameLiftAlias_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
@@ -138,7 +140,7 @@ func TestAccGameLiftAlias_fleetRouting(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf gamelift.Alias
+	var conf awstypes.Alias
 
 	rString := sdkacctest.RandString(8)
 
@@ -169,7 +171,7 @@ func TestAccGameLiftAlias_fleetRouting(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
@@ -200,7 +202,7 @@ func TestAccGameLiftAlias_fleetRouting(t *testing.T) {
 
 func TestAccGameLiftAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf gamelift.Alias
+	var conf awstypes.Alias
 
 	rString := sdkacctest.RandString(8)
 	resourceName := "aws_gamelift_alias.test"
@@ -212,7 +214,7 @@ func TestAccGameLiftAlias_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
@@ -231,19 +233,19 @@ func TestAccGameLiftAlias_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAliasDisappears(ctx context.Context, res *gamelift.Alias) resource.TestCheckFunc {
+func testAccCheckAliasDisappears(ctx context.Context, res *awstypes.Alias) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
 
 		input := &gamelift.DeleteAliasInput{AliasId: res.AliasId}
 
-		_, err := conn.DeleteAliasWithContext(ctx, input)
+		_, err := conn.DeleteAlias(ctx, input)
 
 		return err
 	}
 }
 
-func testAccCheckAliasExists(ctx context.Context, n string, res *gamelift.Alias) resource.TestCheckFunc {
+func testAccCheckAliasExists(ctx context.Context, n string, res *awstypes.Alias) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -254,9 +256,9 @@ func testAccCheckAliasExists(ctx context.Context, n string, res *gamelift.Alias)
 			return fmt.Errorf("No GameLift Alias ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
 
-		out, err := conn.DescribeAliasWithContext(ctx, &gamelift.DescribeAliasInput{
+		out, err := conn.DescribeAlias(ctx, &gamelift.DescribeAliasInput{
 			AliasId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
@@ -276,21 +278,21 @@ func testAccCheckAliasExists(ctx context.Context, n string, res *gamelift.Alias)
 
 func testAccCheckAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_gamelift_alias" {
 				continue
 			}
 
-			_, err := conn.DescribeAliasWithContext(ctx, &gamelift.DescribeAliasInput{
+			_, err := conn.DescribeAlias(ctx, &gamelift.DescribeAliasInput{
 				AliasId: aws.String(rs.Primary.ID),
 			})
 			if err == nil {
 				return fmt.Errorf("GameLift Alias still exists")
 			}
 
-			if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
+			if errs.IsA[*awstypes.NotFoundException](err) {
 				return nil
 			}
 
