@@ -31,7 +31,7 @@ func testAccServicecatalogPortfolioStatus_basic(t *testing.T) {
 				Config: testAccServicecatalogPortfolioStatusConfigConfig_basic("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicecatalogPortfolioStatusExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "status", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Enabled"),
 				),
 			},
 			{
@@ -43,14 +43,14 @@ func testAccServicecatalogPortfolioStatus_basic(t *testing.T) {
 				Config: testAccServicecatalogPortfolioStatusConfigConfig_basic("Disabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicecatalogPortfolioStatusExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "status", "Disabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Disabled"),
 				),
 			},
 			{
 				Config: testAccServicecatalogPortfolioStatusConfigConfig_basic("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicecatalogPortfolioStatusExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "status", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Enabled"),
 				),
 			},
 		},

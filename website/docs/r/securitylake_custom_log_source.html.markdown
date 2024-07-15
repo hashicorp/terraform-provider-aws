@@ -10,6 +10,8 @@ description: |-
 
 Terraform resource for managing an AWS Security Lake Custom Log Source.
 
+~> **NOTE:** The underlying `aws_securitylake_data_lake` must be configured before creating the `aws_securitylake_custom_log_source`. Use a `depends_on` statement.
+
 ## Example Usage
 
 ### Basic Usage
@@ -30,6 +32,8 @@ resource "aws_securitylake_custom_log_source" "example" {
       principal   = "123456789012"
     }
   }
+
+  depends_on = [aws_securitylake_data_lake.example]
 }
 ```
 
@@ -43,8 +47,10 @@ This resource supports the following arguments:
     * `provider_identity` - (Required) The identity of the log provider for the third-party custom source.
         * `external_id` - (Required) The external ID used to estalish trust relationship with the AWS identity.
         * `principal` - (Required) The AWS identity principal.
-* `event_classes` - (Required) The Open Cybersecurity Schema Framework (OCSF) event classes which describes the type of data that the custom source will send to Security Lake.
-* `source_name` - (Required) Specify the name for a third-party custom source. This must be a Regionally unique value.
+* `event_classes` - (Optional) The Open Cybersecurity Schema Framework (OCSF) event classes which describes the type of data that the custom source will send to Security Lake.
+* `source_name` - (Required) Specify the name for a third-party custom source.
+  This must be a Regionally unique value.
+  Has a maximum length of 20.
 * `source_version` - (Optional) Specify the source version for the third-party custom source, to limit log collection to a specific version of custom data source.
 
 ## Attribute Reference

@@ -37,13 +37,13 @@ func testAccPhoneNumber_basic(t *testing.T) {
 				Config: testAccPhoneNumberConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "country_code", "US"),
 					resource.TestCheckResourceAttrSet(resourceName, "phone_number"),
-					resource.TestCheckResourceAttr(resourceName, "status.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "status.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "status.0.status", connect.PhoneNumberWorkflowStatusClaimed),
-					resource.TestCheckResourceAttrPair(resourceName, "target_arn", "aws_connect_instance.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", connect.PhoneNumberTypeDid),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_connect_instance.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, connect.PhoneNumberTypeDid),
 				),
 			},
 			{
@@ -72,7 +72,7 @@ func testAccPhoneNumber_description(t *testing.T) {
 				Config: testAccPhoneNumberConfig_description(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 				),
 			},
 			{
@@ -103,14 +103,14 @@ func testAccPhoneNumber_prefix(t *testing.T) {
 					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "phone_number"),
 					resource.TestMatchResourceAttr(resourceName, "phone_number", regexache.MustCompile(fmt.Sprintf("\\%s[0-9]{0,10}", prefix))),
-					resource.TestCheckResourceAttr(resourceName, "prefix", prefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrefix, prefix),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"prefix"},
+				ImportStateVerifyIgnore: []string{names.AttrPrefix},
 			},
 		},
 	})
@@ -133,7 +133,7 @@ func testAccPhoneNumber_targetARN(t *testing.T) {
 				Config: testAccPhoneNumberConfig_targetARN(rName, rName2, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "target_arn", "aws_connect_instance.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_connect_instance.test", names.AttrARN),
 				),
 			},
 			{
@@ -145,7 +145,7 @@ func testAccPhoneNumber_targetARN(t *testing.T) {
 				Config: testAccPhoneNumberConfig_targetARN(rName, rName2, "second"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "target_arn", "aws_connect_instance.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_connect_instance.test2", names.AttrARN),
 				),
 			},
 		},
@@ -165,11 +165,11 @@ func testAccPhoneNumber_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPhoneNumberConfig_tags1(rName, "key1", "value1"),
+				Config: testAccPhoneNumberConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -178,20 +178,20 @@ func testAccPhoneNumber_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPhoneNumberConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPhoneNumberConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccPhoneNumberConfig_tags1(rName, "key2", "value2"),
+				Config: testAccPhoneNumberConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

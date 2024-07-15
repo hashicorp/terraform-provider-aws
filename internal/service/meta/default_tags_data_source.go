@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource
 func newDataSourceDefaultTags(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceDefaultTags{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }
@@ -38,11 +38,11 @@ func (d *dataSourceDefaultTags) Metadata(_ context.Context, request datasource.M
 func (d *dataSourceDefaultTags) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsAttributeComputedOnly(),
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }

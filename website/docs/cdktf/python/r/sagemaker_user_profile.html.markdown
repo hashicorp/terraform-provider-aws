@@ -105,6 +105,7 @@ This resource supports the following arguments:
 
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+* `custom_image` - (Optional) A list of custom SageMaker images that are configured to run as a CodeEditor app. see [Custom Image](#custom_image) below.
 
 #### r_session_app_settings
 
@@ -144,6 +145,7 @@ This resource supports the following arguments:
 #### canvas_app_settings
 
 * `direct_deploy_settings` - (Optional)The model deployment settings for the SageMaker Canvas application. See [Direct Deploy Settings](#direct_deploy_settings) below.
+* `generative_ai_settings` - (Optional) The generative AI settings for the SageMaker Canvas application. See [Generative AI Settings](#generative_ai_settings) below.
 * `identity_provider_oauth_settings` - (Optional) The settings for connecting to an external data source with OAuth. See [Identity Provider OAuth Settings](#identity_provider_oauth_settings) below.
 * `kendra_settings` - (Optional) The settings for document querying. See [Kendra Settings](#kendra_settings) below.
 * `model_register_settings` - (Optional) The model registry settings for the SageMaker Canvas application. See [Model Register Settings](#model_register_settings) below.
@@ -158,7 +160,11 @@ This resource supports the following arguments:
 
 ##### direct_deploy_settings
 
-* `status` - (Optional)Describes whether model deployment permissions are enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
+* `status` - (Optional) Describes whether model deployment permissions are enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
+
+##### generative_ai_settings
+
+* `amazon_bedrock_role_arn` - (Optional) The ARN of an Amazon Web Services IAM role that allows fine-tuning of large language models (LLMs) in Amazon Bedrock. The IAM role should have Amazon S3 read and write permissions, as well as a trust relationship that establishes bedrock.amazonaws.com as a service principal.
 
 ##### kendra_settings
 
@@ -232,4 +238,4 @@ Using `terraform import`, import SageMaker User Profiles using the `arn`. For ex
 % terraform import aws_sagemaker_user_profile.test_user_profile arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-89170e8ec3e6388d1024c7b591c16d2a106b1b0472a06cdf385d39ee2d6db2c9 -->
+<!-- cache-key: cdktf-0.20.1 input-00a7a86b7587affc3ac29231436801eab67a154a7ae71695f9cb70eb4c202be3 -->

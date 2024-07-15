@@ -240,6 +240,12 @@ service/applicationinsights:
           - any-glob-to-any-file:
               - 'internal/service/applicationinsights/**/*'
               - 'website/**/applicationinsights_*'
+service/applicationsignals:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/applicationsignals/**/*'
+              - 'website/**/applicationsignals_*'
 service/appmesh:
   - any:
       - changed-files:
@@ -324,7 +330,7 @@ service/bedrockagent:
       - changed-files:
           - any-glob-to-any-file:
               - 'internal/service/bedrockagent/**/*'
-              - 'website/**/bedrock_agent_*'
+              - 'website/**/bedrockagent_*'
 service/billingconductor:
   - any:
       - changed-files:
@@ -349,6 +355,12 @@ service/ce:
           - any-glob-to-any-file:
               - 'internal/service/ce/**/*'
               - 'website/**/ce_*'
+service/chatbot:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/chatbot/**/*'
+              - 'website/**/chatbot_*'
 service/chime:
   - any:
       - changed-files:
@@ -1526,6 +1538,12 @@ service/networkmanager:
           - any-glob-to-any-file:
               - 'internal/service/networkmanager/**/*'
               - 'website/**/networkmanager_*'
+service/networkmonitor:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/networkmonitor/**/*'
+              - 'website/**/networkmonitor_*'
 service/nimble:
   - any:
       - changed-files:
@@ -1794,6 +1812,12 @@ service/route53domains:
           - any-glob-to-any-file:
               - 'internal/service/route53domains/**/*'
               - 'website/**/route53domains_*'
+service/route53profiles:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/route53profiles/**/*'
+              - 'website/**/route53profiles_*'
 service/route53recoverycluster:
   - any:
       - changed-files:
@@ -2087,6 +2111,12 @@ service/textract:
           - any-glob-to-any-file:
               - 'internal/service/textract/**/*'
               - 'website/**/textract_*'
+service/timestreaminfluxdb:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/timestreaminfluxdb/**/*'
+              - 'website/**/timestreaminfluxdb_*'
 service/timestreamquery:
   - any:
       - changed-files:

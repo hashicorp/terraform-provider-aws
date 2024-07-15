@@ -25,13 +25,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var (
 	subscriptionSchema = map[string]*schema.Schema{
-		"arn": {
+		names.AttrARN: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -55,7 +57,7 @@ var (
 				return json
 			},
 		},
-		"endpoint": {
+		names.AttrEndpoint: {
 			Type:     schema.TypeString,
 			Required: true,
 			ForceNew: true,
@@ -82,7 +84,7 @@ var (
 			Computed:     true, // When filter_policy is set, this defaults to MessageAttributes.
 			ValidateFunc: validation.StringInSlice(subscriptionFilterPolicyScope_Values(), false),
 		},
-		"owner_id": {
+		names.AttrOwnerID: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -90,7 +92,7 @@ var (
 			Type:     schema.TypeBool,
 			Computed: true,
 		},
-		"protocol": {
+		names.AttrProtocol: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -128,7 +130,7 @@ var (
 			Optional:     true,
 			ValidateFunc: verify.ValidARN,
 		},
-		"topic_arn": {
+		names.AttrTopicARN: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -137,20 +139,20 @@ var (
 	}
 
 	subscriptionAttributeMap = attrmap.New(map[string]string{
-		"arn":                            subscriptionAttributeNameSubscriptionARN,
+		names.AttrARN:                    subscriptionAttributeNameSubscriptionARN,
 		"confirmation_was_authenticated": subscriptionAttributeNameConfirmationWasAuthenticated,
 		"delivery_policy":                subscriptionAttributeNameDeliveryPolicy,
-		"endpoint":                       subscriptionAttributeNameEndpoint,
+		names.AttrEndpoint:               subscriptionAttributeNameEndpoint,
 		"filter_policy":                  subscriptionAttributeNameFilterPolicy,
 		"filter_policy_scope":            subscriptionAttributeNameFilterPolicyScope,
-		"owner_id":                       subscriptionAttributeNameOwner,
+		names.AttrOwnerID:                subscriptionAttributeNameOwner,
 		"pending_confirmation":           subscriptionAttributeNamePendingConfirmation,
-		"protocol":                       subscriptionAttributeNameProtocol,
+		names.AttrProtocol:               subscriptionAttributeNameProtocol,
 		"raw_message_delivery":           subscriptionAttributeNameRawMessageDelivery,
 		"redrive_policy":                 subscriptionAttributeNameRedrivePolicy,
 		"replay_policy":                  subscriptionAttributeNameReplayPolicy,
 		"subscription_role_arn":          subscriptionAttributeNameSubscriptionRoleARN,
-		"topic_arn":                      subscriptionAttributeNameTopicARN,
+		names.AttrTopicARN:               subscriptionAttributeNameTopicARN,
 	}, subscriptionSchema).WithMissingSetToNil("*")
 )
 
@@ -173,11 +175,12 @@ func resourceTopicSubscription() *schema.Resource {
 }
 
 func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	attributes, err := subscriptionAttributeMap.ResourceDataToAPIAttributesCreate(d)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// Endpoint, Protocol and TopicArn are not passed in Attributes.
@@ -185,19 +188,19 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	delete(attributes, subscriptionAttributeNameProtocol)
 	delete(attributes, subscriptionAttributeNameTopicARN)
 
-	protocol := d.Get("protocol").(string)
+	protocol := d.Get(names.AttrProtocol).(string)
 	input := &sns.SubscribeInput{
 		Attributes:            attributes,
-		Endpoint:              aws.String(d.Get("endpoint").(string)),
+		Endpoint:              aws.String(d.Get(names.AttrEndpoint).(string)),
 		Protocol:              aws.String(protocol),
 		ReturnSubscriptionArn: true, // even if not confirmed, will get ARN
-		TopicArn:              aws.String(d.Get("topic_arn").(string)),
+		TopicArn:              aws.String(d.Get(names.AttrTopicARN).(string)),
 	}
 
 	output, err := conn.Subscribe(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating SNS Topic Subscription: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SNS Topic Subscription: %s", err)
 	}
 
 	d.SetId(aws.ToString(output.SubscriptionArn))
@@ -208,7 +211,7 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 		waitForConfirmation = false
 	}
 
-	if strings.Contains(protocol, "email") {
+	if strings.Contains(protocol, names.AttrEmail) {
 		waitForConfirmation = false
 	}
 
@@ -219,14 +222,15 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if _, err := waitSubscriptionConfirmed(ctx, conn, d.Id(), timeout); err != nil {
-			return diag.Errorf("waiting for SNS Topic Subscription (%s) confirmation: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SNS Topic Subscription (%s) confirmation: %s", d.Id(), err)
 		}
 	}
 
-	return resourceTopicSubscriptionRead(ctx, d, meta)
+	return append(diags, resourceTopicSubscriptionRead(ctx, d, meta)...)
 }
 
 func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, subscriptionCreateTimeout, func() (interface{}, error) {
@@ -236,36 +240,38 @@ func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SNS Topic Subscription %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading SNS Topic Subscription (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SNS Topic Subscription (%s): %s", d.Id(), err)
 	}
 
 	attributes := outputRaw.(map[string]string)
 
-	return diag.FromErr(subscriptionAttributeMap.APIAttributesToResourceData(attributes, d))
+	return sdkdiag.AppendFromErr(diags, subscriptionAttributeMap.APIAttributesToResourceData(attributes, d))
 }
 
 func resourceTopicSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	attributes, err := subscriptionAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	err = putSubscriptionAttributes(ctx, conn, d.Id(), attributes)
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return resourceTopicSubscriptionRead(ctx, d, meta)
+	return append(diags, resourceTopicSubscriptionRead(ctx, d, meta)...)
 }
 
 func resourceTopicSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SNS Topic Subscription: %s", d.Id())
@@ -274,18 +280,18 @@ func resourceTopicSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 	})
 
 	if errs.IsAErrorMessageContains[*types.InvalidParameterException](err, "Cannot unsubscribe a subscription that is pending confirmation") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting SNS Topic Subscription (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SNS Topic Subscription (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitSubscriptionDeleted(ctx, conn, d.Id(), subscriptionDeleteTimeout); err != nil {
-		return diag.Errorf("waiting for SNS Topic Subscription (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SNS Topic Subscription (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func putSubscriptionAttributes(ctx context.Context, conn *sns.Client, arn string, attributes map[string]string) error {

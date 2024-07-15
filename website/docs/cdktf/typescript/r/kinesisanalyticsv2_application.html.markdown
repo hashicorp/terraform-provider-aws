@@ -301,9 +301,10 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) The name of the application.
-* `runtimeEnvironment` - (Required) The runtime environment for the application. Valid values: `SQL-1_0`, `FLINK-1_6`, `FLINK-1_8`, `FLINK-1_11`, `FLINK-1_13`, `FLINK-1_15`, `FLINK-1_18`.
+* `runtimeEnvironment` - (Required) The runtime environment for the application. Valid values: `SQL-1_0`, `FLINK-1_6`, `FLINK-1_8`, `FLINK-1_11`, `FLINK-1_13`, `FLINK-1_15`, `FLINK-1_18`, `FLINK-1_19`.
 * `serviceExecutionRole` - (Required) The ARN of the [IAM role](/docs/providers/aws/r/iam_role.html) used by the application to access Kinesis data streams, Kinesis Data Firehose delivery streams, Amazon S3 objects, and other external resources.
 * `applicationConfiguration` - (Optional) The application's configuration
+* `applicationMode` - (Optional) The application's mode. Valid values are `STREAMING`, `INTERACTIVE`.
 * `cloudwatchLoggingOptions` - (Optional) A [CloudWatch log stream](/docs/providers/aws/r/cloudwatch_log_stream.html) to monitor application configuration errors.
 * `description` - (Optional) A summary description of the application.
 * `forceStop` - (Optional) Whether to force stop an unresponsive Flink-based application.
@@ -568,4 +569,4 @@ Using `terraform import`, import `aws_kinesisanalyticsv2_application` using the 
 % terraform import aws_kinesisanalyticsv2_application.example arn:aws:kinesisanalytics:us-west-2:123456789012:application/example-sql-application
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-707f67e25bff11b3a6609e72e7b414e027d3fa539deffe22962d49135b154c39 -->
+<!-- cache-key: cdktf-0.20.1 input-285a8300a0be803744a942b4b82c971baa2718e2a1bae6de5e6ef6e2cab2fe72 -->

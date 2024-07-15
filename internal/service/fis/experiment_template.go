@@ -53,7 +53,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -66,27 +66,27 @@ func ResourceExperimentTemplate() *schema.Resource {
 								validation.StringMatch(regexache.MustCompile(`^aws:[0-9a-z-]+:[0-9A-Za-z/-]+$`), "must be in the format of aws:service-name:action-name"),
 							),
 						},
-						"description": {
+						names.AttrDescription: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 512),
 						},
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 64),
 						},
-						"parameter": {
+						names.AttrParameter: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(0, 64),
 									},
-									"value": {
+									names.AttrValue: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -103,18 +103,18 @@ func ResourceExperimentTemplate() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(0, 64),
 							},
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1, //API will accept more, but return only 1
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validExperimentTemplateActionTargetKey(),
 									},
-									"value": {
+									names.AttrValue: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(0, 64),
@@ -125,10 +125,30 @@ func ResourceExperimentTemplate() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
+			},
+			"experiment_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"account_targeting": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.AccountTargeting](),
+						},
+						"empty_target_resolution_mode": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.EmptyTargetResolutionMode](),
+						},
+					},
+				},
 			},
 			"log_configuration": {
 				Type:     schema.TypeList,
@@ -159,11 +179,11 @@ func ResourceExperimentTemplate() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -173,27 +193,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 					},
 				},
 			},
-			"experiment_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"account_targeting": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.AccountTargeting](),
-						},
-						"empty_target_resolution_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.EmptyTargetResolutionMode](),
-						},
-					},
-				},
-			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -203,12 +203,12 @@ func ResourceExperimentTemplate() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"source": {
+						names.AttrSource: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validExperimentTemplateStopConditionSource(),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -216,22 +216,22 @@ func ResourceExperimentTemplate() *schema.Resource {
 					},
 				},
 			},
-			"target": {
+			names.AttrTarget: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"path": {
+									names.AttrPath: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(0, 256),
 									},
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeSet,
 										Required: true,
 										Set:      schema.HashString,
@@ -243,12 +243,12 @@ func ResourceExperimentTemplate() *schema.Resource {
 								},
 							},
 						},
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 64),
 						},
-						"parameters": {
+						names.AttrParameters: {
 							Type:     schema.TypeMap,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -269,12 +269,12 @@ func ResourceExperimentTemplate() *schema.Resource {
 							MaxItems: 50,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(0, 128),
 									},
-									"value": {
+									names.AttrValue: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(0, 256),
@@ -282,7 +282,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 								},
 							},
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 64),
@@ -310,11 +310,11 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).FISClient(ctx)
 
 	input := &fis.CreateExperimentTemplateInput{
-		Actions:          expandExperimentTemplateActions(d.Get("action").(*schema.Set)),
+		Actions:          expandExperimentTemplateActions(d.Get(names.AttrAction).(*schema.Set)),
 		ClientToken:      aws.String(id.UniqueId()),
-		Description:      aws.String(d.Get("description").(string)),
+		Description:      aws.String(d.Get(names.AttrDescription).(string)),
 		LogConfiguration: expandExperimentTemplateLogConfiguration(d.Get("log_configuration").([]interface{})),
-		RoleArn:          aws.String(d.Get("role_arn").(string)),
+		RoleArn:          aws.String(d.Get(names.AttrRoleARN).(string)),
 		StopConditions:   expandExperimentTemplateStopConditions(d.Get("stop_condition").(*schema.Set)),
 		Tags:             getTagsIn(ctx),
 	}
@@ -323,15 +323,15 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 		input.ExperimentOptions = expandCreateExperimentTemplateExperimentOptionsInput(v.([]interface{}))
 	}
 
-	targets, err := expandExperimentTemplateTargets(d.Get("target").(*schema.Set))
+	targets, err := expandExperimentTemplateTargets(d.Get(names.AttrTarget).(*schema.Set))
 	if err != nil {
-		return create.AppendDiagError(diags, names.FIS, create.ErrActionCreating, ResNameExperimentTemplate, d.Get("description").(string), err)
+		return create.AppendDiagError(diags, names.FIS, create.ErrActionCreating, ResNameExperimentTemplate, d.Get(names.AttrDescription).(string), err)
 	}
 	input.Targets = targets
 
 	output, err := conn.CreateExperimentTemplate(ctx, input)
 	if err != nil {
-		return create.AppendDiagError(diags, names.FIS, create.ErrActionCreating, ResNameExperimentTemplate, d.Get("description").(string), err)
+		return create.AppendDiagError(diags, names.FIS, create.ErrActionCreating, ResNameExperimentTemplate, d.Get(names.AttrDescription).(string), err)
 	}
 
 	d.SetId(aws.ToString(output.ExperimentTemplate.Id))
@@ -370,27 +370,27 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.SetId(aws.ToString(experimentTemplate.Id))
-	d.Set("role_arn", experimentTemplate.RoleArn)
-	d.Set("description", experimentTemplate.Description)
+	d.Set(names.AttrRoleARN, experimentTemplate.RoleArn)
+	d.Set(names.AttrDescription, experimentTemplate.Description)
 
-	if err := d.Set("action", flattenExperimentTemplateActions(experimentTemplate.Actions)); err != nil {
-		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), "action", err)
-	}
-
-	if err := d.Set("log_configuration", flattenExperimentTemplateLogConfiguration(experimentTemplate.LogConfiguration)); err != nil {
-		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), "log_configuration", err)
+	if err := d.Set(names.AttrAction, flattenExperimentTemplateActions(experimentTemplate.Actions)); err != nil {
+		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), names.AttrAction, err)
 	}
 
 	if err := d.Set("experiment_options", flattenExperimentTemplateExperimentOptions(experimentTemplate.ExperimentOptions)); err != nil {
 		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), "experiment_options", err)
 	}
 
+	if err := d.Set("log_configuration", flattenExperimentTemplateLogConfiguration(experimentTemplate.LogConfiguration)); err != nil {
+		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), "log_configuration", err)
+	}
+
 	if err := d.Set("stop_condition", flattenExperimentTemplateStopConditions(experimentTemplate.StopConditions)); err != nil {
 		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), "stop_condition", err)
 	}
 
-	if err := d.Set("target", flattenExperimentTemplateTargets(experimentTemplate.Targets)); err != nil {
-		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), "target", err)
+	if err := d.Set(names.AttrTarget, flattenExperimentTemplateTargets(experimentTemplate.Targets)); err != nil {
+		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), names.AttrTarget, err)
 	}
 
 	setTagsOut(ctx, experimentTemplate.Tags)
@@ -403,17 +403,21 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 
 	conn := meta.(*conns.AWSClient).FISClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &fis.UpdateExperimentTemplateInput{
 			Id: aws.String(d.Id()),
 		}
 
-		if d.HasChange("action") {
-			input.Actions = expandExperimentTemplateActionsForUpdate(d.Get("action").(*schema.Set))
+		if d.HasChange(names.AttrAction) {
+			input.Actions = expandExperimentTemplateActionsForUpdate(d.Get(names.AttrAction).(*schema.Set))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		}
+
+		if d.HasChange("experiment_options") {
+			input.ExperimentOptions = expandUpdateExperimentTemplateExperimentOptionsInput(d.Get("experiment_options").([]interface{}))
 		}
 
 		if d.HasChange("log_configuration") {
@@ -421,25 +425,20 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 			input.LogConfiguration = config
 		}
 
-		if d.HasChange("role_arn") {
-			input.RoleArn = aws.String(d.Get("role_arn").(string))
+		if d.HasChange(names.AttrRoleARN) {
+			input.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 		}
 
 		if d.HasChange("stop_condition") {
 			input.StopConditions = expandExperimentTemplateStopConditionsForUpdate(d.Get("stop_condition").(*schema.Set))
 		}
 
-		if d.HasChange("target") {
-			targets, err := expandExperimentTemplateTargetsForUpdate(d.Get("target").(*schema.Set))
+		if d.HasChange(names.AttrTarget) {
+			targets, err := expandExperimentTemplateTargetsForUpdate(d.Get(names.AttrTarget).(*schema.Set))
 			if err != nil {
 				return create.AppendDiagError(diags, names.FIS, create.ErrActionUpdating, ResNameExperimentTemplate, d.Id(), err)
 			}
 			input.Targets = targets
-		}
-
-		if d.HasChange("experiment_options") {
-			experimentOptions := expandUpdateExperimentTemplateExperimentOptionsInput(d.Get("experiment_options").([]interface{}))
-			input.ExperimentOptions = experimentOptions
 		}
 
 		_, err := conn.UpdateExperimentTemplate(ctx, input)
@@ -490,11 +489,11 @@ func expandExperimentTemplateActions(l *schema.Set) map[string]types.CreateExper
 			config.ActionId = aws.String(v)
 		}
 
-		if v, ok := raw["description"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrDescription].(string); ok && v != "" {
 			config.Description = aws.String(v)
 		}
 
-		if v, ok := raw["parameter"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := raw[names.AttrParameter].(*schema.Set); ok && v.Len() > 0 {
 			config.Parameters = expandExperimentTemplateActionParameteres(v)
 		}
 
@@ -502,11 +501,11 @@ func expandExperimentTemplateActions(l *schema.Set) map[string]types.CreateExper
 			config.StartAfter = flex.ExpandStringValueSet(v)
 		}
 
-		if v, ok := raw["target"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := raw[names.AttrTarget].([]interface{}); ok && len(v) > 0 {
 			config.Targets = expandExperimentTemplateActionTargets(v)
 		}
 
-		if v, ok := raw["name"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrName].(string); ok && v != "" {
 			attrs[v] = config
 		}
 	}
@@ -529,11 +528,11 @@ func expandExperimentTemplateActionsForUpdate(l *schema.Set) map[string]types.Up
 			config.ActionId = aws.String(v)
 		}
 
-		if v, ok := raw["description"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrDescription].(string); ok && v != "" {
 			config.Description = aws.String(v)
 		}
 
-		if v, ok := raw["parameter"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := raw[names.AttrParameter].(*schema.Set); ok && v.Len() > 0 {
 			config.Parameters = expandExperimentTemplateActionParameteres(v)
 		}
 
@@ -541,311 +540,12 @@ func expandExperimentTemplateActionsForUpdate(l *schema.Set) map[string]types.Up
 			config.StartAfter = flex.ExpandStringValueSet(v)
 		}
 
-		if v, ok := raw["target"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := raw[names.AttrTarget].([]interface{}); ok && len(v) > 0 {
 			config.Targets = expandExperimentTemplateActionTargets(v)
 		}
 
-		if v, ok := raw["name"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrName].(string); ok && v != "" {
 			attrs[v] = config
-		}
-	}
-
-	return attrs
-}
-
-func expandExperimentTemplateStopConditions(l *schema.Set) []types.CreateExperimentTemplateStopConditionInput {
-	if l.Len() == 0 {
-		return nil
-	}
-
-	items := []types.CreateExperimentTemplateStopConditionInput{}
-
-	for _, m := range l.List() {
-		raw := m.(map[string]interface{})
-		config := types.CreateExperimentTemplateStopConditionInput{}
-
-		if v, ok := raw["source"].(string); ok && v != "" {
-			config.Source = aws.String(v)
-		}
-
-		if v, ok := raw["value"].(string); ok && v != "" {
-			config.Value = aws.String(v)
-		}
-
-		items = append(items, config)
-	}
-
-	return items
-}
-
-func expandExperimentTemplateLogConfiguration(l []interface{}) *types.CreateExperimentTemplateLogConfigurationInput {
-	if len(l) == 0 {
-		return nil
-	}
-
-	raw := l[0].(map[string]interface{})
-
-	config := types.CreateExperimentTemplateLogConfigurationInput{
-		LogSchemaVersion: aws.Int32(int32(raw["log_schema_version"].(int))),
-	}
-
-	if v, ok := raw["cloudwatch_logs_configuration"].([]interface{}); ok && len(v) > 0 {
-		config.CloudWatchLogsConfiguration = expandExperimentTemplateCloudWatchLogsConfiguration(v)
-	}
-
-	if v, ok := raw["s3_configuration"].([]interface{}); ok && len(v) > 0 {
-		config.S3Configuration = expandExperimentTemplateS3Configuration(v)
-	}
-
-	return &config
-}
-
-func expandExperimentTemplateCloudWatchLogsConfiguration(l []interface{}) *types.ExperimentTemplateCloudWatchLogsLogConfigurationInput {
-	if len(l) == 0 {
-		return nil
-	}
-
-	raw := l[0].(map[string]interface{})
-
-	config := types.ExperimentTemplateCloudWatchLogsLogConfigurationInput{
-		LogGroupArn: aws.String(raw["log_group_arn"].(string)),
-	}
-	return &config
-}
-
-func expandExperimentTemplateS3Configuration(l []interface{}) *types.ExperimentTemplateS3LogConfigurationInput {
-	if len(l) == 0 {
-		return nil
-	}
-
-	raw := l[0].(map[string]interface{})
-
-	config := types.ExperimentTemplateS3LogConfigurationInput{
-		BucketName: aws.String(raw["bucket_name"].(string)),
-	}
-	if v, ok := raw["prefix"].(string); ok && v != "" {
-		config.Prefix = aws.String(v)
-	}
-
-	return &config
-}
-
-func expandExperimentTemplateStopConditionsForUpdate(l *schema.Set) []types.UpdateExperimentTemplateStopConditionInput {
-	if l.Len() == 0 {
-		return nil
-	}
-
-	items := []types.UpdateExperimentTemplateStopConditionInput{}
-
-	for _, m := range l.List() {
-		raw := m.(map[string]interface{})
-		config := types.UpdateExperimentTemplateStopConditionInput{}
-
-		if v, ok := raw["source"].(string); ok && v != "" {
-			config.Source = aws.String(v)
-		}
-
-		if v, ok := raw["value"].(string); ok && v != "" {
-			config.Value = aws.String(v)
-		}
-
-		items = append(items, config)
-	}
-
-	return items
-}
-
-func expandExperimentTemplateTargets(l *schema.Set) (map[string]types.CreateExperimentTemplateTargetInput, error) {
-	if l.Len() == 0 {
-		//Even though a template with no targets is valid (eg. containing just aws:fis:wait) and the API reference states that targets is not required, the key still needs to be present.
-		return map[string]types.CreateExperimentTemplateTargetInput{}, nil
-	}
-
-	attrs := make(map[string]types.CreateExperimentTemplateTargetInput, l.Len())
-
-	for _, m := range l.List() {
-		raw := m.(map[string]interface{})
-		config := types.CreateExperimentTemplateTargetInput{}
-		var hasSeenResourceArns bool
-
-		if v, ok := raw["filter"].([]interface{}); ok && len(v) > 0 {
-			config.Filters = expandExperimentTemplateTargetFilters(v)
-		}
-
-		if v, ok := raw["resource_arns"].(*schema.Set); ok && v.Len() > 0 {
-			config.ResourceArns = flex.ExpandStringValueSet(v)
-			hasSeenResourceArns = true
-		}
-
-		if v, ok := raw["resource_tag"].(*schema.Set); ok && v.Len() > 0 {
-			//FIXME Rework this and use ConflictsWith once it supports lists
-			//https://github.com/hashicorp/terraform-plugin-sdk/issues/71
-			if hasSeenResourceArns {
-				return nil, errors.New("Only one of resource_arns, resource_tag can be set in a target block")
-			}
-			config.ResourceTags = expandExperimentTemplateTargetResourceTags(v)
-		}
-
-		if v, ok := raw["resource_type"].(string); ok && v != "" {
-			config.ResourceType = aws.String(v)
-		}
-
-		if v, ok := raw["selection_mode"].(string); ok && v != "" {
-			config.SelectionMode = aws.String(v)
-		}
-
-		if v, ok := raw["parameters"].(map[string]interface{}); ok && len(v) > 0 {
-			config.Parameters = flex.ExpandStringValueMap(v)
-		}
-
-		if v, ok := raw["name"].(string); ok && v != "" {
-			attrs[v] = config
-		}
-	}
-
-	return attrs, nil
-}
-
-func expandExperimentTemplateTargetsForUpdate(l *schema.Set) (map[string]types.UpdateExperimentTemplateTargetInput, error) {
-	if l.Len() == 0 {
-		return nil, nil
-	}
-
-	attrs := make(map[string]types.UpdateExperimentTemplateTargetInput, l.Len())
-
-	for _, m := range l.List() {
-		raw := m.(map[string]interface{})
-		config := types.UpdateExperimentTemplateTargetInput{}
-		var hasSeenResourceArns bool
-
-		if v, ok := raw["filter"].([]interface{}); ok && len(v) > 0 {
-			config.Filters = expandExperimentTemplateTargetFilters(v)
-		}
-
-		if v, ok := raw["resource_arns"].(*schema.Set); ok && v.Len() > 0 {
-			config.ResourceArns = flex.ExpandStringValueSet(v)
-			hasSeenResourceArns = true
-		}
-
-		if v, ok := raw["resource_tag"].(*schema.Set); ok && v.Len() > 0 {
-			//FIXME Rework this and use ConflictsWith once it supports lists
-			//https://github.com/hashicorp/terraform-plugin-sdk/issues/71
-			if hasSeenResourceArns {
-				return nil, errors.New("Only one of resource_arns, resource_tag can be set in a target block")
-			}
-			config.ResourceTags = expandExperimentTemplateTargetResourceTags(v)
-		}
-
-		if v, ok := raw["resource_type"].(string); ok && v != "" {
-			config.ResourceType = aws.String(v)
-		}
-
-		if v, ok := raw["selection_mode"].(string); ok && v != "" {
-			config.SelectionMode = aws.String(v)
-		}
-
-		if v, ok := raw["parameters"].(map[string]interface{}); ok && len(v) > 0 {
-			config.Parameters = flex.ExpandStringValueMap(v)
-		}
-
-		if v, ok := raw["name"].(string); ok && v != "" {
-			attrs[v] = config
-		}
-	}
-
-	return attrs, nil
-}
-
-func expandExperimentTemplateLogConfigurationForUpdate(l []interface{}) *types.UpdateExperimentTemplateLogConfigurationInput {
-	if len(l) == 0 {
-		return &types.UpdateExperimentTemplateLogConfigurationInput{}
-	}
-
-	raw := l[0].(map[string]interface{})
-	config := types.UpdateExperimentTemplateLogConfigurationInput{
-		LogSchemaVersion: aws.Int32(int32(raw["log_schema_version"].(int))),
-	}
-	if v, ok := raw["cloudwatch_logs_configuration"].([]interface{}); ok && len(v) > 0 {
-		config.CloudWatchLogsConfiguration = expandExperimentTemplateCloudWatchLogsConfiguration(v)
-	}
-
-	if v, ok := raw["s3_configuration"].([]interface{}); ok && len(v) > 0 {
-		config.S3Configuration = expandExperimentTemplateS3Configuration(v)
-	}
-
-	return &config
-}
-
-func expandExperimentTemplateActionParameteres(l *schema.Set) map[string]string {
-	if l.Len() == 0 {
-		return nil
-	}
-
-	attrs := make(map[string]string, l.Len())
-
-	for _, m := range l.List() {
-		if len(m.(map[string]interface{})) > 0 {
-			attr := flex.ExpandStringValueMap(m.(map[string]interface{}))
-			attrs[attr["key"]] = attr["value"]
-		}
-	}
-
-	return attrs
-}
-
-func expandExperimentTemplateActionTargets(l []interface{}) map[string]string {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	attrs := make(map[string]string, len(l))
-
-	for _, m := range l {
-		if len(m.(map[string]interface{})) > 0 {
-			attr := flex.ExpandStringValueMap(l[0].(map[string]interface{}))
-			attrs[attr["key"]] = attr["value"]
-		}
-	}
-
-	return attrs
-}
-
-func expandExperimentTemplateTargetFilters(l []interface{}) []types.ExperimentTemplateTargetInputFilter {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	items := []types.ExperimentTemplateTargetInputFilter{}
-
-	for _, m := range l {
-		raw := m.(map[string]interface{})
-		config := types.ExperimentTemplateTargetInputFilter{}
-
-		if v, ok := raw["path"].(string); ok && v != "" {
-			config.Path = aws.String(v)
-		}
-
-		if v, ok := raw["values"].(*schema.Set); ok && v.Len() > 0 {
-			config.Values = flex.ExpandStringValueSet(v)
-		}
-
-		items = append(items, config)
-	}
-
-	return items
-}
-
-func expandExperimentTemplateTargetResourceTags(l *schema.Set) map[string]string {
-	if l.Len() == 0 {
-		return nil
-	}
-
-	attrs := make(map[string]string, l.Len())
-
-	for _, m := range l.List() {
-		if len(m.(map[string]interface{})) > 0 {
-			attr := flex.ExpandStringValueMap(m.(map[string]interface{}))
-			attrs[attr["key"]] = attr["value"]
 		}
 	}
 
@@ -906,18 +606,317 @@ func flattenExperimentTemplateExperimentOptions(apiObject *types.ExperimentTempl
 	return tfMap
 }
 
+func expandExperimentTemplateStopConditions(l *schema.Set) []types.CreateExperimentTemplateStopConditionInput {
+	if l.Len() == 0 {
+		return nil
+	}
+
+	items := []types.CreateExperimentTemplateStopConditionInput{}
+
+	for _, m := range l.List() {
+		raw := m.(map[string]interface{})
+		config := types.CreateExperimentTemplateStopConditionInput{}
+
+		if v, ok := raw[names.AttrSource].(string); ok && v != "" {
+			config.Source = aws.String(v)
+		}
+
+		if v, ok := raw[names.AttrValue].(string); ok && v != "" {
+			config.Value = aws.String(v)
+		}
+
+		items = append(items, config)
+	}
+
+	return items
+}
+
+func expandExperimentTemplateLogConfiguration(l []interface{}) *types.CreateExperimentTemplateLogConfigurationInput {
+	if len(l) == 0 {
+		return nil
+	}
+
+	raw := l[0].(map[string]interface{})
+
+	config := types.CreateExperimentTemplateLogConfigurationInput{
+		LogSchemaVersion: aws.Int32(int32(raw["log_schema_version"].(int))),
+	}
+
+	if v, ok := raw["cloudwatch_logs_configuration"].([]interface{}); ok && len(v) > 0 {
+		config.CloudWatchLogsConfiguration = expandExperimentTemplateCloudWatchLogsConfiguration(v)
+	}
+
+	if v, ok := raw["s3_configuration"].([]interface{}); ok && len(v) > 0 {
+		config.S3Configuration = expandExperimentTemplateS3Configuration(v)
+	}
+
+	return &config
+}
+
+func expandExperimentTemplateCloudWatchLogsConfiguration(l []interface{}) *types.ExperimentTemplateCloudWatchLogsLogConfigurationInput {
+	if len(l) == 0 {
+		return nil
+	}
+
+	raw := l[0].(map[string]interface{})
+
+	config := types.ExperimentTemplateCloudWatchLogsLogConfigurationInput{
+		LogGroupArn: aws.String(raw["log_group_arn"].(string)),
+	}
+	return &config
+}
+
+func expandExperimentTemplateS3Configuration(l []interface{}) *types.ExperimentTemplateS3LogConfigurationInput {
+	if len(l) == 0 {
+		return nil
+	}
+
+	raw := l[0].(map[string]interface{})
+
+	config := types.ExperimentTemplateS3LogConfigurationInput{
+		BucketName: aws.String(raw[names.AttrBucketName].(string)),
+	}
+	if v, ok := raw[names.AttrPrefix].(string); ok && v != "" {
+		config.Prefix = aws.String(v)
+	}
+
+	return &config
+}
+
+func expandExperimentTemplateStopConditionsForUpdate(l *schema.Set) []types.UpdateExperimentTemplateStopConditionInput {
+	if l.Len() == 0 {
+		return nil
+	}
+
+	items := []types.UpdateExperimentTemplateStopConditionInput{}
+
+	for _, m := range l.List() {
+		raw := m.(map[string]interface{})
+		config := types.UpdateExperimentTemplateStopConditionInput{}
+
+		if v, ok := raw[names.AttrSource].(string); ok && v != "" {
+			config.Source = aws.String(v)
+		}
+
+		if v, ok := raw[names.AttrValue].(string); ok && v != "" {
+			config.Value = aws.String(v)
+		}
+
+		items = append(items, config)
+	}
+
+	return items
+}
+
+func expandExperimentTemplateTargets(l *schema.Set) (map[string]types.CreateExperimentTemplateTargetInput, error) {
+	if l.Len() == 0 {
+		//Even though a template with no targets is valid (eg. containing just aws:fis:wait) and the API reference states that targets is not required, the key still needs to be present.
+		return map[string]types.CreateExperimentTemplateTargetInput{}, nil
+	}
+
+	attrs := make(map[string]types.CreateExperimentTemplateTargetInput, l.Len())
+
+	for _, m := range l.List() {
+		raw := m.(map[string]interface{})
+		config := types.CreateExperimentTemplateTargetInput{}
+		var hasSeenResourceArns bool
+
+		if v, ok := raw[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
+			config.Filters = expandExperimentTemplateTargetFilters(v)
+		}
+
+		if v, ok := raw["resource_arns"].(*schema.Set); ok && v.Len() > 0 {
+			config.ResourceArns = flex.ExpandStringValueSet(v)
+			hasSeenResourceArns = true
+		}
+
+		if v, ok := raw["resource_tag"].(*schema.Set); ok && v.Len() > 0 {
+			//FIXME Rework this and use ConflictsWith once it supports lists
+			//https://github.com/hashicorp/terraform-plugin-sdk/issues/71
+			if hasSeenResourceArns {
+				return nil, errors.New("Only one of resource_arns, resource_tag can be set in a target block")
+			}
+			config.ResourceTags = expandExperimentTemplateTargetResourceTags(v)
+		}
+
+		if v, ok := raw[names.AttrResourceType].(string); ok && v != "" {
+			config.ResourceType = aws.String(v)
+		}
+
+		if v, ok := raw["selection_mode"].(string); ok && v != "" {
+			config.SelectionMode = aws.String(v)
+		}
+
+		if v, ok := raw[names.AttrParameters].(map[string]interface{}); ok && len(v) > 0 {
+			config.Parameters = flex.ExpandStringValueMap(v)
+		}
+
+		if v, ok := raw[names.AttrName].(string); ok && v != "" {
+			attrs[v] = config
+		}
+	}
+
+	return attrs, nil
+}
+
+func expandExperimentTemplateTargetsForUpdate(l *schema.Set) (map[string]types.UpdateExperimentTemplateTargetInput, error) {
+	if l.Len() == 0 {
+		return nil, nil
+	}
+
+	attrs := make(map[string]types.UpdateExperimentTemplateTargetInput, l.Len())
+
+	for _, m := range l.List() {
+		raw := m.(map[string]interface{})
+		config := types.UpdateExperimentTemplateTargetInput{}
+		var hasSeenResourceArns bool
+
+		if v, ok := raw[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
+			config.Filters = expandExperimentTemplateTargetFilters(v)
+		}
+
+		if v, ok := raw["resource_arns"].(*schema.Set); ok && v.Len() > 0 {
+			config.ResourceArns = flex.ExpandStringValueSet(v)
+			hasSeenResourceArns = true
+		}
+
+		if v, ok := raw["resource_tag"].(*schema.Set); ok && v.Len() > 0 {
+			//FIXME Rework this and use ConflictsWith once it supports lists
+			//https://github.com/hashicorp/terraform-plugin-sdk/issues/71
+			if hasSeenResourceArns {
+				return nil, errors.New("Only one of resource_arns, resource_tag can be set in a target block")
+			}
+			config.ResourceTags = expandExperimentTemplateTargetResourceTags(v)
+		}
+
+		if v, ok := raw[names.AttrResourceType].(string); ok && v != "" {
+			config.ResourceType = aws.String(v)
+		}
+
+		if v, ok := raw["selection_mode"].(string); ok && v != "" {
+			config.SelectionMode = aws.String(v)
+		}
+
+		if v, ok := raw[names.AttrParameters].(map[string]interface{}); ok && len(v) > 0 {
+			config.Parameters = flex.ExpandStringValueMap(v)
+		}
+
+		if v, ok := raw[names.AttrName].(string); ok && v != "" {
+			attrs[v] = config
+		}
+	}
+
+	return attrs, nil
+}
+
+func expandExperimentTemplateLogConfigurationForUpdate(l []interface{}) *types.UpdateExperimentTemplateLogConfigurationInput {
+	if len(l) == 0 {
+		return &types.UpdateExperimentTemplateLogConfigurationInput{}
+	}
+
+	raw := l[0].(map[string]interface{})
+	config := types.UpdateExperimentTemplateLogConfigurationInput{
+		LogSchemaVersion: aws.Int32(int32(raw["log_schema_version"].(int))),
+	}
+	if v, ok := raw["cloudwatch_logs_configuration"].([]interface{}); ok && len(v) > 0 {
+		config.CloudWatchLogsConfiguration = expandExperimentTemplateCloudWatchLogsConfiguration(v)
+	}
+
+	if v, ok := raw["s3_configuration"].([]interface{}); ok && len(v) > 0 {
+		config.S3Configuration = expandExperimentTemplateS3Configuration(v)
+	}
+
+	return &config
+}
+
+func expandExperimentTemplateActionParameteres(l *schema.Set) map[string]string {
+	if l.Len() == 0 {
+		return nil
+	}
+
+	attrs := make(map[string]string, l.Len())
+
+	for _, m := range l.List() {
+		if len(m.(map[string]interface{})) > 0 {
+			attr := flex.ExpandStringValueMap(m.(map[string]interface{}))
+			attrs[attr[names.AttrKey]] = attr[names.AttrValue]
+		}
+	}
+
+	return attrs
+}
+
+func expandExperimentTemplateActionTargets(l []interface{}) map[string]string {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	attrs := make(map[string]string, len(l))
+
+	for _, m := range l {
+		if len(m.(map[string]interface{})) > 0 {
+			attr := flex.ExpandStringValueMap(l[0].(map[string]interface{}))
+			attrs[attr[names.AttrKey]] = attr[names.AttrValue]
+		}
+	}
+
+	return attrs
+}
+
+func expandExperimentTemplateTargetFilters(l []interface{}) []types.ExperimentTemplateTargetInputFilter {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	items := []types.ExperimentTemplateTargetInputFilter{}
+
+	for _, m := range l {
+		raw := m.(map[string]interface{})
+		config := types.ExperimentTemplateTargetInputFilter{}
+
+		if v, ok := raw[names.AttrPath].(string); ok && v != "" {
+			config.Path = aws.String(v)
+		}
+
+		if v, ok := raw[names.AttrValues].(*schema.Set); ok && v.Len() > 0 {
+			config.Values = flex.ExpandStringValueSet(v)
+		}
+
+		items = append(items, config)
+	}
+
+	return items
+}
+
+func expandExperimentTemplateTargetResourceTags(l *schema.Set) map[string]string {
+	if l.Len() == 0 {
+		return nil
+	}
+
+	attrs := make(map[string]string, l.Len())
+
+	for _, m := range l.List() {
+		if len(m.(map[string]interface{})) > 0 {
+			attr := flex.ExpandStringValueMap(m.(map[string]interface{}))
+			attrs[attr[names.AttrKey]] = attr[names.AttrValue]
+		}
+	}
+
+	return attrs
+}
+
 func flattenExperimentTemplateActions(configured map[string]types.ExperimentTemplateAction) []map[string]interface{} {
 	dataResources := make([]map[string]interface{}, 0, len(configured))
 
 	for k, v := range configured {
 		item := make(map[string]interface{})
 		item["action_id"] = aws.ToString(v.ActionId)
-		item["description"] = aws.ToString(v.Description)
-		item["parameter"] = flattenExperimentTemplateActionParameters(v.Parameters)
+		item[names.AttrDescription] = aws.ToString(v.Description)
+		item[names.AttrParameter] = flattenExperimentTemplateActionParameters(v.Parameters)
 		item["start_after"] = v.StartAfter
-		item["target"] = flattenExperimentTemplateActionTargets(v.Targets)
+		item[names.AttrTarget] = flattenExperimentTemplateActionTargets(v.Targets)
 
-		item["name"] = k
+		item[names.AttrName] = k
 
 		dataResources = append(dataResources, item)
 	}
@@ -930,10 +929,10 @@ func flattenExperimentTemplateStopConditions(configured []types.ExperimentTempla
 
 	for _, v := range configured {
 		item := make(map[string]interface{})
-		item["source"] = aws.ToString(v.Source)
+		item[names.AttrSource] = aws.ToString(v.Source)
 
 		if aws.ToString(v.Value) != "" {
-			item["value"] = aws.ToString(v.Value)
+			item[names.AttrValue] = aws.ToString(v.Value)
 		}
 
 		dataResources = append(dataResources, item)
@@ -947,14 +946,14 @@ func flattenExperimentTemplateTargets(configured map[string]types.ExperimentTemp
 
 	for k, v := range configured {
 		item := make(map[string]interface{})
-		item["filter"] = flattenExperimentTemplateTargetFilters(v.Filters)
+		item[names.AttrFilter] = flattenExperimentTemplateTargetFilters(v.Filters)
 		item["resource_arns"] = v.ResourceArns
 		item["resource_tag"] = flattenExperimentTemplateTargetResourceTags(v.ResourceTags)
-		item["resource_type"] = aws.ToString(v.ResourceType)
+		item[names.AttrResourceType] = aws.ToString(v.ResourceType)
 		item["selection_mode"] = aws.ToString(v.SelectionMode)
-		item["parameters"] = v.Parameters
+		item[names.AttrParameters] = v.Parameters
 
-		item["name"] = k
+		item[names.AttrName] = k
 
 		dataResources = append(dataResources, item)
 	}
@@ -995,9 +994,9 @@ func flattenS3Configuration(configured *types.ExperimentTemplateS3LogConfigurati
 
 	dataResources := make([]map[string]interface{}, 1)
 	dataResources[0] = make(map[string]interface{})
-	dataResources[0]["bucket_name"] = configured.BucketName
+	dataResources[0][names.AttrBucketName] = configured.BucketName
 	if aws.ToString(configured.Prefix) != "" {
-		dataResources[0]["prefix"] = configured.Prefix
+		dataResources[0][names.AttrPrefix] = configured.Prefix
 	}
 
 	return dataResources
@@ -1008,8 +1007,8 @@ func flattenExperimentTemplateActionParameters(configured map[string]string) []m
 
 	for k, v := range configured {
 		item := make(map[string]interface{})
-		item["key"] = k
-		item["value"] = v
+		item[names.AttrKey] = k
+		item[names.AttrValue] = v
 
 		dataResources = append(dataResources, item)
 	}
@@ -1022,8 +1021,8 @@ func flattenExperimentTemplateActionTargets(configured map[string]string) []map[
 
 	for k, v := range configured {
 		item := make(map[string]interface{})
-		item["key"] = k
-		item["value"] = v
+		item[names.AttrKey] = k
+		item[names.AttrValue] = v
 		dataResources = append(dataResources, item)
 	}
 
@@ -1035,8 +1034,8 @@ func flattenExperimentTemplateTargetFilters(configured []types.ExperimentTemplat
 
 	for _, v := range configured {
 		item := make(map[string]interface{})
-		item["path"] = aws.ToString(v.Path)
-		item["values"] = v.Values
+		item[names.AttrPath] = aws.ToString(v.Path)
+		item[names.AttrValues] = v.Values
 
 		dataResources = append(dataResources, item)
 	}
@@ -1049,8 +1048,8 @@ func flattenExperimentTemplateTargetResourceTags(configured map[string]string) [
 
 	for k, v := range configured {
 		item := make(map[string]interface{})
-		item["key"] = k
-		item["value"] = v
+		item[names.AttrKey] = k
+		item[names.AttrValue] = v
 
 		dataResources = append(dataResources, item)
 	}

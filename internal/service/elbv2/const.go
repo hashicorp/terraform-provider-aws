@@ -6,17 +6,13 @@ package elbv2
 import (
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/elbv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 const (
-	propagationTimeout = 2 * time.Minute
-)
-
-const (
-	errCodeValidationError = "ValidationError"
-
-	tagsOnCreationErrMessage = "cannot specify tags on creation"
+	iamPropagationTimeout   = 2 * time.Minute
+	elbv2PropagationTimeout = 5 * time.Minute // nosemgrep:ci.elbv2-in-const-name, ci.elbv2-in-var-name
 )
 
 // See https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_LoadBalancerAttribute.html#API_LoadBalancerAttribute_Contents.
@@ -33,6 +29,7 @@ const (
 
 	// The following attributes are supported by only Application Load Balancers:
 	loadBalancerAttributeIdleTimeoutTimeoutSeconds                       = "idle_timeout.timeout_seconds"
+	loadBalancerAttributeClientKeepAliveSeconds                          = "client_keep_alive.seconds"
 	loadBalancerAttributeConnectionLogsS3Enabled                         = "connection_logs.s3.enabled"
 	loadBalancerAttributeConnectionLogsS3Bucket                          = "connection_logs.s3.bucket"
 	loadBalancerAttributeConnectionLogsS3Prefix                          = "connection_logs.s3.prefix"
@@ -202,11 +199,11 @@ const (
 )
 
 func healthCheckProtocolEnumValues() []string {
-	return []string{
-		elbv2.ProtocolEnumHttp,
-		elbv2.ProtocolEnumHttps,
-		elbv2.ProtocolEnumTcp,
-	}
+	return enum.Slice[awstypes.ProtocolEnum](
+		awstypes.ProtocolEnumHttp,
+		awstypes.ProtocolEnumHttps,
+		awstypes.ProtocolEnumTcp,
+	)
 }
 
 const (

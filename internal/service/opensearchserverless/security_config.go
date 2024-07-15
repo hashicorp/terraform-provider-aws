@@ -55,17 +55,17 @@ func (r *resourceSecurityConfig) Metadata(_ context.Context, request resource.Me
 func (r *resourceSecurityConfig) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"config_version": schema.StringAttribute{
 				Computed: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 1000),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -74,7 +74,7 @@ func (r *resourceSecurityConfig) Schema(ctx context.Context, req resource.Schema
 					stringvalidator.LengthBetween(3, 32),
 				},
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -152,7 +152,7 @@ func (r *resourceSecurityConfig) Create(ctx context.Context, req resource.Create
 	if out == nil || out.SecurityConfigDetail == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, ResNameSecurityConfig, plan.Name.String(), nil),
-			err.Error(),
+			"Empty response.",
 		)
 		return
 	}
@@ -175,6 +175,14 @@ func (r *resourceSecurityConfig) Read(ctx context.Context, req resource.ReadRequ
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameSecurityConfig, state.ID.ValueString(), err),
+			err.Error(),
+		)
 		return
 	}
 
@@ -258,8 +266,8 @@ func (r *resourceSecurityConfig) ImportState(ctx context.Context, req resource.I
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), parts[2])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrName), parts[2])...)
 }
 
 type resourceSecurityConfigData struct {
