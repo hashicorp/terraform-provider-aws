@@ -48,7 +48,7 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_class", replicationInstanceClass),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_private_ips.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_subnet_group_id"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
