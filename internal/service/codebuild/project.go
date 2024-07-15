@@ -978,8 +978,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("concurrent_build_limit") {
-			v := int32(d.Get("concurrent_build_limit").(int))
-			if v != 0 {
+			if v := int32(d.Get("concurrent_build_limit").(int)); v != 0 {
 				input.ConcurrentBuildLimit = aws.Int32(v)
 			} else {
 				input.ConcurrentBuildLimit = aws.Int32(-1)
