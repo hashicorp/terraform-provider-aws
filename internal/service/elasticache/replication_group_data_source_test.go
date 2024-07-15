@@ -196,9 +196,3 @@ data "aws_elasticache_replication_group" "test" {
 }
 `, rName)
 }
-
-const testAccReplicationGroupDataSourceConfig_nonExistent = `
-data "aws_elasticache_replication_group" "test" {
-  replication_group_id = "tf-acc-test-nonexistent"
-}
-`
