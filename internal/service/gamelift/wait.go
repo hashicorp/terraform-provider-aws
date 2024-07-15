@@ -12,8 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
@@ -23,8 +23,8 @@ const (
 
 func waitBuildReady(ctx context.Context, conn *gamelift.Client, id string) (*awstypes.Build, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.BuildStatusInitialized},
-		Target:  []string{awstypes.BuildStatusReady},
+		Pending: enum.Slice(awstypes.BuildStatusInitialized),
+		Target:  enum.Slice(awstypes.BuildStatusReady),
 		Refresh: statusBuild(ctx, conn, id),
 		Timeout: buildReadyTimeout,
 	}
@@ -40,14 +40,14 @@ func waitBuildReady(ctx context.Context, conn *gamelift.Client, id string) (*aws
 
 func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, timeout time.Duration) (*awstypes.FleetAttributes, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
+		Pending: enum.Slice(
 			awstypes.FleetStatusActivating,
 			awstypes.FleetStatusBuilding,
 			awstypes.FleetStatusDownloading,
 			awstypes.FleetStatusNew,
 			awstypes.FleetStatusValidating,
-		},
-		Target:  []string{awstypes.FleetStatusActive},
+		),
+		Target:  enum.Slice(awstypes.FleetStatusActive),
 		Refresh: statusFleet(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -63,12 +63,12 @@ func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, time
 
 func waitFleetTerminated(ctx context.Context, conn *gamelift.Client, id string, timeout time.Duration) (*awstypes.FleetAttributes, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
+		Pending: enum.Slice(
 			awstypes.FleetStatusActive,
 			awstypes.FleetStatusDeleting,
 			awstypes.FleetStatusError,
 			awstypes.FleetStatusTerminated,
-		},
+		),
 		Target:  []string{},
 		Refresh: statusFleet(ctx, conn, id),
 		Timeout: timeout,
@@ -93,13 +93,13 @@ func waitFleetTerminated(ctx context.Context, conn *gamelift.Client, id string, 
 	return nil, err
 }
 
-func getFleetFailures(ctx context.Context, conn *gamelift.Client, id string) ([]*awstypes.Event, error) {
-	var events []*awstypes.Event
+func getFleetFailures(ctx context.Context, conn *gamelift.Client, id string) ([]awstypes.Event, error) {
+	var events []awstypes.Event
 	err := _getFleetFailures(ctx, conn, id, nil, &events)
 	return events, err
 }
 
-func _getFleetFailures(ctx context.Context, conn *gamelift.Client, id string, nextToken *string, events *[]*awstypes.Event) error {
+func _getFleetFailures(ctx context.Context, conn *gamelift.Client, id string, nextToken *string, events *[]awstypes.Event) error {
 	eOut, err := conn.DescribeFleetEvents(ctx, &gamelift.DescribeFleetEventsInput{
 		FleetId:   aws.String(id),
 		NextToken: nextToken,
@@ -124,8 +124,8 @@ func _getFleetFailures(ctx context.Context, conn *gamelift.Client, id string, ne
 	return nil
 }
 
-func isEventFailure(event *awstypes.Event) bool {
-	failureCodes := []string{
+func isEventFailure(event awstypes.Event) bool {
+	failureCodes := []awstypes.EventCode{
 		awstypes.EventCodeFleetActivationFailed,
 		awstypes.EventCodeFleetActivationFailedNoInstances,
 		awstypes.EventCodeFleetBinaryDownloadFailed,
@@ -145,7 +145,7 @@ func isEventFailure(event *awstypes.Event) bool {
 		awstypes.EventCodeServerProcessTerminatedUnhealthy,
 	}
 	for _, fc := range failureCodes {
-		if string(event.EventCode) == fc {
+		if event.EventCode == fc {
 			return true
 		}
 	}
@@ -154,11 +154,11 @@ func isEventFailure(event *awstypes.Event) bool {
 
 func waitGameServerGroupActive(ctx context.Context, conn *gamelift.Client, name string, timeout time.Duration) (*awstypes.GameServerGroup, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
+		Pending: enum.Slice(
 			awstypes.GameServerGroupStatusNew,
 			awstypes.GameServerGroupStatusActivating,
-		},
-		Target:  []string{awstypes.GameServerGroupStatusActive},
+		),
+		Target:  enum.Slice(awstypes.GameServerGroupStatusActive),
 		Refresh: statusGameServerGroup(ctx, conn, name),
 		Timeout: timeout,
 	}
@@ -174,10 +174,10 @@ func waitGameServerGroupActive(ctx context.Context, conn *gamelift.Client, name 
 
 func waitGameServerGroupTerminated(ctx context.Context, conn *gamelift.Client, name string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
+		Pending: enum.Slice(
 			awstypes.GameServerGroupStatusDeleteScheduled,
 			awstypes.GameServerGroupStatusDeleting,
-		},
+		),
 		Target:  []string{},
 		Refresh: statusGameServerGroup(ctx, conn, name),
 		Timeout: timeout,

@@ -6,9 +6,7 @@ package gamelift
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -25,7 +23,7 @@ func statusBuild(ctx context.Context, conn *gamelift.Client, id string) retry.St
 			return nil, "", err
 		}
 
-		return output, aws.ToString(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
@@ -41,7 +39,7 @@ func statusFleet(ctx context.Context, conn *gamelift.Client, id string) retry.St
 			return nil, "", err
 		}
 
-		return output, aws.ToString(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
@@ -57,6 +55,6 @@ func statusGameServerGroup(ctx context.Context, conn *gamelift.Client, name stri
 			return nil, "", err
 		}
 
-		return output, aws.ToString(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }

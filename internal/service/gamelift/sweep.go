@@ -10,12 +10,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -186,11 +185,15 @@ func sweepFleets(region string) error {
 	for {
 		output, err := conn.ListFleets(ctx, input)
 
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("listing GameLift Fleet for %s: %w", region, err))
+		}
+
 		for _, fleet := range output.FleetIds {
 			r := ResourceFleet()
 			d := r.Data(nil)
 
-			id := aws.ToString(fleet)
+			id := fleet
 			d.SetId(id)
 
 			if err != nil {
@@ -208,10 +211,6 @@ func sweepFleets(region string) error {
 		}
 
 		input.NextToken = output.NextToken
-	}
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("listing GameLift Fleet for %s: %w", region, err))
 	}
 
 	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
@@ -241,6 +240,10 @@ func sweepGameServerGroups(region string) error {
 	for {
 		output, err := conn.ListGameServerGroups(ctx, input)
 
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("listing GameLift Game Server Group for %s: %w", region, err))
+		}
+
 		for _, gameServerGroup := range output.GameServerGroups {
 			r := ResourceGameServerGroup()
 			d := r.Data(nil)
@@ -265,15 +268,11 @@ func sweepGameServerGroups(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("listing GameLift Game Server Group for %s: %w", region, err))
-	}
-
 	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping GameLift Game Server Group for %s: %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping GameLift Game Server Group sweep for %s: %s", region, errs)
 		return nil
 	}

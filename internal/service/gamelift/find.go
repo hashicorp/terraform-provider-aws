@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -58,21 +57,7 @@ func FindFleetByID(ctx context.Context, conn *gamelift.Client, id string) (*awst
 		return nil, err
 	}
 
-	if len(output.FleetAttributes) == 0 || output.FleetAttributes[0] == nil {
-		return nil, tfresource.NewEmptyResultError(output)
-	}
-
-	if count := len(output.FleetAttributes); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, output)
-	}
-
-	fleet := output.FleetAttributes[0]
-
-	if aws.ToString(fleet.FleetId) != id {
-		return nil, tfresource.NewEmptyResultError(id)
-	}
-
-	return fleet, nil
+	return tfresource.AssertSingleValueResult(output.FleetAttributes)
 }
 
 func FindGameServerGroupByName(ctx context.Context, conn *gamelift.Client, name string) (*awstypes.GameServerGroup, error) {
