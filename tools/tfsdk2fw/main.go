@@ -562,18 +562,27 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 	if def := property.Default; def != nil {
 		switch v := def.(type) {
 		case bool:
-			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
+			e.GoImports = append(e.GoImports, goImport{
+				Path: "github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault",
+			})
+			defaultSpec = fmt.Sprintf("booldefault.StaticBool(%t)", v)
 		case int:
-			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
+			e.GoImports = append(e.GoImports, goImport{
+				Path: "github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default",
+			})
+			defaultSpec = fmt.Sprintf("int64default.StaticInt64(%d)", v)
 		case float64:
-			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
+			e.GoImports = append(e.GoImports, goImport{
+				Path: "github.com/hashicorp/terraform-plugin-framework/resource/schema/float64default",
+			})
+			defaultSpec = fmt.Sprintf("float64default.StaticFloat64(%f)", v)
 		case string:
 			e.GoImports = append(e.GoImports, goImport{
 				Path: "github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault",
 			})
 			defaultSpec = fmt.Sprintf("stringdefault.StaticString(%q)", v)
 		default:
-			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
+			fprintf(e.SchemaWriter, "// TODO Default: %#[1]v (%[1]T),\n", def)
 		}
 	}
 
