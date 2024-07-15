@@ -10,11 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -61,12 +61,9 @@ func ResourceAlias() *schema.Resource {
 							Optional: true,
 						},
 						names.AttrType: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								awstypes.RoutingStrategyTypeSimple,
-								awstypes.RoutingStrategyTypeTerminal,
-							}, false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.RoutingStrategyType](),
 						},
 					},
 				},
@@ -171,7 +168,7 @@ func expandRoutingStrategy(cfg []interface{}) *awstypes.RoutingStrategy {
 	strategy := cfg[0].(map[string]interface{})
 
 	out := awstypes.RoutingStrategy{
-		Type: aws.String(strategy[names.AttrType].(string)),
+		Type: awstypes.RoutingStrategyType(strategy[names.AttrType].(string)),
 	}
 
 	if v, ok := strategy["fleet_id"].(string); ok && len(v) > 0 {
@@ -196,7 +193,7 @@ func flattenRoutingStrategy(rs *awstypes.RoutingStrategy) []interface{} {
 	if rs.Message != nil {
 		m[names.AttrMessage] = aws.ToString(rs.Message)
 	}
-	m[names.AttrType] = aws.ToString(rs.Type)
+	m[names.AttrType] = string(rs.Type)
 
 	return []interface{}{m}
 }
