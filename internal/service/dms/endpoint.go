@@ -783,7 +783,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	endpointID := d.Get("endpoint_id").(string)
 	input := &dms.CreateEndpointInput{
 		EndpointIdentifier: aws.String(endpointID),
-		EndpointType:       awstypes.ReplicationEndpointTypeValue(names.AttrEndpointType),
+		EndpointType:       awstypes.ReplicationEndpointTypeValue(d.Get(names.AttrEndpointType).(string)),
 		EngineName:         aws.String(d.Get("engine_name").(string)),
 		Tags:               getTagsIn(ctx),
 	}
