@@ -221,7 +221,7 @@ func TestAccCodeBuildWebhook_scopeConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebhookConfig_ScopeConfiguration(rName),
+				Config: testAccWebhookConfig_scopeConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", acctest.Ct1),
@@ -448,9 +448,7 @@ func testAccCheckWebhookExists(ctx context.Context, n string, v *types.Webhook) 
 }
 
 func testAccWebhookConfig_bitbucket(rName, sourceLocation string) string {
-	return acctest.ConfigCompose(
-		testAccProjectConfig_sourceTypeBitbucket(rName, sourceLocation),
-		`
+	return acctest.ConfigCompose(testAccProjectConfig_sourceTypeBitbucket(rName, sourceLocation), `
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
 }
@@ -458,9 +456,7 @@ resource "aws_codebuild_webhook" "test" {
 }
 
 func testAccWebhookConfig_gitHub(rName string) string {
-	return acctest.ConfigCompose(
-		testAccProjectConfig_basic(rName),
-		`
+	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), `
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
 }
@@ -515,9 +511,7 @@ resource "aws_codebuild_webhook" "test" {
 }
 
 func testAccWebhookConfig_filterGroup(rName string) string {
-	return acctest.ConfigCompose(
-		testAccProjectConfig_basic(rName),
-		`
+	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), `
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
 
@@ -544,10 +538,8 @@ resource "aws_codebuild_webhook" "test" {
 `)
 }
 
-func testAccWebhookConfig_ScopeConfiguration(rName string) string {
-	return acctest.ConfigCompose(
-		testAccProjectConfig_basic(rName),
-		`
+func testAccWebhookConfig_scopeConfiguration(rName string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
   scope_configuration {
@@ -555,5 +547,5 @@ resource "aws_codebuild_webhook" "test" {
     scope = "GITHUB_GLOBAL"
   }
 }
-`)
+`, rName))
 }
