@@ -33,11 +33,11 @@ import (
 )
 
 const (
-	EmptyDescription = " "
+	emptyDescription = " "
 )
 
 const (
-	GlobalReplicationGroupRegionPrefixFormat = "[[:alpha:]]{5}-"
+	globalReplicationGroupRegionPrefixFormat = "[[:alpha:]]{5}-"
 )
 
 const (
@@ -55,7 +55,7 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				re := regexache.MustCompile("^" + GlobalReplicationGroupRegionPrefixFormat)
+				re := regexache.MustCompile("^" + globalReplicationGroupRegionPrefixFormat)
 				d.Set("global_replication_group_id_suffix", re.ReplaceAllLiteralString(d.Id(), ""))
 
 				return []*schema.ResourceData{d}, nil
@@ -142,7 +142,7 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					if (old == EmptyDescription && new == "") || (old == "" && new == EmptyDescription) {
+					if (old == emptyDescription && new == "") || (old == "" && new == emptyDescription) {
 						return true
 					}
 					return false
@@ -150,7 +150,7 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 				StateFunc: func(v any) string {
 					s := v.(string)
 					if s == "" {
-						return EmptyDescription
+						return emptyDescription
 					}
 					return s
 				},
