@@ -166,7 +166,7 @@ func resourceReplicator() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"type": {
+												names.AttrType: {
 													Type:             schema.TypeString,
 													Optional:         true,
 													ForceNew:         true,
@@ -598,7 +598,7 @@ func flattenReplicationStartingPosition(apiObject *types.ReplicationStartingPosi
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Type; v != "" {
-		tfMap["type"] = v
+		tfMap[names.AttrType] = v
 	}
 
 	return tfMap
@@ -813,7 +813,7 @@ func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplicatio
 func expandReplicationStartingPosition(tfMap map[string]interface{}) *types.ReplicationStartingPosition {
 	apiObject := &types.ReplicationStartingPosition{}
 
-	if v, ok := tfMap["type"].(string); ok {
+	if v, ok := tfMap[names.AttrType].(string); ok {
 		apiObject.Type = types.ReplicationStartingPositionType(v)
 	}
 
