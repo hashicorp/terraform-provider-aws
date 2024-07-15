@@ -2680,7 +2680,7 @@ func statusEndpoint(ctx context.Context, conn *dms.Client, id string) retry.Stat
 	}
 }
 
-func waitEndpointDeleted(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.Endpoint, error) {
+func waitEndpointDeleted(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.Endpoint, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{endpointStatusDeleting},
 		Target:  []string{},
