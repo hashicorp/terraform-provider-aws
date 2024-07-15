@@ -23,10 +23,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_alb_listener")
-// @SDKDataSource("aws_lb_listener")
+// @SDKDataSource("aws_alb_listener", name="Listener")
+// @SDKDataSource("aws_lb_listener", name="Listener")
 // @Testing(tagsTest=true)
-func DataSourceListener() *schema.Resource {
+func dataSourceListener() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceListenerRead,
 
@@ -351,7 +351,7 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrProtocol, listener.Protocol)
 	d.Set("ssl_policy", listener.SslPolicy)
 
-	tags, err := listTagsV2(ctx, conn, d.Id())
+	tags, err := listTags(ctx, conn, d.Id())
 
 	if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Listener %s: %s", d.Id(), err)

@@ -22,11 +22,11 @@ func listOfMap(tags tftags.KeyValueTags) []any {
 
 {{- if .TagKeyType }}
 // TagKeys returns {{ .ServicePackage }} service tag keys.
-func TagKeys(tags tftags.KeyValueTags) []*{{ .AWSService }}.{{ .TagKeyType }} {
-	result := make([]*{{ .AWSService }}.{{ .TagKeyType }}, 0, len(tags))
+func TagKeys(tags tftags.KeyValueTags) []awstypes.{{ .TagKeyType }} {
+	result := make([]awstypes.{{ .TagKeyType }}, 0, len(tags))
 
 	for k := range tags.Map() {
-		tagKey := &{{ .AWSService }}.{{ .TagKeyType }}{
+		tagKey := awstypes.{{ .TagKeyType }}{
 			{{ .TagTypeKeyElem }}: aws.String(k),
 		}
 

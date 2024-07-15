@@ -7,20 +7,19 @@ import (
 	"context"
 	"errors"
 
-	"github.com/aws/aws-sdk-go/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // customizeDiffValidateClusterAZMode validates that `num_cache_nodes` is greater than 1 when `az_mode` is "cross-az"
 func customizeDiffValidateClusterAZMode(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	if v, ok := diff.GetOk("az_mode"); !ok || v.(string) != elasticache.AZModeCrossAz {
+	if v, ok := diff.GetOk("az_mode"); !ok || awstypes.AZMode(v.(string)) != awstypes.AZModeCrossAz {
 		return nil
 	}
 	if v, ok := diff.GetOk("num_cache_nodes"); !ok || v.(int) != 1 {
 		return nil
 	}
-
 	return errors.New(`az_mode "cross-az" is not supported with num_cache_nodes = 1`)
 }
 
@@ -29,7 +28,6 @@ func customizeDiffValidateClusterNumCacheNodes(_ context.Context, diff *schema.R
 	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineMemcached {
 		return nil
 	}
-
 	if v, ok := diff.GetOk("num_cache_nodes"); !ok || v.(int) == 1 {
 		return nil
 	}

@@ -1,4 +1,34 @@
-## 5.58.0 (Unreleased)
+## 5.59.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_cloudfront_origin_access_control` ([#36301](https://github.com/hashicorp/terraform-provider-aws/issues/36301))
+* **New Resource:** `aws_grafana_workspace_service_account` ([#38101](https://github.com/hashicorp/terraform-provider-aws/issues/38101))
+* **New Resource:** `aws_grafana_workspace_service_account_token` ([#38101](https://github.com/hashicorp/terraform-provider-aws/issues/38101))
+* **New Resource:** `aws_rds_certificate` ([#35003](https://github.com/hashicorp/terraform-provider-aws/issues/35003))
+
+ENHANCEMENTS:
+
+* data-source/aws_lakeformation_data_lake_settings: Add `allow_full_table_external_data_access` attribute ([#34474](https://github.com/hashicorp/terraform-provider-aws/issues/34474))
+* resource/aws_imagebuilder_image_pipeline: Add `execution_role` and `workflow` arguments ([#37317](https://github.com/hashicorp/terraform-provider-aws/issues/37317))
+* resource/aws_kinesisanalyticsv2_application: Support `FLINK-1_19` as a valid value for `runtime_environment` ([#38350](https://github.com/hashicorp/terraform-provider-aws/issues/38350))
+* resource/aws_lakeformation_data_lake_settings: Add `allow_full_table_external_data_access` attribute ([#34474](https://github.com/hashicorp/terraform-provider-aws/issues/34474))
+* resource/aws_lb_target_group: Add `target_group_health` configuration block ([#37082](https://github.com/hashicorp/terraform-provider-aws/issues/37082))
+
+BUG FIXES:
+
+* data-source/aws_efs_access_point: Set `id` the the access point ID, not the file system ID. This fixes a regression introduced in [v5.58.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5580-july-11-2024) ([#38372](https://github.com/hashicorp/terraform-provider-aws/issues/38372))
+* data-source/aws_lb_listener: Correctly set `default_action.target_group_arn` ([#37348](https://github.com/hashicorp/terraform-provider-aws/issues/37348))
+* resource/aws_lb_target_group: Use the configured `ip_address_type` value when `target_type` is `instance` ([#36423](https://github.com/hashicorp/terraform-provider-aws/issues/36423))
+* resource/aws_lb_trust_store: Wait until trust store is `ACTIVE` on resource Create ([#38332](https://github.com/hashicorp/terraform-provider-aws/issues/38332))
+* resource/aws_pinpoint_app: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panic when `campaign_hook` is empty (`{}`) ([#38323](https://github.com/hashicorp/terraform-provider-aws/issues/38323))
+
+## 5.58.0 (July 11, 2024)
+
+FEATURES:
+
+* **New Resource:** `aws_cloudwatch_log_account_policy` ([#38328](https://github.com/hashicorp/terraform-provider-aws/issues/38328))
+* **New Resource:** `aws_verifiedpermissions_identity_source` ([#38181](https://github.com/hashicorp/terraform-provider-aws/issues/38181))
 
 ENHANCEMENTS:
 
@@ -13,13 +43,19 @@ ENHANCEMENTS:
 * resource/aws_ec2_capacity_reservation: Add configurable timeouts ([#36754](https://github.com/hashicorp/terraform-provider-aws/issues/36754))
 * resource/aws_ec2_capacity_reservation: Retry `InsufficientInstanceCapacity` errors ([#36754](https://github.com/hashicorp/terraform-provider-aws/issues/36754))
 * resource/aws_eks_cluster: Add `bootstrap_self_managed_addons` argument ([#38162](https://github.com/hashicorp/terraform-provider-aws/issues/38162))
+* resource/aws_fms_policy: Add `resource_set_ids` attribute ([#38161](https://github.com/hashicorp/terraform-provider-aws/issues/38161))
+* resource/aws_fsx_ontap_file_system: Add `384`, `768`, `1536`, `3072`, and `6144` as valid values for `throughput_capacity` ([#38308](https://github.com/hashicorp/terraform-provider-aws/issues/38308))
+* resource/aws_fsx_ontap_file_system: Add `384`, `768`, and `1536` as valid values for `throughput_capacity_per_ha_pair` ([#38308](https://github.com/hashicorp/terraform-provider-aws/issues/38308))
+* resource/aws_fsx_ontap_file_system: Add `MULTI_AZ_2` as a valid value for `deployment_type` ([#38308](https://github.com/hashicorp/terraform-provider-aws/issues/38308))
 * resource/aws_globalaccelerator_cross_account_attachment: Add `cidr_block` argument to `resource` configuration block ([#38196](https://github.com/hashicorp/terraform-provider-aws/issues/38196))
+* resource/aws_iam_server_certificate: Add configurable `delete` timeout ([#38212](https://github.com/hashicorp/terraform-provider-aws/issues/38212))
 * resource/aws_launch_template: Add `network_interfaces.primary_ipv6` argument ([#37142](https://github.com/hashicorp/terraform-provider-aws/issues/37142))
 * resource/aws_mskconnect_connector: Add `tags` argument and `tags_all` attribute ([#38270](https://github.com/hashicorp/terraform-provider-aws/issues/38270))
 * resource/aws_mskconnect_custom_plugin: Add `tags` argument and `tags_all` attribute ([#38270](https://github.com/hashicorp/terraform-provider-aws/issues/38270))
 * resource/aws_mskconnect_worker_configuration: Add `tags` argument and `tags_all` attribute ([#38270](https://github.com/hashicorp/terraform-provider-aws/issues/38270))
 * resource/aws_mskconnect_worker_configuration: Add resource deletion logic ([#38270](https://github.com/hashicorp/terraform-provider-aws/issues/38270))
 * resource/aws_oam_link: Add `link_configuration` argument ([#38277](https://github.com/hashicorp/terraform-provider-aws/issues/38277))
+* resource/aws_rds_cluster: Add `ca_certificate_identifier` argument and `ca_certificate_valid_till` attribute ([#37108](https://github.com/hashicorp/terraform-provider-aws/issues/37108))
 * resource/aws_ssm_association: Add `tags` argument and `tags_all` attribute ([#38271](https://github.com/hashicorp/terraform-provider-aws/issues/38271))
 
 BUG FIXES:
@@ -35,9 +71,11 @@ BUG FIXES:
 * aws_ram_principal_association: Checks for errors other than NotFound when reading. ([#38292](https://github.com/hashicorp/terraform-provider-aws/issues/38292))
 * aws_route_table: Checks for errors other than NotFound when reading. ([#38292](https://github.com/hashicorp/terraform-provider-aws/issues/38292))
 * data-source/aws_ecr_repository: Fix issue where the `tags` attribute is not set ([#38272](https://github.com/hashicorp/terraform-provider-aws/issues/38272))
+* data-source/aws_eks_cluster: Add `access_config.bootstrap_cluster_creator_admin_permissions` attribute ([#38295](https://github.com/hashicorp/terraform-provider-aws/issues/38295))
 * resource/aws_appstream_fleet: Support `0` as a valid value for `idle_disconnect_timeout_in_seconds` ([#38274](https://github.com/hashicorp/terraform-provider-aws/issues/38274))
 * resource/aws_cloudformation_stack_set_instance: Add `ForceNew` to deployment_targets attributes to ensure a new resource is recreated when the deployment_targets argument is changed, which was not the case previously. ([#37898](https://github.com/hashicorp/terraform-provider-aws/issues/37898))
 * resource/aws_db_instance: Correctly mark incomplete instances as [tainted](https://developer.hashicorp.com/terraform/cli/state/taint#the-tainted-status) during creation ([#38252](https://github.com/hashicorp/terraform-provider-aws/issues/38252))
+* resource/aws_eks_cluster: Set `access_config.bootstrap_cluster_creator_admin_permissions` to `true` on Read for clusters with no `access_config` configured. This allows in-place updates of existing clusters when `access_config` is configured ([#38295](https://github.com/hashicorp/terraform-provider-aws/issues/38295))
 * resource/aws_elasticache_serverless_cache: Allow `cache_usage_limits.data_storage.maximum`, `cache_usage_limits.data_storage.minimum`, `cache_usage_limits.ecpu_per_second.maximum` and `cache_usage_limits.ecpu_per_second.minimum` to be updated in-place ([#38269](https://github.com/hashicorp/terraform-provider-aws/issues/38269))
 * resource/aws_mskconnect_connector: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panic when `log_delivery.worker_log_delivery` is empty (`{}`) ([#38270](https://github.com/hashicorp/terraform-provider-aws/issues/38270))
 

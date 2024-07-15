@@ -5,14 +5,16 @@ package grafana
 
 // Exports for use in tests only.
 var (
-	ResourceLicenseAssociation         = resourceLicenseAssociation
-	ResourceRoleAssociation            = resourceRoleAssociation
-	ResourceWorkspace                  = resourceWorkspace
-	ResourceWorkspaceAPIKey            = resourceWorkspaceAPIKey
-	ResourceWorkspaceSAMLConfiguration = resourceWorkspaceSAMLConfiguration
+	ResourceWorkspace                    = resourceWorkspace
+	ResourceWorkspaceAPIKey              = resourceWorkspaceAPIKey
+	ResourceWorkspaceSAMLConfiguration   = resourceWorkspaceSAMLConfiguration
+	ResourceWorkspaceServiceAccount      = newWorkspaceServiceAccountResource
+	ResourceWorkspaceServiceAccountToken = newWorkspaceServiceAccountTokenResource
 
-	FindLicensedWorkspaceByID        = findLicensedWorkspaceByID
-	FindRoleAssociationsByTwoPartKey = findRoleAssociationsByTwoPartKey
-	FindSAMLConfigurationByID        = findSAMLConfigurationByID
-	FindWorkspaceByID                = findWorkspaceByID
+	FindLicensedWorkspaceByID                      = findLicensedWorkspaceByID
+	FindRoleAssociationsByTwoPartKey               = findRoleAssociationsByTwoPartKey
+	FindSAMLConfigurationByID                      = findSAMLConfigurationByID
+	FindWorkspaceByID                              = findWorkspaceByID
+	FindWorkspaceServiceAccountByTwoPartKey        = findWorkspaceServiceAccountByTwoPartKey
+	FindWorkspaceServiceAccountTokenByThreePartKey = findWorkspaceServiceAccountTokenByThreePartKey
 )

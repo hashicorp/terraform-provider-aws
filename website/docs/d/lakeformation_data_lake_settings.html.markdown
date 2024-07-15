@@ -36,6 +36,7 @@ This data source exports the following attributes in addition to the arguments a
 * `allow_external_data_filtering` - Whether to allow Amazon EMR clusters to access data managed by Lake Formation.
 * `external_data_filtering_allow_list` - A list of the account IDs of Amazon Web Services accounts with Amazon EMR clusters that are to perform data filtering.
 * `authorized_session_tag_value_list` - Lake Formation relies on a privileged process secured by Amazon EMR or the third party integrator to tag the user's role while assuming it.
+* `allow_full_table_external_data_access` - Whether to allow a third-party query engine to get data access credentials without session tags when a caller has full data access permissions.
 
 ### create_database_default_permissions
 
