@@ -43,11 +43,12 @@ func TestAccCodeBuildWebhook_bitbucket(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_bitbucket(rName, sourceLocation),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", ""),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexache.MustCompile(`^https://`)),
+					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "secret", ""),
 					resource.TestMatchResourceAttr(resourceName, names.AttrURL, regexache.MustCompile(`^https://`)),
 				),
@@ -200,7 +201,7 @@ func TestAccCodeBuildWebhook_buildType(t *testing.T) {
 	})
 }
 
-func TestAccCodeBuildWebhook_ScopeConfiguration(t *testing.T) {
+func TestAccCodeBuildWebhook_scopeConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webhook types.Webhook
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

@@ -179,10 +179,10 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("payload_url", webhook.PayloadUrl)
 	d.Set("project_name", d.Id())
-	d.Set("secret", d.Get("secret").(string))
 	if err := d.Set("scope_configuration", flattenScopeConfiguration(webhook.ScopeConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting scope_configuration: %s", err)
 	}
+	d.Set("secret", d.Get("secret").(string))
 	d.Set(names.AttrURL, webhook.Url)
 
 	return diags
