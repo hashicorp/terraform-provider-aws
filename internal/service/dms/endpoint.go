@@ -1060,7 +1060,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		endpointARN := d.Get("endpoint_arn").(string)
 		pauseTasks := d.Get("pause_replication_tasks").(bool)
-		var tasks []*awstypes.ReplicationTask
+		var tasks []awstypes.ReplicationTask
 
 		if pauseTasks {
 			var err error
@@ -1710,7 +1710,7 @@ func steadyEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn s
 	return nil
 }
 
-func stopEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn string) ([]*awstypes.ReplicationTask, error) {
+func stopEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn string) ([]awstypes.ReplicationTask, error) {
 	if err := steadyEndpointReplicationTasks(ctx, conn, arn); err != nil {
 		return nil, err
 	}
@@ -1721,7 +1721,7 @@ func stopEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn str
 		return nil, err
 	}
 
-	var stoppedTasks []*awstypes.ReplicationTask
+	var stoppedTasks []awstypes.ReplicationTask
 	for _, task := range tasks {
 		rtID := aws.ToString(task.ReplicationTaskIdentifier)
 		switch aws.ToString(task.Status) {
@@ -1740,7 +1740,7 @@ func stopEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn str
 	return stoppedTasks, nil
 }
 
-func startEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn string, tasks []*awstypes.ReplicationTask) error {
+func startEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn string, tasks []awstypes.ReplicationTask) error {
 	const maxConnTestWaitTime = 120 * time.Second
 
 	if len(tasks) == 0 {
@@ -1788,7 +1788,7 @@ func startEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn st
 	return nil
 }
 
-func findReplicationTasksByEndpointARN(ctx context.Context, conn *dms.Client, arn string) ([]*awstypes.ReplicationTask, error) {
+func findReplicationTasksByEndpointARN(ctx context.Context, conn *dms.Client, arn string) ([]awstypes.ReplicationTask, error) {
 	input := &dms.DescribeReplicationTasksInput{
 		Filters: []awstypes.Filter{
 			{
