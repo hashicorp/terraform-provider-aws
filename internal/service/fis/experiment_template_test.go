@@ -5,20 +5,18 @@ package fis_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
-	"github.com/aws/aws-sdk-go-v2/service/fis/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fis/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tffis "github.com/hashicorp/terraform-provider-aws/internal/service/fis"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,7 +24,7 @@ func TestAccFISExperimentTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
-	var conf types.ExperimentTemplate
+	var conf awstypes.ExperimentTemplate
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -77,7 +75,7 @@ func TestAccFISExperimentTemplate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
-	var conf types.ExperimentTemplate
+	var conf awstypes.ExperimentTemplate
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -101,7 +99,7 @@ func TestAccFISExperimentTemplate_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
-	var conf types.ExperimentTemplate
+	var conf awstypes.ExperimentTemplate
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -171,7 +169,7 @@ func TestAccFISExperimentTemplate_spot(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
-	var conf types.ExperimentTemplate
+	var conf awstypes.ExperimentTemplate
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -221,7 +219,7 @@ func TestAccFISExperimentTemplate_eks(t *testing.T) {
 	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
-	var conf types.ExperimentTemplate
+	var conf awstypes.ExperimentTemplate
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -277,7 +275,7 @@ func TestAccFISExperimentTemplate_ebs(t *testing.T) {
 	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
-	var conf types.ExperimentTemplate
+	var conf awstypes.ExperimentTemplate
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -325,7 +323,7 @@ func TestAccFISExperimentTemplate_ebsParameters(t *testing.T) {
 	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
-	var conf types.ExperimentTemplate
+	var conf awstypes.ExperimentTemplate
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -373,7 +371,7 @@ func TestAccFISExperimentTemplate_loggingConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
-	var conf types.ExperimentTemplate
+	var conf awstypes.ExperimentTemplate
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -424,7 +422,7 @@ func TestAccFISExperimentTemplate_updateExperimentOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
-	var conf types.ExperimentTemplate
+	var conf awstypes.ExperimentTemplate
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -458,25 +456,22 @@ func TestAccFISExperimentTemplate_updateExperimentOptions(t *testing.T) {
 	})
 }
 
-func testAccExperimentTemplateExists(ctx context.Context, resourceName string, config *types.ExperimentTemplate) resource.TestCheckFunc {
+func testAccExperimentTemplateExists(ctx context.Context, n string, v *awstypes.ExperimentTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FISClient(ctx)
-		out, err := conn.GetExperimentTemplate(ctx, &fis.GetExperimentTemplateInput{Id: aws.String(rs.Primary.ID)})
+
+		output, err := tffis.FindExperimentTemplateByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Describe Experiment Template error: %v", err)
+			return err
 		}
 
-		if out.ExperimentTemplate == nil {
-			return fmt.Errorf("No Experiment Template returned %v in %v", out.ExperimentTemplate, out)
-		}
-
-		*out.ExperimentTemplate = *config
+		*v = *output
 
 		return nil
 	}
@@ -490,12 +485,17 @@ func testAccCheckExperimentTemplateDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			_, err := conn.GetExperimentTemplate(ctx, &fis.GetExperimentTemplateInput{Id: aws.String(rs.Primary.ID)})
+			_, err := tffis.FindExperimentTemplateByID(ctx, conn, rs.Primary.ID)
 
-			var nf *types.ResourceNotFoundException
-			if !tfawserr.ErrStatusCodeEquals(err, tffis.ErrCodeNotFound) && !errors.As(err, &nf) {
-				return fmt.Errorf("Experiment Template '%s' was not deleted properly", rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				continue
 			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("FIS Experiment Template %s still exists", rs.Primary.ID)
 		}
 
 		return nil
