@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -30,7 +29,7 @@ import (
 
 // @SDKResource("aws_dms_event_subscription", name="Event Subscription")
 // @Tags(identifierAttribute="arn")
-func ResourceEventSubscription() *schema.Resource {
+func resourceEventSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventSubscriptionCreate,
 		ReadWithoutTimeout:   resourceEventSubscriptionRead,
@@ -133,7 +132,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
-	subscription, err := FindEventSubscriptionByName(ctx, conn, d.Id())
+	subscription, err := findEventSubscriptionByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DMS Event Subscription (%s) not found, removing from state", d.Id())
@@ -214,7 +213,7 @@ func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func FindEventSubscriptionByName(ctx context.Context, conn *dms.Client, name string) (*awstypes.EventSubscription, error) {
+func findEventSubscriptionByName(ctx context.Context, conn *dms.Client, name string) (*awstypes.EventSubscription, error) {
 	input := &dms.DescribeEventSubscriptionsInput{
 		SubscriptionName: aws.String(name),
 	}
@@ -229,10 +228,10 @@ func findEventSubscription(ctx context.Context, conn *dms.Client, input *dms.Des
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findEventSubscriptions(ctx context.Context, conn *dms.Client, input *dms.DescribeEventSubscriptionsInput) ([]*awstypes.EventSubscription, error) {
+func findEventSubscriptions(ctx context.Context, conn *dms.Client, input *dms.DescribeEventSubscriptionsInput) ([]awstypes.EventSubscription, error) {
 	var output []awstypes.EventSubscription
 
 	pages := dms.NewDescribeEventSubscriptionsPaginator(conn, input)
@@ -254,12 +253,12 @@ func findEventSubscriptions(ctx context.Context, conn *dms.Client, input *dms.De
 		output = append(output, page.EventSubscriptionsList...)
 	}
 
-	return tfslices.ToPointers(output), nil
+	return output, nil
 }
 
 func statusEventSubscription(ctx context.Context, conn *dms.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindEventSubscriptionByName(ctx, conn, name)
+		output, err := findEventSubscriptionByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
