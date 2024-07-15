@@ -17,7 +17,7 @@ Terraform data source for managing an AWS Timestream Write Table.
 ```terraform
 data "aws_timestreamwrite_table" "test" {
   database_name = aws_timestreamwrite_database.test.database_name
-  table_name    = aws_timestreamwrite_table.test.table_name  
+  table_name    = aws_timestreamwrite_table.test.table_name
 }
 ```
 
