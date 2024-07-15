@@ -539,7 +539,27 @@ resource "aws_codebuild_webhook" "test" {
 }
 
 func testAccWebhookConfig_scopeConfiguration(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = "CODEBUILD_DEFAULT_WEBHOOK_SOURCE_LOCATION"
+    type     = "GITHUB"
+  }
+}
+
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
   scope_configuration {
