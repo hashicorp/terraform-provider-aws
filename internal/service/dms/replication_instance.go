@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_dms_replication_instance", name="Replication Instance")
 // @Tags(identifierAttribute="replication_instance_arn")
-func ResourceReplicationInstance() *schema.Resource {
+func resourceReplicationInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationInstanceCreate,
 		ReadWithoutTimeout:   resourceReplicationInstanceRead,
@@ -214,7 +214,7 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
-	instance, err := FindReplicationInstanceByID(ctx, conn, d.Id())
+	instance, err := findReplicationInstanceByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DMS Replication Instance (%s) not found, removing from state", d.Id())
@@ -241,8 +241,8 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 	d.Set("replication_instance_private_ips", instance.ReplicationInstancePrivateIpAddresses)
 	d.Set("replication_instance_public_ips", instance.ReplicationInstancePublicIpAddresses)
 	d.Set("replication_subnet_group_id", instance.ReplicationSubnetGroup.ReplicationSubnetGroupIdentifier)
-	vpcSecurityGroupIDs := tfslices.ApplyToAll(instance.VpcSecurityGroups, func(sg awstypes.VpcSecurityGroupMembership) string {
-		return aws.ToString(sg.VpcSecurityGroupId)
+	vpcSecurityGroupIDs := tfslices.ApplyToAll(instance.VpcSecurityGroups, func(v awstypes.VpcSecurityGroupMembership) string {
+		return aws.ToString(v.VpcSecurityGroupId)
 	})
 	d.Set(names.AttrVPCSecurityGroupIDs, vpcSecurityGroupIDs)
 
@@ -332,7 +332,7 @@ func resourceReplicationInstanceDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func FindReplicationInstanceByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationInstance, error) {
+func findReplicationInstanceByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationInstance, error) {
 	input := &dms.DescribeReplicationInstancesInput{
 		Filters: []awstypes.Filter{
 			{
@@ -352,14 +352,13 @@ func findReplicationInstance(ctx context.Context, conn *dms.Client, input *dms.D
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findReplicationInstances(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationInstancesInput) ([]*awstypes.ReplicationInstance, error) {
+func findReplicationInstances(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationInstancesInput) ([]awstypes.ReplicationInstance, error) {
 	var output []awstypes.ReplicationInstance
 
 	pages := dms.NewDescribeReplicationInstancesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -377,12 +376,12 @@ func findReplicationInstances(ctx context.Context, conn *dms.Client, input *dms.
 		output = append(output, page.ReplicationInstances...)
 	}
 
-	return tfslices.ToPointers(output), nil
+	return output, nil
 }
 
 func statusReplicationInstance(ctx context.Context, conn *dms.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindReplicationInstanceByID(ctx, conn, id)
+		output, err := findReplicationInstanceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

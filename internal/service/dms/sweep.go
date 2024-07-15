@@ -157,7 +157,7 @@ func sweepReplicationInstances(region string) error {
 		}
 
 		for _, v := range page.ReplicationInstances {
-			r := ResourceReplicationInstance()
+			r := resourceReplicationInstance()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.ReplicationInstanceIdentifier))
 			d.Set("replication_instance_arn", v.ReplicationInstanceArn)
