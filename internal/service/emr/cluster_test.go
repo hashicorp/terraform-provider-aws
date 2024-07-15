@@ -2179,14 +2179,18 @@ EOF
 func testAccClusterConfig_Step(rName string, stepConfig string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
   log_uri                           = "s3://${aws_s3_bucket.test.bucket}/"
   name                              = %[1]q
   release_label                     = "emr-5.12.0"
-  service_role                      = "EMR_DefaultRole"
+  service_role                      = aws_iam_role.emr_service.arn
   termination_protection            = false
 
   master_instance_group {
@@ -2201,13 +2205,17 @@ resource "aws_emr_cluster" "test" {
   ec2_attributes {
     emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
-    instance_profile                  = "EMR_EC2_DefaultRole"
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
     subnet_id                         = aws_subnet.test.id
   }
 
   %[2]s
 
-  depends_on = [aws_route_table_association.test]
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
 }
 
 resource "aws_s3_bucket" "test" {
@@ -2545,6 +2553,8 @@ EOF
 func testAccClusterConfig_coreInstanceGroupAutoScalingPolicy(rName, autoscalingPolicy string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2579,12 +2589,12 @@ resource "aws_emr_cluster" "test" {
   keep_job_flow_alive_when_no_steps = true
   name                              = %[1]q
   release_label                     = "emr-5.12.0"
-  service_role                      = "EMR_DefaultRole"
+  service_role                      = aws_iam_role.emr_service.arn
 
   ec2_attributes {
     emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
-    instance_profile                  = "EMR_EC2_DefaultRole"
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
     subnet_id                         = aws_subnet.test.id
   }
 
@@ -2602,6 +2612,8 @@ POLICY
   depends_on = [
     aws_route_table_association.test,
     aws_iam_role_policy_attachment.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
   ]
 }
 `, rName, autoscalingPolicy))
@@ -2610,6 +2622,8 @@ POLICY
 func testAccClusterConfig_coreInstanceGroupAutoScalingPolicyRemoved(rName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2644,12 +2658,12 @@ resource "aws_emr_cluster" "test" {
   keep_job_flow_alive_when_no_steps = true
   name                              = %[1]q
   release_label                     = "emr-5.12.0"
-  service_role                      = "EMR_DefaultRole"
+  service_role                      = aws_iam_role.emr_service.arn
 
   ec2_attributes {
     emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
-    instance_profile                  = "EMR_EC2_DefaultRole"
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
     subnet_id                         = aws_subnet.test.id
   }
 
@@ -2664,6 +2678,8 @@ resource "aws_emr_cluster" "test" {
   depends_on = [
     aws_route_table_association.test,
     aws_iam_role_policy_attachment.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
   ]
 }
 `, rName))
@@ -2672,18 +2688,22 @@ resource "aws_emr_cluster" "test" {
 func testAccClusterConfig_coreInstanceGroupBidPrice(rName, bidPrice string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
   name                              = %[1]q
   release_label                     = "emr-5.12.0"
-  service_role                      = "EMR_DefaultRole"
+  service_role                      = aws_iam_role.emr_service.arn
 
   ec2_attributes {
     emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
-    instance_profile                  = "EMR_EC2_DefaultRole"
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
     subnet_id                         = aws_subnet.test.id
   }
 
@@ -2696,7 +2716,11 @@ resource "aws_emr_cluster" "test" {
     instance_type = "m4.large"
   }
 
-  depends_on = [aws_route_table_association.test]
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
 }
 `, rName, bidPrice))
 }
@@ -2704,18 +2728,22 @@ resource "aws_emr_cluster" "test" {
 func testAccClusterConfig_coreInstanceGroupInstanceCount(rName string, instanceCount int) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
   name                              = %[1]q
   release_label                     = "emr-5.12.0"
-  service_role                      = "EMR_DefaultRole"
+  service_role                      = aws_iam_role.emr_service.arn
 
   ec2_attributes {
     emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
-    instance_profile                  = "EMR_EC2_DefaultRole"
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
     subnet_id                         = aws_subnet.test.id
   }
 
@@ -2728,7 +2756,11 @@ resource "aws_emr_cluster" "test" {
     instance_type  = "m4.large"
   }
 
-  depends_on = [aws_route_table_association.test]
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
 }
 `, rName, instanceCount))
 }
@@ -2736,18 +2768,22 @@ resource "aws_emr_cluster" "test" {
 func testAccClusterConfig_coreInstanceGroupInstanceType(rName, instanceType string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
   name                              = %[1]q
   release_label                     = "emr-5.12.0"
-  service_role                      = "EMR_DefaultRole"
+  service_role                      = aws_iam_role.emr_service.arn
 
   ec2_attributes {
     emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
-    instance_profile                  = "EMR_EC2_DefaultRole"
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
     subnet_id                         = aws_subnet.test.id
   }
 
@@ -2759,7 +2795,11 @@ resource "aws_emr_cluster" "test" {
     instance_type = %[2]q
   }
 
-  depends_on = [aws_route_table_association.test]
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
 }
 `, rName, instanceType))
 }
@@ -2767,18 +2807,22 @@ resource "aws_emr_cluster" "test" {
 func testAccClusterConfig_coreInstanceGroupName(rName, instanceGroupName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
   name                              = %[1]q
   release_label                     = "emr-5.12.0"
-  service_role                      = "EMR_DefaultRole"
+  service_role                      = aws_iam_role.emr_service.arn
 
   ec2_attributes {
     emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
-    instance_profile                  = "EMR_EC2_DefaultRole"
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
     subnet_id                         = aws_subnet.test.id
   }
 
@@ -2791,7 +2835,11 @@ resource "aws_emr_cluster" "test" {
     name          = %[2]q
   }
 
-  depends_on = [aws_route_table_association.test]
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
 }
 `, rName, instanceGroupName))
 }
@@ -2799,16 +2847,20 @@ resource "aws_emr_cluster" "test" {
 func testAccClusterConfig_ec2AttributesDefaultManagedSecurityGroups(rName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
   name                              = %[1]q
   release_label                     = "emr-5.33.1"
-  service_role                      = "EMR_DefaultRole"
+  service_role                      = aws_iam_role.emr_service.arn
 
   ec2_attributes {
-    instance_profile = "EMR_EC2_DefaultRole"
+    instance_profile = aws_iam_instance_profile.emr_instance_profile.arn
     subnet_id        = aws_subnet.test.id
   }
 
@@ -2816,7 +2868,11 @@ resource "aws_emr_cluster" "test" {
     instance_type = "m4.large"
   }
 
-  depends_on = [aws_route_table_association.test]
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
 }
 `, rName))
 }
@@ -2824,7 +2880,11 @@ resource "aws_emr_cluster" "test" {
 func testAccClusterConfig_kerberosDedicatedKdc(rName string, password string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_emr_security_configuration" "test" {
   configuration = <<EOF
 {
@@ -2846,7 +2906,7 @@ resource "aws_emr_cluster" "test" {
   name                              = %[1]q
   release_label                     = "emr-5.12.0"
   security_configuration            = aws_emr_security_configuration.test.name
-  service_role                      = "EMR_DefaultRole"
+  service_role                      = aws_iam_role.emr_service.arn
   termination_protection            = false
 
   master_instance_group {
@@ -2861,7 +2921,7 @@ resource "aws_emr_cluster" "test" {
   ec2_attributes {
     emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
-    instance_profile                  = "EMR_EC2_DefaultRole"
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
     subnet_id                         = aws_subnet.test.id
   }
 
@@ -2870,7 +2930,11 @@ resource "aws_emr_cluster" "test" {
     realm              = "EC2.INTERNAL"
   }
 
-  depends_on = [aws_route_table_association.test]
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
 }
 `, rName, password))
 }
@@ -2878,18 +2942,22 @@ resource "aws_emr_cluster" "test" {
 func testAccClusterConfig_masterInstanceGroupBidPrice(rName, bidPrice string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
   name                              = %[1]q
   release_label                     = "emr-5.12.0"
-  service_role                      = "EMR_DefaultRole"
+  service_role                      = aws_iam_role.emr_service.arn
 
   ec2_attributes {
     emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
-    instance_profile                  = "EMR_EC2_DefaultRole"
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
     subnet_id                         = aws_subnet.test.id
   }
 
@@ -2898,7 +2966,11 @@ resource "aws_emr_cluster" "test" {
     instance_type = "m4.large"
   }
 
-  depends_on = [aws_route_table_association.test]
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
 }
 `, rName, bidPrice))
 }
@@ -2906,13 +2978,17 @@ resource "aws_emr_cluster" "test" {
 func testAccClusterConfig_masterInstanceGroupInstanceCount(rName string, instanceCount int) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, true),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
   name                              = %[1]q
   release_label                     = "emr-5.24.1"
-  service_role                      = "EMR_DefaultRole"
+  service_role                      = aws_iam_role.emr_service.arn
 
   # Termination protection is automatically enabled for multiple master clusters
   termination_protection = false
@@ -2920,7 +2996,7 @@ resource "aws_emr_cluster" "test" {
   ec2_attributes {
     emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
-    instance_profile                  = "EMR_EC2_DefaultRole"
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
     subnet_id                         = aws_subnet.test.id
   }
 
@@ -2934,7 +3010,11 @@ resource "aws_emr_cluster" "test" {
     instance_type = "m4.large"
   }
 
-  depends_on = [aws_route_table_association.test]
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
 }
 `, rName, instanceCount))
 }
@@ -2942,18 +3022,22 @@ resource "aws_emr_cluster" "test" {
 func testAccClusterConfig_masterInstanceGroupInstanceType(rName, instanceType string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
   name                              = %[1]q
   release_label                     = "emr-5.12.0"
-  service_role                      = "EMR_DefaultRole"
+  service_role                      = aws_iam_role.emr_service.arn
 
   ec2_attributes {
     emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
-    instance_profile                  = "EMR_EC2_DefaultRole"
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
     subnet_id                         = aws_subnet.test.id
   }
 
@@ -2961,7 +3045,11 @@ resource "aws_emr_cluster" "test" {
     instance_type = %[2]q
   }
 
-  depends_on = [aws_route_table_association.test]
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
 }
 `, rName, instanceType))
 }
@@ -2969,18 +3057,22 @@ resource "aws_emr_cluster" "test" {
 func testAccClusterConfig_masterInstanceGroupName(rName, instanceGroupName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
   name                              = %[1]q
   release_label                     = "emr-5.12.0"
-  service_role                      = "EMR_DefaultRole"
+  service_role                      = aws_iam_role.emr_service.arn
 
   ec2_attributes {
     emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
-    instance_profile                  = "EMR_EC2_DefaultRole"
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
     subnet_id                         = aws_subnet.test.id
   }
 
@@ -2989,7 +3081,11 @@ resource "aws_emr_cluster" "test" {
     name          = %[2]q
   }
 
-  depends_on = [aws_route_table_association.test]
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
 }
 `, rName, instanceGroupName))
 }
@@ -3733,18 +3829,22 @@ resource "aws_emr_cluster" "test" {
 func testAccClusterConfig_stepConcurrencyLevel(rName string, stepConcurrencyLevel int) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
   name                              = %[1]q
   release_label                     = "emr-5.28.0"
-  service_role                      = "EMR_DefaultRole"
+  service_role                      = aws_iam_role.emr_service.arn
 
   ec2_attributes {
     emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
-    instance_profile                  = "EMR_EC2_DefaultRole"
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
     subnet_id                         = aws_subnet.test.id
   }
 
@@ -3754,7 +3854,11 @@ resource "aws_emr_cluster" "test" {
 
   step_concurrency_level = %[2]d
 
-  depends_on = [aws_route_table_association.test]
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
 }
 `, rName, stepConcurrencyLevel))
 }
@@ -3762,18 +3866,22 @@ resource "aws_emr_cluster" "test" {
 func testAccClusterConfig_ebs(rName string, volumesPerInstance int) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
   name                              = %[1]q
   release_label                     = "emr-5.28.0"
-  service_role                      = "EMR_DefaultRole"
+  service_role                      = aws_iam_role.emr_service.arn
 
   ec2_attributes {
     emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
-    instance_profile                  = "EMR_EC2_DefaultRole"
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
     subnet_id                         = aws_subnet.test.id
   }
 
@@ -3806,13 +3914,18 @@ resource "aws_emr_cluster" "test" {
     }
   }
 
-  depends_on = [aws_route_table_association.test]
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
 }
 `, rName, volumesPerInstance))
 }
 
 func testAccClusterConfig_customAMIID(rName string) string {
 	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		testAccClusterConfig_baseVPC(rName, false),
 		testAccClusterIAMServiceRoleCustomAMIIDConfig(rName),
 		testAccClusterConfig_baseIAMInstanceProfile(rName),
@@ -3863,32 +3976,7 @@ resource "aws_emr_cluster" "test" {
   service_role         = aws_iam_role.emr_service.arn
   autoscaling_role     = aws_iam_role.emr_autoscaling_role.arn
   ebs_root_volume_size = 48
-  custom_ami_id        = data.aws_ami.emr-custom-ami.id
-}
-
-data "aws_ami" "emr-custom-ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*"]
-  }
-
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
+  custom_ami_id        = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
 }
 `, rName))
 }
@@ -4129,6 +4217,8 @@ resource "aws_emr_cluster" "test" {
 func testAccClusterConfig_autoTermination(rName string, timeout int) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -4141,10 +4231,10 @@ resource "aws_emr_cluster" "test" {
   keep_job_flow_alive_when_no_steps = true
   name                              = %[1]q
   release_label                     = "emr-5.33.1"
-  service_role                      = "EMR_DefaultRole"
+  service_role                      = aws_iam_role.emr_service.arn
 
   ec2_attributes {
-    instance_profile                  = "EMR_EC2_DefaultRole"
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
     subnet_id                         = aws_subnet.test.id
     emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
@@ -4154,7 +4244,11 @@ resource "aws_emr_cluster" "test" {
     instance_type = "m4.large"
   }
 
-  depends_on = [aws_route_table_association.test]
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
 }
 `, rName, timeout))
 }
@@ -4162,6 +4256,8 @@ resource "aws_emr_cluster" "test" {
 func testAccClusterConfig_noAutoTermination(rName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -4170,10 +4266,10 @@ resource "aws_emr_cluster" "test" {
   keep_job_flow_alive_when_no_steps = true
   name                              = %[1]q
   release_label                     = "emr-5.33.1"
-  service_role                      = "EMR_DefaultRole"
+  service_role                      = aws_iam_role.emr_service.arn
 
   ec2_attributes {
-    instance_profile                  = "EMR_EC2_DefaultRole"
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
     subnet_id                         = aws_subnet.test.id
     emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
@@ -4183,7 +4279,11 @@ resource "aws_emr_cluster" "test" {
     instance_type = "m4.large"
   }
 
-  depends_on = [aws_route_table_association.test]
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
 }
 `, rName))
 }
@@ -4347,6 +4447,8 @@ resource "aws_emr_cluster" "test" {
 func testAccClusterConfig_unhealthyNodeReplacement(rName, unhealthyNodeReplacement string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -4355,12 +4457,12 @@ resource "aws_emr_cluster" "test" {
   keep_job_flow_alive_when_no_steps = true
   name                              = %[1]q
   release_label                     = "emr-5.33.1"
-  service_role                      = "EMR_DefaultRole"
+  service_role                      = aws_iam_role.emr_service.arn
   termination_protection            = false
   unhealthy_node_replacement        = %[2]s
 
   ec2_attributes {
-    instance_profile                  = "EMR_EC2_DefaultRole"
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
     subnet_id                         = aws_subnet.test.id
     emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
@@ -4370,7 +4472,11 @@ resource "aws_emr_cluster" "test" {
     instance_type = "m4.large"
   }
 
-  depends_on = [aws_route_table_association.test]
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
 }
 `, rName, unhealthyNodeReplacement))
 }
