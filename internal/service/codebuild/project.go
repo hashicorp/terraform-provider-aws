@@ -948,7 +948,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChangesExcept("project_visibility", "resource_access_role", names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("project_visibility", "resource_access_role") {
 		input := &codebuild.UpdateProjectInput{
 			Name: aws.String(d.Get(names.AttrName).(string)),
 		}
