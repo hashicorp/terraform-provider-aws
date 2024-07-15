@@ -260,6 +260,7 @@ var (
 	UpdateTags                                                 = updateTags
 	VPCDHCPOptionsAssociationParseResourceID                   = vpcDHCPOptionsAssociationParseResourceID
 	VPCMigrateState                                            = vpcMigrateState
+	VPNGatewayRoutePropagationParseID                          = vpnGatewayRoutePropagationParseID
 	WaitVolumeAttachmentCreated                                = waitVolumeAttachmentCreated
 )
 

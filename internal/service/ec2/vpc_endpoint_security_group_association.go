@@ -97,7 +97,7 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *s
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.SetId(VPCEndpointSecurityGroupAssociationCreateID(vpcEndpointID, securityGroupID))
+	d.SetId(vpcEndpointSecurityGroupAssociationCreateID(vpcEndpointID, securityGroupID))
 
 	if replaceDefaultAssociation {
 		// Delete the existing VPC endpoint/default security group association.

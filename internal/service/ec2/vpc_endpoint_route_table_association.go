@@ -65,7 +65,7 @@ func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *sche
 		return sdkdiag.AppendErrorf(diags, "creating VPC Endpoint Route Table Association (%s): %s", id, err)
 	}
 
-	d.SetId(VPCEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
+	d.SetId(vpcEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
 
 	err = waitVPCEndpointRouteTableAssociationReady(ctx, conn, endpointID, routeTableID)
 
@@ -146,7 +146,7 @@ func resourceVPCEndpointRouteTableAssociationImport(ctx context.Context, d *sche
 	routeTableID := parts[1]
 	log.Printf("[DEBUG] Importing VPC Endpoint (%s) Route Table (%s) Association", endpointID, routeTableID)
 
-	d.SetId(VPCEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
+	d.SetId(vpcEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
 	d.Set(names.AttrVPCEndpointID, endpointID)
 	d.Set("route_table_id", routeTableID)
 
