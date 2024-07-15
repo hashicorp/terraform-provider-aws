@@ -528,7 +528,7 @@ func resourceEndpoint() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          awstypes.CannedAclForObjectsValueNone,
-							ValidateDiagFunc: enum.Validate[awstypes.CannedAclForObjectsValue](),
+							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CannedAclForObjectsValue](),
 							StateFunc: func(v interface{}) string {
 								return strings.ToLower(v.(string))
 							},
@@ -602,7 +602,7 @@ func resourceEndpoint() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          awstypes.DatePartitionDelimiterValueSlash,
-							ValidateDiagFunc: enum.Validate[awstypes.DatePartitionDelimiterValue](),
+							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.DatePartitionDelimiterValue](),
 							StateFunc: func(v interface{}) string {
 								return strings.ToLower(v.(string))
 							},
@@ -616,7 +616,7 @@ func resourceEndpoint() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          awstypes.DatePartitionSequenceValueYyyymmdd,
-							ValidateDiagFunc: enum.Validate[awstypes.DatePartitionSequenceValue](),
+							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.DatePartitionSequenceValue](),
 							StateFunc: func(v interface{}) string {
 								return strings.ToLower(v.(string))
 							},

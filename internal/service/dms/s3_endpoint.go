@@ -116,7 +116,7 @@ func resourceS3Endpoint() *schema.Resource {
 			"canned_acl_for_objects": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.CannedAclForObjectsValue](),
+				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CannedAclForObjectsValue](),
 				StateFunc: func(v interface{}) string {
 					return strings.ToLower(v.(string))
 				},
@@ -148,7 +148,7 @@ func resourceS3Endpoint() *schema.Resource {
 			"compression_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.CompressionTypeValue](),
+				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CompressionTypeValue](),
 				Default:          strings.ToUpper(string(awstypes.CompressionTypeValueNone)),
 				StateFunc: func(v interface{}) string {
 					return strings.ToUpper(v.(string))
@@ -185,7 +185,7 @@ func resourceS3Endpoint() *schema.Resource {
 			"date_partition_delimiter": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DatePartitionDelimiterValue](),
+				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.DatePartitionDelimiterValue](),
 				StateFunc: func(v interface{}) string {
 					return strings.ToUpper(v.(string))
 				},
@@ -198,7 +198,7 @@ func resourceS3Endpoint() *schema.Resource {
 			"date_partition_sequence": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DatePartitionSequenceValue](),
+				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.DatePartitionSequenceValue](),
 				StateFunc: func(v interface{}) string {
 					return strings.ToLower(v.(string))
 				},
