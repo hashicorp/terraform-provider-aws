@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -768,12 +767,12 @@ func TestAccFSxWindowsFileSystem_audit(t *testing.T) {
 		CheckDestroy:             testAccCheckWindowsFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemConfig_audit(rName, domainName, awstypes.WindowsAccessAuditLogLevelSuccessOnly),
+				Config: testAccWindowsFileSystemConfig_audit(rName, domainName, string(awstypes.WindowsAccessAuditLogLevelSuccessOnly)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_access_audit_log_level", awstypes.WindowsAccessAuditLogLevelSuccessOnly),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_share_access_audit_log_level", awstypes.WindowsAccessAuditLogLevelSuccessOnly),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_access_audit_log_level", string(awstypes.WindowsAccessAuditLogLevelSuccessOnly)),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_share_access_audit_log_level", string(awstypes.WindowsAccessAuditLogLevelSuccessOnly)),
 					resource.TestCheckResourceAttrSet(resourceName, "audit_log_configuration.0.audit_log_destination"),
 				),
 			},
@@ -787,22 +786,22 @@ func TestAccFSxWindowsFileSystem_audit(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccWindowsFileSystemConfig_audit(rName, domainName, awstypes.WindowsAccessAuditLogLevelSuccessAndFailure),
+				Config: testAccWindowsFileSystemConfig_audit(rName, domainName, string(awstypes.WindowsAccessAuditLogLevelSuccessAndFailure)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_access_audit_log_level", awstypes.WindowsAccessAuditLogLevelSuccessAndFailure),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_share_access_audit_log_level", awstypes.WindowsAccessAuditLogLevelSuccessAndFailure),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_access_audit_log_level", string(awstypes.WindowsAccessAuditLogLevelSuccessAndFailure)),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_share_access_audit_log_level", string(awstypes.WindowsAccessAuditLogLevelSuccessAndFailure)),
 					resource.TestCheckResourceAttrSet(resourceName, "audit_log_configuration.0.audit_log_destination"),
 				),
 			},
 			{
-				Config: testAccWindowsFileSystemConfig_auditNoDestination(rName, domainName, awstypes.WindowsAccessAuditLogLevelDisabled),
+				Config: testAccWindowsFileSystemConfig_auditNoDestination(rName, domainName, string(awstypes.WindowsAccessAuditLogLevelDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_access_audit_log_level", awstypes.WindowsAccessAuditLogLevelDisabled),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_share_access_audit_log_level", awstypes.WindowsAccessAuditLogLevelDisabled),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_access_audit_log_level", string(awstypes.WindowsAccessAuditLogLevelDisabled)),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_share_access_audit_log_level", string(awstypes.WindowsAccessAuditLogLevelDisabled)),
 				),
 			},
 		},
