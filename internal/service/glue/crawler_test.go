@@ -12,8 +12,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,7 +28,7 @@ import (
 
 func TestAccGlueCrawler_dynamoDBTarget(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -96,7 +97,7 @@ func TestAccGlueCrawler_dynamoDBTarget(t *testing.T) {
 
 func TestAccGlueCrawler_DynamoDBTarget_scanAll(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -141,7 +142,7 @@ func TestAccGlueCrawler_DynamoDBTarget_scanAll(t *testing.T) {
 
 func TestAccGlueCrawler_DynamoDBTarget_scanRate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -186,7 +187,7 @@ func TestAccGlueCrawler_DynamoDBTarget_scanRate(t *testing.T) {
 
 func TestAccGlueCrawler_jdbcTarget(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -287,7 +288,7 @@ func TestAccGlueCrawler_jdbcTarget(t *testing.T) {
 
 func TestAccGlueCrawler_JDBCTarget_exclusions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -331,7 +332,7 @@ func TestAccGlueCrawler_JDBCTarget_exclusions(t *testing.T) {
 
 func TestAccGlueCrawler_JDBCTarget_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName())
@@ -392,7 +393,7 @@ func TestAccGlueCrawler_JDBCTarget_multiple(t *testing.T) {
 
 func TestAccGlueCrawler_mongoDBTarget(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(), "27017") + "/testdatabase"
@@ -434,7 +435,7 @@ func TestAccGlueCrawler_mongoDBTarget(t *testing.T) {
 
 func TestAccGlueCrawler_MongoDBTargetScan_all(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(), "27017") + "/testdatabase"
@@ -486,7 +487,7 @@ func TestAccGlueCrawler_MongoDBTargetScan_all(t *testing.T) {
 
 func TestAccGlueCrawler_MongoDBTarget_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(), "27017") + "/testdatabase"
@@ -544,7 +545,7 @@ func TestAccGlueCrawler_MongoDBTarget_multiple(t *testing.T) {
 
 func TestAccGlueCrawler_deltaTarget(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(), "27017") + "/testdatabase"
@@ -590,7 +591,7 @@ func TestAccGlueCrawler_deltaTarget(t *testing.T) {
 
 func TestAccGlueCrawler_hudiTarget(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(), "27017") + "/testdatabase"
@@ -634,7 +635,7 @@ func TestAccGlueCrawler_hudiTarget(t *testing.T) {
 
 func TestAccGlueCrawler_icebergTarget(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(), "27017") + "/testdatabase"
@@ -678,7 +679,7 @@ func TestAccGlueCrawler_icebergTarget(t *testing.T) {
 
 func TestAccGlueCrawler_s3Target(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -747,7 +748,7 @@ func TestAccGlueCrawler_s3Target(t *testing.T) {
 
 func TestAccGlueCrawler_S3Target_connectionName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 	connectionName := "aws_glue_connection.test"
@@ -778,7 +779,7 @@ func TestAccGlueCrawler_S3Target_connectionName(t *testing.T) {
 
 func TestAccGlueCrawler_S3Target_sampleSize(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -815,7 +816,7 @@ func TestAccGlueCrawler_S3Target_sampleSize(t *testing.T) {
 
 func TestAccGlueCrawler_S3Target_exclusions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -857,7 +858,7 @@ func TestAccGlueCrawler_S3Target_exclusions(t *testing.T) {
 
 func TestAccGlueCrawler_S3Target_eventqueue(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -888,7 +889,7 @@ func TestAccGlueCrawler_S3Target_eventqueue(t *testing.T) {
 
 func TestAccGlueCrawler_CatalogTarget_dlqeventqueue(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -919,7 +920,7 @@ func TestAccGlueCrawler_CatalogTarget_dlqeventqueue(t *testing.T) {
 
 func TestAccGlueCrawler_S3Target_dlqeventqueue(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -951,7 +952,7 @@ func TestAccGlueCrawler_S3Target_dlqeventqueue(t *testing.T) {
 
 func TestAccGlueCrawler_S3Target_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -1006,7 +1007,7 @@ func TestAccGlueCrawler_S3Target_multiple(t *testing.T) {
 
 func TestAccGlueCrawler_catalogTarget(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -1080,7 +1081,7 @@ func TestAccGlueCrawler_catalogTarget(t *testing.T) {
 
 func TestAccGlueCrawler_CatalogTarget_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -1137,7 +1138,7 @@ func TestAccGlueCrawler_CatalogTarget_multiple(t *testing.T) {
 
 func TestAccGlueCrawler_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -1161,7 +1162,7 @@ func TestAccGlueCrawler_disappears(t *testing.T) {
 
 func TestAccGlueCrawler_classifiers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -1207,7 +1208,7 @@ func TestAccGlueCrawler_classifiers(t *testing.T) {
 
 func TestAccGlueCrawler_Configuration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	configuration1 := `{"Version": 1.0, "CrawlerOutput": {"Tables": { "AddOrUpdateBehavior": "MergeNewColumns" }}}`
 	configuration2 := `{"Version": 1.0, "CrawlerOutput": {"Partitions": { "AddOrUpdateBehavior": "InheritFromTable" }}}`
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1251,7 +1252,7 @@ func TestAccGlueCrawler_Configuration(t *testing.T) {
 
 func TestAccGlueCrawler_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -1286,7 +1287,7 @@ func TestAccGlueCrawler_description(t *testing.T) {
 
 func TestAccGlueCrawler_RoleARN_noPath(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	iamRoleResourceName := "aws_iam_role.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
@@ -1315,7 +1316,7 @@ func TestAccGlueCrawler_RoleARN_noPath(t *testing.T) {
 
 func TestAccGlueCrawler_RoleARN_path(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -1343,7 +1344,7 @@ func TestAccGlueCrawler_RoleARN_path(t *testing.T) {
 
 func TestAccGlueCrawler_RoleName_path(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -1371,7 +1372,7 @@ func TestAccGlueCrawler_RoleName_path(t *testing.T) {
 
 func TestAccGlueCrawler_schedule(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -1413,7 +1414,7 @@ func TestAccGlueCrawler_schedule(t *testing.T) {
 
 func TestAccGlueCrawler_schemaChangePolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -1424,21 +1425,21 @@ func TestAccGlueCrawler_schemaChangePolicy(t *testing.T) {
 		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCrawlerConfig_schemaChangePolicy(rName, glue.DeleteBehaviorDeleteFromDatabase, glue.UpdateBehaviorUpdateInDatabase),
+				Config: testAccCrawlerConfig_schemaChangePolicy(rName, awstypes.DeleteBehaviorDeleteFromDatabase, awstypes.UpdateBehaviorUpdateInDatabase),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", glue.DeleteBehaviorDeleteFromDatabase),
-					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", glue.UpdateBehaviorUpdateInDatabase),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", awstypes.DeleteBehaviorDeleteFromDatabase),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", awstypes.UpdateBehaviorUpdateInDatabase),
 				),
 			},
 			{
-				Config: testAccCrawlerConfig_schemaChangePolicy(rName, glue.DeleteBehaviorLog, glue.UpdateBehaviorLog),
+				Config: testAccCrawlerConfig_schemaChangePolicy(rName, awstypes.DeleteBehaviorLog, awstypes.UpdateBehaviorLog),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", glue.DeleteBehaviorLog),
-					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", glue.UpdateBehaviorLog),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", awstypes.DeleteBehaviorLog),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", awstypes.UpdateBehaviorLog),
 				),
 			},
 			{
@@ -1452,7 +1453,7 @@ func TestAccGlueCrawler_schemaChangePolicy(t *testing.T) {
 
 func TestAccGlueCrawler_tablePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -1487,7 +1488,7 @@ func TestAccGlueCrawler_tablePrefix(t *testing.T) {
 
 func TestAccGlueCrawler_removeTablePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -1522,7 +1523,7 @@ func TestAccGlueCrawler_removeTablePrefix(t *testing.T) {
 
 func TestAccGlueCrawler_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler1, crawler2, crawler3 glue.Crawler
+	var crawler1, crawler2, crawler3 awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -1568,7 +1569,7 @@ func TestAccGlueCrawler_tags(t *testing.T) {
 
 func TestAccGlueCrawler_security(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -1603,7 +1604,7 @@ func TestAccGlueCrawler_security(t *testing.T) {
 
 func TestAccGlueCrawler_lineage(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -1647,7 +1648,7 @@ func TestAccGlueCrawler_lineage(t *testing.T) {
 
 func TestAccGlueCrawler_lakeformation(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -1683,7 +1684,7 @@ func TestAccGlueCrawler_lakeformation(t *testing.T) {
 
 func TestAccGlueCrawler_reCrawlPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var crawler glue.Crawler
+	var crawler awstypes.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
 
@@ -1725,7 +1726,7 @@ func TestAccGlueCrawler_reCrawlPolicy(t *testing.T) {
 	})
 }
 
-func testAccCheckCrawlerExists(ctx context.Context, resourceName string, crawler *glue.Crawler) resource.TestCheckFunc {
+func testAccCheckCrawlerExists(ctx context.Context, resourceName string, crawler *awstypes.Crawler) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -1736,7 +1737,7 @@ func testAccCheckCrawlerExists(ctx context.Context, resourceName string, crawler
 			return fmt.Errorf("no ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 		output, err := tfglue.FindCrawlerByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -1756,7 +1757,7 @@ func testAccCheckCrawlerDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 			_, err := tfglue.FindCrawlerByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
@@ -1774,9 +1775,9 @@ func testAccCheckCrawlerDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckCrawlerConfiguration(crawler *glue.Crawler, acctestJSON string) resource.TestCheckFunc {
+func testAccCheckCrawlerConfiguration(crawler *awstypes.Crawler, acctestJSON string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		apiJSON := aws.StringValue(crawler.Configuration)
+		apiJSON := aws.ToString(crawler.Configuration)
 		apiJSONBuffer := bytes.NewBufferString("")
 		if err := json.Compact(apiJSONBuffer, []byte(apiJSON)); err != nil {
 			return fmt.Errorf("unable to compact API configuration JSON: %s", err)

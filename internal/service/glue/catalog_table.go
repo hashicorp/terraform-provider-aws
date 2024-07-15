@@ -10,15 +10,17 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -405,7 +407,7 @@ func ReadTableID(id string) (string, string, string, error) {
 
 func resourceCatalogTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get(names.AttrDatabaseName).(string)
 	name := d.Get(names.AttrName).(string)
@@ -418,7 +420,7 @@ func resourceCatalogTableCreate(ctx context.Context, d *schema.ResourceData, met
 		PartitionIndexes:     expandTablePartitionIndexes(d.Get("partition_index").([]interface{})),
 	}
 
-	_, err := conn.CreateTableWithContext(ctx, input)
+	_, err := conn.CreateTable(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Catalog Table (%s): %s", name, err)
 	}
@@ -430,7 +432,7 @@ func resourceCatalogTableCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	catalogID, dbName, name, err := ReadTableID(d.Id())
 	if err != nil {
@@ -454,7 +456,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		Service:   "glue",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("table/%s/%s", dbName, aws.StringValue(table.Name)),
+		Resource:  fmt.Sprintf("table/%s/%s", dbName, aws.ToString(table.Name)),
 	}.String()
 	d.Set(names.AttrARN, tableArn)
 	d.Set(names.AttrCatalogID, catalogID)
@@ -494,7 +496,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		TableName:    aws.String(name),
 	}
 
-	output, err := conn.GetPartitionIndexesWithContext(ctx, input)
+	output, err := conn.GetPartitionIndexes(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s) partition indexes: %s", d.Id(), err)
@@ -511,7 +513,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	catalogID, dbName, name, err := ReadTableID(d.Id())
 	if err != nil {
@@ -531,7 +533,7 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", d.Id(), err)
 	}
 
-	if allParameters := aws.StringValueMap(table.Parameters); allParameters["table_type"] == "ICEBERG" {
+	if allParameters := table.Parameters; allParameters["table_type"] == "ICEBERG" {
 		for _, k := range []string{"table_type", "metadata_location"} {
 			if v := allParameters[k]; v != "" {
 				if input.TableInput.Parameters == nil {
@@ -542,7 +544,7 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	_, err = conn.UpdateTableWithContext(ctx, input)
+	_, err = conn.UpdateTable(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Glue Catalog Table (%s): %s", d.Id(), err)
@@ -553,7 +555,7 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceCatalogTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	catalogID, dbName, name, err := ReadTableID(d.Id())
 	if err != nil {
@@ -561,13 +563,13 @@ func resourceCatalogTableDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[DEBUG] Deleting Glue Catalog Table: %s", d.Id())
-	_, err = conn.DeleteTableWithContext(ctx, &glue.DeleteTableInput{
+	_, err = conn.DeleteTable(ctx, &glue.DeleteTableInput{
 		CatalogId:    aws.String(catalogID),
 		Name:         aws.String(name),
 		DatabaseName: aws.String(dbName),
 	})
 
-	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return diags
 	}
 
@@ -578,16 +580,16 @@ func resourceCatalogTableDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func FindTableByName(ctx context.Context, conn *glue.Glue, catalogID, dbName, name string) (*glue.TableData, error) {
+func FindTableByName(ctx context.Context, conn *glue.Client, catalogID, dbName, name string) (*awstypes.TableData, error) {
 	input := &glue.GetTableInput{
 		CatalogId:    aws.String(catalogID),
 		DatabaseName: aws.String(dbName),
 		Name:         aws.String(name),
 	}
 
-	output, err := conn.GetTableWithContext(ctx, input)
+	output, err := conn.GetTable(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -629,7 +631,7 @@ func expandTableInput(d *schema.ResourceData) *glue.TableInput {
 	if v, ok := d.GetOk("partition_keys"); ok {
 		tableInput.PartitionKeys = expandColumns(v.([]interface{}))
 	} else if _, ok = d.GetOk("open_table_format_input"); !ok {
-		tableInput.PartitionKeys = []*glue.Column{}
+		tableInput.PartitionKeys = []*awstypes.Column{}
 	}
 
 	if v, ok := d.GetOk("view_original_text"); ok {
@@ -655,9 +657,9 @@ func expandTableInput(d *schema.ResourceData) *glue.TableInput {
 	return tableInput
 }
 
-func expandOpenTableFormat(s *schema.ResourceData) *glue.OpenTableFormatInput_ {
+func expandOpenTableFormat(s *schema.ResourceData) *awstypes.OpenTableFormatInput_ {
 	if v, ok := s.GetOk("open_table_format_input"); ok {
-		openTableFormatInput := &glue.OpenTableFormatInput_{
+		openTableFormatInput := &awstypes.OpenTableFormatInput_{
 			IcebergInput: expandIcebergInput(v.([]interface{})[0].(map[string]interface{})),
 		}
 		return openTableFormatInput
@@ -665,9 +667,9 @@ func expandOpenTableFormat(s *schema.ResourceData) *glue.OpenTableFormatInput_ {
 	return nil
 }
 
-func expandIcebergInput(s map[string]interface{}) *glue.IcebergInput_ {
+func expandIcebergInput(s map[string]interface{}) *awstypes.IcebergInput_ {
 	var iceberg = s["iceberg_input"].([]interface{})[0].(map[string]interface{})
-	icebergInput := &glue.IcebergInput_{
+	icebergInput := &awstypes.IcebergInput_{
 		MetadataOperation: aws.String(iceberg["metadata_operation"].(string)),
 	}
 	if v, ok := iceberg[names.AttrVersion].(string); ok && v != "" {
@@ -676,8 +678,8 @@ func expandIcebergInput(s map[string]interface{}) *glue.IcebergInput_ {
 	return icebergInput
 }
 
-func expandTablePartitionIndexes(a []interface{}) []*glue.PartitionIndex {
-	partitionIndexes := make([]*glue.PartitionIndex, 0, len(a))
+func expandTablePartitionIndexes(a []interface{}) []*awstypes.PartitionIndex {
+	partitionIndexes := make([]*awstypes.PartitionIndex, 0, len(a))
 
 	for _, m := range a {
 		partitionIndexes = append(partitionIndexes, expandTablePartitionIndex(m.(map[string]interface{})))
@@ -686,8 +688,8 @@ func expandTablePartitionIndexes(a []interface{}) []*glue.PartitionIndex {
 	return partitionIndexes
 }
 
-func expandTablePartitionIndex(m map[string]interface{}) *glue.PartitionIndex {
-	partitionIndex := &glue.PartitionIndex{
+func expandTablePartitionIndex(m map[string]interface{}) *awstypes.PartitionIndex {
+	partitionIndex := &awstypes.PartitionIndex{
 		IndexName: aws.String(m["index_name"].(string)),
 		Keys:      flex.ExpandStringList(m["keys"].([]interface{})),
 	}
@@ -695,13 +697,13 @@ func expandTablePartitionIndex(m map[string]interface{}) *glue.PartitionIndex {
 	return partitionIndex
 }
 
-func expandStorageDescriptor(l []interface{}) *glue.StorageDescriptor {
+func expandStorageDescriptor(l []interface{}) *awstypes.StorageDescriptor {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	s := l[0].(map[string]interface{})
-	storageDescriptor := &glue.StorageDescriptor{}
+	storageDescriptor := &awstypes.StorageDescriptor{}
 
 	if v, ok := s["additional_locations"]; ok {
 		storageDescriptor.AdditionalLocations = flex.ExpandStringList(v.([]interface{}))
@@ -763,12 +765,12 @@ func expandStorageDescriptor(l []interface{}) *glue.StorageDescriptor {
 	return storageDescriptor
 }
 
-func expandColumns(columns []interface{}) []*glue.Column {
-	columnSlice := []*glue.Column{}
+func expandColumns(columns []interface{}) []*awstypes.Column {
+	columnSlice := []*awstypes.Column{}
 	for _, element := range columns {
 		elementMap := element.(map[string]interface{})
 
-		column := &glue.Column{
+		column := &awstypes.Column{
 			Name: aws.String(elementMap[names.AttrName].(string)),
 		}
 
@@ -790,13 +792,13 @@ func expandColumns(columns []interface{}) []*glue.Column {
 	return columnSlice
 }
 
-func expandSerDeInfo(l []interface{}) *glue.SerDeInfo {
+func expandSerDeInfo(l []interface{}) *awstypes.SerDeInfo {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	s := l[0].(map[string]interface{})
-	serDeInfo := &glue.SerDeInfo{}
+	serDeInfo := &awstypes.SerDeInfo{}
 
 	if v := s[names.AttrName]; len(v.(string)) > 0 {
 		serDeInfo.Name = aws.String(v.(string))
@@ -813,13 +815,13 @@ func expandSerDeInfo(l []interface{}) *glue.SerDeInfo {
 	return serDeInfo
 }
 
-func expandSortColumns(columns []interface{}) []*glue.Order {
-	orderSlice := make([]*glue.Order, len(columns))
+func expandSortColumns(columns []interface{}) []*awstypes.Order {
+	orderSlice := make([]*awstypes.Order, len(columns))
 
 	for i, element := range columns {
 		elementMap := element.(map[string]interface{})
 
-		order := &glue.Order{
+		order := &awstypes.Order{
 			Column: aws.String(elementMap["column"].(string)),
 		}
 
@@ -833,13 +835,13 @@ func expandSortColumns(columns []interface{}) []*glue.Order {
 	return orderSlice
 }
 
-func expandSkewedInfo(l []interface{}) *glue.SkewedInfo {
+func expandSkewedInfo(l []interface{}) *awstypes.SkewedInfo {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	s := l[0].(map[string]interface{})
-	skewedInfo := &glue.SkewedInfo{}
+	skewedInfo := &awstypes.SkewedInfo{}
 
 	if v, ok := s["skewed_column_names"]; ok {
 		skewedInfo.SkewedColumnNames = flex.ExpandStringList(v.([]interface{}))
@@ -856,13 +858,13 @@ func expandSkewedInfo(l []interface{}) *glue.SkewedInfo {
 	return skewedInfo
 }
 
-func expandTableSchemaReference(l []interface{}) *glue.SchemaReference {
+func expandTableSchemaReference(l []interface{}) *awstypes.SchemaReference {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	s := l[0].(map[string]interface{})
-	schemaRef := &glue.SchemaReference{}
+	schemaRef := &awstypes.SchemaReference{}
 
 	if v, ok := s["schema_version_id"].(string); ok && v != "" {
 		schemaRef.SchemaVersionId = aws.String(v)
@@ -879,13 +881,13 @@ func expandTableSchemaReference(l []interface{}) *glue.SchemaReference {
 	return schemaRef
 }
 
-func expandTableSchemaReferenceSchemaID(l []interface{}) *glue.SchemaId {
+func expandTableSchemaReferenceSchemaID(l []interface{}) *awstypes.SchemaId {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	s := l[0].(map[string]interface{})
-	schemaID := &glue.SchemaId{}
+	schemaID := &awstypes.SchemaId{}
 
 	if v, ok := s["registry_name"].(string); ok && v != "" {
 		schemaID.RegistryName = aws.String(v)
@@ -902,7 +904,7 @@ func expandTableSchemaReferenceSchemaID(l []interface{}) *glue.SchemaId {
 	return schemaID
 }
 
-func flattenStorageDescriptor(s *glue.StorageDescriptor) []map[string]interface{} {
+func flattenStorageDescriptor(s *awstypes.StorageDescriptor) []map[string]interface{} {
 	if s == nil {
 		storageDescriptors := make([]map[string]interface{}, 0)
 		return storageDescriptors
@@ -914,17 +916,17 @@ func flattenStorageDescriptor(s *glue.StorageDescriptor) []map[string]interface{
 
 	storageDescriptor["additional_locations"] = flex.FlattenStringList(s.AdditionalLocations)
 	storageDescriptor["columns"] = flattenColumns(s.Columns)
-	storageDescriptor[names.AttrLocation] = aws.StringValue(s.Location)
-	storageDescriptor["input_format"] = aws.StringValue(s.InputFormat)
-	storageDescriptor["output_format"] = aws.StringValue(s.OutputFormat)
-	storageDescriptor["compressed"] = aws.BoolValue(s.Compressed)
-	storageDescriptor["number_of_buckets"] = aws.Int64Value(s.NumberOfBuckets)
+	storageDescriptor[names.AttrLocation] = aws.ToString(s.Location)
+	storageDescriptor["input_format"] = aws.ToString(s.InputFormat)
+	storageDescriptor["output_format"] = aws.ToString(s.OutputFormat)
+	storageDescriptor["compressed"] = aws.ToBool(s.Compressed)
+	storageDescriptor["number_of_buckets"] = aws.ToInt64(s.NumberOfBuckets)
 	storageDescriptor["ser_de_info"] = flattenSerDeInfo(s.SerdeInfo)
 	storageDescriptor["bucket_columns"] = flex.FlattenStringList(s.BucketColumns)
 	storageDescriptor["sort_columns"] = flattenOrders(s.SortColumns)
-	storageDescriptor[names.AttrParameters] = aws.StringValueMap(s.Parameters)
+	storageDescriptor[names.AttrParameters] = s.Parameters
 	storageDescriptor["skewed_info"] = flattenSkewedInfo(s.SkewedInfo)
-	storageDescriptor["stored_as_sub_directories"] = aws.BoolValue(s.StoredAsSubDirectories)
+	storageDescriptor["stored_as_sub_directories"] = aws.ToBool(s.StoredAsSubDirectories)
 
 	if s.SchemaReference != nil {
 		storageDescriptor["schema_reference"] = flattenTableSchemaReference(s.SchemaReference)
@@ -935,7 +937,7 @@ func flattenStorageDescriptor(s *glue.StorageDescriptor) []map[string]interface{
 	return storageDescriptors
 }
 
-func flattenColumns(cs []*glue.Column) []map[string]interface{} {
+func flattenColumns(cs []*awstypes.Column) []map[string]interface{} {
 	columnsSlice := make([]map[string]interface{}, len(cs))
 	if len(cs) > 0 {
 		for i, v := range cs {
@@ -946,33 +948,33 @@ func flattenColumns(cs []*glue.Column) []map[string]interface{} {
 	return columnsSlice
 }
 
-func flattenColumn(c *glue.Column) map[string]interface{} {
+func flattenColumn(c *awstypes.Column) map[string]interface{} {
 	column := make(map[string]interface{})
 
 	if c == nil {
 		return column
 	}
 
-	if v := aws.StringValue(c.Name); v != "" {
+	if v := aws.ToString(c.Name); v != "" {
 		column[names.AttrName] = v
 	}
 
-	if v := aws.StringValue(c.Type); v != "" {
+	if v := aws.ToString(c.Type); v != "" {
 		column[names.AttrType] = v
 	}
 
-	if v := aws.StringValue(c.Comment); v != "" {
+	if v := aws.ToString(c.Comment); v != "" {
 		column[names.AttrComment] = v
 	}
 
 	if v := c.Parameters; v != nil {
-		column[names.AttrParameters] = aws.StringValueMap(v)
+		column[names.AttrParameters] = v
 	}
 
 	return column
 }
 
-func flattenPartitionIndexes(cs []*glue.PartitionIndexDescriptor) []map[string]interface{} {
+func flattenPartitionIndexes(cs []*awstypes.PartitionIndexDescriptor) []map[string]interface{} {
 	partitionIndexSlice := make([]map[string]interface{}, len(cs))
 	if len(cs) > 0 {
 		for i, v := range cs {
@@ -983,18 +985,18 @@ func flattenPartitionIndexes(cs []*glue.PartitionIndexDescriptor) []map[string]i
 	return partitionIndexSlice
 }
 
-func flattenPartitionIndex(c *glue.PartitionIndexDescriptor) map[string]interface{} {
+func flattenPartitionIndex(c *awstypes.PartitionIndexDescriptor) map[string]interface{} {
 	partitionIndex := make(map[string]interface{})
 
 	if c == nil {
 		return partitionIndex
 	}
 
-	if v := aws.StringValue(c.IndexName); v != "" {
+	if v := aws.ToString(c.IndexName); v != "" {
 		partitionIndex["index_name"] = v
 	}
 
-	if v := aws.StringValue(c.IndexStatus); v != "" {
+	if v := aws.ToString(c.IndexStatus); v != "" {
 		partitionIndex["index_status"] = v
 	}
 
@@ -1009,7 +1011,7 @@ func flattenPartitionIndex(c *glue.PartitionIndexDescriptor) map[string]interfac
 	return partitionIndex
 }
 
-func flattenSerDeInfo(s *glue.SerDeInfo) []map[string]interface{} {
+func flattenSerDeInfo(s *awstypes.SerDeInfo) []map[string]interface{} {
 	if s == nil {
 		serDeInfos := make([]map[string]interface{}, 0)
 		return serDeInfos
@@ -1018,13 +1020,11 @@ func flattenSerDeInfo(s *glue.SerDeInfo) []map[string]interface{} {
 	serDeInfos := make([]map[string]interface{}, 1)
 	serDeInfo := make(map[string]interface{})
 
-	if v := aws.StringValue(s.Name); v != "" {
+	if v := aws.ToString(s.Name); v != "" {
 		serDeInfo[names.AttrName] = v
 	}
-
-	serDeInfo[names.AttrParameters] = aws.StringValueMap(s.Parameters)
-
-	if v := aws.StringValue(s.SerializationLibrary); v != "" {
+	serDeInfo[names.AttrParameters] = s.Parameters
+	if v := aws.ToString(s.SerializationLibrary); v != "" {
 		serDeInfo["serialization_library"] = v
 	}
 
@@ -1032,19 +1032,19 @@ func flattenSerDeInfo(s *glue.SerDeInfo) []map[string]interface{} {
 	return serDeInfos
 }
 
-func flattenOrders(os []*glue.Order) []map[string]interface{} {
+func flattenOrders(os []*awstypes.Order) []map[string]interface{} {
 	orders := make([]map[string]interface{}, len(os))
 	for i, v := range os {
 		order := make(map[string]interface{})
-		order["column"] = aws.StringValue(v.Column)
-		order["sort_order"] = int(aws.Int64Value(v.SortOrder))
+		order["column"] = aws.ToString(v.Column)
+		order["sort_order"] = int(aws.ToInt64(v.SortOrder))
 		orders[i] = order
 	}
 
 	return orders
 }
 
-func flattenSkewedInfo(s *glue.SkewedInfo) []map[string]interface{} {
+func flattenSkewedInfo(s *awstypes.SkewedInfo) []map[string]interface{} {
 	if s == nil {
 		skewedInfoSlice := make([]map[string]interface{}, 0)
 		return skewedInfoSlice
@@ -1054,14 +1054,14 @@ func flattenSkewedInfo(s *glue.SkewedInfo) []map[string]interface{} {
 
 	skewedInfo := make(map[string]interface{})
 	skewedInfo["skewed_column_names"] = flex.FlattenStringList(s.SkewedColumnNames)
-	skewedInfo["skewed_column_value_location_maps"] = aws.StringValueMap(s.SkewedColumnValueLocationMaps)
+	skewedInfo["skewed_column_value_location_maps"] = s.SkewedColumnValueLocationMaps
 	skewedInfo["skewed_column_values"] = flex.FlattenStringList(s.SkewedColumnValues)
 	skewedInfoSlice[0] = skewedInfo
 
 	return skewedInfoSlice
 }
 
-func flattenTableSchemaReference(s *glue.SchemaReference) []map[string]interface{} {
+func flattenTableSchemaReference(s *awstypes.SchemaReference) []map[string]interface{} {
 	if s == nil {
 		schemaReferenceInfoSlice := make([]map[string]interface{}, 0)
 		return schemaReferenceInfoSlice
@@ -1072,11 +1072,11 @@ func flattenTableSchemaReference(s *glue.SchemaReference) []map[string]interface
 	schemaReferenceInfo := make(map[string]interface{})
 
 	if s.SchemaVersionId != nil {
-		schemaReferenceInfo["schema_version_id"] = aws.StringValue(s.SchemaVersionId)
+		schemaReferenceInfo["schema_version_id"] = aws.ToString(s.SchemaVersionId)
 	}
 
 	if s.SchemaVersionNumber != nil {
-		schemaReferenceInfo["schema_version_number"] = aws.Int64Value(s.SchemaVersionNumber)
+		schemaReferenceInfo["schema_version_number"] = aws.ToInt64(s.SchemaVersionNumber)
 	}
 
 	if s.SchemaId != nil {
@@ -1088,7 +1088,7 @@ func flattenTableSchemaReference(s *glue.SchemaReference) []map[string]interface
 	return schemaReferenceInfoSlice
 }
 
-func flattenTableSchemaReferenceSchemaID(s *glue.SchemaId) []map[string]interface{} {
+func flattenTableSchemaReferenceSchemaID(s *awstypes.SchemaId) []map[string]interface{} {
 	if s == nil {
 		schemaIDInfoSlice := make([]map[string]interface{}, 0)
 		return schemaIDInfoSlice
@@ -1099,15 +1099,15 @@ func flattenTableSchemaReferenceSchemaID(s *glue.SchemaId) []map[string]interfac
 	schemaIDInfo := make(map[string]interface{})
 
 	if s.RegistryName != nil {
-		schemaIDInfo["registry_name"] = aws.StringValue(s.RegistryName)
+		schemaIDInfo["registry_name"] = aws.ToString(s.RegistryName)
 	}
 
 	if s.SchemaArn != nil {
-		schemaIDInfo["schema_arn"] = aws.StringValue(s.SchemaArn)
+		schemaIDInfo["schema_arn"] = aws.ToString(s.SchemaArn)
 	}
 
 	if s.SchemaName != nil {
-		schemaIDInfo["schema_name"] = aws.StringValue(s.SchemaName)
+		schemaIDInfo["schema_name"] = aws.ToString(s.SchemaName)
 	}
 
 	schemaIDInfoSlice[0] = schemaIDInfo
@@ -1115,12 +1115,12 @@ func flattenTableSchemaReferenceSchemaID(s *glue.SchemaId) []map[string]interfac
 	return schemaIDInfoSlice
 }
 
-func expandTableTargetTable(tfMap map[string]interface{}) *glue.TableIdentifier {
+func expandTableTargetTable(tfMap map[string]interface{}) *awstypes.TableIdentifier {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &glue.TableIdentifier{}
+	apiObject := &awstypes.TableIdentifier{}
 
 	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
@@ -1141,7 +1141,7 @@ func expandTableTargetTable(tfMap map[string]interface{}) *glue.TableIdentifier 
 	return apiObject
 }
 
-func flattenTableTargetTable(apiObject *glue.TableIdentifier) map[string]interface{} {
+func flattenTableTargetTable(apiObject *awstypes.TableIdentifier) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1149,29 +1149,29 @@ func flattenTableTargetTable(apiObject *glue.TableIdentifier) map[string]interfa
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap[names.AttrCatalogID] = aws.StringValue(v)
+		tfMap[names.AttrCatalogID] = aws.ToString(v)
 	}
 
 	if v := apiObject.DatabaseName; v != nil {
-		tfMap[names.AttrDatabaseName] = aws.StringValue(v)
+		tfMap[names.AttrDatabaseName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap[names.AttrRegion] = aws.StringValue(v)
+		tfMap[names.AttrRegion] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenNonManagedParameters(table *glue.TableData) map[string]string {
+func flattenNonManagedParameters(table *awstypes.TableData) map[string]string {
 	allParameters := table.Parameters
-	if aws.StringValue(allParameters["table_type"]) == "ICEBERG" {
+	if aws.ToString(allParameters["table_type"]) == "ICEBERG" {
 		delete(allParameters, "table_type")
 		delete(allParameters, "metadata_location")
 	}
-	return aws.StringValueMap(allParameters)
+	return allParameters
 }

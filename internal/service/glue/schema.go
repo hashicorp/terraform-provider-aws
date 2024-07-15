@@ -8,13 +8,16 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -70,12 +73,12 @@ func ResourceSchema() *schema.Resource {
 			"compatibility": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice(glue.Compatibility_Values(), false),
+				ValidateFunc: enum.Validate[awstypes.Compatibility](),
 			},
 			"data_format": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice(glue.DataFormat_Values(), false),
+				ValidateFunc: enum.Validate[awstypes.DataFormat](),
 			},
 			"schema_definition": {
 				Type:     schema.TypeString,
@@ -102,7 +105,7 @@ func ResourceSchema() *schema.Resource {
 
 func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	input := &glue.CreateSchemaInput{
 		SchemaName:       aws.String(d.Get("schema_name").(string)),
@@ -120,15 +123,15 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("compatibility"); ok {
-		input.Compatibility = aws.String(v.(string))
+		input.Compatibility = awstypes.Compatibility(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating Glue Schema: %s", input)
-	output, err := conn.CreateSchemaWithContext(ctx, input)
+	output, err := conn.CreateSchema(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Schema: %s", err)
 	}
-	d.SetId(aws.StringValue(output.SchemaArn))
+	d.SetId(aws.ToString(output.SchemaArn))
 
 	_, err = waitSchemaAvailable(ctx, conn, d.Id())
 	if err != nil {
@@ -140,11 +143,11 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	output, err := FindSchemaByID(ctx, conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			log.Printf("[WARN] Glue Schema (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -158,7 +161,7 @@ func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	arn := aws.StringValue(output.SchemaArn)
+	arn := aws.ToString(output.SchemaArn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("schema_name", output.SchemaName)
@@ -182,11 +185,11 @@ func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	input := &glue.UpdateSchemaInput{
 		SchemaId: createSchemaID(d.Id()),
-		SchemaVersionNumber: &glue.SchemaVersionNumber{
+		SchemaVersionNumber: &awstypes.SchemaVersionNumber{
 			LatestVersion: aws.Bool(true),
 		},
 	}
@@ -198,13 +201,13 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("compatibility") {
-		input.Compatibility = aws.String(d.Get("compatibility").(string))
+		input.Compatibility = awstypes.Compatibility(d.Get("compatibility").(string))
 		update = true
 	}
 
 	if update {
 		log.Printf("[DEBUG] Updating Glue Schema: %#v", input)
-		_, err := conn.UpdateSchemaWithContext(ctx, input)
+		_, err := conn.UpdateSchema(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Schema (%s): %s", d.Id(), err)
 		}
@@ -221,7 +224,7 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			SchemaDefinition: aws.String(d.Get("schema_definition").(string)),
 		}
 
-		_, err := conn.RegisterSchemaVersionWithContext(ctx, defInput)
+		_, err := conn.RegisterSchemaVersion(ctx, defInput)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Schema Definition (%s): %s", d.Id(), err)
 		}
@@ -237,16 +240,16 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSchemaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Schema: %s", d.Id())
 	input := &glue.DeleteSchemaInput{
 		SchemaId: createSchemaID(d.Id()),
 	}
 
-	_, err := conn.DeleteSchemaWithContext(ctx, input)
+	_, err := conn.DeleteSchema(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting Glue Schema (%s): %s", d.Id(), err)
@@ -254,7 +257,7 @@ func resourceSchemaDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	_, err = waitSchemaDeleted(ctx, conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "waiting for Glue Schema (%s) to be deleted: %s", d.Id(), err)

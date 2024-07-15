@@ -8,9 +8,10 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -86,7 +87,7 @@ func sweepCatalogDatabases(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.GlueConn(ctx)
+	conn := client.GlueClient(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -98,7 +99,7 @@ func sweepCatalogDatabases(region string) error {
 			return false
 		}
 		for _, database := range page.DatabaseList {
-			name := aws.StringValue(database.Name)
+			name := aws.ToString(database.Name)
 
 			log.Printf("[INFO] Deleting Glue Catalog Database: %s", name)
 
@@ -133,7 +134,7 @@ func sweepClassifiers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.GlueConn(ctx)
+	conn := client.GlueClient(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -147,13 +148,13 @@ func sweepClassifiers(region string) error {
 		for _, classifier := range page.Classifiers {
 			var name string
 			if classifier.CsvClassifier != nil {
-				name = aws.StringValue(classifier.CsvClassifier.Name)
+				name = aws.ToString(classifier.CsvClassifier.Name)
 			} else if classifier.GrokClassifier != nil {
-				name = aws.StringValue(classifier.GrokClassifier.Name)
+				name = aws.ToString(classifier.GrokClassifier.Name)
 			} else if classifier.JsonClassifier != nil {
-				name = aws.StringValue(classifier.JsonClassifier.Name)
+				name = aws.ToString(classifier.JsonClassifier.Name)
 			} else if classifier.XMLClassifier != nil {
-				name = aws.StringValue(classifier.XMLClassifier.Name)
+				name = aws.ToString(classifier.XMLClassifier.Name)
 			}
 			if name == "" {
 				log.Printf("[WARN] Unable to determine Glue Classifier name: %#v", classifier)
@@ -190,7 +191,7 @@ func sweepConnections(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.GlueConn(ctx)
+	conn := client.GlueClient(ctx)
 	catalogID := client.AccountID
 
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -205,7 +206,7 @@ func sweepConnections(region string) error {
 			return false
 		}
 		for _, connection := range page.ConnectionList {
-			id := fmt.Sprintf("%s:%s", catalogID, aws.StringValue(connection.Name))
+			id := fmt.Sprintf("%s:%s", catalogID, aws.ToString(connection.Name))
 
 			log.Printf("[INFO] Deleting Glue Connection: %s", id)
 			r := ResourceConnection()
@@ -237,7 +238,7 @@ func sweepCrawlers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.GlueConn(ctx)
+	conn := client.GlueClient(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -249,7 +250,7 @@ func sweepCrawlers(region string) error {
 			return false
 		}
 		for _, crawler := range page.Crawlers {
-			name := aws.StringValue(crawler.Name)
+			name := aws.ToString(crawler.Name)
 
 			r := ResourceCrawler()
 			d := r.Data(nil)
@@ -281,7 +282,7 @@ func sweepDevEndpoints(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &glue.GetDevEndpointsInput{}
-	conn := client.GlueConn(ctx)
+	conn := client.GlueClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.GetDevEndpointsPagesWithContext(ctx, input, func(page *glue.GetDevEndpointsOutput, lastPage bool) bool {
@@ -290,7 +291,7 @@ func sweepDevEndpoints(region string) error {
 		}
 
 		for _, v := range page.DevEndpoints {
-			name := aws.StringValue(v.EndpointName)
+			name := aws.ToString(v.EndpointName)
 			if !strings.HasPrefix(name, sweep.ResourcePrefix) {
 				log.Printf("[INFO] Skipping Glue Dev Endpoint: %s", name)
 				continue
@@ -331,7 +332,7 @@ func sweepJobs(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &glue.GetJobsInput{}
-	conn := client.GlueConn(ctx)
+	conn := client.GlueClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.GetJobsPagesWithContext(ctx, input, func(page *glue.GetJobsOutput, lastPage bool) bool {
@@ -342,7 +343,7 @@ func sweepJobs(region string) error {
 		for _, v := range page.Jobs {
 			r := ResourceJob()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.Name))
+			d.SetId(aws.ToString(v.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -374,7 +375,7 @@ func sweepMLTransforms(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.GlueConn(ctx)
+	conn := client.GlueClient(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -386,7 +387,7 @@ func sweepMLTransforms(region string) error {
 			return false
 		}
 		for _, transforms := range page.Transforms {
-			id := aws.StringValue(transforms.TransformId)
+			id := aws.ToString(transforms.TransformId)
 
 			log.Printf("[INFO] Deleting Glue ML Transform: %s", id)
 			r := ResourceMLTransform()
@@ -418,12 +419,12 @@ func sweepRegistry(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.GlueConn(ctx)
+	conn := client.GlueClient(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
-	listOutput, err := conn.ListRegistriesWithContext(ctx, &glue.ListRegistriesInput{})
+	listOutput, err := conn.ListRegistries(ctx, &glue.ListRegistriesInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Registrys return InternalFailure
 		if awsv1.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
@@ -433,7 +434,7 @@ func sweepRegistry(region string) error {
 		return fmt.Errorf("Error retrieving Glue Registry: %s", err)
 	}
 	for _, registry := range listOutput.Registries {
-		arn := aws.StringValue(registry.RegistryArn)
+		arn := aws.ToString(registry.RegistryArn)
 		r := ResourceRegistry()
 		d := r.Data(nil)
 		d.SetId(arn)
@@ -454,12 +455,12 @@ func sweepSchema(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.GlueConn(ctx)
+	conn := client.GlueClient(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
-	listOutput, err := conn.ListSchemasWithContext(ctx, &glue.ListSchemasInput{})
+	listOutput, err := conn.ListSchemas(ctx, &glue.ListSchemasInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Schemas return InternalFailure
 		if awsv1.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
@@ -469,7 +470,7 @@ func sweepSchema(region string) error {
 		return fmt.Errorf("Error retrieving Glue Schema: %s", err)
 	}
 	for _, schema := range listOutput.Schemas {
-		arn := aws.StringValue(schema.SchemaArn)
+		arn := aws.ToString(schema.SchemaArn)
 		r := ResourceSchema()
 		d := r.Data(nil)
 		d.SetId(arn)
@@ -490,12 +491,12 @@ func sweepSecurityConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.GlueConn(ctx)
+	conn := client.GlueClient(ctx)
 
 	input := &glue.GetSecurityConfigurationsInput{}
 
 	for {
-		output, err := conn.GetSecurityConfigurationsWithContext(ctx, input)
+		output, err := conn.GetSecurityConfigurations(ctx, input)
 
 		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Glue Security Configuration sweep for %s: %s", region, err)
@@ -507,7 +508,7 @@ func sweepSecurityConfigurations(region string) error {
 		}
 
 		for _, securityConfiguration := range output.SecurityConfigurations {
-			name := aws.StringValue(securityConfiguration.Name)
+			name := aws.ToString(securityConfiguration.Name)
 
 			log.Printf("[INFO] Deleting Glue Security Configuration: %s", name)
 			err := DeleteSecurityConfiguration(ctx, conn, name)
@@ -516,7 +517,7 @@ func sweepSecurityConfigurations(region string) error {
 			}
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
+		if aws.ToString(output.NextToken) == "" {
 			break
 		}
 
@@ -532,7 +533,7 @@ func sweepTriggers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.GlueConn(ctx)
+	conn := client.GlueClient(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -544,7 +545,7 @@ func sweepTriggers(region string) error {
 			return false
 		}
 		for _, trigger := range page.Triggers {
-			name := aws.StringValue(trigger.Name)
+			name := aws.ToString(trigger.Name)
 
 			log.Printf("[INFO] Deleting Glue Trigger: %s", name)
 			r := ResourceTrigger()
@@ -576,9 +577,9 @@ func sweepWorkflow(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.GlueConn(ctx)
+	conn := client.GlueClient(ctx)
 
-	listOutput, err := conn.ListWorkflowsWithContext(ctx, &glue.ListWorkflowsInput{})
+	listOutput, err := conn.ListWorkflows(ctx, &glue.ListWorkflowsInput{})
 	if err != nil {
 		// Some endpoints that do not support Glue Workflows return InternalFailure
 		if awsv1.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {

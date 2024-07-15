@@ -9,7 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +23,7 @@ import (
 
 func TestAccGlueDevEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint glue.DevEndpoint
+	var endpoint awstypes.DevEndpoint
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
@@ -57,7 +58,7 @@ func TestAccGlueDevEndpoint_basic(t *testing.T) {
 
 func TestAccGlueDevEndpoint_arguments(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint glue.DevEndpoint
+	var endpoint awstypes.DevEndpoint
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
@@ -104,7 +105,7 @@ func TestAccGlueDevEndpoint_arguments(t *testing.T) {
 
 func TestAccGlueDevEndpoint_extraJarsS3Path(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint glue.DevEndpoint
+	var endpoint awstypes.DevEndpoint
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	extraJarsS3Path := "foo"
@@ -142,7 +143,7 @@ func TestAccGlueDevEndpoint_extraJarsS3Path(t *testing.T) {
 
 func TestAccGlueDevEndpoint_extraPythonLibsS3Path(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint glue.DevEndpoint
+	var endpoint awstypes.DevEndpoint
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	extraPythonLibsS3Path := "foo"
@@ -180,7 +181,7 @@ func TestAccGlueDevEndpoint_extraPythonLibsS3Path(t *testing.T) {
 
 func TestAccGlueDevEndpoint_glueVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint glue.DevEndpoint
+	var endpoint awstypes.DevEndpoint
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
@@ -220,7 +221,7 @@ func TestAccGlueDevEndpoint_glueVersion(t *testing.T) {
 
 func TestAccGlueDevEndpoint_numberOfNodes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint glue.DevEndpoint
+	var endpoint awstypes.DevEndpoint
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
@@ -260,7 +261,7 @@ func TestAccGlueDevEndpoint_numberOfNodes(t *testing.T) {
 
 func TestAccGlueDevEndpoint_numberOfWorkers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint glue.DevEndpoint
+	var endpoint awstypes.DevEndpoint
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
@@ -300,7 +301,7 @@ func TestAccGlueDevEndpoint_numberOfWorkers(t *testing.T) {
 
 func TestAccGlueDevEndpoint_publicKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint glue.DevEndpoint
+	var endpoint awstypes.DevEndpoint
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
@@ -345,7 +346,7 @@ func TestAccGlueDevEndpoint_publicKey(t *testing.T) {
 
 func TestAccGlueDevEndpoint_publicKeys(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint glue.DevEndpoint
+	var endpoint awstypes.DevEndpoint
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
@@ -405,7 +406,7 @@ func TestAccGlueDevEndpoint_publicKeys(t *testing.T) {
 
 func TestAccGlueDevEndpoint_security(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint glue.DevEndpoint
+	var endpoint awstypes.DevEndpoint
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
@@ -435,7 +436,7 @@ func TestAccGlueDevEndpoint_security(t *testing.T) {
 // Note: Either none or both of subnetId and securityGroupIds must be specified.
 func TestAccGlueDevEndpoint_SubnetID_securityGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint glue.DevEndpoint
+	var endpoint awstypes.DevEndpoint
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
@@ -467,7 +468,7 @@ func TestAccGlueDevEndpoint_SubnetID_securityGroupIDs(t *testing.T) {
 
 func TestAccGlueDevEndpoint_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint1, endpoint2, endpoint3 glue.DevEndpoint
+	var endpoint1, endpoint2, endpoint3 awstypes.DevEndpoint
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
@@ -514,7 +515,7 @@ func TestAccGlueDevEndpoint_tags(t *testing.T) {
 
 func TestAccGlueDevEndpoint_workerType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint glue.DevEndpoint
+	var endpoint awstypes.DevEndpoint
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
@@ -529,21 +530,21 @@ func TestAccGlueDevEndpoint_workerType(t *testing.T) {
 				Config: testAccDevEndpointConfig_workerTypeStandard(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "worker_type", glue.WorkerTypeStandard),
+					resource.TestCheckResourceAttr(resourceName, "worker_type", awstypes.WorkerTypeStandard),
 				),
 			},
 			{
-				Config: testAccDevEndpointConfig_workerType(rName, glue.WorkerTypeG1x),
+				Config: testAccDevEndpointConfig_workerType(rName, awstypes.WorkerTypeG1x),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "worker_type", glue.WorkerTypeG1x),
+					resource.TestCheckResourceAttr(resourceName, "worker_type", awstypes.WorkerTypeG1x),
 				),
 			},
 			{
-				Config: testAccDevEndpointConfig_workerType(rName, glue.WorkerTypeG2x),
+				Config: testAccDevEndpointConfig_workerType(rName, awstypes.WorkerTypeG2x),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "worker_type", glue.WorkerTypeG2x),
+					resource.TestCheckResourceAttr(resourceName, "worker_type", awstypes.WorkerTypeG2x),
 				),
 			},
 			{
@@ -557,7 +558,7 @@ func TestAccGlueDevEndpoint_workerType(t *testing.T) {
 
 func TestAccGlueDevEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint glue.DevEndpoint
+	var endpoint awstypes.DevEndpoint
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
@@ -580,7 +581,7 @@ func TestAccGlueDevEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDevEndpointExists(ctx context.Context, n string, v *glue.DevEndpoint) resource.TestCheckFunc {
+func testAccCheckDevEndpointExists(ctx context.Context, n string, v *awstypes.DevEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -591,7 +592,7 @@ func testAccCheckDevEndpointExists(ctx context.Context, n string, v *glue.DevEnd
 			return fmt.Errorf("No Glue Dev Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
 		output, err := tfglue.FindDevEndpointByName(ctx, conn, rs.Primary.ID)
 
@@ -607,7 +608,7 @@ func testAccCheckDevEndpointExists(ctx context.Context, n string, v *glue.DevEnd
 
 func testAccCheckDevEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_dev_endpoint" {

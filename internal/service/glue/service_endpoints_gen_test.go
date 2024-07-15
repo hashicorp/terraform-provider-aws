@@ -13,9 +13,9 @@ import (
 	"strings"
 	"testing"
 
+	glue_sdkv1 "github.com/aws/aws-sdk-go-v2/service/glue"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	glue_sdkv1 "github.com/aws/aws-sdk-go/service/glue"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -278,7 +278,7 @@ func defaultFIPSEndpoint(region string) (url.URL, error) {
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
-	client := meta.GlueConn(ctx)
+	client := meta.GlueClient(ctx)
 
 	req, _ := client.ListRegistriesRequest(&glue_sdkv1.ListRegistriesInput{})
 

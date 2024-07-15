@@ -6,21 +6,23 @@ package glue
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindDevEndpointByName(ctx context.Context, conn *glue.Glue, name string) (*glue.DevEndpoint, error) {
+func FindDevEndpointByName(ctx context.Context, conn *glue.Client, name string) (*awstypes.DevEndpoint, error) {
 	input := &glue.GetDevEndpointInput{
 		EndpointName: aws.String(name),
 	}
 
-	output, err := conn.GetDevEndpointWithContext(ctx, input)
+	output, err := conn.GetDevEndpoint(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -38,14 +40,14 @@ func FindDevEndpointByName(ctx context.Context, conn *glue.Glue, name string) (*
 	return output.DevEndpoint, nil
 }
 
-func FindJobByName(ctx context.Context, conn *glue.Glue, name string) (*glue.Job, error) {
+func FindJobByName(ctx context.Context, conn *glue.Client, name string) (*awstypes.Job, error) {
 	input := &glue.GetJobInput{
 		JobName: aws.String(name),
 	}
 
-	output, err := conn.GetJobWithContext(ctx, input)
+	output, err := conn.GetJob(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -63,14 +65,14 @@ func FindJobByName(ctx context.Context, conn *glue.Glue, name string) (*glue.Job
 	return output.Job, nil
 }
 
-func FindDatabaseByName(ctx context.Context, conn *glue.Glue, catalogID, name string) (*glue.GetDatabaseOutput, error) {
+func FindDatabaseByName(ctx context.Context, conn *glue.Client, catalogID, name string) (*glue.GetDatabaseOutput, error) {
 	input := &glue.GetDatabaseInput{
 		CatalogId: aws.String(catalogID),
 		Name:      aws.String(name),
 	}
 
-	output, err := conn.GetDatabaseWithContext(ctx, input)
-	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+	output, err := conn.GetDatabase(ctx, input)
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -88,13 +90,13 @@ func FindDatabaseByName(ctx context.Context, conn *glue.Glue, catalogID, name st
 	return output, nil
 }
 
-func FindDataQualityRulesetByName(ctx context.Context, conn *glue.Glue, name string) (*glue.GetDataQualityRulesetOutput, error) {
+func FindDataQualityRulesetByName(ctx context.Context, conn *glue.Client, name string) (*glue.GetDataQualityRulesetOutput, error) {
 	input := &glue.GetDataQualityRulesetInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.GetDataQualityRulesetWithContext(ctx, input)
-	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+	output, err := conn.GetDataQualityRuleset(ctx, input)
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -113,12 +115,12 @@ func FindDataQualityRulesetByName(ctx context.Context, conn *glue.Glue, name str
 }
 
 // FindTriggerByName returns the Trigger corresponding to the specified name.
-func FindTriggerByName(ctx context.Context, conn *glue.Glue, name string) (*glue.GetTriggerOutput, error) {
+func FindTriggerByName(ctx context.Context, conn *glue.Client, name string) (*glue.GetTriggerOutput, error) {
 	input := &glue.GetTriggerInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.GetTriggerWithContext(ctx, input)
+	output, err := conn.GetTrigger(ctx, input)
 	if err != nil {
 		return nil, err
 	}
@@ -127,12 +129,12 @@ func FindTriggerByName(ctx context.Context, conn *glue.Glue, name string) (*glue
 }
 
 // FindRegistryByID returns the Registry corresponding to the specified ID.
-func FindRegistryByID(ctx context.Context, conn *glue.Glue, id string) (*glue.GetRegistryOutput, error) {
+func FindRegistryByID(ctx context.Context, conn *glue.Client, id string) (*glue.GetRegistryOutput, error) {
 	input := &glue.GetRegistryInput{
 		RegistryId: createRegistryID(id),
 	}
 
-	output, err := conn.GetRegistryWithContext(ctx, input)
+	output, err := conn.GetRegistry(ctx, input)
 	if err != nil {
 		return nil, err
 	}
@@ -141,12 +143,12 @@ func FindRegistryByID(ctx context.Context, conn *glue.Glue, id string) (*glue.Ge
 }
 
 // FindSchemaByID returns the Schema corresponding to the specified ID.
-func FindSchemaByID(ctx context.Context, conn *glue.Glue, id string) (*glue.GetSchemaOutput, error) {
+func FindSchemaByID(ctx context.Context, conn *glue.Client, id string) (*glue.GetSchemaOutput, error) {
 	input := &glue.GetSchemaInput{
 		SchemaId: createSchemaID(id),
 	}
 
-	output, err := conn.GetSchemaWithContext(ctx, input)
+	output, err := conn.GetSchema(ctx, input)
 	if err != nil {
 		return nil, err
 	}
@@ -155,15 +157,15 @@ func FindSchemaByID(ctx context.Context, conn *glue.Glue, id string) (*glue.GetS
 }
 
 // FindSchemaVersionByID returns the Schema corresponding to the specified ID.
-func FindSchemaVersionByID(ctx context.Context, conn *glue.Glue, id string) (*glue.GetSchemaVersionOutput, error) {
+func FindSchemaVersionByID(ctx context.Context, conn *glue.Client, id string) (*glue.GetSchemaVersionOutput, error) {
 	input := &glue.GetSchemaVersionInput{
 		SchemaId: createSchemaID(id),
-		SchemaVersionNumber: &glue.SchemaVersionNumber{
+		SchemaVersionNumber: &awstypes.SchemaVersionNumber{
 			LatestVersion: aws.Bool(true),
 		},
 	}
 
-	output, err := conn.GetSchemaVersionWithContext(ctx, input)
+	output, err := conn.GetSchemaVersion(ctx, input)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +174,7 @@ func FindSchemaVersionByID(ctx context.Context, conn *glue.Glue, id string) (*gl
 }
 
 // FindPartitionByValues returns the Partition corresponding to the specified Partition Values.
-func FindPartitionByValues(ctx context.Context, conn *glue.Glue, id string) (*glue.Partition, error) {
+func FindPartitionByValues(ctx context.Context, conn *glue.Client, id string) (*awstypes.Partition, error) {
 	catalogID, dbName, tableName, values, err := readPartitionID(id)
 	if err != nil {
 		return nil, err
@@ -185,7 +187,7 @@ func FindPartitionByValues(ctx context.Context, conn *glue.Glue, id string) (*gl
 		PartitionValues: aws.StringSlice(values),
 	}
 
-	output, err := conn.GetPartitionWithContext(ctx, input)
+	output, err := conn.GetPartition(ctx, input)
 	if err != nil {
 		return nil, err
 	}
@@ -198,14 +200,14 @@ func FindPartitionByValues(ctx context.Context, conn *glue.Glue, id string) (*gl
 }
 
 // FindConnectionByName returns the Connection corresponding to the specified Name and CatalogId.
-func FindConnectionByName(ctx context.Context, conn *glue.Glue, name, catalogID string) (*glue.Connection, error) {
+func FindConnectionByName(ctx context.Context, conn *glue.Client, name, catalogID string) (*awstypes.Connection, error) {
 	input := &glue.GetConnectionInput{
 		CatalogId: aws.String(catalogID),
 		Name:      aws.String(name),
 	}
 
-	output, err := conn.GetConnectionWithContext(ctx, input)
-	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+	output, err := conn.GetConnection(ctx, input)
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -224,7 +226,7 @@ func FindConnectionByName(ctx context.Context, conn *glue.Glue, name, catalogID 
 }
 
 // FindPartitionIndexByName returns the Partition Index corresponding to the specified Partition Index Name.
-func FindPartitionIndexByName(ctx context.Context, conn *glue.Glue, id string) (*glue.PartitionIndexDescriptor, error) {
+func FindPartitionIndexByName(ctx context.Context, conn *glue.Client, id string) (*awstypes.PartitionIndexDescriptor, error) {
 	catalogID, dbName, tableName, partIndex, err := readPartitionIndexID(id)
 	if err != nil {
 		return nil, err
@@ -236,11 +238,11 @@ func FindPartitionIndexByName(ctx context.Context, conn *glue.Glue, id string) (
 		TableName:    aws.String(tableName),
 	}
 
-	var result *glue.PartitionIndexDescriptor
+	var result *awstypes.PartitionIndexDescriptor
 
-	output, err := conn.GetPartitionIndexesWithContext(ctx, input)
+	output, err := conn.GetPartitionIndexes(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -260,7 +262,7 @@ func FindPartitionIndexByName(ctx context.Context, conn *glue.Glue, id string) (
 			continue
 		}
 
-		if aws.StringValue(partInd.IndexName) == partIndex {
+		if aws.ToString(partInd.IndexName) == partIndex {
 			result = partInd
 			break
 		}
@@ -276,13 +278,13 @@ func FindPartitionIndexByName(ctx context.Context, conn *glue.Glue, id string) (
 	return result, nil
 }
 
-func FindClassifierByName(ctx context.Context, conn *glue.Glue, name string) (*glue.Classifier, error) {
+func FindClassifierByName(ctx context.Context, conn *glue.Client, name string) (*awstypes.Classifier, error) {
 	input := &glue.GetClassifierInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.GetClassifierWithContext(ctx, input)
-	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+	output, err := conn.GetClassifier(ctx, input)
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -300,13 +302,13 @@ func FindClassifierByName(ctx context.Context, conn *glue.Glue, name string) (*g
 	return output.Classifier, nil
 }
 
-func FindCrawlerByName(ctx context.Context, conn *glue.Glue, name string) (*glue.Crawler, error) {
+func FindCrawlerByName(ctx context.Context, conn *glue.Client, name string) (*awstypes.Crawler, error) {
 	input := &glue.GetCrawlerInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.GetCrawlerWithContext(ctx, input)
-	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+	output, err := conn.GetCrawler(ctx, input)
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

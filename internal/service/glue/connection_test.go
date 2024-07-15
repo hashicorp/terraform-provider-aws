@@ -9,7 +9,8 @@ import (
 	"net"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +23,7 @@ import (
 
 func TestAccGlueConnection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var connection glue.Connection
+	var connection awstypes.Connection
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_connection.test"
@@ -60,7 +61,7 @@ func TestAccGlueConnection_basic(t *testing.T) {
 
 func TestAccGlueConnection_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var connection glue.Connection
+	var connection awstypes.Connection
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_connection.test"
@@ -109,7 +110,7 @@ func TestAccGlueConnection_tags(t *testing.T) {
 
 func TestAccGlueConnection_mongoDB(t *testing.T) {
 	ctx := acctest.Context(t)
-	var connection glue.Connection
+	var connection awstypes.Connection
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_connection.test"
 	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(), "27017") + "/testdatabase"
@@ -144,7 +145,7 @@ func TestAccGlueConnection_mongoDB(t *testing.T) {
 
 func TestAccGlueConnection_kafka(t *testing.T) {
 	ctx := acctest.Context(t)
-	var connection glue.Connection
+	var connection awstypes.Connection
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_connection.test"
@@ -179,7 +180,7 @@ func TestAccGlueConnection_kafka(t *testing.T) {
 
 func TestAccGlueConnection_network(t *testing.T) {
 	ctx := acctest.Context(t)
-	var connection glue.Connection
+	var connection awstypes.Connection
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_connection.test"
@@ -214,7 +215,7 @@ func TestAccGlueConnection_network(t *testing.T) {
 
 func TestAccGlueConnection_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var connection glue.Connection
+	var connection awstypes.Connection
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_connection.test"
@@ -252,7 +253,7 @@ func TestAccGlueConnection_description(t *testing.T) {
 
 func TestAccGlueConnection_matchCriteria(t *testing.T) {
 	ctx := acctest.Context(t)
-	var connection glue.Connection
+	var connection awstypes.Connection
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_connection.test"
@@ -305,7 +306,7 @@ func TestAccGlueConnection_matchCriteria(t *testing.T) {
 
 func TestAccGlueConnection_physicalConnectionRequirements(t *testing.T) {
 	ctx := acctest.Context(t)
-	var connection glue.Connection
+	var connection awstypes.Connection
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_connection.test"
@@ -343,7 +344,7 @@ func TestAccGlueConnection_physicalConnectionRequirements(t *testing.T) {
 
 func TestAccGlueConnection_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var connection glue.Connection
+	var connection awstypes.Connection
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_connection.test"
@@ -369,7 +370,7 @@ func TestAccGlueConnection_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectionExists(ctx context.Context, resourceName string, connection *glue.Connection) resource.TestCheckFunc {
+func testAccCheckConnectionExists(ctx context.Context, resourceName string, connection *awstypes.Connection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -380,7 +381,7 @@ func testAccCheckConnectionExists(ctx context.Context, resourceName string, conn
 			return fmt.Errorf("No Glue Connection ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 		catalogID, connectionName, err := tfglue.DecodeConnectionID(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -405,7 +406,7 @@ func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 			catalogID, connectionName, err := tfglue.DecodeConnectionID(rs.Primary.ID)
 			if err != nil {
 				return err
