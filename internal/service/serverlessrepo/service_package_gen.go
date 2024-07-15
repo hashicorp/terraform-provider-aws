@@ -5,6 +5,8 @@ package serverlessrepo
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	serverlessapplicationrepository_sdkv2 "github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	serverlessapplicationrepository_sdkv1 "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
@@ -64,6 +66,16 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*s
 	}
 
 	return serverlessapplicationrepository_sdkv1.New(sess.Copy(&cfg)), nil
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*serverlessapplicationrepository_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return serverlessapplicationrepository_sdkv2.NewFromConfig(cfg,
+		serverlessapplicationrepository_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

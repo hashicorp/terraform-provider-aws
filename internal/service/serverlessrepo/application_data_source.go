@@ -75,7 +75,7 @@ func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("semantic_version", output.Version.SemanticVersion)
 	d.Set("source_code_url", output.Version.SourceCodeUrl)
 	d.Set("template_url", output.Version.TemplateUrl)
-	if err = d.Set("required_capabilities", flex.FlattenStringSet(output.Version.RequiredCapabilities)); err != nil {
+	if err = d.Set("required_capabilities", flex.FlattenStringValueSet(output.Version.RequiredCapabilities)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "to set required_capabilities: %s", err)
 	}
 

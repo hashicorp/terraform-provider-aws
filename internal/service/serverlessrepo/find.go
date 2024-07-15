@@ -7,9 +7,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	serverlessrepo "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	serverlessrepo "github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
@@ -22,7 +22,7 @@ func findApplication(ctx context.Context, conn *serverlessrepo.ServerlessApplica
 	}
 
 	log.Printf("[DEBUG] Getting Serverless findApplication Repository Application: %s", input)
-	resp, err := conn.GetApplicationWithContext(ctx, input)
+	resp, err := conn.GetApplication(ctx, input)
 	if tfawserr.ErrCodeEquals(err, serverlessrepo.ErrCodeNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:    err,

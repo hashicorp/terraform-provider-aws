@@ -169,6 +169,7 @@ import (
 	secretsmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	securityhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securityhub"
 	securitylake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securitylake"
+	serverlessapplicationrepository_sdkv2 "github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository"
 	servicecatalogappregistry_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
 	servicediscovery_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	servicequotas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicequotas"
@@ -1149,6 +1150,10 @@ func (c *AWSClient) SecurityLakeClient(ctx context.Context) *securitylake_sdkv2.
 
 func (c *AWSClient) ServerlessRepoConn(ctx context.Context) *serverlessapplicationrepository_sdkv1.ServerlessApplicationRepository {
 	return errs.Must(conn[*serverlessapplicationrepository_sdkv1.ServerlessApplicationRepository](ctx, c, names.ServerlessRepo, make(map[string]any)))
+}
+
+func (c *AWSClient) ServerlessRepoClient(ctx context.Context) *serverlessapplicationrepository_sdkv2.Client {
+	return errs.Must(client[*serverlessapplicationrepository_sdkv2.Client](ctx, c, names.ServerlessRepo, make(map[string]any)))
 }
 
 func (c *AWSClient) ServiceCatalogConn(ctx context.Context) *servicecatalog_sdkv1.ServiceCatalog {
