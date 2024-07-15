@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_dms_replication_instance")
-func DataSourceReplicationInstance() *schema.Resource {
+// @SDKDataSource("aws_dms_replication_instance", name="Replication Instance")
+func dataSourceReplicationInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationInstanceRead,
 
@@ -103,7 +103,7 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	rID := d.Get("replication_instance_id").(string)
-	instance, err := FindReplicationInstanceByID(ctx, conn, rID)
+	instance, err := findReplicationInstanceByID(ctx, conn, rID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Instance (%s): %s", rID, err)

@@ -35,8 +35,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Endpoint",
 		},
 		{
-			Factory:  DataSourceReplicationInstance,
+			Factory:  dataSourceReplicationInstance,
 			TypeName: "aws_dms_replication_instance",
+			Name:     "Replication Instance",
 		},
 		{
 			Factory:  DataSourceReplicationSubnetGroup,
