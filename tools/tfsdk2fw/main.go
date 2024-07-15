@@ -568,7 +568,7 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
 		case string:
 			providerPlanModifierPackage = "stringplanmodifier"
-			// Alias the provider plan modifier package name with an "fw" prefix. See also resource.tmpl.
+			// Alias the provider plan modifier package name with an "fw" prefix. See also resource.gtpl.
 			planModifiers = append(planModifiers, fmt.Sprintf("fw%s.DefaultValue(%q)", providerPlanModifierPackage, v))
 			e.ProviderPlanModifierPackages = append(e.ProviderPlanModifierPackages, providerPlanModifierPackage)
 		default:
@@ -903,8 +903,8 @@ type templateData struct {
 	TFTypeName                    string // e.g. aws_instance
 }
 
-//go:embed datasource.tmpl
+//go:embed datasource.gtpl
 var datasourceImpl string
 
-//go:embed resource.tmpl
+//go:embed resource.gtpl
 var resourceImpl string
