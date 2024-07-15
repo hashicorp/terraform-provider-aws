@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -44,8 +43,8 @@ func TestAccGameLiftGameServerGroup_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`gameservergroup/.+`)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "auto_scaling_group_arn", "autoscaling", regexache.MustCompile(`autoScalingGroup:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_policy.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "balancing_strategy", awstypes.BalancingStrategySpotPreferred),
-					resource.TestCheckResourceAttr(resourceName, "game_server_protection_policy", awstypes.GameServerProtectionPolicyNoProtection),
+					resource.TestCheckResourceAttr(resourceName, "balancing_strategy", string(awstypes.BalancingStrategySpotPreferred)),
+					resource.TestCheckResourceAttr(resourceName, "game_server_protection_policy", string(awstypes.GameServerProtectionPolicyNoProtection)),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
@@ -142,10 +141,10 @@ func TestAccGameLiftGameServerGroup_BalancingStrategy(t *testing.T) {
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfig_balancingStrategy(rName, awstypes.BalancingStrategySpotOnly),
+				Config: testAccGameServerGroupConfig_balancingStrategy(rName, string(awstypes.BalancingStrategySpotOnly)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "balancing_strategy", awstypes.BalancingStrategySpotOnly),
+					resource.TestCheckResourceAttr(resourceName, "balancing_strategy", string(awstypes.BalancingStrategySpotOnly)),
 				),
 			},
 			{
@@ -401,10 +400,10 @@ func TestAccGameLiftGameServerGroup_GameServerProtectionPolicy(t *testing.T) {
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfig_protectionPolicy(rName, awstypes.GameServerProtectionPolicyFullProtection),
+				Config: testAccGameServerGroupConfig_protectionPolicy(rName, string(awstypes.GameServerProtectionPolicyFullProtection)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "game_server_protection_policy", awstypes.GameServerProtectionPolicyFullProtection),
+					resource.TestCheckResourceAttr(resourceName, "game_server_protection_policy", string(awstypes.GameServerProtectionPolicyFullProtection)),
 				),
 			},
 			{

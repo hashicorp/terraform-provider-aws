@@ -15,7 +15,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	autoscalingtypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -95,10 +94,10 @@ func ResourceGameServerGroup() *schema.Resource {
 				},
 			},
 			"balancing_strategy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: enum.Validate[awstypes.BalancingStrategy](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.BalancingStrategy](),
 			},
 			"game_server_group_name": {
 				Type:         schema.TypeString,
@@ -107,10 +106,10 @@ func ResourceGameServerGroup() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"game_server_protection_policy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: enum.Validate[awstypes.GameServerProtectionPolicy](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.GameServerProtectionPolicy](),
 			},
 			"instance_definition": {
 				Type:     schema.TypeSet,
@@ -120,9 +119,9 @@ func ResourceGameServerGroup() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrInstanceType: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: enum.Validate[awstypes.GameServerGroupInstanceType](),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.GameServerGroupInstanceType](),
 						},
 						"weighted_capacity": {
 							Type:         schema.TypeString,
@@ -204,8 +203,8 @@ func resourceGameServerGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		GameServerGroupName: aws.String(d.Get("game_server_group_name").(string)),
 		InstanceDefinitions: expandInstanceDefinitions(d.Get("instance_definition").(*schema.Set).List()),
 		LaunchTemplate:      expandLaunchTemplateSpecification(d.Get(names.AttrLaunchTemplate).([]interface{})[0].(map[string]interface{})),
-		MaxSize:             aws.Int64(int64(d.Get("max_size").(int))),
-		MinSize:             aws.Int64(int64(d.Get("min_size").(int))),
+		MaxSize:             aws.Int32(int32(d.Get("max_size").(int))),
+		MinSize:             aws.Int32(int32(d.Get("min_size").(int))),
 		RoleArn:             aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:                getTagsIn(ctx),
 	}
@@ -223,16 +222,16 @@ func resourceGameServerGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("vpc_subnets"); ok && v.(*schema.Set).Len() > 0 {
-		input.VpcSubnets = flex.ExpandStringSet(v.(*schema.Set))
+		input.VpcSubnets = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	log.Printf("[INFO] Creating GameLift Game Server Group: %s", input)
+	log.Printf("[INFO] Creating GameLift Game Server Group: %+v", input)
 	var out *gamelift.CreateGameServerGroupOutput
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 		out, err = conn.CreateGameServerGroup(ctx, input)
 
-		if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidRequestException, "GameLift is not authorized to perform") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "GameLift is not authorized to perform") {
 			return retry.RetryableError(err)
 		}
 
@@ -404,19 +403,15 @@ func expandGameServerGroupAutoScalingPolicy(tfMap map[string]interface{}) *awsty
 	}
 
 	if v, ok := tfMap["estimated_instance_warmup"].(int); ok && v != 0 {
-		apiObject.EstimatedInstanceWarmup = aws.Int64(int64(v))
+		apiObject.EstimatedInstanceWarmup = aws.Int32(int32(v))
 	}
 
 	return apiObject
 }
 
-func expandInstanceDefinition(tfMap map[string]interface{}) *awstypes.InstanceDefinition {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &awstypes.InstanceDefinition{
-		InstanceType: aws.String(tfMap[names.AttrInstanceType].(string)),
+func expandInstanceDefinition(tfMap map[string]interface{}) awstypes.InstanceDefinition {
+	apiObject := awstypes.InstanceDefinition{
+		InstanceType: awstypes.GameServerGroupInstanceType(tfMap[names.AttrInstanceType].(string)),
 	}
 
 	if v, ok := tfMap["weighted_capacity"].(string); ok && v != "" {
@@ -426,12 +421,12 @@ func expandInstanceDefinition(tfMap map[string]interface{}) *awstypes.InstanceDe
 	return apiObject
 }
 
-func expandInstanceDefinitions(tfList []interface{}) []*awstypes.InstanceDefinition {
+func expandInstanceDefinitions(tfList []interface{}) []awstypes.InstanceDefinition {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*awstypes.InstanceDefinition
+	var apiObjects []awstypes.InstanceDefinition
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -440,13 +435,7 @@ func expandInstanceDefinitions(tfList []interface{}) []*awstypes.InstanceDefinit
 			continue
 		}
 
-		apiObject := expandInstanceDefinition(tfMap)
-
-		if apiObject == nil {
-			continue
-		}
-
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, expandInstanceDefinition(tfMap))
 	}
 
 	return apiObjects
@@ -492,19 +481,15 @@ func flattenGameServerGroupAutoScalingPolicy(apiObject autoscalingtypes.ScalingP
 	}
 
 	if v := apiObject.EstimatedInstanceWarmup; v != nil {
-		tfMap["estimated_instance_warmup"] = aws.Int32Value(v)
+		tfMap["estimated_instance_warmup"] = aws.ToInt32(v)
 	}
 
 	return tfMap
 }
 
-func flattenInstanceDefinition(apiObject *awstypes.InstanceDefinition) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenInstanceDefinition(apiObject awstypes.InstanceDefinition) map[string]interface{} {
 	tfMap := map[string]interface{}{
-		names.AttrInstanceType: aws.ToString(apiObject.InstanceType),
+		names.AttrInstanceType: string(apiObject.InstanceType),
 	}
 
 	if v := apiObject.WeightedCapacity; v != nil {
@@ -534,7 +519,7 @@ func flattenAutoScalingLaunchTemplateSpecification(apiObject *autoscalingtypes.L
 	return []map[string]interface{}{tfMap}
 }
 
-func flattenInstanceDefinitions(apiObjects []*awstypes.InstanceDefinition) []interface{} {
+func flattenInstanceDefinitions(apiObjects []awstypes.InstanceDefinition) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -542,10 +527,6 @@ func flattenInstanceDefinitions(apiObjects []*awstypes.InstanceDefinition) []int
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenInstanceDefinition(apiObject))
 	}
 
