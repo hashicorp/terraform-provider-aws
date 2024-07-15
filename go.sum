@@ -22,8 +22,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.54.18 h1:t8DGtN8A2wEiazoJxeDbfPsbxCKtjoRLuO7jBSgJzo4=
-github.com/aws/aws-sdk-go v1.54.18/go.mod h1:eRwEWoyTWFMVYVQzKMNHWP5/RV4xIUGMQfXQHfHkpNU=
+github.com/aws/aws-sdk-go v1.54.19 h1:tyWV+07jagrNiCcGRzRhdtVjQs7Vy41NwsuOcl0IbVI=
+github.com/aws/aws-sdk-go v1.54.19/go.mod h1:eRwEWoyTWFMVYVQzKMNHWP5/RV4xIUGMQfXQHfHkpNU=
 github.com/aws/aws-sdk-go-v2 v1.30.3 h1:jUeBtG0Ih+ZIFH0F4UkmL9w3cSpaMv9tYYDbzILP8dY=
 github.com/aws/aws-sdk-go-v2 v1.30.3/go.mod h1:nIQjQVp5sfpQcTc9mPSr1B0PaWK5ByX9MOoDadSN4lc=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.3 h1:tW1/Rkad38LA15X4UQtjXZXNKsCgkshC3EbmcUmghTg=
@@ -50,8 +50,8 @@ github.com/aws/aws-sdk-go-v2/service/account v1.19.3 h1:w/ZZ69+nzIYoussDQvIqyezI
 github.com/aws/aws-sdk-go-v2/service/account v1.19.3/go.mod h1:s7hT4ZWjp8GoSr0z8d5ZsJ8k+C2g4AsknLtmQaJgp0c=
 github.com/aws/aws-sdk-go-v2/service/acm v1.28.4 h1:wiW1Y6/1lysA0eJZRq0I53YYKuV9MNAzL15z2eZRlEE=
 github.com/aws/aws-sdk-go-v2/service/acm v1.28.4/go.mod h1:bzjymHHRhexkSMIvUHMpKydo9U82bmqQ5ru0IzYM8m8=
-github.com/aws/aws-sdk-go-v2/service/acmpca v1.33.3 h1:DFy+8V6VY+iALFQAV4OS4TQEFeOE6txu9hteY3tweF0=
-github.com/aws/aws-sdk-go-v2/service/acmpca v1.33.3/go.mod h1:vDUysl9ROGF6GAsl1OgTg6xHDnw391hCc5+IYg2U/GQ=
+github.com/aws/aws-sdk-go-v2/service/acmpca v1.34.0 h1:CCaeK/FqBo/fmhSSqY0K8buep/ELBDEWc8IoOjf2piM=
+github.com/aws/aws-sdk-go-v2/service/acmpca v1.34.0/go.mod h1:vDUysl9ROGF6GAsl1OgTg6xHDnw391hCc5+IYg2U/GQ=
 github.com/aws/aws-sdk-go-v2/service/amp v1.27.3 h1:o1cMErMp45oKZ2ScvBOdVXYhvu6FdUcz0Xn+JpDd408=
 github.com/aws/aws-sdk-go-v2/service/amp v1.27.3/go.mod h1:TuSBSV1IedYHHrC4A3bW84WjQXNSzc6XasgvuDRDb4E=
 github.com/aws/aws-sdk-go-v2/service/amplify v1.23.3 h1:Plmg9O8/Pt4SKvPtUfSqCfv+SSSllouzlISFcvHK4bM=
@@ -232,8 +232,8 @@ github.com/aws/aws-sdk-go-v2/service/fms v1.35.3 h1:QeYAz3JhpkTxkS+fifDBfmgWFdSR
 github.com/aws/aws-sdk-go-v2/service/fms v1.35.3/go.mod h1:GXASgVouW5X/bmEgOoV/tkzJkp5ib7ZeA+YxMc5piqs=
 github.com/aws/aws-sdk-go-v2/service/glacier v1.24.3 h1:de8RU808VMx8km6t2wY3WDWigB6GqbNEcyVQRJFaIYs=
 github.com/aws/aws-sdk-go-v2/service/glacier v1.24.3/go.mod h1:F/qjepwnxPHHUTK9ikZp14jLyrvB18kZ/22MmaPxtHE=
-github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.26.4 h1:rLoIcyLk3UE+asYx/GynLd6vGv1dgeL3TYcVujblR6c=
-github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.26.4/go.mod h1:ehkx8lBkJkZbdKYX2GyMFmdOAfcGs0mjcbaNXNiHAEE=
+github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.27.0 h1:nlm6tZX8gwsVktDKTQe3IOagNVK1+6CGf9IpdWM6x+E=
+github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.27.0/go.mod h1:ehkx8lBkJkZbdKYX2GyMFmdOAfcGs0mjcbaNXNiHAEE=
 github.com/aws/aws-sdk-go-v2/service/grafana v1.24.3 h1:riHLAJSqo5zczCyMSo8XDA46X2aDpQvB46F0seKuNEM=
 github.com/aws/aws-sdk-go-v2/service/grafana v1.24.3/go.mod h1:2ipW9QX9MlePs99Dy8ohwfdW847hMJG6BU9jvixIpxE=
 github.com/aws/aws-sdk-go-v2/service/greengrass v1.25.3 h1:5KauP/IHPWGoHni4mt2Sjp0EtHMkdWtPP3v81qaHHyg=
@@ -310,8 +310,8 @@ github.com/aws/aws-sdk-go-v2/service/mediastore v1.22.3 h1:WBVRvc0iIJdbdCkBjWRMV
 github.com/aws/aws-sdk-go-v2/service/mediastore v1.22.3/go.mod h1:plJWP1InGjEZiJvXfTlBqTBeMW8ddEZeIdYYFTYZMyE=
 github.com/aws/aws-sdk-go-v2/service/mq v1.25.3 h1:SyRcb9GRPcoNKCuLnpj1qGIr/8stnVIf4DsuRhXIzEA=
 github.com/aws/aws-sdk-go-v2/service/mq v1.25.3/go.mod h1:Xu8nT/Yj64z5Gj1ebVB3drPEIBsPNDoFhx2xZDrdGlc=
-github.com/aws/aws-sdk-go-v2/service/mwaa v1.29.3 h1:UQQbEWaoiTIdMAxExvBCf056j8Oh4STkpL2Em9i1yLo=
-github.com/aws/aws-sdk-go-v2/service/mwaa v1.29.3/go.mod h1:mtgvj3nNI+LiRNT07JaHbTh6E/y8QRrClvd+/GMhMS4=
+github.com/aws/aws-sdk-go-v2/service/mwaa v1.29.4 h1:lptYTP7Br5zll9USf2aKY1ZlN69vYAlZOSCv1Q+k1S4=
+github.com/aws/aws-sdk-go-v2/service/mwaa v1.29.4/go.mod h1:mtgvj3nNI+LiRNT07JaHbTh6E/y8QRrClvd+/GMhMS4=
 github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.10.3 h1:XEbvRhi+ELazJaqh8k0KgTZrAgXM3rmR0hsGPTIpUIo=
 github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.10.3/go.mod h1:tfCOS8E/SwIkqHHGgpwRZTly3ZQxcsORZPEVBKMkbx4=
 github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.40.3 h1:hb3i/o9ouQj6RZjykyGI1koOfp22/ZMuWpuPfeu+zNE=
