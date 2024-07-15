@@ -81,11 +81,12 @@ func TestAccCodeBuildWebhook_gitHub(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_gitHub(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", ""),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexache.MustCompile(`^https://`)),
+					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "secret", ""),
 					resource.TestMatchResourceAttr(resourceName, names.AttrURL, regexache.MustCompile(`^https://`)),
 				),
@@ -118,11 +119,12 @@ func TestAccCodeBuildWebhook_gitHubEnterprise(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_gitHubEnterprise(rName, "dev"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", "dev"),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexache.MustCompile(`^https://`)),
+					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", acctest.Ct0),
 					resource.TestMatchResourceAttr(resourceName, "secret", regexache.MustCompile(`.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURL, ""),
 				),
@@ -135,11 +137,12 @@ func TestAccCodeBuildWebhook_gitHubEnterprise(t *testing.T) {
 			},
 			{
 				Config: testAccWebhookConfig_gitHubEnterprise(rName, "master"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", "master"),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexache.MustCompile(`^https://`)),
+					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", acctest.Ct0),
 					resource.TestMatchResourceAttr(resourceName, "secret", regexache.MustCompile(`.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURL, ""),
 				),
