@@ -46,7 +46,7 @@ func TestAccFISExperimentTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.value", "to-terminate-1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.target.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "An experiment template for testing"),
-					resource.TestCheckResourceAttr(resourceName, "experiment_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
@@ -434,7 +434,7 @@ func TestAccFISExperimentTemplate_updateExperimentOptions(t *testing.T) {
 				Config: testAccExperimentTemplateConfig_ExperimentOptions(rName, "skip"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "experiment_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "experiment_options.0.account_targeting", "single-account"),
 					resource.TestCheckResourceAttr(resourceName, "experiment_options.0.empty_target_resolution_mode", "skip"),
 				),
@@ -443,7 +443,7 @@ func TestAccFISExperimentTemplate_updateExperimentOptions(t *testing.T) {
 				Config: testAccExperimentTemplateConfig_ExperimentOptions(rName, "fail"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "experiment_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "experiment_options.0.empty_target_resolution_mode", "fail"),
 				),
 			},
