@@ -77,5 +77,16 @@ func customizeDiffValidateReplicationGroupAutomaticFailoverNumCacheClusters(_ co
 	if v, ok := diff.GetOk("num_cache_clusters"); !ok || v.(int) > 1 {
 		return nil
 	}
-	return errors.New(`num_cache_clusters: must be at least 2 if automatic_failover_enabled is true`)
+	return errors.New(`"num_cache_clusters": must be at least 2 if automatic_failover_enabled is true`)
+}
+
+func customizeDiffValidateReplicationGroupReplicasPerNodeGroupConflictsWithNumCacheClusters(_ context.Context, diff *schema.ResourceDiff, v any) error {
+	if v, ok := diff.GetOk("num_cache_clusters"); !ok || v.(int) == 0 {
+		return nil
+	}
+	raw := diff.GetRawConfig().GetAttr("replicas_per_node_group")
+	if !raw.IsKnown() || raw.IsNull() {
+		return nil
+	}
+	return errors.New(`"replicas_per_node_group": conflicts with num_cache_clusters`)
 }

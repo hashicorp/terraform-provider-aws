@@ -225,16 +225,19 @@ The following arguments are optional:
 * `num_cache_clusters` - (Optional) Number of cache clusters (primary and replicas) this replication group will have.
   If `automatic_failover_enabled` or `multi_az_enabled` are `true`, must be at least 2.
   Updates will occur before other modifications.
-  Conflicts with `num_node_groups`.
+  Conflicts with `num_node_groups` and `replicas_per_node_group`.
   Defaults to `1`.
 * `num_node_groups` - (Optional) Number of node groups (shards) for this Redis replication group.
   Changing this number will trigger a resizing operation before other settings modifications.
+  Conflicts with `num_cache_clusters`.
 * `parameter_group_name` - (Optional) Name of the parameter group to associate with this replication group. If this argument is omitted, the default cache parameter group for the specified engine is used. To enable "cluster mode", i.e., data sharding, use a parameter group that has the parameter `cluster-enabled` set to true.
 * `port` – (Optional) Port number on which each of the cache nodes will accept connections. For Memcache the default is 11211, and for Redis the default port is 6379.
 * `preferred_cache_cluster_azs` - (Optional) List of EC2 availability zones in which the replication group's cache clusters will be created. The order of the availability zones in the list is considered. The first item in the list will be the primary node. Ignored when updating.
 * `replicas_per_node_group` - (Optional) Number of replica nodes in each node group.
   Changing this number will trigger a resizing operation before other settings modifications.
   Valid values are 0 to 5.
+  Conflicts with `num_cache_clusters`.
+  Can only be set if `num_node_groups` is set.
 * `security_group_ids` - (Optional) IDs of one or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud.
 * `security_group_names` - (Optional) Names of one or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud.
 * `snapshot_arns` – (Optional) List of ARNs that identify Redis RDB snapshot files stored in Amazon S3. The names object names cannot contain any commas.

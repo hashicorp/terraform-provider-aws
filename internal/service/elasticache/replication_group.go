@@ -15,6 +15,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/go-cty/cty/gocty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -234,7 +236,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Type:          schema.TypeInt,
 				Computed:      true,
 				Optional:      true,
-				ConflictsWith: []string{"num_node_groups"},
+				ConflictsWith: []string{"num_node_groups", "replicas_per_node_group"},
 			},
 			"num_node_groups": {
 				Type:          schema.TypeInt,
@@ -276,9 +278,11 @@ func resourceReplicationGroup() *schema.Resource {
 				Computed: true,
 			},
 			"replicas_per_node_group": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"num_cache_clusters", "global_replication_group_id"},
+				ValidateFunc:  validation.IntBetween(0, 5),
 			},
 			"replication_group_id": {
 				Type:         schema.TypeString,
@@ -398,6 +402,7 @@ func resourceReplicationGroup() *schema.Resource {
 				return semver.LessThan(d.Get("engine_version_actual").(string), "7.0.5")
 			}),
 			customizeDiffValidateReplicationGroupAutomaticFailoverNumCacheClusters,
+			customizeDiffValidateReplicationGroupReplicasPerNodeGroupConflictsWithNumCacheClusters,
 			verify.SetTagsDiff,
 		),
 	}
@@ -513,8 +518,23 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.PreferredCacheClusterAZs = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("replicas_per_node_group"); ok {
-		input.ReplicasPerNodeGroup = aws.Int32(int32(v.(int)))
+	rawConfig := d.GetRawConfig()
+	rawReplicasPerNodeGroup := rawConfig.GetAttr("replicas_per_node_group")
+	if rawReplicasPerNodeGroup.IsKnown() && !rawReplicasPerNodeGroup.IsNull() {
+		var v int32
+		err := gocty.FromCtyValue(rawReplicasPerNodeGroup, &v)
+		if err != nil {
+			path := cty.GetAttrPath("replicas_per_node_group")
+			diags = append(diags, errs.NewAttributeErrorDiagnostic(
+				path,
+				"Invalid Value",
+				"An unexpected error occurred while reading configuration values. "+
+					"This is always an error in the provider. "+
+					"Please report the following to the provider developer:\n\n"+
+					fmt.Sprintf(`Reading "%s": %s`, errs.PathString(path), err),
+			))
+		}
+		input.ReplicasPerNodeGroup = aws.Int32(v)
 	}
 
 	if v, ok := d.GetOk("subnet_group_name"); ok {

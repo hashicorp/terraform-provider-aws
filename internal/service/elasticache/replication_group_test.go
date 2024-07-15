@@ -1370,6 +1370,28 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_updateFromDisabled_Compatibl
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_cacheClustersConflictsWithReplicasPerNodeGroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccReplicationGroupConfig_cacheClustersConflictsWithReplicasPerNodeGroup(rName),
+				ExpectError: regexache.MustCompile(`"replicas_per_node_group": conflicts with num_cache_clusters`),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_clusteringAndCacheNodesCausesError(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3098,6 +3120,20 @@ resource "aws_elasticache_replication_group" "test" {
   apply_immediately    = true
   maintenance_window   = "tue:06:30-tue:07:30"
   snapshot_window      = "01:00-02:00"
+}
+`, rName)
+}
+
+func testAccReplicationGroupConfig_cacheClustersConflictsWithReplicasPerNodeGroup(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[1]q
+  description          = "test description"
+  node_type            = "cache.t3.small"
+
+  automatic_failover_enabled = true
+  num_cache_clusters         = 2
+  replicas_per_node_group    = 0
 }
 `, rName)
 }
