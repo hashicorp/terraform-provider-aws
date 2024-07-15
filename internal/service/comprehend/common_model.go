@@ -73,8 +73,8 @@ func waitNetworkInterfaceCreated(ctx context.Context, conn *ec2.Client, initialE
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.NetworkInterface); ok {
-		return output, err
+	if output, ok := outputRaw.(awstypes.NetworkInterface); ok {
+		return &output, err
 	}
 
 	return nil, err
