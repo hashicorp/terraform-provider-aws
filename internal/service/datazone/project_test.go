@@ -47,7 +47,7 @@ func TestAccDataZoneProject_basic(t *testing.T) {
 				Config: testAccProjectConfig_basic(rName, dName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_id", domainName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "glossary_terms.#"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -55,7 +55,6 @@ func TestAccDataZoneProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_at"),
-					//resource.TestCheckResourceAttrSet(resourceName, "project_status"),
 				),
 			},
 			{
@@ -92,7 +91,6 @@ func TestAccDataZoneProject_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceProject, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-				//ExpectError:        regexache.MustCompile(`(AccessDeniedException)`),
 			},
 		},
 	})
@@ -104,7 +102,7 @@ func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_datazone_project" {
 				continue
 			}
-			t := rs.Primary.Attributes["domain_id"]
+			t := rs.Primary.Attributes["domain_identifier"]
 
 			input := &datazone.GetProjectInput{
 				DomainIdentifier: &t,
@@ -123,7 +121,7 @@ func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 			_, err := conn.DeleteDomain(ctx, &datazone.DeleteDomainInput{
-				Identifier: aws.String(rs.Primary.Attributes["domain_id"]),
+				Identifier: aws.String(rs.Primary.Attributes["domain_identifier"]),
 			})
 
 			if err != nil {
@@ -144,10 +142,10 @@ func testAccCheckProjectExists(ctx context.Context, name string, project *datazo
 		if rs.Primary.ID == "" {
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameProject, name, errors.New("not set"))
 		}
-		if rs.Primary.Attributes["domain_id"] == "" {
+		if rs.Primary.Attributes["domain_identifier"] == "" {
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameProject, name, errors.New("domain identifier not set"))
 		}
-		t := rs.Primary.Attributes["domain_id"]
+		t := rs.Primary.Attributes["domain_identifier"]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
 		resp, err := conn.GetProject(ctx, &datazone.GetProjectInput{
 			DomainIdentifier: &t,
@@ -197,7 +195,7 @@ func TestAccDataZoneProject_update(t *testing.T) {
 				Config: testAccProjectConfig_basic(pName, dName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_id", domainName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "glossary_terms.#"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, pName),
@@ -205,8 +203,6 @@ func TestAccDataZoneProject_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_at"),
-					//resource.TestCheckResourceAttrSet(resourceName, "project_status"),
-					//resource.TestCheckResourceAttrSet(resourceName, "result_metadata"),
 				),
 			},
 			{
@@ -221,7 +217,7 @@ func TestAccDataZoneProject_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &v2),
 					testAccCheckProjectNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_id", domainName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "glossary_terms.#"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, pName),
@@ -229,8 +225,6 @@ func TestAccDataZoneProject_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_at"),
-					//resource.TestCheckResourceAttrSet(resourceName, "project_status"),
-					//resource.TestCheckResourceAttrSet(resourceName, "result_metadata"),
 				),
 			},
 			{
@@ -251,7 +245,7 @@ func testAccAuthorizerImportStateIdFunc(resourceName string) resource.ImportStat
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s:%s", rs.Primary.Attributes["domain_id"], rs.Primary.ID), nil
+		return fmt.Sprintf("%s:%s", rs.Primary.Attributes["domain_identifier"], rs.Primary.ID), nil
 	}
 }
 
@@ -262,7 +256,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_datazone_project" "test" {
-  domain_id           = aws_datazone_domain.test.id
+  domain_identifier   = aws_datazone_domain.test.id
   glossary_terms      = ["2N8w6XJCwZf"]
   name                = %[1]q
   description         = "desc"
@@ -277,7 +271,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_datazone_project" "test" {
-  domain_id           = aws_datazone_domain.test.id
+  domain_identifier   = aws_datazone_domain.test.id
   glossary_terms      = ["2N8w6XJCwZf"]
   name                = %[1]q
   description         = "description"

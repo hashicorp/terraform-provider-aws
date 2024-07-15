@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 	"strings"
 	"time"
 
@@ -68,7 +67,7 @@ func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest
 					stringvalidator.LengthAtMost(2048),
 				},
 			},
-			"domain_id": schema.StringAttribute{
+			"domain_identifier": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(`^dzd[-_][a-zA-Z0-9_-]{1,36}$`), "must conform to: ^dzd[-_][a-zA-Z0-9_-]{1,36}$ "),
@@ -149,29 +148,14 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 	}
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var validateDomain datazone.GetDomainInput
-	validateDomain.Identifier = plan.DomainId.ValueStringPointer()
-	_, err := conn.GetDomain(ctx, &validateDomain)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameProject, plan.Name.String(), err),
-			err.Error(),
-		)
+	in := &datazone.CreateProjectInput{}
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+
+	out, err := conn.CreateProject(ctx, in)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	in := &datazone.CreateProjectInput{
-		Name:             aws.String(plan.Name.ValueString()),
-		DomainIdentifier: aws.String(plan.DomainId.ValueString()),
-	}
-	if !plan.Description.IsNull() {
-		in.Description = aws.String(plan.Description.ValueString())
-	}
-	if !plan.GlossaryTerms.IsNull() {
-		in.GlossaryTerms = aws.ToStringSlice(flex.ExpandFrameworkStringList(ctx, plan.GlossaryTerms))
-	}
-
-	out, err := conn.CreateProject(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameProject, plan.Name.String(), err),
@@ -201,7 +185,7 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitProjectCreated(ctx, conn, plan.DomainId.ValueString(), plan.ID.ValueString(), createTimeout)
+	_, err = waitProjectCreated(ctx, conn, plan.DomainIdentifier.ValueString(), plan.ID.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForCreation, ResNameProject, plan.Name.String(), err),
@@ -221,8 +205,7 @@ func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	//out, err := conn.GetProject(ctx, in)
-	out, err := findProjectByID(ctx, conn, state.DomainId.ValueString(), state.ID.ValueString())
+	out, err := findProjectByID(ctx, conn, state.DomainIdentifier.ValueString(), state.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -252,59 +235,36 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if plan.DomainIdentifier.Equal(state.DomainIdentifier) {
+		in := &datazone.UpdateProjectInput{}
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
 
-	if plan.DomainId != state.DomainId {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameProject, plan.ID.String(), nil),
-			errors.New("domain_id should not change with updates").Error(),
-		)
-		return
-	}
-
-	in := &datazone.UpdateProjectInput{
-		DomainIdentifier: aws.String(plan.DomainId.ValueString()),
-		Identifier:       aws.String(plan.ID.ValueString()),
-	}
-
-	if plan.GlossaryTerms.IsNull() {
-		if !reflect.DeepEqual(plan.GlossaryTerms, state.GlossaryTerms) {
-			in.GlossaryTerms = aws.ToStringSlice(flex.ExpandFrameworkStringList(ctx, plan.GlossaryTerms))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		in.Identifier = plan.ID.ValueStringPointer()
+		out, err := conn.UpdateProject(ctx, in)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameProject, plan.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		if out == nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameProject, plan.ID.String(), nil),
+				errors.New("empty output from project update").Error(),
+			)
+			return
+		}
+		out.ProjectStatus = "ACTIVE"
+		resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+		if resp.Diagnostics.HasError() {
+			return
 		}
 	}
 
-	if !plan.Description.IsNull() {
-		if plan.Description.ValueString() != state.Description.ValueString() {
-			in.Description = aws.String(plan.Description.ValueString())
-		}
-	}
-
-	if !plan.Name.IsNull() {
-		if plan.Name != state.Name {
-			in.Name = aws.String(plan.Name.ValueString())
-		}
-	}
-
-	out, err := conn.UpdateProject(ctx, in)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameProject, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameProject, plan.ID.String(), nil),
-			errors.New("empty output from project update").Error(),
-		)
-		return
-	}
-
-	out.ProjectStatus = "ACTIVE"
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -318,7 +278,7 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	in := &datazone.DeleteProjectInput{
-		DomainIdentifier: state.DomainId.ValueStringPointer(),
+		DomainIdentifier: state.DomainIdentifier.ValueStringPointer(),
 		Identifier:       aws.String((*state.ID.ValueStringPointer())),
 	}
 	if !state.SkipDeletionCheck.IsNull() {
@@ -338,7 +298,7 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitProjectDeleted(ctx, conn, state.DomainId.ValueString(), state.ID.ValueString(), deleteTimeout)
+	_, err = waitProjectDeleted(ctx, conn, state.DomainIdentifier.ValueString(), state.ID.ValueString(), deleteTimeout)
 
 	if err != nil && !errs.IsA[*awstypes.AccessDeniedException](err) {
 		resp.Diagnostics.AddError(
@@ -355,7 +315,7 @@ func (r *resourceProject) ImportState(ctx context.Context, req resource.ImportSt
 	if len(parts) != 2 {
 		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "DomainIdentifier:Id"`, req.ID))
 	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_id"), parts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
 }
 
@@ -379,7 +339,7 @@ func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain strin
 
 func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain string, identifier string, timeout time.Duration) (*datazone.GetProjectOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice[awstypes.ProjectStatus](awstypes.ProjectStatusDeleting, awstypes.ProjectStatusActive), // Not too sure about this.
+		Pending: enum.Slice[awstypes.ProjectStatus](awstypes.ProjectStatusDeleting, awstypes.ProjectStatusActive),
 		Target:  []string{},
 		Refresh: statusProject(ctx, conn, domain, identifier),
 		Timeout: timeout,
@@ -433,7 +393,7 @@ func findProjectByID(ctx context.Context, conn *datazone.Client, domain string, 
 
 type resourceProjectData struct {
 	Description       types.String                                            `tfsdk:"description"`
-	DomainId          types.String                                            `tfsdk:"domain_id"`
+	DomainIdentifier  types.String                                            `tfsdk:"domain_identifier"`
 	Name              types.String                                            `tfsdk:"name"`
 	CreatedBy         types.String                                            `tfsdk:"created_by"`
 	ID                types.String                                            `tfsdk:"id"`

@@ -25,8 +25,8 @@ resource "aws_datazone_project" "test" {
 
 ```terraform
 resource "aws_datazone_project" "test" {
-  domain_id = aws_datazone_domain.test.id
-  name      = "name"
+  domain_identifier = aws_datazone_domain.test.id
+  name              = "name"
 }
 ```
 
@@ -34,7 +34,7 @@ resource "aws_datazone_project" "test" {
 
 The following arguments are required:
 
-* `domain_id` - (Required) Identifier of domain which the project is part of. Must follow the regex of ^dzd[-_][a-zA-Z0-9_-]{1,36}$.
+* `domain_identifier` - (Required) Identifier of domain which the project is part of. Must follow the regex of ^dzd[-_][a-zA-Z0-9_-]{1,36}$.
 * `name` - (Required) Name of the project. Must follow the regex of ^[\w -]+$. and have a length of at most 64.
 
 The following arguments are optional:
