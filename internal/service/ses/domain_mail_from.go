@@ -56,7 +56,7 @@ func resourceDomainMailFromSet(ctx context.Context, d *schema.ResourceData, meta
 	mailFromDomain := d.Get("mail_from_domain").(string)
 
 	input := &ses.SetIdentityMailFromDomainInput{
-		BehaviorOnMXFailure: aws.String(behaviorOnMxFailure),
+		BehaviorOnMXFailure: awstypes.BehaviorOnMXFailure(behaviorOnMxFailure),
 		Identity:            aws.String(domainName),
 		MailFromDomain:      aws.String(mailFromDomain),
 	}
@@ -78,8 +78,8 @@ func resourceDomainMailFromRead(ctx context.Context, d *schema.ResourceData, met
 	domainName := d.Id()
 
 	readOpts := &ses.GetIdentityMailFromDomainAttributesInput{
-		Identities: []*string{
-			aws.String(domainName),
+		Identities: []string{
+			domainName,
 		},
 	}
 
