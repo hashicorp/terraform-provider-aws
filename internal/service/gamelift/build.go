@@ -10,13 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -47,10 +47,10 @@ func ResourceBuild() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"operating_system": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: enum.Validate[awstypes.OperatingSystem](),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.OperatingSystem](),
 			},
 			"storage_location": {
 				Type:     schema.TypeList,
@@ -102,7 +102,7 @@ func resourceBuildCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	input := gamelift.CreateBuildInput{
 		Name:            aws.String(d.Get(names.AttrName).(string)),
-		OperatingSystem: aws.String(d.Get("operating_system").(string)),
+		OperatingSystem: awstypes.OperatingSystem(d.Get("operating_system").(string)),
 		StorageLocation: expandStorageLocation(d.Get("storage_location").([]interface{})),
 		Tags:            getTagsIn(ctx),
 	}
@@ -111,14 +111,14 @@ func resourceBuildCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Version = aws.String(v.(string))
 	}
 
-	log.Printf("[INFO] Creating GameLift Build: %s", input)
+	log.Printf("[INFO] Creating GameLift Build: %+v", input)
 	var out *gamelift.CreateBuildOutput
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 		out, err = conn.CreateBuild(ctx, &input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidRequestException, "Provided build is not accessible.") ||
-				tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidRequestException, "GameLift cannot assume the role") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Provided build is not accessible.") ||
+				errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "GameLift cannot assume the role") {
 				return retry.RetryableError(err)
 			}
 			return retry.NonRetryableError(err)
