@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -32,11 +31,11 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 	queueName := testAccGameSessionQueuePrefix + sdkacctest.RandString(8)
 	playerLatencyPolicies := []awstypes.PlayerLatencyPolicy{
 		{
-			MaximumIndividualPlayerLatencyMilliseconds: aws.Int64(100),
-			PolicyDurationSeconds:                      aws.Int64(5),
+			MaximumIndividualPlayerLatencyMilliseconds: aws.Int32(100),
+			PolicyDurationSeconds:                      aws.Int32(5),
 		},
 		{
-			MaximumIndividualPlayerLatencyMilliseconds: aws.Int64(200),
+			MaximumIndividualPlayerLatencyMilliseconds: aws.Int32(200),
 			PolicyDurationSeconds:                      nil,
 		},
 	}
@@ -45,11 +44,11 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 	uQueueName := queueName + "-updated"
 	uPlayerLatencyPolicies := []awstypes.PlayerLatencyPolicy{
 		{
-			MaximumIndividualPlayerLatencyMilliseconds: aws.Int64(150),
-			PolicyDurationSeconds:                      aws.Int64(10),
+			MaximumIndividualPlayerLatencyMilliseconds: aws.Int32(150),
+			PolicyDurationSeconds:                      aws.Int32(10),
 		},
 		{
-			MaximumIndividualPlayerLatencyMilliseconds: aws.Int64(250),
+			MaximumIndividualPlayerLatencyMilliseconds: aws.Int32(250),
 			PolicyDurationSeconds:                      nil,
 		},
 	}
@@ -176,11 +175,11 @@ func TestAccGameLiftGameSessionQueue_disappears(t *testing.T) {
 	queueName := testAccGameSessionQueuePrefix + sdkacctest.RandString(8)
 	playerLatencyPolicies := []awstypes.PlayerLatencyPolicy{
 		{
-			MaximumIndividualPlayerLatencyMilliseconds: aws.Int64(100),
-			PolicyDurationSeconds:                      aws.Int64(5),
+			MaximumIndividualPlayerLatencyMilliseconds: aws.Int32(100),
+			PolicyDurationSeconds:                      aws.Int32(5),
 		},
 		{
-			MaximumIndividualPlayerLatencyMilliseconds: aws.Int64(200),
+			MaximumIndividualPlayerLatencyMilliseconds: aws.Int32(200),
 			PolicyDurationSeconds:                      nil,
 		},
 	}

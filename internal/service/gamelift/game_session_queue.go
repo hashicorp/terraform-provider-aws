@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -104,7 +103,7 @@ func resourceGameSessionQueueCreate(ctx context.Context, d *schema.ResourceData,
 		Name:                  aws.String(name),
 		Destinations:          expandGameSessionQueueDestinations(d.Get("destinations").([]interface{})),
 		PlayerLatencyPolicies: expandGameSessionPlayerLatencyPolicies(d.Get("player_latency_policy").([]interface{})),
-		TimeoutInSeconds:      aws.Int64(int64(d.Get("timeout_in_seconds").(int))),
+		TimeoutInSeconds:      aws.Int32(int32(d.Get("timeout_in_seconds").(int))),
 		Tags:                  getTagsIn(ctx),
 	}
 
@@ -168,7 +167,7 @@ func resourceGameSessionQueueUpdate(ctx context.Context, d *schema.ResourceData,
 			Name:                  aws.String(d.Id()),
 			Destinations:          expandGameSessionQueueDestinations(d.Get("destinations").([]interface{})),
 			PlayerLatencyPolicies: expandGameSessionPlayerLatencyPolicies(d.Get("player_latency_policy").([]interface{})),
-			TimeoutInSeconds:      aws.Int64(int64(d.Get("timeout_in_seconds").(int))),
+			TimeoutInSeconds:      aws.Int32(int32(d.Get("timeout_in_seconds").(int))),
 		}
 
 		if v, ok := d.GetOk("custom_event_data"); ok {
@@ -236,69 +235,58 @@ func FindGameSessionQueueByName(ctx context.Context, conn *gamelift.Client, name
 		return nil, err
 	}
 
-	if output == nil || len(output.GameSessionQueues) == 0 || output.GameSessionQueues[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.GameSessionQueues); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.GameSessionQueues[0], nil
+	return tfresource.AssertSingleValueResult(output.GameSessionQueues)
 }
 
-func flattenGameSessionQueueDestinations(destinations []*awstypes.GameSessionQueueDestination) []interface{} {
+func flattenGameSessionQueueDestinations(destinations []awstypes.GameSessionQueueDestination) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, destination := range destinations {
-		if destination == nil {
-			continue
-		}
 		l = append(l, aws.ToString(destination.DestinationArn))
 	}
 
 	return l
 }
 
-func flattenPlayerLatencyPolicies(playerLatencyPolicies []*awstypes.PlayerLatencyPolicy) []interface{} {
+func flattenPlayerLatencyPolicies(playerLatencyPolicies []awstypes.PlayerLatencyPolicy) []interface{} {
 	l := make([]interface{}, 0)
 	for _, policy := range playerLatencyPolicies {
 		m := map[string]interface{}{
-			"maximum_individual_player_latency_milliseconds": aws.ToInt64(policy.MaximumIndividualPlayerLatencyMilliseconds),
-			"policy_duration_seconds":                        aws.ToInt64(policy.PolicyDurationSeconds),
+			"maximum_individual_player_latency_milliseconds": aws.ToInt32(policy.MaximumIndividualPlayerLatencyMilliseconds),
+			"policy_duration_seconds":                        aws.ToInt32(policy.PolicyDurationSeconds),
 		}
 		l = append(l, m)
 	}
 	return l
 }
 
-func expandGameSessionQueueDestinations(destinationsMap []interface{}) []*awstypes.GameSessionQueueDestination {
+func expandGameSessionQueueDestinations(destinationsMap []interface{}) []awstypes.GameSessionQueueDestination {
 	if len(destinationsMap) < 1 {
 		return nil
 	}
-	var destinations []*awstypes.GameSessionQueueDestination
+	var destinations []awstypes.GameSessionQueueDestination
 	for _, destination := range destinationsMap {
 		destinations = append(
 			destinations,
-			&awstypes.GameSessionQueueDestination{
+			awstypes.GameSessionQueueDestination{
 				DestinationArn: aws.String(destination.(string)),
 			})
 	}
 	return destinations
 }
 
-func expandGameSessionPlayerLatencyPolicies(destinationsPlayerLatencyPolicyMap []interface{}) []*awstypes.PlayerLatencyPolicy {
+func expandGameSessionPlayerLatencyPolicies(destinationsPlayerLatencyPolicyMap []interface{}) []awstypes.PlayerLatencyPolicy {
 	if len(destinationsPlayerLatencyPolicyMap) < 1 {
 		return nil
 	}
-	var playerLatencyPolicies []*awstypes.PlayerLatencyPolicy
+	var playerLatencyPolicies []awstypes.PlayerLatencyPolicy
 	for _, playerLatencyPolicy := range destinationsPlayerLatencyPolicyMap {
 		item := playerLatencyPolicy.(map[string]interface{})
 		playerLatencyPolicies = append(
 			playerLatencyPolicies,
-			&awstypes.PlayerLatencyPolicy{
-				MaximumIndividualPlayerLatencyMilliseconds: aws.Int64(int64(item["maximum_individual_player_latency_milliseconds"].(int))),
-				PolicyDurationSeconds:                      aws.Int64(int64(item["policy_duration_seconds"].(int))),
+			awstypes.PlayerLatencyPolicy{
+				MaximumIndividualPlayerLatencyMilliseconds: aws.Int32(int32(item["maximum_individual_player_latency_milliseconds"].(int))),
+				PolicyDurationSeconds:                      aws.Int32(int32(item["policy_duration_seconds"].(int))),
 			})
 	}
 	return playerLatencyPolicies
