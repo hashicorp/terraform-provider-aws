@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws
 
-go 1.22.4
+go 1.22.5
 
 require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.3-proton
