@@ -52,6 +52,22 @@ func dataSourceAddon() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"pod_identity_association": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrRoleARN: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"service_account": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"service_account_role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -83,6 +99,13 @@ func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("configuration_values", addon.ConfigurationValues)
 	d.Set(names.AttrCreatedAt, aws.ToTime(addon.CreatedAt).Format(time.RFC3339))
 	d.Set("modified_at", aws.ToTime(addon.ModifiedAt).Format(time.RFC3339))
+	flatPIAs, err := flattenAddonPodIdentityAssociations(ctx, addon.PodIdentityAssociations, clusterName, meta)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening pod_identity_association: %s", err)
+	}
+	if err := d.Set("pod_identity_association", flatPIAs); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting pod_identity_association: %s", err)
+	}
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, addon.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
