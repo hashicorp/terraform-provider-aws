@@ -114,7 +114,7 @@ func TestAccServerlessRepoCloudFormationStack_versioned(t *testing.T) {
 	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
 	const (
-		version1 = "1.1.36"
+		version1 = "1.1.465"
 		version2 = "1.1.88"
 	)
 
@@ -173,7 +173,7 @@ func TestAccServerlessRepoCloudFormationStack_paired(t *testing.T) {
 	appARN := testAccCloudFormationApplicationID()
 	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
-	const version = "1.1.36"
+	const version = "1.1.465"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
