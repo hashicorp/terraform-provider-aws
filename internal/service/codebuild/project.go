@@ -172,7 +172,7 @@ func resourceProject() *schema.Resource {
 						"timeout_in_mins": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(5, 480),
+							ValidateFunc: validation.IntBetween(5, 2160),
 						},
 					},
 				},
@@ -181,7 +181,7 @@ func resourceProject() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      60,
-				ValidateFunc: validation.IntBetween(5, 480),
+				ValidateFunc: validation.IntBetween(5, 2160),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					switch environmentType := types.EnvironmentType(d.Get("environment.0.type").(string)); environmentType {
 					case types.EnvironmentTypeArmLambdaContainer, types.EnvironmentTypeLinuxLambdaContainer:
@@ -978,7 +978,11 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("concurrent_build_limit") {
-			input.ConcurrentBuildLimit = aws.Int32(int32(d.Get("concurrent_build_limit").(int)))
+			if v := int32(d.Get("concurrent_build_limit").(int)); v != 0 {
+				input.ConcurrentBuildLimit = aws.Int32(v)
+			} else {
+				input.ConcurrentBuildLimit = aws.Int32(-1)
+			}
 		}
 
 		if d.HasChange(names.AttrDescription) {

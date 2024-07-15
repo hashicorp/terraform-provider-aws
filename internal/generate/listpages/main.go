@@ -19,7 +19,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -52,6 +52,10 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
+	if *sdkVersion != sdkV1 && *sdkVersion != sdkV2 {
+		log.Fatalf("AWSSDKVersion must be either 1 or 2, got %d", *sdkVersion)
+	}
+
 	if (*inputPaginator != "" && *outputPaginator == "") || (*inputPaginator == "" && *outputPaginator != "") {
 		log.Fatal("both InputPaginator and OutputPaginator must be specified if one is")
 	}
@@ -71,10 +75,14 @@ func main() {
 	servicePackage := os.Getenv("GOPACKAGE")
 	log.SetPrefix(fmt.Sprintf("generate/listpage: %s: ", servicePackage))
 
-	awsService, err := names.AWSGoV1Package(servicePackage)
-
+	service, err := data.LookupService(servicePackage)
 	if err != nil {
 		log.Fatalf("encountered: %s", err)
+	}
+
+	awsService := service.GoV1Package()
+	if *sdkVersion == sdkV2 {
+		awsService = service.GoV2Package()
 	}
 
 	functions := strings.Split(*listOps, ",")
@@ -92,10 +100,8 @@ func main() {
 	}
 
 	sourcePackage := fmt.Sprintf("github.com/aws/aws-sdk-go/service/%[1]s", awsService)
-
 	if *sdkVersion == sdkV2 {
 		sourcePackage = fmt.Sprintf("github.com/aws/aws-sdk-go-v2/service/%[1]s", awsService)
-
 	}
 
 	g.parsePackage(sourcePackage)
@@ -107,14 +113,14 @@ func main() {
 		SourceIntfPackage:  fmt.Sprintf("github.com/aws/aws-sdk-go/service/%[1]s/%[1]siface", awsService),
 	}, *sdkVersion)
 
-	awsUpper, err := names.AWSGoClientTypeName(servicePackage, *sdkVersion)
+	clientTypeName := service.ClientTypeName(*sdkVersion)
 
 	if err != nil {
 		log.Fatalf("encountered: %s", err)
 	}
 
 	for _, functionName := range functions {
-		g.generateFunction(functionName, awsService, awsUpper, *export, *sdkVersion, *v2Suffix)
+		g.generateFunction(functionName, awsService, clientTypeName, *export, *sdkVersion, *v2Suffix)
 	}
 
 	src := g.format()
@@ -204,7 +210,7 @@ type FuncSpec struct {
 	V2Suffix        bool
 }
 
-func (g *Generator) generateFunction(functionName, awsService, awsServiceUpper string, export bool, sdkVersion int, v2Suffix bool) {
+func (g *Generator) generateFunction(functionName, awsService, clientTypeName string, export bool, sdkVersion int, v2Suffix bool) {
 	var function *ast.FuncDecl
 
 	for _, file := range g.pkg.files {
@@ -233,14 +239,14 @@ func (g *Generator) generateFunction(functionName, awsService, awsServiceUpper s
 		funcName = fmt.Sprintf("%s%s", strings.ToLower(funcName[0:1]), funcName[1:])
 	}
 
-	recvType := fmt.Sprintf("%[1]siface.%[2]sAPI", awsService, awsServiceUpper)
+	recvType := fmt.Sprintf("%[1]siface.%[2]sAPI", awsService, clientTypeName)
 
 	if sdkVersion == sdkV2 {
-		recvType = fmt.Sprintf("*%[1]s.%[2]s", awsService, awsServiceUpper)
+		recvType = fmt.Sprintf("*%[1]s.%[2]s", awsService, clientTypeName)
 	}
 
 	funcSpec := FuncSpec{
-		Name:            fixUpFuncName(funcName, awsServiceUpper),
+		Name:            fixUpFuncName(funcName, clientTypeName),
 		AWSName:         function.Name.Name,
 		RecvType:        recvType,
 		ParamType:       g.expandTypeField(function.Type.Params, sdkVersion, false), // Assumes there is a single input parameter

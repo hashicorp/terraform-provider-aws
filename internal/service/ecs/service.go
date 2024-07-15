@@ -567,7 +567,7 @@ func ResourceService() *schema.Resource {
 										Optional: true,
 									},
 									names.AttrThroughput: {
-										Type:         schema.TypeString,
+										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntBetween(0, 1000),
 									},

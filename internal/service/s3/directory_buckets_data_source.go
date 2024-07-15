@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Directory Buckets")
+// @FrameworkDataSource("aws_s3_directory_buckets", name="Directory Buckets")
 func newDirectoryBucketsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &directoryBucketsDataSource{}
 

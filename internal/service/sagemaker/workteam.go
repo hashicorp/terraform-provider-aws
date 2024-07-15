@@ -111,6 +111,50 @@ func ResourceWorkteam() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
+			"worker_access_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"s3_presign": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"iam_policy_constraints": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"source_ip": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.EnabledOrDisabled_Values(), false),
+													ExactlyOneOf: []string{"worker_access_configuration.0.s3_presign.0.iam_policy_constraints.0.source_ip", "worker_access_configuration.0.s3_presign.0.iam_policy_constraints.0.vpc_source_ip"},
+												},
+												"vpc_source_ip": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.EnabledOrDisabled_Values(), false),
+													ExactlyOneOf: []string{"worker_access_configuration.0.s3_presign.0.iam_policy_constraints.0.source_ip", "worker_access_configuration.0.s3_presign.0.iam_policy_constraints.0.vpc_source_ip"},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"subdomain": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -152,6 +196,10 @@ func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("notification_configuration"); ok {
 		input.NotificationConfiguration = expandWorkteamNotificationConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("worker_access_configuration"); ok {
+		input.WorkerAccessConfiguration = expandWorkerAccessConfiguration(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Updating SageMaker Workteam: %s", input)
@@ -198,6 +246,10 @@ func resourceWorkteamRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting notification_configuration: %s", err)
 	}
 
+	if err := d.Set("worker_access_configuration", flattenWorkerAccessConfiguration(workteam.WorkerAccessConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting worker_access_configuration: %s", err)
+	}
+
 	return diags
 }
 
@@ -217,6 +269,10 @@ func resourceWorkteamUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if d.HasChange("notification_configuration") {
 			input.NotificationConfiguration = expandWorkteamNotificationConfiguration(d.Get("notification_configuration").([]interface{}))
+		}
+
+		if d.HasChange("worker_access_configuration") {
+			input.WorkerAccessConfiguration = expandWorkerAccessConfiguration(d.Get("worker_access_configuration").([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating SageMaker Workteam: %s", input)
@@ -376,6 +432,99 @@ func flattenWorkteamNotificationConfiguration(config *sagemaker.NotificationConf
 
 	m := map[string]interface{}{
 		"notification_topic_arn": aws.StringValue(config.NotificationTopicArn),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandWorkerAccessConfiguration(l []interface{}) *sagemaker.WorkerAccessConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.WorkerAccessConfiguration{}
+
+	if v, ok := m["s3_presign"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		config.S3Presign = expandS3Presign(v)
+	} else {
+		return nil
+	}
+
+	return config
+}
+
+func flattenWorkerAccessConfiguration(config *sagemaker.WorkerAccessConfiguration) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"s3_presign": flattenS3Presign(config.S3Presign),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandS3Presign(l []interface{}) *sagemaker.S3Presign {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.S3Presign{}
+
+	if v, ok := m["iam_policy_constraints"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		config.IamPolicyConstraints = expandIAMPolicyConstraints(v)
+	} else {
+		return nil
+	}
+
+	return config
+}
+
+func flattenS3Presign(config *sagemaker.S3Presign) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"iam_policy_constraints": flattenIAMPolicyConstraints(config.IamPolicyConstraints),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandIAMPolicyConstraints(l []interface{}) *sagemaker.IamPolicyConstraints {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.IamPolicyConstraints{}
+
+	if v, ok := m["source_ip"].(string); ok && v != "" {
+		config.SourceIp = aws.String(v)
+	}
+
+	if v, ok := m["vpc_source_ip"].(string); ok && v != "" {
+		config.VpcSourceIp = aws.String(v)
+	}
+
+	return config
+}
+
+func flattenIAMPolicyConstraints(config *sagemaker.IamPolicyConstraints) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"source_ip":     aws.StringValue(config.SourceIp),
+		"vpc_source_ip": aws.StringValue(config.VpcSourceIp),
 	}
 
 	return []map[string]interface{}{m}

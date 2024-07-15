@@ -991,7 +991,7 @@ Inspect a single header. Provide the name of the header to inspect, for example,
 
 The `singleHeader` block supports the following arguments:
 
-* `name` - (Optional) Name of the query header to inspect. This setting must be provided as lower case characters.
+* `name` - (Required) Name of the query header to inspect. This setting must be provided as lower case characters.
 
 ### `singleQueryArgument` Block
 
@@ -999,7 +999,7 @@ Inspect a single query argument. Provide the name of the query argument to inspe
 
 The `singleQueryArgument` block supports the following arguments:
 
-* `name` - (Optional) Name of the query header to inspect. This setting must be provided as lower case characters.
+* `name` - (Required) Name of the query header to inspect. This setting must be provided as lower case characters.
 
 ### `body` Block
 
@@ -1217,4 +1217,4 @@ Using `terraform import`, import WAFv2 Web ACLs using `ID/Name/Scope`. For examp
 % terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4800ce5f2b0cf4b09a78a5bb9def790a4cefd02b621a6308dc87ff1db787c3cc -->
+<!-- cache-key: cdktf-0.20.1 input-c702f22122e320bf55b9f4c49ee2086ac97153d87dafa76313fce05d741646d7 -->

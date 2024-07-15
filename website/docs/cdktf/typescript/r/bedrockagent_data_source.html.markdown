@@ -1,5 +1,5 @@
 ---
-subcategory: "Agents for Amazon Bedrock"
+subcategory: "Bedrock Agents"
 layout: "aws"
 page_title: "AWS: aws_bedrockagent_data_source"
 description: |-
@@ -149,4 +149,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Data Source using the
 % terraform import aws_bedrockagent_data_source.example GWCMFMQF6T,EMDPPAYPZI
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-521849b603b0e73d8d2c3cd8d697ce1b08edce7634b15d3786983c55993b8f17 -->
+<!-- cache-key: cdktf-0.20.1 input-8aaedb087a1462247c32851ffac6f1813521a188a65dba1f8f50fc7a093a3677 -->

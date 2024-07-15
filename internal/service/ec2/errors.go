@@ -66,6 +66,8 @@ const (
 	errCodeInvalidLaunchTemplateIdNotFound                         = "InvalidLaunchTemplateId.NotFound"
 	errCodeInvalidLaunchTemplateIdVersionNotFound                  = "InvalidLaunchTemplateId.VersionNotFound"
 	errCodeInvalidLaunchTemplateNameNotFoundException              = "InvalidLaunchTemplateName.NotFoundException"
+	errCodeInvalidLocalGatewayRouteTableIDNotFound                 = "InvalidLocalGatewayRouteTableID.NotFound"
+	errCodeInvalidLocalGatewayRouteTableVPCAssociationIDNotFound   = "InvalidLocalGatewayRouteTableVpcAssociationID.NotFound"
 	errCodeInvalidNetworkACLEntryNotFound                          = "InvalidNetworkAclEntry.NotFound"
 	errCodeInvalidNetworkACLIDNotFound                             = "InvalidNetworkAclID.NotFound"
 	errCodeInvalidNetworkInsightsAnalysisIdNotFound                = "InvalidNetworkInsightsAnalysisId.NotFound"
@@ -82,6 +84,7 @@ const (
 	errCodeInvalidPrefixListIDNotFound                             = "InvalidPrefixListID.NotFound"
 	errCodeInvalidPrefixListIdNotFound                             = "InvalidPrefixListId.NotFound"
 	errCodeInvalidPublicIpv4PoolIDNotFound                         = "InvalidPublicIpv4PoolID.NotFound" // nosemgrep:ci.caps5-in-const-name,ci.caps5-in-var-name
+	errCodeInvalidReservationNotFound                              = "InvalidReservationID.NotFound"
 	errCodeInvalidRouteNotFound                                    = "InvalidRoute.NotFound"
 	errCodeInvalidRouteTableIDNotFound                             = "InvalidRouteTableID.NotFound"
 	errCodeInvalidRouteTableIdNotFound                             = "InvalidRouteTableId.NotFound"
@@ -139,40 +142,40 @@ const (
 	errCodeVolumeInUse                                             = "VolumeInUse"
 )
 
-func CancelSpotFleetRequestError(apiObject *ec2.CancelSpotFleetRequestsErrorItem) error {
-	if apiObject == nil || apiObject.Error == nil {
+func cancelSpotFleetRequestError(apiObject *awstypes.CancelSpotFleetRequestsError) error {
+	if apiObject == nil {
 		return nil
 	}
 
-	return awserr.New(aws.StringValue(apiObject.Error.Code), aws.StringValue(apiObject.Error.Message), nil)
+	return errs.APIError(apiObject.Code, aws_sdkv2.ToString(apiObject.Message))
 }
 
-func CancelSpotFleetRequestsError(apiObjects []*ec2.CancelSpotFleetRequestsErrorItem) error {
+func cancelSpotFleetRequestsError(apiObjects []awstypes.CancelSpotFleetRequestsErrorItem) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		if err := CancelSpotFleetRequestError(apiObject); err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws.StringValue(apiObject.SpotFleetRequestId), err))
+		if err := cancelSpotFleetRequestError(apiObject.Error); err != nil {
+			errs = append(errs, fmt.Errorf("%s: %w", aws_sdkv2.ToString(apiObject.SpotFleetRequestId), err))
 		}
 	}
 
 	return errors.Join(errs...)
 }
 
-func deleteFleetError(apiObject *ec2.DeleteFleetErrorItem) error {
-	if apiObject == nil || apiObject.Error == nil {
+func deleteFleetError(apiObject *awstypes.DeleteFleetError) error {
+	if apiObject == nil {
 		return nil
 	}
 
-	return awserr.New(aws.StringValue(apiObject.Error.Code), aws.StringValue(apiObject.Error.Message), nil)
+	return errs.APIError(apiObject.Code, aws_sdkv2.ToString(apiObject.Message))
 }
 
-func deleteFleetsError(apiObjects []*ec2.DeleteFleetErrorItem) error {
+func deleteFleetsError(apiObjects []awstypes.DeleteFleetErrorItem) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		if err := deleteFleetError(apiObject); err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws.StringValue(apiObject.FleetId), err))
+		if err := deleteFleetError(apiObject.Error); err != nil {
+			errs = append(errs, fmt.Errorf("%s: %w", aws_sdkv2.ToString(apiObject.FleetId), err))
 		}
 	}
 
@@ -197,6 +200,26 @@ func UnsuccessfulItemsError(apiObjects []*ec2.UnsuccessfulItem) error {
 
 		if err := UnsuccessfulItemError(apiObject.Error); err != nil {
 			errs = append(errs, fmt.Errorf("%s: %w", aws.StringValue(apiObject.ResourceId), err))
+		}
+	}
+
+	return errors.Join(errs...)
+}
+
+func unsuccessfulItemErrorV2(apiObject *awstypes.UnsuccessfulItemError) error {
+	if apiObject == nil {
+		return nil
+	}
+
+	return errs.APIError(aws_sdkv2.ToString(apiObject.Code), aws_sdkv2.ToString(apiObject.Message))
+}
+
+func unsuccessfulItemsErrorV2(apiObjects []awstypes.UnsuccessfulItem) error {
+	var errs []error
+
+	for _, apiObject := range apiObjects {
+		if err := unsuccessfulItemErrorV2(apiObject.Error); err != nil {
+			errs = append(errs, fmt.Errorf("%s: %w", aws_sdkv2.ToString(apiObject.ResourceId), err))
 		}
 	}
 
@@ -240,5 +263,5 @@ func networkACLEntryAlreadyExistsError(naclID string, egress bool, ruleNumber in
 }
 
 func routeAlreadyExistsError(routeTableID, destination string) error {
-	return awserr.New(errCodeRouteAlreadyExists, fmt.Sprintf("Route in Route Table (%s) with destination (%s) already exists", routeTableID, destination), nil)
+	return errs.APIError(errCodeRouteAlreadyExists, fmt.Sprintf("Route in Route Table (%s) with destination (%s) already exists", routeTableID, destination))
 }

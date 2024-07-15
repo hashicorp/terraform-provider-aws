@@ -34,7 +34,7 @@ data "aws_connect_vocabulary" "example" {
 
 ~> **NOTE:** `instance_id` and one of either `name` or `vocabulary_id` is required.
 
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Vocabulary by name

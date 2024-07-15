@@ -1,5 +1,5 @@
 ---
-subcategory: "Agents for Amazon Bedrock"
+subcategory: "Bedrock Agents"
 layout: "aws"
 page_title: "AWS: aws_bedrockagent_agent"
 description: |-
@@ -179,4 +179,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Agent using the agent
 % terraform import aws_bedrockagent_agent.example GGRRAED6JP
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e31025b680e674ea65764d99b335cb39542a596b973c195203ca856e04a62bb7 -->
+<!-- cache-key: cdktf-0.20.1 input-6acd3a57aec1fc8ca56b88e3eb3b7cddc686c244a40a03e371eb498b76dafee0 -->

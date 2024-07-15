@@ -7,9 +7,10 @@ import (
 	"context"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -22,7 +23,7 @@ func replicationGroupStateUpgradeV1(ctx context.Context, rawState map[string]int
 	}
 
 	// Set auth_token_update_strategy to new default value
-	rawState["auth_token_update_strategy"] = elasticache.AuthTokenUpdateStrategyTypeRotate
+	rawState["auth_token_update_strategy"] = awstypes.AuthTokenUpdateStrategyTypeRotate
 
 	return rawState, nil
 }
@@ -120,10 +121,10 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				},
 			},
 			"ip_discovery": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(elasticache.IpDiscovery_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.IpDiscovery](),
 			},
 			"log_delivery_configuration": {
 				Type:     schema.TypeSet,
@@ -132,23 +133,23 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"destination_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(elasticache.DestinationType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.DestinationType](),
 						},
 						names.AttrDestination: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 						"log_format": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(elasticache.LogFormat_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LogFormat](),
 						},
 						"log_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(elasticache.LogType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LogType](),
 						},
 					},
 				},
@@ -175,11 +176,11 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Default:  false,
 			},
 			"network_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(elasticache.NetworkType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
 			},
 			"node_type": {
 				Type:     schema.TypeString,

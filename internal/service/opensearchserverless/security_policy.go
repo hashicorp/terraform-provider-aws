@@ -149,6 +149,14 @@ func (r *resourceSecurityPolicy) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameSecurityPolicy, state.ID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
 	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

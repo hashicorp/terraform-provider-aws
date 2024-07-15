@@ -1,3 +1,4 @@
+version: 2
 archives:
   - files:
       # Ensure only built binary and license file are archived

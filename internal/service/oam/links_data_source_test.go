@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccObservabilityAccessManagerLinksDataSource_basic(t *testing.T) {
+func testAccObservabilityAccessManagerLinksDataSource_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
