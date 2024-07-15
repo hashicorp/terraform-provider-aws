@@ -84,17 +84,7 @@ func (cd containerDefinitions) Reduce(isAWSVPC bool) error {
 			return err
 		}
 
-		definition := reflect.ValueOf(defCopy).Elem()
-		for i := 0; i < definition.NumField(); i++ {
-			sf := definition.Field(i)
-
-			// Set all empty slices to nil
-			if sf.Kind() == reflect.Slice {
-				if sf.IsValid() && !sf.IsNil() && sf.Len() == 0 {
-					sf.Set(reflect.Zero(sf.Type()))
-				}
-			}
-		}
+		definition := reflect.ValueOf(defCopy)
 		iface := definition.Interface().(awstypes.ContainerDefinition)
 		cd[i] = iface
 	}

@@ -19,149 +19,6 @@ import (
 // Move functions to findv2.go as they are migrated to AWS SDK for Go v2.
 //
 
-func FindCOIPPools(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeCoipPoolsInput) ([]*ec2.CoipPool, error) {
-	var output []*ec2.CoipPool
-
-	err := conn.DescribeCoipPoolsPagesWithContext(ctx, input, func(page *ec2.DescribeCoipPoolsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.CoipPools {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidPoolIDNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-func FindCOIPPool(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeCoipPoolsInput) (*ec2.CoipPool, error) {
-	output, err := FindCOIPPools(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func FindLocalGatewayRouteTables(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeLocalGatewayRouteTablesInput) ([]*ec2.LocalGatewayRouteTable, error) {
-	var output []*ec2.LocalGatewayRouteTable
-
-	err := conn.DescribeLocalGatewayRouteTablesPagesWithContext(ctx, input, func(page *ec2.DescribeLocalGatewayRouteTablesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.LocalGatewayRouteTables {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-func FindLocalGatewayRouteTable(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeLocalGatewayRouteTablesInput) (*ec2.LocalGatewayRouteTable, error) {
-	output, err := FindLocalGatewayRouteTables(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func FindLocalGatewayVirtualInterfaceGroups(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput) ([]*ec2.LocalGatewayVirtualInterfaceGroup, error) {
-	var output []*ec2.LocalGatewayVirtualInterfaceGroup
-
-	err := conn.DescribeLocalGatewayVirtualInterfaceGroupsPagesWithContext(ctx, input, func(page *ec2.DescribeLocalGatewayVirtualInterfaceGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.LocalGatewayVirtualInterfaceGroups {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-func FindLocalGatewayVirtualInterfaceGroup(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput) (*ec2.LocalGatewayVirtualInterfaceGroup, error) {
-	output, err := FindLocalGatewayVirtualInterfaceGroups(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func FindLocalGateways(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeLocalGatewaysInput) ([]*ec2.LocalGateway, error) {
-	var output []*ec2.LocalGateway
-
-	err := conn.DescribeLocalGatewaysPagesWithContext(ctx, input, func(page *ec2.DescribeLocalGatewaysOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.LocalGateways {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-func FindLocalGateway(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeLocalGatewaysInput) (*ec2.LocalGateway, error) {
-	output, err := FindLocalGateways(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
 func FindNetworkACL(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeNetworkAclsInput) (*ec2.NetworkAcl, error) {
 	output, err := FindNetworkACLs(ctx, conn, input)
 
@@ -414,130 +271,6 @@ func FindNetworkInterfaceSecurityGroup(ctx context.Context, conn *ec2.EC2, netwo
 	}
 }
 
-func FindNetworkInsightsAnalysis(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeNetworkInsightsAnalysesInput) (*ec2.NetworkInsightsAnalysis, error) {
-	output, err := FindNetworkInsightsAnalyses(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func FindNetworkInsightsAnalyses(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeNetworkInsightsAnalysesInput) ([]*ec2.NetworkInsightsAnalysis, error) {
-	var output []*ec2.NetworkInsightsAnalysis
-
-	err := conn.DescribeNetworkInsightsAnalysesPagesWithContext(ctx, input, func(page *ec2.DescribeNetworkInsightsAnalysesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.NetworkInsightsAnalyses {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInsightsAnalysisIdNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-func FindNetworkInsightsAnalysisByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NetworkInsightsAnalysis, error) {
-	input := &ec2.DescribeNetworkInsightsAnalysesInput{
-		NetworkInsightsAnalysisIds: aws.StringSlice([]string{id}),
-	}
-
-	output, err := FindNetworkInsightsAnalysis(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Eventual consistency check.
-	if aws.StringValue(output.NetworkInsightsAnalysisId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
-func FindNetworkInsightsPath(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeNetworkInsightsPathsInput) (*ec2.NetworkInsightsPath, error) {
-	output, err := FindNetworkInsightsPaths(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func FindNetworkInsightsPaths(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeNetworkInsightsPathsInput) ([]*ec2.NetworkInsightsPath, error) {
-	var output []*ec2.NetworkInsightsPath
-
-	err := conn.DescribeNetworkInsightsPathsPagesWithContext(ctx, input, func(page *ec2.DescribeNetworkInsightsPathsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.NetworkInsightsPaths {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInsightsPathIdNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-func FindNetworkInsightsPathByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NetworkInsightsPath, error) {
-	input := &ec2.DescribeNetworkInsightsPathsInput{
-		NetworkInsightsPathIds: aws.StringSlice([]string{id}),
-	}
-
-	output, err := FindNetworkInsightsPath(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Eventual consistency check.
-	if aws.StringValue(output.NetworkInsightsPathId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
 func FindSecurityGroupByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.SecurityGroup, error) {
 	input := &ec2.DescribeSecurityGroupsInput{
 		GroupIds: aws.StringSlice([]string{id}),
@@ -559,8 +292,19 @@ func FindSecurityGroupByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 	return output, nil
 }
 
-// FindSecurityGroupByNameAndVPCIDAndOwnerID looks up a security group by name, VPC ID and owner ID. Returns a retry.NotFoundError if not found.
-func FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx context.Context, conn *ec2.EC2, name, vpcID, ownerID string) (*ec2.SecurityGroup, error) {
+func findSecurityGroupByDescriptionAndVPCID(ctx context.Context, conn *ec2.EC2, description, vpcID string) (*ec2.SecurityGroup, error) {
+	input := &ec2.DescribeSecurityGroupsInput{
+		Filters: newAttributeFilterList(
+			map[string]string{
+				"description": description, // nosemgrep:ci.literal-description-string-constant
+				"vpc-id":      vpcID,
+			},
+		),
+	}
+	return FindSecurityGroup(ctx, conn, input)
+}
+
+func findSecurityGroupByNameAndVPCIDAndOwnerID(ctx context.Context, conn *ec2.EC2, name, vpcID, ownerID string) (*ec2.SecurityGroup, error) {
 	input := &ec2.DescribeSecurityGroupsInput{
 		Filters: newAttributeFilterList(
 			map[string]string{

@@ -313,7 +313,7 @@ func findAppSettingsByID(ctx context.Context, conn *pinpoint.Pinpoint, id string
 }
 
 func expandCampaignHook(configs []interface{}) *pinpoint.CampaignHook {
-	if len(configs) == 0 {
+	if len(configs) == 0 || configs[0] == nil {
 		return nil
 	}
 
@@ -351,7 +351,7 @@ func flattenCampaignHook(ch *pinpoint.CampaignHook) []interface{} {
 }
 
 func expandCampaignLimits(configs []interface{}) *pinpoint.CampaignLimits {
-	if len(configs) == 0 {
+	if len(configs) == 0 || configs[0] == nil {
 		return nil
 	}
 
@@ -394,7 +394,7 @@ func flattenCampaignLimits(cl *pinpoint.CampaignLimits) []interface{} {
 }
 
 func expandQuietTime(configs []interface{}) *pinpoint.QuietTime {
-	if len(configs) == 0 {
+	if len(configs) == 0 || configs[0] == nil {
 		return nil
 	}
 

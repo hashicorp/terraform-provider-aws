@@ -53,7 +53,7 @@ class MyConvertedCode(TerraformStack):
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-cluster.html).
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `allow_major_version_upgrade` - (Optional) A value that indicates whether major version upgrades are allowed. Constraints: You must allow major version upgrades when specifying a value for the EngineVersion parameter that is a different major version than the DB cluster's current version.
 * `apply_immediately` - (Optional) Specifies whether any cluster modifications
@@ -66,7 +66,7 @@ This argument supports the following arguments:
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `db_subnet_group_name` - (Optional) A DB subnet group to associate with this DB instance.
 * `db_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.
-* `deletion_protection` - (Optional) A value that indicates whether the DB cluster has deletion protection enabled. The database can't be deleted when deletion protection is enabled. By default, deletion protection is disabled.
+* `deletion_protection` - (Optional) A boolean value that indicates whether the DB cluster has deletion protection enabled. The database can't be deleted when deletion protection is enabled. Defaults to `false`.
 * `enabled_cloudwatch_logs_exports` - (Optional) List of log types to export to cloudwatch. If omitted, no logs will be exported.
    The following log types are supported: `audit`, `profiler`.
 * `engine_version` - (Optional) The database engine version. Updating this argument results in an outage.
@@ -148,4 +148,4 @@ Using `terraform import`, import DocumentDB Clusters using the `cluster_identifi
 % terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-664459fa40a41971bd2a2712b5b349cfbdeadd5787580fa2e5e09af6d1ad7029 -->
+<!-- cache-key: cdktf-0.20.1 input-904fc284b6c7a5652f0f5b0730354356928abca9165b63fc07d46db96fa506c9 -->

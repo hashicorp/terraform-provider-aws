@@ -99,6 +99,23 @@ func ResourceCluster() *schema.Resource {
 								},
 							},
 						},
+						"managed_storage_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"fargate_ephemeral_storage_kms_key_id": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									names.AttrKMSKeyID: {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -528,6 +545,11 @@ func flattenClusterConfiguration(apiObject *awstypes.ClusterConfiguration) []int
 	if apiObject.ExecuteCommandConfiguration != nil {
 		tfMap["execute_command_configuration"] = flattenClusterConfigurationExecuteCommandConfiguration(apiObject.ExecuteCommandConfiguration)
 	}
+
+	if apiObject.ManagedStorageConfiguration != nil {
+		tfMap["managed_storage_configuration"] = flattenManagedStorageConfiguration(apiObject.ManagedStorageConfiguration)
+	}
+
 	return []interface{}{tfMap}
 }
 
@@ -576,6 +598,24 @@ func flattenClusterConfigurationExecuteCommandConfigurationLogConfiguration(apiO
 	return []interface{}{tfMap}
 }
 
+func flattenManagedStorageConfiguration(apiObject *awstypes.ManagedStorageConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if apiObject.FargateEphemeralStorageKmsKeyId != nil {
+		tfMap["fargate_ephemeral_storage_kms_key_id"] = aws.ToString(apiObject.FargateEphemeralStorageKmsKeyId)
+	}
+
+	if apiObject.KmsKeyId != nil {
+		tfMap[names.AttrKMSKeyID] = aws.ToString(apiObject.KmsKeyId)
+	}
+
+	return []interface{}{tfMap}
+}
+
 func expandClusterConfiguration(nc []interface{}) *awstypes.ClusterConfiguration {
 	if len(nc) == 0 || nc[0] == nil {
 		return &awstypes.ClusterConfiguration{}
@@ -585,6 +625,10 @@ func expandClusterConfiguration(nc []interface{}) *awstypes.ClusterConfiguration
 	config := &awstypes.ClusterConfiguration{}
 	if v, ok := raw["execute_command_configuration"].([]interface{}); ok && len(v) > 0 {
 		config.ExecuteCommandConfiguration = expandClusterConfigurationExecuteCommandConfiguration(v)
+	}
+
+	if v, ok := raw["managed_storage_configuration"].([]interface{}); ok && len(v) > 0 {
+		config.ManagedStorageConfiguration = expandManagedStorageConfiguration(v)
 	}
 
 	return config
@@ -641,4 +685,23 @@ func expandClusterConfigurationExecuteCommandLogConfiguration(nc []interface{}) 
 	}
 
 	return config
+}
+
+func expandManagedStorageConfiguration(tfList []interface{}) *awstypes.ManagedStorageConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return &awstypes.ManagedStorageConfiguration{}
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &awstypes.ManagedStorageConfiguration{}
+
+	if v, ok := tfMap["fargate_ephemeral_storage_kms_key_id"].(string); ok && v != "" {
+		apiObject.FargateEphemeralStorageKmsKeyId = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
+		apiObject.KmsKeyId = aws.String(v)
+	}
+
+	return apiObject
 }

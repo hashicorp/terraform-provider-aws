@@ -9,20 +9,21 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sfn"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sfn"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sfn_alias")
-func ResourceAlias() *schema.Resource {
+// @SDKResource("aws_sfn_alias", name="Alias")
+func resourceAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAliasCreate,
 		ReadWithoutTimeout:   resourceAliasRead,
@@ -83,7 +84,7 @@ const (
 
 func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SFNConn(ctx)
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
 	in := &sfn.CreateStateMachineAliasInput{
 		Name:        aws.String(d.Get(names.AttrName).(string)),
@@ -94,7 +95,7 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		in.RoutingConfiguration = expandAliasRoutingConfiguration(v.([]interface{}))
 	}
 
-	out, err := conn.CreateStateMachineAliasWithContext(ctx, in)
+	out, err := conn.CreateStateMachineAlias(ctx, in)
 	if err != nil {
 		return create.AppendDiagError(diags, names.SFN, create.ErrActionCreating, ResNameAlias, d.Get(names.AttrName).(string), err)
 	}
@@ -103,16 +104,16 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.AppendDiagError(diags, names.SFN, create.ErrActionCreating, ResNameAlias, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
-	d.SetId(aws.StringValue(out.StateMachineAliasArn))
+	d.SetId(aws.ToString(out.StateMachineAliasArn))
 
 	return append(diags, resourceAliasRead(ctx, d, meta)...)
 }
 
 func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SFNConn(ctx)
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
-	out, err := FindAliasByARN(ctx, conn, d.Id())
+	out, err := findAliasByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SFN Alias (%s) not found, removing from state", d.Id())
@@ -127,8 +128,8 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrARN, out.StateMachineAliasArn)
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrDescription, out.Description)
-	d.Set(names.AttrCreationDate, aws.TimeValue(out.CreationDate).Format(time.RFC3339))
-	d.SetId(aws.StringValue(out.StateMachineAliasArn))
+	d.Set(names.AttrCreationDate, aws.ToTime(out.CreationDate).Format(time.RFC3339))
+	d.SetId(aws.ToString(out.StateMachineAliasArn))
 
 	if err := d.Set("routing_configuration", flattenAliasRoutingConfiguration(out.RoutingConfiguration)); err != nil {
 		return create.AppendDiagError(diags, names.SFN, create.ErrActionSetting, ResNameAlias, d.Id(), err)
@@ -138,7 +139,7 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SFNConn(ctx)
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
 	update := false
 
@@ -161,7 +162,7 @@ func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] Updating SFN Alias (%s): %#v", d.Id(), in)
-	_, err := conn.UpdateStateMachineAliasWithContext(ctx, in)
+	_, err := conn.UpdateStateMachineAlias(ctx, in)
 	if err != nil {
 		return create.AppendDiagError(diags, names.SFN, create.ErrActionUpdating, ResNameAlias, d.Id(), err)
 	}
@@ -171,10 +172,10 @@ func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SFNConn(ctx)
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
 	log.Printf("[INFO] Deleting SFN Alias %s", d.Id())
-	_, err := conn.DeleteStateMachineAliasWithContext(ctx, &sfn.DeleteStateMachineAliasInput{
+	_, err := conn.DeleteStateMachineAlias(ctx, &sfn.DeleteStateMachineAliasInput{
 		StateMachineAliasArn: aws.String(d.Id()),
 	})
 
@@ -185,12 +186,12 @@ func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func FindAliasByARN(ctx context.Context, conn *sfn.SFN, arn string) (*sfn.DescribeStateMachineAliasOutput, error) {
+func findAliasByARN(ctx context.Context, conn *sfn.Client, arn string) (*sfn.DescribeStateMachineAliasOutput, error) {
 	in := &sfn.DescribeStateMachineAliasInput{
 		StateMachineAliasArn: aws.String(arn),
 	}
-	out, err := conn.DescribeStateMachineAliasWithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, sfn.ErrCodeResourceNotFound) {
+	out, err := conn.DescribeStateMachineAlias(ctx, in)
+	if errs.IsA[*awstypes.ResourceNotFound](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
@@ -208,25 +209,19 @@ func FindAliasByARN(ctx context.Context, conn *sfn.SFN, arn string) (*sfn.Descri
 	return out, nil
 }
 
-func flattenAliasRoutingConfigurationItem(apiObject *sfn.RoutingConfigurationListItem) map[string]interface{} {
-	if apiObject == nil {
-		return nil
+func flattenAliasRoutingConfigurationItem(apiObject awstypes.RoutingConfigurationListItem) map[string]interface{} {
+	tfMap := map[string]interface{}{
+		names.AttrWeight: apiObject.Weight,
 	}
-
-	tfMap := map[string]interface{}{}
 
 	if v := apiObject.StateMachineVersionArn; v != nil {
-		tfMap["state_machine_version_arn"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.Weight; v != nil {
-		tfMap[names.AttrWeight] = aws.Int64Value(v)
+		tfMap["state_machine_version_arn"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenAliasRoutingConfiguration(apiObjects []*sfn.RoutingConfigurationListItem) []interface{} {
+func flattenAliasRoutingConfiguration(apiObjects []awstypes.RoutingConfigurationListItem) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -234,21 +229,17 @@ func flattenAliasRoutingConfiguration(apiObjects []*sfn.RoutingConfigurationList
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenAliasRoutingConfigurationItem(apiObject))
 	}
 
 	return tfList
 }
 
-func expandAliasRoutingConfiguration(tfList []interface{}) []*sfn.RoutingConfigurationListItem {
+func expandAliasRoutingConfiguration(tfList []interface{}) []awstypes.RoutingConfigurationListItem {
 	if len(tfList) == 0 {
 		return nil
 	}
-	var configurationListItems []*sfn.RoutingConfigurationListItem
+	var configurationListItems []awstypes.RoutingConfigurationListItem
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -259,7 +250,7 @@ func expandAliasRoutingConfiguration(tfList []interface{}) []*sfn.RoutingConfigu
 
 		configurationListItem := expandAliasRoutingConfigurationItem(tfMap)
 
-		if configurationListItem == nil {
+		if configurationListItem.StateMachineVersionArn == nil {
 			continue
 		}
 
@@ -269,18 +260,15 @@ func expandAliasRoutingConfiguration(tfList []interface{}) []*sfn.RoutingConfigu
 	return configurationListItems
 }
 
-func expandAliasRoutingConfigurationItem(tfMap map[string]interface{}) *sfn.RoutingConfigurationListItem {
-	if tfMap == nil {
-		return nil
-	}
+func expandAliasRoutingConfigurationItem(tfMap map[string]interface{}) awstypes.RoutingConfigurationListItem {
+	apiObject := awstypes.RoutingConfigurationListItem{}
 
-	apiObject := &sfn.RoutingConfigurationListItem{}
 	if v, ok := tfMap["state_machine_version_arn"].(string); ok && v != "" {
 		apiObject.StateMachineVersionArn = aws.String(v)
 	}
 
 	if v, ok := tfMap[names.AttrWeight].(int); ok && v != 0 {
-		apiObject.Weight = aws.Int64(int64(v))
+		apiObject.Weight = int32(v)
 	}
 
 	return apiObject

@@ -19,6 +19,11 @@ import (
 
 // Expand  = TF -->  AWS
 
+// Expander is implemented by types that customize their expansion
+type Expander interface {
+	Expand(ctx context.Context) (any, diag.Diagnostics)
+}
+
 // Expand "expands" a resource's "business logic" data structure,
 // implemented using Terraform Plugin Framework data types, into
 // an AWS SDK for Go v2 API data structure.
@@ -65,6 +70,11 @@ func (expander autoExpander) getOptions() AutoFlexOptions {
 // convert converts a single Plugin Framework value to its AWS API equivalent.
 func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	if fromExpander, ok := valFrom.Interface().(Expander); ok {
+		diags.Append(expandExpander(ctx, fromExpander, vTo)...)
+		return diags
+	}
 
 	vFrom, ok := valFrom.Interface().(attr.Value)
 	if !ok {
@@ -358,6 +368,15 @@ func (expander autoExpander) object(ctx context.Context, vFrom basetypes.ObjectV
 				return diags
 			}
 		}
+
+	case reflect.Interface:
+		//
+		// types.Object -> interface.
+		//
+		if vFrom, ok := vFrom.(fwtypes.NestedObjectValue); ok {
+			diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tTo, vTo)...)
+			return diags
+		}
 	}
 
 	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
@@ -379,8 +398,12 @@ func (expander autoExpander) list(ctx context.Context, vFrom basetypes.ListValua
 	}
 
 	switch v.ElementType(ctx).(type) {
+	case basetypes.Int64Typable:
+		diags.Append(expander.listOrSetOfInt64(ctx, v, vTo)...)
+		return diags
+
 	case basetypes.StringTypable:
-		diags.Append(expander.listOfString(ctx, v, vTo)...)
+		diags.Append(expander.listOrSetOfString(ctx, v, vTo)...)
 		return diags
 
 	case basetypes.ObjectTypable:
@@ -398,8 +421,71 @@ func (expander autoExpander) list(ctx context.Context, vFrom basetypes.ListValua
 	return diags
 }
 
-// listOfString copies a Plugin Framework ListOfString(ish) value to a compatible AWS API value.
-func (expander autoExpander) listOfString(ctx context.Context, vFrom basetypes.ListValue, vTo reflect.Value) diag.Diagnostics {
+// listOrSetOfInt64 copies a Plugin Framework ListOfInt64(ish) or SetOfInt64(ish) value to a compatible AWS API value.
+func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWithElementsAs, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch vTo.Kind() {
+	case reflect.Slice:
+		switch tSliceElem := vTo.Type().Elem(); tSliceElem.Kind() {
+		case reflect.Int32, reflect.Int64:
+			//
+			// types.List(OfInt64) -> []int64 or []int32
+			//
+			var to []int64
+			diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vals := reflect.MakeSlice(vTo.Type(), len(to), len(to))
+			for i := 0; i < len(to); i++ {
+				vals.Index(i).SetInt(to[i])
+			}
+			vTo.Set(vals)
+			return diags
+
+		case reflect.Ptr:
+			switch tSliceElem.Elem().Kind() {
+			case reflect.Int32:
+				//
+				// types.List(OfInt64) -> []*int32.
+				//
+				var to []*int32
+				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
+				return diags
+
+			case reflect.Int64:
+				//
+				// types.List(OfInt64) -> []*int64.
+				//
+				var to []*int64
+				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
+				return diags
+			}
+		}
+	}
+
+	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
+		"from": vFrom.Type(ctx),
+		"to":   vTo.Kind(),
+	})
+
+	return diags
+}
+
+// listOrSetOfString copies a Plugin Framework ListOfString(ish) or SetOfString(ish) value to a compatible AWS API value.
+func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueWithElementsAs, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
@@ -443,8 +529,8 @@ func (expander autoExpander) listOfString(ctx context.Context, vFrom basetypes.L
 	}
 
 	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
-		"from list[%s]": vFrom.ElementType(ctx),
-		"to":            vTo.Kind(),
+		"from": vFrom.Type(ctx),
+		"to":   vTo.Kind(),
 	})
 
 	return diags
@@ -576,8 +662,12 @@ func (expander autoExpander) set(ctx context.Context, vFrom basetypes.SetValuabl
 	}
 
 	switch v.ElementType(ctx).(type) {
+	case basetypes.Int64Typable:
+		diags.Append(expander.listOrSetOfInt64(ctx, v, vTo)...)
+		return diags
+
 	case basetypes.StringTypable:
-		diags.Append(expander.setOfString(ctx, v, vTo)...)
+		diags.Append(expander.listOrSetOfString(ctx, v, vTo)...)
 		return diags
 
 	case basetypes.ObjectTypable:
@@ -589,58 +679,6 @@ func (expander autoExpander) set(ctx context.Context, vFrom basetypes.SetValuabl
 
 	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
 		"from set[%s]": v.ElementType(ctx),
-		"to":           vTo.Kind(),
-	})
-
-	return diags
-}
-
-// setOfString copies a Plugin Framework SetOfString(ish) value to a compatible AWS API value.
-func (expander autoExpander) setOfString(ctx context.Context, vFrom basetypes.SetValue, vTo reflect.Value) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	switch vTo.Kind() {
-	case reflect.Slice:
-		switch tSliceElem := vTo.Type().Elem(); tSliceElem.Kind() {
-		case reflect.String:
-			//
-			// types.Set(OfString) -> []string.
-			//
-			var to []string
-			diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
-			if diags.HasError() {
-				return diags
-			}
-
-			// Copy elements individually to enable expansion of lists of
-			// custom string types (AWS enums)
-			vals := reflect.MakeSlice(vTo.Type(), len(to), len(to))
-			for i := 0; i < len(to); i++ {
-				vals.Index(i).SetString(to[i])
-			}
-			vTo.Set(vals)
-			return diags
-
-		case reflect.Ptr:
-			switch tSliceElem.Elem().Kind() {
-			case reflect.String:
-				//
-				// types.Set(OfString) -> []*string.
-				//
-				var to []*string
-				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
-				return diags
-			}
-		}
-	}
-
-	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
-		"from set[%s]": vFrom.ElementType(ctx),
 		"to":           vTo.Kind(),
 	})
 
@@ -665,6 +703,13 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 			diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tElem, vTo)...)
 			return diags
 		}
+
+	case reflect.Interface:
+		//
+		// types.List(OfObject) -> interface.
+		//
+		diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tTo, vTo)...)
+		return diags
 
 	case reflect.Map:
 		switch tElem := tTo.Elem(); tElem.Kind() {
@@ -706,16 +751,9 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 			//
 			// types.List(OfObject) -> []interface.
 			//
-			// Smithy union type handling not yet implemented. Silently skip.
+			diags.Append(expander.nestedObjectToSlice(ctx, vFrom, tTo, tElem, vTo)...)
 			return diags
 		}
-
-	case reflect.Interface:
-		//
-		// types.List(OfObject) -> interface.
-		//
-		// Smithy union type handling not yet implemented. Silently skip.
-		return diags
 	}
 
 	diags.AddError("Incompatible types", fmt.Sprintf("nestedObjectCollection[%s] cannot be expanded to %s", vFrom.Type(ctx).(attr.TypeWithElementType).ElementType(), vTo.Kind()))
@@ -740,10 +778,12 @@ func (expander autoExpander) nestedObjectToStruct(ctx context.Context, vFrom fwt
 		return diags
 	}
 
-	// Set value (or pointer).
-	if vTo.Type().Kind() == reflect.Struct {
+	// Set value.
+	switch vTo.Type().Kind() {
+	case reflect.Struct, reflect.Interface:
 		vTo.Set(to.Elem())
-	} else {
+
+	default:
 		vTo.Set(to)
 	}
 
@@ -773,10 +813,12 @@ func (expander autoExpander) nestedObjectToSlice(ctx context.Context, vFrom fwty
 			return diags
 		}
 
-		// Set value (or pointer) in the target slice.
-		if vTo.Type().Elem().Kind() == reflect.Struct {
+		// Set value in the target slice.
+		switch vTo.Type().Elem().Kind() {
+		case reflect.Struct, reflect.Interface:
 			t.Index(i).Set(target.Elem())
-		} else {
+
+		default:
 			t.Index(i).Set(target)
 		}
 	}
@@ -874,4 +916,78 @@ func blockKeyMap(from any) (reflect.Value, diag.Diagnostics) {
 	diags.AddError("AutoFlEx", fmt.Sprintf("unable to find map block key (%s)", MapBlockKey))
 
 	return reflect.Zero(reflect.TypeOf("")), diags
+}
+
+func expandExpander(ctx context.Context, fromExpander Expander, toVal reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	expanded, d := fromExpander.Expand(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if expanded == nil {
+		diags.Append(diagExpandsToNil(reflect.TypeOf(fromExpander)))
+		return diags
+	}
+
+	expandedVal := reflect.ValueOf(expanded)
+
+	targetType := toVal.Type()
+	if targetType.Kind() == reflect.Interface {
+		expandedType := reflect.TypeOf(expanded)
+		if !expandedType.Implements(targetType) {
+			diags.Append(diagExpandedTypeDoesNotImplement(expandedType, targetType))
+			return diags
+		}
+
+		toVal.Set(expandedVal)
+
+		return diags
+	}
+
+	if targetType.Kind() == reflect.Struct {
+		expandedVal = expandedVal.Elem()
+	}
+	expandedType := expandedVal.Type()
+
+	if !expandedType.AssignableTo(targetType) {
+		diags.Append(diagCannotBeAssigned(expandedType, targetType))
+		return diags
+	}
+
+	toVal.Set(expandedVal)
+
+	return diags
+}
+
+func diagExpandsToNil(expanderType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while expanding configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Expanding %q returned nil.", fullTypeName(expanderType)),
+	)
+}
+
+func diagExpandedTypeDoesNotImplement(expandedType, targetType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while expanding configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Type %q does not implement %q.", fullTypeName(expandedType), fullTypeName(targetType)),
+	)
+}
+
+func diagCannotBeAssigned(expandedType, targetType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while expanding configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Type %q cannot be assigned to %q.", fullTypeName(expandedType), fullTypeName(targetType)),
+	)
 }

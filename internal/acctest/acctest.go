@@ -24,6 +24,9 @@ import (
 	accounttypes "github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	acmpcatypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	dstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
@@ -37,9 +40,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/outposts"
+	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -979,6 +982,26 @@ func PreCheckPartitionNot(t *testing.T, partitions ...string) {
 	}
 }
 
+func PreCheckCognitoIdentityProvider(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
+
+	input := &cognitoidentityprovider.ListUserPoolsInput{
+		MaxResults: aws.Int32(1),
+	}
+
+	_, err := conn.ListUserPools(ctx, input)
+
+	if PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func PreCheckInspector2(ctx context.Context, t *testing.T) {
 	t.Helper()
 
@@ -1074,6 +1097,22 @@ func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testi
 
 	if aws.StringValue(organization.MasterAccountId) == aws.StringValue(callerIdentity.Account) {
 		t.Skip("this AWS account must not be the management account of an AWS Organization")
+	}
+}
+
+func PreCheckPinpointApp(ctx context.Context, t *testing.T) {
+	conn := Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
+
+	input := &pinpoint.GetAppsInput{}
+
+	_, err := conn.GetAppsWithContext(ctx, input)
+
+	if PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
@@ -1175,10 +1214,10 @@ func PreCheckIAMServiceLinkedRoleWithProvider(ctx context.Context, t *testing.T,
 func PreCheckDirectoryService(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	conn := Provider.Meta().(*conns.AWSClient).DSConn(ctx)
+	conn := Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 	input := &directoryservice.DescribeDirectoriesInput{}
 
-	_, err := conn.DescribeDirectoriesWithContext(ctx, input)
+	_, err := conn.DescribeDirectories(ctx, input)
 
 	if PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -1195,20 +1234,20 @@ func PreCheckDirectoryService(ctx context.Context, t *testing.T) {
 func PreCheckDirectoryServiceSimpleDirectory(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	conn := Provider.Meta().(*conns.AWSClient).DSConn(ctx)
+	conn := Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 	input := &directoryservice.CreateDirectoryInput{
 		Name:     aws.String("corp.example.com"),
 		Password: aws.String("PreCheck123"),
-		Size:     aws.String(directoryservice.DirectorySizeSmall),
+		Size:     dstypes.DirectorySizeSmall,
 	}
 
-	_, err := conn.CreateDirectoryWithContext(ctx, input)
+	_, err := conn.CreateDirectory(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeClientException, "Simple AD directory creation is currently not supported in this region") {
+	if errs.IsAErrorMessageContains[*dstypes.ClientException](err, "Simple AD directory creation is currently not supported in this region") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if err != nil && !tfawserr.ErrMessageContains(err, directoryservice.ErrCodeInvalidParameterException, "VpcSettings must be specified") {
+	if err != nil && !errs.IsAErrorMessageContains[*dstypes.InvalidParameterException](err, "VpcSettings must be specified") {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
