@@ -4,8 +4,6 @@
 package fsx
 
 import (
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -13,16 +11,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func newSnapshotFilterList(s *schema.Set) []*awstypes.SnapshotFilter {
+func newSnapshotFilterList(s *schema.Set) []awstypes.SnapshotFilter {
 	if s == nil {
-		return []*awstypes.SnapshotFilter{}
+		return []awstypes.SnapshotFilter{}
 	}
 
-	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) *awstypes.SnapshotFilter {
+	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) awstypes.SnapshotFilter {
 		tfMap := tfList.(map[string]interface{})
-		return &awstypes.SnapshotFilter{
-			Name:   aws.String(tfMap[names.AttrName].(string)),
-			Values: flex.ExpandStringList(tfMap[names.AttrValues].([]interface{})),
+		return awstypes.SnapshotFilter{
+			Name:   awstypes.SnapshotFilterName(tfMap[names.AttrName].(string)),
+			Values: flex.ExpandStringValueList(tfMap[names.AttrValues].([]interface{})),
 		}
 	})
 }
@@ -49,16 +47,16 @@ func snapshotFiltersSchema() *schema.Schema {
 	}
 }
 
-func newStorageVirtualMachineFilterList(s *schema.Set) []*awstypes.StorageVirtualMachineFilter {
+func newStorageVirtualMachineFilterList(s *schema.Set) []awstypes.StorageVirtualMachineFilter {
 	if s == nil {
-		return []*awstypes.StorageVirtualMachineFilter{}
+		return []awstypes.StorageVirtualMachineFilter{}
 	}
 
-	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) *awstypes.StorageVirtualMachineFilter {
+	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) awstypes.StorageVirtualMachineFilter {
 		tfMap := tfList.(map[string]interface{})
-		return &awstypes.StorageVirtualMachineFilter{
-			Name:   aws.String(tfMap[names.AttrName].(string)),
-			Values: flex.ExpandStringList(tfMap[names.AttrValues].([]interface{})),
+		return awstypes.StorageVirtualMachineFilter{
+			Name:   awstypes.StorageVirtualMachineFilterName(tfMap[names.AttrName].(string)),
+			Values: flex.ExpandStringValueList(tfMap[names.AttrValues].([]interface{})),
 		}
 	})
 }
