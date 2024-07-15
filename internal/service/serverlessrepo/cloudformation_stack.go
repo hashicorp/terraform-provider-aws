@@ -315,7 +315,6 @@ func createCloudFormationChangeSet(ctx context.Context, d *schema.ResourceData, 
 		changeSetRequest.ParameterOverrides = expandCloudFormationChangeSetParameters(v.(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating Serverless Application Repository CloudFormation change set: %s", changeSetRequest)
 	changeSetResponse, err := serverlessConn.CreateCloudFormationChangeSet(ctx, &changeSetRequest)
 	if err != nil {
 		return nil, err
@@ -341,7 +340,7 @@ func flattenStackCapabilities(stackCapabilities []cloudformationtypes.Capability
 	capabilities := flex.FlattenStringyValueSet(stackCapabilities)
 	for _, capability := range applicationRequiredCapabilities {
 		if capability == awstypes.CapabilityCapabilityResourcePolicy {
-			capabilities.Add(awstypes.CapabilityCapabilityResourcePolicy)
+			capabilities.Add(string(awstypes.CapabilityCapabilityResourcePolicy))
 			break
 		}
 	}

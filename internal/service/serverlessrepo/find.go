@@ -5,12 +5,12 @@ package serverlessrepo
 
 import (
 	"context"
-	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	serverlessrepo "github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 func findApplication(ctx context.Context, conn *serverlessrepo.Client, applicationID, version string) (*serverlessrepo.GetApplicationOutput, error) {
@@ -21,9 +21,8 @@ func findApplication(ctx context.Context, conn *serverlessrepo.Client, applicati
 		input.SemanticVersion = aws.String(version)
 	}
 
-	log.Printf("[DEBUG] Getting Serverless findApplication Repository Application: %s", input)
 	resp, err := conn.GetApplication(ctx, input)
-	if tfawserr.ErrCodeEquals(err, serverlessrepo.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:    err,
 			LastRequest:  input,
