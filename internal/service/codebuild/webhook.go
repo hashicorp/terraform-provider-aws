@@ -74,6 +74,15 @@ func resourceWebhook() *schema.Resource {
 				},
 				ConflictsWith: []string{"branch_filter"},
 			},
+			"payload_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"project_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"scope_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -84,26 +93,17 @@ func resourceWebhook() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrScope: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
 						names.AttrDomain: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[types.WebhookScopeType](),
 						},
+						names.AttrScope: {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 					},
 				},
-			},
-			"payload_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"project_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
 			},
 			"secret": {
 				Type:      schema.TypeString,
@@ -174,11 +174,15 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("build_type", webhook.BuildType)
 	d.Set("branch_filter", webhook.BranchFilter)
-	d.Set("filter_group", flattenWebhookFilterGroups(webhook.FilterGroups))
-	d.Set("scope_configuration", flattenScopeConfiguration(webhook.ScopeConfiguration))
+	if err := d.Set("filter_group", flattenWebhookFilterGroups(webhook.FilterGroups)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting filter_group: %s", err)
+	}
 	d.Set("payload_url", webhook.PayloadUrl)
 	d.Set("project_name", d.Id())
 	d.Set("secret", d.Get("secret").(string))
+	if err := d.Set("scope_configuration", flattenScopeConfiguration(webhook.ScopeConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting scope_configuration: %s", err)
+	}
 	d.Set(names.AttrURL, webhook.Url)
 
 	return diags
@@ -322,14 +326,14 @@ func expandScopeConfiguration(tfList []interface{}) *types.ScopeConfiguration {
 		return nil
 	}
 
-	m := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
 	apiObject := &types.ScopeConfiguration{
-		Name:  aws.String(m[names.AttrName].(string)),
-		Scope: types.WebhookScopeType(m[names.AttrScope].(string)),
+		Name:  aws.String(tfMap[names.AttrName].(string)),
+		Scope: types.WebhookScopeType(tfMap[names.AttrScope].(string)),
 	}
 
-	if v, ok := m[names.AttrDomain].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDomain].(string); ok && v != "" {
 		apiObject.Domain = aws.String(v)
 	}
 
@@ -383,19 +387,19 @@ func flattenWebhookFilter(apiObject types.WebhookFilter) map[string]interface{} 
 	return tfMap
 }
 
-func flattenScopeConfiguration(apiObjects *types.ScopeConfiguration) map[string]interface{} {
-	if apiObjects == nil {
+func flattenScopeConfiguration(apiObject *types.ScopeConfiguration) map[string]interface{} {
+	if apiObject == nil {
 		return map[string]interface{}{}
 	}
 
-	tfList := map[string]interface{}{
-		names.AttrName:  apiObjects.Name,
-		names.AttrScope: apiObjects.Scope,
+	tfMap := map[string]interface{}{
+		names.AttrName:  apiObject.Name,
+		names.AttrScope: apiObject.Scope,
 	}
 
-	if apiObjects.Domain != nil {
-		tfList[names.AttrDomain] = apiObjects.Domain
+	if apiObject.Domain != nil {
+		tfMap[names.AttrDomain] = apiObject.Domain
 	}
 
-	return tfList
+	return tfMap
 }
