@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/tools
 
-go 1.22.4
+go 1.22.5
 
 require (
 	github.com/YakDriver/tfproviderdocs v0.13.0
@@ -11,7 +11,7 @@ require (
 	github.com/katbyte/terrafmt v0.5.3
 	github.com/pavius/impi v0.0.3
 	github.com/rhysd/actionlint v1.7.1
-	github.com/terraform-linters/tflint v0.51.2
+	github.com/terraform-linters/tflint v0.52.0
 	github.com/uber-go/gopatch v0.4.0
 	mvdan.cc/gofumpt v0.6.0
 )
@@ -268,7 +268,7 @@ require (
 	github.com/t-yuki/gocover-cobertura v0.0.0-20180217150009-aaee18c8195c // indirect
 	github.com/tdakkota/asciicheck v0.2.0 // indirect
 	github.com/terraform-linters/tflint-plugin-sdk v0.20.0 // indirect
-	github.com/terraform-linters/tflint-ruleset-terraform v0.7.0 // indirect
+	github.com/terraform-linters/tflint-ruleset-terraform v0.8.0 // indirect
 	github.com/tetafro/godot v1.4.16 // indirect
 	github.com/thanhpk/randstr v1.0.4 // indirect
 	github.com/thlib/go-timezone-local v0.0.0-20210907160436-ef149e42d28e // indirect

@@ -1,4 +1,14 @@
 ## 5.59.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_rds_certificate` ([#35003](https://github.com/hashicorp/terraform-provider-aws/issues/35003))
+
+ENHANCEMENTS:
+
+* resource/aws_imagebuilder_image_pipeline: Add `execution_role` and `workflow` arguments ([#37317](https://github.com/hashicorp/terraform-provider-aws/issues/37317))
+* resource/aws_kinesisanalyticsv2_application: Support `FLINK-1_19` as a valid value for `runtime_environment` ([#38350](https://github.com/hashicorp/terraform-provider-aws/issues/38350))
+
 ## 5.58.0 (July 11, 2024)
 
 FEATURES:

@@ -5,20 +5,16 @@ package elbv2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,7 +36,7 @@ func TestAccELBV2ListenerCertificate_basic(t *testing.T) {
 			{
 				Config: testAccListenerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerCertificateExists(resourceName),
+					testAccCheckListenerCertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, iamServerCertificateResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", lbListenerResourceName, names.AttrARN),
 				),
@@ -73,7 +69,7 @@ func TestAccELBV2ListenerCertificate_CertificateARN_underscores(t *testing.T) {
 			{
 				Config: testAccListenerCertificateConfig_arnUnderscores(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerCertificateExists(resourceName),
+					testAccCheckListenerCertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, iamServerCertificateResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", lbListenerResourceName, names.AttrARN),
 				),
@@ -108,9 +104,9 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 			{
 				Config: testAccListenerCertificateConfig_multiple(rName, keys, certificates),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.default"),
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_1"),
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_2"),
+					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.default"),
+					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.additional_1"),
+					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.additional_2"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", "listener_arn"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", names.AttrCertificateARN),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_1", "listener_arn"),
@@ -127,10 +123,10 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 			{
 				Config: testAccListenerCertificateConfig_multipleAddNew(rName, keys, certificates),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.default"),
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_1"),
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_2"),
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_3"),
+					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.default"),
+					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.additional_1"),
+					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.additional_2"),
+					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.additional_3"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", "listener_arn"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", names.AttrCertificateARN),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_1", "listener_arn"),
@@ -144,9 +140,9 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 			{
 				Config: testAccListenerCertificateConfig_multiple(rName, keys, certificates),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.default"),
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_1"),
-					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_2"),
+					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.default"),
+					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.additional_1"),
+					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.additional_2"),
 					testAccCheckListenerCertificateNotExists("aws_lb_listener_certificate.additional_3"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", "listener_arn"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", names.AttrCertificateARN),
@@ -176,7 +172,7 @@ func TestAccELBV2ListenerCertificate_disappears(t *testing.T) {
 			{
 				Config: testAccListenerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerCertificateExists(resourceName),
+					testAccCheckListenerCertificateExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelbv2.ResourceListenerCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -202,7 +198,7 @@ func TestAccELBV2ListenerCertificate_disappears_Listener(t *testing.T) {
 			{
 				Config: testAccListenerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerCertificateExists(resourceName),
+					testAccCheckListenerCertificateExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelbv2.ResourceListener(), listenerResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -216,47 +212,39 @@ func testAccCheckListenerCertificateDestroy(ctx context.Context) resource.TestCh
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_lb_listener_certificate" {
+			if rs.Type != "aws_lb_listener_certificate" && rs.Type != "aws_alb_listener_certificate" {
 				continue
 			}
 
-			input := &elasticloadbalancingv2.DescribeListenerCertificatesInput{
-				ListenerArn: aws.String(rs.Primary.Attributes["listener_arn"]),
-				PageSize:    aws.Int32(400),
+			_, err := tfelbv2.FindListenerCertificateByTwoPartKey(ctx, conn, rs.Primary.Attributes["listener_arn"], rs.Primary.Attributes[names.AttrCertificateARN])
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			resp, err := conn.DescribeListenerCertificates(ctx, input)
 			if err != nil {
-				if errs.IsA[*awstypes.ListenerNotFoundException](err) {
-					return nil
-				}
 				return err
 			}
 
-			for _, cert := range resp.Certificates {
-				// We only care about additional certificates.
-				if aws.ToBool(cert.IsDefault) {
-					continue
-				}
-
-				if aws.ToString(cert.CertificateArn) == rs.Primary.Attributes[names.AttrCertificateARN] {
-					return errors.New("LB listener certificate not destroyed")
-				}
-			}
+			return fmt.Errorf("ELBv2 Listener Certificate %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckListenerCertificateExists(name string) resource.TestCheckFunc {
+func testAccCheckListenerCertificateExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		return nil
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
+
+		_, err := tfelbv2.FindListenerCertificateByTwoPartKey(ctx, conn, rs.Primary.Attributes["listener_arn"], rs.Primary.Attributes[names.AttrCertificateARN])
+
+		return err
 	}
 }
 

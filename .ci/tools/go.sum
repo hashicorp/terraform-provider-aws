@@ -1134,12 +1134,12 @@ github.com/tenntenn/modver v1.0.1 h1:2klLppGhDgzJrScMpkj9Ujy3rXPUspSjAcev9tSEBgA
 github.com/tenntenn/modver v1.0.1/go.mod h1:bePIyQPb7UeioSRkw3Q0XeMhYZSMx9B8ePqg6SAMGH0=
 github.com/tenntenn/text/transform v0.0.0-20200319021203-7eef512accb3 h1:f+jULpRQGxTSkNYKJ51yaw6ChIqO+Je8UqsTKN/cDag=
 github.com/tenntenn/text/transform v0.0.0-20200319021203-7eef512accb3/go.mod h1:ON8b8w4BN/kE1EOhwT0o+d62W65a6aPw1nouo9LMgyY=
-github.com/terraform-linters/tflint v0.51.2 h1:YcMVv5Ctm3q4Ks/Vbp4QoE11ub3CEQwTQYajhHlwxmg=
-github.com/terraform-linters/tflint v0.51.2/go.mod h1:qY5NMwjS1Lu8MmHGduijY/hXAdlsH2dB8NUQSH3O+S4=
+github.com/terraform-linters/tflint v0.52.0 h1:ZHzquuGCTpDXQUoZ8XCTnBeogZ9+V7fzS7iKv8GaUws=
+github.com/terraform-linters/tflint v0.52.0/go.mod h1:W2gKr4g7zdG8zL+7xIYpKCkKtcQbdWP+hDNtUuJju4s=
 github.com/terraform-linters/tflint-plugin-sdk v0.20.0 h1:e7vfAI2rvAtClPx+eY0fd7kvmY0plVRDycgSQL9UQ4o=
 github.com/terraform-linters/tflint-plugin-sdk v0.20.0/go.mod h1:ySt9h+KoEhCM/zjjigIZC2J2Tboyzf53437PAYjrKxc=
-github.com/terraform-linters/tflint-ruleset-terraform v0.7.0 h1:yV/sxzk1nO4hGikkaqWGZ9A4aKdRCigxWCAb4Y4Mcsg=
-github.com/terraform-linters/tflint-ruleset-terraform v0.7.0/go.mod h1:nyZpkZu1x6n+l+XE8m14ADdQTpzitZVP+DZt/AHsQKQ=
+github.com/terraform-linters/tflint-ruleset-terraform v0.8.0 h1:31zqg0fKSZYaH9Dgg/aiYSI76yp8n1awATVGdic6kxo=
+github.com/terraform-linters/tflint-ruleset-terraform v0.8.0/go.mod h1:YoN4gNfVGPi4guQFyHZ/lxqpT5HyRMsl+TQKaS2YqWo=
 github.com/tetafro/godot v1.4.16 h1:4ChfhveiNLk4NveAZ9Pu2AN8QZ2nkUGFuadM9lrr5D0=
 github.com/tetafro/godot v1.4.16/go.mod h1:2oVxTBSftRTh4+MVfUaUXR6bn2GDXCaMcOG4Dk3rfio=
 github.com/thanhpk/randstr v1.0.4 h1:IN78qu/bR+My+gHCvMEXhR/i5oriVHcTB/BJJIRTsNo=
