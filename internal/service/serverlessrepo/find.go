@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-func findApplication(ctx context.Context, conn *serverlessrepo.ServerlessApplicationRepository, applicationID, version string) (*serverlessrepo.GetApplicationOutput, error) {
+func findApplication(ctx context.Context, conn *serverlessrepo.Client, applicationID, version string) (*serverlessrepo.GetApplicationOutput, error) {
 	input := &serverlessrepo.GetApplicationInput{
 		ApplicationId: aws.String(applicationID),
 	}
