@@ -11,6 +11,8 @@ ENHANCEMENTS:
 
 * data-source/aws_lakeformation_data_lake_settings: Add `allow_full_table_external_data_access` attribute ([#34474](https://github.com/hashicorp/terraform-provider-aws/issues/34474))
 * resource/aws_codebuild_webhook: Add `scope_configuration` argument ([#38199](https://github.com/hashicorp/terraform-provider-aws/issues/38199))
+* resource/aws_ecs_cluster: Add `configuration.managed_storage_configuration` argument ([#37932](https://github.com/hashicorp/terraform-provider-aws/issues/37932))
+* resource/aws_fis_experiment_template: Add `experiment_options` configuration block ([#36900](https://github.com/hashicorp/terraform-provider-aws/issues/36900))
 * resource/aws_imagebuilder_image_pipeline: Add `execution_role` and `workflow` arguments ([#37317](https://github.com/hashicorp/terraform-provider-aws/issues/37317))
 * resource/aws_kinesisanalyticsv2_application: Support `FLINK-1_19` as a valid value for `runtime_environment` ([#38350](https://github.com/hashicorp/terraform-provider-aws/issues/38350))
 * resource/aws_lakeformation_data_lake_settings: Add `allow_full_table_external_data_access` attribute ([#34474](https://github.com/hashicorp/terraform-provider-aws/issues/34474))
