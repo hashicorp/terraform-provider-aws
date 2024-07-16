@@ -92,10 +92,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.40.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.7.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.39.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.40.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.31.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.30.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.40.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.13.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dax v1.21.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/detective v1.29.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.25.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.32.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.27.3 // indirect
@@ -305,12 +308,12 @@ require (
 	go.opentelemetry.io/otel/metric v1.27.0 // indirect
 	go.opentelemetry.io/otel/trace v1.27.0 // indirect
 	golang.org/x/crypto v0.25.0 // indirect
-	golang.org/x/mod v0.17.0 // indirect
-	golang.org/x/net v0.26.0 // indirect
+	golang.org/x/mod v0.19.0 // indirect
+	golang.org/x/net v0.27.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
-	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
+	golang.org/x/tools v0.23.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/grpc v1.63.2 // indirect
