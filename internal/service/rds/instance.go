@@ -308,6 +308,12 @@ func ResourceInstance() *schema.Resource {
 					return strings.ToLower(value)
 				},
 			},
+			"engine_lifecycle_support": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(engineLifecycleSupport_Values(), false),
+			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -1000,6 +1006,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DedicatedLogVolume = aws.Bool(v.(bool))
 		}
 
+		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+			input.EngineLifecycleSupport = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
 			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
 		}
@@ -1213,6 +1223,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if engine != "" {
 			input.Engine = aws.String(engine)
+		}
+
+		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+			input.EngineLifecycleSupport = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
@@ -1464,6 +1478,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Engine = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+			input.EngineLifecycleSupport = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
 			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
 		}
@@ -1647,6 +1665,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
+		}
+
+		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+			input.EngineLifecycleSupport = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
@@ -1886,6 +1908,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(v.EnabledCloudwatchLogsExports))
 	d.Set(names.AttrEngine, v.Engine)
+	d.Set("engine_lifecycle_support", v.EngineLifecycleSupport)
 	d.Set("iam_database_authentication_enabled", v.IAMDatabaseAuthenticationEnabled)
 	d.Set(names.AttrIdentifier, v.DBInstanceIdentifier)
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(v.DBInstanceIdentifier)))
