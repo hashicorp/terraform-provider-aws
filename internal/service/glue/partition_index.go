@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -140,7 +139,7 @@ func resourcePartitionIndexRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrCatalogID, catalogID)
 	d.Set(names.AttrDatabaseName, dbName)
 
-	if err := d.Set("partition_index", []map[string]interface{}{flattenPartitionIndex(partition)}); err != nil {
+	if err := d.Set("partition_index", []map[string]interface{}{flattenPartitionIndex(*partition)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting partition_index: %s", err)
 	}
 
@@ -186,7 +185,7 @@ func expandPartitionIndex(l []interface{}) *awstypes.PartitionIndex {
 	parIndex := &awstypes.PartitionIndex{}
 
 	if v, ok := s["keys"].([]interface{}); ok && len(v) > 0 {
-		parIndex.Keys = flex.ExpandStringList(v)
+		parIndex.Keys = flex.ExpandStringValueList(v)
 	}
 
 	if v, ok := s["index_name"].(string); ok && v != "" {
