@@ -2692,7 +2692,7 @@ service "datapipeline" {
 
   sdk {
     id             = "Data Pipeline"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {

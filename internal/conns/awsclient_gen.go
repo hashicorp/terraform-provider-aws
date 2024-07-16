@@ -70,6 +70,7 @@ import (
 	databasemigrationservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	databrew_sdkv2 "github.com/aws/aws-sdk-go-v2/service/databrew"
 	dataexchange_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dataexchange"
+	datapipeline_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datapipeline"
 	datasync_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datasync"
 	datazone_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datazone"
 	dax_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dax"
@@ -208,7 +209,6 @@ import (
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
-	datapipeline_sdkv1 "github.com/aws/aws-sdk-go/service/datapipeline"
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
@@ -543,8 +543,8 @@ func (c *AWSClient) DataExchangeClient(ctx context.Context) *dataexchange_sdkv2.
 	return errs.Must(client[*dataexchange_sdkv2.Client](ctx, c, names.DataExchange, make(map[string]any)))
 }
 
-func (c *AWSClient) DataPipelineConn(ctx context.Context) *datapipeline_sdkv1.DataPipeline {
-	return errs.Must(conn[*datapipeline_sdkv1.DataPipeline](ctx, c, names.DataPipeline, make(map[string]any)))
+func (c *AWSClient) DataPipelineClient(ctx context.Context) *datapipeline_sdkv2.Client {
+	return errs.Must(client[*datapipeline_sdkv2.Client](ctx, c, names.DataPipeline, make(map[string]any)))
 }
 
 func (c *AWSClient) DataSyncClient(ctx context.Context) *datasync_sdkv2.Client {

@@ -62,6 +62,7 @@ const (
 	ComprehendEndpointID                 = "comprehend"
 	ConfigServiceEndpointID              = "config"
 	DataExchangeEndpointID               = "dataexchange"
+	DataPipelineEndpointID               = "datapipeline"
 	DetectiveEndpointID                  = "api.detective"
 	DeviceFarmEndpointID                 = "devicefarm"
 	DevOpsGuruEndpointID                 = "devops-guru"
