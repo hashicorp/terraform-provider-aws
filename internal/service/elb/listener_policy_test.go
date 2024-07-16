@@ -34,7 +34,7 @@ func TestAccELBListenerPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", "aws_load_balancer_policy.test", "policy_name"),
 				),
 			},
@@ -60,7 +60,7 @@ func TestAccELBListenerPolicy_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", "aws_load_balancer_policy.test", "policy_name"),
 				),
 			},
@@ -69,7 +69,7 @@ func TestAccELBListenerPolicy_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", "aws_load_balancer_policy.test", "policy_name"),
 				),
 			},
@@ -106,7 +106,7 @@ func TestAccELBListenerPolicy_disappears(t *testing.T) {
 
 func testAccCheckListenerPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_load_balancer_listener_policy" {
@@ -153,7 +153,7 @@ func testAccCheckListenerPolicyExists(ctx context.Context, n string) resource.Te
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
 		_, err = tfelb.FindLoadBalancerListenerPolicyByTwoPartKey(ctx, conn, lbName, lbPort)
 
@@ -204,6 +204,10 @@ resource "aws_iam_server_certificate" "test" {
   name_prefix      = %[1]q
   certificate_body = "%[2]s"
   private_key      = "%[3]s"
+
+  timeouts {
+    delete = "30m"
+  }
 }
 
 resource "aws_elb" "test" {

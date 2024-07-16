@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccBedrockAgentActionGroup_basic(t *testing.T) {
+func TestAccBedrockAgentAgentActionGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_action_group.test"
@@ -48,7 +48,7 @@ func TestAccBedrockAgentActionGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentActionGroup_s3APISchema(t *testing.T) {
+func TestAccBedrockAgentAgentActionGroup_s3APISchema(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_action_group.test"
@@ -77,7 +77,7 @@ func TestAccBedrockAgentActionGroup_s3APISchema(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentActionGroup_update(t *testing.T) {
+func TestAccBedrockAgentAgentActionGroup_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_action_group.test"
@@ -107,7 +107,7 @@ func TestAccBedrockAgentActionGroup_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "Basic Agent Action"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Basic Agent Action"),
 				),
 			},
 			{

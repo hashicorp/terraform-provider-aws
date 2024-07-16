@@ -54,30 +54,24 @@ This resource supports the following arguments:
 
 * `cdcStartPosition` - (Optional, Conflicts with `cdcStartTime`) Indicates when you want a change data capture (CDC) operation to start. The value can be a RFC3339 formatted date, a checkpoint, or a LSN/SCN format depending on the source engine. For more information see [Determining a CDC native start point](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Task.CDC.html#CHAP_Task.CDC.StartPoint.Native).
 * `cdcStartTime` - (Optional, Conflicts with `cdcStartPosition`) RFC3339 formatted date string or UNIX timestamp for the start of the Change Data Capture (CDC) operation.
-* `migrationType` - (Required) The migration type. Can be one of `full-load | cdc | full-load-and-cdc`.
-* `replicationInstanceArn` - (Required) The Amazon Resource Name (ARN) of the replication instance.
-* `replicationTaskId` - (Required) The replication task identifier.
-
-    - Must contain from 1 to 255 alphanumeric characters or hyphens.
-    - First character must be a letter.
-    - Cannot end with a hyphen.
-    - Cannot contain two consecutive hyphens.
-
-* `replicationTaskSettings` - (Optional) An escaped JSON string that contains the task settings. For a complete list of task settings, see [Task Settings for AWS Database Migration Service Tasks](http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TaskSettings.html).
+* `migrationType` - (Required) Migration type. Can be one of `full-load | cdc | full-load-and-cdc`.
+* `replicationInstanceArn` - (Required) ARN of the replication instance.
+* `replicationTaskId` - (Required) Replication task identifier which must contain from 1 to 255 alphanumeric characters or hyphens, first character must be a letter, cannot end with a hyphen, and cannot contain two consecutive hyphens.
+* `replicationTaskSettings` - (Optional) Escaped JSON string that contains the task settings. For a complete list of task settings, see [Task Settings for AWS Database Migration Service Tasks](http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TaskSettings.html). Note that `Logging.CloudWatchLogGroup` and `Logging.CloudWatchLogStream` are read only and should not be defined, even as `null`, in the configuration since AWS provides a value for these settings.
 * `resourceIdentifier` - (Optional) A friendly name for the resource identifier at the end of the EndpointArn response parameter that is returned in the created Endpoint object.
-* `sourceEndpointArn` - (Required) The Amazon Resource Name (ARN) string that uniquely identifies the source endpoint.
+* `sourceEndpointArn` - (Required) ARN that uniquely identifies the source endpoint.
 * `startReplicationTask` - (Optional) Whether to run or stop the replication task.
-* `tableMappings` - (Required) An escaped JSON string that contains the table mappings. For information on table mapping see [Using Table Mapping with an AWS Database Migration Service Task to Select and Filter Data](http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.html)
+* `tableMappings` - (Required) Escaped JSON string that contains the table mappings. For information on table mapping see [Using Table Mapping with an AWS Database Migration Service Task to Select and Filter Data](http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.html)
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `targetEndpointArn` - (Required) The Amazon Resource Name (ARN) string that uniquely identifies the target endpoint.
+* `targetEndpointArn` - (Required) ARN that uniquely identifies the target endpoint.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `replicationTaskArn` - The Amazon Resource Name (ARN) for the replication task.
+* `replicationTaskArn` - ARN for the replication task.
 * `status` - Replication Task status.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -111,4 +105,4 @@ Using `terraform import`, import replication tasks using the `replicationTaskId`
 % terraform import aws_dms_replication_task.test test-dms-replication-task-tf
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f6a2cf35d679f8c0d5a5807b21d86c1b58933bfdd518a00e3db5d76c95c9a78e -->
+<!-- cache-key: cdktf-0.20.1 input-e11e9e05b5529a88f50b383dac8a49965adbeb2ba4cae01b923a80ea790ec74d -->

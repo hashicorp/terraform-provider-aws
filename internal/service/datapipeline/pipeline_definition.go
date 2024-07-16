@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_datapipeline_pipeline_definition")
@@ -44,7 +45,7 @@ func ResourcePipelineDefinition() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
@@ -57,7 +58,7 @@ func ResourcePipelineDefinition() *schema.Resource {
 								},
 							},
 						},
-						"id": {
+						names.AttrID: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 256),
@@ -70,7 +71,7 @@ func ResourcePipelineDefinition() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 256),
@@ -94,12 +95,12 @@ func ResourcePipelineDefinition() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"field": {
+						names.AttrField: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
@@ -117,12 +118,12 @@ func ResourcePipelineDefinition() *schema.Resource {
 								},
 							},
 						},
-						"id": {
+						names.AttrID: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -166,7 +167,7 @@ func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, 
 		}
 		if output.Errored {
 			errors := getValidationError(output.ValidationErrors)
-			if strings.Contains(errors.Error(), "role") {
+			if strings.Contains(errors.Error(), names.AttrRole) {
 				return retry.RetryableError(fmt.Errorf("validating after creation DataPipeline Pipeline Definition (%s): %w", pipelineID, errors))
 			}
 		}
@@ -243,7 +244,7 @@ func expandPipelineDefinitionParameterObject(tfMap map[string]interface{}) awsty
 
 	apiObject := awstypes.ParameterObject{
 		Attributes: expandPipelineDefinitionParameterAttributes(tfMap["attribute"].(*schema.Set).List()),
-		Id:         aws.String(tfMap["id"].(string)),
+		Id:         aws.String(tfMap[names.AttrID].(string)),
 	}
 
 	return apiObject
@@ -255,7 +256,7 @@ func expandPipelineDefinitionParameterAttribute(tfMap map[string]interface{}) aw
 	}
 
 	apiObject := awstypes.ParameterAttribute{
-		Key:         aws.String(tfMap["key"].(string)),
+		Key:         aws.String(tfMap[names.AttrKey].(string)),
 		StringValue: aws.String(tfMap["string_value"].(string)),
 	}
 
@@ -309,14 +310,14 @@ func expandPipelineDefinitionParameterObjects(tfList []interface{}) []awstypes.P
 func flattenPipelineDefinitionParameterObject(apiObject awstypes.ParameterObject) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 	tfMap["attribute"] = flattenPipelineDefinitionParameterAttributes(apiObject.Attributes)
-	tfMap["id"] = aws.ToString(apiObject.Id)
+	tfMap[names.AttrID] = aws.ToString(apiObject.Id)
 
 	return tfMap
 }
 
 func flattenPipelineDefinitionParameterAttribute(apiObject awstypes.ParameterAttribute) map[string]interface{} {
 	tfMap := map[string]interface{}{}
-	tfMap["key"] = aws.ToString(apiObject.Key)
+	tfMap[names.AttrKey] = aws.ToString(apiObject.Key)
 	tfMap["string_value"] = aws.ToString(apiObject.StringValue)
 
 	return tfMap
@@ -356,7 +357,7 @@ func expandPipelineDefinitionParameterValue(tfMap map[string]interface{}) awstyp
 	}
 
 	apiObject := awstypes.ParameterValue{
-		Id:          aws.String(tfMap["id"].(string)),
+		Id:          aws.String(tfMap[names.AttrID].(string)),
 		StringValue: aws.String(tfMap["string_value"].(string)),
 	}
 
@@ -387,7 +388,7 @@ func expandPipelineDefinitionParameterValues(tfList []interface{}) []awstypes.Pa
 
 func flattenPipelineDefinitionParameterValue(apiObject awstypes.ParameterValue) map[string]interface{} {
 	tfMap := map[string]interface{}{}
-	tfMap["id"] = aws.ToString(apiObject.Id)
+	tfMap[names.AttrID] = aws.ToString(apiObject.Id)
 	tfMap["string_value"] = aws.ToString(apiObject.StringValue)
 
 	return tfMap
@@ -413,9 +414,9 @@ func expandPipelineDefinitionObject(tfMap map[string]interface{}) awstypes.Pipel
 	}
 
 	apiObject := awstypes.PipelineObject{
-		Fields: expandPipelineDefinitionPipelineFields(tfMap["field"].(*schema.Set).List()),
-		Id:     aws.String(tfMap["id"].(string)),
-		Name:   aws.String(tfMap["name"].(string)),
+		Fields: expandPipelineDefinitionPipelineFields(tfMap[names.AttrField].(*schema.Set).List()),
+		Id:     aws.String(tfMap[names.AttrID].(string)),
+		Name:   aws.String(tfMap[names.AttrName].(string)),
 	}
 
 	return apiObject
@@ -427,7 +428,7 @@ func expandPipelineDefinitionPipelineField(tfMap map[string]interface{}) awstype
 	}
 
 	apiObject := awstypes.Field{
-		Key: aws.String(tfMap["key"].(string)),
+		Key: aws.String(tfMap[names.AttrKey].(string)),
 	}
 
 	if v, ok := tfMap["ref_value"]; ok && v.(string) != "" {
@@ -486,16 +487,16 @@ func expandPipelineDefinitionObjects(tfList []interface{}) []awstypes.PipelineOb
 
 func flattenPipelineDefinitionObject(apiObject awstypes.PipelineObject) map[string]interface{} {
 	tfMap := map[string]interface{}{}
-	tfMap["field"] = flattenPipelineDefinitionParameterFields(apiObject.Fields)
-	tfMap["id"] = aws.ToString(apiObject.Id)
-	tfMap["name"] = aws.ToString(apiObject.Name)
+	tfMap[names.AttrField] = flattenPipelineDefinitionParameterFields(apiObject.Fields)
+	tfMap[names.AttrID] = aws.ToString(apiObject.Id)
+	tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 
 	return tfMap
 }
 
 func flattenPipelineDefinitionParameterField(apiObject awstypes.Field) map[string]interface{} {
 	tfMap := map[string]interface{}{}
-	tfMap["key"] = aws.ToString(apiObject.Key)
+	tfMap[names.AttrKey] = aws.ToString(apiObject.Key)
 	tfMap["ref_value"] = aws.ToString(apiObject.RefValue)
 	tfMap["string_value"] = aws.ToString(apiObject.StringValue)
 

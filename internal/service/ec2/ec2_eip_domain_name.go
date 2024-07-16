@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="EIP Domain Name")
+// @FrameworkResource("aws_eip_domain_name", name="EIP Domain Name")
 func newEIPDomainNameResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &eipDomainNameResource{}
 
@@ -53,7 +53,7 @@ func (r *eipDomainNameResource) Schema(ctx context.Context, request resource.Sch
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"domain_name": schema.StringAttribute{
+			names.AttrDomainName: schema.StringAttribute{
 				Required: true,
 			},
 			names.AttrID: framework.IDAttribute(),
@@ -65,7 +65,7 @@ func (r *eipDomainNameResource) Schema(ctx context.Context, request resource.Sch
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,

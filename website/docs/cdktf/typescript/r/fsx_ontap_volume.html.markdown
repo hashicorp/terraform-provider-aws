@@ -82,12 +82,14 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) The name of the Volume. You can use a maximum of 203 alphanumeric characters, plus the underscore (_) special character.
+* `aggregateConfiguration` - (Optional) The Aggregate configuration only applies to `FLEXGROUP` volumes. See [Aggreate Configuration](#aggregate-configuration) below.
 * `bypassSnaplockEnterpriseRetention` - (Optional) Setting this to `true` allows a SnapLock administrator to delete an FSx for ONTAP SnapLock Enterprise volume with unexpired write once, read many (WORM) files. This configuration must be applied separately before attempting to delete the resource to have the desired behavior. Defaults to `false`.
 * `copyTagsToBackups` - (Optional) A boolean flag indicating whether tags for the volume should be copied to backups. This value defaults to `false`.
 * `junctionPath` - (Optional) Specifies the location in the storage virtual machine's namespace where the volume is mounted. The junction_path must have a leading forward slash, such as `/vol3`
 * `ontapVolumeType` - (Optional) Specifies the type of volume, valid values are `RW`, `DP`. Default value is `RW`. These can be set by the ONTAP CLI or API. This setting is used as part of migration and replication [Migrating to Amazon FSx for NetApp ONTAP](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/migrating-fsx-ontap.html)
 * `securityStyle` - (Optional) Specifies the volume security style, Valid values are `UNIX`, `NTFS`, and `MIXED`.
-* `sizeInMegabytes` - (Required) Specifies the size of the volume, in megabytes (MB), that you are creating.
+* `sizeInBytes` - (Optional) Specifies the size of the volume, in megabytes (MB), that you are creating. Can be used for any size but required for volumes over 2 PB. Either size_in_bytes or size_in_megabytes must be specified. Minimum size for `FLEXGROUP` volumes are 100GiB per constituent.
+* `sizeInMegabytes` - (Optional) Specifies the size of the volume, in megabytes (MB), that you are creating. Supported when creating volumes under 2 PB. Either size_in_bytes or size_in_megabytes must be specified. Minimum size for `FLEXGROUP` volumes are 100GiB per constituent.
 * `skipFinalBackup` - (Optional) When enabled, will skip the default final backup taken when the volume is deleted. This configuration must be applied separately before attempting to delete the resource to have the desired behavior. Defaults to `false`.
 * `snaplockConfiguration` - (Optional) The SnapLock configuration for an FSx for ONTAP volume. See [SnapLock Configuration](#snaplock-configuration) below.
 * `snapshotPolicy` - (Optional) Specifies the snapshot policy for the volume. See [snapshot policies](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/snapshots-ontap.html#snapshot-policies) in the Amazon FSx ONTAP User Guide
@@ -95,6 +97,12 @@ This resource supports the following arguments:
 * `storageVirtualMachineId` - (Required) Specifies the storage virtual machine in which to create the volume.
 * `tags` - (Optional) A map of tags to assign to the volume. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tieringPolicy` - (Optional) The data tiering policy for an FSx for ONTAP volume. See [Tiering Policy](#tiering-policy) below.
+* `volumeStyle` - (Optional) Specifies the styles of volume, valid values are `FLEXVOL`, `FLEXGROUP`. Default value is `FLEXVOL`. FLEXGROUPS have a larger minimum and maximum size. See Volume Styles for more details. [Volume Styles](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/volume-styles.html)
+
+### Aggregate Configuration
+
+* `aggregates` - (Optional) Used to specify the names of the aggregates on which the volume will be created. Each aggregate needs to be in the format aggrX where X is the number of the aggregate.
+* `constituentsPerAggregate` - (Optional) Used to explicitly set the number of constituents within the FlexGroup per storage aggregate. the default value is `8`.
 
 ### SnapLock Configuration
 
@@ -130,6 +138,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `aggregate_configuration.total_constituents` - The total amount of constituents for a `FLEXGROUP` volume. This would equal constituents_per_aggregate x aggregates.
 * `arn` - Amazon Resource Name of the volune.
 * `id` - Identifier of the volume, e.g., `fsvol-12345678`
 * `fileSystemId` - Describes the file system for the volume, e.g. `fs-12345679`
@@ -178,4 +187,4 @@ Using `terraform import`, import FSx ONTAP volume using the `id`. For example:
 % terraform import aws_fsx_ontap_volume.example fsvol-12345678abcdef123
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4150b6016178afdca4f0be9139d92abeffcd41f64e3fc04737a2e1147ba2af7e -->
+<!-- cache-key: cdktf-0.20.1 input-f1a5c92c2e6e96ddcc98e2bc45e26912ba75d1ee77679dca1ebc3f800558e353 -->

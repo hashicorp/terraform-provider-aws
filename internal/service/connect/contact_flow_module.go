@@ -40,7 +40,7 @@ func ResourceContactFlowModule() *schema.Resource {
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,7 +48,7 @@ func ResourceContactFlowModule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content": {
+			names.AttrContent: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -64,7 +64,7 @@ func ResourceContactFlowModule() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 500),
@@ -72,13 +72,13 @@ func ResourceContactFlowModule() *schema.Resource {
 			"filename": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"content"},
+				ConflictsWith: []string{names.AttrContent},
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 127),
@@ -94,8 +94,8 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
-	name := d.Get("name").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
+	name := d.Get(names.AttrName).(string)
 
 	input := &connect.CreateContactFlowModuleInput{
 		Name:       aws.String(name),
@@ -103,7 +103,7 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 		Tags:       getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -119,7 +119,7 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 			return sdkdiag.AppendErrorf(diags, "unable to load %q: %s", filename, err)
 		}
 		input.Content = aws.String(file)
-	} else if v, ok := d.GetOk("content"); ok {
+	} else if v, ok := d.GetOk(names.AttrContent); ok {
 		input.Content = aws.String(v.(string))
 	}
 
@@ -168,12 +168,12 @@ func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "getting Connect Contact Flow Module (%s): empty response", d.Id())
 	}
 
-	d.Set("arn", resp.ContactFlowModule.Arn)
+	d.Set(names.AttrARN, resp.ContactFlowModule.Arn)
 	d.Set("contact_flow_module_id", resp.ContactFlowModule.Id)
-	d.Set("instance_id", instanceID)
-	d.Set("name", resp.ContactFlowModule.Name)
-	d.Set("description", resp.ContactFlowModule.Description)
-	d.Set("content", resp.ContactFlowModule.Content)
+	d.Set(names.AttrInstanceID, instanceID)
+	d.Set(names.AttrName, resp.ContactFlowModule.Name)
+	d.Set(names.AttrDescription, resp.ContactFlowModule.Description)
+	d.Set(names.AttrContent, resp.ContactFlowModule.Content)
 
 	setTagsOut(ctx, resp.ContactFlowModule.Tags)
 
@@ -191,12 +191,12 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChanges("name", "description") {
+	if d.HasChanges(names.AttrName, names.AttrDescription) {
 		updateMetadataInput := &connect.UpdateContactFlowModuleMetadataInput{
 			ContactFlowModuleId: aws.String(contactFlowModuleID),
-			Description:         aws.String(d.Get("description").(string)),
+			Description:         aws.String(d.Get(names.AttrDescription).(string)),
 			InstanceId:          aws.String(instanceID),
-			Name:                aws.String(d.Get("name").(string)),
+			Name:                aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		_, updateMetadataInputErr := conn.UpdateContactFlowModuleMetadataWithContext(ctx, updateMetadataInput)
@@ -206,7 +206,7 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if d.HasChanges("content", "content_hash", "filename") {
+	if d.HasChanges(names.AttrContent, "content_hash", "filename") {
 		updateContentInput := &connect.UpdateContactFlowModuleContentInput{
 			ContactFlowModuleId: aws.String(contactFlowModuleID),
 			InstanceId:          aws.String(instanceID),
@@ -224,7 +224,7 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 				return sdkdiag.AppendErrorf(diags, "unable to load %q: %s", filename, err)
 			}
 			updateContentInput.Content = aws.String(file)
-		} else if v, ok := d.GetOk("content"); ok {
+		} else if v, ok := d.GetOk(names.AttrContent); ok {
 			updateContentInput.Content = aws.String(v.(string))
 		}
 

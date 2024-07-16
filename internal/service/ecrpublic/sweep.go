@@ -55,7 +55,7 @@ func sweepRepositories(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.ToString(repository.RepositoryName))
 			d.Set("registry_id", repository.RegistryId)
-			d.Set("force_destroy", true)
+			d.Set(names.AttrForceDestroy, true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

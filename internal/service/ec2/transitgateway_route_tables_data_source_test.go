@@ -55,7 +55,7 @@ func testAccTransitGatewayRouteTablesDataSource_filter(t *testing.T, semaphore t
 			{
 				Config: testAccTransitGatewayRouteTablesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct2),
 				),
 			},
 		},
@@ -79,7 +79,7 @@ func testAccTransitGatewayRouteTablesDataSource_tags(t *testing.T, semaphore tfs
 			{
 				Config: testAccTransitGatewayRouteTablesDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct1),
 				),
 			},
 		},
@@ -103,7 +103,7 @@ func testAccTransitGatewayRouteTablesDataSource_empty(t *testing.T, semaphore tf
 			{
 				Config: testAccTransitGatewayRouteTablesDataSourceConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct0),
 				),
 			},
 		},

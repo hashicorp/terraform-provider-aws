@@ -37,13 +37,13 @@ func ResourcePipeline() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -63,12 +63,12 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	uniqueID := id.UniqueId()
 	input := datapipeline.CreatePipelineInput{
-		Name:     aws.String(d.Get("name").(string)),
+		Name:     aws.String(d.Get(names.AttrName).(string)),
 		UniqueId: aws.String(uniqueID),
 		Tags:     getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -97,8 +97,8 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "describing DataPipeline (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", v.Name)
-	d.Set("description", v.Description)
+	d.Set(names.AttrName, v.Name)
+	d.Set(names.AttrDescription, v.Description)
 
 	setTagsOut(ctx, v.Tags)
 

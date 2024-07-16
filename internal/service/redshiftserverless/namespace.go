@@ -62,7 +62,7 @@ func resourceNamespace() *schema.Resource {
 				Sensitive: true,
 				Computed:  true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -86,7 +86,7 @@ func resourceNamespace() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -156,7 +156,7 @@ func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.IamRoles = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -199,11 +199,11 @@ func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("admin_password_secret_arn", output.AdminPasswordSecretArn)
 	d.Set("admin_password_secret_kms_key_id", output.AdminPasswordSecretKmsKeyId)
 	d.Set("admin_username", output.AdminUsername)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("db_name", output.DbName)
 	d.Set("default_iam_role_arn", output.DefaultIamRoleArn)
 	d.Set("iam_roles", flattenNamespaceIAMRoles(output.IamRoles))
-	d.Set("kms_key_id", output.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
 	d.Set("log_exports", aws.StringValueSlice(output.LogExports))
 	d.Set("namespace_id", output.NamespaceId)
 	d.Set("namespace_name", output.NamespaceName)
@@ -215,7 +215,7 @@ func resourceNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &redshiftserverless.UpdateNamespaceInput{
 			NamespaceName: aws.String(d.Id()),
 		}
@@ -237,8 +237,8 @@ func resourceNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.IamRoles = flex.ExpandStringSet(d.Get("iam_roles").(*schema.Set))
 		}
 
-		if d.HasChange("kms_key_id") {
-			input.KmsKeyId = aws.String(d.Get("kms_key_id").(string))
+		if d.HasChange(names.AttrKMSKeyID) {
+			input.KmsKeyId = aws.String(d.Get(names.AttrKMSKeyID).(string))
 		}
 
 		if d.HasChange("log_exports") {

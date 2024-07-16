@@ -45,7 +45,7 @@ func ResourceWorkspace() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func ResourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +63,7 @@ func ResourceWorkspace() *schema.Resource {
 				ForceNew: true,
 				Default:  false,
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -155,7 +155,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	input := types.WorkspaceRequest{
 		BundleId:                    aws.String(d.Get("bundle_id").(string)),
 		DirectoryId:                 aws.String(d.Get("directory_id").(string)),
-		UserName:                    aws.String(d.Get("user_name").(string)),
+		UserName:                    aws.String(d.Get(names.AttrUserName).(string)),
 		RootVolumeEncryptionEnabled: aws.Bool(d.Get("root_volume_encryption_enabled").(bool)),
 		UserVolumeEncryptionEnabled: aws.Bool(d.Get("user_volume_encryption_enabled").(bool)),
 		Tags:                        getTagsIn(ctx),
@@ -207,11 +207,11 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	workspace := rawOutput.(types.Workspace)
 	d.Set("bundle_id", workspace.BundleId)
 	d.Set("directory_id", workspace.DirectoryId)
-	d.Set("ip_address", workspace.IpAddress)
+	d.Set(names.AttrIPAddress, workspace.IpAddress)
 	d.Set("computer_name", workspace.ComputerName)
-	d.Set("state", workspace.State)
+	d.Set(names.AttrState, workspace.State)
 	d.Set("root_volume_encryption_enabled", workspace.RootVolumeEncryptionEnabled)
-	d.Set("user_name", workspace.UserName)
+	d.Set(names.AttrUserName, workspace.UserName)
 	d.Set("user_volume_encryption_enabled", workspace.UserVolumeEncryptionEnabled)
 	d.Set("volume_encryption_key", workspace.VolumeEncryptionKey)
 	if err := d.Set("workspace_properties", FlattenWorkspaceProperties(workspace.WorkspaceProperties)); err != nil {

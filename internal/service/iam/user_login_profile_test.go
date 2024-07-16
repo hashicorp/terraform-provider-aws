@@ -249,7 +249,7 @@ func TestAccIAMUserLoginProfile_nogpg(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserLoginProfileExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "20"),
-					resource.TestCheckResourceAttrSet(resourceName, "password"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPassword),
 				),
 			},
 			{
@@ -260,7 +260,7 @@ func TestAccIAMUserLoginProfile_nogpg(t *testing.T) {
 					"encrypted_password",
 					"key_fingerprint",
 					"password_length",
-					"password",
+					names.AttrPassword,
 				},
 			},
 		},
@@ -314,7 +314,7 @@ func TestAccIAMUserLoginProfile_passwordResetRequired(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "encrypted_password"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_fingerprint"),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "20"),
-					resource.TestCheckResourceAttr(resourceName, "password_reset_required", "true"),
+					resource.TestCheckResourceAttr(resourceName, "password_reset_required", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "pgp_key", testPubKey1+"\n"),
 				),
 			},
