@@ -228,12 +228,18 @@ func ResourceCluster() *schema.Resource {
 					validation.StringInSlice(ClusterEngine_Values(), false),
 				),
 			},
+			"engine_lifecycle_support": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(engineLifecycleSupport_Values(), false),
+			},
 			"engine_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      EngineModeProvisioned,
-				ValidateFunc: validation.StringInSlice(EngineMode_Values(), false),
+				Default:      engineModeProvisioned,
+				ValidateFunc: validation.StringInSlice(engineMode_Values(), false),
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -648,6 +654,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
+		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+			input.EngineLifecycleSupport = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 			input.EngineVersion = aws.String(v.(string))
 		}
@@ -772,6 +782,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
+		}
+
+		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+			input.EngineLifecycleSupport = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
@@ -1040,6 +1054,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
+		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+			input.EngineLifecycleSupport = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 			input.EngineVersion = aws.String(v.(string))
 		}
@@ -1222,6 +1240,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
 	d.Set(names.AttrEndpoint, dbc.Endpoint)
 	d.Set(names.AttrEngine, dbc.Engine)
+	d.Set("engine_lifecycle_support", dbc.EngineLifecycleSupport)
 	d.Set("engine_mode", dbc.EngineMode)
 	clusterSetResourceDataEngineVersionFromCluster(d, dbc)
 	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
@@ -1284,7 +1303,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// Fetch and save Global Cluster if engine mode global
 	d.Set("global_cluster_identifier", "")
 
-	if aws.StringValue(dbc.EngineMode) == EngineModeGlobal || aws.StringValue(dbc.EngineMode) == EngineModeProvisioned {
+	if aws.StringValue(dbc.EngineMode) == engineModeGlobal || aws.StringValue(dbc.EngineMode) == engineModeProvisioned {
 		globalCluster, err := FindGlobalClusterByDBClusterARN(ctx, conn, aws.StringValue(dbc.DBClusterArn))
 
 		if err == nil {

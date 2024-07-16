@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.3-proton
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.54.18
+	github.com/aws/aws-sdk-go v1.54.19
 	github.com/aws/aws-sdk-go-v2 v1.30.3
 	github.com/aws/aws-sdk-go-v2/config v1.27.26
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.26
@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/account v1.19.3
 	github.com/aws/aws-sdk-go-v2/service/acm v1.28.4
-	github.com/aws/aws-sdk-go-v2/service/acmpca v1.33.3
+	github.com/aws/aws-sdk-go-v2/service/acmpca v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/amp v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.25.3
@@ -75,10 +75,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.7.3
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.39.3
+	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.31.3
+	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.30.3
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/dax v1.21.3
+	github.com/aws/aws-sdk-go-v2/service/detective v1.29.3
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.27.3
@@ -106,7 +109,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fis v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/fms v1.35.3
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.24.3
-	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.26.4
+	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.29.3
@@ -140,7 +143,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.14.3
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.22.3
 	github.com/aws/aws-sdk-go-v2/service/mq v1.25.3
-	github.com/aws/aws-sdk-go-v2/service/mwaa v1.29.3
+	github.com/aws/aws-sdk-go-v2/service/mwaa v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.10.3
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.5.3
@@ -177,6 +180,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.51.3
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.16.3
+	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.22.3
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.23.3
@@ -212,7 +216,7 @@ require (
 	github.com/beevik/etree v1.4.0
 	github.com/cedar-policy/cedar-go v0.0.0-20240318205125-470d1fe984bb
 	github.com/davecgh/go-spew v1.1.1
-	github.com/dlclark/regexp2 v1.11.1
+	github.com/dlclark/regexp2 v1.11.2
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.23.0

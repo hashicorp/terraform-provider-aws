@@ -113,9 +113,9 @@ func dataSourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EFS Access Point", err))
 	}
 
-	fsID := aws.ToString(ap.FileSystemId)
-	d.SetId(fsID)
+	d.SetId(aws.ToString(ap.AccessPointId))
 	d.Set(names.AttrARN, ap.AccessPointArn)
+	fsID := aws.ToString(ap.FileSystemId)
 	fsARN := arn.ARN{
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
