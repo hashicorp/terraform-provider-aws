@@ -67,6 +67,7 @@ import (
 	costexplorer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	costoptimizationhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	customerprofiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/customerprofiles"
+	databasemigrationservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	databrew_sdkv2 "github.com/aws/aws-sdk-go-v2/service/databrew"
 	datasync_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datasync"
 	datazone_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datazone"
@@ -205,7 +206,6 @@ import (
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
-	databasemigrationservice_sdkv1 "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	dataexchange_sdkv1 "github.com/aws/aws-sdk-go/service/dataexchange"
 	datapipeline_sdkv1 "github.com/aws/aws-sdk-go/service/datapipeline"
 	detective_sdkv1 "github.com/aws/aws-sdk-go/service/detective"
@@ -523,8 +523,8 @@ func (c *AWSClient) DLMClient(ctx context.Context) *dlm_sdkv2.Client {
 	return errs.Must(client[*dlm_sdkv2.Client](ctx, c, names.DLM, make(map[string]any)))
 }
 
-func (c *AWSClient) DMSConn(ctx context.Context) *databasemigrationservice_sdkv1.DatabaseMigrationService {
-	return errs.Must(conn[*databasemigrationservice_sdkv1.DatabaseMigrationService](ctx, c, names.DMS, make(map[string]any)))
+func (c *AWSClient) DMSClient(ctx context.Context) *databasemigrationservice_sdkv2.Client {
+	return errs.Must(client[*databasemigrationservice_sdkv2.Client](ctx, c, names.DMS, make(map[string]any)))
 }
 
 func (c *AWSClient) DRSClient(ctx context.Context) *drs_sdkv2.Client {
