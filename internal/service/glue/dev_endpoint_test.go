@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -530,21 +529,21 @@ func TestAccGlueDevEndpoint_workerType(t *testing.T) {
 				Config: testAccDevEndpointConfig_workerTypeStandard(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "worker_type", awstypes.WorkerTypeStandard),
+					resource.TestCheckResourceAttr(resourceName, "worker_type", string(awstypes.WorkerTypeStandard)),
 				),
 			},
 			{
-				Config: testAccDevEndpointConfig_workerType(rName, awstypes.WorkerTypeG1x),
+				Config: testAccDevEndpointConfig_workerType(rName, string(awstypes.WorkerTypeG1x)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "worker_type", awstypes.WorkerTypeG1x),
+					resource.TestCheckResourceAttr(resourceName, "worker_type", string(awstypes.WorkerTypeG1x)),
 				),
 			},
 			{
-				Config: testAccDevEndpointConfig_workerType(rName, awstypes.WorkerTypeG2x),
+				Config: testAccDevEndpointConfig_workerType(rName, string(awstypes.WorkerTypeG2x)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "worker_type", awstypes.WorkerTypeG2x),
+					resource.TestCheckResourceAttr(resourceName, "worker_type", string(awstypes.WorkerTypeG2x)),
 				),
 			},
 			{

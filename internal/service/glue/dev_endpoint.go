@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -149,11 +148,11 @@ func ResourceDevEndpoint() *schema.Resource {
 				Computed: true,
 			},
 			"worker_type": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  enum.Validate[awstypes.WorkerType](),
-				ConflictsWith: []string{"number_of_nodes"},
-				ForceNew:      true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.WorkerType](),
+				ConflictsWith:    []string{"number_of_nodes"},
+				ForceNew:         true,
 			},
 			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
@@ -187,7 +186,7 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("arguments"); ok {
-		input.Arguments = flex.ExpandStringMap(v.(map[string]interface{}))
+		input.Arguments = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("extra_jars_s3_path"); ok {
@@ -203,11 +202,11 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("number_of_nodes"); ok {
-		input.NumberOfNodes = aws.Int64(int64(v.(int)))
+		input.NumberOfNodes = int32(v.(int))
 	}
 
 	if v, ok := d.GetOk("number_of_workers"); ok {
-		input.NumberOfWorkers = aws.Int64(int64(v.(int)))
+		input.NumberOfWorkers = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk(names.AttrPublicKey); ok {
@@ -215,7 +214,7 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("public_keys"); ok {
-		publicKeys := flex.ExpandStringSet(v.(*schema.Set))
+		publicKeys := flex.ExpandStringValueSet(v.(*schema.Set))
 		input.PublicKeys = publicKeys
 	}
 
@@ -224,7 +223,7 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
-		securityGroupIDs := flex.ExpandStringSet(v.(*schema.Set))
+		securityGroupIDs := flex.ExpandStringValueSet(v.(*schema.Set))
 		input.SecurityGroupIds = securityGroupIDs
 	}
 
@@ -241,13 +240,13 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		_, err := conn.CreateDevEndpoint(ctx, input)
 		if err != nil {
 			// Retry for IAM eventual consistency
-			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidInputException, "should be given assume role permissions for Glue Service") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "should be given assume role permissions for Glue Service") {
 				return retry.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidInputException, "is not authorized to perform") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "is not authorized to perform") {
 				return retry.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidInputException, "S3 endpoint and NAT validation has failed for subnetId") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "S3 endpoint and NAT validation has failed for subnetId") {
 				return retry.RetryableError(err)
 			}
 
@@ -350,7 +349,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting public_key for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("public_keys", flex.FlattenStringSet(endpoint.PublicKeys)); err != nil {
+	if err := d.Set("public_keys", flex.FlattenStringValueSet(endpoint.PublicKeys)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting public_keys for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
@@ -362,7 +361,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting security_configuration for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrSecurityGroupIDs, flex.FlattenStringSet(endpoint.SecurityGroupIds)); err != nil {
+	if err := d.Set(names.AttrSecurityGroupIDs, flex.FlattenStringValueSet(endpoint.SecurityGroupIds)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting security_group_ids for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
@@ -409,11 +408,11 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		oldRaw, newRaw := d.GetChange("arguments")
 		old := oldRaw.(map[string]interface{})
 		new := newRaw.(map[string]interface{})
-		add, remove, _ := flex.DiffStringMaps(old, new)
+		add, remove, _ := flex.DiffStringValueMaps(old, new)
 
-		removeKeys := make([]*string, 0)
+		removeKeys := make([]string, 0)
 		for k := range remove {
-			removeKeys = append(removeKeys, aws.String(k))
+			removeKeys = append(removeKeys, k)
 		}
 
 		input.AddArguments = add
@@ -425,7 +424,7 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("extra_jars_s3_path") {
 		customLibs.ExtraJarsS3Path = aws.String(d.Get("extra_jars_s3_path").(string))
 		input.CustomLibraries = customLibs
-		input.UpdateEtlLibraries = aws.Bool(true)
+		input.UpdateEtlLibraries = true
 
 		hasChanged = true
 	}
@@ -433,7 +432,7 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("extra_python_libs_s3_path") {
 		customLibs.ExtraPythonLibsS3Path = aws.String(d.Get("extra_python_libs_s3_path").(string))
 		input.CustomLibraries = customLibs
-		input.UpdateEtlLibraries = aws.Bool(true)
+		input.UpdateEtlLibraries = true
 
 		hasChanged = true
 	}
@@ -457,21 +456,21 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		remove := os.Difference(ns)
 		add := ns.Difference(os)
 
-		input.AddPublicKeys = flex.ExpandStringSet(add)
+		input.AddPublicKeys = flex.ExpandStringValueSet(add)
 		log.Printf("[DEBUG] expectedCreate public keys: %v", add)
 
-		input.DeletePublicKeys = flex.ExpandStringSet(remove)
+		input.DeletePublicKeys = flex.ExpandStringValueSet(remove)
 		log.Printf("[DEBUG] remove public keys: %v", remove)
 
 		hasChanged = true
 	}
 
 	if hasChanged {
-		log.Printf("[DEBUG] Updating Glue Dev Endpoint: %s", input)
+		log.Printf("[DEBUG] Updating Glue Dev Endpoint: %+v", input)
 		err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 			_, err := conn.UpdateDevEndpoint(ctx, input)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidInputException, "another concurrent update operation") {
+				if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "another concurrent update operation") {
 					return retry.RetryableError(err)
 				}
 
