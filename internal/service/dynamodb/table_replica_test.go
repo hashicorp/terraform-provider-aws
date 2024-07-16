@@ -128,7 +128,7 @@ func TestAccDynamoDBTableReplica_pitrKMS(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtFalse),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.alternate", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
@@ -136,7 +136,7 @@ func TestAccDynamoDBTableReplica_pitrKMS(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtTrue),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.alternate", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
@@ -144,7 +144,7 @@ func TestAccDynamoDBTableReplica_pitrKMS(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtFalse),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.alternate", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
@@ -409,7 +409,7 @@ func testAccTableReplicaConfig_basic(rName string) string {
 		acctest.ConfigMultipleRegionProvider(3),
 		fmt.Sprintf(`
 resource "aws_dynamodb_table_replica" "test" {
-  global_table_arn = aws_dynamodb_table.test.arn
+  global_table_arn = aws_dynamodb_table.source.arn
 
   tags = {
     Name = %[1]q
@@ -417,7 +417,7 @@ resource "aws_dynamodb_table_replica" "test" {
   }
 }
 
-resource "aws_dynamodb_table" "test" {
+resource "aws_dynamodb_table" "source" {
   provider         = "awsalternate"
   name             = %[1]q
   hash_key         = "TestTableHashKey"
@@ -443,11 +443,11 @@ func testAccTableReplicaConfig_pitr(rName string) string {
 		fmt.Sprintf(`
 resource "aws_dynamodb_table_replica" "test" {
   provider               = "awsalternate"
-  global_table_arn       = aws_dynamodb_table.test.arn
+  global_table_arn       = aws_dynamodb_table.source.arn
   point_in_time_recovery = true
 }
 
-resource "aws_dynamodb_table" "test" {
+resource "aws_dynamodb_table" "source" {
   name             = %[1]q
   hash_key         = "TestTableHashKey"
   billing_mode     = "PAY_PER_REQUEST"
@@ -472,18 +472,18 @@ func testAccTableReplicaConfig_pitrKMS(rName string, pitr bool) string {
 		fmt.Sprintf(`
 resource "aws_dynamodb_table_replica" "test" {
   provider               = awsalternate
-  global_table_arn       = aws_dynamodb_table.test.arn
+  global_table_arn       = aws_dynamodb_table.source.arn
   point_in_time_recovery = %[2]t
-  kms_key_arn            = aws_kms_key.alternate.arn
+  kms_key_arn            = aws_kms_key.test.arn
 }
 
-resource "aws_kms_key" "alternate" {
+resource "aws_kms_key" "test" {
   provider                = awsalternate
   description             = %[1]q
   deletion_window_in_days = 7
 }
 
-resource "aws_dynamodb_table" "test" {
+resource "aws_dynamodb_table" "source" {
   name             = %[1]q
   hash_key         = "TestTableHashKey"
   billing_mode     = "PAY_PER_REQUEST"
@@ -497,7 +497,7 @@ resource "aws_dynamodb_table" "test" {
 
   server_side_encryption {
     enabled     = true
-    kms_key_arn = aws_kms_key.test.arn
+    kms_key_arn = aws_kms_key.source.arn
   }
 
   lifecycle {
@@ -505,7 +505,7 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 
-resource "aws_kms_key" "test" {
+resource "aws_kms_key" "source" {
   description             = %[1]q
   deletion_window_in_days = 7
 }
@@ -518,11 +518,11 @@ func testAccTableReplicaConfig_pitrDefault(rName string, pitr bool) string {
 		fmt.Sprintf(`
 resource "aws_dynamodb_table_replica" "test" {
   provider               = awsalternate
-  global_table_arn       = aws_dynamodb_table.test.arn
+  global_table_arn       = aws_dynamodb_table.source.arn
   point_in_time_recovery = %[2]t
 }
 
-resource "aws_dynamodb_table" "test" {
+resource "aws_dynamodb_table" "source" {
   name             = %[1]q
   hash_key         = "TestTableHashKey"
   billing_mode     = "PAY_PER_REQUEST"
@@ -551,7 +551,7 @@ func testAccTableReplicaConfig_tags1(rName string) string {
 		fmt.Sprintf(`
 resource "aws_dynamodb_table_replica" "test" {
   provider         = "awsalternate"
-  global_table_arn = aws_dynamodb_table.test.arn
+  global_table_arn = aws_dynamodb_table.source.arn
 
   tags = {
     Name = %[1]q
@@ -559,7 +559,7 @@ resource "aws_dynamodb_table_replica" "test" {
   }
 }
 
-resource "aws_dynamodb_table" "test" {
+resource "aws_dynamodb_table" "source" {
   name             = %[1]q
   hash_key         = "TestTableHashKey"
   billing_mode     = "PAY_PER_REQUEST"
@@ -589,7 +589,7 @@ func testAccTableReplicaConfig_tags2(rName string) string {
 		fmt.Sprintf(`
 resource "aws_dynamodb_table_replica" "test" {
   provider         = "awsalternate"
-  global_table_arn = aws_dynamodb_table.test.arn
+  global_table_arn = aws_dynamodb_table.source.arn
 
   tags = {
     Name      = %[1]q
@@ -600,7 +600,7 @@ resource "aws_dynamodb_table_replica" "test" {
   }
 }
 
-resource "aws_dynamodb_table" "test" {
+resource "aws_dynamodb_table" "source" {
   name             = %[1]q
   hash_key         = "TestTableHashKey"
   billing_mode     = "PAY_PER_REQUEST"
@@ -629,14 +629,14 @@ func testAccTableReplicaConfig_tags3(rName string) string {
 		fmt.Sprintf(`
 resource "aws_dynamodb_table_replica" "test" {
   provider         = "awsalternate"
-  global_table_arn = aws_dynamodb_table.test.arn
+  global_table_arn = aws_dynamodb_table.source.arn
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_dynamodb_table" "test" {
+resource "aws_dynamodb_table" "source" {
   name             = %[1]q
   hash_key         = "TestTableHashKey"
   billing_mode     = "PAY_PER_REQUEST"
@@ -664,7 +664,7 @@ func testAccTableReplicaConfig_tableClass(rName, class string) string {
 		acctest.ConfigMultipleRegionProvider(3),
 		fmt.Sprintf(`
 resource "aws_dynamodb_table_replica" "test" {
-  global_table_arn     = aws_dynamodb_table.test.arn
+  global_table_arn     = aws_dynamodb_table.source.arn
   table_class_override = %[2]q
 
   tags = {
@@ -672,7 +672,7 @@ resource "aws_dynamodb_table_replica" "test" {
   }
 }
 
-resource "aws_dynamodb_table" "test" {
+resource "aws_dynamodb_table" "source" {
   provider         = "awsalternate"
   name             = %[1]q
   hash_key         = "ArticLake"
@@ -701,16 +701,9 @@ func testAccTableReplicaConfig_keys(rName, key string) string {
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
 resource "aws_dynamodb_table_replica" "test" {
-  global_table_arn       = aws_dynamodb_table.test.arn
+  global_table_arn       = aws_dynamodb_table.source.arn
   kms_key_arn            = aws_kms_key.%[2]s.arn
   point_in_time_recovery = true
-}
-
-resource "aws_kms_key" "alternate" {
-  provider                = awsalternate
-  description             = "Julie test KMS key A"
-  multi_region            = false
-  deletion_window_in_days = 7
 }
 
 resource "aws_kms_key" "test1" {
@@ -725,7 +718,7 @@ resource "aws_kms_key" "test2" {
   deletion_window_in_days = 7
 }
 
-resource "aws_dynamodb_table" "test" {
+resource "aws_dynamodb_table" "source" {
   provider         = awsalternate
   name             = %[1]q
   hash_key         = "ParticipantId"
@@ -741,7 +734,7 @@ resource "aws_dynamodb_table" "test" {
 
   server_side_encryption {
     enabled     = true
-    kms_key_arn = aws_kms_key.alternate.arn
+    kms_key_arn = aws_kms_key.source.arn
   }
 
   attribute {
@@ -757,6 +750,13 @@ resource "aws_dynamodb_table" "test" {
   lifecycle {
     ignore_changes = [replica]
   }
+}
+
+resource "aws_kms_key" "source" {
+  provider                = awsalternate
+  description             = "Julie test KMS key A"
+  multi_region            = false
+  deletion_window_in_days = 7
 }
 `, rName, key))
 }
