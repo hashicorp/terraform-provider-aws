@@ -169,6 +169,7 @@ import (
 	secretsmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	securityhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securityhub"
 	securitylake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securitylake"
+	serverlessapplicationrepository_sdkv2 "github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository"
 	servicecatalogappregistry_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
 	servicediscovery_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	servicequotas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicequotas"
@@ -212,7 +213,6 @@ import (
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
-	elasticache_sdkv1 "github.com/aws/aws-sdk-go/service/elasticache"
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	elastictranscoder_sdkv1 "github.com/aws/aws-sdk-go/service/elastictranscoder"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
@@ -247,7 +247,6 @@ import (
 	route53resolver_sdkv1 "github.com/aws/aws-sdk-go/service/route53resolver"
 	s3outposts_sdkv1 "github.com/aws/aws-sdk-go/service/s3outposts"
 	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
-	serverlessapplicationrepository_sdkv1 "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	servicecatalog_sdkv1 "github.com/aws/aws-sdk-go/service/servicecatalog"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
@@ -642,10 +641,6 @@ func (c *AWSClient) EMRContainersConn(ctx context.Context) *emrcontainers_sdkv1.
 
 func (c *AWSClient) EMRServerlessClient(ctx context.Context) *emrserverless_sdkv2.Client {
 	return errs.Must(client[*emrserverless_sdkv2.Client](ctx, c, names.EMRServerless, make(map[string]any)))
-}
-
-func (c *AWSClient) ElastiCacheConn(ctx context.Context) *elasticache_sdkv1.ElastiCache {
-	return errs.Must(conn[*elasticache_sdkv1.ElastiCache](ctx, c, names.ElastiCache, make(map[string]any)))
 }
 
 func (c *AWSClient) ElastiCacheClient(ctx context.Context) *elasticache_sdkv2.Client {
@@ -1152,8 +1147,8 @@ func (c *AWSClient) SecurityLakeClient(ctx context.Context) *securitylake_sdkv2.
 	return errs.Must(client[*securitylake_sdkv2.Client](ctx, c, names.SecurityLake, make(map[string]any)))
 }
 
-func (c *AWSClient) ServerlessRepoConn(ctx context.Context) *serverlessapplicationrepository_sdkv1.ServerlessApplicationRepository {
-	return errs.Must(conn[*serverlessapplicationrepository_sdkv1.ServerlessApplicationRepository](ctx, c, names.ServerlessRepo, make(map[string]any)))
+func (c *AWSClient) ServerlessRepoClient(ctx context.Context) *serverlessapplicationrepository_sdkv2.Client {
+	return errs.Must(client[*serverlessapplicationrepository_sdkv2.Client](ctx, c, names.ServerlessRepo, make(map[string]any)))
 }
 
 func (c *AWSClient) ServiceCatalogConn(ctx context.Context) *servicecatalog_sdkv1.ServiceCatalog {
