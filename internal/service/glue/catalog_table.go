@@ -536,9 +536,9 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 		for _, k := range []string{"table_type", "metadata_location"} {
 			if v := allParameters[k]; v != "" {
 				if input.TableInput.Parameters == nil {
-					input.TableInput.Parameters = make(map[string]*string)
+					input.TableInput.Parameters = make(map[string]string)
 				}
-				input.TableInput.Parameters[k] = aws.String(v)
+				input.TableInput.Parameters[k] = v
 			}
 		}
 	}
@@ -579,7 +579,7 @@ func resourceCatalogTableDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func FindTableByName(ctx context.Context, conn *glue.Client, catalogID, dbName, name string) (*awstypes.TableData, error) {
+func FindTableByName(ctx context.Context, conn *glue.Client, catalogID, dbName, name string) (*awstypes.Table, error) {
 	input := &glue.GetTableInput{
 		CatalogId:    aws.String(catalogID),
 		DatabaseName: aws.String(dbName),
@@ -606,8 +606,8 @@ func FindTableByName(ctx context.Context, conn *glue.Client, catalogID, dbName, 
 	return output.Table, nil
 }
 
-func expandTableInput(d *schema.ResourceData) *glue.TableInput {
-	tableInput := &glue.TableInput{
+func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
+	tableInput := &awstypes.TableInput{
 		Name: aws.String(d.Get(names.AttrName).(string)),
 	}
 
@@ -620,7 +620,7 @@ func expandTableInput(d *schema.ResourceData) *glue.TableInput {
 	}
 
 	if v, ok := d.GetOk("retention"); ok {
-		tableInput.Retention = aws.Int64(int64(v.(int)))
+		tableInput.Retention = int32(v.(int))
 	}
 
 	if v, ok := d.GetOk("storage_descriptor"); ok {
@@ -630,7 +630,7 @@ func expandTableInput(d *schema.ResourceData) *glue.TableInput {
 	if v, ok := d.GetOk("partition_keys"); ok {
 		tableInput.PartitionKeys = expandColumns(v.([]interface{}))
 	} else if _, ok = d.GetOk("open_table_format_input"); !ok {
-		tableInput.PartitionKeys = []*awstypes.Column{}
+		tableInput.PartitionKeys = []awstypes.Column{}
 	}
 
 	if v, ok := d.GetOk("view_original_text"); ok {
@@ -646,7 +646,7 @@ func expandTableInput(d *schema.ResourceData) *glue.TableInput {
 	}
 
 	if v, ok := d.GetOk(names.AttrParameters); ok {
-		tableInput.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
+		tableInput.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("target_table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -656,9 +656,9 @@ func expandTableInput(d *schema.ResourceData) *glue.TableInput {
 	return tableInput
 }
 
-func expandOpenTableFormat(s *schema.ResourceData) *awstypes.OpenTableFormatInput_ {
+func expandOpenTableFormat(s *schema.ResourceData) *awstypes.OpenTableFormatInput {
 	if v, ok := s.GetOk("open_table_format_input"); ok {
-		openTableFormatInput := &awstypes.OpenTableFormatInput_{
+		openTableFormatInput := &awstypes.OpenTableFormatInput{
 			IcebergInput: expandIcebergInput(v.([]interface{})[0].(map[string]interface{})),
 		}
 		return openTableFormatInput
@@ -666,10 +666,10 @@ func expandOpenTableFormat(s *schema.ResourceData) *awstypes.OpenTableFormatInpu
 	return nil
 }
 
-func expandIcebergInput(s map[string]interface{}) *awstypes.IcebergInput_ {
+func expandIcebergInput(s map[string]interface{}) *awstypes.IcebergInput {
 	var iceberg = s["iceberg_input"].([]interface{})[0].(map[string]interface{})
-	icebergInput := &awstypes.IcebergInput_{
-		MetadataOperation: aws.String(iceberg["metadata_operation"].(string)),
+	icebergInput := &awstypes.IcebergInput{
+		MetadataOperation: awstypes.MetadataOperation(iceberg["metadata_operation"].(string)),
 	}
 	if v, ok := iceberg[names.AttrVersion].(string); ok && v != "" {
 		icebergInput.Version = aws.String(v)
@@ -677,8 +677,8 @@ func expandIcebergInput(s map[string]interface{}) *awstypes.IcebergInput_ {
 	return icebergInput
 }
 
-func expandTablePartitionIndexes(a []interface{}) []*awstypes.PartitionIndex {
-	partitionIndexes := make([]*awstypes.PartitionIndex, 0, len(a))
+func expandTablePartitionIndexes(a []interface{}) []awstypes.PartitionIndex {
+	partitionIndexes := make([]awstypes.PartitionIndex, 0, len(a))
 
 	for _, m := range a {
 		partitionIndexes = append(partitionIndexes, expandTablePartitionIndex(m.(map[string]interface{})))
@@ -687,10 +687,10 @@ func expandTablePartitionIndexes(a []interface{}) []*awstypes.PartitionIndex {
 	return partitionIndexes
 }
 
-func expandTablePartitionIndex(m map[string]interface{}) *awstypes.PartitionIndex {
-	partitionIndex := &awstypes.PartitionIndex{
+func expandTablePartitionIndex(m map[string]interface{}) awstypes.PartitionIndex {
+	partitionIndex := awstypes.PartitionIndex{
 		IndexName: aws.String(m["index_name"].(string)),
-		Keys:      flex.ExpandStringList(m["keys"].([]interface{})),
+		Keys:      flex.ExpandStringValueList(m["keys"].([]interface{})),
 	}
 
 	return partitionIndex
@@ -705,7 +705,7 @@ func expandStorageDescriptor(l []interface{}) *awstypes.StorageDescriptor {
 	storageDescriptor := &awstypes.StorageDescriptor{}
 
 	if v, ok := s["additional_locations"]; ok {
-		storageDescriptor.AdditionalLocations = flex.ExpandStringList(v.([]interface{}))
+		storageDescriptor.AdditionalLocations = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := s["columns"]; ok {
@@ -725,11 +725,11 @@ func expandStorageDescriptor(l []interface{}) *awstypes.StorageDescriptor {
 	}
 
 	if v, ok := s["compressed"]; ok {
-		storageDescriptor.Compressed = aws.Bool(v.(bool))
+		storageDescriptor.Compressed = v.(bool)
 	}
 
 	if v, ok := s["number_of_buckets"]; ok {
-		storageDescriptor.NumberOfBuckets = aws.Int64(int64(v.(int)))
+		storageDescriptor.NumberOfBuckets = int32(v.(int))
 	}
 
 	if v, ok := s["ser_de_info"]; ok {
@@ -737,7 +737,7 @@ func expandStorageDescriptor(l []interface{}) *awstypes.StorageDescriptor {
 	}
 
 	if v, ok := s["bucket_columns"]; ok {
-		storageDescriptor.BucketColumns = flex.ExpandStringList(v.([]interface{}))
+		storageDescriptor.BucketColumns = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := s["sort_columns"]; ok {
@@ -749,11 +749,11 @@ func expandStorageDescriptor(l []interface{}) *awstypes.StorageDescriptor {
 	}
 
 	if v, ok := s[names.AttrParameters]; ok {
-		storageDescriptor.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
+		storageDescriptor.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := s["stored_as_sub_directories"]; ok {
-		storageDescriptor.StoredAsSubDirectories = aws.Bool(v.(bool))
+		storageDescriptor.StoredAsSubDirectories = v.(bool)
 	}
 
 	if v, ok := s["schema_reference"]; ok && len(v.([]interface{})) > 0 {
@@ -764,12 +764,12 @@ func expandStorageDescriptor(l []interface{}) *awstypes.StorageDescriptor {
 	return storageDescriptor
 }
 
-func expandColumns(columns []interface{}) []*awstypes.Column {
-	columnSlice := []*awstypes.Column{}
+func expandColumns(columns []interface{}) []awstypes.Column {
+	columnSlice := []awstypes.Column{}
 	for _, element := range columns {
 		elementMap := element.(map[string]interface{})
 
-		column := &awstypes.Column{
+		column := awstypes.Column{
 			Name: aws.String(elementMap[names.AttrName].(string)),
 		}
 
@@ -782,7 +782,7 @@ func expandColumns(columns []interface{}) []*awstypes.Column {
 		}
 
 		if v, ok := elementMap[names.AttrParameters]; ok {
-			column.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
+			column.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 		}
 
 		columnSlice = append(columnSlice, column)
@@ -804,7 +804,7 @@ func expandSerDeInfo(l []interface{}) *awstypes.SerDeInfo {
 	}
 
 	if v := s[names.AttrParameters]; len(v.(map[string]interface{})) > 0 {
-		serDeInfo.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
+		serDeInfo.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
 	if v := s["serialization_library"]; len(v.(string)) > 0 {
@@ -814,18 +814,18 @@ func expandSerDeInfo(l []interface{}) *awstypes.SerDeInfo {
 	return serDeInfo
 }
 
-func expandSortColumns(columns []interface{}) []*awstypes.Order {
-	orderSlice := make([]*awstypes.Order, len(columns))
+func expandSortColumns(columns []interface{}) []awstypes.Order {
+	orderSlice := make([]awstypes.Order, len(columns))
 
 	for i, element := range columns {
 		elementMap := element.(map[string]interface{})
 
-		order := &awstypes.Order{
+		order := awstypes.Order{
 			Column: aws.String(elementMap["column"].(string)),
 		}
 
 		if v, ok := elementMap["sort_order"]; ok {
-			order.SortOrder = aws.Int64(int64(v.(int)))
+			order.SortOrder = int32(v.(int))
 		}
 
 		orderSlice[i] = order
@@ -843,15 +843,15 @@ func expandSkewedInfo(l []interface{}) *awstypes.SkewedInfo {
 	skewedInfo := &awstypes.SkewedInfo{}
 
 	if v, ok := s["skewed_column_names"]; ok {
-		skewedInfo.SkewedColumnNames = flex.ExpandStringList(v.([]interface{}))
+		skewedInfo.SkewedColumnNames = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := s["skewed_column_value_location_maps"]; ok {
-		skewedInfo.SkewedColumnValueLocationMaps = flex.ExpandStringMap(v.(map[string]interface{}))
+		skewedInfo.SkewedColumnValueLocationMaps = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := s["skewed_column_values"]; ok {
-		skewedInfo.SkewedColumnValues = flex.ExpandStringList(v.([]interface{}))
+		skewedInfo.SkewedColumnValues = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	return skewedInfo
@@ -913,19 +913,19 @@ func flattenStorageDescriptor(s *awstypes.StorageDescriptor) []map[string]interf
 
 	storageDescriptor := make(map[string]interface{})
 
-	storageDescriptor["additional_locations"] = flex.FlattenStringList(s.AdditionalLocations)
+	storageDescriptor["additional_locations"] = flex.FlattenStringValueList(s.AdditionalLocations)
 	storageDescriptor["columns"] = flattenColumns(s.Columns)
 	storageDescriptor[names.AttrLocation] = aws.ToString(s.Location)
 	storageDescriptor["input_format"] = aws.ToString(s.InputFormat)
 	storageDescriptor["output_format"] = aws.ToString(s.OutputFormat)
-	storageDescriptor["compressed"] = aws.ToBool(s.Compressed)
-	storageDescriptor["number_of_buckets"] = aws.ToInt64(s.NumberOfBuckets)
+	storageDescriptor["compressed"] = s.Compressed
+	storageDescriptor["number_of_buckets"] = s.NumberOfBuckets
 	storageDescriptor["ser_de_info"] = flattenSerDeInfo(s.SerdeInfo)
-	storageDescriptor["bucket_columns"] = flex.FlattenStringList(s.BucketColumns)
+	storageDescriptor["bucket_columns"] = flex.FlattenStringValueList(s.BucketColumns)
 	storageDescriptor["sort_columns"] = flattenOrders(s.SortColumns)
 	storageDescriptor[names.AttrParameters] = s.Parameters
 	storageDescriptor["skewed_info"] = flattenSkewedInfo(s.SkewedInfo)
-	storageDescriptor["stored_as_sub_directories"] = aws.ToBool(s.StoredAsSubDirectories)
+	storageDescriptor["stored_as_sub_directories"] = s.StoredAsSubDirectories
 
 	if s.SchemaReference != nil {
 		storageDescriptor["schema_reference"] = flattenTableSchemaReference(s.SchemaReference)
@@ -980,18 +980,14 @@ func flattenPartitionIndexes(cs []awstypes.PartitionIndexDescriptor) []map[strin
 	return partitionIndexSlice
 }
 
-func flattenPartitionIndex(c *awstypes.PartitionIndexDescriptor) map[string]interface{} {
+func flattenPartitionIndex(c awstypes.PartitionIndexDescriptor) map[string]interface{} {
 	partitionIndex := make(map[string]interface{})
-
-	if c == nil {
-		return partitionIndex
-	}
 
 	if v := aws.ToString(c.IndexName); v != "" {
 		partitionIndex["index_name"] = v
 	}
 
-	if v := aws.ToString(c.IndexStatus); v != "" {
+	if v := string(c.IndexStatus); v != "" {
 		partitionIndex["index_status"] = v
 	}
 
@@ -1027,12 +1023,12 @@ func flattenSerDeInfo(s *awstypes.SerDeInfo) []map[string]interface{} {
 	return serDeInfos
 }
 
-func flattenOrders(os []*awstypes.Order) []map[string]interface{} {
+func flattenOrders(os []awstypes.Order) []map[string]interface{} {
 	orders := make([]map[string]interface{}, len(os))
 	for i, v := range os {
 		order := make(map[string]interface{})
 		order["column"] = aws.ToString(v.Column)
-		order["sort_order"] = int(aws.ToInt64(v.SortOrder))
+		order["sort_order"] = int(v.SortOrder)
 		orders[i] = order
 	}
 
@@ -1048,9 +1044,9 @@ func flattenSkewedInfo(s *awstypes.SkewedInfo) []map[string]interface{} {
 	skewedInfoSlice := make([]map[string]interface{}, 1)
 
 	skewedInfo := make(map[string]interface{})
-	skewedInfo["skewed_column_names"] = flex.FlattenStringList(s.SkewedColumnNames)
+	skewedInfo["skewed_column_names"] = flex.FlattenStringValueList(s.SkewedColumnNames)
 	skewedInfo["skewed_column_value_location_maps"] = s.SkewedColumnValueLocationMaps
-	skewedInfo["skewed_column_values"] = flex.FlattenStringList(s.SkewedColumnValues)
+	skewedInfo["skewed_column_values"] = flex.FlattenStringValueList(s.SkewedColumnValues)
 	skewedInfoSlice[0] = skewedInfo
 
 	return skewedInfoSlice
@@ -1162,9 +1158,9 @@ func flattenTableTargetTable(apiObject *awstypes.TableIdentifier) map[string]int
 	return tfMap
 }
 
-func flattenNonManagedParameters(table *awstypes.TableData) map[string]string {
+func flattenNonManagedParameters(table *awstypes.Table) map[string]string {
 	allParameters := table.Parameters
-	if aws.ToString(allParameters["table_type"]) == "ICEBERG" {
+	if allParameters["table_type"] == "ICEBERG" {
 		delete(allParameters, "table_type")
 		delete(allParameters, "metadata_location")
 	}
