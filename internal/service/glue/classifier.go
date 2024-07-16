@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -79,9 +78,9 @@ func ResourceClassifier() *schema.Resource {
 							Optional: true,
 						},
 						"contains_header": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: enum.Validate[awstypes.CsvHeaderOption](),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.CsvHeaderOption](),
 						},
 						"custom_datatype_configured": {
 							Type:     schema.TypeBool,
@@ -126,10 +125,10 @@ func ResourceClassifier() *schema.Resource {
 							Optional: true,
 						},
 						"serde": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: enum.Validate[awstypes.CsvSerdeOption](),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.CsvSerdeOption](),
 						},
 					},
 				},
@@ -227,7 +226,7 @@ func resourceClassifierCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.XMLClassifier = expandXmlClassifierCreate(name, m)
 	}
 
-	log.Printf("[DEBUG] Creating Glue Classifier: %s", input)
+	log.Printf("[DEBUG] Creating Glue Classifier: %+v", input)
 	_, err := conn.CreateClassifier(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Classifier (%s): %s", name, err)
@@ -300,7 +299,7 @@ func resourceClassifierUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		input.XMLClassifier = expandXmlClassifierUpdate(d.Id(), m)
 	}
 
-	log.Printf("[DEBUG] Updating Glue Classifier: %s", input)
+	log.Printf("[DEBUG] Updating Glue Classifier: %+v", input)
 	_, err := conn.UpdateClassifier(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Glue Classifier (%s): %s", d.Id(), err)
@@ -341,7 +340,7 @@ func DeleteClassifier(ctx context.Context, conn *glue.Client, name string) error
 func expandCSVClassifierCreate(name string, m map[string]interface{}) *awstypes.CreateCsvClassifierRequest {
 	csvClassifier := &awstypes.CreateCsvClassifierRequest{
 		AllowSingleColumn:    aws.Bool(m["allow_single_column"].(bool)),
-		ContainsHeader:       aws.String(m["contains_header"].(string)),
+		ContainsHeader:       awstypes.CsvHeaderOption(m["contains_header"].(string)),
 		Delimiter:            aws.String(m["delimiter"].(string)),
 		DisableValueTrimming: aws.Bool(m["disable_value_trimming"].(bool)),
 		Name:                 aws.String(name),
@@ -352,18 +351,18 @@ func expandCSVClassifierCreate(name string, m map[string]interface{}) *awstypes.
 	}
 
 	if v, ok := m[names.AttrHeader].([]interface{}); ok {
-		csvClassifier.Header = flex.ExpandStringList(v)
+		csvClassifier.Header = flex.ExpandStringValueList(v)
 	}
 
 	if v, ok := m["custom_datatypes"].([]interface{}); ok && len(v) > 0 {
 		if confV, confOk := m["custom_datatype_configured"].(bool); confOk {
 			csvClassifier.CustomDatatypeConfigured = aws.Bool(confV)
 		}
-		csvClassifier.CustomDatatypes = flex.ExpandStringList(v)
+		csvClassifier.CustomDatatypes = flex.ExpandStringValueList(v)
 	}
 
 	if v, ok := m["serde"].(string); ok && v != "" {
-		csvClassifier.Serde = aws.String(v)
+		csvClassifier.Serde = awstypes.CsvSerdeOption(v)
 	}
 
 	return csvClassifier
@@ -372,7 +371,7 @@ func expandCSVClassifierCreate(name string, m map[string]interface{}) *awstypes.
 func expandCSVClassifierUpdate(name string, m map[string]interface{}) *awstypes.UpdateCsvClassifierRequest {
 	csvClassifier := &awstypes.UpdateCsvClassifierRequest{
 		AllowSingleColumn:    aws.Bool(m["allow_single_column"].(bool)),
-		ContainsHeader:       aws.String(m["contains_header"].(string)),
+		ContainsHeader:       awstypes.CsvHeaderOption(m["contains_header"].(string)),
 		Delimiter:            aws.String(m["delimiter"].(string)),
 		DisableValueTrimming: aws.Bool(m["disable_value_trimming"].(bool)),
 		Name:                 aws.String(name),
@@ -383,18 +382,18 @@ func expandCSVClassifierUpdate(name string, m map[string]interface{}) *awstypes.
 	}
 
 	if v, ok := m[names.AttrHeader].([]interface{}); ok {
-		csvClassifier.Header = flex.ExpandStringList(v)
+		csvClassifier.Header = flex.ExpandStringValueList(v)
 	}
 
 	if v, ok := m["custom_datatypes"].([]interface{}); ok && len(v) > 0 {
 		if confV, confOk := m["custom_datatype_configured"].(bool); confOk {
 			csvClassifier.CustomDatatypeConfigured = aws.Bool(confV)
 		}
-		csvClassifier.CustomDatatypes = flex.ExpandStringList(v)
+		csvClassifier.CustomDatatypes = flex.ExpandStringValueList(v)
 	}
 
 	if v, ok := m["serde"].(string); ok && v != "" {
-		csvClassifier.Serde = aws.String(v)
+		csvClassifier.Serde = awstypes.CsvSerdeOption(v)
 	}
 
 	return csvClassifier
@@ -477,14 +476,14 @@ func flattenCSVClassifier(csvClassifier *awstypes.CsvClassifier) []map[string]in
 
 	m := map[string]interface{}{
 		"allow_single_column":        aws.ToBool(csvClassifier.AllowSingleColumn),
-		"contains_header":            aws.ToString(csvClassifier.ContainsHeader),
+		"contains_header":            string(csvClassifier.ContainsHeader),
 		"delimiter":                  aws.ToString(csvClassifier.Delimiter),
 		"disable_value_trimming":     aws.ToBool(csvClassifier.DisableValueTrimming),
 		names.AttrHeader:             csvClassifier.Header,
 		"quote_symbol":               aws.ToString(csvClassifier.QuoteSymbol),
 		"custom_datatype_configured": aws.ToBool(csvClassifier.CustomDatatypeConfigured),
 		"custom_datatypes":           csvClassifier.CustomDatatypes,
-		"serde":                      aws.ToString(csvClassifier.Serde),
+		"serde":                      string(csvClassifier.Serde),
 	}
 
 	return []map[string]interface{}{m}
