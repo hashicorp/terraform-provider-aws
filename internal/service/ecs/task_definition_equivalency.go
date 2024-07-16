@@ -4,21 +4,18 @@
 package ecs
 
 import (
-	"bytes"
-	"encoding/json"
-	"log"
 	"sort"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
-	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 // ContainerDefinitionsAreEquivalent determines equality between two ECS container definition JSON strings
 // Note: This function will be moved out of the aws package in the future.
 func ContainerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (bool, error) {
 	var obj1 containerDefinitions
-	err := json.Unmarshal([]byte(def1), &obj1)
+	err := tfjson.DecodeFromString(def1, &obj1)
 	if err != nil {
 		return false, err
 	}
@@ -26,13 +23,13 @@ func ContainerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (bool, 
 	if err != nil {
 		return false, err
 	}
-	canonicalJson1, err := jsonutil.BuildJSON(obj1)
+	b1, err := tfjson.EncodeToBytes(obj1)
 	if err != nil {
 		return false, err
 	}
 
 	var obj2 containerDefinitions
-	err = json.Unmarshal([]byte(def2), &obj2)
+	err = tfjson.DecodeFromString(def2, &obj2)
 	if err != nil {
 		return false, err
 	}
@@ -40,34 +37,31 @@ func ContainerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (bool, 
 	if err != nil {
 		return false, err
 	}
-
-	canonicalJson2, err := jsonutil.BuildJSON(obj2)
+	b2, err := tfjson.EncodeToBytes(obj2)
 	if err != nil {
 		return false, err
 	}
 
-	equal := bytes.Equal(canonicalJson1, canonicalJson2)
-	if !equal {
-		log.Printf("[DEBUG] Canonical definitions are not equal.\nFirst: %s\nSecond: %s\n",
-			canonicalJson1, canonicalJson2)
-	}
-	return equal, nil
+	return tfjson.EqualBytes(b1, b2), nil
 }
 
 type containerDefinitions []awstypes.ContainerDefinition
 
 func (cd containerDefinitions) Reduce(isAWSVPC bool) error {
-	// Deal with fields which may be re-ordered in the API
+	// Deal with fields which may be re-ordered in the API.
 	cd.OrderContainers()
 	cd.OrderEnvironmentVariables()
 	cd.OrderSecrets()
 
 	for i, def := range cd {
-		// Deal with special fields which have defaults
+		// Deal with special fields which have defaults.
 		if def.Essential == nil {
-			def.Essential = aws.Bool(true)
+			cd[i].Essential = aws.Bool(true)
 		}
 		for j, pm := range def.PortMappings {
+			if pm.Protocol == awstypes.TransportProtocolTcp {
+				cd[i].PortMappings[j].Protocol = ""
+			}
 			if aws.ToInt32(pm.HostPort) == 0 {
 				cd[i].PortMappings[j].HostPort = nil
 			}
