@@ -1,6 +1,11 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+service "amp" {
+  # The maximum scrapers per region quota is fixed at 10
+  parallelism = 10
+}
+
 service "appautoscaling" {
   vpc_lock = true
 }
@@ -80,7 +85,7 @@ service "ec2ebs" {
 
 service "ec2outposts" {
   vpc_lock                   = true
-  pattern_override           = "TestAccOutposts"
+  pattern_override           = "TestAccEC2Outposts"
   split_package_real_package = "ec2"
 }
 

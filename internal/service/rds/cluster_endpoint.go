@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_rds_cluster_endpoint", name="Cluster Endpoint")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceClusterEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterEndpointCreate,
@@ -37,7 +38,7 @@ func ResourceClusterEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,7 +48,7 @@ func ResourceClusterEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validIdentifier,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -61,7 +62,7 @@ func ResourceClusterEndpoint() *schema.Resource {
 					"ANY",
 				}, false),
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,7 +96,7 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 	endpointID := d.Get("cluster_endpoint_identifier").(string)
 	input := &rds.CreateDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(endpointID),
-		DBClusterIdentifier:         aws.String(d.Get("cluster_identifier").(string)),
+		DBClusterIdentifier:         aws.String(d.Get(names.AttrClusterIdentifier).(string)),
 		EndpointType:                aws.String(d.Get("custom_endpoint_type").(string)),
 		Tags:                        getTagsIn(ctx),
 	}
@@ -139,11 +140,11 @@ func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	arn := aws.StringValue(clusterEp.DBClusterEndpointArn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("cluster_endpoint_identifier", clusterEp.DBClusterEndpointIdentifier)
-	d.Set("cluster_identifier", clusterEp.DBClusterIdentifier)
+	d.Set(names.AttrClusterIdentifier, clusterEp.DBClusterIdentifier)
 	d.Set("custom_endpoint_type", clusterEp.CustomEndpointType)
-	d.Set("endpoint", clusterEp.Endpoint)
+	d.Set(names.AttrEndpoint, clusterEp.Endpoint)
 	d.Set("excluded_members", aws.StringValueSlice(clusterEp.ExcludedMembers))
 	d.Set("static_members", aws.StringValueSlice(clusterEp.StaticMembers))
 
@@ -154,7 +155,7 @@ func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &rds.ModifyDBClusterEndpointInput{
 			DBClusterEndpointIdentifier: aws.String(d.Id()),
 		}

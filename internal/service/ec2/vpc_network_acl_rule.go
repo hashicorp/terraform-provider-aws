@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_network_acl_rule", name="Network ACL Rule")
@@ -35,11 +36,11 @@ func resourceNetworkACLRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"cidr_block", "ipv6_cidr_block"},
+				ExactlyOneOf: []string{names.AttrCIDRBlock, "ipv6_cidr_block"},
 			},
 			"egress": {
 				Type:     schema.TypeBool,
@@ -66,14 +67,14 @@ func resourceNetworkACLRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"cidr_block", "ipv6_cidr_block"},
+				ExactlyOneOf: []string{names.AttrCIDRBlock, "ipv6_cidr_block"},
 			},
 			"network_acl_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -124,7 +125,7 @@ func resourceNetworkACLRuleCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	protocol := d.Get("protocol").(string)
+	protocol := d.Get(names.AttrProtocol).(string)
 	protocolNumber, err := networkACLProtocolNumber(protocol)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Network ACL Rule: %s", err)
@@ -156,7 +157,7 @@ func resourceNetworkACLRuleCreate(ctx context.Context, d *schema.ResourceData, m
 		RuleNumber: aws.Int64(int64(ruleNumber)),
 	}
 
-	if v, ok := d.GetOk("cidr_block"); ok {
+	if v, ok := d.GetOk(names.AttrCIDRBlock); ok {
 		input.CidrBlock = aws.String(v.(string))
 	}
 
@@ -209,7 +210,7 @@ func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, met
 
 	naclEntry := outputRaw.(*ec2.NetworkAclEntry)
 
-	d.Set("cidr_block", naclEntry.CidrBlock)
+	d.Set(names.AttrCIDRBlock, naclEntry.CidrBlock)
 	d.Set("egress", naclEntry.Egress)
 	d.Set("ipv6_cidr_block", naclEntry.Ipv6CidrBlock)
 	if naclEntry.IcmpTypeCode != nil {
@@ -232,9 +233,9 @@ func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, met
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL Rule (%s): %s", d.Id(), err)
 		}
 
-		d.Set("protocol", strconv.Itoa(protocolNumber))
+		d.Set(names.AttrProtocol, strconv.Itoa(protocolNumber))
 	} else {
-		d.Set("protocol", nil)
+		d.Set(names.AttrProtocol, nil)
 	}
 
 	return diags

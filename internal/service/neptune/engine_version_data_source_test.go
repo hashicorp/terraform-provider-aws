@@ -30,8 +30,8 @@ func TestAccNeptuneEngineVersionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_basic(version),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", "neptune"),
-					resource.TestCheckResourceAttr(dataSourceName, "version", version),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, "neptune"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, version),
 					resource.TestCheckResourceAttrSet(dataSourceName, "engine_description"),
 					resource.TestMatchResourceAttr(dataSourceName, "exportable_log_types.#", regexache.MustCompile(`^[1-9][0-9]*`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "parameter_group_family"),
@@ -58,8 +58,8 @@ func TestAccNeptuneEngineVersionDataSource_preferred(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferred(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", "neptune"),
-					resource.TestCheckResourceAttr(dataSourceName, "version", "1.2.0.2"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, "neptune"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "1.2.0.2"),
 				),
 			},
 		},
@@ -78,8 +78,8 @@ func TestAccNeptuneEngineVersionDataSource_defaultOnly(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_defaultOnly(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", "neptune"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "version"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, "neptune"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrVersion),
 				),
 			},
 		},

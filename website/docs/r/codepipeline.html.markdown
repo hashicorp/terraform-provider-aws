@@ -224,7 +224,7 @@ A `trigger` block supports the following arguments:
 
 A `git_configuration` block supports the following arguments:
 
-* `source_action_name` - (Required) The name of the pipeline source action where the trigger configuration.
+* `source_action_name` - (Required) The name of the pipeline source action where the trigger configuration, such as Git tags, is specified. The trigger configuration will start the pipeline upon the specified change only.
 * `pull_request` - (Optional) The field where the repository event that will start the pipeline is specified as pull requests. A `pull_request` block is documented below.
 * `push` - (Optional) The field where the repository event that will start the pipeline, such as pushing Git tags, is specified with details. A `push` block is documented below.
 

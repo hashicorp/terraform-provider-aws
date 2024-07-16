@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_internet_gateway_attachment")
@@ -40,7 +41,7 @@ func ResourceInternetGatewayAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -54,7 +55,7 @@ func resourceInternetGatewayAttachmentCreate(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	igwID := d.Get("internet_gateway_id").(string)
-	vpcID := d.Get("vpc_id").(string)
+	vpcID := d.Get(names.AttrVPCID).(string)
 
 	if err := attachInternetGateway(ctx, conn, igwID, vpcID, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Internet Gateway Attachment: %s", err)
@@ -92,7 +93,7 @@ func resourceInternetGatewayAttachmentRead(ctx context.Context, d *schema.Resour
 	igw := outputRaw.(*ec2.InternetGatewayAttachment)
 
 	d.Set("internet_gateway_id", igwID)
-	d.Set("vpc_id", igw.VpcId)
+	d.Set(names.AttrVPCID, igw.VpcId)
 
 	return diags
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_imagebuilder_container_recipe")
@@ -21,7 +22,7 @@ func DataSourceContainerRecipe() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceContainerRecipeRead,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -35,16 +36,16 @@ func DataSourceContainerRecipe() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"parameter": {
+						names.AttrParameter: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -62,7 +63,7 @@ func DataSourceContainerRecipe() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +71,7 @@ func DataSourceContainerRecipe() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -84,7 +85,7 @@ func DataSourceContainerRecipe() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"device_name": {
+									names.AttrDeviceName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -93,35 +94,35 @@ func DataSourceContainerRecipe() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"delete_on_termination": {
+												names.AttrDeleteOnTermination: {
 													Type:     schema.TypeBool,
 													Computed: true,
 												},
-												"encrypted": {
+												names.AttrEncrypted: {
 													Type:     schema.TypeBool,
 													Computed: true,
 												},
-												"iops": {
+												names.AttrIOPS: {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
-												"kms_key_id": {
+												names.AttrKMSKeyID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"snapshot_id": {
+												names.AttrSnapshotID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"throughput": {
+												names.AttrThroughput: {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
-												"volume_size": {
+												names.AttrVolumeSize: {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
-												"volume_type": {
+												names.AttrVolumeType: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -132,7 +133,7 @@ func DataSourceContainerRecipe() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"virtual_name": {
+									names.AttrVirtualName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -146,15 +147,15 @@ func DataSourceContainerRecipe() *schema.Resource {
 					},
 				},
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -166,13 +167,13 @@ func DataSourceContainerRecipe() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchema(),
 			"target_repository": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"repository_name": {
+						names.AttrRepositoryName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -183,7 +184,7 @@ func DataSourceContainerRecipe() *schema.Resource {
 					},
 				},
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -202,7 +203,7 @@ func dataSourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, 
 
 	input := &imagebuilder.GetContainerRecipeInput{}
 
-	if v, ok := d.GetOk("arn"); ok {
+	if v, ok := d.GetOk(names.AttrARN); ok {
 		input.ContainerRecipeArn = aws.String(v.(string))
 	}
 
@@ -219,13 +220,13 @@ func dataSourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, 
 	containerRecipe := output.ContainerRecipe
 
 	d.SetId(aws.StringValue(containerRecipe.Arn))
-	d.Set("arn", containerRecipe.Arn)
+	d.Set(names.AttrARN, containerRecipe.Arn)
 	d.Set("component", flattenComponentConfigurations(containerRecipe.Components))
 	d.Set("container_type", containerRecipe.ContainerType)
 	d.Set("date_created", containerRecipe.DateCreated)
-	d.Set("description", containerRecipe.Description)
+	d.Set(names.AttrDescription, containerRecipe.Description)
 	d.Set("dockerfile_template_data", containerRecipe.DockerfileTemplateData)
-	d.Set("encrypted", containerRecipe.Encrypted)
+	d.Set(names.AttrEncrypted, containerRecipe.Encrypted)
 
 	if containerRecipe.InstanceConfiguration != nil {
 		d.Set("instance_configuration", []interface{}{flattenInstanceConfiguration(containerRecipe.InstanceConfiguration)})
@@ -233,14 +234,14 @@ func dataSourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("instance_configuration", nil)
 	}
 
-	d.Set("kms_key_id", containerRecipe.KmsKeyId)
-	d.Set("name", containerRecipe.Name)
-	d.Set("owner", containerRecipe.Owner)
+	d.Set(names.AttrKMSKeyID, containerRecipe.KmsKeyId)
+	d.Set(names.AttrName, containerRecipe.Name)
+	d.Set(names.AttrOwner, containerRecipe.Owner)
 	d.Set("parent_image", containerRecipe.ParentImage)
 	d.Set("platform", containerRecipe.Platform)
-	d.Set("tags", KeyValueTags(ctx, containerRecipe.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	d.Set(names.AttrTags, KeyValueTags(ctx, containerRecipe.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 	d.Set("target_repository", []interface{}{flattenTargetContainerRepository(containerRecipe.TargetRepository)})
-	d.Set("version", containerRecipe.Version)
+	d.Set(names.AttrVersion, containerRecipe.Version)
 	d.Set("working_directory", containerRecipe.WorkingDirectory)
 
 	return diags

@@ -39,7 +39,7 @@ func resourceConnection() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +54,7 @@ func resourceConnection() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.ProviderType](),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -106,10 +106,10 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading App Runner Connection (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", c.ConnectionArn)
+	d.Set(names.AttrARN, c.ConnectionArn)
 	d.Set("connection_name", c.ConnectionName)
 	d.Set("provider_type", c.ProviderType)
-	d.Set("status", c.Status)
+	d.Set(names.AttrStatus, c.Status)
 
 	return diags
 }
@@ -126,7 +126,7 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	log.Printf("[INFO] Deleting App Runner Connection: %s", d.Id())
 	_, err := conn.DeleteConnection(ctx, &apprunner.DeleteConnectionInput{
-		ConnectionArn: aws.String(d.Get("arn").(string)),
+		ConnectionArn: aws.String(d.Get(names.AttrARN).(string)),
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {

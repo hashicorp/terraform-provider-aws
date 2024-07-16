@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Security Group Rules")
+// @FrameworkDataSource("aws_vpc_security_group_rules", name="Security Group Rules")
 func newSecurityGroupRulesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &securityGroupRulesDataSource{}
 
@@ -37,14 +37,14 @@ func (d *securityGroupRulesDataSource) Schema(ctx context.Context, request datas
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			"ids": schema.ListAttribute{
+			names.AttrIDs: schema.ListAttribute{
 				ElementType: types.StringType,
 				Computed:    true,
 			},
 			names.AttrTags: tftags.TagsAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			"filter": customFiltersBlock(),
+			names.AttrFilter: customFiltersBlock(),
 		},
 	}
 }

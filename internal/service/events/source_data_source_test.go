@@ -38,9 +38,9 @@ func TestAccEventsSourceDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSourceDataSourceConfig_partner(busName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "name", busName),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, busName),
 					resource.TestCheckResourceAttr(dataSourceName, "created_by", createdBy),
-					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
 				),
 			},
 		},

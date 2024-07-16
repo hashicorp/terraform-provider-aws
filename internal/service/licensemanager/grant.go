@@ -49,7 +49,7 @@ func ResourceGrant() *schema.Resource {
 				},
 				Description: "Allowed operations for the grant. This is a subset of the allowed operations on the license.",
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Amazon Resource Name (ARN) of the grant.",
@@ -66,7 +66,7 @@ func ResourceGrant() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 				Description:  "License ARN.",
 			},
-			"name": {
+			names.AttrName: {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Name of the grant.",
@@ -76,19 +76,19 @@ func ResourceGrant() *schema.Resource {
 				Computed:    true,
 				Description: "Parent ARN.",
 			},
-			"principal": {
+			names.AttrPrincipal: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 				Description:  "The grantee principal ARN. The target account for the grant in the form of the ARN for an account principal of the root user.",
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Grant status.",
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Grant version.",
@@ -105,16 +105,16 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	in := &licensemanager.CreateGrantInput{
 		AllowedOperations: aws.StringSlice(expandAllowedOperations(d.Get("allowed_operations").(*schema.Set).List())),
 		ClientToken:       aws.String(id.UniqueId()),
-		GrantName:         aws.String(d.Get("name").(string)),
+		GrantName:         aws.String(d.Get(names.AttrName).(string)),
 		HomeRegion:        aws.String(meta.(*conns.AWSClient).Region),
 		LicenseArn:        aws.String(d.Get("license_arn").(string)),
-		Principals:        aws.StringSlice([]string{d.Get("principal").(string)}),
+		Principals:        aws.StringSlice([]string{d.Get(names.AttrPrincipal).(string)}),
 	}
 
 	out, err := conn.CreateGrantWithContext(ctx, in)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionCreating, ResGrant, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionCreating, ResGrant, d.Get(names.AttrName).(string), err)
 	}
 
 	d.SetId(aws.StringValue(out.GrantArn))
@@ -140,14 +140,14 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set("allowed_operations", out.GrantedOperations)
-	d.Set("arn", out.GrantArn)
+	d.Set(names.AttrARN, out.GrantArn)
 	d.Set("home_region", out.HomeRegion)
 	d.Set("license_arn", out.LicenseArn)
-	d.Set("name", out.GrantName)
+	d.Set(names.AttrName, out.GrantName)
 	d.Set("parent_arn", out.ParentArn)
-	d.Set("principal", out.GranteePrincipalArn)
-	d.Set("status", out.GrantStatus)
-	d.Set("version", out.Version)
+	d.Set(names.AttrPrincipal, out.GranteePrincipalArn)
+	d.Set(names.AttrStatus, out.GrantStatus)
+	d.Set(names.AttrVersion, out.Version)
 
 	return diags
 }
@@ -166,8 +166,8 @@ func resourceGrantUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		in.AllowedOperations = aws.StringSlice(d.Get("allowed_operations").([]string))
 	}
 
-	if d.HasChange("name") {
-		in.GrantName = aws.String(d.Get("name").(string))
+	if d.HasChange(names.AttrName) {
+		in.GrantName = aws.String(d.Get(names.AttrName).(string))
 	}
 
 	_, err := conn.CreateGrantVersionWithContext(ctx, in)

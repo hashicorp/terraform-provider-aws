@@ -8,20 +8,23 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_directory_service_radius_settings")
-func ResourceRadiusSettings() *schema.Resource {
+// @SDKResource("aws_directory_service_radius_settings", name="RADIUS Settings")
+func resourceRadiusSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRadiusSettingsCreate,
 		ReadWithoutTimeout:   resourceRadiusSettingsRead,
@@ -39,9 +42,9 @@ func ResourceRadiusSettings() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"authentication_protocol": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(directoryservice.RadiusAuthenticationProtocol_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.RadiusAuthenticationProtocol](),
 			},
 			"directory_id": {
 				Type:     schema.TypeString,
@@ -92,26 +95,24 @@ func ResourceRadiusSettings() *schema.Resource {
 
 func resourceRadiusSettingsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).DSConn(ctx)
+	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
 	directoryID := d.Get("directory_id").(string)
 	input := &directoryservice.EnableRadiusInput{
 		DirectoryId: aws.String(directoryID),
-		RadiusSettings: &directoryservice.RadiusSettings{
-			AuthenticationProtocol: aws.String(d.Get("authentication_protocol").(string)),
+		RadiusSettings: &awstypes.RadiusSettings{
+			AuthenticationProtocol: awstypes.RadiusAuthenticationProtocol(d.Get("authentication_protocol").(string)),
 			DisplayLabel:           aws.String(d.Get("display_label").(string)),
-			RadiusPort:             aws.Int64(int64(d.Get("radius_port").(int))),
-			RadiusRetries:          aws.Int64(int64(d.Get("radius_retries").(int))),
-			RadiusServers:          flex.ExpandStringSet(d.Get("radius_servers").(*schema.Set)),
-			RadiusTimeout:          aws.Int64(int64(d.Get("radius_timeout").(int))),
+			RadiusPort:             aws.Int32(int32(d.Get("radius_port").(int))),
+			RadiusRetries:          int32(d.Get("radius_retries").(int)),
+			RadiusServers:          flex.ExpandStringValueSet(d.Get("radius_servers").(*schema.Set)),
+			RadiusTimeout:          aws.Int32(int32(d.Get("radius_timeout").(int))),
 			SharedSecret:           aws.String(d.Get("shared_secret").(string)),
-			UseSameUsername:        aws.Bool(d.Get("use_same_username").(bool)),
+			UseSameUsername:        d.Get("use_same_username").(bool),
 		},
 	}
 
-	log.Printf("[DEBUG] Enabling Directory Service Directory RADIUS: %s", input)
-	_, err := conn.EnableRadiusWithContext(ctx, input)
+	_, err := conn.EnableRadius(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "enabling Directory Service Directory (%s) RADIUS: %s", directoryID, err)
@@ -128,13 +129,12 @@ func resourceRadiusSettingsCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceRadiusSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
-	conn := meta.(*conns.AWSClient).DSConn(ctx)
-
-	output, err := FindRadiusSettings(ctx, conn, d.Id())
+	output, err := findRadiusSettingsByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Directory Service Directory (%s) RADIUS settings not found, removing from state", d.Id())
+		log.Printf("[WARN] Directory Service Directory (%s) RADIUS Settings not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -148,7 +148,7 @@ func resourceRadiusSettingsRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("directory_id", d.Id())
 	d.Set("radius_port", output.RadiusPort)
 	d.Set("radius_retries", output.RadiusRetries)
-	d.Set("radius_servers", aws.StringValueSlice(output.RadiusServers))
+	d.Set("radius_servers", output.RadiusServers)
 	d.Set("radius_timeout", output.RadiusTimeout)
 	d.Set("shared_secret", output.SharedSecret)
 	d.Set("use_same_username", output.UseSameUsername)
@@ -158,25 +158,23 @@ func resourceRadiusSettingsRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceRadiusSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).DSConn(ctx)
+	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
 	input := &directoryservice.UpdateRadiusInput{
 		DirectoryId: aws.String(d.Id()),
-		RadiusSettings: &directoryservice.RadiusSettings{
-			AuthenticationProtocol: aws.String(d.Get("authentication_protocol").(string)),
+		RadiusSettings: &awstypes.RadiusSettings{
+			AuthenticationProtocol: awstypes.RadiusAuthenticationProtocol(d.Get("authentication_protocol").(string)),
 			DisplayLabel:           aws.String(d.Get("display_label").(string)),
-			RadiusPort:             aws.Int64(int64(d.Get("radius_port").(int))),
-			RadiusRetries:          aws.Int64(int64(d.Get("radius_retries").(int))),
-			RadiusServers:          flex.ExpandStringSet(d.Get("radius_servers").(*schema.Set)),
-			RadiusTimeout:          aws.Int64(int64(d.Get("radius_timeout").(int))),
+			RadiusPort:             aws.Int32(int32(d.Get("radius_port").(int))),
+			RadiusRetries:          int32(d.Get("radius_retries").(int)),
+			RadiusServers:          flex.ExpandStringValueSet(d.Get("radius_servers").(*schema.Set)),
+			RadiusTimeout:          aws.Int32(int32(d.Get("radius_timeout").(int))),
 			SharedSecret:           aws.String(d.Get("shared_secret").(string)),
-			UseSameUsername:        aws.Bool(d.Get("use_same_username").(bool)),
+			UseSameUsername:        d.Get("use_same_username").(bool),
 		},
 	}
 
-	log.Printf("[DEBUG] Updating Directory Service Directory RADIUS: %s", input)
-	_, err := conn.UpdateRadiusWithContext(ctx, input)
+	_, err := conn.UpdateRadius(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Directory Service Directory (%s) RADIUS: %s", d.Id(), err)
@@ -191,14 +189,14 @@ func resourceRadiusSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceRadiusSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
-	conn := meta.(*conns.AWSClient).DSConn(ctx)
-
-	_, err := conn.DisableRadiusWithContext(ctx, &directoryservice.DisableRadiusInput{
+	log.Printf("[DEBUG] Deleting Directory Service RADIUS Settings: %s", d.Id())
+	_, err := conn.DisableRadius(ctx, &directoryservice.DisableRadiusInput{
 		DirectoryId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeDirectoryDoesNotExistException) {
+	if errs.IsA[*awstypes.DirectoryDoesNotExistException](err) {
 		return diags
 	}
 
@@ -207,4 +205,51 @@ func resourceRadiusSettingsDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
+}
+
+func findRadiusSettingsByID(ctx context.Context, conn *directoryservice.Client, directoryID string) (*awstypes.RadiusSettings, error) {
+	output, err := findDirectoryByID(ctx, conn, directoryID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.RadiusSettings == nil {
+		return nil, tfresource.NewEmptyResultError(directoryID)
+	}
+
+	return output.RadiusSettings, nil
+}
+
+func statusRadius(ctx context.Context, conn *directoryservice.Client, directoryID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findDirectoryByID(ctx, conn, directoryID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.RadiusStatus), nil
+	}
+}
+
+func waitRadiusCompleted(ctx context.Context, conn *directoryservice.Client, directoryID string, timeout time.Duration) (*awstypes.DirectoryDescription, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RadiusStatusCreating),
+		Target:  enum.Slice(awstypes.RadiusStatusCompleted),
+		Refresh: statusRadius(ctx, conn, directoryID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DirectoryDescription); ok {
+		return output, err
+	}
+
+	return nil, err
 }

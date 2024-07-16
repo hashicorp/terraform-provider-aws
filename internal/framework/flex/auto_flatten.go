@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/shopspring/decimal"
 )
 
 // Flatten = AWS --> TF
@@ -29,11 +31,7 @@ import (
 // suitable target data type) are copied.
 func Flatten(ctx context.Context, apiObject, tfObject any, optFns ...AutoFlexOptionsFunc) diag.Diagnostics {
 	var diags diag.Diagnostics
-	flattener := &autoFlattener{}
-
-	for _, optFn := range optFns {
-		optFn(flattener)
-	}
+	flattener := newAutoFlattener(optFns)
 
 	diags.Append(autoFlexConvert(ctx, apiObject, tfObject, flattener)...)
 	if diags.HasError() {
@@ -44,7 +42,29 @@ func Flatten(ctx context.Context, apiObject, tfObject any, optFns ...AutoFlexOpt
 	return diags
 }
 
-type autoFlattener struct{}
+type autoFlattener struct {
+	Options AutoFlexOptions
+}
+
+// newAutoFlattener initializes an auto-flattener with defaults that can be overridden
+// via functional options
+func newAutoFlattener(optFns []AutoFlexOptionsFunc) *autoFlattener {
+	o := AutoFlexOptions{
+		ignoredFieldNames: DefaultIgnoredFieldNames,
+	}
+
+	for _, optFn := range optFns {
+		optFn(&o)
+	}
+
+	return &autoFlattener{
+		Options: o,
+	}
+}
+
+func (flattener autoFlattener) getOptions() AutoFlexOptions {
+	return flattener.Options
+}
 
 // convert converts a single AWS API value to its Plugin Framework equivalent.
 func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.Value) diag.Diagnostics {
@@ -91,7 +111,7 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 		return diags
 
 	case reflect.Interface:
-		// Smithy union type handling not yet implemented. Silently skip.
+		diags.Append(flattener.interface_(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 	}
 
@@ -142,7 +162,13 @@ func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, i
 	case basetypes.Float64Typable:
 		float64Value := types.Float64Null()
 		if !isNullFrom {
-			float64Value = types.Float64Value(vFrom.Float())
+			switch from := vFrom.Interface().(type) {
+			// Avoid loss of equivalence.
+			case float32:
+				float64Value = types.Float64Value(decimal.NewFromFloat32(from).InexactFloat64())
+			default:
+				float64Value = types.Float64Value(vFrom.Float())
+			}
 		}
 		v, d := tTo.ValueFromFloat64(ctx, float64Value)
 		diags.Append(d...)
@@ -302,6 +328,44 @@ func (flattener autoFlattener) ptr(ctx context.Context, vFrom reflect.Value, tTo
 	return diags
 }
 
+func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch tTo := tTo.(type) {
+	case basetypes.StringTypable:
+		stringValue := types.StringNull()
+		if !isNullFrom {
+			//
+			// JSONStringer -> types.String-ish.
+			//
+			if vFrom.Type().Implements(reflect.TypeOf((*smithyjson.JSONStringer)(nil)).Elem()) {
+				doc := vFrom.Interface().(smithyjson.JSONStringer)
+				b, err := doc.MarshalSmithyDocument()
+				if err != nil {
+					diags.AddError("AutoFlEx", err.Error())
+					return diags
+				}
+				stringValue = types.StringValue(string(b))
+			}
+		}
+		v, d := tTo.ValueFromString(ctx, stringValue)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(v))
+		return diags
+	}
+
+	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+		"from": vFrom.Kind(),
+		"to":   tTo,
+	})
+
+	return diags
+}
+
 // struct_ copies an AWS API struct value to a compatible Plugin Framework value.
 func (flattener autoFlattener) struct_(ctx context.Context, vFrom reflect.Value, isNilFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -334,149 +398,90 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 	var diags diag.Diagnostics
 
 	switch tSliceElem := vFrom.Type().Elem(); tSliceElem.Kind() {
+	case reflect.Int32, reflect.Int64:
+		switch tTo := tTo.(type) {
+		case basetypes.ListTypable:
+			//
+			// []int32 or []int64 -> types.List(OfInt64).
+			//
+			diags.Append(flattener.sliceOfPrimtiveToList(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ValueFromReflectValue)...)
+			return diags
+
+		case basetypes.SetTypable:
+			//
+			// []int32 or []int64 -> types.Set(OfInt64).
+			//
+			diags.Append(flattener.sliceOfPrimitiveToSet(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ValueFromReflectValue)...)
+			return diags
+		}
+
 	case reflect.String:
 		switch tTo := tTo.(type) {
 		case basetypes.ListTypable:
 			//
 			// []string -> types.List(OfString).
 			//
-			if vFrom.IsNil() {
-				to, d := tTo.ValueFromList(ctx, types.ListNull(types.StringType))
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
-				return diags
-			}
-
-			elements := make([]attr.Value, vFrom.Len())
-			for i := 0; i < vFrom.Len(); i++ {
-				elements[i] = types.StringValue(vFrom.Index(i).String())
-			}
-			list, d := types.ListValue(types.StringType, elements)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-
-			to, d := tTo.ValueFromList(ctx, list)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-
-			vTo.Set(reflect.ValueOf(to))
+			diags.Append(flattener.sliceOfPrimtiveToList(ctx, vFrom, tTo, vTo, types.StringType, newStringValueFromReflectValue)...)
 			return diags
 
 		case basetypes.SetTypable:
 			//
 			// []string -> types.Set(OfString).
 			//
-			if vFrom.IsNil() {
-				to, d := tTo.ValueFromSet(ctx, types.SetNull(types.StringType))
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
-				return diags
-			}
-
-			elements := make([]attr.Value, vFrom.Len())
-			for i := 0; i < vFrom.Len(); i++ {
-				elements[i] = types.StringValue(vFrom.Index(i).String())
-			}
-			set, d := types.SetValue(types.StringType, elements)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-
-			to, d := tTo.ValueFromSet(ctx, set)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-
-			vTo.Set(reflect.ValueOf(to))
+			diags.Append(flattener.sliceOfPrimitiveToSet(ctx, vFrom, tTo, vTo, types.StringType, newStringValueFromReflectValue)...)
 			return diags
 		}
 
 	case reflect.Ptr:
 		switch tSliceElem.Elem().Kind() {
+		case reflect.Int32:
+			switch tTo := tTo.(type) {
+			case basetypes.ListTypable:
+				//
+				// []*int32 -> types.List(OfInt64).
+				//
+				diags.Append(flattener.sliceOfPrimtiveToList(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ValueFromReflectPointerValue)...)
+				return diags
+
+			case basetypes.SetTypable:
+				//
+				// []*int32 -> types.Set(OfInt64).
+				//
+				diags.Append(flattener.sliceOfPrimitiveToSet(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ValueFromReflectPointerValue)...)
+				return diags
+			}
+
+		case reflect.Int64:
+			switch tTo := tTo.(type) {
+			case basetypes.ListTypable:
+				//
+				// []*int64 -> types.List(OfInt64).
+				//
+				diags.Append(flattener.sliceOfPrimtiveToList(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ValueFromReflectPointerValue)...)
+				return diags
+
+			case basetypes.SetTypable:
+				//
+				// []*int64 -> types.Set(OfInt64).
+				//
+				diags.Append(flattener.sliceOfPrimitiveToSet(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ValueFromReflectPointerValue)...)
+				return diags
+			}
+
 		case reflect.String:
 			switch tTo := tTo.(type) {
 			case basetypes.ListTypable:
 				//
 				// []*string -> types.List(OfString).
 				//
-				if vFrom.IsNil() {
-					to, d := tTo.ValueFromList(ctx, types.ListNull(types.StringType))
-					diags.Append(d...)
-					if diags.HasError() {
-						return diags
-					}
-
-					vTo.Set(reflect.ValueOf(to))
-					return diags
-				}
-
-				from := vFrom.Interface().([]*string)
-				elements := make([]attr.Value, len(from))
-				for i, v := range from {
-					elements[i] = types.StringPointerValue(v)
-				}
-				list, d := types.ListValue(types.StringType, elements)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				to, d := tTo.ValueFromList(ctx, list)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
+				diags.Append(flattener.sliceOfPrimtiveToList(ctx, vFrom, tTo, vTo, types.StringType, newStringValueFromReflectPointerValue)...)
 				return diags
 
 			case basetypes.SetTypable:
 				//
-				// []string -> types.Set(OfString).
+				// []*string -> types.Set(OfString).
 				//
-				if vFrom.IsNil() {
-					to, d := tTo.ValueFromSet(ctx, types.SetNull(types.StringType))
-					diags.Append(d...)
-					if diags.HasError() {
-						return diags
-					}
-
-					vTo.Set(reflect.ValueOf(to))
-					return diags
-				}
-
-				from := vFrom.Interface().([]*string)
-				elements := make([]attr.Value, len(from))
-				for i, v := range from {
-					elements[i] = types.StringPointerValue(v)
-				}
-				set, d := types.SetValue(types.StringType, elements)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				to, d := tTo.ValueFromSet(ctx, set)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
+				diags.Append(flattener.sliceOfPrimitiveToSet(ctx, vFrom, tTo, vTo, types.StringType, newStringValueFromReflectPointerValue)...)
 				return diags
 			}
 
@@ -485,7 +490,7 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 				//
 				// []*struct -> types.List(OfObject).
 				//
-				diags.Append(flattener.sliceOfStructNestedObjectCollection(ctx, vFrom, tTo, vTo)...)
+				diags.Append(flattener.sliceOfStructToNestedObjectCollection(ctx, vFrom, tTo, vTo)...)
 				return diags
 			}
 		}
@@ -495,7 +500,7 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 			//
 			// []struct -> types.List(OfObject).
 			//
-			diags.Append(flattener.sliceOfStructNestedObjectCollection(ctx, vFrom, tTo, vTo)...)
+			diags.Append(flattener.sliceOfStructToNestedObjectCollection(ctx, vFrom, tTo, vTo)...)
 			return diags
 		}
 
@@ -576,6 +581,88 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 
 				vTo.Set(reflect.ValueOf(to))
 				return diags
+			}
+
+		case reflect.Map:
+			switch tTo := tTo.(type) {
+			case basetypes.MapTypable:
+				//
+				// map[string]map[string]string -> types.Map(OfMap[types.String]).
+				//
+				if vFrom.IsNil() {
+					to, d := tTo.ValueFromMap(ctx, types.MapNull(types.MapType{ElemType: types.StringType}))
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
+					return diags
+				}
+
+				switch tMapElem.Elem().Kind() {
+				case reflect.String:
+					from := vFrom.Interface().(map[string]map[string]string)
+					elements := make(map[string]attr.Value, len(from))
+					for k, v := range from {
+						innerElements := make(map[string]attr.Value, len(v))
+						for ik, iv := range v {
+							innerElements[ik] = types.StringValue(iv)
+						}
+						innerMap, d := fwtypes.NewMapValueOf[types.String](ctx, innerElements)
+						diags.Append(d...)
+						if diags.HasError() {
+							return diags
+						}
+
+						elements[k] = innerMap
+					}
+					map_, d := fwtypes.NewMapValueOf[fwtypes.MapValueOf[types.String]](ctx, elements)
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					to, d := tTo.ValueFromMap(ctx, map_.MapValue)
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
+					return diags
+
+				case reflect.Ptr:
+					from := vFrom.Interface().(map[string]map[string]*string)
+					elements := make(map[string]attr.Value, len(from))
+					for k, v := range from {
+						innerElements := make(map[string]attr.Value, len(v))
+						for ik, iv := range v {
+							innerElements[ik] = types.StringValue(*iv)
+						}
+						innerMap, d := fwtypes.NewMapValueOf[types.String](ctx, innerElements)
+						diags.Append(d...)
+						if diags.HasError() {
+							return diags
+						}
+
+						elements[k] = innerMap
+					}
+					map_, d := fwtypes.NewMapValueOf[fwtypes.MapValueOf[types.String]](ctx, elements)
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					to, d := tTo.ValueFromMap(ctx, map_.MapValue)
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
+					return diags
+				}
 			}
 
 		case reflect.Ptr:
@@ -741,8 +828,78 @@ func (flattener autoFlattener) structToNestedObject(ctx context.Context, vFrom r
 	return diags
 }
 
-// sliceOfStructNestedObjectCollection copies an AWS API []struct value to a compatible Plugin Framework NestedObjectCollectionValue value.
-func (flattener autoFlattener) sliceOfStructNestedObjectCollection(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectCollectionType, vTo reflect.Value) diag.Diagnostics {
+// sliceOfPrimtiveToList copies an AWS API slice of primitive (or pointer to primitive) value to a compatible Plugin Framework List value.
+func (flattener autoFlattener) sliceOfPrimtiveToList(ctx context.Context, vFrom reflect.Value, tTo basetypes.ListTypable, vTo reflect.Value, elementType attr.Type, f attrValueFromReflectValueFunc) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if vFrom.IsNil() {
+		to, d := tTo.ValueFromList(ctx, types.ListNull(elementType))
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(to))
+		return diags
+	}
+
+	elements := make([]attr.Value, vFrom.Len())
+	for i := 0; i < vFrom.Len(); i++ {
+		elements[i] = f(vFrom.Index(i))
+	}
+	list, d := types.ListValue(elementType, elements)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	to, d := tTo.ValueFromList(ctx, list)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	vTo.Set(reflect.ValueOf(to))
+	return diags
+}
+
+// sliceOfPrimitiveToSet copies an AWS API slice of primitive (or pointer to primitive) value to a compatible Plugin Framework Set value.
+func (flattener autoFlattener) sliceOfPrimitiveToSet(ctx context.Context, vFrom reflect.Value, tTo basetypes.SetTypable, vTo reflect.Value, elementType attr.Type, f attrValueFromReflectValueFunc) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if vFrom.IsNil() {
+		to, d := tTo.ValueFromSet(ctx, types.SetNull(elementType))
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(to))
+		return diags
+	}
+
+	elements := make([]attr.Value, vFrom.Len())
+	for i := 0; i < vFrom.Len(); i++ {
+		elements[i] = f(vFrom.Index(i))
+	}
+	set, d := types.SetValue(elementType, elements)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	to, d := tTo.ValueFromSet(ctx, set)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	vTo.Set(reflect.ValueOf(to))
+	return diags
+}
+
+// sliceOfStructToNestedObjectCollection copies an AWS API []struct value to a compatible Plugin Framework NestedObjectCollectionValue value.
+func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectCollectionType, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if vFrom.IsNil() {
@@ -836,4 +993,30 @@ func blockKeyMapSet(to any, key reflect.Value) diag.Diagnostics {
 	diags.AddError("AutoFlEx", fmt.Sprintf("unable to find map block key (%s)", MapBlockKey))
 
 	return diags
+}
+
+type attrValueFromReflectValueFunc func(reflect.Value) attr.Value
+
+func newInt64ValueFromReflectValue(v reflect.Value) attr.Value {
+	return types.Int64Value(v.Int())
+}
+
+func newInt64ValueFromReflectPointerValue(v reflect.Value) attr.Value {
+	if v.IsNil() {
+		return types.Int64Null()
+	}
+
+	return newInt64ValueFromReflectValue(v.Elem())
+}
+
+func newStringValueFromReflectValue(v reflect.Value) attr.Value {
+	return types.StringValue(v.String())
+}
+
+func newStringValueFromReflectPointerValue(v reflect.Value) attr.Value {
+	if v.IsNil() {
+		return types.StringNull()
+	}
+
+	return newStringValueFromReflectValue(v.Elem())
 }

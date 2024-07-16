@@ -38,11 +38,11 @@ func ResourceLicenseConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -70,11 +70,11 @@ func ResourceLicenseConfiguration() *schema.Resource {
 					ValidateFunc: validation.StringMatch(regexache.MustCompile("^#([^=]+)=(.+)$"), "Expected format is #RuleType=RuleValue"),
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -91,14 +91,14 @@ func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceD
 
 	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &licensemanager.CreateLicenseConfigurationInput{
 		LicenseCountingType: aws.String(d.Get("license_counting_type").(string)),
 		Name:                aws.String(name),
 		Tags:                getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -142,14 +142,14 @@ func resourceLicenseConfigurationRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading License Manager License Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.LicenseConfigurationArn)
-	d.Set("description", output.Description)
+	d.Set(names.AttrARN, output.LicenseConfigurationArn)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("license_count", output.LicenseCount)
 	d.Set("license_count_hard_limit", output.LicenseCountHardLimit)
 	d.Set("license_counting_type", output.LicenseCountingType)
 	d.Set("license_rules", aws.StringValueSlice(output.LicenseRules))
-	d.Set("name", output.Name)
-	d.Set("owner_account_id", output.OwnerAccountId)
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrOwnerAccountID, output.OwnerAccountId)
 
 	setTagsOut(ctx, output.Tags)
 
@@ -161,12 +161,12 @@ func resourceLicenseConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 
 	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &licensemanager.UpdateLicenseConfigurationInput{
-			Description:             aws.String(d.Get("description").(string)),
+			Description:             aws.String(d.Get(names.AttrDescription).(string)),
 			LicenseConfigurationArn: aws.String(d.Id()),
 			LicenseCountHardLimit:   aws.Bool(d.Get("license_count_hard_limit").(bool)),
-			Name:                    aws.String(d.Get("name").(string)),
+			Name:                    aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		if v, ok := d.GetOk("license_count"); ok {
