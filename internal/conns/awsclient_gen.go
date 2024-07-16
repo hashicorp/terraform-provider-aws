@@ -73,6 +73,7 @@ import (
 	datasync_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datasync"
 	datazone_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datazone"
 	dax_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dax"
+	detective_sdkv2 "github.com/aws/aws-sdk-go-v2/service/detective"
 	devicefarm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devicefarm"
 	devopsguru_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
@@ -208,7 +209,6 @@ import (
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
 	datapipeline_sdkv1 "github.com/aws/aws-sdk-go/service/datapipeline"
-	detective_sdkv1 "github.com/aws/aws-sdk-go/service/detective"
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
@@ -559,8 +559,8 @@ func (c *AWSClient) DeployClient(ctx context.Context) *codedeploy_sdkv2.Client {
 	return errs.Must(client[*codedeploy_sdkv2.Client](ctx, c, names.Deploy, make(map[string]any)))
 }
 
-func (c *AWSClient) DetectiveConn(ctx context.Context) *detective_sdkv1.Detective {
-	return errs.Must(conn[*detective_sdkv1.Detective](ctx, c, names.Detective, make(map[string]any)))
+func (c *AWSClient) DetectiveClient(ctx context.Context) *detective_sdkv2.Client {
+	return errs.Must(client[*detective_sdkv2.Client](ctx, c, names.Detective, make(map[string]any)))
 }
 
 func (c *AWSClient) DevOpsGuruClient(ctx context.Context) *devopsguru_sdkv2.Client {

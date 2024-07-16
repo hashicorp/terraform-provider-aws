@@ -2771,7 +2771,7 @@ service "detective" {
 
   sdk {
     id             = "Detective"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
