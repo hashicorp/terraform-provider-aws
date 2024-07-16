@@ -150,7 +150,7 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 
 	in := &datazone.CreateProjectInput{}
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
-	
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
