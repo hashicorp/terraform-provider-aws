@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -237,8 +236,8 @@ func ResourceCrawler() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: enum.Validate[awstypes.JdbcMetadataEntry](),
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[awstypes.JdbcMetadataEntry](),
 							},
 						},
 						"exclusions": {
@@ -281,10 +280,10 @@ func ResourceCrawler() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"crawler_lineage_settings": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      awstypes.CrawlerLineageSettingsDisable,
-							ValidateFunc: enum.Validate[awstypes.CrawlerLineageSettings](),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.CrawlerLineageSettingsDisable,
+							ValidateDiagFunc: enum.Validate[awstypes.CrawlerLineageSettings](),
 						},
 					},
 				},
@@ -329,10 +328,10 @@ func ResourceCrawler() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"recrawl_behavior": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      awstypes.RecrawlBehaviorCrawlEverything,
-							ValidateFunc: enum.Validate[awstypes.RecrawlBehavior](),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.RecrawlBehaviorCrawlEverything,
+							ValidateDiagFunc: enum.Validate[awstypes.RecrawlBehavior](),
 						},
 					},
 				},
@@ -401,16 +400,16 @@ func ResourceCrawler() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"delete_behavior": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      awstypes.DeleteBehaviorDeprecateInDatabase,
-							ValidateFunc: enum.Validate[awstypes.DeleteBehavior](),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.DeleteBehaviorDeprecateInDatabase,
+							ValidateDiagFunc: enum.Validate[awstypes.DeleteBehavior](),
 						},
 						"update_behavior": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      awstypes.UpdateBehaviorUpdateInDatabase,
-							ValidateFunc: enum.Validate[awstypes.UpdateBehavior](),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.UpdateBehaviorUpdateInDatabase,
+							ValidateDiagFunc: enum.Validate[awstypes.UpdateBehavior](),
 						},
 					},
 				},
@@ -445,26 +444,26 @@ func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta int
 		_, err = glueConn.CreateCrawler(ctx, crawlerInput)
 		if err != nil {
 			// InvalidInputException: Insufficient Lake Formation permission(s) on xxx
-			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidInputException, "Insufficient Lake Formation permission") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Insufficient Lake Formation permission") {
 				return retry.RetryableError(err)
 			}
 
-			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidInputException, "Service is unable to assume provided role") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Service is unable to assume provided role") {
 				return retry.RetryableError(err)
 			}
 
 			// InvalidInputException: com.amazonaws.services.glue.model.AccessDeniedException: You need to enable AWS Security Token Service for this region. . Please verify the role's TrustPolicy.
-			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidInputException, "Please verify the role's TrustPolicy") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Please verify the role's TrustPolicy") {
 				return retry.RetryableError(err)
 			}
 
 			// InvalidInputException: Unable to retrieve connection tf-acc-test-8656357591012534997: User: arn:aws:sts::*******:assumed-role/tf-acc-test-8656357591012534997/AWS-Crawler is not authorized to perform: glue:GetConnection on resource: * (Service: AmazonDataCatalog; Status Code: 400; Error Code: AccessDeniedException; Request ID: 4d72b66f-9c75-11e8-9faf-5b526c7be968)
-			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidInputException, "is not authorized") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "is not authorized") {
 				return retry.RetryableError(err)
 			}
 
 			// InvalidInputException: SQS queue arn:aws:sqs:us-west-2:*******:tf-acc-test-4317277351691904203 does not exist or the role provided does not have access to it.
-			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidInputException, "SQS queue") && tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidInputException, "does not exist or the role provided does not have access to it") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "SQS queue") && errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "does not exist or the role provided does not have access to it") {
 				return retry.RetryableError(err)
 			}
 
@@ -516,7 +515,7 @@ func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if crawler.Schedule != nil {
 		d.Set(names.AttrSchedule, crawler.Schedule.ScheduleExpression)
 	}
-	if err := d.Set("classifiers", flex.FlattenStringList(crawler.Classifiers)); err != nil {
+	if err := d.Set("classifiers", flex.FlattenStringValueList(crawler.Classifiers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting classifiers: %s", err)
 	}
 	d.Set("table_prefix", crawler.TablePrefix)
@@ -592,26 +591,26 @@ func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			_, err := glueConn.UpdateCrawler(ctx, updateCrawlerInput)
 			if err != nil {
 				// InvalidInputException: Insufficient Lake Formation permission(s) on xxx
-				if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidInputException, "Insufficient Lake Formation permission") {
+				if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Insufficient Lake Formation permission") {
 					return retry.RetryableError(err)
 				}
 
-				if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidInputException, "Service is unable to assume provided role") {
+				if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Service is unable to assume provided role") {
 					return retry.RetryableError(err)
 				}
 
 				// InvalidInputException: com.amazonaws.services.glue.model.AccessDeniedException: You need to enable AWS Security Token Service for this region. . Please verify the role's TrustPolicy.
-				if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidInputException, "Please verify the role's TrustPolicy") {
+				if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Please verify the role's TrustPolicy") {
 					return retry.RetryableError(err)
 				}
 
 				// InvalidInputException: Unable to retrieve connection tf-acc-test-8656357591012534997: User: arn:aws:sts::*******:assumed-role/tf-acc-test-8656357591012534997/AWS-Crawler is not authorized to perform: glue:GetConnection on resource: * (Service: AmazonDataCatalog; Status Code: 400; Error Code: AccessDeniedException; Request ID: 4d72b66f-9c75-11e8-9faf-5b526c7be968)
-				if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidInputException, "is not authorized") {
+				if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "is not authorized") {
 					return retry.RetryableError(err)
 				}
 
 				// InvalidInputException: SQS queue arn:aws:sqs:us-west-2:*******:tf-acc-test-4317277351691904203 does not exist or the role provided does not have access to it.
-				if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidInputException, "SQS queue") && tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidInputException, "does not exist or the role provided does not have access to it") {
+				if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "SQS queue") && errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "does not exist or the role provided does not have access to it") {
 					return retry.RetryableError(err)
 				}
 
@@ -667,7 +666,7 @@ func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName
 		crawlerInput.Schedule = aws.String(schedule.(string))
 	}
 	if classifiers, ok := d.GetOk("classifiers"); ok {
-		crawlerInput.Classifiers = flex.ExpandStringList(classifiers.([]interface{}))
+		crawlerInput.Classifiers = flex.ExpandStringValueList(classifiers.([]interface{}))
 	}
 
 	crawlerInput.SchemaChangePolicy = expandSchemaChangePolicy(d.Get("schema_change_policy").([]interface{}))
@@ -724,7 +723,7 @@ func updateCrawlerInput(d *schema.ResourceData, crawlerName string) (*glue.Updat
 	}
 
 	if classifiers, ok := d.GetOk("classifiers"); ok {
-		crawlerInput.Classifiers = flex.ExpandStringList(classifiers.([]interface{}))
+		crawlerInput.Classifiers = flex.ExpandStringValueList(classifiers.([]interface{}))
 	}
 
 	crawlerInput.SchemaChangePolicy = expandSchemaChangePolicy(d.Get("schema_change_policy").([]interface{}))
@@ -819,12 +818,12 @@ func expandCrawlerTargets(d *schema.ResourceData) *awstypes.CrawlerTargets {
 	return crawlerTargets
 }
 
-func expandDynamoDBTargets(targets []interface{}) []*awstypes.DynamoDBTarget {
+func expandDynamoDBTargets(targets []interface{}) []awstypes.DynamoDBTarget {
 	if len(targets) < 1 {
-		return []*awstypes.DynamoDBTarget{}
+		return []awstypes.DynamoDBTarget{}
 	}
 
-	perms := make([]*awstypes.DynamoDBTarget, len(targets))
+	perms := make([]awstypes.DynamoDBTarget, len(targets))
 	for i, rawCfg := range targets {
 		cfg := rawCfg.(map[string]interface{})
 		perms[i] = expandDynamoDBTarget(cfg)
@@ -832,8 +831,8 @@ func expandDynamoDBTargets(targets []interface{}) []*awstypes.DynamoDBTarget {
 	return perms
 }
 
-func expandDynamoDBTarget(cfg map[string]interface{}) *awstypes.DynamoDBTarget {
-	target := &awstypes.DynamoDBTarget{
+func expandDynamoDBTarget(cfg map[string]interface{}) awstypes.DynamoDBTarget {
+	target := awstypes.DynamoDBTarget{
 		Path:    aws.String(cfg[names.AttrPath].(string)),
 		ScanAll: aws.Bool(cfg["scan_all"].(bool)),
 	}
@@ -845,12 +844,12 @@ func expandDynamoDBTarget(cfg map[string]interface{}) *awstypes.DynamoDBTarget {
 	return target
 }
 
-func expandS3Targets(targets []interface{}) []*awstypes.S3Target {
+func expandS3Targets(targets []interface{}) []awstypes.S3Target {
 	if len(targets) < 1 {
-		return []*awstypes.S3Target{}
+		return []awstypes.S3Target{}
 	}
 
-	perms := make([]*awstypes.S3Target, len(targets))
+	perms := make([]awstypes.S3Target, len(targets))
 	for i, rawCfg := range targets {
 		cfg := rawCfg.(map[string]interface{})
 		perms[i] = expandS3Target(cfg)
@@ -858,8 +857,8 @@ func expandS3Targets(targets []interface{}) []*awstypes.S3Target {
 	return perms
 }
 
-func expandS3Target(cfg map[string]interface{}) *awstypes.S3Target {
-	target := &awstypes.S3Target{
+func expandS3Target(cfg map[string]interface{}) awstypes.S3Target {
+	target := awstypes.S3Target{
 		Path: aws.String(cfg[names.AttrPath].(string)),
 	}
 
@@ -868,11 +867,11 @@ func expandS3Target(cfg map[string]interface{}) *awstypes.S3Target {
 	}
 
 	if v, ok := cfg["exclusions"]; ok {
-		target.Exclusions = flex.ExpandStringList(v.([]interface{}))
+		target.Exclusions = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := cfg["sample_size"]; ok && v.(int) > 0 {
-		target.SampleSize = aws.Int64(int64(v.(int)))
+		target.SampleSize = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := cfg["event_queue_arn"]; ok {
@@ -886,12 +885,12 @@ func expandS3Target(cfg map[string]interface{}) *awstypes.S3Target {
 	return target
 }
 
-func expandJDBCTargets(targets []interface{}) []*awstypes.JdbcTarget {
+func expandJDBCTargets(targets []interface{}) []awstypes.JdbcTarget {
 	if len(targets) < 1 {
-		return []*awstypes.JdbcTarget{}
+		return []awstypes.JdbcTarget{}
 	}
 
-	perms := make([]*awstypes.JdbcTarget, len(targets))
+	perms := make([]awstypes.JdbcTarget, len(targets))
 	for i, rawCfg := range targets {
 		cfg := rawCfg.(map[string]interface{})
 		perms[i] = expandJDBCTarget(cfg)
@@ -899,29 +898,29 @@ func expandJDBCTargets(targets []interface{}) []*awstypes.JdbcTarget {
 	return perms
 }
 
-func expandJDBCTarget(cfg map[string]interface{}) *awstypes.JdbcTarget {
-	target := &awstypes.JdbcTarget{
+func expandJDBCTarget(cfg map[string]interface{}) awstypes.JdbcTarget {
+	target := awstypes.JdbcTarget{
 		Path:           aws.String(cfg[names.AttrPath].(string)),
 		ConnectionName: aws.String(cfg["connection_name"].(string)),
 	}
 
 	if v, ok := cfg["enable_additional_metadata"].([]interface{}); ok {
-		target.EnableAdditionalMetadata = flex.ExpandStringList(v)
+		target.EnableAdditionalMetadata = flex.ExpandStringyValueList[awstypes.JdbcMetadataEntry](v)
 	}
 
 	if v, ok := cfg["exclusions"].([]interface{}); ok {
-		target.Exclusions = flex.ExpandStringList(v)
+		target.Exclusions = flex.ExpandStringValueList(v)
 	}
 
 	return target
 }
 
-func expandCatalogTargets(targets []interface{}) []*awstypes.CatalogTarget {
+func expandCatalogTargets(targets []interface{}) []awstypes.CatalogTarget {
 	if len(targets) < 1 {
-		return []*awstypes.CatalogTarget{}
+		return []awstypes.CatalogTarget{}
 	}
 
-	perms := make([]*awstypes.CatalogTarget, len(targets))
+	perms := make([]awstypes.CatalogTarget, len(targets))
 	for i, rawCfg := range targets {
 		cfg := rawCfg.(map[string]interface{})
 		perms[i] = expandCatalogTarget(cfg)
@@ -929,10 +928,10 @@ func expandCatalogTargets(targets []interface{}) []*awstypes.CatalogTarget {
 	return perms
 }
 
-func expandCatalogTarget(cfg map[string]interface{}) *awstypes.CatalogTarget {
-	target := &awstypes.CatalogTarget{
+func expandCatalogTarget(cfg map[string]interface{}) awstypes.CatalogTarget {
+	target := awstypes.CatalogTarget{
 		DatabaseName: aws.String(cfg[names.AttrDatabaseName].(string)),
-		Tables:       flex.ExpandStringList(cfg["tables"].([]interface{})),
+		Tables:       flex.ExpandStringValueList(cfg["tables"].([]interface{})),
 	}
 
 	if v, ok := cfg["connection_name"].(string); ok {
@@ -950,12 +949,12 @@ func expandCatalogTarget(cfg map[string]interface{}) *awstypes.CatalogTarget {
 	return target
 }
 
-func expandMongoDBTargets(targets []interface{}) []*awstypes.MongoDBTarget {
+func expandMongoDBTargets(targets []interface{}) []awstypes.MongoDBTarget {
 	if len(targets) < 1 {
-		return []*awstypes.MongoDBTarget{}
+		return []awstypes.MongoDBTarget{}
 	}
 
-	perms := make([]*awstypes.MongoDBTarget, len(targets))
+	perms := make([]awstypes.MongoDBTarget, len(targets))
 	for i, rawCfg := range targets {
 		cfg := rawCfg.(map[string]interface{})
 		perms[i] = expandMongoDBTarget(cfg)
@@ -963,8 +962,8 @@ func expandMongoDBTargets(targets []interface{}) []*awstypes.MongoDBTarget {
 	return perms
 }
 
-func expandMongoDBTarget(cfg map[string]interface{}) *awstypes.MongoDBTarget {
-	target := &awstypes.MongoDBTarget{
+func expandMongoDBTarget(cfg map[string]interface{}) awstypes.MongoDBTarget {
+	target := awstypes.MongoDBTarget{
 		ConnectionName: aws.String(cfg["connection_name"].(string)),
 		Path:           aws.String(cfg[names.AttrPath].(string)),
 		ScanAll:        aws.Bool(cfg["scan_all"].(bool)),
@@ -973,12 +972,12 @@ func expandMongoDBTarget(cfg map[string]interface{}) *awstypes.MongoDBTarget {
 	return target
 }
 
-func expandDeltaTargets(targets []interface{}) []*awstypes.DeltaTarget {
+func expandDeltaTargets(targets []interface{}) []awstypes.DeltaTarget {
 	if len(targets) < 1 {
-		return []*awstypes.DeltaTarget{}
+		return []awstypes.DeltaTarget{}
 	}
 
-	perms := make([]*awstypes.DeltaTarget, len(targets))
+	perms := make([]awstypes.DeltaTarget, len(targets))
 	for i, rawCfg := range targets {
 		cfg := rawCfg.(map[string]interface{})
 		perms[i] = expandDeltaTarget(cfg)
@@ -986,10 +985,10 @@ func expandDeltaTargets(targets []interface{}) []*awstypes.DeltaTarget {
 	return perms
 }
 
-func expandDeltaTarget(cfg map[string]interface{}) *awstypes.DeltaTarget {
-	target := &awstypes.DeltaTarget{
+func expandDeltaTarget(cfg map[string]interface{}) awstypes.DeltaTarget {
+	target := awstypes.DeltaTarget{
 		CreateNativeDeltaTable: aws.Bool(cfg["create_native_delta_table"].(bool)),
-		DeltaTables:            flex.ExpandStringSet(cfg["delta_tables"].(*schema.Set)),
+		DeltaTables:            flex.ExpandStringValueSet(cfg["delta_tables"].(*schema.Set)),
 		WriteManifest:          aws.Bool(cfg["write_manifest"].(bool)),
 	}
 
@@ -1000,12 +999,12 @@ func expandDeltaTarget(cfg map[string]interface{}) *awstypes.DeltaTarget {
 	return target
 }
 
-func expandHudiTargets(targets []interface{}) []*awstypes.HudiTarget {
+func expandHudiTargets(targets []interface{}) []awstypes.HudiTarget {
 	if len(targets) < 1 {
-		return []*awstypes.HudiTarget{}
+		return []awstypes.HudiTarget{}
 	}
 
-	perms := make([]*awstypes.HudiTarget, len(targets))
+	perms := make([]awstypes.HudiTarget, len(targets))
 	for i, rawCfg := range targets {
 		cfg := rawCfg.(map[string]interface{})
 		perms[i] = expandHudiTarget(cfg)
@@ -1013,14 +1012,14 @@ func expandHudiTargets(targets []interface{}) []*awstypes.HudiTarget {
 	return perms
 }
 
-func expandHudiTarget(cfg map[string]interface{}) *awstypes.HudiTarget {
-	target := &awstypes.HudiTarget{
-		Paths:                 flex.ExpandStringSet(cfg["paths"].(*schema.Set)),
-		MaximumTraversalDepth: aws.Int64(int64(cfg["maximum_traversal_depth"].(int))),
+func expandHudiTarget(cfg map[string]interface{}) awstypes.HudiTarget {
+	target := awstypes.HudiTarget{
+		Paths:                 flex.ExpandStringValueSet(cfg["paths"].(*schema.Set)),
+		MaximumTraversalDepth: aws.Int32(int32(cfg["maximum_traversal_depth"].(int))),
 	}
 
 	if v, ok := cfg["exclusions"]; ok {
-		target.Exclusions = flex.ExpandStringList(v.([]interface{}))
+		target.Exclusions = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := cfg["connection_name"].(string); ok {
@@ -1030,12 +1029,12 @@ func expandHudiTarget(cfg map[string]interface{}) *awstypes.HudiTarget {
 	return target
 }
 
-func expandIcebergTargets(targets []interface{}) []*awstypes.IcebergTarget {
+func expandIcebergTargets(targets []interface{}) []awstypes.IcebergTarget {
 	if len(targets) < 1 {
-		return []*awstypes.IcebergTarget{}
+		return []awstypes.IcebergTarget{}
 	}
 
-	perms := make([]*awstypes.IcebergTarget, len(targets))
+	perms := make([]awstypes.IcebergTarget, len(targets))
 	for i, rawCfg := range targets {
 		cfg := rawCfg.(map[string]interface{})
 		perms[i] = expandIcebergTarget(cfg)
@@ -1043,14 +1042,14 @@ func expandIcebergTargets(targets []interface{}) []*awstypes.IcebergTarget {
 	return perms
 }
 
-func expandIcebergTarget(cfg map[string]interface{}) *awstypes.IcebergTarget {
-	target := &awstypes.IcebergTarget{
-		Paths:                 flex.ExpandStringSet(cfg["paths"].(*schema.Set)),
-		MaximumTraversalDepth: aws.Int64(int64(cfg["maximum_traversal_depth"].(int))),
+func expandIcebergTarget(cfg map[string]interface{}) awstypes.IcebergTarget {
+	target := awstypes.IcebergTarget{
+		Paths:                 flex.ExpandStringValueSet(cfg["paths"].(*schema.Set)),
+		MaximumTraversalDepth: aws.Int32(int32(cfg["maximum_traversal_depth"].(int))),
 	}
 
 	if v, ok := cfg["exclusions"]; ok {
-		target.Exclusions = flex.ExpandStringList(v.([]interface{}))
+		target.Exclusions = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := cfg["connection_name"].(string); ok {
@@ -1060,17 +1059,17 @@ func expandIcebergTarget(cfg map[string]interface{}) *awstypes.IcebergTarget {
 	return target
 }
 
-func flattenS3Targets(s3Targets []*awstypes.S3Target) []map[string]interface{} {
+func flattenS3Targets(s3Targets []awstypes.S3Target) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 
 	for _, s3Target := range s3Targets {
 		attrs := make(map[string]interface{})
-		attrs["exclusions"] = flex.FlattenStringList(s3Target.Exclusions)
+		attrs["exclusions"] = flex.FlattenStringValueList(s3Target.Exclusions)
 		attrs[names.AttrPath] = aws.ToString(s3Target.Path)
 		attrs["connection_name"] = aws.ToString(s3Target.ConnectionName)
 
 		if s3Target.SampleSize != nil {
-			attrs["sample_size"] = aws.ToInt64(s3Target.SampleSize)
+			attrs["sample_size"] = aws.ToInt32(s3Target.SampleSize)
 		}
 
 		attrs["event_queue_arn"] = aws.ToString(s3Target.EventQueueArn)
@@ -1081,13 +1080,13 @@ func flattenS3Targets(s3Targets []*awstypes.S3Target) []map[string]interface{} {
 	return result
 }
 
-func flattenCatalogTargets(CatalogTargets []*awstypes.CatalogTarget) []map[string]interface{} {
+func flattenCatalogTargets(CatalogTargets []awstypes.CatalogTarget) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 
 	for _, catalogTarget := range CatalogTargets {
 		attrs := make(map[string]interface{})
 		attrs["connection_name"] = aws.ToString(catalogTarget.ConnectionName)
-		attrs["tables"] = flex.FlattenStringList(catalogTarget.Tables)
+		attrs["tables"] = flex.FlattenStringValueList(catalogTarget.Tables)
 		attrs[names.AttrDatabaseName] = aws.ToString(catalogTarget.DatabaseName)
 		attrs["event_queue_arn"] = aws.ToString(catalogTarget.EventQueueArn)
 		attrs["dlq_event_queue_arn"] = aws.ToString(catalogTarget.DlqEventQueueArn)
@@ -1097,7 +1096,7 @@ func flattenCatalogTargets(CatalogTargets []*awstypes.CatalogTarget) []map[strin
 	return result
 }
 
-func flattenDynamoDBTargets(dynamodbTargets []*awstypes.DynamoDBTarget) []map[string]interface{} {
+func flattenDynamoDBTargets(dynamodbTargets []awstypes.DynamoDBTarget) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 
 	for _, dynamodbTarget := range dynamodbTargets {
@@ -1111,14 +1110,14 @@ func flattenDynamoDBTargets(dynamodbTargets []*awstypes.DynamoDBTarget) []map[st
 	return result
 }
 
-func flattenJDBCTargets(jdbcTargets []*awstypes.JdbcTarget) []map[string]interface{} {
+func flattenJDBCTargets(jdbcTargets []awstypes.JdbcTarget) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 
 	for _, jdbcTarget := range jdbcTargets {
 		attrs := make(map[string]interface{})
 		attrs["connection_name"] = aws.ToString(jdbcTarget.ConnectionName)
-		attrs["exclusions"] = flex.FlattenStringList(jdbcTarget.Exclusions)
-		attrs["enable_additional_metadata"] = flex.FlattenStringList(jdbcTarget.EnableAdditionalMetadata)
+		attrs["exclusions"] = flex.FlattenStringValueList(jdbcTarget.Exclusions)
+		attrs["enable_additional_metadata"] = flex.FlattenStringyValueList(jdbcTarget.EnableAdditionalMetadata)
 		attrs[names.AttrPath] = aws.ToString(jdbcTarget.Path)
 
 		result = append(result, attrs)
@@ -1126,7 +1125,7 @@ func flattenJDBCTargets(jdbcTargets []*awstypes.JdbcTarget) []map[string]interfa
 	return result
 }
 
-func flattenMongoDBTargets(mongoDBTargets []*awstypes.MongoDBTarget) []map[string]interface{} {
+func flattenMongoDBTargets(mongoDBTargets []awstypes.MongoDBTarget) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 
 	for _, mongoDBTarget := range mongoDBTargets {
@@ -1140,14 +1139,14 @@ func flattenMongoDBTargets(mongoDBTargets []*awstypes.MongoDBTarget) []map[strin
 	return result
 }
 
-func flattenDeltaTargets(deltaTargets []*awstypes.DeltaTarget) []map[string]interface{} {
+func flattenDeltaTargets(deltaTargets []awstypes.DeltaTarget) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 
 	for _, deltaTarget := range deltaTargets {
 		attrs := make(map[string]interface{})
 		attrs["connection_name"] = aws.ToString(deltaTarget.ConnectionName)
 		attrs["create_native_delta_table"] = aws.ToBool(deltaTarget.CreateNativeDeltaTable)
-		attrs["delta_tables"] = flex.FlattenStringSet(deltaTarget.DeltaTables)
+		attrs["delta_tables"] = flex.FlattenStringValueSet(deltaTarget.DeltaTables)
 		attrs["write_manifest"] = aws.ToBool(deltaTarget.WriteManifest)
 
 		result = append(result, attrs)
@@ -1155,30 +1154,30 @@ func flattenDeltaTargets(deltaTargets []*awstypes.DeltaTarget) []map[string]inte
 	return result
 }
 
-func flattenHudiTargets(hudiTargets []*awstypes.HudiTarget) []map[string]interface{} {
+func flattenHudiTargets(hudiTargets []awstypes.HudiTarget) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 
 	for _, hudiTarget := range hudiTargets {
 		attrs := make(map[string]interface{})
 		attrs["connection_name"] = aws.ToString(hudiTarget.ConnectionName)
-		attrs["maximum_traversal_depth"] = aws.ToInt64(hudiTarget.MaximumTraversalDepth)
-		attrs["paths"] = flex.FlattenStringSet(hudiTarget.Paths)
-		attrs["exclusions"] = flex.FlattenStringList(hudiTarget.Exclusions)
+		attrs["maximum_traversal_depth"] = aws.ToInt32(hudiTarget.MaximumTraversalDepth)
+		attrs["paths"] = flex.FlattenStringValueSet(hudiTarget.Paths)
+		attrs["exclusions"] = flex.FlattenStringValueList(hudiTarget.Exclusions)
 
 		result = append(result, attrs)
 	}
 	return result
 }
 
-func flattenIcebergTargets(icebergTargets []*awstypes.IcebergTarget) []map[string]interface{} {
+func flattenIcebergTargets(icebergTargets []awstypes.IcebergTarget) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 
 	for _, icebergTarget := range icebergTargets {
 		attrs := make(map[string]interface{})
 		attrs["connection_name"] = aws.ToString(icebergTarget.ConnectionName)
-		attrs["maximum_traversal_depth"] = aws.ToInt64(icebergTarget.MaximumTraversalDepth)
-		attrs["paths"] = flex.FlattenStringSet(icebergTarget.Paths)
-		attrs["exclusions"] = flex.FlattenStringList(icebergTarget.Exclusions)
+		attrs["maximum_traversal_depth"] = aws.ToInt32(icebergTarget.MaximumTraversalDepth)
+		attrs["paths"] = flex.FlattenStringValueSet(icebergTarget.Paths)
+		attrs["exclusions"] = flex.FlattenStringValueList(icebergTarget.Exclusions)
 
 		result = append(result, attrs)
 	}
@@ -1202,7 +1201,7 @@ func expandCrawlerLineageConfiguration(cfg []interface{}) *awstypes.LineageConfi
 	m := cfg[0].(map[string]interface{})
 
 	target := &awstypes.LineageConfiguration{
-		CrawlerLineageSettings: aws.String(m["crawler_lineage_settings"].(string)),
+		CrawlerLineageSettings: awstypes.CrawlerLineageSettings(m["crawler_lineage_settings"].(string)),
 	}
 	return target
 }
@@ -1252,7 +1251,7 @@ func expandCrawlerRecrawlPolicy(cfg []interface{}) *awstypes.RecrawlPolicy {
 	m := cfg[0].(map[string]interface{})
 
 	target := &awstypes.RecrawlPolicy{
-		RecrawlBehavior: aws.String(m["recrawl_behavior"].(string)),
+		RecrawlBehavior: awstypes.RecrawlBehavior(m["recrawl_behavior"].(string)),
 	}
 	return target
 }

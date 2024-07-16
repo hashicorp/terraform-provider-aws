@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -1425,21 +1424,21 @@ func TestAccGlueCrawler_schemaChangePolicy(t *testing.T) {
 		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCrawlerConfig_schemaChangePolicy(rName, awstypes.DeleteBehaviorDeleteFromDatabase, awstypes.UpdateBehaviorUpdateInDatabase),
+				Config: testAccCrawlerConfig_schemaChangePolicy(rName, string(awstypes.DeleteBehaviorDeleteFromDatabase), string(awstypes.UpdateBehaviorUpdateInDatabase)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", awstypes.DeleteBehaviorDeleteFromDatabase),
-					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", awstypes.UpdateBehaviorUpdateInDatabase),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", string(awstypes.DeleteBehaviorDeleteFromDatabase)),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", string(awstypes.UpdateBehaviorUpdateInDatabase)),
 				),
 			},
 			{
-				Config: testAccCrawlerConfig_schemaChangePolicy(rName, awstypes.DeleteBehaviorLog, awstypes.UpdateBehaviorLog),
+				Config: testAccCrawlerConfig_schemaChangePolicy(rName, string(awstypes.DeleteBehaviorLog), string(awstypes.UpdateBehaviorLog)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", awstypes.DeleteBehaviorLog),
-					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", awstypes.UpdateBehaviorLog),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", string(awstypes.DeleteBehaviorLog)),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", string(awstypes.UpdateBehaviorLog)),
 				),
 			},
 			{
