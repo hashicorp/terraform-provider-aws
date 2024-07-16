@@ -20,6 +20,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory: newDataSourceDatabase,
 			Name:    "Database",
 		},
+		{
+			Factory: newDataSourceTable,
+			Name:    "Table",
+		},
 	}
 }
 
