@@ -58,7 +58,7 @@ func resourceInstance() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  InstanceMigrateState,
+		MigrateState:  instanceMigrateState,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),

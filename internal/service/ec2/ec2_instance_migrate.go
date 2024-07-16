@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func InstanceMigrateState(
+func instanceMigrateState(
 	v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:

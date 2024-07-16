@@ -238,6 +238,7 @@ var (
 	FlattenNetworkInterfacePrivateIPAddresses                  = flattenNetworkInterfacePrivateIPAddresses
 	FlattenSecurityGroups                                      = flattenSecurityGroups
 	InternetGatewayAttachmentParseResourceID                   = internetGatewayAttachmentParseResourceID
+	InstanceMigrateState                                       = instanceMigrateState
 	IPAMServicePrincipal                                       = ipamServicePrincipal
 	ManagedPrefixListEntryCreateResourceID                     = managedPrefixListEntryCreateResourceID
 	ManagedPrefixListEntryParseResourceID                      = managedPrefixListEntryParseResourceID
