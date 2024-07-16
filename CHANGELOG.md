@@ -17,6 +17,7 @@ ENHANCEMENTS:
 * resource/aws_kinesisanalyticsv2_application: Support `FLINK-1_19` as a valid value for `runtime_environment` ([#38350](https://github.com/hashicorp/terraform-provider-aws/issues/38350))
 * resource/aws_lakeformation_data_lake_settings: Add `allow_full_table_external_data_access` attribute ([#34474](https://github.com/hashicorp/terraform-provider-aws/issues/34474))
 * resource/aws_lb_target_group: Add `target_group_health` configuration block ([#37082](https://github.com/hashicorp/terraform-provider-aws/issues/37082))
+* resource/aws_msk_replicator: Add `starting_position` argument ([#36968](https://github.com/hashicorp/terraform-provider-aws/issues/36968))
 
 BUG FIXES:
 
