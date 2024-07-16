@@ -44,7 +44,7 @@ func TestAccTimestreamWriteTableDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDatabaseName, rDatabaseName),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrTableName, rTableName),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rTableName),
 					resource.TestCheckResourceAttr(dataSourceName, "magnetic_store_write_properties.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", acctest.Ct0),
@@ -228,7 +228,7 @@ func testAccCheckTableExistsNames(ctx context.Context, n string) resource.TestCh
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteClient(ctx)
 
-		_, err := tftimestreamwrite.FindTableByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDatabaseName], rs.Primary.Attributes[names.AttrTableName])
+		_, err := tftimestreamwrite.FindTableByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDatabaseName], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
@@ -245,8 +245,10 @@ resource "aws_timestreamwrite_database" "test" {
 
 data "aws_timestreamwrite_table" "test" {
   database_name = aws_timestreamwrite_database.test.database_name
-  table_name    = aws_timestreamwrite_table.test.table_name
+  name          = aws_timestreamwrite_table.test.table_name
 }
+
+
 
 
 `, rName)
@@ -265,6 +267,7 @@ resource "aws_timestreamwrite_table" "test" {
 func testAccTableDataSourceConfig_magneticStoreWriteProperties(rDatabaseName, rTableName string, enable bool) string {
 	return fmt.Sprintf(`
 
+
 resource "aws_timestreamwrite_database" "test" {
   database_name = %[1]q
 }
@@ -280,8 +283,10 @@ resource "aws_timestreamwrite_table" "test" {
 
 data "aws_timestreamwrite_table" "test" {
   database_name = aws_timestreamwrite_database.test.database_name
-  table_name    = aws_timestreamwrite_table.test.table_name
+  name          = aws_timestreamwrite_table.test.table_name
 }
+
+
 
 
   `, rDatabaseName, rTableName, enable)
@@ -289,6 +294,7 @@ data "aws_timestreamwrite_table" "test" {
 
 func testAccTableDataSourceConfig_magneticStoreWritePropertiesS3(rDatabaseName, rTableName, prefix string) string {
 	return fmt.Sprintf(`
+
 
 resource "aws_timestreamwrite_database" "test" {
   database_name = %[1]q
@@ -317,13 +323,14 @@ resource "aws_timestreamwrite_table" "test" {
 
 data "aws_timestreamwrite_table" "test" {
   database_name = aws_timestreamwrite_database.test.database_name
-  table_name    = aws_timestreamwrite_table.test.table_name
+  name          = aws_timestreamwrite_table.test.table_name
 }
 `, rDatabaseName, rTableName, prefix)
 }
 
 func testAccTableDataSourceConfig_magneticStoreWritePropertiesS3KMS(rDatabaseName, rTableName string) string {
 	return fmt.Sprintf(`
+
 
 resource "aws_timestreamwrite_database" "test" {
   database_name = %[1]q
@@ -359,13 +366,15 @@ resource "aws_timestreamwrite_table" "test" {
 
 data "aws_timestreamwrite_table" "test" {
   database_name = aws_timestreamwrite_database.test.database_name
-  table_name    = aws_timestreamwrite_table.test.table_name
+  name          = aws_timestreamwrite_table.test.table_name
 }
 `, rDatabaseName, rTableName)
 }
 
 func testAccTableDataSourceConfig_retentionProperties(rDatabaseName, rTableName string, magneticStoreDays, memoryStoreHours int) string {
 	return fmt.Sprintf(`
+
+
 
 
 resource "aws_timestreamwrite_database" "test" {
@@ -384,13 +393,15 @@ resource "aws_timestreamwrite_table" "test" {
 
 data "aws_timestreamwrite_table" "test" {
   database_name = aws_timestreamwrite_database.test.database_name
-  table_name    = aws_timestreamwrite_table.test.table_name
+  name          = aws_timestreamwrite_table.test.table_name
 }
 `, rDatabaseName, rTableName, magneticStoreDays, memoryStoreHours)
 }
 
 func testAccTableDataSourceConfig_schema(rDatabaseName, rTableName, enforcementInRecord string) string {
 	return fmt.Sprintf(`
+
+
 
 
 resource "aws_timestreamwrite_database" "test" {
@@ -412,7 +423,7 @@ resource "aws_timestreamwrite_table" "test" {
 
 data "aws_timestreamwrite_table" "test" {
   database_name = aws_timestreamwrite_database.test.database_name
-  table_name    = aws_timestreamwrite_table.test.table_name
+  name          = aws_timestreamwrite_table.test.table_name
 }
 `, rDatabaseName, rTableName, enforcementInRecord)
 }

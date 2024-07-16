@@ -17,7 +17,7 @@ Terraform data source for managing an AWS Timestream Write Table.
 ```terraform
 data "aws_timestreamwrite_table" "test" {
   database_name = aws_timestreamwrite_database.test.database_name
-  table_name    = aws_timestreamwrite_table.test.table_name
+  name          = aws_timestreamwrite_table.test.table_name
 }
 ```
 
@@ -26,7 +26,7 @@ data "aws_timestreamwrite_table" "test" {
 The following arguments are required:
 
 * `database_name` - (Required) Name of the Timestream database.
-* `table_name` - (Required) Name of the Timestream table.
+* `name` - (Required) Name of the Timestream table.
 
 ## Attribute Reference
 
@@ -51,5 +51,5 @@ This data source exports the following attributes in addition to the arguments a
     * `type` - Type of partition key.
     * `partition_key` - Level of enforcement for the specification of a dimension key in ingested records.
     * `name` - Name of the timestream attribute used for a dimension key.
-* `table_name` - Name of the table.
+* `name` - Name of the table.
 * `table_status` - Current state of table.

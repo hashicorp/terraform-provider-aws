@@ -45,7 +45,7 @@ func (d *dataSourceTable) Schema(ctx context.Context, request datasource.SchemaR
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
-			names.AttrTableName: schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 
@@ -104,7 +104,7 @@ type dsTable struct {
 	MagneticStoreWriteProperties fwtypes.ListNestedObjectValueOf[dsMagneticProp]        `tfsdk:"magnetic_store_write_properties"`
 	RetentionProperties          fwtypes.ListNestedObjectValueOf[dsRetentionProperties] `tfsdk:"retention_properties"`
 	Schema                       fwtypes.ListNestedObjectValueOf[dsSchema]              `tfsdk:"schema"`
-	Name                         types.String                                           `tfsdk:"table_name"`
+	Name                         types.String                                           `tfsdk:"name"`
 	Status                       fwtypes.StringEnum[awstypes.TableStatus]               `tfsdk:"table_status"`
 }
 
