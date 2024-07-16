@@ -521,7 +521,7 @@ func testAccApplicationConfig_interactiveConfiguration(rName string, livyEndpoin
 	return fmt.Sprintf(`
 resource "aws_emrserverless_application" "test" {
   name          = %[1]q
-  release_label = "emr-6.6.0"
+  release_label = "emr-6.14.0"
   type          = "hive"
   interactive_configuration {
     livy_endpoint_enabled = %[2]t
