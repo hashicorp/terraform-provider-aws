@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -72,8 +71,8 @@ func ResourceCatalogDatabase() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: enum.Validate[awstypes.Permission](),
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[awstypes.Permission](),
 							},
 						},
 						names.AttrPrincipal: {
@@ -159,7 +158,7 @@ func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, 
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	name := d.Get(names.AttrName).(string)
 
-	dbInput := &glue.DatabaseInput{
+	dbInput := &awstypes.DatabaseInput{
 		Name: aws.String(name),
 	}
 
@@ -172,7 +171,7 @@ func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk(names.AttrParameters); ok {
-		dbInput.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
+		dbInput.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("federated_database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -218,7 +217,7 @@ func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, 
 			Name:      aws.String(name),
 		}
 
-		dbInput := &glue.DatabaseInput{
+		dbInput := &awstypes.DatabaseInput{
 			Name: aws.String(name),
 		}
 
@@ -231,7 +230,7 @@ func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if v, ok := d.GetOk(names.AttrParameters); ok {
-			dbInput.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
+			dbInput.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("federated_database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -426,12 +425,12 @@ func flattenDatabaseTargetDatabase(apiObject *awstypes.DatabaseIdentifier) map[s
 	return tfMap
 }
 
-func expandDatabasePrincipalPermissions(tfList []interface{}) []*awstypes.PrincipalPermissions {
+func expandDatabasePrincipalPermissions(tfList []interface{}) []awstypes.PrincipalPermissions {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*awstypes.PrincipalPermissions
+	var apiObjects []awstypes.PrincipalPermissions
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -442,25 +441,17 @@ func expandDatabasePrincipalPermissions(tfList []interface{}) []*awstypes.Princi
 
 		apiObject := expandDatabasePrincipalPermission(tfMap)
 
-		if apiObject == nil {
-			continue
-		}
-
 		apiObjects = append(apiObjects, apiObject)
 	}
 
 	return apiObjects
 }
 
-func expandDatabasePrincipalPermission(tfMap map[string]interface{}) *awstypes.PrincipalPermissions {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &awstypes.PrincipalPermissions{}
+func expandDatabasePrincipalPermission(tfMap map[string]interface{}) awstypes.PrincipalPermissions {
+	apiObject := awstypes.PrincipalPermissions{}
 
 	if v, ok := tfMap[names.AttrPermissions].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Permissions = flex.ExpandStringSet(v)
+		apiObject.Permissions = flex.ExpandStringyValueSet[awstypes.Permission](v)
 	}
 
 	if v, ok := tfMap[names.AttrPrincipal].([]interface{}); ok && len(v) > 0 {
@@ -484,7 +475,7 @@ func expandDatabasePrincipal(tfMap map[string]interface{}) *awstypes.DataLakePri
 	return apiObject
 }
 
-func flattenDatabasePrincipalPermissions(apiObjects []*awstypes.PrincipalPermissions) []interface{} {
+func flattenDatabasePrincipalPermissions(apiObjects []awstypes.PrincipalPermissions) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -492,25 +483,17 @@ func flattenDatabasePrincipalPermissions(apiObjects []*awstypes.PrincipalPermiss
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenDatabasePrincipalPermission(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenDatabasePrincipalPermission(apiObject *awstypes.PrincipalPermissions) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenDatabasePrincipalPermission(apiObject awstypes.PrincipalPermissions) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Permissions; v != nil {
-		tfMap[names.AttrPermissions] = flex.FlattenStringSet(v)
+		tfMap[names.AttrPermissions] = flex.FlattenStringyValueSet(v)
 	}
 
 	if v := apiObject.Principal; v != nil {
