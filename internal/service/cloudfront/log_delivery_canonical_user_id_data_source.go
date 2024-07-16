@@ -26,7 +26,7 @@ func dataSourceLogDeliveryCanonicalUserID() *schema.Resource {
 		ReadWithoutTimeout: dataSourceLogDeliveryCanonicalUserIDRead,
 
 		Schema: map[string]*schema.Schema{
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -39,7 +39,7 @@ func dataSourceLogDeliveryCanonicalUserIDRead(ctx context.Context, d *schema.Res
 	canonicalId := defaultLogDeliveryCanonicalUserID
 
 	region := meta.(*conns.AWSClient).Region
-	if v, ok := d.GetOk("region"); ok {
+	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
 

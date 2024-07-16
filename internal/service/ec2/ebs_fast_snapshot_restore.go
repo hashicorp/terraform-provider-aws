@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="EBS Fast Snapshot Restore")
+// @FrameworkResource("aws_ebs_fast_snapshot_restore", name="EBS Fast Snapshot Restore")
 func newEBSFastSnapshotRestoreResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &ebsFastSnapshotRestoreResource{}
 
@@ -48,25 +48,25 @@ func (*ebsFastSnapshotRestoreResource) Metadata(_ context.Context, request resou
 func (r *ebsFastSnapshotRestoreResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"availability_zone": schema.StringAttribute{
+			names.AttrAvailabilityZone: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"snapshot_id": schema.StringAttribute{
+			names.AttrSnapshotID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"state": schema.StringAttribute{
+			names.AttrState: schema.StringAttribute{
 				Computed: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),

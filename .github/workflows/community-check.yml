@@ -19,6 +19,12 @@ on:
         description: Whether or not the user is a partner
         value: ${{ jobs.community_check.outputs.is_partner }}
 
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
 jobs:
   community_check:
     name: Check community lists for username

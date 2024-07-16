@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestFilterPermissions(t *testing.T) {
@@ -302,7 +303,7 @@ func TestFilterPermissions(t *testing.T) {
 				},
 			},
 			TableType:   tflakeformation.TableTypeTableWithColumns,
-			ColumnNames: []string{"value"},
+			ColumnNames: []string{names.AttrValue},
 			All: []awstypes.PrincipalResourcePermissions{
 				{
 					Permissions:                []awstypes.Permission{awstypes.PermissionAlter, awstypes.PermissionDelete},
@@ -323,7 +324,7 @@ func TestFilterPermissions(t *testing.T) {
 					Resource: &awstypes.Resource{
 						TableWithColumns: &awstypes.TableWithColumnsResource{
 							CatalogId:    aws.String(accountID),
-							ColumnNames:  []string{"value"},
+							ColumnNames:  []string{names.AttrValue},
 							DatabaseName: aws.String(dbName),
 							Name:         aws.String(tableName),
 						},
@@ -363,7 +364,7 @@ func TestFilterPermissions(t *testing.T) {
 					Resource: &awstypes.Resource{
 						TableWithColumns: &awstypes.TableWithColumnsResource{
 							CatalogId:    aws.String(accountID),
-							ColumnNames:  []string{"value"},
+							ColumnNames:  []string{names.AttrValue},
 							DatabaseName: aws.String(dbName),
 							Name:         aws.String(tableName),
 						},
@@ -467,7 +468,7 @@ func TestFilterPermissions(t *testing.T) {
 			},
 			TableType:           tflakeformation.TableTypeTableWithColumns,
 			ColumnWildcard:      true,
-			ExcludedColumnNames: []string{"value"},
+			ExcludedColumnNames: []string{names.AttrValue},
 			All: []awstypes.PrincipalResourcePermissions{
 				{
 					Permissions:                []awstypes.Permission{awstypes.PermissionAlter, awstypes.PermissionDelete},
@@ -489,7 +490,7 @@ func TestFilterPermissions(t *testing.T) {
 						TableWithColumns: &awstypes.TableWithColumnsResource{
 							CatalogId: aws.String(accountID),
 							ColumnWildcard: &awstypes.ColumnWildcard{
-								ExcludedColumnNames: []string{"value"},
+								ExcludedColumnNames: []string{names.AttrValue},
 							},
 							DatabaseName: aws.String(dbName),
 							Name:         aws.String(tableName),
@@ -531,7 +532,7 @@ func TestFilterPermissions(t *testing.T) {
 						TableWithColumns: &awstypes.TableWithColumnsResource{
 							CatalogId: aws.String(accountID),
 							ColumnWildcard: &awstypes.ColumnWildcard{
-								ExcludedColumnNames: []string{"value"},
+								ExcludedColumnNames: []string{names.AttrValue},
 							},
 							DatabaseName: aws.String(dbName),
 							Name:         aws.String(tableName),

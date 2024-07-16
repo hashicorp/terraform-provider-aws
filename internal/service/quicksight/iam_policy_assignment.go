@@ -71,7 +71,7 @@ func (r *resourceIAMPolicyAssignment) Schema(ctx context.Context, req resource.S
 					stringvalidator.OneOf(quicksight.AssignmentStatus_Values()...),
 				},
 			},
-			"aws_account_id": schema.StringAttribute{
+			names.AttrAWSAccountID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -79,8 +79,8 @@ func (r *resourceIAMPolicyAssignment) Schema(ctx context.Context, req resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"namespace": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrNamespace: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				Default:  stringdefault.StaticString(DefaultIAMPolicyAssignmentNamespace),
@@ -316,7 +316,7 @@ func (r *resourceIAMPolicyAssignment) Delete(ctx context.Context, req resource.D
 }
 
 func (r *resourceIAMPolicyAssignment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindIAMPolicyAssignmentByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.IAMPolicyAssignment, error) {

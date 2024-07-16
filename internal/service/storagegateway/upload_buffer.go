@@ -19,12 +19,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_storagegateway_upload_buffer")
-func ResourceUploadBuffer() *schema.Resource {
+// @SDKResource("aws_storagegateway_upload_buffer", name="Upload Buffer")
+func resourceUploadBuffer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUploadBufferCreate,
 		ReadWithoutTimeout:   resourceUploadBufferRead,
 		DeleteWithoutTimeout: schema.NoopContext,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -89,7 +90,7 @@ func resourceUploadBufferCreate(ctx context.Context, d *schema.ResourceData, met
 		return append(diags, resourceUploadBufferRead(ctx, d, meta)...)
 	}
 
-	disk, err := FindLocalDiskByDiskPath(ctx, conn, aws.StringValue(output.GatewayARN), aws.StringValue(input.DiskIds[0]))
+	disk, err := findLocalDiskByGatewayARNAndDiskPath(ctx, conn, aws.StringValue(output.GatewayARN), aws.StringValue(input.DiskIds[0]))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing Storage Gateway Local Disks after creating Upload Buffer: %s", err)
@@ -139,7 +140,7 @@ func resourceUploadBufferRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("gateway_arn", gatewayARN)
 
 	if _, ok := d.GetOk("disk_path"); !ok {
-		disk, err := FindLocalDiskByDiskID(ctx, conn, gatewayARN, aws.StringValue(foundDiskID))
+		disk, err := findLocalDiskByGatewayARNAndDiskID(ctx, conn, gatewayARN, aws.StringValue(foundDiskID))
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "listing Storage Gateway Local Disks: %s", err)

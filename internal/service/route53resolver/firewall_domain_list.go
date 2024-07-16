@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -38,7 +39,7 @@ func ResourceFirewallDomainList() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,7 +48,7 @@ func ResourceFirewallDomainList() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -62,9 +63,10 @@ func ResourceFirewallDomainList() *schema.Resource {
 }
 
 func resourceFirewallDomainListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &route53resolver.CreateFirewallDomainListInput{
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-firewall-domain-list-")),
 		Name:             aws.String(name),
@@ -74,7 +76,7 @@ func resourceFirewallDomainListCreate(ctx context.Context, d *schema.ResourceDat
 	output, err := conn.CreateFirewallDomainListWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Route53 Resolver Firewall Domain List (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Resolver Firewall Domain List (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.FirewallDomainList.Id))
@@ -87,18 +89,19 @@ func resourceFirewallDomainListCreate(ctx context.Context, d *schema.ResourceDat
 		})
 
 		if err != nil {
-			return diag.Errorf("updating Route53 Resolver Firewall Domain List (%s) domains: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Route53 Resolver Firewall Domain List (%s) domains: %s", d.Id(), err)
 		}
 
 		if _, err = waitFirewallDomainListUpdated(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("waiting for Route53 Resolver Firewall Domain List (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Firewall Domain List (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceFirewallDomainListRead(ctx, d, meta)
+	return append(diags, resourceFirewallDomainListRead(ctx, d, meta)...)
 }
 
 func resourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	firewallDomainList, err := FindFirewallDomainListByID(ctx, conn, d.Id())
@@ -106,16 +109,16 @@ func resourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData,
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Firewall Domain List (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Firewall Domain List (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Firewall Domain List (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(firewallDomainList.Arn)
-	d.Set("arn", arn)
-	d.Set("name", firewallDomainList.Name)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrName, firewallDomainList.Name)
 
 	input := &route53resolver.ListFirewallDomainsInput{
 		FirewallDomainListId: aws.String(d.Id()),
@@ -133,15 +136,16 @@ func resourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData,
 	})
 
 	if err != nil {
-		return diag.Errorf("listing Route53 Resolver Firewall Domain List (%s) domains: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing Route53 Resolver Firewall Domain List (%s) domains: %s", d.Id(), err)
 	}
 
 	d.Set("domains", aws.StringValueSlice(output))
 
-	return nil
+	return diags
 }
 
 func resourceFirewallDomainListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	if d.HasChange("domains") {
@@ -170,18 +174,19 @@ func resourceFirewallDomainListUpdate(ctx context.Context, d *schema.ResourceDat
 		})
 
 		if err != nil {
-			return diag.Errorf("updating Route53 Resolver Firewall Domain List (%s) domains: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Route53 Resolver Firewall Domain List (%s) domains: %s", d.Id(), err)
 		}
 
 		if _, err = waitFirewallDomainListUpdated(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("waiting for Route53 Resolver Firewall Domain List (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Firewall Domain List (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceFirewallDomainListRead(ctx, d, meta)
+	return append(diags, resourceFirewallDomainListRead(ctx, d, meta)...)
 }
 
 func resourceFirewallDomainListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Domain List: %s", d.Id())
@@ -190,18 +195,18 @@ func resourceFirewallDomainListDelete(ctx context.Context, d *schema.ResourceDat
 	})
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Route53 Resolver Firewall Domain List (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 Resolver Firewall Domain List (%s): %s", d.Id(), err)
 	}
 
 	if _, err = waitFirewallDomainListDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Route53 Resolver Firewall Domain List (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Firewall Domain List (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindFirewallDomainListByID(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.FirewallDomainList, error) {

@@ -86,9 +86,11 @@ class MyConvertedCode extends TerraformStack {
     const example = new SagemakerAppImageConfig(this, "example", {
       appImageConfigName: "example",
       kernelGatewayImageConfig: {
-        kernelSpec: {
-          name: "example",
-        },
+        kernelSpec: [
+          {
+            name: "example",
+          },
+        ],
       },
     });
     const awsSagemakerImageExample = new SagemakerImage(this, "example_1", {
@@ -268,6 +270,7 @@ The following arguments are optional:
 
 * `defaultResourceSpec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [`defaultResourceSpec` Block](#default_resource_spec-block) below.
 * `lifecycleConfigArns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+* `customImage` - (Optional) A list of custom SageMaker images that are configured to run as a CodeEditor app. see [`customImage` Block](#custom_image-block) below.
 
 ##### `codeRepository` Block
 
@@ -364,4 +367,4 @@ Using `terraform import`, import SageMaker Domains using the `id`. For example:
 % terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1aef42f588000331a9cbfd58b449907f26fa2c1a99529bd8fe066eea5f20c0de -->
+<!-- cache-key: cdktf-0.20.1 input-888b29765c78136a5dfabf8748cce1605dbe6705ed2be06764d7f9fb568fcfae -->

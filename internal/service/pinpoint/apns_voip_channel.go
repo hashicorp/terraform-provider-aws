@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_pinpoint_apns_voip_channel")
@@ -28,7 +29,7 @@ func ResourceAPNSVoIPChannel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -38,7 +39,7 @@ func ResourceAPNSVoIPChannel() *schema.Resource {
 				Optional:  true,
 				Sensitive: true,
 			},
-			"certificate": {
+			names.AttrCertificate: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
@@ -47,12 +48,12 @@ func ResourceAPNSVoIPChannel() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"private_key": {
+			names.AttrPrivateKey: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
@@ -78,8 +79,8 @@ func ResourceAPNSVoIPChannel() *schema.Resource {
 
 func resourceAPNSVoIPChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	certificate, certificateOk := d.GetOk("certificate")
-	privateKey, privateKeyOk := d.GetOk("private_key")
+	certificate, certificateOk := d.GetOk(names.AttrCertificate)
+	privateKey, privateKeyOk := d.GetOk(names.AttrPrivateKey)
 
 	bundleId, bundleIdOk := d.GetOk("bundle_id")
 	teamId, teamIdOk := d.GetOk("team_id")
@@ -92,12 +93,12 @@ func resourceAPNSVoIPChannelUpsert(ctx context.Context, d *schema.ResourceData, 
 
 	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	applicationId := d.Get("application_id").(string)
+	applicationId := d.Get(names.AttrApplicationID).(string)
 
 	params := &pinpoint.APNSVoipChannelRequest{}
 
 	params.DefaultAuthenticationMethod = aws.String(d.Get("default_authentication_method").(string))
-	params.Enabled = aws.Bool(d.Get("enabled").(bool))
+	params.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
 
 	params.Certificate = aws.String(certificate.(string))
 	params.PrivateKey = aws.String(privateKey.(string))
@@ -141,9 +142,9 @@ func resourceAPNSVoIPChannelRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "getting Pinpoint APNs Voip Channel for application %s: %s", d.Id(), err)
 	}
 
-	d.Set("application_id", output.APNSVoipChannelResponse.ApplicationId)
+	d.Set(names.AttrApplicationID, output.APNSVoipChannelResponse.ApplicationId)
 	d.Set("default_authentication_method", output.APNSVoipChannelResponse.DefaultAuthenticationMethod)
-	d.Set("enabled", output.APNSVoipChannelResponse.Enabled)
+	d.Set(names.AttrEnabled, output.APNSVoipChannelResponse.Enabled)
 	// Sensitive params are not returned
 
 	return diags

@@ -63,7 +63,7 @@ func ResourceMediaInsightsPipelineConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,7 +72,7 @@ func ResourceMediaInsightsPipelineConfiguration() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.MediaInsightsPipelineConfigurationElementType](),
@@ -88,11 +88,11 @@ func ResourceMediaInsightsPipelineConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -148,7 +148,7 @@ func AmazonTranscribeCallAnalyticsProcessorConfigurationSchema() *schema.Schema 
 					Type:     schema.TypeBool,
 					Optional: true,
 				},
-				"language_code": {
+				names.AttrLanguageCode: {
 					Type:             schema.TypeString,
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.CallAnalyticsLanguageCode](),
@@ -259,7 +259,7 @@ func AmazonTranscribeProcessorConfigurationSchema() *schema.Schema {
 					Type:     schema.TypeBool,
 					Optional: true,
 				},
-				"language_code": {
+				names.AttrLanguageCode: {
 					Type:             schema.TypeString,
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.CallAnalyticsLanguageCode](),
@@ -340,7 +340,7 @@ func S3RecordingSinkConfigurationSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"destination": {
+				names.AttrDestination: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: verify.ValidARN,
@@ -458,7 +458,7 @@ func RealTimeAlertConfigurationSchema() *schema.Schema {
 									},
 								},
 							},
-							"type": {
+							names.AttrType: {
 								Type:             schema.TypeString,
 								Required:         true,
 								ValidateDiagFunc: enum.Validate[awstypes.RealTimeAlertRuleType](),
@@ -479,11 +479,11 @@ func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *sc
 	elements, err := expandElements(d.Get("elements").([]interface{}))
 	if err != nil {
 		return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionCreating,
-			ResNameMediaInsightsPipelineConfiguration, d.Get("name").(string), err)
+			ResNameMediaInsightsPipelineConfiguration, d.Get(names.AttrName).(string), err)
 	}
 
 	in := &chimesdkmediapipelines.CreateMediaInsightsPipelineConfigurationInput{
-		MediaInsightsPipelineConfigurationName: aws.String(d.Get("name").(string)),
+		MediaInsightsPipelineConfigurationName: aws.String(d.Get(names.AttrName).(string)),
 		ResourceAccessRoleArn:                  aws.String(d.Get("resource_access_role_arn").(string)),
 		Elements:                               elements,
 		Tags:                                   getTagsIn(ctx),
@@ -493,7 +493,7 @@ func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *sc
 		rtac, err := expandRealTimeAlertConfiguration(realTimeAlertConfiguration.([]interface{})[0].(map[string]interface{}))
 		if err != nil {
 			return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionCreating,
-				ResNameMediaInsightsPipelineConfiguration, d.Get("name").(string), err)
+				ResNameMediaInsightsPipelineConfiguration, d.Get(names.AttrName).(string), err)
 		}
 		in.RealTimeAlertConfiguration = rtac
 	}
@@ -514,11 +514,11 @@ func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *sc
 		return nil
 	})
 	if createError != nil {
-		return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionCreating, ResNameMediaInsightsPipelineConfiguration, d.Get("name").(string), createError)
+		return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionCreating, ResNameMediaInsightsPipelineConfiguration, d.Get(names.AttrName).(string), createError)
 	}
 
 	if out == nil || out.MediaInsightsPipelineConfiguration == nil {
-		return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionCreating, ResNameMediaInsightsPipelineConfiguration, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionCreating, ResNameMediaInsightsPipelineConfiguration, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.MediaInsightsPipelineConfiguration.MediaInsightsPipelineConfigurationArn))
@@ -543,9 +543,9 @@ func resourceMediaInsightsPipelineConfigurationRead(ctx context.Context, d *sche
 		return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionReading, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
 	}
 
-	d.Set("arn", out.MediaInsightsPipelineConfigurationArn)
-	d.Set("name", out.MediaInsightsPipelineConfigurationName)
-	d.Set("id", out.MediaInsightsPipelineConfigurationId)
+	d.Set(names.AttrARN, out.MediaInsightsPipelineConfigurationArn)
+	d.Set(names.AttrName, out.MediaInsightsPipelineConfigurationName)
+	d.Set(names.AttrID, out.MediaInsightsPipelineConfigurationId)
 	d.Set("resource_access_role_arn", out.ResourceAccessRoleArn)
 	if err := d.Set("elements", flattenElements(out.Elements)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting elements: %s", err)
@@ -679,7 +679,7 @@ func expandElement(inputElement interface{}) (awstypes.MediaInsightsPipelineConf
 	}
 
 	element := awstypes.MediaInsightsPipelineConfigurationElement{
-		Type: awstypes.MediaInsightsPipelineConfigurationElementType(inputMapRaw["type"].(string)),
+		Type: awstypes.MediaInsightsPipelineConfigurationElementType(inputMapRaw[names.AttrType].(string)),
 	}
 
 	switch {
@@ -691,7 +691,7 @@ func expandElement(inputElement interface{}) (awstypes.MediaInsightsPipelineConf
 
 		rawConfiguration := configuration[0].(map[string]interface{})
 		element.AmazonTranscribeCallAnalyticsProcessorConfiguration = &awstypes.AmazonTranscribeCallAnalyticsProcessorConfiguration{
-			LanguageCode: awstypes.CallAnalyticsLanguageCode(rawConfiguration["language_code"].(string)),
+			LanguageCode: awstypes.CallAnalyticsLanguageCode(rawConfiguration[names.AttrLanguageCode].(string)),
 		}
 
 		if callAnalyticsStreamCategories, ok := rawConfiguration["call_analytics_stream_categories"].([]interface{}); ok && len(callAnalyticsStreamCategories) > 0 {
@@ -761,7 +761,7 @@ func expandElement(inputElement interface{}) (awstypes.MediaInsightsPipelineConf
 
 		rawConfiguration := configuration[0].(map[string]interface{})
 		element.AmazonTranscribeProcessorConfiguration = &awstypes.AmazonTranscribeProcessorConfiguration{
-			LanguageCode: awstypes.CallAnalyticsLanguageCode(rawConfiguration["language_code"].(string)),
+			LanguageCode: awstypes.CallAnalyticsLanguageCode(rawConfiguration[names.AttrLanguageCode].(string)),
 		}
 
 		if contentIdentificationType, ok := rawConfiguration["content_identification_type"].(string); ok && contentIdentificationType != "" {
@@ -855,7 +855,7 @@ func expandElement(inputElement interface{}) (awstypes.MediaInsightsPipelineConf
 
 		rawConfiguration := configuration[0].(map[string]interface{})
 		element.S3RecordingSinkConfiguration = &awstypes.S3RecordingSinkConfiguration{
-			Destination: aws.String(rawConfiguration["destination"].(string)),
+			Destination: aws.String(rawConfiguration[names.AttrDestination].(string)),
 		}
 	case element.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeVoiceAnalyticsProcessor:
 		var configuration []interface{}
@@ -895,7 +895,7 @@ func expandRealTimeAlertRule(inputRule interface{}) (awstypes.RealTimeAlertRule,
 	if !ok {
 		return awstypes.RealTimeAlertRule{}, nil
 	}
-	ruleType := awstypes.RealTimeAlertRuleType(inputRuleRaw["type"].(string))
+	ruleType := awstypes.RealTimeAlertRuleType(inputRuleRaw[names.AttrType].(string))
 	apiRule := awstypes.RealTimeAlertRule{
 		Type: ruleType,
 	}
@@ -967,7 +967,7 @@ func flattenElement(apiElement awstypes.MediaInsightsPipelineConfigurationElemen
 		return nil
 	}
 	tfMap := map[string]interface{}{}
-	tfMap["type"] = string(apiElement.Type)
+	tfMap[names.AttrType] = string(apiElement.Type)
 
 	configuration := map[string]interface{}{}
 
@@ -979,7 +979,7 @@ func flattenElement(apiElement awstypes.MediaInsightsPipelineConfigurationElemen
 		configuration["content_redaction_type"] = processorConfiguration.ContentRedactionType
 		configuration["enable_partial_results_stabilization"] = processorConfiguration.EnablePartialResultsStabilization
 		configuration["filter_partial_results"] = processorConfiguration.FilterPartialResults
-		configuration["language_code"] = processorConfiguration.LanguageCode
+		configuration[names.AttrLanguageCode] = processorConfiguration.LanguageCode
 		configuration["language_model_name"] = processorConfiguration.LanguageModelName
 		configuration["partial_results_stability"] = processorConfiguration.PartialResultsStability
 		configuration["pii_entity_types"] = processorConfiguration.PiiEntityTypes
@@ -1003,7 +1003,7 @@ func flattenElement(apiElement awstypes.MediaInsightsPipelineConfigurationElemen
 		configuration["content_redaction_type"] = processorConfiguration.ContentRedactionType
 		configuration["enable_partial_results_stabilization"] = processorConfiguration.EnablePartialResultsStabilization
 		configuration["filter_partial_results"] = processorConfiguration.FilterPartialResults
-		configuration["language_code"] = processorConfiguration.LanguageCode
+		configuration[names.AttrLanguageCode] = processorConfiguration.LanguageCode
 		configuration["language_model_name"] = processorConfiguration.LanguageModelName
 		configuration["partial_results_stability"] = processorConfiguration.PartialResultsStability
 		configuration["pii_entity_types"] = processorConfiguration.PiiEntityTypes
@@ -1030,7 +1030,7 @@ func flattenElement(apiElement awstypes.MediaInsightsPipelineConfigurationElemen
 		tfMap["sqs_queue_sink_configuration"] = []interface{}{configuration}
 	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeS3RecordingSink:
 		processorConfiguration := apiElement.S3RecordingSinkConfiguration
-		configuration["destination"] = processorConfiguration.Destination
+		configuration[names.AttrDestination] = processorConfiguration.Destination
 		tfMap["s3_recording_sink_configuration"] = []interface{}{configuration}
 	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeVoiceAnalyticsProcessor:
 		processorConfiguration := apiElement.VoiceAnalyticsProcessorConfiguration
@@ -1067,7 +1067,7 @@ func flattenRealTimeAlertRule(apiRule awstypes.RealTimeAlertRule) interface{} {
 		return nil
 	}
 	tfMap := map[string]interface{}{}
-	tfMap["type"] = string(apiRule.Type)
+	tfMap[names.AttrType] = string(apiRule.Type)
 
 	configuration := map[string]interface{}{}
 

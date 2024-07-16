@@ -23,6 +23,7 @@ import (
 
 // @SDKResource("aws_default_vpc", name="VPC")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceDefaultVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -50,7 +51,7 @@ func ResourceDefaultVPC() *schema.Resource {
 		//   - existing_default_vpc Computed-only, set in resourceDefaultVPCCreate
 		//   - force_destroy Optional
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,7 +60,7 @@ func ResourceDefaultVPC() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"ipv6_ipam_pool_id"},
 			},
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -98,7 +99,7 @@ func ResourceDefaultVPC() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -143,7 +144,7 @@ func ResourceDefaultVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -166,7 +167,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	vpcInfo := &vpcInfo{}
-	vpc, err := findVPCV2(ctx, conn, input)
+	vpc, err := findVPC(ctx, conn, input)
 
 	if err == nil {
 		d.SetId(aws.ToString(vpc.VpcId))
@@ -174,18 +175,18 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 		vpcInfo.vpc = vpc
 
-		if v, err := findVPCAttributeV2(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames); err != nil {
+		if v, err := findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames); err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames, err)
 		} else {
 			vpcInfo.enableDnsHostnames = v
 		}
 
-		if v, err := findVPCAttributeV2(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport); err != nil {
+		if v, err := findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport); err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsSupport, err)
 		} else {
 			vpcInfo.enableDnsSupport = v
 		}
-		if v, err := findVPCAttributeV2(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
+		if v, err := findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
 		} else {
 			vpcInfo.enableNetworkAddressUsageMetrics = v
@@ -204,7 +205,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 		d.SetId(aws.ToString(vpc.VpcId))
 		d.Set("existing_default_vpc", false)
 
-		vpc, err = waitVPCCreatedV2(ctx, conn, d.Id())
+		vpc, err = waitVPCCreated(ctx, conn, d.Id())
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Default VPC (%s) create: %s", d.Id(), err)
@@ -285,7 +286,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDefaultVPCDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	if d.Get("force_destroy").(bool) {
+	if d.Get(names.AttrForceDestroy).(bool) {
 		return append(diags, resourceVPCDelete(ctx, d, meta)...)
 	}
 
