@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -937,7 +936,7 @@ func flattenStorageDescriptor(s *awstypes.StorageDescriptor) []map[string]interf
 	return storageDescriptors
 }
 
-func flattenColumns(cs []*awstypes.Column) []map[string]interface{} {
+func flattenColumns(cs []awstypes.Column) []map[string]interface{} {
 	columnsSlice := make([]map[string]interface{}, len(cs))
 	if len(cs) > 0 {
 		for i, v := range cs {
@@ -948,12 +947,8 @@ func flattenColumns(cs []*awstypes.Column) []map[string]interface{} {
 	return columnsSlice
 }
 
-func flattenColumn(c *awstypes.Column) map[string]interface{} {
+func flattenColumn(c awstypes.Column) map[string]interface{} {
 	column := make(map[string]interface{})
-
-	if c == nil {
-		return column
-	}
 
 	if v := aws.ToString(c.Name); v != "" {
 		column[names.AttrName] = v
@@ -974,7 +969,7 @@ func flattenColumn(c *awstypes.Column) map[string]interface{} {
 	return column
 }
 
-func flattenPartitionIndexes(cs []*awstypes.PartitionIndexDescriptor) []map[string]interface{} {
+func flattenPartitionIndexes(cs []awstypes.PartitionIndexDescriptor) []map[string]interface{} {
 	partitionIndexSlice := make([]map[string]interface{}, len(cs))
 	if len(cs) > 0 {
 		for i, v := range cs {
