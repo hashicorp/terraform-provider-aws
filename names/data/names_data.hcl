@@ -2915,7 +2915,7 @@ service "dms" {
 
   sdk {
     id             = "Database Migration Service"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
