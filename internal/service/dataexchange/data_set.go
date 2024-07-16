@@ -67,9 +67,9 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
 	input := &dataexchange.CreateDataSetInput{
-		Name:        aws.String(d.Get("name").(string)),
+		Name:        aws.String(d.Get(names.AttrName).(string)),
 		AssetType:   awstypes.AssetType(d.Get("asset_type").(string)),
-		Description: aws.String(d.Get("description").(string)),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
 		Tags:        getTagsIn(ctx),
 	}
 
