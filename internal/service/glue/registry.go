@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -75,7 +74,7 @@ func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Glue Registry: %s", input)
+	log.Printf("[DEBUG] Creating Glue Registry: %+v", input)
 	output, err := conn.CreateRegistry(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Registry: %s", err)
