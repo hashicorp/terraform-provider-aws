@@ -21,8 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_egress_only_internet_gateway", name="Egress-only Internet Gateway")
+// @SDKResource("aws_egress_only_internet_gateway", name="Egress-Only Internet Gateway")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceEgressOnlyInternetGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEgressOnlyInternetGatewayCreate,

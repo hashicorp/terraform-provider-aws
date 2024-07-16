@@ -85,7 +85,7 @@ func resourceIPAMPoolCIDRAllocation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_owner": {
+			names.AttrResourceOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -169,7 +169,7 @@ func resourceIPAMPoolCIDRAllocationRead(ctx context.Context, d *schema.ResourceD
 	d.Set("ipam_pool_allocation_id", allocation.IpamPoolAllocationId)
 	d.Set("ipam_pool_id", poolID)
 	d.Set(names.AttrResourceID, allocation.ResourceId)
-	d.Set("resource_owner", allocation.ResourceOwner)
+	d.Set(names.AttrResourceOwner, allocation.ResourceOwner)
 	d.Set(names.AttrResourceType, allocation.ResourceType)
 
 	return diags

@@ -365,8 +365,8 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DOPlainText_hiveCompatible(t *testing
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrLogGroupName, ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.file_format", "plain-text"),
-					resource.TestCheckResourceAttr(resourceName, "destination_options.0.hive_compatible_partitions", "true"),
-					resource.TestCheckResourceAttr(resourceName, "destination_options.0.per_hour_partition", "true"),
+					resource.TestCheckResourceAttr(resourceName, "destination_options.0.hive_compatible_partitions", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "destination_options.0.per_hour_partition", acctest.CtTrue),
 				),
 			},
 			{
@@ -431,7 +431,7 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DOParquet_hiveCompatible(t *testing.T
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrLogGroupName, ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.file_format", "parquet"),
-					resource.TestCheckResourceAttr(resourceName, "destination_options.0.hive_compatible_partitions", "true"),
+					resource.TestCheckResourceAttr(resourceName, "destination_options.0.hive_compatible_partitions", acctest.CtTrue),
 				),
 			},
 			{
@@ -464,8 +464,8 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DOParquetHiveCompatible_perHour(t *te
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrLogGroupName, ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.file_format", "parquet"),
-					resource.TestCheckResourceAttr(resourceName, "destination_options.0.hive_compatible_partitions", "true"),
-					resource.TestCheckResourceAttr(resourceName, "destination_options.0.per_hour_partition", "true"),
+					resource.TestCheckResourceAttr(resourceName, "destination_options.0.hive_compatible_partitions", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "destination_options.0.per_hour_partition", acctest.CtTrue),
 				),
 			},
 			{

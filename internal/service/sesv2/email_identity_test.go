@@ -47,7 +47,7 @@ func TestAccSESV2EmailIdentity_basic_emailAddress(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.status", "NOT_STARTED"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.tokens.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "identity_type", "EMAIL_ADDRESS"),
-					resource.TestCheckResourceAttr(resourceName, "verified_for_sending_status", "false"),
+					resource.TestCheckResourceAttr(resourceName, "verified_for_sending_status", acctest.CtFalse),
 				),
 			},
 			{
@@ -84,7 +84,7 @@ func TestAccSESV2EmailIdentity_basic_domain(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.status", "PENDING"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.tokens.#", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "identity_type", "DOMAIN"),
-					resource.TestCheckResourceAttr(resourceName, "verified_for_sending_status", "false"),
+					resource.TestCheckResourceAttr(resourceName, "verified_for_sending_status", acctest.CtFalse),
 				),
 			},
 			{

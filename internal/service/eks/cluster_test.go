@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -47,6 +48,7 @@ func TestAccEKSCluster_basic(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "access_config.#", acctest.Ct1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("cluster/%s$", rName))),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_authority.0.data"),
 					resource.TestCheckNoResourceAttr(resourceName, "cluster_id"),
@@ -68,17 +70,18 @@ func TestAccEKSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestMatchResourceAttr(resourceName, names.AttrVersion, regexache.MustCompile(`^\d+\.\d+$`)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_private_access", "false"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_public_access", "true"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_private_access", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_public_access", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", acctest.Ct2),
 					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexache.MustCompile(`^vpc-.+`)),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 		},
 	})
@@ -126,13 +129,14 @@ func TestAccEKSCluster_AccessConfig_create(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "access_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "access_config.0.authentication_mode", string(types.AuthenticationModeConfigMap)),
-					resource.TestCheckResourceAttr(resourceName, "access_config.0.bootstrap_cluster_creator_admin_permissions", "true"),
+					resource.TestCheckResourceAttr(resourceName, "access_config.0.bootstrap_cluster_creator_admin_permissions", acctest.CtTrue),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: false,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       false,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 		},
 	})
@@ -155,24 +159,36 @@ func TestAccEKSCluster_AccessConfig_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "access_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_config.0.authentication_mode", string(types.AuthenticationModeConfigMap)),
+					resource.TestCheckResourceAttr(resourceName, "access_config.0.bootstrap_cluster_creator_admin_permissions", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccClusterConfig_accessConfig(rName, types.AuthenticationModeConfigMap),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "access_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "access_config.0.authentication_mode", string(types.AuthenticationModeConfigMap)),
-					resource.TestCheckResourceAttr(resourceName, "access_config.0.bootstrap_cluster_creator_admin_permissions", "true"),
+					resource.TestCheckResourceAttr(resourceName, "access_config.0.bootstrap_cluster_creator_admin_permissions", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccClusterConfig_accessConfig(rName, types.AuthenticationModeApiAndConfigMap),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "access_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "access_config.0.authentication_mode", string(types.AuthenticationModeApiAndConfigMap)),
-					resource.TestCheckResourceAttr(resourceName, "access_config.0.bootstrap_cluster_creator_admin_permissions", "true"),
+					resource.TestCheckResourceAttr(resourceName, "access_config.0.bootstrap_cluster_creator_admin_permissions", acctest.CtTrue),
 				),
 			},
 			{
@@ -180,6 +196,84 @@ func TestAccEKSCluster_AccessConfig_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "access_config.#", acctest.Ct1),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEKSCluster_BootstrapSelfManagedAddons_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster types.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_bootstrapSelfManagedAddons(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+			{
+				Config: testAccClusterConfig_bootstrapSelfManagedAddons(rName, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEKSCluster_BootstrapSelfManagedAddons_migrate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster1, cluster2 types.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EKSServiceID),
+		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.56.1",
+					},
+				},
+				Config: testAccClusterConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					resource.TestCheckNoResourceAttr(resourceName, "bootstrap_self_managed_addons"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccClusterConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtTrue),
 				),
 			},
 		},
@@ -210,9 +304,10 @@ func TestAccEKSCluster_Encryption_create(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 		},
 	})
@@ -250,9 +345,10 @@ func TestAccEKSCluster_Encryption_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 		},
 	})
@@ -284,9 +380,10 @@ func TestAccEKSCluster_Encryption_versionUpdate(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 			{
 				Config: testAccClusterConfig_encryptionVersion(rName, clusterVersionUpgradeUpdated),
@@ -324,9 +421,10 @@ func TestAccEKSCluster_version(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 			{
 				Config: testAccClusterConfig_version(rName, clusterVersionUpgradeUpdated),
@@ -361,9 +459,10 @@ func TestAccEKSCluster_logging(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 			{
 				Config: testAccClusterConfig_logging(rName, []string{"api", "audit"}),
@@ -409,9 +508,10 @@ func TestAccEKSCluster_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 			{
 				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -455,9 +555,10 @@ func TestAccEKSCluster_VPC_securityGroupIDs(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 		},
 	})
@@ -495,9 +596,10 @@ func TestAccEKSCluster_VPC_securityGroupIDsAndSubnetIDs_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 		},
 	})
@@ -520,13 +622,14 @@ func TestAccEKSCluster_VPC_endpointPrivateAccess(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_private_access", "true"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_private_access", acctest.CtTrue),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 			{
 				Config: testAccClusterConfig_vpcEndpointPrivateAccess(rName, false),
@@ -534,7 +637,7 @@ func TestAccEKSCluster_VPC_endpointPrivateAccess(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_private_access", "false"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_private_access", acctest.CtFalse),
 				),
 			},
 			{
@@ -543,7 +646,7 @@ func TestAccEKSCluster_VPC_endpointPrivateAccess(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &cluster3),
 					testAccCheckClusterNotRecreated(&cluster2, &cluster3),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_private_access", "true"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_private_access", acctest.CtTrue),
 				),
 			},
 		},
@@ -567,13 +670,14 @@ func TestAccEKSCluster_VPC_endpointPublicAccess(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_public_access", "false"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_public_access", acctest.CtFalse),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 			{
 				Config: testAccClusterConfig_vpcEndpointPublicAccess(rName, true),
@@ -581,7 +685,7 @@ func TestAccEKSCluster_VPC_endpointPublicAccess(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_public_access", "true"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_public_access", acctest.CtTrue),
 				),
 			},
 			{
@@ -590,7 +694,7 @@ func TestAccEKSCluster_VPC_endpointPublicAccess(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &cluster3),
 					testAccCheckClusterNotRecreated(&cluster2, &cluster3),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_public_access", "false"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_public_access", acctest.CtFalse),
 				),
 			},
 		},
@@ -618,9 +722,10 @@ func TestAccEKSCluster_VPC_publicAccessCIDRs(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 			{
 				Config: testAccClusterConfig_vpcPublicAccessCIDRs(rName, `["4.3.2.1/32", "8.7.6.5/32"]`),
@@ -675,9 +780,10 @@ func TestAccEKSCluster_Network_serviceIPv4CIDR(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 			{
 				Config:             testAccClusterConfig_networkServiceIPv4CIDR(rName, `"192.168.0.0/24"`),
@@ -718,9 +824,10 @@ func TestAccEKSCluster_Network_ipFamily(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 			{
 				Config:             testAccClusterConfig_networkIPFamily(rName, `"ipv6"`),
@@ -764,9 +871,10 @@ func TestAccEKSCluster_Outpost_create(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 		},
 	})
@@ -797,9 +905,10 @@ func TestAccEKSCluster_Outpost_placement(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 		},
 	})
@@ -978,6 +1087,22 @@ resource "aws_eks_cluster" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
 `, rName, authenticationMode))
+}
+
+func testAccClusterConfig_bootstrapSelfManagedAddons(rName string, bootstrapSelfManagedAddons bool) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name                          = %[1]q
+  role_arn                      = aws_iam_role.test.arn
+  bootstrap_self_managed_addons = %[2]t
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+}
+`, rName, bootstrapSelfManagedAddons))
 }
 
 func testAccClusterConfig_version(rName, version string) string {

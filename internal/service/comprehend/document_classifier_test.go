@@ -1328,7 +1328,7 @@ func TestAccComprehendDocumentClassifier_DefaultTags_providerOnly(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtProviderValue1),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtProviderValue1),
 					testAccDocumentClassifierConfig_tags0(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1346,7 +1346,7 @@ func TestAccComprehendDocumentClassifier_DefaultTags_providerOnly(t *testing.T) 
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("providerkey1", acctest.CtProviderValue1, "providerkey2", "providervalue2"),
+					acctest.ConfigDefaultTags_Tags2(acctest.CtProviderKey1, acctest.CtProviderValue1, "providerkey2", "providervalue2"),
 					testAccDocumentClassifierConfig_tags0(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1361,7 +1361,7 @@ func TestAccComprehendDocumentClassifier_DefaultTags_providerOnly(t *testing.T) 
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtValue1),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtValue1),
 					testAccDocumentClassifierConfig_tags0(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(

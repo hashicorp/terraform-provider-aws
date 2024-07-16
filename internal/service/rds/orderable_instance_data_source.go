@@ -35,7 +35,7 @@ func DataSourceOrderableInstance() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -226,7 +226,7 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 		input.DBInstanceClass = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine"); ok {
+	if v, ok := d.GetOk(names.AttrEngine); ok {
 		input.Engine = aws.String(v.(string))
 	}
 
@@ -473,7 +473,7 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 		availabilityZones = append(availabilityZones, aws.StringValue(v.Name))
 	}
 	d.Set(names.AttrAvailabilityZones, availabilityZones)
-	d.Set("engine", found.Engine)
+	d.Set(names.AttrEngine, found.Engine)
 	d.Set(names.AttrEngineVersion, found.EngineVersion)
 	d.Set("instance_class", found.DBInstanceClass)
 	d.Set("license_model", found.LicenseModel)

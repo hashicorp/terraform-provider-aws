@@ -178,7 +178,7 @@ func testAccCheckDeploymentDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfm2.FindDeploymentByTwoPartKey(ctx, conn, rs.Primary.Attributes["application_id"], rs.Primary.Attributes["deployment_id"])
+			_, err := tfm2.FindDeploymentByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrApplicationID], rs.Primary.Attributes["deployment_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -204,7 +204,7 @@ func testAccCheckDeploymentExists(ctx context.Context, n string, v *m2.GetDeploy
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).M2Client(ctx)
 
-		output, err := tfm2.FindDeploymentByTwoPartKey(ctx, conn, rs.Primary.Attributes["application_id"], rs.Primary.Attributes["deployment_id"])
+		output, err := tfm2.FindDeploymentByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrApplicationID], rs.Primary.Attributes["deployment_id"])
 
 		if err != nil {
 			return err

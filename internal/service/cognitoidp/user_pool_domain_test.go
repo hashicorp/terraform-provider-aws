@@ -5,12 +5,10 @@ package cognitoidp_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -36,7 +34,7 @@ func TestAccCognitoIDPUserPoolDomain_basic(t *testing.T) {
 				Config: testAccUserPoolDomainConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolDomainExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "aws_account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAWSAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, "cloudfront_distribution"),
 					resource.TestCheckResourceAttrSet(resourceName, "cloudfront_distribution_arn"),
 					resource.TestCheckResourceAttr(resourceName, "cloudfront_distribution_zone_id", "Z2FDTNDATAQYW2"),
@@ -79,10 +77,6 @@ func TestAccCognitoIDPUserPoolDomain_disappears(t *testing.T) {
 
 func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	poolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -90,7 +84,7 @@ func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 	resourceName := "aws_cognito_user_pool_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, names.USEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserPoolDomainDestroy(ctx),
@@ -99,7 +93,7 @@ func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 				Config: testAccUserPoolDomainConfig_custom(rootDomain, domain, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolDomainExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "aws_account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAWSAccountID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, acmCertificateResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "cloudfront_distribution"),
 					resource.TestCheckResourceAttr(resourceName, "cloudfront_distribution_zone_id", "Z2FDTNDATAQYW2"),
@@ -119,10 +113,6 @@ func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 
 func TestAccCognitoIDPUserPoolDomain_customCertUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	poolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -133,7 +123,7 @@ func TestAccCognitoIDPUserPoolDomain_customCertUpdate(t *testing.T) {
 	cognitoPoolResourceName := "aws_cognito_user_pool_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, names.USEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserPoolDomainDestroy(ctx),
@@ -164,11 +154,7 @@ func testAccCheckUserPoolDomainExists(ctx context.Context, n string) resource.Te
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return errors.New("No Cognito User Pool Domain ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
 		_, err := tfcognitoidp.FindUserPoolDomain(ctx, conn, rs.Primary.ID)
 
@@ -178,7 +164,7 @@ func testAccCheckUserPoolDomainExists(ctx context.Context, n string) resource.Te
 
 func testAccCheckUserPoolDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_user_pool_domain" {
@@ -209,20 +195,12 @@ func testAccCheckUserPoolDomainCertMatches(ctx context.Context, cognitoResourceN
 			return fmt.Errorf("Not found: %s", cognitoResourceName)
 		}
 
-		if cognitoResource.Primary.ID == "" {
-			return errors.New("No Cognito User Pool Domain ID is set")
-		}
-
 		certResource, ok := s.RootModule().Resources[certResourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", cognitoResourceName)
 		}
 
-		if certResource.Primary.ID == "" {
-			return errors.New("No ACM Certificate ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
 		domain, err := tfcognitoidp.FindUserPoolDomain(ctx, conn, cognitoResource.Primary.ID)
 
@@ -231,11 +209,11 @@ func testAccCheckUserPoolDomainCertMatches(ctx context.Context, cognitoResourceN
 		}
 
 		if domain.CustomDomainConfig == nil {
-			return fmt.Errorf("No Custom Domain set on Cognito User Pool: %s", aws.StringValue(domain.UserPoolId))
+			return fmt.Errorf("No Custom Domain set on Cognito User Pool: %s", aws.ToString(domain.UserPoolId))
 		}
 
-		if aws.StringValue(domain.CustomDomainConfig.CertificateArn) != certResource.Primary.ID {
-			return fmt.Errorf("Certificate ARN on Custom Domain does not match, expected: %s, got: %s", certResource.Primary.ID, aws.StringValue(domain.CustomDomainConfig.CertificateArn))
+		if aws.ToString(domain.CustomDomainConfig.CertificateArn) != certResource.Primary.ID {
+			return fmt.Errorf("Certificate ARN on Custom Domain does not match, expected: %s, got: %s", certResource.Primary.ID, aws.ToString(domain.CustomDomainConfig.CertificateArn))
 		}
 
 		return nil

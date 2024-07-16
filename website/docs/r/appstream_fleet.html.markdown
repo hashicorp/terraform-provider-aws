@@ -56,7 +56,7 @@ The following arguments are optional:
 * `enable_default_internet_access` - (Optional) Enables or disables default internet access for the fleet.
 * `fleet_type` - (Optional) Fleet type. Valid values are: `ON_DEMAND`, `ALWAYS_ON`
 * `iam_role_arn` - (Optional) ARN of the IAM role to apply to the fleet.
-* `idle_disconnect_timeout_in_seconds` - (Optional) Amount of time that users can be idle (inactive) before they are disconnected from their streaming session and the `disconnect_timeout_in_seconds` time interval begins. Defaults to 60 seconds.
+* `idle_disconnect_timeout_in_seconds` - (Optional) Amount of time that users can be idle (inactive) before they are disconnected from their streaming session and the `disconnect_timeout_in_seconds` time interval begins. Defaults to `0`. Valid value is between `60` and `3600 `seconds.
 * `image_name` - (Optional) Name of the image used to create the fleet.
 * `image_arn` - (Optional) ARN of the public, private, or shared image to use.
 * `stream_view` - (Optional) AppStream 2.0 view that is displayed to your users when they stream from the fleet. When `APP` is specified, only the windows of applications opened by users display. When `DESKTOP` is specified, the standard desktop that is provided by the operating system displays. If not specified, defaults to `APP`.

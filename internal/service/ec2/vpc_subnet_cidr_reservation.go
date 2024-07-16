@@ -44,7 +44,7 @@ func ResourceSubnetCIDRReservation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -80,7 +80,7 @@ func resourceSubnetCIDRReservationCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateSubnetCidrReservationInput{
-		Cidr:            aws.String(d.Get("cidr_block").(string)),
+		Cidr:            aws.String(d.Get(names.AttrCIDRBlock).(string)),
 		ReservationType: aws.String(d.Get("reservation_type").(string)),
 		SubnetId:        aws.String(d.Get(names.AttrSubnetID).(string)),
 	}
@@ -117,7 +117,7 @@ func resourceSubnetCIDRReservationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Subnet CIDR Reservation (%s): %s", d.Id(), err)
 	}
 
-	d.Set("cidr_block", output.Cidr)
+	d.Set(names.AttrCIDRBlock, output.Cidr)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set(names.AttrOwnerID, output.OwnerId)
 	d.Set("reservation_type", output.ReservationType)

@@ -24,15 +24,15 @@ func TestAccIPAMResourceDiscovery_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"ResourceDiscovery": {
-			acctest.CtBasic: testAccIPAMResourceDiscovery_basic,
-			"modify":        testAccIPAMResourceDiscovery_modify,
-			"disappears":    testAccIPAMResourceDiscovery_disappears,
-			"tags":          testAccIPAMResourceDiscovery_tags,
+			acctest.CtBasic:      testAccIPAMResourceDiscovery_basic,
+			"modify":             testAccIPAMResourceDiscovery_modify,
+			acctest.CtDisappears: testAccIPAMResourceDiscovery_disappears,
+			"tags":               testAccIPAMResourceDiscovery_tags,
 		},
 		"ResourceDiscoveryAssociation": {
-			acctest.CtBasic: testAccIPAMResourceDiscoveryAssociation_basic,
-			"disappears":    testAccIPAMResourceDiscoveryAssociation_disappears,
-			"tags":          testAccIPAMResourceDiscoveryAssociation_tags,
+			acctest.CtBasic:      testAccIPAMResourceDiscoveryAssociation_basic,
+			acctest.CtDisappears: testAccIPAMResourceDiscoveryAssociation_disappears,
+			"tags":               testAccIPAMResourceDiscoveryAssociation_tags,
 		},
 	}
 
@@ -58,7 +58,7 @@ func testAccIPAMResourceDiscovery_basic(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`ipam-resource-discovery/ipam-res-disco-[0-9a-f]+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_resource_discovery_region", dataSourceRegion, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "is_default", "false"),
+					resource.TestCheckResourceAttr(resourceName, "is_default", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", acctest.Ct1),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),

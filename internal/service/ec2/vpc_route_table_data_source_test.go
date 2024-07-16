@@ -117,7 +117,7 @@ func TestAccVPCRouteTableDataSource_main(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(datasourceName, names.AttrVPCID),
-					resource.TestCheckResourceAttr(datasourceName, "associations.0.main", "true"),
+					resource.TestCheckResourceAttr(datasourceName, "associations.0.main", acctest.CtTrue),
 				),
 			},
 		},

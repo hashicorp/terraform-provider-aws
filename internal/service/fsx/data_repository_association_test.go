@@ -47,7 +47,7 @@ func TestAccFSxDataRepositoryAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`association/fs-.+/dra-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "batch_import_meta_data_on_create", "false"),
+					resource.TestCheckResourceAttr(resourceName, "batch_import_meta_data_on_create", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_path", bucketPath),
 					resource.TestMatchResourceAttr(resourceName, names.AttrFileSystemID, regexache.MustCompile(`fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "file_system_path", fileSystemPath),
@@ -315,10 +315,10 @@ func TestAccFSxDataRepositoryAssociation_deleteDataInFilesystem(t *testing.T) {
 		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataRepositoryAssociationConfig_deleteInFilesystem(rName, rName, fileSystemPath, "true"),
+				Config: testAccDataRepositoryAssociationConfig_deleteInFilesystem(rName, rName, fileSystemPath, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association),
-					resource.TestCheckResourceAttr(resourceName, "delete_data_in_filesystem", "true"),
+					resource.TestCheckResourceAttr(resourceName, "delete_data_in_filesystem", acctest.CtTrue),
 				),
 			},
 			{

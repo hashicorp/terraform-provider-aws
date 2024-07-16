@@ -10,6 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -33,12 +36,14 @@ func testAccMeshDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrLastUpdatedDate, dataSourceName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttrPair(resourceName, "mesh_owner", dataSourceName, "mesh_owner"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_owner", dataSourceName, "resource_owner"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtResourceOwner, dataSourceName, acctest.CtResourceOwner),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.#", dataSourceName, "spec.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.egress_filter.#", dataSourceName, "spec.0.egress_filter.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.egress_filter.0.type", dataSourceName, "spec.0.egress_filter.0.type"),
-					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 		},
 	})
@@ -63,18 +68,20 @@ func testAccMeshDataSource_meshOwner(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrLastUpdatedDate, dataSourceName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttrPair(resourceName, "mesh_owner", dataSourceName, "mesh_owner"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_owner", dataSourceName, "resource_owner"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtResourceOwner, dataSourceName, acctest.CtResourceOwner),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.#", dataSourceName, "spec.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.egress_filter.#", dataSourceName, "spec.0.egress_filter.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.egress_filter.0.type", dataSourceName, "spec.0.egress_filter.0.type"),
-					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 		},
 	})
 }
 
-func testAccMeshDataSource_specAndTagsSet(t *testing.T) {
+func testAccMeshDataSource_specSet(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appmesh_mesh.test"
@@ -86,18 +93,17 @@ func testAccMeshDataSource_specAndTagsSet(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMeshDataSourceConfig_specAndTagsSet(rName),
+				Config: testAccMeshDataSourceConfig_specSet(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedDate, dataSourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrLastUpdatedDate, dataSourceName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttrPair(resourceName, "mesh_owner", dataSourceName, "mesh_owner"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_owner", dataSourceName, "resource_owner"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtResourceOwner, dataSourceName, acctest.CtResourceOwner),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.#", dataSourceName, "spec.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.egress_filter.#", dataSourceName, "spec.0.egress_filter.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.egress_filter.0.type", dataSourceName, "spec.0.egress_filter.0.type"),
-					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -127,12 +133,14 @@ func testAccMeshDataSource_shared(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrLastUpdatedDate, dataSourceName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttrPair(resourceName, "mesh_owner", dataSourceName, "mesh_owner"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_owner", dataSourceName, "resource_owner"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtResourceOwner, dataSourceName, acctest.CtResourceOwner),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.#", dataSourceName, "spec.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.egress_filter.#", dataSourceName, "spec.0.egress_filter.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.egress_filter.0.type", dataSourceName, "spec.0.egress_filter.0.type"),
-					resource.TestCheckNoResourceAttr(dataSourceName, acctest.CtTagsPercent),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 		},
 	})
@@ -165,7 +173,7 @@ data "aws_appmesh_mesh" "test" {
 `, rName)
 }
 
-func testAccMeshDataSourceConfig_specAndTagsSet(rName string) string {
+func testAccMeshDataSourceConfig_specSet(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q

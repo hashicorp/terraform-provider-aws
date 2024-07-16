@@ -42,12 +42,12 @@ func TestAccGlobalAcceleratorAccelerator_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAcceleratorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_s3_prefix", ""),
 					resource.TestMatchResourceAttr(resourceName, names.AttrDNSName, dnsNameRegex),
 					resource.TestCheckResourceAttr(resourceName, "dual_stack_dns_name", ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrHostedZoneID, "Z2BJ6XQ5FK7U4H"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, "ip_addresses.#", acctest.Ct0),
@@ -85,7 +85,7 @@ func TestAccGlobalAcceleratorAccelerator_ipAddressType_dualStack(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAcceleratorExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "dual_stack_dns_name", dualStackDNSNameRegex),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "DUAL_STACK"),
 					resource.TestCheckResourceAttr(resourceName, "ip_sets.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_addresses.#", acctest.Ct2),
@@ -121,7 +121,7 @@ func TestAccGlobalAcceleratorAccelerator_byoip(t *testing.T) {
 				Config: testAccAcceleratorConfig_byoip(rName, requestedAddr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAcceleratorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "ip_sets.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_addresses.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_family", "IPv4"),
@@ -192,7 +192,7 @@ func TestAccGlobalAcceleratorAccelerator_update(t *testing.T) {
 				Config: testAccAcceleratorConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAcceleratorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -205,7 +205,7 @@ func TestAccGlobalAcceleratorAccelerator_update(t *testing.T) {
 				Config: testAccAcceleratorConfig_enabled(newName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAcceleratorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, newName),
 				),
 			},
@@ -213,7 +213,7 @@ func TestAccGlobalAcceleratorAccelerator_update(t *testing.T) {
 				Config: testAccAcceleratorConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAcceleratorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -242,7 +242,7 @@ func TestAccGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAcceleratorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "attributes.0.flow_logs_s3_bucket", s3BucketResourceName, names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_s3_prefix", "flow-logs/"),
 				),
@@ -257,7 +257,7 @@ func TestAccGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAcceleratorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "attributes.0.flow_logs_s3_bucket", s3BucketResourceName, names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_s3_prefix", "flow-logs/"),
 				),
@@ -267,7 +267,7 @@ func TestAccGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAcceleratorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "attributes.0.flow_logs_s3_bucket", s3BucketResourceName, names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_s3_prefix", "flow-logs-updated/"),
 				),
@@ -277,7 +277,7 @@ func TestAccGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAcceleratorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "attributes.0.flow_logs_s3_bucket", s3BucketResourceName, names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_s3_prefix", "flow-logs/"),
 				),

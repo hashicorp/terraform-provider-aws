@@ -77,7 +77,7 @@ func testAccCheckVPCEndpointRouteTableAssociationDestroy(ctx context.Context) re
 				continue
 			}
 
-			err := tfec2.FindVPCEndpointRouteTableAssociationExistsV2(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes["route_table_id"])
+			err := tfec2.FindVPCEndpointRouteTableAssociationExists(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes["route_table_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -107,7 +107,7 @@ func testAccCheckVPCEndpointRouteTableAssociationExists(ctx context.Context, n s
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		return tfec2.FindVPCEndpointRouteTableAssociationExistsV2(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes["route_table_id"])
+		return tfec2.FindVPCEndpointRouteTableAssociationExists(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes["route_table_id"])
 	}
 }
 

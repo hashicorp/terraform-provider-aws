@@ -24,7 +24,7 @@ func TestAccRDSReservedInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	key := "RUN_RDS_RESERVED_INSTANCE_TESTS"
 	vifId := os.Getenv(key)
-	if vifId != "true" {
+	if vifId != acctest.CtTrue {
 		t.Skipf("Environment variable %s is not set to true", key)
 	}
 

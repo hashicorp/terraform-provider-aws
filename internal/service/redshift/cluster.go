@@ -195,7 +195,7 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.All(
@@ -1003,7 +1003,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if !skipFinalSnapshot {
-		if v, ok := d.GetOk("final_snapshot_identifier"); ok {
+		if v, ok := d.GetOk(names.AttrFinalSnapshotIdentifier); ok {
 			input.FinalClusterSnapshotIdentifier = aws.String(v.(string))
 		} else {
 			return sdkdiag.AppendErrorf(diags, "Redshift Cluster Instance FinalSnapshotIdentifier is required when a final snapshot is required")

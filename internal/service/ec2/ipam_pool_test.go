@@ -41,7 +41,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "allocation_min_netmask_length"),
 					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.%", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "auto_import", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_import", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "aws_service", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "ipam_scope_type"),
@@ -67,7 +67,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.test", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "auto_import", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_import", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "aws_service", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipam_scope_type"),
@@ -120,7 +120,7 @@ func TestAccIPAMPool_ipv6Basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv6"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_advertisable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_advertisable", acctest.CtFalse),
 				),
 			},
 			{
@@ -149,7 +149,7 @@ func TestAccIPAMPool_ipv6Contiguous(t *testing.T) {
 					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv6"),
 					resource.TestCheckResourceAttr(resourceName, "public_ip_source", "byoip"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_advertisable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_advertisable", acctest.CtFalse),
 				),
 			},
 			{

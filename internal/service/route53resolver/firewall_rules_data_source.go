@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -93,6 +94,7 @@ func DataSourceResolverFirewallRules() *schema.Resource {
 }
 
 func dataSourceResolverFirewallFirewallRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	firewallRuleGroupID := d.Get("firewall_rule_group_id").(string)
@@ -109,22 +111,22 @@ func dataSourceResolverFirewallFirewallRulesRead(ctx context.Context, d *schema.
 	})
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Firewall Rules (%s): %s", firewallRuleGroupID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Firewall Rules (%s): %s", firewallRuleGroupID, err)
 	}
 
 	if n := len(rules); n == 0 {
-		return diag.Errorf("no Route53 Resolver Firewall Rules matched")
+		return sdkdiag.AppendErrorf(diags, "no Route53 Resolver Firewall Rules matched")
 	} else if n > 1 {
-		return diag.Errorf("%d Route53 Resolver Firewall Rules matched; use additional constraints to reduce matches to a single Firewall Rule", n)
+		return sdkdiag.AppendErrorf(diags, "%d Route53 Resolver Firewall Rules matched; use additional constraints to reduce matches to a single Firewall Rule", n)
 	}
 
 	if err := d.Set("firewall_rules", flattenFirewallRules(rules)); err != nil {
-		return diag.Errorf("setting firewall_rules: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting firewall_rules: %s", err)
 	}
 
 	d.SetId(firewallRuleGroupID)
 
-	return nil
+	return diags
 }
 
 func flattenFirewallRules(apiObjects []*route53resolver.FirewallRule) []interface{} {

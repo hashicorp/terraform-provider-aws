@@ -42,7 +42,7 @@ func TestAccGlueTrigger_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", acctest.Ct0),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("trigger/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, ""),
@@ -165,21 +165,21 @@ func TestAccGlueTrigger_enabled(t *testing.T) {
 				Config: testAccTriggerConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccTriggerConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccTriggerConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
@@ -484,7 +484,7 @@ func TestAccGlueTrigger_onDemandDisable(t *testing.T) {
 				Config: testAccTriggerConfig_onDemand(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ON_DEMAND"),
 				),
 			},
@@ -492,7 +492,7 @@ func TestAccGlueTrigger_onDemandDisable(t *testing.T) {
 				Config: testAccTriggerConfig_onDemandEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ON_DEMAND"),
 				),
 			},
@@ -506,7 +506,7 @@ func TestAccGlueTrigger_onDemandDisable(t *testing.T) {
 				Config: testAccTriggerConfig_onDemandEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ON_DEMAND"),
 				),
 			},

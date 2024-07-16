@@ -29,7 +29,7 @@ func ResourceBaiduChannel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -57,7 +57,7 @@ func resourceBaiduChannelUpsert(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	applicationId := d.Get("application_id").(string)
+	applicationId := d.Get(names.AttrApplicationID).(string)
 
 	params := &pinpoint.BaiduChannelRequest{}
 
@@ -99,7 +99,7 @@ func resourceBaiduChannelRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "getting Pinpoint Baidu Channel for application %s: %s", d.Id(), err)
 	}
 
-	d.Set("application_id", output.BaiduChannelResponse.ApplicationId)
+	d.Set(names.AttrApplicationID, output.BaiduChannelResponse.ApplicationId)
 	d.Set(names.AttrEnabled, output.BaiduChannelResponse.Enabled)
 	// ApiKey and SecretKey are never returned
 

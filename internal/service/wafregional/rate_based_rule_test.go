@@ -182,7 +182,7 @@ func TestAccWAFRegionalRateBasedRule_changePredicates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicate.*", map[string]string{
-						"negated":      "false",
+						"negated":      acctest.CtFalse,
 						names.AttrType: "IPMatch",
 					}),
 				),
@@ -195,7 +195,7 @@ func TestAccWAFRegionalRateBasedRule_changePredicates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicate.*", map[string]string{
-						"negated":      "true",
+						"negated":      acctest.CtTrue,
 						names.AttrType: "ByteMatch",
 					}),
 				),
