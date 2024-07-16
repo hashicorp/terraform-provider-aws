@@ -51,6 +51,52 @@ func findTag(ctx context.Context, conn *ec2.Client, identifier, key string, optF
 	return listTags.KeyValue(key), nil
 }
 
+// listTags lists ec2 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func listTags(ctx context.Context, conn *ec2.Client, identifier string, optFns ...func(*ec2.Options)) (tftags.KeyValueTags, error) {
+	input := &ec2.DescribeTagsInput{
+		Filters: []awstypes.Filter{
+			{
+				Name:   aws.String("resource-id"),
+				Values: []string{identifier},
+			},
+		},
+	}
+	var output []awstypes.TagDescription
+
+	pages := ec2.NewDescribeTagsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return tftags.New(ctx, nil), err
+		}
+
+		for _, v := range page.Tags {
+			output = append(output, v)
+		}
+	}
+
+	return keyValueTags(ctx, output), nil
+}
+
+// ListTags lists ec2 service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).EC2Client(ctx), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(tags)
+	}
+
+	return nil
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns ec2 service tags.
