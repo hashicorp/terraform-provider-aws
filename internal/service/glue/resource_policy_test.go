@@ -11,12 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -199,7 +199,7 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFu
 		policy, err := conn.GetResourcePolicy(ctx, &glue.GetResourcePolicyInput{})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeEntityNotFoundException, "Policy not found") {
+			if errs.IsAErrorMessageContains[*awstypes.EntityNotFoundException](err, "Policy not found") {
 				return nil
 			}
 			return err

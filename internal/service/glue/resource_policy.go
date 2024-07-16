@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -47,15 +46,15 @@ func ResourceResourcePolicy() *schema.Resource {
 				},
 			},
 			"enable_hybrid": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: enum.Validate[awstypes.EnableHybridValues](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.EnableHybridValues](),
 			},
 		},
 	}
 }
 
-func resourceResourcePolicyPut(condition string) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
+func resourceResourcePolicyPut(condition awstypes.ExistCondition) func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
 	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 		var diags diag.Diagnostics
 		conn := meta.(*conns.AWSClient).GlueClient(ctx)
@@ -68,11 +67,11 @@ func resourceResourcePolicyPut(condition string) func(context.Context, *schema.R
 
 		input := &glue.PutResourcePolicyInput{
 			PolicyInJson:          aws.String(policy),
-			PolicyExistsCondition: aws.String(condition),
+			PolicyExistsCondition: condition,
 		}
 
 		if v, ok := d.GetOk("enable_hybrid"); ok {
-			input.EnableHybrid = aws.String(v.(string))
+			input.EnableHybrid = awstypes.EnableHybridValues(v.(string))
 		}
 
 		_, err = conn.PutResourcePolicy(ctx, input)
