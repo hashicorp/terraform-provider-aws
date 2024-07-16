@@ -25,19 +25,19 @@ func dataSourceSubnetGroup() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSubnetGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -51,7 +51,7 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	subnetgroup, err := findSubnetGroupByName(ctx, conn, d.Get("name").(string))
+	subnetgroup, err := findSubnetGroupByName(ctx, conn, d.Get(names.AttrName).(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Subnet Group (%s): %s", d.Id(), err)
@@ -65,10 +65,10 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("subnetgroup:%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("description", subnetgroup.Description)
-	d.Set("name", subnetgroup.ClusterSubnetGroupName)
-	d.Set("subnet_ids", subnetIdsToSlice(subnetgroup.Subnets))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, subnetgroup.Description)
+	d.Set(names.AttrName, subnetgroup.ClusterSubnetGroupName)
+	d.Set(names.AttrSubnetIDs, subnetIdsToSlice(subnetgroup.Subnets))
 
 	setTagsOut(ctx, subnetgroup.Tags)
 

@@ -44,7 +44,7 @@ func resourceServerlessCluster() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,7 +69,7 @@ func resourceServerlessCluster() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Required: true,
 													ForceNew: true,
@@ -83,7 +83,7 @@ func resourceServerlessCluster() *schema.Resource {
 					},
 				},
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -95,13 +95,13 @@ func resourceServerlessCluster() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
@@ -111,7 +111,7 @@ func resourceServerlessCluster() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
@@ -130,12 +130,12 @@ func resourceServerlessClusterCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	name := d.Get("cluster_name").(string)
+	name := d.Get(names.AttrClusterName).(string)
 	input := &kafka.CreateClusterV2Input{
 		ClusterName: aws.String(name),
 		Serverless: &types.ServerlessRequest{
 			ClientAuthentication: expandServerlessClientAuthentication(d.Get("client_authentication").([]interface{})[0].(map[string]interface{})),
-			VpcConfigs:           expandVpcConfigs(d.Get("vpc_config").([]interface{})),
+			VpcConfigs:           expandVpcConfigs(d.Get(names.AttrVPCConfig).([]interface{})),
 		},
 		Tags: getTagsIn(ctx),
 	}
@@ -172,7 +172,7 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	clusterARN := aws.ToString(cluster.ClusterArn)
-	d.Set("arn", clusterARN)
+	d.Set(names.AttrARN, clusterARN)
 	if cluster.Serverless.ClientAuthentication != nil {
 		if err := d.Set("client_authentication", []interface{}{flattenServerlessClientAuthentication(cluster.Serverless.ClientAuthentication)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting client_authentication: %s", err)
@@ -180,10 +180,10 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 	} else {
 		d.Set("client_authentication", nil)
 	}
-	d.Set("cluster_name", cluster.ClusterName)
+	d.Set(names.AttrClusterName, cluster.ClusterName)
 	clusterUUID, _ := clusterUUIDFromARN(clusterARN)
 	d.Set("cluster_uuid", clusterUUID)
-	if err := d.Set("vpc_config", flattenVpcConfigs(cluster.Serverless.VpcConfigs)); err != nil {
+	if err := d.Set(names.AttrVPCConfig, flattenVpcConfigs(cluster.Serverless.VpcConfigs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
@@ -249,7 +249,7 @@ func expandIam(tfMap map[string]interface{}) *types.Iam { // nosemgrep:ci.caps4-
 
 	apiObject := &types.Iam{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -292,7 +292,7 @@ func flattenIam(apiObject *types.Iam) map[string]interface{} { // nosemgrep:ci.c
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.ToBool(v)
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	return tfMap
@@ -305,11 +305,11 @@ func expandVpcConfig(tfMap map[string]interface{}) *types.VpcConfig { // nosemgr
 
 	apiObject := &types.VpcConfig{}
 
-	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
@@ -346,11 +346,11 @@ func flattenVpcConfig(apiObject types.VpcConfig) map[string]interface{} { // nos
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
-		tfMap["security_group_ids"] = v
+		tfMap[names.AttrSecurityGroupIDs] = v
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap["subnet_ids"] = v
+		tfMap[names.AttrSubnetIDs] = v
 	}
 
 	return tfMap

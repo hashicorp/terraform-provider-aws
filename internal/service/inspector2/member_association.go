@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_inspector2_member_association")
@@ -39,7 +40,7 @@ func ResourceMemberAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -65,7 +66,7 @@ func resourceMemberAssociationCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	input := &inspector2.AssociateMemberInput{
 		AccountId: aws.String(accountID),
 	}
@@ -101,7 +102,7 @@ func resourceMemberAssociationRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading Amazon Inspector Member Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", member.AccountId)
+	d.Set(names.AttrAccountID, member.AccountId)
 	d.Set("delegated_admin_account_id", member.DelegatedAdminAccountId)
 	d.Set("relationship_status", member.RelationshipStatus)
 	d.Set("updated_at", aws.ToTime(member.UpdatedAt).Format(time.RFC3339))
@@ -115,7 +116,7 @@ func resourceMemberAssociationDelete(ctx context.Context, d *schema.ResourceData
 
 	log.Printf("[DEBUG] Deleting Amazon Inspector Member Association: %s", d.Id())
 
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	_, err := conn.DisassociateMember(ctx, &inspector2.DisassociateMemberInput{
 		AccountId: aws.String(accountID),
 	})

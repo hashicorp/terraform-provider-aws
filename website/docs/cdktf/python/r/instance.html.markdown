@@ -205,7 +205,7 @@ class MyConvertedCode(TerraformStack):
         aws_instance_example.override_logical_id("example")
 ```
 
-### Host resource group or Licence Manager registered AMI example
+### Host resource group or License Manager registered AMI example
 
 A host resource group is a collection of Dedicated Hosts that you can manage as a single entity. As you launch instances, License Manager allocates the hosts and launches instances on them based on the settings that you configured. You can add existing Dedicated Hosts to a host resource group and take advantage of automated host management through License Manager.
 
@@ -536,4 +536,4 @@ Using `terraform import`, import instances using the `id`. For example:
 % terraform import aws_instance.web i-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7592a7bb2443516de6da5bc059dae53369672623089161ded2386f333afc0f55 -->
+<!-- cache-key: cdktf-0.20.1 input-22fa60b78e07a8c405942a5e6347bd94ae3a9cbb548f38ac0744b9f7ef890b1b -->

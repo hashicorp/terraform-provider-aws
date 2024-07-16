@@ -59,14 +59,14 @@ func (r *resourceSecurityPolicy) Metadata(_ context.Context, request resource.Me
 func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 1000),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
@@ -75,7 +75,7 @@ func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.Schema
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"policy": schema.StringAttribute{
+			names.AttrPolicy: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 20480),
@@ -84,7 +84,7 @@ func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.Schema
 			"policy_version": schema.StringAttribute{
 				Computed: true,
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.SecurityPolicyType](),
@@ -146,6 +146,14 @@ func (r *resourceSecurityPolicy) Read(ctx context.Context, req resource.ReadRequ
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameSecurityPolicy, state.ID.ValueString(), err),
+			err.Error(),
+		)
 		return
 	}
 

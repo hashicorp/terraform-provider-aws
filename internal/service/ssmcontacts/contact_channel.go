@@ -36,7 +36,7 @@ func ResourceContactChannel() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,11 +58,11 @@ func ResourceContactChannel() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"type": {
+			names.AttrType: {
 				ForceNew: true,
 				Type:     schema.TypeString,
 				Required: true,
@@ -76,6 +76,7 @@ const (
 )
 
 func resourceContactChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	delivery_address := expandContactChannelAddress(d.Get("delivery_address").([]interface{}))
@@ -83,25 +84,26 @@ func resourceContactChannelCreate(ctx context.Context, d *schema.ResourceData, m
 		ContactId:       aws.String(d.Get("contact_id").(string)),
 		DeferActivation: aws.Bool(true),
 		DeliveryAddress: delivery_address,
-		Name:            aws.String(d.Get("name").(string)),
-		Type:            types.ChannelType(d.Get("type").(string)),
+		Name:            aws.String(d.Get(names.AttrName).(string)),
+		Type:            types.ChannelType(d.Get(names.AttrType).(string)),
 	}
 
 	out, err := conn.CreateContactChannel(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionCreating, ResNameContactChannel, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.SSMContacts, create.ErrActionCreating, ResNameContactChannel, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionCreating, ResNameContactChannel, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.SSMContacts, create.ErrActionCreating, ResNameContactChannel, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.ContactChannelArn))
 
-	return resourceContactChannelRead(ctx, d, meta)
+	return append(diags, resourceContactChannelRead(ctx, d, meta)...)
 }
 
 func resourceContactChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	out, err := findContactChannelByID(ctx, conn, d.Id())
@@ -109,21 +111,22 @@ func resourceContactChannelRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSMContacts ContactChannel (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionReading, ResNameContactChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMContacts, create.ErrActionReading, ResNameContactChannel, d.Id(), err)
 	}
 
 	if err := setContactChannelResourceData(d, out); err != nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionSetting, ResNameContactChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMContacts, create.ErrActionSetting, ResNameContactChannel, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceContactChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	update := false
@@ -137,25 +140,26 @@ func resourceContactChannelUpdate(ctx context.Context, d *schema.ResourceData, m
 		update = true
 	}
 
-	if d.HasChanges("name") {
-		in.Name = aws.String(d.Get("name").(string))
+	if d.HasChanges(names.AttrName) {
+		in.Name = aws.String(d.Get(names.AttrName).(string))
 		update = true
 	}
 
 	if !update {
-		return nil
+		return diags
 	}
 
 	log.Printf("[DEBUG] Updating SSMContacts ContactChannel (%s): %#v", d.Id(), in)
 	_, err := conn.UpdateContactChannel(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionUpdating, ResNameContactChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMContacts, create.ErrActionUpdating, ResNameContactChannel, d.Id(), err)
 	}
 
-	return resourceContactChannelRead(ctx, d, meta)
+	return append(diags, resourceContactChannelRead(ctx, d, meta)...)
 }
 
 func resourceContactChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	log.Printf("[INFO] Deleting SSMContacts ContactChannel %s", d.Id())
@@ -167,11 +171,11 @@ func resourceContactChannelDelete(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.SSMContacts, create.ErrActionDeleting, ResNameContactChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMContacts, create.ErrActionDeleting, ResNameContactChannel, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

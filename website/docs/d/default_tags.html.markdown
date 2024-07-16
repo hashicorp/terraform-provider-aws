@@ -55,9 +55,4 @@ This data source has no arguments.
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `tags` - Blocks of default tags set on the provider. See details below.
-
-### tags
-
-* `key` - Key name of the tag (i.e., `tags.#.key`).
-* `value` - Value of the tag (i.e., `tags.#.value`).
+* `tags` - Key-value mapping of provider default tags.

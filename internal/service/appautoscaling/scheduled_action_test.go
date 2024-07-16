@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,7 +24,7 @@ import (
 
 func TestAccAppAutoScalingScheduledAction_dynamoDB(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sa1, sa2 applicationautoscaling.ScheduledAction
+	var sa1, sa2 awstypes.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	schedule1 := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
 	schedule2 := time.Now().AddDate(0, 0, 2).Format("2006-01-02T15:04:05")
@@ -42,17 +42,17 @@ func TestAccAppAutoScalingScheduledAction_dynamoDB(t *testing.T) {
 				Config: testAccScheduledActionConfig_dynamoDB(rName, schedule1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", fmt.Sprintf("at(%s)", schedule1)),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, fmt.Sprintf("at(%s)", schedule1)),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
-					resource.TestCheckNoResourceAttr(resourceName, "start_time"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrStartTime),
 					resource.TestCheckNoResourceAttr(resourceName, "end_time"),
 				),
 			},
@@ -61,17 +61,17 @@ func TestAccAppAutoScalingScheduledAction_dynamoDB(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa2),
 					testAccCheckScheduledActionNotRecreated(&sa1, &sa2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", fmt.Sprintf("at(%s)", schedule2)),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, fmt.Sprintf("at(%s)", schedule2)),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "9"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", updatedTimezone),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
-					resource.TestCheckNoResourceAttr(resourceName, "start_time"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrStartTime),
 					resource.TestCheckNoResourceAttr(resourceName, "end_time"),
 				),
 			},
@@ -81,7 +81,7 @@ func TestAccAppAutoScalingScheduledAction_dynamoDB(t *testing.T) {
 
 func TestAccAppAutoScalingScheduledAction_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sa applicationautoscaling.ScheduledAction
+	var sa awstypes.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	schedule := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
 
@@ -107,7 +107,7 @@ func TestAccAppAutoScalingScheduledAction_disappears(t *testing.T) {
 
 func TestAccAppAutoScalingScheduledAction_ecs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sa applicationautoscaling.ScheduledAction
+	var sa awstypes.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
 	resourceName := "aws_appautoscaling_scheduled_action.test"
@@ -123,16 +123,16 @@ func TestAccAppAutoScalingScheduledAction_ecs(t *testing.T) {
 				Config: testAccScheduledActionConfig_ecs(rName, ts),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", fmt.Sprintf("at(%s)", ts)),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, fmt.Sprintf("at(%s)", ts)),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "5"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 				),
 			},
 		},
@@ -141,7 +141,7 @@ func TestAccAppAutoScalingScheduledAction_ecs(t *testing.T) {
 
 func TestAccAppAutoScalingScheduledAction_ecsUpdateScheduleRetainStartAndEndTime(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sa applicationautoscaling.ScheduledAction
+	var sa awstypes.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
 	tsUpdate := time.Now().AddDate(0, 0, 2).Format("2006-01-02T15:04:05")
@@ -160,34 +160,34 @@ func TestAccAppAutoScalingScheduledAction_ecsUpdateScheduleRetainStartAndEndTime
 				Config: testAccScheduledActionConfig_ecsWithStartAndEndTime(rName, ts, startTime, endTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", fmt.Sprintf("at(%s)", ts)),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, fmt.Sprintf("at(%s)", ts)),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "5"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					resource.TestCheckResourceAttr(resourceName, "start_time", startTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStartTime, startTime),
 					resource.TestCheckResourceAttr(resourceName, "end_time", endTime),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 				),
 			},
 			{
 				Config: testAccScheduledActionConfig_ecsWithStartAndEndTime(rName, tsUpdate, startTime, endTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", fmt.Sprintf("at(%s)", tsUpdate)),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, fmt.Sprintf("at(%s)", tsUpdate)),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "5"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 				),
 			},
 		},
@@ -196,7 +196,7 @@ func TestAccAppAutoScalingScheduledAction_ecsUpdateScheduleRetainStartAndEndTime
 
 func TestAccAppAutoScalingScheduledAction_ecsUpdateStartAndEndTime(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sa applicationautoscaling.ScheduledAction
+	var sa awstypes.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
 	tsUpdate := time.Now().AddDate(0, 0, 2).Format("2006-01-02T15:04:05")
@@ -217,36 +217,36 @@ func TestAccAppAutoScalingScheduledAction_ecsUpdateStartAndEndTime(t *testing.T)
 				Config: testAccScheduledActionConfig_ecsWithStartAndEndTime(rName, ts, startTime, endTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", fmt.Sprintf("at(%s)", ts)),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, fmt.Sprintf("at(%s)", ts)),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "5"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					resource.TestCheckResourceAttr(resourceName, "start_time", startTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStartTime, startTime),
 					resource.TestCheckResourceAttr(resourceName, "end_time", endTime),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 				),
 			},
 			{
 				Config: testAccScheduledActionConfig_ecsWithStartAndEndTime(rName, tsUpdate, startTimeUpdate, endTimeUpdate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", fmt.Sprintf("at(%s)", tsUpdate)),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, fmt.Sprintf("at(%s)", tsUpdate)),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "5"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					resource.TestCheckResourceAttr(resourceName, "start_time", startTimeUpdate),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStartTime, startTimeUpdate),
 					resource.TestCheckResourceAttr(resourceName, "end_time", endTimeUpdate),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 				),
 			},
 		},
@@ -255,7 +255,7 @@ func TestAccAppAutoScalingScheduledAction_ecsUpdateStartAndEndTime(t *testing.T)
 
 func TestAccAppAutoScalingScheduledAction_ecsAddStartTimeAndEndTimeAfterResourceCreated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sa applicationautoscaling.ScheduledAction
+	var sa awstypes.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
 	tsUpdate := time.Now().AddDate(0, 0, 2).Format("2006-01-02T15:04:05")
@@ -274,36 +274,36 @@ func TestAccAppAutoScalingScheduledAction_ecsAddStartTimeAndEndTimeAfterResource
 				Config: testAccScheduledActionConfig_ecs(rName, ts),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", fmt.Sprintf("at(%s)", ts)),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, fmt.Sprintf("at(%s)", ts)),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "5"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					resource.TestCheckNoResourceAttr(resourceName, "start_time"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrStartTime),
 					resource.TestCheckNoResourceAttr(resourceName, "end_time"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 				),
 			},
 			{
 				Config: testAccScheduledActionConfig_ecsWithStartAndEndTime(rName, tsUpdate, startTime, endTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", fmt.Sprintf("at(%s)", tsUpdate)),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, fmt.Sprintf("at(%s)", tsUpdate)),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "5"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					resource.TestCheckResourceAttr(resourceName, "start_time", startTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStartTime, startTime),
 					resource.TestCheckResourceAttr(resourceName, "end_time", endTime),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 				),
 			},
 		},
@@ -312,7 +312,7 @@ func TestAccAppAutoScalingScheduledAction_ecsAddStartTimeAndEndTimeAfterResource
 
 func TestAccAppAutoScalingScheduledAction_emr(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sa applicationautoscaling.ScheduledAction
+	var sa awstypes.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
 	resourceName := "aws_appautoscaling_scheduled_action.test"
@@ -328,16 +328,16 @@ func TestAccAppAutoScalingScheduledAction_emr(t *testing.T) {
 				Config: testAccScheduledActionConfig_emr(rName, ts),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", fmt.Sprintf("at(%s)", ts)),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, fmt.Sprintf("at(%s)", ts)),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "5"),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 				),
 			},
 		},
@@ -346,7 +346,7 @@ func TestAccAppAutoScalingScheduledAction_emr(t *testing.T) {
 
 func TestAccAppAutoScalingScheduledAction_Name_duplicate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sa1, sa2 applicationautoscaling.ScheduledAction
+	var sa1, sa2 awstypes.ScheduledAction
 	resourceName := "aws_appautoscaling_scheduled_action.test"
 	resourceName2 := "aws_appautoscaling_scheduled_action.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -370,7 +370,7 @@ func TestAccAppAutoScalingScheduledAction_Name_duplicate(t *testing.T) {
 
 func TestAccAppAutoScalingScheduledAction_spotFleet(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sa applicationautoscaling.ScheduledAction
+	var sa awstypes.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -387,16 +387,16 @@ func TestAccAppAutoScalingScheduledAction_spotFleet(t *testing.T) {
 				Config: testAccScheduledActionConfig_spotFleet(rName, ts, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", fmt.Sprintf("at(%s)", ts)),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, fmt.Sprintf("at(%s)", ts)),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 				),
 			},
 		},
@@ -405,7 +405,7 @@ func TestAccAppAutoScalingScheduledAction_spotFleet(t *testing.T) {
 
 func TestAccAppAutoScalingScheduledAction_ScheduleAtExpression_timezone(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sa applicationautoscaling.ScheduledAction
+	var sa awstypes.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
 	at := fmt.Sprintf("at(%s)", ts)
@@ -425,17 +425,17 @@ func TestAccAppAutoScalingScheduledAction_ScheduleAtExpression_timezone(t *testi
 				Config: testAccScheduledActionConfig_timezone(rName, at, timezone, startTime, endTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", at),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, at),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "timezone", timezone),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
-					resource.TestCheckResourceAttr(resourceName, "start_time", startTime),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStartTime, startTime),
 					resource.TestCheckResourceAttr(resourceName, "end_time", endTime),
 				),
 			},
@@ -445,7 +445,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleAtExpression_timezone(t *testi
 
 func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sa applicationautoscaling.ScheduledAction
+	var sa awstypes.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cron := "cron(0 17 * * ? *)"
 	resourceName := "aws_appautoscaling_scheduled_action.test"
@@ -461,17 +461,17 @@ func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_basic(t *testin
 				Config: testAccScheduledActionConfig_schedule(rName, cron),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", cron),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, cron),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
-					resource.TestCheckNoResourceAttr(resourceName, "start_time"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrStartTime),
 					resource.TestCheckNoResourceAttr(resourceName, "end_time"),
 				),
 			},
@@ -481,7 +481,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_basic(t *testin
 
 func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_timezone(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sa applicationautoscaling.ScheduledAction
+	var sa awstypes.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cron := "cron(0 17 * * ? *)"
 	timezone := "Pacific/Tahiti"
@@ -500,17 +500,17 @@ func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_timezone(t *tes
 				Config: testAccScheduledActionConfig_timezone(rName, cron, timezone, startTime, endTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", cron),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, cron),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "timezone", timezone),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
-					resource.TestCheckResourceAttr(resourceName, "start_time", startTime),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStartTime, startTime),
 					resource.TestCheckResourceAttr(resourceName, "end_time", endTime),
 				),
 			},
@@ -520,7 +520,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_timezone(t *tes
 
 func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_startEndTimeTimezone(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sa applicationautoscaling.ScheduledAction
+	var sa awstypes.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cron := "cron(0 17 * * ? *)"
 	scheduleTimezone := "Etc/GMT+9"                                    // Z-09:00 (IANA and RFC3339 have inverted signs)
@@ -543,17 +543,17 @@ func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_startEndTimeTim
 				Config: testAccScheduledActionConfig_timezone(rName, cron, scheduleTimezone, startTime.Format(time.RFC3339), endTime.Format(time.RFC3339)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", cron),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, cron),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "timezone", scheduleTimezone),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
-					resource.TestCheckResourceAttr(resourceName, "start_time", startTimeUtc.Format(time.RFC3339)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStartTime, startTimeUtc.Format(time.RFC3339)),
 					resource.TestCheckResourceAttr(resourceName, "end_time", endTimeUtc.Format(time.RFC3339)),
 				),
 			},
@@ -561,17 +561,17 @@ func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_startEndTimeTim
 				Config: testAccScheduledActionConfig_schedule(rName, cron),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", cron),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, cron),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
-					resource.TestCheckResourceAttr(resourceName, "start_time", ""),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStartTime, ""),
 					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
 				),
 			},
@@ -581,7 +581,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_startEndTimeTim
 
 func TestAccAppAutoScalingScheduledAction_ScheduleRateExpression_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sa applicationautoscaling.ScheduledAction
+	var sa awstypes.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rate := "rate(1 day)"
 	resourceName := "aws_appautoscaling_scheduled_action.test"
@@ -597,17 +597,17 @@ func TestAccAppAutoScalingScheduledAction_ScheduleRateExpression_basic(t *testin
 				Config: testAccScheduledActionConfig_schedule(rName, rate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", rate),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, rate),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
-					resource.TestCheckNoResourceAttr(resourceName, "start_time"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrStartTime),
 					resource.TestCheckNoResourceAttr(resourceName, "end_time"),
 				),
 			},
@@ -617,7 +617,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleRateExpression_basic(t *testin
 
 func TestAccAppAutoScalingScheduledAction_ScheduleRateExpression_timezone(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sa applicationautoscaling.ScheduledAction
+	var sa awstypes.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rate := "rate(1 day)"
 	timezone := "Pacific/Tahiti"
@@ -636,17 +636,17 @@ func TestAccAppAutoScalingScheduledAction_ScheduleRateExpression_timezone(t *tes
 				Config: testAccScheduledActionConfig_timezone(rName, rate, timezone, startTime, endTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", rate),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, rate),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "timezone", timezone),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
-					resource.TestCheckResourceAttr(resourceName, "start_time", startTime),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStartTime, startTime),
 					resource.TestCheckResourceAttr(resourceName, "end_time", endTime),
 				),
 			},
@@ -656,7 +656,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleRateExpression_timezone(t *tes
 
 func TestAccAppAutoScalingScheduledAction_minCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sa1, sa2 applicationautoscaling.ScheduledAction
+	var sa1, sa2 awstypes.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	schedule := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
 	resourceName := "aws_appautoscaling_scheduled_action.test"
@@ -672,17 +672,17 @@ func TestAccAppAutoScalingScheduledAction_minCapacity(t *testing.T) {
 				Config: testAccScheduledActionConfig_minCapacity(rName, schedule, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", fmt.Sprintf("at(%s)", schedule)),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, fmt.Sprintf("at(%s)", schedule)),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", ""),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
-					resource.TestCheckNoResourceAttr(resourceName, "start_time"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrStartTime),
 					resource.TestCheckNoResourceAttr(resourceName, "end_time"),
 				),
 			},
@@ -691,8 +691,8 @@ func TestAccAppAutoScalingScheduledAction_minCapacity(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa2),
 					testAccCheckScheduledActionNotRecreated(&sa1, &sa2),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", ""),
 				),
 			},
@@ -701,9 +701,9 @@ func TestAccAppAutoScalingScheduledAction_minCapacity(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa2),
 					testAccCheckScheduledActionNotRecreated(&sa1, &sa2),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", ""),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", acctest.Ct10),
 				),
 			},
 		},
@@ -712,7 +712,7 @@ func TestAccAppAutoScalingScheduledAction_minCapacity(t *testing.T) {
 
 func TestAccAppAutoScalingScheduledAction_maxCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sa1, sa2 applicationautoscaling.ScheduledAction
+	var sa1, sa2 awstypes.ScheduledAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	schedule := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
 	resourceName := "aws_appautoscaling_scheduled_action.test"
@@ -728,17 +728,17 @@ func TestAccAppAutoScalingScheduledAction_maxCapacity(t *testing.T) {
 				Config: testAccScheduledActionConfig_maxCapacity(rName, schedule, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, autoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", fmt.Sprintf("at(%s)", schedule)),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, fmt.Sprintf("at(%s)", schedule)),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", ""),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
-					resource.TestCheckNoResourceAttr(resourceName, "start_time"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrStartTime),
 					resource.TestCheckNoResourceAttr(resourceName, "end_time"),
 				),
 			},
@@ -747,7 +747,7 @@ func TestAccAppAutoScalingScheduledAction_maxCapacity(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa2),
 					testAccCheckScheduledActionNotRecreated(&sa1, &sa2),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", ""),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "8"),
 				),
@@ -757,8 +757,8 @@ func TestAccAppAutoScalingScheduledAction_maxCapacity(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa2),
 					testAccCheckScheduledActionNotRecreated(&sa1, &sa2),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", ""),
 				),
 			},
@@ -768,14 +768,14 @@ func TestAccAppAutoScalingScheduledAction_maxCapacity(t *testing.T) {
 
 func testAccCheckScheduledActionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appautoscaling_scheduled_action" {
 				continue
 			}
 
-			_, err := tfappautoscaling.FindScheduledActionByFourPartKey(ctx, conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["scalable_dimension"])
+			_, err := tfappautoscaling.FindScheduledActionByFourPartKey(ctx, conn, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["scalable_dimension"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -792,16 +792,16 @@ func testAccCheckScheduledActionDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckScheduledActionExists(ctx context.Context, n string, v *applicationautoscaling.ScheduledAction) resource.TestCheckFunc {
+func testAccCheckScheduledActionExists(ctx context.Context, n string, v *awstypes.ScheduledAction) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingClient(ctx)
 
-		output, err := tfappautoscaling.FindScheduledActionByFourPartKey(ctx, conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["scalable_dimension"])
+		output, err := tfappautoscaling.FindScheduledActionByFourPartKey(ctx, conn, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["scalable_dimension"])
 
 		if err != nil {
 			return err
@@ -813,9 +813,9 @@ func testAccCheckScheduledActionExists(ctx context.Context, n string, v *applica
 	}
 }
 
-func testAccCheckScheduledActionNotRecreated(i, j *applicationautoscaling.ScheduledAction) resource.TestCheckFunc {
+func testAccCheckScheduledActionNotRecreated(i, j *awstypes.ScheduledAction) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
+		if !aws.ToTime(i.CreationTime).Equal(aws.ToTime(j.CreationTime)) {
 			return fmt.Errorf("Application Auto Scaling Scheduled Action recreated")
 		}
 

@@ -20,7 +20,7 @@ func DataSourceResponsePlan() *schema.Resource {
 		ReadWithoutTimeout: dataSourceResponsePlanRead,
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -34,7 +34,7 @@ func DataSourceResponsePlan() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"role_arn": {
+									names.AttrRoleARN: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -46,16 +46,16 @@ func DataSourceResponsePlan() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"parameter": {
+									names.AttrParameter: {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"name": {
+												names.AttrName: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"values": {
+												names.AttrValues: {
 													Type:     schema.TypeSet,
 													Computed: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -74,7 +74,7 @@ func DataSourceResponsePlan() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -84,7 +84,7 @@ func DataSourceResponsePlan() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -117,7 +117,7 @@ func DataSourceResponsePlan() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"sns_topic_arn": {
+									names.AttrSNSTopicARN: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -141,7 +141,7 @@ func DataSourceResponsePlan() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -159,11 +159,11 @@ func DataSourceResponsePlan() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -173,31 +173,32 @@ const (
 )
 
 func dataSourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
-	d.SetId(d.Get("arn").(string))
+	d.SetId(d.Get(names.AttrARN).(string))
 
 	responsePlan, err := FindResponsePlanByID(ctx, client, d.Id())
 
 	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionReading, DSNameResponsePlan, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionReading, DSNameResponsePlan, d.Id(), err)
 	}
 
 	if d, err := setResponsePlanResourceData(d, responsePlan); err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionReading, DSNameResponsePlan, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionReading, DSNameResponsePlan, d.Id(), err)
 	}
 
 	tags, err := listTags(ctx, client, d.Id())
 	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionReading, DSNameResponsePlan, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionReading, DSNameResponsePlan, d.Id(), err)
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, DSNameResponsePlan, d.Id(), err)
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionSetting, DSNameResponsePlan, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

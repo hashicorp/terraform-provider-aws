@@ -26,6 +26,7 @@ func RegisterSweepers() {
 		F:    sweepLustreFileSystems,
 		Dependencies: []string{
 			"aws_datasync_location",
+			"aws_m2_environment",
 		},
 	})
 
@@ -35,6 +36,7 @@ func RegisterSweepers() {
 		Dependencies: []string{
 			"aws_datasync_location",
 			"aws_fsx_ontap_storage_virtual_machine",
+			"aws_m2_environment",
 		},
 	})
 
@@ -57,6 +59,7 @@ func RegisterSweepers() {
 		Dependencies: []string{
 			"aws_datasync_location",
 			"aws_fsx_openzfs_volume",
+			"aws_m2_environment",
 		},
 	})
 
@@ -70,6 +73,7 @@ func RegisterSweepers() {
 		F:    sweepWindowsFileSystems,
 		Dependencies: []string{
 			"aws_datasync_location",
+			"aws_m2_environment",
 			"aws_storagegateway_file_system_association",
 		},
 	})
@@ -94,7 +98,7 @@ func sweepBackups(region string) error {
 		}
 
 		for _, fs := range page.Backups {
-			r := ResourceBackup()
+			r := resourceBackup()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.BackupId))
 
@@ -143,7 +147,7 @@ func sweepLustreFileSystems(region string) error {
 				continue
 			}
 
-			r := ResourceLustreFileSystem()
+			r := resourceLustreFileSystem()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.FileSystemId))
 
@@ -192,7 +196,7 @@ func sweepONTAPFileSystems(region string) error {
 				continue
 			}
 
-			r := ResourceONTAPFileSystem()
+			r := resourceONTAPFileSystem()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.FileSystemId))
 
@@ -237,7 +241,7 @@ func sweepONTAPStorageVirtualMachine(region string) error {
 		}
 
 		for _, vm := range page.StorageVirtualMachines {
-			r := ResourceONTAPStorageVirtualMachine()
+			r := resourceONTAPStorageVirtualMachine()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(vm.StorageVirtualMachineId))
 
@@ -289,7 +293,7 @@ func sweepONTAPVolumes(region string) error {
 				continue
 			}
 
-			r := ResourceONTAPVolume()
+			r := resourceONTAPVolume()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.VolumeId))
 			d.Set("bypass_snaplock_enterprise_retention", true)
@@ -340,7 +344,7 @@ func sweepOpenZFSFileSystems(region string) error {
 				continue
 			}
 
-			r := ResourceOpenZFSFileSystem()
+			r := resourceOpenZFSFileSystem()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.FileSystemId))
 
@@ -392,7 +396,7 @@ func sweepOpenZFSVolume(region string) error {
 				continue
 			}
 
-			r := ResourceOpenZFSVolume()
+			r := resourceOpenZFSVolume()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.VolumeId))
 
@@ -441,7 +445,7 @@ func sweepWindowsFileSystems(region string) error {
 				continue
 			}
 
-			r := ResourceWindowsFileSystem()
+			r := resourceWindowsFileSystem()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.FileSystemId))
 			d.Set("skip_final_backup", true)

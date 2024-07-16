@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_key_pair", name="Key Pair")
 // @Tags(identifierAttribute="key_pair_id")
+// @Testing(tagsTest=false)
 func resourceKeyPair() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -47,7 +48,7 @@ func resourceKeyPair() *schema.Resource {
 		MigrateState:  KeyPairMigrateState,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,7 +80,7 @@ func resourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"public_key": {
+			names.AttrPublicKey: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -105,7 +106,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 	keyName := create.Name(d.Get("key_name").(string), d.Get("key_name_prefix").(string))
 	input := &ec2.ImportKeyPairInput{
 		KeyName:           aws.String(keyName),
-		PublicKeyMaterial: []byte(d.Get("public_key").(string)),
+		PublicKeyMaterial: []byte(d.Get(names.AttrPublicKey).(string)),
 		TagSpecifications: getTagSpecificationsInV2(ctx, types.ResourceTypeKeyPair),
 	}
 
@@ -143,7 +144,7 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta inter
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  "key-pair/" + d.Id(),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("fingerprint", keyPair.KeyFingerprint)
 	d.Set("key_name", keyPair.KeyName)
 	d.Set("key_name_prefix", create.NamePrefixFromName(aws.ToString(keyPair.KeyName)))

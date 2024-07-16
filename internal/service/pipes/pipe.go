@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -50,73 +51,76 @@ func resourcePipe() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "Managed by Terraform",
-			},
-			"desired_state": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          string(awstypes.RequestedPipeStateRunning),
-				ValidateDiagFunc: enum.Validate[awstypes.RequestedPipeState](),
-			},
-			"enrichment": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"enrichment_parameters": enrichmentParametersSchema(),
-			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), ""),
-				),
-			},
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64-id.UniqueIDSuffixLength),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), ""),
-				),
-			},
-			"role_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"source": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					verify.ValidARN,
-					validation.StringMatch(regexache.MustCompile(`^smk://(([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z]):[0-9]{1,5}|arn:(aws[0-9A-Za-z-]*):([0-9A-Za-z-]+):([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1})?:(\d{12})?:(.+)$`), ""),
-				),
-			},
-			"source_parameters": sourceParametersSchema(),
-			"target": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"target_parameters": targetParametersSchema(),
-			names.AttrTags:      tftags.TagsSchema(),
-			names.AttrTagsAll:   tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "Managed by Terraform",
+				},
+				"desired_state": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          string(awstypes.RequestedPipeStateRunning),
+					ValidateDiagFunc: enum.Validate[awstypes.RequestedPipeState](),
+				},
+				"enrichment": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"enrichment_parameters": enrichmentParametersSchema(),
+				"log_configuration":     logConfigurationSchema(),
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 64),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), ""),
+					),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 64-id.UniqueIDSuffixLength),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), ""),
+					),
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrSource: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.Any(
+						verify.ValidARN,
+						validation.StringMatch(regexache.MustCompile(`^smk://(([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z]):[0-9]{1,5}|arn:(aws[0-9A-Za-z-]*):([0-9A-Za-z-]+):([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1})?:(\d{12})?:(.+)$`), ""),
+					),
+				},
+				"source_parameters": sourceParametersSchema(),
+				names.AttrTarget: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"target_parameters": targetParametersSchema(),
+				names.AttrTags:      tftags.TagsSchema(),
+				names.AttrTagsAll:   tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -126,19 +130,20 @@ const (
 )
 
 func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PipesClient(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &pipes.CreatePipeInput{
 		DesiredState: awstypes.RequestedPipeState(d.Get("desired_state").(string)),
 		Name:         aws.String(name),
-		RoleArn:      aws.String(d.Get("role_arn").(string)),
-		Source:       aws.String(d.Get("source").(string)),
+		RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),
+		Source:       aws.String(d.Get(names.AttrSource).(string)),
 		Tags:         getTagsIn(ctx),
-		Target:       aws.String(d.Get("target").(string)),
+		Target:       aws.String(d.Get(names.AttrTarget).(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -158,22 +163,27 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.TargetParameters = expandPipeTargetParameters(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("log_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.LogConfiguration = expandPipeLogConfigurationParameters(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	output, err := conn.CreatePipe(ctx, input)
 
 	if err != nil {
-		return create.DiagError(names.Pipes, create.ErrActionCreating, ResNamePipe, name, err)
+		return create.AppendDiagError(diags, names.Pipes, create.ErrActionCreating, ResNamePipe, name, err)
 	}
 
 	d.SetId(aws.ToString(output.Name))
 
 	if _, err := waitPipeCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.Pipes, create.ErrActionWaitingForCreation, ResNamePipe, d.Id(), err)
+		return create.AppendDiagError(diags, names.Pipes, create.ErrActionWaitingForCreation, ResNamePipe, d.Id(), err)
 	}
 
-	return resourcePipeRead(ctx, d, meta)
+	return append(diags, resourcePipeRead(ctx, d, meta)...)
 }
 
 func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PipesClient(ctx)
 
 	output, err := findPipeByName(ctx, conn, d.Id())
@@ -181,57 +191,65 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Pipes Pipe (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Pipes, create.ErrActionReading, ResNamePipe, d.Id(), err)
+		return create.AppendDiagError(diags, names.Pipes, create.ErrActionReading, ResNamePipe, d.Id(), err)
 	}
 
-	d.Set("arn", output.Arn)
-	d.Set("description", output.Description)
+	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("desired_state", output.DesiredState)
 	d.Set("enrichment", output.Enrichment)
 	if v := output.EnrichmentParameters; !types.IsZero(v) {
 		if err := d.Set("enrichment_parameters", []interface{}{flattenPipeEnrichmentParameters(v)}); err != nil {
-			return diag.Errorf("setting enrichment_parameters: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting enrichment_parameters: %s", err)
 		}
 	} else {
 		d.Set("enrichment_parameters", nil)
 	}
-	d.Set("name", output.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.Name)))
-	d.Set("role_arn", output.RoleArn)
-	d.Set("source", output.Source)
+	if v := output.LogConfiguration; !types.IsZero(v) {
+		if err := d.Set("log_configuration", []interface{}{flattenPipeLogConfiguration(v)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting log_configuration: %s", err)
+		}
+	} else {
+		d.Set("log_configuration", nil)
+	}
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
+	d.Set(names.AttrRoleARN, output.RoleArn)
+	d.Set(names.AttrSource, output.Source)
 	if v := output.SourceParameters; !types.IsZero(v) {
 		if err := d.Set("source_parameters", []interface{}{flattenPipeSourceParameters(v)}); err != nil {
-			return diag.Errorf("setting source_parameters: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting source_parameters: %s", err)
 		}
 	} else {
 		d.Set("source_parameters", nil)
 	}
-	d.Set("target", output.Target)
+	d.Set(names.AttrTarget, output.Target)
 	if v := output.TargetParameters; !types.IsZero(v) {
 		if err := d.Set("target_parameters", []interface{}{flattenPipeTargetParameters(v)}); err != nil {
-			return diag.Errorf("setting target_parameters: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting target_parameters: %s", err)
 		}
 	} else {
 		d.Set("target_parameters", nil)
 	}
 
-	return nil
+	return diags
 }
 
 func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PipesClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &pipes.UpdatePipeInput{
-			Description:  aws.String(d.Get("description").(string)),
+			Description:  aws.String(d.Get(names.AttrDescription).(string)),
 			DesiredState: awstypes.RequestedPipeState(d.Get("desired_state").(string)),
 			Name:         aws.String(d.Id()),
-			RoleArn:      aws.String(d.Get("role_arn").(string)),
-			Target:       aws.String(d.Get("target").(string)),
+			RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),
+			Target:       aws.String(d.Get(names.AttrTarget).(string)),
 			// Reset state in case it's a deletion, have to set the input to an empty string otherwise it doesn't get overwritten.
 			TargetParameters: &awstypes.PipeTargetParameters{
 				InputTemplate: aws.String(""),
@@ -245,6 +263,12 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		if d.HasChange("enrichment_parameters") {
 			if v, ok := d.GetOk("enrichment_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.EnrichmentParameters = expandPipeEnrichmentParameters(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if d.HasChange("log_configuration") {
+			if v, ok := d.GetOk("log_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.LogConfiguration = expandPipeLogConfigurationParameters(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
 
@@ -263,18 +287,19 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		output, err := conn.UpdatePipe(ctx, input)
 
 		if err != nil {
-			return create.DiagError(names.Pipes, create.ErrActionUpdating, ResNamePipe, d.Id(), err)
+			return create.AppendDiagError(diags, names.Pipes, create.ErrActionUpdating, ResNamePipe, d.Id(), err)
 		}
 
 		if _, err := waitPipeUpdated(ctx, conn, aws.ToString(output.Name), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.Pipes, create.ErrActionWaitingForUpdate, ResNamePipe, d.Id(), err)
+			return create.AppendDiagError(diags, names.Pipes, create.ErrActionWaitingForUpdate, ResNamePipe, d.Id(), err)
 		}
 	}
 
-	return resourcePipeRead(ctx, d, meta)
+	return append(diags, resourcePipeRead(ctx, d, meta)...)
 }
 
 func resourcePipeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PipesClient(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Pipes Pipe: %s", d.Id())
@@ -283,18 +308,18 @@ func resourcePipeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Pipes, create.ErrActionDeleting, ResNamePipe, d.Id(), err)
+		return create.AppendDiagError(diags, names.Pipes, create.ErrActionDeleting, ResNamePipe, d.Id(), err)
 	}
 
 	if _, err := waitPipeDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.Pipes, create.ErrActionWaitingForDeletion, ResNamePipe, d.Id(), err)
+		return create.AppendDiagError(diags, names.Pipes, create.ErrActionWaitingForDeletion, ResNamePipe, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findPipeByName(ctx context.Context, conn *pipes.Client, name string) (*pipes.DescribePipeOutput, error) {

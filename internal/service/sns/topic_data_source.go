@@ -13,8 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_sns_topic")
@@ -23,11 +25,11 @@ func dataSourceTopic() *schema.Resource {
 		ReadWithoutTimeout: dataSourceTopicRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -36,20 +38,21 @@ func dataSourceTopic() *schema.Resource {
 }
 
 func dataSourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	topic, err := findTopicByName(ctx, conn, name)
 
 	if err != nil {
-		return diag.Errorf("reading SNS Topic (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading SNS Topic (%s): %s", name, err)
 	}
 
 	topicARN := aws.ToString(topic.TopicArn)
 	d.SetId(topicARN)
-	d.Set("arn", topicARN)
+	d.Set(names.AttrARN, topicARN)
 
-	return nil
+	return diags
 }
 
 func findTopicByName(ctx context.Context, conn *sns.Client, name string) (*types.Topic, error) {

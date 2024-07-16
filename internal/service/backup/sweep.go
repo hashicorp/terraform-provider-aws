@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/go-multierror"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -56,86 +56,80 @@ func sweepFramework(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.BackupConn(ctx)
+	conn := client.BackupClient(ctx)
 	input := &backup.ListFrameworksInput{}
-	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListFrameworksPagesWithContext(ctx, input, func(page *backup.ListFrameworksOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := backup.NewListFrameworksPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Backup Framework sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Backup Frameworks (%s): %w", region, err)
 		}
 
 		for _, framework := range page.Frameworks {
 			r := ResourceFramework()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(framework.FrameworkName))
+			d.SetId(aws.ToString(framework.FrameworkName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Backup Framework sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Backup Frameworks for %s: %w", region, err))
 	}
 
 	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Backup Frameworks for %s: %w", region, err))
+		return fmt.Errorf("error sweeping Backup Frameworks (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }
 
 func sweepReportPlan(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.BackupConn(ctx)
+	conn := client.BackupClient(ctx)
 	input := &backup.ListReportPlansInput{}
-	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListReportPlansPagesWithContext(ctx, input, func(page *backup.ListReportPlansOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := backup.NewListReportPlansPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Backup Report Plans sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Backup Report Plans for %s: %w", region, err)
 		}
 
 		for _, reportPlan := range page.ReportPlans {
 			r := ResourceReportPlan()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(reportPlan.ReportPlanName))
+			d.SetId(aws.ToString(reportPlan.ReportPlanName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Backup Report Plans sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Backup Report Plans for %s: %w", region, err))
 	}
 
 	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Backup Report Plans for %s: %w", region, err))
+		return fmt.Errorf("error sweeping Backup Report Plans for %s: %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }
 
 func sweepVaultLockConfiguration(region string) error {
@@ -143,49 +137,41 @@ func sweepVaultLockConfiguration(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.BackupConn(ctx)
+	conn := client.BackupClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
 	input := &backup.ListBackupVaultsInput{}
 
-	err = conn.ListBackupVaultsPagesWithContext(ctx, input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := backup.NewListBackupVaultsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Backup Vault Lock Configuration sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Backup Vaults for %s: %w", region, err)
 		}
 
 		for _, vault := range page.BackupVaultList {
-			if vault == nil {
-				continue
-			}
-
 			r := ResourceVaultLockConfiguration()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(vault.BackupVaultName))
+			d.SetId(aws.ToString(vault.BackupVaultName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing Backup Vaults for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Backup Vault Lock Configuration for %s: %w", region, err))
+		return fmt.Errorf("error sweeping Backup Vault Lock Configuration for %s: %w", region, err)
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Backup Vault Lock Configuration sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }
 
 func sweepVaultNotifications(region string) error {
@@ -193,49 +179,41 @@ func sweepVaultNotifications(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.BackupConn(ctx)
+	conn := client.BackupClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
 	input := &backup.ListBackupVaultsInput{}
 
-	err = conn.ListBackupVaultsPagesWithContext(ctx, input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := backup.NewListBackupVaultsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Backup Vault Notifications sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Backup Vaults for %s: %w", region, err)
 		}
 
 		for _, vault := range page.BackupVaultList {
-			if vault == nil {
-				continue
-			}
-
 			r := ResourceVaultNotifications()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(vault.BackupVaultName))
+			d.SetId(aws.ToString(vault.BackupVaultName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing Backup Vaults for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Backup Vault Notifications for %s: %w", region, err))
+		return fmt.Errorf("error sweeping Backup Vault Notifications for %s: %w", region, err)
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Backup Vault Notifications sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }
 
 func sweepVaultPolicies(region string) error {
@@ -244,41 +222,38 @@ func sweepVaultPolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.BackupConn(ctx)
+	conn := client.BackupClient(ctx)
 	input := &backup.ListBackupVaultsInput{}
-	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListBackupVaultsPagesWithContext(ctx, input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := backup.NewListBackupVaultsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Backup Vault Policies sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Backup Vaults for %s: %w", region, err)
 		}
 
 		for _, vault := range page.BackupVaultList {
 			r := ResourceVaultPolicy()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(vault.BackupVaultName))
+			d.SetId(aws.ToString(vault.BackupVaultName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Backup Vault Policies sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Backup Vaults for %s: %w", region, err))
 	}
 
 	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Backup Vault Policies for %s: %w", region, err))
+		return fmt.Errorf("error sweeping Backup Vault Policies for %s: %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }
 
 func sweepVaults(region string) error {
@@ -288,18 +263,26 @@ func sweepVaults(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.BackupConn(ctx)
+	conn := client.BackupClient(ctx)
 	input := &backup.ListBackupVaultsInput{}
-	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListBackupVaultsPagesWithContext(ctx, input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := backup.NewListBackupVaultsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Backup Vaults sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Backup Vaults for %s: %w", region, err)
 		}
 
 		for _, vault := range page.BackupVaultList {
-			name := aws.StringValue(vault.BackupVaultName)
+			name := aws.ToString(vault.BackupVaultName)
 
 			// Ignore Default and Automatic EFS Backup Vaults in region (cannot be deleted)
 			if name == "Default" || name == "aws/efs/automatic-backup-vault" {
@@ -310,26 +293,15 @@ func sweepVaults(region string) error {
 			r := ResourceVault()
 			d := r.Data(nil)
 			d.SetId(name)
-			d.Set("force_destroy", true)
+			d.Set(names.AttrForceDestroy, true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Backup Vaults sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Backup Vaults for %s: %w", region, err))
 	}
 
 	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Backup Vaults for %s: %w", region, err))
+		return fmt.Errorf("error sweeping Backup Vaults for %s: %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }
