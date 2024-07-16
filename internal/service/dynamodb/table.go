@@ -417,6 +417,7 @@ func resourceTable() *schema.Resource {
 			"stream_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"stream_label": {
 				Type:     schema.TypeString,
