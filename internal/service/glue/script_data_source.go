@@ -12,8 +12,8 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -85,13 +85,10 @@ func DataSourceScript() *schema.Resource {
 				},
 			},
 			"language": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  awstypes.LanguagePython,
-				ValidateFunc: validation.StringInSlice([]string{
-					awstypes.LanguagePython,
-					awstypes.LanguageScala,
-				}, false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.LanguagePython,
+				ValidateDiagFunc: enum.Validate[awstypes.Language](),
 			},
 			"python_script": {
 				Type:     schema.TypeString,
@@ -121,7 +118,7 @@ func dataSourceScriptRead(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Language = awstypes.Language(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Glue Script: %s", input)
+	log.Printf("[DEBUG] Creating Glue Script: %+v", input)
 	output, err := conn.CreateScript(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue script: %s", err)
@@ -138,14 +135,14 @@ func dataSourceScriptRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func expandCodeGenNodeArgs(l []interface{}) []*awstypes.CodeGenNodeArg {
-	args := []*awstypes.CodeGenNodeArg{}
+func expandCodeGenNodeArgs(l []interface{}) []awstypes.CodeGenNodeArg {
+	args := []awstypes.CodeGenNodeArg{}
 
 	for _, mRaw := range l {
 		m := mRaw.(map[string]interface{})
-		arg := &awstypes.CodeGenNodeArg{
+		arg := awstypes.CodeGenNodeArg{
 			Name:  aws.String(m[names.AttrName].(string)),
-			Param: aws.Bool(m["param"].(bool)),
+			Param: m["param"].(bool),
 			Value: aws.String(m[names.AttrValue].(string)),
 		}
 		args = append(args, arg)
@@ -154,12 +151,12 @@ func expandCodeGenNodeArgs(l []interface{}) []*awstypes.CodeGenNodeArg {
 	return args
 }
 
-func expandCodeGenEdges(l []interface{}) []*awstypes.CodeGenEdge {
-	edges := []*awstypes.CodeGenEdge{}
+func expandCodeGenEdges(l []interface{}) []awstypes.CodeGenEdge {
+	edges := []awstypes.CodeGenEdge{}
 
 	for _, mRaw := range l {
 		m := mRaw.(map[string]interface{})
-		edge := &awstypes.CodeGenEdge{
+		edge := awstypes.CodeGenEdge{
 			Source: aws.String(m[names.AttrSource].(string)),
 			Target: aws.String(m[names.AttrTarget].(string)),
 		}
@@ -172,18 +169,18 @@ func expandCodeGenEdges(l []interface{}) []*awstypes.CodeGenEdge {
 	return edges
 }
 
-func expandCodeGenNodes(l []interface{}) []*awstypes.CodeGenNode {
-	nodes := []*awstypes.CodeGenNode{}
+func expandCodeGenNodes(l []interface{}) []awstypes.CodeGenNode {
+	nodes := []awstypes.CodeGenNode{}
 
 	for _, mRaw := range l {
 		m := mRaw.(map[string]interface{})
-		node := &awstypes.CodeGenNode{
+		node := awstypes.CodeGenNode{
 			Args:     expandCodeGenNodeArgs(m["args"].([]interface{})),
 			Id:       aws.String(m[names.AttrID].(string)),
 			NodeType: aws.String(m["node_type"].(string)),
 		}
 		if v, ok := m["line_number"]; ok && v.(int) != 0 {
-			node.LineNumber = aws.Int64(int64(v.(int)))
+			node.LineNumber = int32(v.(int))
 		}
 		nodes = append(nodes, node)
 	}
