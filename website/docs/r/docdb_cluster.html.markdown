@@ -53,7 +53,7 @@ This resource supports the following arguments:
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `db_subnet_group_name` - (Optional) A DB subnet group to associate with this DB instance.
 * `db_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.
-* `deletion_protection` - (Optional) A value that indicates whether the DB cluster has deletion protection enabled. The database can't be deleted when deletion protection is enabled. By default, deletion protection is disabled.
+* `deletion_protection` - (Optional) A boolean value that indicates whether the DB cluster has deletion protection enabled. The database can't be deleted when deletion protection is enabled. Defaults to `false`.
 * `enabled_cloudwatch_logs_exports` - (Optional) List of log types to export to cloudwatch. If omitted, no logs will be exported.
    The following log types are supported: `audit`, `profiler`.
 * `engine_version` - (Optional) The database engine version. Updating this argument results in an outage.

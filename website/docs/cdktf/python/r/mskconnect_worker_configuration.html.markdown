@@ -38,12 +38,13 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are required:
 
-* `name` - (Required) The name of the worker configuration.
-* `properties_file_content` - (Required) Contents of connect-distributed.properties file. The value can be either base64 encoded or in raw format.
+* `name` - (Required, Forces new resource) The name of the worker configuration.
+* `properties_file_content` - (Required, Forces new resource) Contents of connect-distributed.properties file. The value can be either base64 encoded or in raw format.
 
 The following arguments are optional:
 
-* `description` - (Optional) A summary description of the worker configuration.
+* `description` - (Optional, Forces new resource) A summary description of the worker configuration.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -51,6 +52,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - the Amazon Resource Name (ARN) of the worker configuration.
 * `latest_revision` - an ID of the latest successfully created revision of the worker configuration.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `delete` - (Default `10m`)
 
 ## Import
 
@@ -77,4 +85,4 @@ Using `terraform import`, import MSK Connect Worker Configuration using the plug
 % terraform import aws_mskconnect_worker_configuration.example 'arn:aws:kafkaconnect:eu-central-1:123456789012:worker-configuration/example/8848493b-7fcc-478c-a646-4a52634e3378-4'
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bc7b92333857615efcf55495814a13f7f290beda82616db5a0a69a043449491a -->
+<!-- cache-key: cdktf-0.20.1 input-636518bb950dc126d61f198f20edb87d205b9ff5d5e7c3a6c7ba631c4b79b4a7 -->

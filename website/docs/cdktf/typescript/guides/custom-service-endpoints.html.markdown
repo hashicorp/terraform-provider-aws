@@ -166,6 +166,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>costoptimizationhub</code></li>
   <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
   <li><code>customerprofiles</code></li>
+  <li><code>databrew</code> (or <code>gluedatabrew</code>)</li>
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
   <li><code>datasync</code></li>
@@ -447,4 +448,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c1a3202c783f1e92cd7bef9ba339a8fec2fc2f89a5069c66142e4bd6b27029fe -->
+<!-- cache-key: cdktf-0.20.1 input-227dc81e204e7a234b4a0663958241753fb418ed412942f24e32d7208467522e -->
