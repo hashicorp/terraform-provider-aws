@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -103,9 +102,9 @@ func ResourceMLTransform() *schema.Resource {
 							},
 						},
 						"transform_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: enum.Validate[awstypes.TransformType](),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.TransformType](),
 						},
 					},
 				},
@@ -150,11 +149,11 @@ func ResourceMLTransform() *schema.Resource {
 				Default:  2880,
 			},
 			"worker_type": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrMaxCapacity},
-				ValidateFunc:  enum.Validate[awstypes.WorkerType](),
-				RequiredWith:  []string{"number_of_workers"},
+				Type:             schema.TypeString,
+				Optional:         true,
+				ConflictsWith:    []string{names.AttrMaxCapacity},
+				ValidateDiagFunc: enum.Validate[awstypes.WorkerType](),
+				RequiredWith:     []string{"number_of_workers"},
 			},
 			"number_of_workers": {
 				Type:          schema.TypeInt,
@@ -195,7 +194,7 @@ func resourceMLTransformCreate(ctx context.Context, d *schema.ResourceData, meta
 		Name:              aws.String(d.Get(names.AttrName).(string)),
 		Role:              aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:              getTagsIn(ctx),
-		Timeout:           aws.Int64(int64(d.Get(names.AttrTimeout).(int))),
+		Timeout:           aws.Int32(int32(d.Get(names.AttrTimeout).(int))),
 		InputRecordTables: expandMLTransformInputRecordTables(d.Get("input_record_tables").([]interface{})),
 		Parameters:        expandMLTransformParameters(d.Get(names.AttrParameters).([]interface{})),
 	}
@@ -213,7 +212,7 @@ func resourceMLTransformCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("max_retries"); ok {
-		input.MaxRetries = aws.Int64(int64(v.(int)))
+		input.MaxRetries = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("worker_type"); ok {
@@ -221,10 +220,10 @@ func resourceMLTransformCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("number_of_workers"); ok {
-		input.NumberOfWorkers = aws.Int64(int64(v.(int)))
+		input.NumberOfWorkers = aws.Int32(int32(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Creating Glue ML Transform: %s", input)
+	log.Printf("[DEBUG] Creating Glue ML Transform: %+v", input)
 	output, err := conn.CreateMLTransform(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue ML Transform: %s", err)
@@ -243,7 +242,7 @@ func resourceMLTransformRead(ctx context.Context, d *schema.ResourceData, meta i
 		TransformId: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Reading Glue ML Transform: %s", input)
+	log.Printf("[DEBUG] Reading Glue ML Transform: %+v", input)
 	output, err := conn.GetMLTransform(ctx, input)
 	if err != nil {
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {
@@ -306,7 +305,7 @@ func resourceMLTransformUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input := &glue.UpdateMLTransformInput{
 			TransformId: aws.String(d.Id()),
 			Role:        aws.String(d.Get(names.AttrRoleARN).(string)),
-			Timeout:     aws.Int64(int64(d.Get(names.AttrTimeout).(int))),
+			Timeout:     aws.Int32(int32(d.Get(names.AttrTimeout).(int))),
 		}
 
 		if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -318,11 +317,11 @@ func resourceMLTransformUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if v, ok := d.GetOk("max_retries"); ok {
-			input.MaxRetries = aws.Int64(int64(v.(int)))
+			input.MaxRetries = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk("number_of_workers"); ok {
-			input.NumberOfWorkers = aws.Int64(int64(v.(int)))
+			input.NumberOfWorkers = aws.Int32(int32(v.(int)))
 		} else {
 			if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
 				input.MaxCapacity = aws.Float64(v.(float64))
@@ -337,7 +336,7 @@ func resourceMLTransformUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.Parameters = expandMLTransformParameters(v.([]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating Glue ML Transform: %s", input)
+		log.Printf("[DEBUG] Updating Glue ML Transform: %+v", input)
 		_, err := conn.UpdateMLTransform(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue ML Transform (%s): %s", d.Id(), err)
@@ -375,13 +374,13 @@ func resourceMLTransformDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func expandMLTransformInputRecordTables(l []interface{}) []*awstypes.Table {
-	var tables []*awstypes.Table
+func expandMLTransformInputRecordTables(l []interface{}) []awstypes.GlueTable {
+	var tables []awstypes.GlueTable
 
 	for _, mRaw := range l {
 		m := mRaw.(map[string]interface{})
 
-		table := &awstypes.Table{}
+		table := awstypes.GlueTable{}
 
 		if v, ok := m[names.AttrTableName].(string); ok {
 			table.TableName = aws.String(v)
@@ -405,7 +404,7 @@ func expandMLTransformInputRecordTables(l []interface{}) []*awstypes.Table {
 	return tables
 }
 
-func flattenMLTransformInputRecordTables(tables []*awstypes.Table) []interface{} {
+func flattenMLTransformInputRecordTables(tables []awstypes.GlueTable) []interface{} {
 	l := []interface{}{}
 
 	for _, table := range tables {
@@ -432,7 +431,7 @@ func expandMLTransformParameters(l []interface{}) *awstypes.TransformParameters 
 	m := l[0].(map[string]interface{})
 
 	param := &awstypes.TransformParameters{
-		TransformType: aws.String(m["transform_type"].(string)),
+		TransformType: awstypes.TransformType(m["transform_type"].(string)),
 	}
 
 	if v, ok := m["find_matches_parameters"]; ok && len(v.([]interface{})) > 0 {
@@ -508,7 +507,7 @@ func flattenMLTransformFindMatchesParameters(parameters *awstypes.FindMatchesPar
 	return []map[string]interface{}{m}
 }
 
-func flattenMLTransformSchemaColumns(schemaCols []*awstypes.SchemaColumn) []interface{} {
+func flattenMLTransformSchemaColumns(schemaCols []awstypes.SchemaColumn) []interface{} {
 	l := []interface{}{}
 
 	for _, schemaCol := range schemaCols {
