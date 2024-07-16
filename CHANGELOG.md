@@ -10,6 +10,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_lakeformation_data_lake_settings: Add `allow_full_table_external_data_access` attribute ([#34474](https://github.com/hashicorp/terraform-provider-aws/issues/34474))
+* data-source/aws_msk_cluster: Add `broker_node_group_info` attribute ([#37705](https://github.com/hashicorp/terraform-provider-aws/issues/37705))
 * resource/aws_codebuild_webhook: Add `scope_configuration` argument ([#38199](https://github.com/hashicorp/terraform-provider-aws/issues/38199))
 * resource/aws_ecs_cluster: Add `configuration.managed_storage_configuration` argument ([#37932](https://github.com/hashicorp/terraform-provider-aws/issues/37932))
 * resource/aws_fis_experiment_template: Add `experiment_options` configuration block ([#36900](https://github.com/hashicorp/terraform-provider-aws/issues/36900))
@@ -18,6 +19,7 @@ ENHANCEMENTS:
 * resource/aws_lakeformation_data_lake_settings: Add `allow_full_table_external_data_access` attribute ([#34474](https://github.com/hashicorp/terraform-provider-aws/issues/34474))
 * resource/aws_lb_target_group: Add `target_group_health` configuration block ([#37082](https://github.com/hashicorp/terraform-provider-aws/issues/37082))
 * resource/aws_msk_replicator: Add `starting_position` argument ([#36968](https://github.com/hashicorp/terraform-provider-aws/issues/36968))
+* resource/aws_wafv2_web_acl: Add `enable_machine_learning` to `aws_managed_rules_bot_control_rule_set` configuration block ([#37006](https://github.com/hashicorp/terraform-provider-aws/issues/37006))
 
 BUG FIXES:
 
