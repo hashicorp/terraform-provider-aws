@@ -5,7 +5,6 @@ package ecs
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -18,16 +17,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ecs_account_setting_default", name="Account Setting Defauilt")
-func ResourceAccountSettingDefault() *schema.Resource {
+// @SDKResource("aws_ecs_account_setting_default", name="Account Setting Default")
+func resourceAccountSettingDefault() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAccountSettingDefaultCreate,
+		CreateWithoutTimeout: resourceAccountSettingDefaultPut,
 		ReadWithoutTimeout:   resourceAccountSettingDefaultRead,
-		UpdateWithoutTimeout: resourceAccountSettingDefaultUpdate,
+		UpdateWithoutTimeout: resourceAccountSettingDefaultPut,
 		DeleteWithoutTimeout: resourceAccountSettingDefaultDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAccountSettingDefaultImport,
 		},
@@ -51,40 +52,26 @@ func ResourceAccountSettingDefault() *schema.Resource {
 	}
 }
 
-func resourceAccountSettingDefaultImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.Set(names.AttrName, d.Id())
-	d.SetId(arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Service:   names.ECSEndpointID,
-		Resource:  fmt.Sprintf("cluster/%s", d.Id()),
-	}.String())
-	return []*schema.ResourceData{d}, nil
-}
-
-func resourceAccountSettingDefaultCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountSettingDefaultPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
-	settingName := d.Get(names.AttrName).(string)
-	settingValue := d.Get(names.AttrValue).(string)
-	log.Printf("[DEBUG] Setting Account Default %s", settingName)
-
-	input := ecs.PutAccountSettingDefaultInput{
-		Name:  awstypes.SettingName(settingName),
-		Value: aws.String(settingValue),
+	settingName := awstypes.SettingName(d.Get(names.AttrName).(string))
+	input := &ecs.PutAccountSettingDefaultInput{
+		Name:  settingName,
+		Value: aws.String(d.Get(names.AttrValue).(string)),
 	}
 
-	out, err := conn.PutAccountSettingDefault(ctx, &input)
+	output, err := conn.PutAccountSettingDefault(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating ECS Account Setting Defauilt (%s): %s", settingName, err)
+		return sdkdiag.AppendErrorf(diags, "putting ECS Account Setting Default (%s): %s", settingName, err)
 	}
-	log.Printf("[DEBUG] Account Setting Default %s set", aws.ToString(out.Setting.Value))
 
-	d.SetId(aws.ToString(out.Setting.Value))
-	d.Set("principal_arn", out.Setting.PrincipalArn)
+	if d.IsNewResource() {
+		// Huh?
+		d.SetId(aws.ToString(output.Setting.Value))
+	}
 
 	return append(diags, resourceAccountSettingDefaultRead(ctx, d, meta)...)
 }
@@ -93,52 +80,24 @@ func resourceAccountSettingDefaultRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
-	input := &ecs.ListAccountSettingsInput{
-		Name:              awstypes.SettingName(d.Get(names.AttrName).(string)),
-		EffectiveSettings: true,
-	}
+	settingName := awstypes.SettingName(d.Get(names.AttrName).(string))
+	setting, err := findEffectiveAccountSettingByName(ctx, conn, settingName)
 
-	log.Printf("[DEBUG] Reading Default Account Settings: %+v", input)
-	resp, err := conn.ListAccountSettings(ctx, input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ECS Account Setting Defauilt (%s): %s", d.Get(names.AttrName).(string), err)
-	}
-
-	if len(resp.Settings) == 0 {
-		log.Printf("[WARN] Account Setting Default not set. Removing from state")
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] ECS Account Setting Default (%s) not found, removing from state", settingName)
 		d.SetId("")
 		return diags
 	}
 
-	for _, r := range resp.Settings {
-		d.SetId(aws.ToString(r.PrincipalArn))
-		d.Set(names.AttrName, r.Name)
-		d.Set("principal_arn", r.PrincipalArn)
-		d.Set(names.AttrValue, r.Value)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ECS Account Setting Default (%s): %s", settingName, err)
 	}
 
-	return diags
-}
-
-func resourceAccountSettingDefaultUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSClient(ctx)
-
-	settingName := d.Get(names.AttrName).(string)
-	settingValue := d.Get(names.AttrValue).(string)
-
-	if d.HasChange(names.AttrValue) {
-		input := ecs.PutAccountSettingDefaultInput{
-			Name:  awstypes.SettingName(settingName),
-			Value: aws.String(settingValue),
-		}
-
-		_, err := conn.PutAccountSettingDefault(ctx, &input)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating ECS Account Setting Default (%s): %s", settingName, err)
-		}
-	}
+	principalARN := aws.ToString(setting.PrincipalArn)
+	d.SetId(principalARN)
+	d.Set(names.AttrName, setting.Name)
+	d.Set("principal_arn", principalARN)
+	d.Set(names.AttrValue, setting.Value)
 
 	return diags
 }
@@ -147,31 +106,81 @@ func resourceAccountSettingDefaultDelete(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
-	settingName := d.Get(names.AttrName).(string)
+	settingName := awstypes.SettingName(d.Get(names.AttrName).(string))
 	settingValue := "disabled"
 
-	//Default value: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-maintenance.html#task-retirement-change
-	if settingName == string(awstypes.SettingNameFargateTaskRetirementWaitPeriod) {
+	// Default value: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-maintenance.html#task-retirement-change.
+	if settingName == awstypes.SettingNameFargateTaskRetirementWaitPeriod {
+		const (
+			fargateTaskRetirementWaitPeriodValue = "7"
+		)
 		settingValue = fargateTaskRetirementWaitPeriodValue
 	}
 
-	log.Printf("[WARN] Disabling ECS Account Setting Default %s", settingName)
-	input := ecs.PutAccountSettingDefaultInput{
-		Name:  awstypes.SettingName(settingName),
+	log.Printf("[WARN] Deleting ECS Account Setting Default: %s", settingName)
+	input := &ecs.PutAccountSettingDefaultInput{
+		Name:  settingName,
 		Value: aws.String(settingValue),
 	}
 
-	_, err := conn.PutAccountSettingDefault(ctx, &input)
+	_, err := conn.PutAccountSettingDefault(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "You can no longer disable") {
-		log.Printf("[DEBUG] ECS Account Setting Default (%q) could not be disabled: %s", settingName, err)
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "disabling ECS Account Setting Default: %s", err)
+		return sdkdiag.AppendErrorf(diags, "disabling ECS Account Setting Default (%s): %s", settingName, err)
 	}
 
-	log.Printf("[DEBUG] ECS Account Setting Default (%q) disabled", settingName)
 	return diags
+}
+
+func resourceAccountSettingDefaultImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	d.Set(names.AttrName, d.Id())
+	d.SetId(arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Service:   names.ECSEndpointID,
+		Resource:  "cluster/" + d.Id(),
+	}.String())
+
+	return []*schema.ResourceData{d}, nil
+}
+
+func findSetting(ctx context.Context, conn *ecs.Client, input *ecs.ListAccountSettingsInput) (*awstypes.Setting, error) {
+	output, err := findSettings(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSettings(ctx context.Context, conn *ecs.Client, input *ecs.ListAccountSettingsInput) ([]awstypes.Setting, error) {
+	var output []awstypes.Setting
+
+	pages := ecs.NewListAccountSettingsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Settings...)
+	}
+
+	return output, nil
+}
+
+func findEffectiveAccountSettingByName(ctx context.Context, conn *ecs.Client, name awstypes.SettingName) (*awstypes.Setting, error) {
+	input := &ecs.ListAccountSettingsInput{
+		EffectiveSettings: true,
+		Name:              name,
+	}
+
+	return findSetting(ctx, conn, input)
 }

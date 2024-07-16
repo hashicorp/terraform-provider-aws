@@ -10,13 +10,13 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -49,6 +49,7 @@ func testAccAccountSettingDefault_containerInstanceLongARNFormat(t *testing.T) {
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
@@ -78,6 +79,7 @@ func testAccAccountSettingDefault_serviceLongARNFormat(t *testing.T) {
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
@@ -107,6 +109,7 @@ func testAccAccountSettingDefault_taskLongARNFormat(t *testing.T) {
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
@@ -136,6 +139,7 @@ func testAccAccountSettingDefault_vpcTrunking(t *testing.T) {
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
@@ -165,6 +169,7 @@ func testAccAccountSettingDefault_containerInsights(t *testing.T) {
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
@@ -194,6 +199,7 @@ func testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod(t *testing.T) 
 			{
 				Config: testAccAccountSettingDefaultConfig_fargateTaskRetirementWaitPeriod(settingName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "fargateTaskRetirementWaitPeriod"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "14"),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
@@ -209,6 +215,22 @@ func testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod(t *testing.T) 
 	})
 }
 
+func testAccCheckAccountSettingDefaultExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
+
+		settingName := awstypes.SettingName(rs.Primary.Attributes[names.AttrName])
+		_, err := tfecs.FindEffectiveAccountSettingByName(ctx, conn, settingName)
+
+		return err
+	}
+}
+
 func testAccCheckAccountSettingDefaultDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
@@ -218,37 +240,31 @@ func testAccCheckAccountSettingDefaultDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			name := rs.Primary.Attributes[names.AttrName]
+			settingName := awstypes.SettingName(rs.Primary.Attributes[names.AttrName])
+			output, err := tfecs.FindEffectiveAccountSettingByName(ctx, conn, settingName)
 
-			input := &ecs.ListAccountSettingsInput{
-				Name:              awstypes.SettingName(name),
-				EffectiveSettings: true,
-			}
-
-			resp, err := conn.ListAccountSettings(ctx, input)
-
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				continue
+			if tfresource.NotFound(err) {
+				return nil
 			}
 
 			if err != nil {
 				return err
 			}
 
-			for _, value := range resp.Settings {
-				if aws.ToString(value.Value) != "disabled" && aws.ToString(value.Value) != "7" {
-					switch awstypes.SettingName(name) {
-					case awstypes.SettingNameContainerInstanceLongArnFormat:
-						return nil
-					case awstypes.SettingNameServiceLongArnFormat:
-						return nil
-					case awstypes.SettingNameTaskLongArnFormat:
-						return nil
-					default:
-						return fmt.Errorf("[Destroy Error] Account Settings (%s), still enabled", string(value.Name))
-					}
+			switch value := aws.ToString(output.Value); settingName {
+			case awstypes.SettingNameContainerInstanceLongArnFormat, awstypes.SettingNameServiceLongArnFormat, awstypes.SettingNameTaskLongArnFormat:
+				return nil
+			case awstypes.SettingNameFargateTaskRetirementWaitPeriod:
+				if value == "7" {
+					return nil
+				}
+			default:
+				if value == "disabled" {
+					return nil
 				}
 			}
+
+			return fmt.Errorf("ECS Account Setting Default %s still exists", settingName)
 		}
 
 		return nil

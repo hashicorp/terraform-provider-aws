@@ -5,7 +5,9 @@ package ecs
 
 // Exports for use in tests only.
 var (
-	ResourceTag = resourceTag
+	ResourceAccountSettingDefault = resourceAccountSettingDefault
+	ResourceTag                   = resourceTag
 
-	FindTag = findTag
+	FindEffectiveAccountSettingByName = findEffectiveAccountSettingByName
+	FindTag                           = findTag
 )
