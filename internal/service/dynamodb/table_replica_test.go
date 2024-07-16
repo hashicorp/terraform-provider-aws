@@ -408,6 +408,15 @@ func testAccTableReplicaConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
 		fmt.Sprintf(`
+resource "aws_dynamodb_table_replica" "test" {
+  global_table_arn = aws_dynamodb_table.test.arn
+
+  tags = {
+    Name = %[1]q
+    Pozo = "Amargo"
+  }
+}
+
 resource "aws_dynamodb_table" "test" {
   provider         = "awsalternate"
   name             = %[1]q
@@ -425,15 +434,6 @@ resource "aws_dynamodb_table" "test" {
     ignore_changes = [replica]
   }
 }
-
-resource "aws_dynamodb_table_replica" "test" {
-  global_table_arn = aws_dynamodb_table.test.arn
-
-  tags = {
-    Name = %[1]q
-    Pozo = "Amargo"
-  }
-}
 `, rName))
 }
 
@@ -441,6 +441,12 @@ func testAccTableReplicaConfig_pitr(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
 		fmt.Sprintf(`
+resource "aws_dynamodb_table_replica" "test" {
+  provider               = "awsalternate"
+  global_table_arn       = aws_dynamodb_table.test.arn
+  point_in_time_recovery = true
+}
+
 resource "aws_dynamodb_table" "test" {
   name             = %[1]q
   hash_key         = "TestTableHashKey"
@@ -457,12 +463,6 @@ resource "aws_dynamodb_table" "test" {
     ignore_changes = [replica]
   }
 }
-
-resource "aws_dynamodb_table_replica" "test" {
-  provider               = "awsalternate"
-  global_table_arn       = aws_dynamodb_table.test.arn
-  point_in_time_recovery = true
-}
 `, rName))
 }
 
@@ -470,7 +470,15 @@ func testAccTableReplicaConfig_pitrKMS(rName string, pitr bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
 		fmt.Sprintf(`
-resource "aws_kms_key" "test" {
+resource "aws_dynamodb_table_replica" "test" {
+  provider               = awsalternate
+  global_table_arn       = aws_dynamodb_table.test.arn
+  point_in_time_recovery = %[2]t
+  kms_key_arn            = aws_kms_key.alternate.arn
+}
+
+resource "aws_kms_key" "alternate" {
+  provider                = awsalternate
   description             = %[1]q
   deletion_window_in_days = 7
 }
@@ -497,17 +505,9 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 
-resource "aws_kms_key" "alternate" {
-  provider                = awsalternate
+resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
-}
-
-resource "aws_dynamodb_table_replica" "test" {
-  provider               = awsalternate
-  global_table_arn       = aws_dynamodb_table.test.arn
-  point_in_time_recovery = %[2]t
-  kms_key_arn            = aws_kms_key.alternate.arn
 }
 `, rName, pitr))
 }
@@ -516,6 +516,12 @@ func testAccTableReplicaConfig_pitrDefault(rName string, pitr bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
 		fmt.Sprintf(`
+resource "aws_dynamodb_table_replica" "test" {
+  provider               = awsalternate
+  global_table_arn       = aws_dynamodb_table.test.arn
+  point_in_time_recovery = %[2]t
+}
+
 resource "aws_dynamodb_table" "test" {
   name             = %[1]q
   hash_key         = "TestTableHashKey"
@@ -536,12 +542,6 @@ resource "aws_dynamodb_table" "test" {
     ignore_changes = [replica]
   }
 }
-
-resource "aws_dynamodb_table_replica" "test" {
-  provider               = awsalternate
-  global_table_arn       = aws_dynamodb_table.test.arn
-  point_in_time_recovery = %[2]t
-}
 `, rName, pitr))
 }
 
@@ -549,27 +549,6 @@ func testAccTableReplicaConfig_tags1(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
 		fmt.Sprintf(`
-resource "aws_dynamodb_table" "test" {
-  name             = %[1]q
-  hash_key         = "TestTableHashKey"
-  billing_mode     = "PAY_PER_REQUEST"
-  stream_enabled   = true
-  stream_view_type = "NEW_AND_OLD_IMAGES"
-
-  attribute {
-    name = "TestTableHashKey"
-    type = "S"
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-
-  lifecycle {
-    ignore_changes = [replica]
-  }
-}
-
 resource "aws_dynamodb_table_replica" "test" {
   provider         = "awsalternate"
   global_table_arn = aws_dynamodb_table.test.arn
@@ -579,13 +558,7 @@ resource "aws_dynamodb_table_replica" "test" {
     tape = "Valladolid"
   }
 }
-`, rName))
-}
 
-func testAccTableReplicaConfig_tags2(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(3),
-		fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name             = %[1]q
   hash_key         = "TestTableHashKey"
@@ -607,6 +580,13 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 
+`, rName))
+}
+
+func testAccTableReplicaConfig_tags2(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
 resource "aws_dynamodb_table_replica" "test" {
   provider         = "awsalternate"
   global_table_arn = aws_dynamodb_table.test.arn
@@ -619,13 +599,7 @@ resource "aws_dynamodb_table_replica" "test" {
     shooting  = "Stars"
   }
 }
-`, rName))
-}
 
-func testAccTableReplicaConfig_tags3(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(3),
-		fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name             = %[1]q
   hash_key         = "TestTableHashKey"
@@ -646,13 +620,40 @@ resource "aws_dynamodb_table" "test" {
     ignore_changes = [replica]
   }
 }
+`, rName))
+}
 
+func testAccTableReplicaConfig_tags3(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
 resource "aws_dynamodb_table_replica" "test" {
   provider         = "awsalternate"
   global_table_arn = aws_dynamodb_table.test.arn
 
   tags = {
     Name = %[1]q
+  }
+}
+
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+
+  lifecycle {
+    ignore_changes = [replica]
   }
 }
 `, rName))
@@ -662,6 +663,15 @@ func testAccTableReplicaConfig_tableClass(rName, class string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
 		fmt.Sprintf(`
+resource "aws_dynamodb_table_replica" "test" {
+  global_table_arn     = aws_dynamodb_table.test.arn
+  table_class_override = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_dynamodb_table" "test" {
   provider         = "awsalternate"
   name             = %[1]q
@@ -683,15 +693,6 @@ resource "aws_dynamodb_table" "test" {
     ignore_changes = [replica]
   }
 }
-
-resource "aws_dynamodb_table_replica" "test" {
-  global_table_arn     = aws_dynamodb_table.test.arn
-  table_class_override = %[2]q
-
-  tags = {
-    Name = %[1]q
-  }
-}
 `, rName, class))
 }
 
@@ -699,6 +700,12 @@ func testAccTableReplicaConfig_keys(rName, key string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
+resource "aws_dynamodb_table_replica" "test" {
+  global_table_arn       = aws_dynamodb_table.test.arn
+  kms_key_arn            = aws_kms_key.%[2]s.arn
+  point_in_time_recovery = true
+}
+
 resource "aws_kms_key" "alternate" {
   provider                = awsalternate
   description             = "Julie test KMS key A"
@@ -750,12 +757,6 @@ resource "aws_dynamodb_table" "test" {
   lifecycle {
     ignore_changes = [replica]
   }
-}
-
-resource "aws_dynamodb_table_replica" "test" {
-  global_table_arn       = aws_dynamodb_table.test.arn
-  kms_key_arn            = aws_kms_key.%[2]s.arn
-  point_in_time_recovery = true
 }
 `, rName, key))
 }
