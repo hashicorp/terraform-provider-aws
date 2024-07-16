@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -132,7 +131,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting physical_connection_requirements: %s", err)
 	}
 
-	if err := d.Set("match_criteria", flex.FlattenStringList(connection.MatchCriteria)); err != nil {
+	if err := d.Set("match_criteria", flex.FlattenStringValueList(connection.MatchCriteria)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting match_criteria: %s", err)
 	}
 
