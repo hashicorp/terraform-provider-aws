@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -251,7 +250,7 @@ func resourcePartitionRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrTableName, partition.TableName)
 	d.Set(names.AttrCatalogID, partition.CatalogId)
 	d.Set(names.AttrDatabaseName, partition.DatabaseName)
-	d.Set("partition_values", flex.FlattenStringList(partition.Values))
+	d.Set("partition_values", flex.FlattenStringValueList(partition.Values))
 
 	if partition.LastAccessTime != nil {
 		d.Set("last_accessed_time", partition.LastAccessTime.Format(time.RFC3339))
@@ -290,7 +289,7 @@ func resourcePartitionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		DatabaseName:       aws.String(dbName),
 		TableName:          aws.String(tableName),
 		PartitionInput:     expandPartitionInput(d),
-		PartitionValueList: aws.StringSlice(values),
+		PartitionValueList: values,
 	}
 
 	if _, err := conn.UpdatePartition(ctx, input); err != nil {
@@ -314,7 +313,7 @@ func resourcePartitionDelete(ctx context.Context, d *schema.ResourceData, meta i
 		CatalogId:       aws.String(catalogID),
 		TableName:       aws.String(tableName),
 		DatabaseName:    aws.String(dbName),
-		PartitionValues: aws.StringSlice(values),
+		PartitionValues: values,
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Glue Partition: %s", err)
@@ -322,19 +321,19 @@ func resourcePartitionDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func expandPartitionInput(d *schema.ResourceData) *glue.PartitionInput {
-	tableInput := &glue.PartitionInput{}
+func expandPartitionInput(d *schema.ResourceData) *awstypes.PartitionInput {
+	tableInput := &awstypes.PartitionInput{}
 
 	if v, ok := d.GetOk("storage_descriptor"); ok {
 		tableInput.StorageDescriptor = expandStorageDescriptor(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk(names.AttrParameters); ok {
-		tableInput.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
+		tableInput.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("partition_values"); ok && len(v.([]interface{})) > 0 {
-		tableInput.Values = flex.ExpandStringList(v.([]interface{}))
+		tableInput.Values = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	return tableInput
