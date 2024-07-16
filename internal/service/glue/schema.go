@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -71,14 +70,14 @@ func ResourceSchema() *schema.Resource {
 				Computed: true,
 			},
 			"compatibility": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: enum.Validate[awstypes.Compatibility](),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.Compatibility](),
 			},
 			"data_format": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: enum.Validate[awstypes.DataFormat](),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.DataFormat](),
 			},
 			"schema_definition": {
 				Type:     schema.TypeString,
@@ -110,7 +109,7 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	input := &glue.CreateSchemaInput{
 		SchemaName:       aws.String(d.Get("schema_name").(string)),
 		SchemaDefinition: aws.String(d.Get("schema_definition").(string)),
-		DataFormat:       aws.String(d.Get("data_format").(string)),
+		DataFormat:       awstypes.DataFormat(d.Get("data_format").(string)),
 		Tags:             getTagsIn(ctx),
 	}
 
@@ -126,7 +125,7 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Compatibility = awstypes.Compatibility(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Glue Schema: %s", input)
+	log.Printf("[DEBUG] Creating Glue Schema: %+v", input)
 	output, err := conn.CreateSchema(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Schema: %s", err)
@@ -190,7 +189,7 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	input := &glue.UpdateSchemaInput{
 		SchemaId: createSchemaID(d.Id()),
 		SchemaVersionNumber: &awstypes.SchemaVersionNumber{
-			LatestVersion: aws.Bool(true),
+			LatestVersion: true,
 		},
 	}
 	update := false
