@@ -19,6 +19,7 @@ var (
 	FindSubnetByID                                                 = findSubnetByID
 	FindVPCByID                                                    = findVPCByID
 	FindVPCEndpointByID                                            = findVPCEndpointByID
+	NetworkInterfaceDetachedTimeout                                = networkInterfaceDetachedTimeout
 	NewCustomFilterListFramework                                   = newCustomFilterListFramework
 	NewFilter                                                      = newFilter
 	ResourceAMI                                                    = resourceAMI

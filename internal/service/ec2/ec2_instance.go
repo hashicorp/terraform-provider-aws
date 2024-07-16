@@ -2060,7 +2060,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("capacity_reservation_specification") && !d.IsNewResource() {
 		if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			if v := expandCapacityReservationSpecification(v.([]interface{})[0].(map[string]interface{})); v != nil && (v.CapacityReservationPreference != "" || v.CapacityReservationTarget != nil) {
-				if err := stopInstance(ctx, conn, d.Id(), false, InstanceStopTimeout); err != nil {
+				if err := stopInstance(ctx, conn, d.Id(), false, instanceStopTimeout); err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 
@@ -2095,7 +2095,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) capacity reservation attributes update: %s", d.Id(), err)
 				}
 
-				if err := startInstance(ctx, conn, d.Id(), true, InstanceStartTimeout); err != nil {
+				if err := startInstance(ctx, conn, d.Id(), true, instanceStartTimeout); err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 			}
@@ -2219,7 +2219,7 @@ func disableInstanceAPITermination(ctx context.Context, conn *ec2.Client, id str
 func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.Client, input *ec2.ModifyInstanceAttributeInput, attrName string) error {
 	id := aws.ToString(input.InstanceId)
 
-	if err := stopInstance(ctx, conn, id, false, InstanceStopTimeout); err != nil {
+	if err := stopInstance(ctx, conn, id, false, instanceStopTimeout); err != nil {
 		return err
 	}
 
@@ -2227,7 +2227,7 @@ func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.Client,
 		return fmt.Errorf("modifying EC2 Instance (%s) %s attribute: %w", id, attrName, err)
 	}
 
-	if err := startInstance(ctx, conn, id, true, InstanceStartTimeout); err != nil {
+	if err := startInstance(ctx, conn, id, true, instanceStartTimeout); err != nil {
 		return err
 	}
 

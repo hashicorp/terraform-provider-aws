@@ -142,13 +142,13 @@ func updateInstanceState(ctx context.Context, conn *ec2.Client, id string, curre
 	}
 
 	if configuredState == "stopped" {
-		if err := stopInstance(ctx, conn, id, force, InstanceStopTimeout); err != nil {
+		if err := stopInstance(ctx, conn, id, force, instanceStopTimeout); err != nil {
 			return err
 		}
 	}
 
 	if configuredState == "running" {
-		if err := startInstance(ctx, conn, id, false, InstanceStartTimeout); err != nil {
+		if err := startInstance(ctx, conn, id, false, instanceStartTimeout); err != nil {
 			return err
 		}
 	}

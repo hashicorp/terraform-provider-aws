@@ -448,7 +448,7 @@ func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if waitForClientConnectResponseOptionsUpdate {
-			if _, err := waitClientVPNEndpointClientConnectResponseOptionsUpdated(ctx, conn, d.Id()); err != nil {
+			if _, err := waitClientVPNEndpointClientConnectResponseOptionsUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for EC2 Client VPN Endpoint (%s) ClientConnectResponseOptions update: %s", d.Id(), err)
 			}
 		}
@@ -474,7 +474,7 @@ func resourceClientVPNEndpointDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Client VPN Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitClientVPNEndpointDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitClientVPNEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Client VPN Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
