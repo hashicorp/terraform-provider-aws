@@ -21,6 +21,7 @@ import (
 
 // @SDKDataSource("aws_db_snapshot", name="DB Snapshot")
 // @Tags
+// @Testing(tagsTest=false)
 func DataSourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSnapshotRead,

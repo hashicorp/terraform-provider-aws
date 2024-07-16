@@ -23,6 +23,7 @@ import (
 
 // @SDKDataSource("aws_ebs_snapshot", name="EBS Snapshot")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceEBSSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEBSSnapshotRead,

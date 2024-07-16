@@ -21,6 +21,7 @@ import (
 
 // @SDKDataSource("aws_db_cluster_snapshot", name="DB Cluster Snapshot")
 // @Tags
+// @Testing(tagsTest=false)
 func DataSourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterSnapshotRead,

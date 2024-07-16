@@ -6,12 +6,14 @@ package ec2
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -131,6 +133,40 @@ func findCapacityReservationByID(ctx context.Context, conn *ec2.Client, id strin
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
+	}
+
+	return output, nil
+}
+
+func findCOIPPool(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCoipPoolsInput) (*awstypes.CoipPool, error) {
+	output, err := findCOIPPools(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findCOIPPools(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCoipPoolsInput) ([]awstypes.CoipPool, error) {
+	var output []awstypes.CoipPool
+
+	pages := ec2.NewDescribeCoipPoolsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidPoolIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.CoipPools...)
 	}
 
 	return output, nil
@@ -612,6 +648,230 @@ func findLaunchTemplateVersionByTwoPartKey(ctx context.Context, conn *ec2.Client
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayRouteTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTablesInput) (*awstypes.LocalGatewayRouteTable, error) {
+	output, err := findLocalGatewayRouteTables(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLocalGatewayRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTablesInput) ([]awstypes.LocalGatewayRouteTable, error) {
+	var output []awstypes.LocalGatewayRouteTable
+
+	pages := ec2.NewDescribeLocalGatewayRouteTablesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LocalGatewayRouteTables...)
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayRoutes(ctx context.Context, conn *ec2.Client, input *ec2.SearchLocalGatewayRoutesInput) ([]awstypes.LocalGatewayRoute, error) {
+	var output []awstypes.LocalGatewayRoute
+
+	pages := ec2.NewSearchLocalGatewayRoutesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidLocalGatewayRouteTableIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Routes...)
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayRouteByTwoPartKey(ctx context.Context, conn *ec2.Client, localGatewayRouteTableID, destinationCIDRBlock string) (*awstypes.LocalGatewayRoute, error) {
+	input := &ec2.SearchLocalGatewayRoutesInput{
+		Filters: []awstypes.Filter{
+			{
+				Name:   aws.String(names.AttrType),
+				Values: enum.Slice(awstypes.LocalGatewayRouteTypeStatic),
+			},
+		},
+		LocalGatewayRouteTableId: aws.String(localGatewayRouteTableID),
+	}
+
+	localGatewayRoutes, err := findLocalGatewayRoutes(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	localGatewayRoutes = tfslices.Filter(localGatewayRoutes, func(v awstypes.LocalGatewayRoute) bool {
+		return aws.ToString(v.DestinationCidrBlock) == destinationCIDRBlock
+	})
+
+	output, err := tfresource.AssertSingleValueResult(localGatewayRoutes)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.LocalGatewayRouteStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayRouteTableVPCAssociation(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTableVpcAssociationsInput) (*awstypes.LocalGatewayRouteTableVpcAssociation, error) {
+	output, err := findLocalGatewayRouteTableVPCAssociations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLocalGatewayRouteTableVPCAssociations(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTableVpcAssociationsInput) ([]awstypes.LocalGatewayRouteTableVpcAssociation, error) {
+	var output []awstypes.LocalGatewayRouteTableVpcAssociation
+
+	pages := ec2.NewDescribeLocalGatewayRouteTableVpcAssociationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LocalGatewayRouteTableVpcAssociations...)
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayRouteTableVPCAssociationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.LocalGatewayRouteTableVpcAssociation, error) {
+	input := &ec2.DescribeLocalGatewayRouteTableVpcAssociationsInput{
+		LocalGatewayRouteTableVpcAssociationIds: []string{id},
+	}
+
+	output, err := findLocalGatewayRouteTableVPCAssociation(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.ToString(output.State); state == string(awstypes.RouteTableAssociationStateCodeDisassociated) {
+		return nil, &retry.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.LocalGatewayRouteTableVpcAssociationId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayVirtualInterface(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayVirtualInterfacesInput) (*awstypes.LocalGatewayVirtualInterface, error) {
+	output, err := findLocalGatewayVirtualInterfaces(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLocalGatewayVirtualInterfaces(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayVirtualInterfacesInput) ([]awstypes.LocalGatewayVirtualInterface, error) {
+	var output []awstypes.LocalGatewayVirtualInterface
+
+	pages := ec2.NewDescribeLocalGatewayVirtualInterfacesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LocalGatewayVirtualInterfaces...)
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayVirtualInterfaceGroup(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput) (*awstypes.LocalGatewayVirtualInterfaceGroup, error) {
+	output, err := findLocalGatewayVirtualInterfaceGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLocalGatewayVirtualInterfaceGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput) ([]awstypes.LocalGatewayVirtualInterfaceGroup, error) {
+	var output []awstypes.LocalGatewayVirtualInterfaceGroup
+
+	pages := ec2.NewDescribeLocalGatewayVirtualInterfaceGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LocalGatewayVirtualInterfaceGroups...)
+	}
+
+	return output, nil
+}
+
+func findLocalGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewaysInput) (*awstypes.LocalGateway, error) {
+	output, err := findLocalGateways(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLocalGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewaysInput) ([]awstypes.LocalGateway, error) {
+	var output []awstypes.LocalGateway
+
+	pages := ec2.NewDescribeLocalGatewaysPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LocalGateways...)
 	}
 
 	return output, nil
@@ -3208,7 +3468,7 @@ func findTransitGateways(ctx context.Context, conn *ec2.Client, input *ec2.Descr
 	var output []awstypes.TransitGateway
 
 	pages := ec2.NewDescribeTransitGatewaysPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayIDNotFound) {
@@ -3270,7 +3530,7 @@ func findTransitGatewayAttachments(ctx context.Context, conn *ec2.Client, input 
 	var output []awstypes.TransitGatewayAttachment
 
 	pages := ec2.NewDescribeTransitGatewayAttachmentsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
@@ -3325,7 +3585,7 @@ func findTransitGatewayConnects(ctx context.Context, conn *ec2.Client, input *ec
 	var output []awstypes.TransitGatewayConnect
 
 	pages := ec2.NewDescribeTransitGatewayConnectsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
@@ -3392,7 +3652,7 @@ func findTransitGatewayConnectPeers(ctx context.Context, conn *ec2.Client, input
 	var output []awstypes.TransitGatewayConnectPeer
 
 	pages := ec2.NewDescribeTransitGatewayConnectPeersPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayConnectPeerIDNotFound) {
@@ -3454,7 +3714,7 @@ func findTransitGatewayMulticastDomains(ctx context.Context, conn *ec2.Client, i
 	var output []awstypes.TransitGatewayMulticastDomain
 
 	pages := ec2.NewDescribeTransitGatewayMulticastDomainsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
@@ -3516,7 +3776,7 @@ func findTransitGatewayMulticastDomainAssociations(ctx context.Context, conn *ec
 	var output []awstypes.TransitGatewayMulticastDomainAssociation
 
 	pages := ec2.NewGetTransitGatewayMulticastDomainAssociationsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
@@ -3572,7 +3832,7 @@ func findTransitGatewayMulticastGroups(ctx context.Context, conn *ec2.Client, in
 	var output []awstypes.TransitGatewayMulticastGroup
 
 	pages := ec2.NewSearchTransitGatewayMulticastGroupsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
@@ -3681,7 +3941,7 @@ func findTransitGatewayPeeringAttachments(ctx context.Context, conn *ec2.Client,
 	var output []awstypes.TransitGatewayPeeringAttachment
 
 	pages := ec2.NewDescribeTransitGatewayPeeringAttachmentsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
@@ -3747,7 +4007,7 @@ func findTransitGatewayPrefixListReferences(ctx context.Context, conn *ec2.Clien
 	var output []awstypes.TransitGatewayPrefixListReference
 
 	pages := ec2.NewGetTransitGatewayPrefixListReferencesPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
@@ -3869,7 +4129,7 @@ func findTransitGatewayPolicyTables(ctx context.Context, conn *ec2.Client, input
 	var output []awstypes.TransitGatewayPolicyTable
 
 	pages := ec2.NewDescribeTransitGatewayPolicyTablesPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIdNotFound) {
@@ -3893,7 +4153,7 @@ func findTransitGatewayRouteTables(ctx context.Context, conn *ec2.Client, input 
 	var output []awstypes.TransitGatewayRouteTable
 
 	pages := ec2.NewDescribeTransitGatewayRouteTablesPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
@@ -4038,7 +4298,7 @@ func findTransitGatewayPolicyTableAssociations(ctx context.Context, conn *ec2.Cl
 	var output []awstypes.TransitGatewayPolicyTableAssociation
 
 	pages := ec2.NewGetTransitGatewayPolicyTableAssociationsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIdNotFound) {
@@ -4072,7 +4332,7 @@ func findTransitGatewayRouteTableAssociations(ctx context.Context, conn *ec2.Cli
 	var output []awstypes.TransitGatewayRouteTableAssociation
 
 	pages := ec2.NewGetTransitGatewayRouteTableAssociationsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
@@ -4137,7 +4397,7 @@ func findTransitGatewayRouteTablePropagations(ctx context.Context, conn *ec2.Cli
 	var output []awstypes.TransitGatewayRouteTablePropagation
 
 	pages := ec2.NewGetTransitGatewayRouteTablePropagationsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
@@ -4171,7 +4431,7 @@ func findTransitGatewayVPCAttachments(ctx context.Context, conn *ec2.Client, inp
 	var output []awstypes.TransitGatewayVpcAttachment
 
 	pages := ec2.NewDescribeTransitGatewayVpcAttachmentsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
@@ -5081,6 +5341,293 @@ func findFastSnapshotRestoreByTwoPartKey(ctx context.Context, conn *ec2.Client, 
 	if state := output.State; state == awstypes.FastSnapshotRestoreStateCodeDisabled {
 		return nil, &retry.NotFoundError{
 			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findTrafficMirrorFilter(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTrafficMirrorFiltersInput) (*awstypes.TrafficMirrorFilter, error) {
+	output, err := findTrafficMirrorFilters(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTrafficMirrorFilters(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTrafficMirrorFiltersInput) ([]awstypes.TrafficMirrorFilter, error) {
+	var output []awstypes.TrafficMirrorFilter
+
+	pages := ec2.NewDescribeTrafficMirrorFiltersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorFilterIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TrafficMirrorFilters...)
+	}
+
+	return output, nil
+}
+
+func findTrafficMirrorFilterByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TrafficMirrorFilter, error) {
+	input := &ec2.DescribeTrafficMirrorFiltersInput{
+		TrafficMirrorFilterIds: []string{id},
+	}
+
+	output, err := findTrafficMirrorFilter(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TrafficMirrorFilterId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findTrafficMirrorFilterRuleByTwoPartKey(ctx context.Context, conn *ec2.Client, filterID, ruleID string) (*awstypes.TrafficMirrorFilterRule, error) {
+	output, err := findTrafficMirrorFilterByID(ctx, conn, filterID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(tfslices.Filter(slices.Concat(output.IngressFilterRules, output.EgressFilterRules), func(v awstypes.TrafficMirrorFilterRule) bool {
+		return aws.ToString(v.TrafficMirrorFilterRuleId) == ruleID
+	}))
+}
+
+func findTrafficMirrorSession(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTrafficMirrorSessionsInput) (*awstypes.TrafficMirrorSession, error) {
+	output, err := findTrafficMirrorSessions(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTrafficMirrorSessions(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTrafficMirrorSessionsInput) ([]awstypes.TrafficMirrorSession, error) {
+	var output []awstypes.TrafficMirrorSession
+
+	pages := ec2.NewDescribeTrafficMirrorSessionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorSessionIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TrafficMirrorSessions...)
+	}
+
+	return output, nil
+}
+
+func findTrafficMirrorSessionByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TrafficMirrorSession, error) {
+	input := &ec2.DescribeTrafficMirrorSessionsInput{
+		TrafficMirrorSessionIds: []string{id},
+	}
+
+	output, err := findTrafficMirrorSession(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TrafficMirrorSessionId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findTrafficMirrorTarget(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTrafficMirrorTargetsInput) (*awstypes.TrafficMirrorTarget, error) {
+	output, err := findTrafficMirrorTargets(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTrafficMirrorTargets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTrafficMirrorTargetsInput) ([]awstypes.TrafficMirrorTarget, error) {
+	var output []awstypes.TrafficMirrorTarget
+
+	pages := ec2.NewDescribeTrafficMirrorTargetsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorTargetIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TrafficMirrorTargets...)
+	}
+
+	return output, nil
+}
+
+func findTrafficMirrorTargetByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TrafficMirrorTarget, error) {
+	input := &ec2.DescribeTrafficMirrorTargetsInput{
+		TrafficMirrorTargetIds: []string{id},
+	}
+
+	output, err := findTrafficMirrorTarget(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TrafficMirrorTargetId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findNetworkInsightsPath(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInsightsPathsInput) (*awstypes.NetworkInsightsPath, error) {
+	output, err := findNetworkInsightsPaths(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findNetworkInsightsAnalysis(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInsightsAnalysesInput) (*awstypes.NetworkInsightsAnalysis, error) {
+	output, err := findNetworkInsightsAnalyses(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findNetworkInsightsAnalyses(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInsightsAnalysesInput) ([]awstypes.NetworkInsightsAnalysis, error) {
+	var output []awstypes.NetworkInsightsAnalysis
+
+	pages := ec2.NewDescribeNetworkInsightsAnalysesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInsightsAnalysisIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.NetworkInsightsAnalyses...)
+	}
+
+	return output, nil
+}
+
+func findNetworkInsightsAnalysisByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInsightsAnalysis, error) {
+	input := &ec2.DescribeNetworkInsightsAnalysesInput{
+		NetworkInsightsAnalysisIds: []string{id},
+	}
+
+	output, err := findNetworkInsightsAnalysis(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.NetworkInsightsAnalysisId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findNetworkInsightsPaths(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInsightsPathsInput) ([]awstypes.NetworkInsightsPath, error) {
+	var output []awstypes.NetworkInsightsPath
+
+	pages := ec2.NewDescribeNetworkInsightsPathsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInsightsPathIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.NetworkInsightsPaths...)
+	}
+
+	return output, nil
+}
+
+func findNetworkInsightsPathByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInsightsPath, error) {
+	input := &ec2.DescribeNetworkInsightsPathsInput{
+		NetworkInsightsPathIds: []string{id},
+	}
+
+	output, err := findNetworkInsightsPath(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.NetworkInsightsPathId) != id {
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}

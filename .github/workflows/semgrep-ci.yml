@@ -24,8 +24,34 @@ env:
   SEMGREP_ARGS: --error --quiet
 
 jobs:
+  semgrep-validate:
+    name: Validate Code Quality Rules
+    runs-on: ubuntu-latest
+    container:
+      image: "returntocorp/semgrep:1.52.0"
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - run: |
+          semgrep --validate \
+          --config .ci/.semgrep.yml \
+          --config .ci/.semgrep-constants.yml \
+          --config .ci/.semgrep-test-constants.yml \
+          --config .ci/semgrep/
+
+  semgrep-test:
+    name: Semgrep Rule Tests
+    needs: [semgrep-validate]
+    runs-on: ubuntu-latest
+    container:
+      image: "returntocorp/semgrep:1.52.0"
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - run: |
+          semgrep --quiet --test .ci/semgrep/
+
   semgrep:
     name: Code Quality Scan
+    needs: [semgrep-test]
     runs-on: ubuntu-latest
     container:
       image: "returntocorp/semgrep:1.52.0"
@@ -33,6 +59,7 @@ jobs:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - run: |
           semgrep $SEMGREP_ARGS \
+          --exclude .ci/semgrep/**/*.go \
           --config .ci/.semgrep.yml \
           --config .ci/.semgrep-constants.yml \
           --config .ci/.semgrep-test-constants.yml \

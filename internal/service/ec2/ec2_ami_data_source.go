@@ -4,10 +4,8 @@
 package ec2
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"log"
 	"sort"
 	"time"
 
@@ -20,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -29,6 +26,7 @@ import (
 
 // @SDKDataSource("aws_ami", name="AMI")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceAMI() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAMIRead,
@@ -49,7 +47,6 @@ func dataSourceAMI() *schema.Resource {
 			"block_device_mappings": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Set:      amiBlockDeviceMappingHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrDeviceName: {
@@ -169,7 +166,6 @@ func dataSourceAMI() *schema.Resource {
 			"product_codes": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Set:      amiProductCodesHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"product_code_id": {
@@ -348,48 +344,54 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func flattenAMIBlockDeviceMappings(m []awstypes.BlockDeviceMapping) *schema.Set {
-	s := &schema.Set{
-		F: amiBlockDeviceMappingHash,
+func flattenAMIBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
 	}
-	for _, v := range m {
-		mapping := map[string]interface{}{
-			names.AttrDeviceName:  aws.ToString(v.DeviceName),
-			names.AttrVirtualName: aws.ToString(v.VirtualName),
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			names.AttrDeviceName:  aws.ToString(apiObject.DeviceName),
+			names.AttrVirtualName: aws.ToString(apiObject.VirtualName),
 		}
 
-		if v.Ebs != nil {
+		if apiObject := apiObject.Ebs; apiObject != nil {
 			ebs := map[string]interface{}{
-				names.AttrDeleteOnTermination: fmt.Sprintf("%t", aws.ToBool(v.Ebs.DeleteOnTermination)),
-				names.AttrEncrypted:           fmt.Sprintf("%t", aws.ToBool(v.Ebs.Encrypted)),
-				names.AttrIOPS:                fmt.Sprintf("%d", aws.ToInt32(v.Ebs.Iops)),
-				names.AttrThroughput:          fmt.Sprintf("%d", aws.ToInt32(v.Ebs.Throughput)),
-				names.AttrVolumeSize:          fmt.Sprintf("%d", aws.ToInt32(v.Ebs.VolumeSize)),
-				names.AttrSnapshotID:          aws.ToString(v.Ebs.SnapshotId),
-				names.AttrVolumeType:          v.Ebs.VolumeType,
+				names.AttrDeleteOnTermination: flex.BoolToStringValue(apiObject.DeleteOnTermination),
+				names.AttrEncrypted:           flex.BoolToStringValue(apiObject.Encrypted),
+				names.AttrIOPS:                flex.Int32ToStringValue(apiObject.Iops),
+				names.AttrSnapshotID:          aws.ToString(apiObject.SnapshotId),
+				names.AttrThroughput:          flex.Int32ToStringValue(apiObject.Throughput),
+				names.AttrVolumeSize:          flex.Int32ToStringValue(apiObject.VolumeSize),
+				names.AttrVolumeType:          apiObject.VolumeType,
 			}
 
-			mapping["ebs"] = ebs
+			tfMap["ebs"] = ebs
 		}
 
-		log.Printf("[DEBUG] aws_ami - adding block device mapping: %v", mapping)
-		s.Add(mapping)
+		tfList = append(tfList, tfMap)
 	}
-	return s
+
+	return tfList
 }
 
-func flattenAMIProductCodes(m []awstypes.ProductCode) *schema.Set {
-	s := &schema.Set{
-		F: amiProductCodesHash,
+func flattenAMIProductCodes(apiObjects []awstypes.ProductCode) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
 	}
-	for _, v := range m {
-		code := map[string]interface{}{
-			"product_code_id":   aws.ToString(v.ProductCodeId),
-			"product_code_type": v.ProductCodeType,
-		}
-		s.Add(code)
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, map[string]interface{}{
+			"product_code_id":   aws.ToString(apiObject.ProductCodeId),
+			"product_code_type": apiObject.ProductCodeType,
+		})
 	}
-	return s
+
+	return tfList
 }
 
 func amiRootSnapshotId(image awstypes.Image) string {
@@ -418,40 +420,4 @@ func flattenAMIStateReason(m *awstypes.StateReason) map[string]interface{} {
 		s[names.AttrMessage] = "UNSET"
 	}
 	return s
-}
-
-func amiBlockDeviceMappingHash(v interface{}) int {
-	var buf bytes.Buffer
-	// All keys added in alphabetical order.
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-	if d, ok := m["ebs"]; ok {
-		if len(d.(map[string]interface{})) > 0 {
-			e := d.(map[string]interface{})
-			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrDeleteOnTermination].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrEncrypted].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrIOPS].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrVolumeSize].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrVolumeType]))
-		}
-	}
-	if d, ok := m["no_device"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
-	}
-	if d, ok := m[names.AttrVirtualName]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
-	}
-	if d, ok := m[names.AttrSnapshotID]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
-	}
-	return create.StringHashcode(buf.String())
-}
-
-func amiProductCodesHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	// All keys added in alphabetical order.
-	buf.WriteString(fmt.Sprintf("%s-", m["product_code_id"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["product_code_type"].(string)))
-	return create.StringHashcode(buf.String())
 }

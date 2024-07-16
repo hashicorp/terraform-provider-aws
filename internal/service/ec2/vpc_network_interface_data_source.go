@@ -22,6 +22,7 @@ import (
 
 // @SDKDataSource("aws_network_interface", name="Network Interface")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceNetworkInterface() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNetworkInterfaceRead,

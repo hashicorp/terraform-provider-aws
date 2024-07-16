@@ -20,6 +20,7 @@ import (
 )
 
 // @SDKDataSource("aws_servicecatalog_portfolio")
+// @Tags
 func DataSourcePortfolio() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePortfolioRead,
@@ -99,12 +100,7 @@ func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrName, detail.DisplayName)
 	d.Set(names.AttrProviderName, detail.ProviderName)
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags := KeyValueTags(ctx, output.Tags)
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }

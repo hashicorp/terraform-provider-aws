@@ -41,7 +41,7 @@ func TestAccRDSInstancesDataSource_filter(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstancesDataSource_tags(t *testing.T) {
+func TestAccRDSInstancesDataSource_matchTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbInstance rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -55,7 +55,7 @@ func TestAccRDSInstancesDataSource_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstancesDataSourceConfig_tags(rName),
+				Config: testAccInstancesDataSourceConfig_matchTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", acctest.Ct1),
@@ -116,7 +116,7 @@ data "aws_db_instances" "test" {
 `, rName)
 }
 
-func testAccInstancesDataSourceConfig_tags(rName string) string {
+func testAccInstancesDataSourceConfig_matchTags(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "postgres"

@@ -1,5 +1,5 @@
 ---
-subcategory: "Agents for Amazon Bedrock"
+subcategory: "Bedrock Agents"
 layout: "aws"
 page_title: "AWS: aws_bedrockagent_data_source"
 description: |-

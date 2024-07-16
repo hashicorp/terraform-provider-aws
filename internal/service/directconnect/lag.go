@@ -201,6 +201,10 @@ func resourceLagDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 			return diags
 		}
 
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "deleting Direct Connect LAG (%s): listing connections: %s", d.Id(), err)
+		}
+
 		for _, connection := range lag.Connections {
 			if err := deleteConnection(ctx, conn, aws.StringValue(connection.ConnectionId), waitConnectionDeleted); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
