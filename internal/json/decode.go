@@ -4,10 +4,16 @@
 package json
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"strings"
 )
+
+// DecodeFromBytes decodes (unmarshals) the given byte slice, containing valid JSON, into `to`.
+func DecodeFromBytes(b []byte, to any) error {
+	return DecodeFromReader(bytes.NewReader(b), to)
+}
 
 // DecodeFromReader decodes (unmarshals) the given io.Reader, pointing to a JSON stream, into `to`.
 func DecodeFromReader(r io.Reader, to any) error {
