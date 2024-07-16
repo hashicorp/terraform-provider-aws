@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func testAccTransitGatewayConnectPeer_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayConnectPeer
+	var v awstypes.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
 	transitGatewayConnectResourceName := "aws_ec2_transit_gateway_connect.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -62,7 +62,7 @@ func testAccTransitGatewayConnectPeer_basic(t *testing.T, semaphore tfsync.Semap
 
 func testAccTransitGatewayConnectPeer_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayConnectPeer
+	var v awstypes.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -90,7 +90,7 @@ func testAccTransitGatewayConnectPeer_disappears(t *testing.T, semaphore tfsync.
 
 func testAccTransitGatewayConnectPeer_bgpASN(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayConnectPeer
+	var v awstypes.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -117,7 +117,7 @@ func testAccTransitGatewayConnectPeer_bgpASN(t *testing.T, semaphore tfsync.Sema
 
 func testAccTransitGatewayConnectPeer_insideCIDRBlocks(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayConnectPeer
+	var v awstypes.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -151,7 +151,7 @@ func testAccTransitGatewayConnectPeer_insideCIDRBlocks(t *testing.T, semaphore t
 
 func testAccTransitGatewayConnectPeer_tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayConnectPeer
+	var v awstypes.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -201,7 +201,7 @@ func testAccTransitGatewayConnectPeer_tags(t *testing.T, semaphore tfsync.Semaph
 
 func testAccTransitGatewayConnectPeer_TransitGatewayAddress(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayConnectPeer
+	var v awstypes.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -226,7 +226,7 @@ func testAccTransitGatewayConnectPeer_TransitGatewayAddress(t *testing.T, semaph
 	})
 }
 
-func testAccCheckTransitGatewayConnectPeerExists(ctx context.Context, n string, v *ec2.TransitGatewayConnectPeer) resource.TestCheckFunc {
+func testAccCheckTransitGatewayConnectPeerExists(ctx context.Context, n string, v *awstypes.TransitGatewayConnectPeer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -237,7 +237,7 @@ func testAccCheckTransitGatewayConnectPeerExists(ctx context.Context, n string, 
 			return fmt.Errorf("No EC2 Transit Gateway Connect Peer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindTransitGatewayConnectPeerByID(ctx, conn, rs.Primary.ID)
 
@@ -253,7 +253,7 @@ func testAccCheckTransitGatewayConnectPeerExists(ctx context.Context, n string, 
 
 func testAccCheckTransitGatewayConnectPeerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_transit_gateway_connect_peer" {

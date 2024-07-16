@@ -36,7 +36,7 @@ func ResourceApp() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -187,7 +187,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "reading Pinpoint App (%s) settings: %s", d.Id(), err)
 	}
 
-	d.Set("application_id", app.Id)
+	d.Set(names.AttrApplicationID, app.Id)
 	d.Set(names.AttrARN, app.Arn)
 	if err := d.Set("campaign_hook", flattenCampaignHook(settings.CampaignHook)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting campaign_hook: %s", err)
@@ -313,7 +313,7 @@ func findAppSettingsByID(ctx context.Context, conn *pinpoint.Pinpoint, id string
 }
 
 func expandCampaignHook(configs []interface{}) *pinpoint.CampaignHook {
-	if len(configs) == 0 {
+	if len(configs) == 0 || configs[0] == nil {
 		return nil
 	}
 
@@ -351,7 +351,7 @@ func flattenCampaignHook(ch *pinpoint.CampaignHook) []interface{} {
 }
 
 func expandCampaignLimits(configs []interface{}) *pinpoint.CampaignLimits {
-	if len(configs) == 0 {
+	if len(configs) == 0 || configs[0] == nil {
 		return nil
 	}
 
@@ -394,7 +394,7 @@ func flattenCampaignLimits(cl *pinpoint.CampaignLimits) []interface{} {
 }
 
 func expandQuietTime(configs []interface{}) *pinpoint.QuietTime {
-	if len(configs) == 0 {
+	if len(configs) == 0 || configs[0] == nil {
 		return nil
 	}
 

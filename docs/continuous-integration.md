@@ -1,6 +1,6 @@
 # Continuous Integration
 
-Continuous integration (CI) includes processes we run when you submit a pull request (PR). These processes can be divided into two broad categories: enrichment and testing.
+Continuous integration (CI) includes processes that run when you submit a pull request (PR). These processes can be divided into two broad categories: enrichment and testing.
 
 ## CI: Enrichment
 
@@ -18,23 +18,25 @@ To help place testing performed as part of CI in context, here is an overview of
 
 ## Rationale
 
-Continuous integration plays a pivotal role in maintaining the health and quality of a large project like the Terraform AWS Provider. CI tests serve as a crucial component in automatically assessing code changes for compliance with project standards and functionality expectations, greatly reducing the review burden on maintainers. By executing a battery of tests upon each pull request submission, continuous integration ensures that new contributions integrate seamlessly with the existing codebase, minimizing the risk of regressions and enhancing overall stability.
+Continuous integration (CI) plays a pivotal role in maintaining the health and quality of a large project like the Terraform AWS Provider. CI tests are crucial for automatically assessing code changes for compliance with project standards and functionality expectations, greatly reducing the review burden on maintainers. By executing a battery of tests upon each pull request submission, CI ensures that new contributions integrate seamlessly with the existing codebase, minimizing the risk of regressions and enhancing overall stability.
 
-Additionally, these tests provide rapid feedback to contributors, enabling them to identify and rectify issues early in the development cycle. In essence, continuous integration tests serve as a safeguard, bolstering the reliability and maintainability of this project while fostering a collaborative and iterative development environment.
+Additionally, these tests provide rapid feedback to contributors, enabling them to identify and rectify issues early in the development cycle. In essence, CI tests serve as a safeguard, bolstering the reliability and maintainability of the project while fostering a collaborative and iterative development environment.
 
-## Using `make` To Run Specific Tests Locally
+## Using `make` to Run Specific Tests Locally
 
-**NOTE:** We've gone to great effort to make sure that tests running on GitHub have a close-as-possible equivalent in the Makefile. If you notice a difference, please [open an issue](https://github.com/hashicorp/terraform-provider-aws/issues/new/choose) to let us know.
+**NOTE:** We've made a great effort to ensure that tests running on GitHub have a close-as-possible equivalent in the Makefile. If you notice a difference, please [open an issue](https://github.com/hashicorp/terraform-provider-aws/issues/new/choose) to let us know.
 
-The Makefile included with the Terraform AWS Provider allows you to run many of the CI tests locally before submitting your PR. The file is located in the provider's root directory and is called `GNUmakefile`. You should be able to use `make` with a variety of Linux-type shells that support `bash`, such as a MacOS terminal.
+The Makefile included with the Terraform AWS Provider allows you to run many of the CI tests locally before submitting your PR. The file is located in the provider's root directory and is called `GNUmakefile`. You should be able to use `make` with a variety of Linux-type shells that support `bash`, such as a macOS terminal.
 
-There are many different tests and they change often. This guide doesn't cover everything CI does because, as noted above, many of the CI processes enrich the pull request, such as adding labels. If you notice something important that isn't reflected in this documentation, let us know!
+**NOTE:** See the [Makefile Cheat Sheet](makefile-cheat-sheet.md) for detailed information about the Makefile.
+
+There are many different tests, and they change often. This guide doesn't cover everything CI does because, as noted above, many of the CI processes enrich the pull request, such as adding labels. If you notice something important that isn't reflected in this documentation, let us know!
 
 **NOTE:** Many tests simply exit without error if passing. "No news is good news."
 
 ### Before Running Tests
 
-CI tests run on GitHub when you run a pull request. However, these can take a while to run. If you prefer, you can run most tests locally. Before running tests locally, you will need to clone the repository, which you've likely done anyway if you're working on a PR, and install tools.
+CI tests run on GitHub when you submit a pull request. However, these tests can take a while to complete. If you prefer, you can run most tests locally. Before running tests locally, you need to clone the repository, which you've likely already done if you're working on a PR, and install the necessary tools.
 
 Use the `tools` target to install a variety of tools used by different CI tests:
 
@@ -44,7 +46,7 @@ make tools
 
 ### Running All Available CI Tests
 
-Use the `ci` target to run all the tests below:
+Use the `ci` target to run all the tests listed below:
 
 ```console
 make ci
@@ -52,13 +54,13 @@ make ci
 
 **NOTE:** Depending on your machine, running all the tests can take a long time!
 
-To run most of the tests but not the longer-running tests, use the `ci-quick` target. "Quick" may not be _quick_ precisely but, relative to the full `ci` target, is _quicker_:
+To run most of the tests but exclude the longer-running ones, use the `ci-quick` target. "Quick" may not be _quick_ precisely, but relative to the full `ci` target, it is _quicker_:
 
 ```console
 make ci-quick
 ```
 
-Use the `clean-make-tests` target to clean up artifacts that `make` tests leave behind, although they should be ignored by Git:
+Use the `clean-make-tests` target to clean up artifacts left behind by `make` tests, although they should be ignored by Git:
 
 ```console
 make clean-make-tests
@@ -66,15 +68,19 @@ make clean-make-tests
 
 ### Acceptance Test Linting
 
-Acceptance test linting involves thorough testing of the Terraform configuration associated with acceptance tests. Currently, this extracts configuration embedded as strings in Go files. However, as we move testing configurations to `.tf` files, this will involve testing those files for correctness.
+Acceptance test linting involves thoroughly testing the Terraform configuration associated with acceptance tests. Currently, this process extracts configuration embedded as strings in Go files. However, as we move testing configurations to `.tf` files, linting will involve testing those files for correctness.
 
-Acceptance Test Linting has two components: `terrafmt` and `tflint`. `make` has several targets to help you with this.
+Acceptance test linting has two components: `terrafmt` and `tflint`. The `make` tool provides several targets to help with this.
 
-Use the `acctest-lint` target to run all the Acceptance Test Linting checks using both `terrafmt` and `tflint`:
+#### Running All Acceptance Test Linting Checks
+
+Use the `acctest-lint` target to run all the acceptance test linting checks using both `terrafmt` and `tflint`:
 
 ```console
 make acctest-lint
 ```
+
+#### Limiting Linting to a Specific Service Package
 
 You can limit the test to a service package by using the `PKG` environment variable:
 
@@ -82,7 +88,7 @@ You can limit the test to a service package by using the `PKG` environment varia
 PKG=rds make acctest-lint
 ```
 
-The command above is equivalent to using `SVC_DIR` and the whole relative path:
+The command above is equivalent to using `SVC_DIR` with the full relative path:
 
 ```console
 SVC_DIR=./internal/service/rds make acctest-lint
@@ -90,21 +96,21 @@ SVC_DIR=./internal/service/rds make acctest-lint
 
 #### `terrafmt`
 
-Use the `testacc-lint` target to run only the `terrafmt` test (`tflint` takes a long time to run):
+Use the `testacc-lint` target to run only the `terrafmt` test. This is useful if you want to skip `tflint`, which takes a long time to run:
 
 ```console
 make testacc-lint
 ```
 
-Use the `testacc-lint-fix` target to automatically fix issues found with `terrafmt`:
+Use the `testacc-lint-fix` target to automatically fix issues found by `terrafmt`:
 
 ```console
 make testacc-lint-fix
 ```
 
-#### Validate Acceptance Tests (`tflint`)
+#### Validate Acceptance Tests with `tflint`
 
-Use the `testacc-tflint` target to run only the `tflint` test (`tflint` takes a long time to run):
+Use the `testacc-tflint` target to run only the `tflint` test. This is useful if you want to skip `terrafmt`:
 
 ```console
 make testacc-tflint
@@ -192,7 +198,7 @@ This check is not currently available in the Makefile.
 
 golangci-lint checks runs a variety of linters on the provider's code. This is done in two stages with the first stage acting as a gatekeeper since the second stage takes considerably longer to run.
 
-Before running these checks locally, you need to install golangci-lint locally. This can be done in [several ways](https://golangci-lint.run/welcome/install/#local-installation) including using Homebrew on MacOS:
+Before running these checks locally, you need to install golangci-lint locally. This can be done in [several ways](https://golangci-lint.run/welcome/install/#local-installation) including using Homebrew on macOS:
 
 ```console
 brew install golangci-lint
@@ -236,13 +242,13 @@ PKG=rds make golangci-lint2
 
 GoReleaser CI build-32-bit ensures that GoReleaser can build a 32-bit binary. This check catches rare but important edge cases. Currently, we do not offer a `make` target to run this check locally.
 
-### Preferred Library Version Check / diffgrep
+### Preferred Library Version Check / `diffgrep`
 
-Preferred Library Version Check doesn't cause CI to fail but will leave a comment.
+The Preferred Library Version Check doesn't cause CI to fail but will leave a comment on the pull request.
 
-This check verifies that preferred library versions are used in development of net-new resources. This is done by inspecting the pull request diff for any occurrence of a non-preferred library name, typically seen in an import block. At this time the only check is for AWS SDK for Go V1, but it may be extended in the future. This check will not fail if a non-preferred library version is detected, but will leave a comment on the pull request linking to the relevant contributor documentation.
+This check verifies that preferred library versions are used in the development of new resources. It inspects the pull request diff for any occurrence of a non-preferred library name, typically seen in an import block. Currently, the only check is for AWS SDK for Go V1, but this may be extended in the future. If a non-preferred library version is detected, the check will not fail but will leave a comment on the pull request linking to the relevant contributor documentation.
 
-Use the `preferred-lib` target to check your changes against the `origin/main` of your Git repository (configurable using `BASE_REF`):
+Use the `preferred-lib` target to check your changes against the `origin/main` branch of your Git repository (configurable using `BASE_REF`):
 
 ```console
 make preferred-lib
@@ -352,7 +358,7 @@ This process generates the Terraform AWS Provider schema for use by the `tfprovi
 
 #### tfproviderdocs
 
-**NOTE:** To run this test, you need Terraform installed locally. On MacOS, you can use Homebrew to install Terraform:
+**NOTE:** To run this test, you need Terraform installed locally. On macOS, you can use Homebrew to install Terraform:
 
 ```console
 brew install terraform
@@ -404,7 +410,7 @@ make provider-lint
 
 We use [Semgrep](https://github.com/semgrep/semgrep) for many types of checks and cannot describe all of them here. They are broken into rough groupings for parallel CI processing, as described below.
 
-To locally run Semgrep checks using `make`, you'll need to install Semgrep locally. On MacOS, you can do this easily using Homebrew:
+To locally run Semgrep checks using `make`, you'll need to install Semgrep locally. On macOS, you can do this easily using Homebrew:
 
 ```console
 brew install semgrep
@@ -564,7 +570,7 @@ make gh-workflow-lint
 
 YAMLlint checks the validity of YAML files.
 
-To run YAMLlist locally using `make`, you'll need to install it locally. On MacOS, you can install it using Homebrew:
+To run YAMLlint locally using `make`, you'll need to install it locally. On macOS, you can install it using Homebrew:
 
 ```console
 brew install yamllint

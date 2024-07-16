@@ -23,6 +23,7 @@ import (
 )
 
 // @SDKDataSource("aws_route_table")
+// @Testing(tagsTest=true)
 func DataSourceRouteTable() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouteTableRead,
@@ -62,7 +63,7 @@ func DataSourceRouteTable() *schema.Resource {
 						///
 						// Destinations.
 						///
-						"cidr_block": {
+						names.AttrCIDRBlock: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -280,7 +281,7 @@ func dataSourceRoutesRead(ctx context.Context, conn *ec2.Client, ec2Routes []aws
 
 		// Skip cross-account ENIs for AWS services.
 		if networkInterfaceID := aws.ToString(r.NetworkInterfaceId); networkInterfaceID != "" {
-			networkInterface, err := findNetworkInterfaceByIDV2(ctx, conn, networkInterfaceID)
+			networkInterface, err := findNetworkInterfaceByID(ctx, conn, networkInterfaceID)
 
 			if err == nil && networkInterface.Attachment != nil {
 				if ownerID, instanceOwnerID := aws.ToString(networkInterface.OwnerId), aws.ToString(networkInterface.Attachment.InstanceOwnerId); ownerID != "" && instanceOwnerID != ownerID {
@@ -293,7 +294,7 @@ func dataSourceRoutesRead(ctx context.Context, conn *ec2.Client, ec2Routes []aws
 		m := make(map[string]interface{})
 
 		if r.DestinationCidrBlock != nil {
-			m["cidr_block"] = aws.ToString(r.DestinationCidrBlock)
+			m[names.AttrCIDRBlock] = aws.ToString(r.DestinationCidrBlock)
 		}
 		if r.DestinationIpv6CidrBlock != nil {
 			m["ipv6_cidr_block"] = aws.ToString(r.DestinationIpv6CidrBlock)

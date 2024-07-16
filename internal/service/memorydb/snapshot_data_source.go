@@ -55,7 +55,7 @@ func DataSourceSnapshot() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"parameter_group_name": {
+						names.AttrParameterGroupName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

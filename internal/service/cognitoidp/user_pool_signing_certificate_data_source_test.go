@@ -53,6 +53,12 @@ resource "aws_cognito_identity_provider" "test" {
   attribute_mapping = {
     email = "email"
   }
+
+  lifecycle {
+    ignore_changes = [
+      provider_details["ActiveEncryptionCertificate"],
+    ]
+  }
 }
 
 data "aws_cognito_user_pool_signing_certificate" "test" {

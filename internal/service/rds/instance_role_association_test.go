@@ -77,7 +77,7 @@ func TestAccRDSInstanceRoleAssociation_disappears(t *testing.T) {
 			{
 				Config: testAccInstanceRoleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, dbInstanceResourceName, &dbInstance1),
+					testAccCheckDBInstanceExists(ctx, dbInstanceResourceName, &dbInstance1),
 					testAccCheckInstanceRoleAssociationExists(ctx, resourceName, &dbInstanceRole1),
 					testAccCheckInstanceRoleAssociationDisappears(ctx, &dbInstance1, &dbInstanceRole1),
 				),

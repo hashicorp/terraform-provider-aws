@@ -129,7 +129,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrEndpoint, endpoint.Endpoint)
 	if endpoint.VpcOptions != nil {
 		if err := d.Set("vpc_options", []interface{}{flattenVPCDerivedInfo(endpoint.VpcOptions)}); err != nil {
-			return diag.Errorf("setting vpc_options: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
 		}
 	} else {
 		d.Set("vpc_options", nil)

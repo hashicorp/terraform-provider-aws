@@ -36,7 +36,7 @@ func TestAccS3BucketLogging_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
-					resource.TestCheckResourceAttr(resourceName, "expected_bucket_owner", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExpectedBucketOwner, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "target_grant.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.#", acctest.Ct0),
@@ -373,7 +373,7 @@ func TestAccS3BucketLogging_withExpectedBucketOwner(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
-					acctest.CheckResourceAttrAccountID(resourceName, "expected_bucket_owner"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrExpectedBucketOwner),
 					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "target_grant.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.#", acctest.Ct0),

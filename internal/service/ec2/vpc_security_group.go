@@ -35,7 +35,9 @@ import (
 
 // @SDKResource("aws_security_group", name="Security Group")
 // @Tags(identifierAttribute="id")
-func ResourceSecurityGroup() *schema.Resource {
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/ec2;ec2.SecurityGroup")
+// @Testing(importIgnore="revoke_rules_on_delete")
+func resourceSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityGroupCreate,

@@ -362,7 +362,7 @@ func resourceCluster() *schema.Resource {
 											Required: true,
 											ForceNew: true,
 										},
-										"throughput": {
+										names.AttrThroughput: {
 											Type:     schema.TypeInt,
 											Optional: true,
 											ForceNew: true,
@@ -588,7 +588,7 @@ func resourceCluster() *schema.Resource {
 											Required: true,
 											ForceNew: true,
 										},
-										"throughput": {
+										names.AttrThroughput: {
 											Type:     schema.TypeInt,
 											Optional: true,
 											ForceNew: true,
@@ -1832,7 +1832,7 @@ func flattenEBSConfig(ebsBlockDevices []*emr.EbsBlockDevice) *schema.Set {
 			ebsAttrs[names.AttrSize] = int(aws.Int64Value(ebs.VolumeSpecification.SizeInGB))
 		}
 		if ebs.VolumeSpecification.Throughput != nil {
-			ebsAttrs["throughput"] = aws.Int64Value(ebs.VolumeSpecification.Throughput)
+			ebsAttrs[names.AttrThroughput] = aws.Int64Value(ebs.VolumeSpecification.Throughput)
 		}
 		if ebs.VolumeSpecification.VolumeType != nil {
 			ebsAttrs[names.AttrType] = aws.StringValue(ebs.VolumeSpecification.VolumeType)
@@ -1982,7 +1982,7 @@ func expandEBSConfig(configAttributes map[string]interface{}, config *emr.Instan
 					VolumeType: aws.String(rawEbsConfig[names.AttrType].(string)),
 				},
 			}
-			if v, ok := rawEbsConfig["throughput"].(int); ok && v != 0 {
+			if v, ok := rawEbsConfig[names.AttrThroughput].(int); ok && v != 0 {
 				ebsBlockDeviceConfig.VolumeSpecification.Throughput = aws.Int64(int64(v))
 			}
 			if v, ok := rawEbsConfig[names.AttrIOPS].(int); ok && v != 0 {
@@ -2080,7 +2080,7 @@ func resourceClusterEBSHashConfig(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%d-", m[names.AttrSize].(int)))
 	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrType].(string)))
 	buf.WriteString(fmt.Sprintf("%d-", m["volumes_per_instance"].(int)))
-	if v, ok := m["throughput"].(int); ok && v != 0 {
+	if v, ok := m[names.AttrThroughput].(int); ok && v != 0 {
 		buf.WriteString(fmt.Sprintf("%d-", v))
 	}
 	if v, ok := m[names.AttrIOPS].(int); ok && v != 0 {
@@ -2265,7 +2265,7 @@ func expandEBSConfiguration(ebsConfigurations []interface{}) *emr.EbsConfigurati
 				VolumeType: aws.String(cfg[names.AttrType].(string)),
 			},
 		}
-		if v, ok := cfg["throughput"].(int); ok && v != 0 {
+		if v, ok := cfg[names.AttrThroughput].(int); ok && v != 0 {
 			ebsBlockDeviceConfig.VolumeSpecification.Throughput = aws.Int64(int64(v))
 		}
 		if v, ok := cfg[names.AttrIOPS].(int); ok && v != 0 {

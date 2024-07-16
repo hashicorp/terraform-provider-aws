@@ -30,6 +30,9 @@ import (
 
 // @SDKResource("aws_api_gateway_domain_name", name="Domain Name")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetDomainNameOutput")
+// @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain()")
+// @Testing(tlsKey=true, tlsKeyDomain="rName")
 func resourceDomainName() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainNameCreate,

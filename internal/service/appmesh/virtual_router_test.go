@@ -68,8 +68,8 @@ func testAccVirtualRouter_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vrName),
 				ImportState:       true,
+				ImportStateIdFunc: testAccVirtualRouterImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -134,57 +134,9 @@ func testAccVirtualRouter_multiListener(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vrName),
 				ImportState:       true,
+				ImportStateIdFunc: testAccVirtualRouterImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func testAccVirtualRouter_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var vr appmesh.VirtualRouterData
-	resourceName := "aws_appmesh_virtual_router.test"
-	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVirtualRouterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVirtualRouterConfig_tags1(meshName, vrName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vrName),
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccVirtualRouterConfig_tags2(meshName, vrName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccVirtualRouterConfig_tags1(meshName, vrName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
 			},
 		},
 	})
@@ -262,6 +214,17 @@ func testAccCheckVirtualRouterExists(ctx context.Context, n string, v *appmesh.V
 		*v = *output
 
 		return nil
+	}
+}
+
+func testAccVirtualRouterImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not Found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes[names.AttrName]), nil
 	}
 }
 
@@ -369,57 +332,4 @@ resource "aws_appmesh_virtual_router" "test" {
   }
 }
 `, meshName, vrName)
-}
-
-func testAccVirtualRouterConfig_tags1(meshName, vrName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_appmesh_mesh" "test" {
-  name = %[1]q
-}
-
-resource "aws_appmesh_virtual_router" "test" {
-  name      = %[2]q
-  mesh_name = aws_appmesh_mesh.test.id
-
-  spec {
-    listener {
-      port_mapping {
-        port     = 8080
-        protocol = "http"
-      }
-    }
-  }
-
-  tags = {
-    %[3]s = %[4]q
-  }
-}
-`, meshName, vrName, tagKey1, tagValue1)
-}
-
-func testAccVirtualRouterConfig_tags2(meshName, vrName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_appmesh_mesh" "test" {
-  name = %[1]q
-}
-
-resource "aws_appmesh_virtual_router" "test" {
-  name      = %[2]q
-  mesh_name = aws_appmesh_mesh.test.id
-
-  spec {
-    listener {
-      port_mapping {
-        port     = 8080
-        protocol = "http"
-      }
-    }
-  }
-
-  tags = {
-    %[3]s = %[4]q
-    %[5]s = %[6]q
-  }
-}
-`, meshName, vrName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

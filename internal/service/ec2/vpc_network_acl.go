@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_network_acl", name="Network ACL")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceNetworkACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkACLCreate,
@@ -113,7 +114,7 @@ func networkACLRuleNestedBlock() *schema.Resource {
 				},
 				ValidateFunc: validation.StringInSlice(ec2.RuleAction_Values(), true),
 			},
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
@@ -393,7 +394,7 @@ func networkACLRuleHash(v interface{}) int {
 	protocolNumber, _ := networkACLProtocolNumber(tfMap[names.AttrProtocol].(string))
 	buf.WriteString(fmt.Sprintf("%d-", protocolNumber))
 
-	if v, ok := tfMap["cidr_block"]; ok {
+	if v, ok := tfMap[names.AttrCIDRBlock]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 	if v, ok := tfMap["ipv6_cidr_block"]; ok {
@@ -515,7 +516,7 @@ func expandNetworkACLEntry(tfMap map[string]interface{}, egress bool) *ec2.Netwo
 		apiObject.RuleAction = aws.String(v)
 	}
 
-	if v, ok := tfMap["cidr_block"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCIDRBlock].(string); ok && v != "" {
 		apiObject.CidrBlock = aws.String(v)
 	}
 
@@ -600,7 +601,7 @@ func flattenNetworkACLEntry(apiObject *ec2.NetworkAclEntry) map[string]interface
 	}
 
 	if v := apiObject.CidrBlock; v != nil {
-		tfMap["cidr_block"] = aws.StringValue(v)
+		tfMap[names.AttrCIDRBlock] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Ipv6CidrBlock; v != nil {

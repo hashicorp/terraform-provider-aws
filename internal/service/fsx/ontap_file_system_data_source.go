@@ -77,7 +77,7 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"ip_addresses": {
+									names.AttrIPAddresses: {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -94,7 +94,7 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"ip_addresses": {
+									names.AttrIPAddresses: {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},

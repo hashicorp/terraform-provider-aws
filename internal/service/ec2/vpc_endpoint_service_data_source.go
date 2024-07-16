@@ -137,7 +137,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 		input.Filters = nil
 	}
 
-	serviceDetails, serviceNames, err := findVPCEndpointServicesV2(ctx, conn, input)
+	serviceDetails, serviceNames, err := findVPCEndpointServices(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Endpoint Services: %s", err)

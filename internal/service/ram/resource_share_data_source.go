@@ -65,7 +65,7 @@ func dataSourceResourceShare() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"resource_owner": {
+			names.AttrResourceOwner: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.ResourceOwner](),
@@ -88,7 +88,7 @@ func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
-	resourceOwner := d.Get("resource_owner").(string)
+	resourceOwner := d.Get(names.AttrResourceOwner).(string)
 	inputG := &ram.GetResourceSharesInput{
 		ResourceOwner: awstypes.ResourceOwner(resourceOwner),
 	}

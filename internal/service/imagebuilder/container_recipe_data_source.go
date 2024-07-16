@@ -114,7 +114,7 @@ func DataSourceContainerRecipe() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"throughput": {
+												names.AttrThroughput: {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
@@ -133,7 +133,7 @@ func DataSourceContainerRecipe() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"virtual_name": {
+									names.AttrVirtualName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},

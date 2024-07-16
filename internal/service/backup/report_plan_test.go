@@ -8,7 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +22,7 @@ import (
 
 func TestAccBackupReportPlan_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var reportPlan backup.ReportPlan
+	var reportPlan awstypes.ReportPlan
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 	originalDescription := "original description"
@@ -81,7 +82,7 @@ func TestAccBackupReportPlan_basic(t *testing.T) {
 
 func TestAccBackupReportPlan_updateTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var reportPlan backup.ReportPlan
+	var reportPlan awstypes.ReportPlan
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 	description := "example description"
@@ -166,7 +167,7 @@ func TestAccBackupReportPlan_updateTags(t *testing.T) {
 
 func TestAccBackupReportPlan_updateReportDeliveryChannel(t *testing.T) {
 	ctx := acctest.Context(t)
-	var reportPlan backup.ReportPlan
+	var reportPlan awstypes.ReportPlan
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 	description := "example description"
@@ -226,7 +227,7 @@ func TestAccBackupReportPlan_updateReportDeliveryChannel(t *testing.T) {
 
 func TestAccBackupReportPlan_updateReportSettings(t *testing.T) {
 	ctx := acctest.Context(t)
-	var reportPlan backup.ReportPlan
+	var reportPlan awstypes.ReportPlan
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 	description := "example description"
@@ -291,7 +292,7 @@ func TestAccBackupReportPlan_updateReportSettings(t *testing.T) {
 
 func TestAccBackupReportPlan_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var reportPlan backup.ReportPlan
+	var reportPlan awstypes.ReportPlan
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 	resourceName := "aws_backup_report_plan.test"
@@ -315,9 +316,9 @@ func TestAccBackupReportPlan_disappears(t *testing.T) {
 }
 
 func testAccReportPlanPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
-	_, err := conn.ListReportPlansWithContext(ctx, &backup.ListReportPlansInput{})
+	_, err := conn.ListReportPlans(ctx, &backup.ListReportPlansInput{})
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -330,7 +331,7 @@ func testAccReportPlanPreCheck(ctx context.Context, t *testing.T) {
 
 func testAccCheckReportPlanDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_report_plan" {
@@ -354,7 +355,7 @@ func testAccCheckReportPlanDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckReportPlanExists(ctx context.Context, n string, v *backup.ReportPlan) resource.TestCheckFunc {
+func testAccCheckReportPlanExists(ctx context.Context, n string, v *awstypes.ReportPlan) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -365,7 +366,7 @@ func testAccCheckReportPlanExists(ctx context.Context, n string, v *backup.Repor
 			return fmt.Errorf("No Backup Report Plan ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
 		output, err := tfbackup.FindReportPlanByName(ctx, conn, rs.Primary.ID)
 

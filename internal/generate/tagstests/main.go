@@ -16,17 +16,19 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
-	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/dlclark/regexp2"
+	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
-	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
+	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
 
 func main() {
@@ -45,21 +47,34 @@ func main() {
 	g.Infof("Generating tagging tests for internal/service/%s", servicePackage)
 
 	var (
-		serviceRecord data.ServiceRecord
-		found         bool
+		svc   serviceRecords
+		found bool
 	)
 
 	for _, l := range serviceData {
 		// See internal/generate/namesconsts/main.go.
-		p := l.ProviderPackage()
+		if p := l.SplitPackageRealPackage(); p != "" {
+			if p != servicePackage {
+				continue
+			}
 
-		if p != servicePackage {
-			continue
+			ep := l.ProviderPackage()
+			if p == ep {
+				svc.primary = l
+				found = true
+			} else {
+				svc.additional = append(svc.additional, l)
+			}
+		} else {
+			p := l.ProviderPackage()
+
+			if p != servicePackage {
+				continue
+			}
+
+			svc.primary = l
+			found = true
 		}
-
-		serviceRecord = l
-		found = true
-		break
 	}
 
 	if !found {
@@ -82,62 +97,212 @@ func main() {
 		sourceName := resource.FileName
 		ext := filepath.Ext(sourceName)
 		sourceName = strings.TrimSuffix(sourceName, ext)
+		sourceName = strings.TrimSuffix(sourceName, "_")
 
-		resource.ProviderNameUpper = serviceRecord.ProviderNameUpper()
+		if name, err := svc.ProviderNameUpper(resource.TypeName); err != nil {
+			g.Fatalf("determining provider service name: %w", err)
+		} else {
+			resource.ResourceProviderNameUpper = name
+		}
+		resource.PackageProviderNameUpper = svc.PackageProviderNameUpper()
 		resource.ProviderPackage = servicePackage
 
-		filename := fmt.Sprintf("%s_tags_gen_test.go", sourceName)
+		if !resource.DataSource {
+			filename := fmt.Sprintf("%s_tags_gen_test.go", sourceName)
 
-		d := g.NewGoFileDestination(filename)
-		templates, err := template.New("taggingtests").Parse(testGoTmpl)
-		if err != nil {
-			g.Fatalf("parsing base Go test template: %w", err)
-		}
-
-		if err := d.WriteTemplateSet(templates, resource); err != nil {
-			g.Fatalf("error generating %q service package data: %s", servicePackage, err)
-		}
-
-		if err := d.Write(); err != nil {
-			g.Fatalf("generating file (%s): %s", filename, err)
-		}
-
-		configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
-		var configTmpl string
-		if _, err := os.Stat(configTmplFile); err == nil {
-			b, err := os.ReadFile(configTmplFile)
+			d := g.NewGoFileDestination(filename)
+			templates, err := template.New("taggingtests").Parse(resourceTestGoTmpl)
 			if err != nil {
-				g.Fatalf("reading %q: %w", configTmplFile, err)
+				g.Fatalf("parsing base Go test template: %w", err)
 			}
-			configTmpl = string(b)
-			resource.GenerateConfig = true
-		} else if errors.Is(err, os.ErrNotExist) {
-			g.Errorf("no tags template found for %s at %q", sourceName, configTmplFile)
-			failed = true
+
+			if err := d.WriteTemplateSet(templates, resource); err != nil {
+				g.Fatalf("error generating %q service package data: %s", servicePackage, err)
+			}
+
+			if err := d.Write(); err != nil {
+				g.Fatalf("generating file (%s): %s", filename, err)
+			}
 		} else {
-			g.Fatalf("opening config template %q: %w", configTmplFile, err)
+			filename := fmt.Sprintf("%s_tags_gen_test.go", sourceName)
+
+			d := g.NewGoFileDestination(filename)
+			templates, err := template.New("taggingtests").Parse(dataSourceTestGoTmpl)
+			if err != nil {
+				g.Fatalf("parsing base Go test template: %w", err)
+			}
+
+			if err := d.WriteTemplateSet(templates, resource); err != nil {
+				g.Fatalf("error generating %q service package data: %s", servicePackage, err)
+			}
+
+			if err := d.Write(); err != nil {
+				g.Fatalf("generating file (%s): %s", filename, err)
+			}
 		}
 
-		if resource.GenerateConfig {
-			additionalTfVars := tfmaps.Keys(resource.AdditionalTfVars)
-			slices.Sort(additionalTfVars)
-			testDirPath := path.Join("testdata", resource.Name)
-
-			common := commonConfig{
-				AdditionalTfVars: additionalTfVars,
-				WithRName:        (resource.Generator != ""),
+		if !resource.DataSource {
+			configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
+			var configTmpl string
+			if _, err := os.Stat(configTmplFile); err == nil {
+				b, err := os.ReadFile(configTmplFile)
+				if err != nil {
+					g.Fatalf("reading %q: %w", configTmplFile, err)
+				}
+				configTmpl = string(b)
+				resource.GenerateConfig = true
+			} else if errors.Is(err, os.ErrNotExist) {
+				g.Errorf("no tags template found for %s at %q", sourceName, configTmplFile)
+				failed = true
+			} else {
+				g.Fatalf("opening config template %q: %w", configTmplFile, err)
 			}
 
-			generateTestConfig(g, testDirPath, "tags", false, configTmplFile, configTmpl, common)
-			generateTestConfig(g, testDirPath, "tags", true, configTmplFile, configTmpl, common)
-			generateTestConfig(g, testDirPath, "tagsComputed1", false, configTmplFile, configTmpl, common)
-			generateTestConfig(g, testDirPath, "tagsComputed2", false, configTmplFile, configTmpl, common)
+			if resource.GenerateConfig {
+				additionalTfVars := tfmaps.Keys(resource.additionalTfVars)
+				slices.Sort(additionalTfVars)
+				testDirPath := path.Join("testdata", resource.Name)
+
+				tfTemplates, err := template.New("taggingtests").Parse(testTfTmpl)
+				if err != nil {
+					g.Fatalf("parsing base Terraform config template: %s", err)
+				}
+
+				_, err = tfTemplates.New("body").Parse(configTmpl)
+				if err != nil {
+					g.Fatalf("parsing config template %q: %s", configTmplFile, err)
+				}
+
+				common := commonConfig{
+					AdditionalTfVars:        additionalTfVars,
+					WithRName:               (resource.Generator != ""),
+					AlternateRegionProvider: resource.AlternateRegionProvider,
+				}
+
+				generateTestConfig(g, testDirPath, "tags", false, tfTemplates, common)
+				generateTestConfig(g, testDirPath, "tags", true, tfTemplates, common)
+				generateTestConfig(g, testDirPath, "tagsComputed1", false, tfTemplates, common)
+				generateTestConfig(g, testDirPath, "tagsComputed2", false, tfTemplates, common)
+				generateTestConfig(g, testDirPath, "tags_ignore", false, tfTemplates, common)
+			}
+		} else {
+			sourceName = strings.TrimSuffix(sourceName, "_data_source")
+			configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
+			var configTmpl string
+			if _, err := os.Stat(configTmplFile); err == nil {
+				b, err := os.ReadFile(configTmplFile)
+				if err != nil {
+					g.Fatalf("reading %q: %w", configTmplFile, err)
+				}
+				configTmpl = string(b)
+				resource.GenerateConfig = true
+			} else if errors.Is(err, os.ErrNotExist) {
+				g.Errorf("no tags template found for %s at %q", sourceName, configTmplFile)
+				failed = true
+			} else {
+				g.Fatalf("opening config template %q: %w", configTmplFile, err)
+			}
+
+			if resource.GenerateConfig {
+				dataSourceConfigTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_data_source.gtpl", sourceName))
+				var dataSourceConfigTmpl string
+				if _, err := os.Stat(dataSourceConfigTmplFile); err == nil {
+					b, err := os.ReadFile(dataSourceConfigTmplFile)
+					if err != nil {
+						g.Fatalf("reading %q: %w", dataSourceConfigTmplFile, err)
+					}
+					dataSourceConfigTmpl = string(b)
+				} else if errors.Is(err, os.ErrNotExist) {
+					g.Errorf("no data source template found for %s at %q", sourceName, dataSourceConfigTmplFile)
+					failed = true
+				} else {
+					g.Fatalf("opening data source config template %q: %w", dataSourceConfigTmplFile, err)
+				}
+
+				additionalTfVars := tfmaps.Keys(resource.additionalTfVars)
+				slices.Sort(additionalTfVars)
+				testDirPath := path.Join("testdata", resource.Name)
+
+				tfTemplates, err := template.New("taggingtests").Parse(testTfTmpl)
+				if err != nil {
+					g.Fatalf("parsing base Terraform config template: %s", err)
+				}
+
+				_, err = tfTemplates.New("body").Parse(configTmpl)
+				if err != nil {
+					g.Fatalf("parsing config template %q: %s", configTmplFile, err)
+				}
+
+				_, err = tfTemplates.New("data_source").Parse(dataSourceConfigTmpl)
+				if err != nil {
+					g.Fatalf("parsing data source config template %q: %s", configTmplFile, err)
+				}
+
+				common := commonConfig{
+					AdditionalTfVars:        additionalTfVars,
+					WithRName:               (resource.Generator != ""),
+					AlternateRegionProvider: resource.AlternateRegionProvider,
+				}
+
+				generateTestConfig(g, testDirPath, "data.tags", false, tfTemplates, common)
+			}
 		}
 	}
 
 	if failed {
 		os.Exit(1)
 	}
+}
+
+type serviceRecords struct {
+	primary    data.ServiceRecord
+	additional []data.ServiceRecord
+}
+
+func (sr serviceRecords) ProviderNameUpper(resource string) (string, error) {
+	if len(sr.additional) == 0 {
+		return sr.primary.ProviderNameUpper(), nil
+	}
+
+	var (
+		service data.ServiceRecord
+		found   bool
+	)
+	for _, svc := range sr.additional {
+		re, err := regexp2.Compile(svc.ResourcePrefix(), 0)
+		if err != nil {
+			return "", err
+		}
+		if match, err := re.MatchString(resource); err != nil {
+			return "", err
+		} else if match {
+			service = svc
+			found = true
+		}
+	}
+
+	if !found {
+		re, err := regexp2.Compile(sr.primary.ResourcePrefix(), 0)
+		if err != nil {
+			return "", err
+		}
+		if match, err := re.MatchString(resource); err != nil {
+			return "", err
+		} else if match {
+			service = sr.primary
+			found = true
+		}
+	}
+
+	if found {
+		return service.ProviderNameUpper(), nil
+	}
+
+	return "", fmt.Errorf("No match found for resource type %q", resource)
+}
+
+func (sr serviceRecords) PackageProviderNameUpper() string {
+	return sr.primary.ProviderNameUpper()
 }
 
 type implementation string
@@ -148,26 +313,40 @@ const (
 )
 
 type ResourceDatum struct {
-	ProviderPackage   string
-	ProviderNameUpper string
-	Name              string
-	TypeName          string
-	ExistsTypeName    string
-	FileName          string
-	Generator         string
-	NoImport          bool
-	ImportStateID     string
-	ImportStateIDFunc string
-	ImportIgnore      []string
-	Implementation    implementation
-	Serialize         bool
-	PreCheck          bool
-	SkipEmptyTags     bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
-	NoRemoveTags      bool
-	GoImports         []goImport
-	GenerateConfig    bool
-	InitCodeBlocks    []codeBlock
-	AdditionalTfVars  map[string][]string
+	ProviderPackage           string
+	ResourceProviderNameUpper string
+	PackageProviderNameUpper  string
+	Name                      string
+	TypeName                  string
+	DestroyTakesT             bool
+	ExistsTypeName            string
+	ExistsTakesT              bool
+	FileName                  string
+	Generator                 string
+	NoImport                  bool
+	ImportStateID             string
+	ImportStateIDFunc         string
+	ImportIgnore              []string
+	Implementation            implementation
+	Serialize                 bool
+	SerializeDelay            bool
+	PreCheck                  bool
+	SkipEmptyTags             bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
+	NoRemoveTags              bool
+	GoImports                 []goImport
+	GenerateConfig            bool
+	InitCodeBlocks            []codeBlock
+	additionalTfVars          map[string]string
+	AlternateRegionProvider   bool
+	TagsUpdateForceNew        bool
+	CheckDestroyNoop          bool
+	DataSource                bool
+}
+
+func (d ResourceDatum) AdditionalTfVars() map[string]string {
+	return tfmaps.ApplyToAllKeys(d.additionalTfVars, func(k string) string {
+		return acctestgen.ConstOrQuote(k)
+	})
 }
 
 type goImport struct {
@@ -180,8 +359,9 @@ type codeBlock struct {
 }
 
 type commonConfig struct {
-	AdditionalTfVars []string
-	WithRName        bool
+	AdditionalTfVars        []string
+	WithRName               bool
+	AlternateRegionProvider bool
 }
 
 type ConfigDatum struct {
@@ -191,15 +371,22 @@ type ConfigDatum struct {
 	commonConfig
 }
 
-//go:embed test.go.gtpl
-var testGoTmpl string
+//go:embed resource_test.go.gtpl
+var resourceTestGoTmpl string
+
+//go:embed data_source_test.go.gtpl
+var dataSourceTestGoTmpl string
 
 //go:embed test.tf.gtpl
 var testTfTmpl string
 
 // Annotation processing.
 var (
-	annotation = regexache.MustCompile(`^//\s*@([0-9A-Za-z]+)(\((.*)\))?\s*$`)
+	annotation = regexp.MustCompile(`^//\s*@([0-9A-Za-z]+)(\((.*)\))?\s*$`) // nosemgrep:ci.calling-regexp.MustCompile-directly
+)
+
+var (
+	sdkNameRegexp = regexp.MustCompile(`^(?i:Resource|DataSource)(\w+)$`) // nosemgrep:ci.calling-regexp.MustCompile-directly
 )
 
 type visitor struct {
@@ -255,9 +442,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	// Look first for tagging annotations.
 	d := ResourceDatum{
 		FileName:         v.fileName,
-		AdditionalTfVars: make(map[string][]string),
+		additionalTfVars: make(map[string]string),
 	}
-	dataSource := false
 	tagged := false
 	skip := false
 	generatorSeen := false
@@ -269,6 +455,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
 			switch annotationName := m[1]; annotationName {
+			case "FrameworkDataSource":
+				d.DataSource = true
+				fallthrough
+
 			case "FrameworkResource":
 				d.Implementation = implementationFramework
 				args := common.ParseArgs(m[3])
@@ -277,9 +467,15 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					continue
 				}
 				d.TypeName = args.Positional[0]
+
 				if attr, ok := args.Keyword["name"]; ok {
-					d.Name = strings.ReplaceAll(attr, " ", "")
+					attr = strings.ReplaceAll(attr, " ", "")
+					d.Name = strings.ReplaceAll(attr, "-", "")
 				}
+
+			case "SDKDataSource":
+				d.DataSource = true
+				fallthrough
 
 			case "SDKResource":
 				d.Implementation = implementationSDK
@@ -289,19 +485,54 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					continue
 				}
 				d.TypeName = args.Positional[0]
-				if attr, ok := args.Keyword["name"]; ok {
-					d.Name = strings.ReplaceAll(attr, " ", "")
-				}
 
-			case "SDKDataSource":
-				dataSource = true
-				break
+				if attr, ok := args.Keyword["name"]; ok {
+					attr = strings.ReplaceAll(attr, " ", "")
+					d.Name = strings.ReplaceAll(attr, "-", "")
+				} else if d.DataSource {
+					m := sdkNameRegexp.FindStringSubmatch(v.functionName)
+					if m == nil {
+						v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					}
+					d.Name = m[1]
+				}
 
 			case "Tags":
 				tagged = true
 
 			case "Testing":
 				args := common.ParseArgs(m[3])
+				if attr, ok := args.Keyword["altRegionProvider"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid altRegionProvider value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.AlternateRegionProvider = b
+					}
+				}
+
+				if attr, ok := args.Keyword["destroyTakesT"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid destroyTakesT value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.DestroyTakesT = b
+					}
+				}
+				if attr, ok := args.Keyword["checkDestroyNoop"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid checkDestroyNoop value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.CheckDestroyNoop = b
+						d.GoImports = append(d.GoImports,
+							goImport{
+								Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+							},
+						)
+					}
+				}
 				if attr, ok := args.Keyword["existsType"]; ok {
 					if typeName, importSpec, err := parseIdentifierSpec(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
@@ -311,6 +542,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						if importSpec != nil {
 							d.GoImports = append(d.GoImports, *importSpec)
 						}
+					}
+				}
+				if attr, ok := args.Keyword["existsTakesT"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid existsTakesT value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.ExistsTakesT = b
 					}
 				}
 				if attr, ok := args.Keyword["generator"]; ok {
@@ -331,7 +570,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.ImportIgnore = strings.Split(attr, ";")
 
 					for i, val := range d.ImportIgnore {
-						d.ImportIgnore[i] = names.ConstOrQuote(val)
+						d.ImportIgnore[i] = namesgen.ConstOrQuote(val)
 					}
 				}
 				if attr, ok := args.Keyword["importStateId"]; ok {
@@ -350,7 +589,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					} else {
 						d.NoImport = b
 					}
-
 				}
 				if attr, ok := args.Keyword["preCheck"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
@@ -368,10 +606,19 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.Serialize = b
 					}
 				}
+				if attr, ok := args.Keyword["serializeDelay"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid serializeDelay value: %q at %s. Should be duration value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.SerializeDelay = b
+					}
+				}
 				if attr, ok := args.Keyword["tagsTest"]; ok {
 					switch attr {
 					case "true":
-						// no-op
+						// Add tagging tests for non-transparent tagging resources
+						tagged = true
 
 					case "false":
 						v.g.Infof("Skipping tags test for %s.%s", v.packageName, v.functionName)
@@ -380,6 +627,15 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					default:
 						v.errs = append(v.errs, fmt.Errorf("invalid tagsTest value: %q at %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 						continue
+					}
+				}
+				// TODO: should probably be a parameter on @Tags
+				if attr, ok := args.Keyword["tagsUpdateForceNew"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid tagsUpdateForceNew value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.TagsUpdateForceNew = b
 					}
 				}
 				if attr, ok := args.Keyword["skipEmptyTags"]; ok {
@@ -415,21 +671,23 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if tlsKey {
 		if len(tlsKeyCN) == 0 {
-			tlsKeyCN = `"example.com"`
+			tlsKeyCN = "acctest.RandomDomain().String()"
+			d.GoImports = append(d.GoImports,
+				goImport{
+					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				},
+			)
 		}
 		d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
 			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 			certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, %s)`, tlsKeyCN),
 		})
-		d.AdditionalTfVars["certificate_pem"] = []string{acctest.ConstOrQuote("certificate_pem"), "certificatePEM"}
-		d.AdditionalTfVars["private_key_pem"] = []string{acctest.ConstOrQuote("private_key_pem"), "privateKeyPEM"}
-
+		d.additionalTfVars["certificate_pem"] = "certificatePEM"
+		d.additionalTfVars["private_key_pem"] = "privateKeyPEM"
 	}
 
 	if tagged {
-		if dataSource {
-			v.g.Infof("Skipping tags test for %s.%s: Data Source", v.packageName, v.functionName)
-		} else if !skip {
+		if !skip {
 			if !generatorSeen {
 				d.Generator = "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
 				d.GoImports = append(d.GoImports,
@@ -459,7 +717,7 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
-func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults bool, configTmplFile, configTmpl string, common commonConfig) {
+func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults bool, tfTemplates *template.Template, common commonConfig) {
 	testName := test
 	if withDefaults {
 		testName += "_defaults"
@@ -471,16 +729,6 @@ func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults 
 
 	mainPath := path.Join(dirPath, "main_gen.tf")
 	tf := g.NewUnformattedFileDestination(mainPath)
-
-	tfTemplates, err := template.New("taggingtests").Parse(testTfTmpl)
-	if err != nil {
-		g.Fatalf("parsing base Terraform config template: %s", err)
-	}
-
-	_, err = tfTemplates.New("body").Parse(configTmpl)
-	if err != nil {
-		g.Fatalf("parsing config template %q: %s", configTmplFile, err)
-	}
 
 	configData := ConfigDatum{
 		Tags:            test,
@@ -517,4 +765,25 @@ func parseIdentifierSpec(s string) (string, *goImport, error) {
 	default:
 		return "", nil, fmt.Errorf("invalid generator value: %q", s)
 	}
+}
+
+func generateDurationStatement(d time.Duration) string {
+	var buf strings.Builder
+
+	d = d.Round(1 * time.Second)
+
+	if d >= time.Minute {
+		mins := d / time.Minute
+		fmt.Fprintf(&buf, "%d*time.Minute", mins)
+		d = d - mins*time.Minute
+		if d != 0 {
+			fmt.Fprint(&buf, "+")
+		}
+	}
+	if d != 0 {
+		secs := d / time.Second
+		fmt.Fprintf(&buf, "%d*time.Second", secs)
+	}
+
+	return buf.String()
 }

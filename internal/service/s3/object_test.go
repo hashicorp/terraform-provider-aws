@@ -151,7 +151,7 @@ func TestAccS3Object_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption", "AES256"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrSource),
 					resource.TestCheckNoResourceAttr(resourceName, "source_hash"),
-					resource.TestCheckResourceAttr(resourceName, "storage_class", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "version_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "website_redirect", ""),
@@ -851,7 +851,7 @@ func TestAccS3Object_storageClass(t *testing.T) {
 				Config: testAccObjectConfig_content(rName, "some_bucket_content"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "storage_class", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "STANDARD"),
 					testAccCheckObjectStorageClass(ctx, resourceName, "STANDARD"),
 				),
 			},
@@ -859,7 +859,7 @@ func TestAccS3Object_storageClass(t *testing.T) {
 				Config: testAccObjectConfig_storageClass(rName, "REDUCED_REDUNDANCY"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "storage_class", "REDUCED_REDUNDANCY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "REDUCED_REDUNDANCY"),
 					testAccCheckObjectStorageClass(ctx, resourceName, "REDUCED_REDUNDANCY"),
 				),
 			},
@@ -867,7 +867,7 @@ func TestAccS3Object_storageClass(t *testing.T) {
 				Config: testAccObjectConfig_storageClass(rName, "GLACIER"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Can't GetObject on an object in Glacier without restoring it.
-					resource.TestCheckResourceAttr(resourceName, "storage_class", "GLACIER"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "GLACIER"),
 					testAccCheckObjectStorageClass(ctx, resourceName, "GLACIER"),
 				),
 			},
@@ -875,7 +875,7 @@ func TestAccS3Object_storageClass(t *testing.T) {
 				Config: testAccObjectConfig_storageClass(rName, "INTELLIGENT_TIERING"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "storage_class", "INTELLIGENT_TIERING"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "INTELLIGENT_TIERING"),
 					testAccCheckObjectStorageClass(ctx, resourceName, "INTELLIGENT_TIERING"),
 				),
 			},
@@ -883,7 +883,7 @@ func TestAccS3Object_storageClass(t *testing.T) {
 				Config: testAccObjectConfig_storageClass(rName, "DEEP_ARCHIVE"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// 	Can't GetObject on an object in DEEP_ARCHIVE without restoring it.
-					resource.TestCheckResourceAttr(resourceName, "storage_class", "DEEP_ARCHIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "DEEP_ARCHIVE"),
 					testAccCheckObjectStorageClass(ctx, resourceName, "DEEP_ARCHIVE"),
 				),
 			},
@@ -1544,7 +1544,7 @@ func TestAccS3Object_ignoreTags(t *testing.T) {
 					testAccCheckObjectBody(&obj, "stuff"),
 					testAccCheckObjectUpdateTags(ctx, resourceName, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					testAccCheckObjectCheckTags(ctx, resourceName, map[string]string{
+					testAccCheckAllObjectTags(ctx, resourceName, map[string]string{
 						"ignorekey1": "ignorevalue1",
 					}),
 				),
@@ -1560,7 +1560,7 @@ func TestAccS3Object_ignoreTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
-					testAccCheckObjectCheckTags(ctx, resourceName, map[string]string{
+					testAccCheckAllObjectTags(ctx, resourceName, map[string]string{
 						"ignorekey1": "ignorevalue1",
 						"Key1":       "A@AA",
 						"Key2":       "BBB",
@@ -1702,7 +1702,7 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption", "AES256"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrSource),
 					resource.TestCheckNoResourceAttr(resourceName, "source_hash"),
-					resource.TestCheckResourceAttr(resourceName, "storage_class", "EXPRESS_ONEZONE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "EXPRESS_ONEZONE"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "version_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "website_redirect", ""),
@@ -2102,7 +2102,7 @@ func testAccCheckObjectUpdateTags(ctx context.Context, n string, oldTags, newTag
 	}
 }
 
-func testAccCheckObjectCheckTags(ctx context.Context, n string, expectedTags map[string]string) resource.TestCheckFunc {
+func testAccCheckAllObjectTags(ctx context.Context, n string, expectedTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 

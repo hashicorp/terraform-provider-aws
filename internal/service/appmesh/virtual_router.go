@@ -27,6 +27,9 @@ import (
 
 // @SDKResource("aws_appmesh_virtual_router", name="Virtual Router")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/appmesh;appmesh.VirtualRouterData")
+// @Testing(serialize=true)
+// @Testing(importStateIdFunc=testAccVirtualRouterImportStateIdFunc)
 func resourceVirtualRouter() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -75,7 +78,7 @@ func resourceVirtualRouter() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
-				"resource_owner": {
+				names.AttrResourceOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -185,7 +188,7 @@ func resourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("mesh_name", vr.MeshName)
 	d.Set("mesh_owner", vr.Metadata.MeshOwner)
 	d.Set(names.AttrName, vr.VirtualRouterName)
-	d.Set("resource_owner", vr.Metadata.ResourceOwner)
+	d.Set(names.AttrResourceOwner, vr.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenVirtualRouterSpec(vr.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}

@@ -23,6 +23,7 @@ import (
 
 // @SDKDataSource("aws_customer_gateway", name="Customer Gateway")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceCustomerGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCustomerGatewayRead,
@@ -37,6 +38,10 @@ func dataSourceCustomerGateway() *schema.Resource {
 				Computed: true,
 			},
 			"bgp_asn": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"bgp_asn_extended": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -107,6 +112,17 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("bgp_asn", v)
 	} else {
 		d.Set("bgp_asn", nil)
+	}
+	if v := aws.ToString(cgw.BgpAsnExtended); v != "" {
+		v, err := strconv.ParseInt(v, 0, 0)
+
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		d.Set("bgp_asn_extended", v)
+	} else {
+		d.Set("bgp_asn_extended", nil)
 	}
 	d.Set(names.AttrCertificateARN, cgw.CertificateArn)
 	d.Set(names.AttrDeviceName, cgw.DeviceName)

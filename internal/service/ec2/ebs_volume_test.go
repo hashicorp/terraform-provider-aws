@@ -45,7 +45,7 @@ func TestAccEC2EBSVolume_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp2"),
 				),
 			},
@@ -99,7 +99,7 @@ func TestAccEC2EBSVolume_updateAttachedEBSVolume(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct0),
 				),
 			},
 			{
@@ -113,7 +113,7 @@ func TestAccEC2EBSVolume_updateAttachedEBSVolume(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "20"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct0),
 				),
 			},
 		},
@@ -137,7 +137,7 @@ func TestAccEC2EBSVolume_updateSize(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct0),
 				),
 			},
 			{
@@ -151,7 +151,7 @@ func TestAccEC2EBSVolume_updateSize(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct0),
 				),
 			},
 		},
@@ -175,7 +175,7 @@ func TestAccEC2EBSVolume_updateType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp2"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct0),
 				),
 			},
 			{
@@ -189,7 +189,7 @@ func TestAccEC2EBSVolume_updateType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "sc1"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct0),
 				),
 			},
 		},
@@ -213,7 +213,7 @@ func TestAccEC2EBSVolume_UpdateIops_io1(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct0),
 				),
 			},
 			{
@@ -227,7 +227,7 @@ func TestAccEC2EBSVolume_UpdateIops_io1(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "200"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct0),
 				),
 			},
 		},
@@ -251,7 +251,7 @@ func TestAccEC2EBSVolume_UpdateIops_io2(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct0),
 				),
 			},
 			{
@@ -265,7 +265,7 @@ func TestAccEC2EBSVolume_UpdateIops_io2(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "200"),
-					resource.TestCheckResourceAttr(resourceName, "throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct0),
 				),
 			},
 		},
@@ -291,7 +291,7 @@ func TestAccEC2EBSVolume_kmsKey(t *testing.T) {
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct0),
 				),
 			},
 			{
@@ -320,7 +320,7 @@ func TestAccEC2EBSVolume_noIops(t *testing.T) {
 				Config: testAccEBSVolumeConfig_noIOPS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct0),
 				),
 			},
 			{
@@ -429,7 +429,7 @@ func TestAccEC2EBSVolume_multiAttach_io1(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "io1"),
 				),
 			},
@@ -460,7 +460,7 @@ func TestAccEC2EBSVolume_multiAttach_io2(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "io2"),
 				),
 			},
@@ -546,7 +546,7 @@ func TestAccEC2EBSVolume_GP3_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "125"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "125"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp3"),
 				),
 			},
@@ -586,7 +586,7 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "200"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "200"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp3"),
 				),
 			},
@@ -610,7 +610,7 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "200"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "200"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp3"),
 				),
 			},
@@ -644,7 +644,7 @@ func TestAccEC2EBSVolume_GP3_throughput(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "400"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "400"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp3"),
 				),
 			},
@@ -668,7 +668,7 @@ func TestAccEC2EBSVolume_GP3_throughput(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "600"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "600"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp3"),
 				),
 			},
@@ -702,7 +702,7 @@ func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "400"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "400"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp3"),
 				),
 			},
@@ -726,7 +726,7 @@ func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp2"),
 				),
 			},
@@ -760,7 +760,7 @@ func TestAccEC2EBSVolume_io1ToGP3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "io1"),
 				),
 			},
@@ -784,7 +784,7 @@ func TestAccEC2EBSVolume_io1ToGP3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", "125"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "125"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp3"),
 				),
 			},
@@ -819,7 +819,7 @@ func TestAccEC2EBSVolume_snapshotID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSnapshotID, snapshotResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp2"),
 				),
 			},
@@ -860,7 +860,7 @@ func TestAccEC2EBSVolume_snapshotIDAndSize(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSnapshotID, snapshotResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp2"),
 				),
 			},

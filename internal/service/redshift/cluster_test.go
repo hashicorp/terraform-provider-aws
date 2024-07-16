@@ -58,7 +58,7 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 					names.AttrApplyImmediately,
@@ -92,7 +92,7 @@ func TestAccRedshiftCluster_aqua(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 					names.AttrApplyImmediately,
@@ -163,7 +163,7 @@ func TestAccRedshiftCluster_withFinalSnapshot(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 					names.AttrApplyImmediately,
@@ -200,7 +200,7 @@ func TestAccRedshiftCluster_kmsKey(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 					names.AttrApplyImmediately,
@@ -234,7 +234,7 @@ func TestAccRedshiftCluster_enhancedVPCRoutingEnabled(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 					names.AttrApplyImmediately,
@@ -277,7 +277,7 @@ func TestAccRedshiftCluster_loggingEnabled(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 					names.AttrApplyImmediately,
@@ -492,7 +492,7 @@ func TestAccRedshiftCluster_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 					names.AttrApplyImmediately,
@@ -734,7 +734,7 @@ func TestAccRedshiftCluster_availabilityZoneRelocation(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 					names.AttrApplyImmediately,
@@ -799,7 +799,7 @@ func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 					"snapshot_identifier",
@@ -834,7 +834,7 @@ func TestAccRedshiftCluster_restoreFromSnapshotARN(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 					"snapshot_arn",
@@ -871,7 +871,7 @@ func TestAccRedshiftCluster_manageMasterPassword(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"manage_master_password",
 					"skip_final_snapshot",
 					names.AttrApplyImmediately,
@@ -905,7 +905,7 @@ func TestAccRedshiftCluster_multiAZ(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 					names.AttrApplyImmediately,

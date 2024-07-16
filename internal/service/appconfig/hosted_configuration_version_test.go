@@ -38,7 +38,7 @@ func TestAccAppConfigHostedConfigurationVersion_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedConfigurationVersionExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/configurationprofile/[0-9a-z]{4,7}/hostedconfigurationversion/[0-9]+`)),
-					resource.TestCheckResourceAttrPair(resourceName, "application_id", "aws_appconfig_application.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, "aws_appconfig_application.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_profile_id", "aws_appconfig_configuration_profile.test", "configuration_profile_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrContent, "{\"foo\":\"bar\"}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "application/json"),

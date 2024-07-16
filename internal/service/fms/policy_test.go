@@ -365,6 +365,34 @@ func testAccPolicy_securityGroup(t *testing.T) {
 	})
 }
 
+func testAccPolicy_rscSet(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fms_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_rscSet(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "resource_set_ids.#", acctest.Ct1),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSClient(ctx)
@@ -413,6 +441,7 @@ resource "aws_fms_policy" "test" {
   name                  = %[1]q
   description           = "test description"
   remediation_enabled   = false
+  resource_set_ids      = [aws_fms_resource_set.test.id]
   resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
 
   exclude_map {
@@ -430,6 +459,14 @@ resource "aws_fms_policy" "test" {
 resource "aws_wafregional_rule_group" "test" {
   metric_name = "MyTest"
   name        = %[2]q
+}
+
+resource "aws_fms_resource_set" "test" {
+  depends_on = [aws_fms_admin_account.test]
+  resource_set {
+    name               = %[1]q
+    resource_type_list = ["AWS::NetworkFirewall::Firewall"]
+  }
 }
 `, policyName, ruleGroupName))
 }
@@ -844,4 +881,41 @@ resource "aws_fms_policy" "test" {
   depends_on = [aws_fms_admin_account.test]
 }
 `, rName))
+}
+
+func testAccPolicyConfig_rscSet(policyName, ruleGroupName string) string {
+	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
+resource "aws_fms_policy" "test" {
+  exclude_resource_tags = false
+  name                  = %[1]q
+  description           = "test description"
+  remediation_enabled   = false
+  resource_set_ids      = [aws_fms_resource_set.test.id]
+  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+
+  exclude_map {
+    account = [data.aws_caller_identity.current.account_id]
+  }
+
+  security_service_policy_data {
+    type                 = "WAF"
+    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+  }
+
+  depends_on = [aws_fms_admin_account.test]
+}
+
+resource "aws_wafregional_rule_group" "test" {
+  metric_name = "MyTest"
+  name        = %[2]q
+}
+
+resource "aws_fms_resource_set" "test" {
+  depends_on = [aws_fms_admin_account.test]
+  resource_set {
+    name               = %[1]q
+    resource_type_list = ["AWS::NetworkFirewall::Firewall"]
+  }
+}
+`, policyName, ruleGroupName))
 }

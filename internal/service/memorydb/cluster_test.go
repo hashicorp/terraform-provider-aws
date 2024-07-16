@@ -49,7 +49,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
 					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "num_shards", acctest.Ct2),
-					resource.TestCheckResourceAttrSet(resourceName, "parameter_group_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrParameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "6379"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test", names.AttrID),
@@ -111,7 +111,7 @@ func TestAccMemoryDBCluster_defaults(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
 					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "num_shards", acctest.Ct1),
-					resource.TestCheckResourceAttrSet(resourceName, "parameter_group_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrParameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "6379"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", acctest.Ct0),
@@ -756,7 +756,7 @@ func TestAccMemoryDBCluster_Update_parameterGroup(t *testing.T) {
 				Config: testAccClusterConfig_parameterGroup(rName, "default.memorydb-redis7"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis7"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrParameterGroupName, "default.memorydb-redis7"),
 				),
 			},
 			{
@@ -768,14 +768,14 @@ func TestAccMemoryDBCluster_Update_parameterGroup(t *testing.T) {
 				Config: testAccClusterConfig_parameterGroup(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrParameterGroupName, rName),
 				),
 			},
 			{
 				Config: testAccClusterConfig_parameterGroup(rName, "default.memorydb-redis7"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis7"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrParameterGroupName, "default.memorydb-redis7"),
 				),
 			},
 			{

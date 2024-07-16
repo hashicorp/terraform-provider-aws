@@ -9,7 +9,7 @@ jobs:
   goreleaser:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
           go-version-file: go.mod
@@ -20,9 +20,10 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - name: goreleaser release
-        uses: goreleaser/goreleaser-action@5742e2a039330cbb23ebf35f046f814d4c6ff811 # v5.1.0
+        uses: goreleaser/goreleaser-action@286f3b13b1b49da4ac219696163fb8c1c93e1200 # v6.0.0
         with:
-          args: release --rm-dist --skip-sign --snapshot --timeout 2h
+          args: release --clean --skip=sign --snapshot --timeout 2h
+          version: "~> v2"
       - name: artifact naming
         id: naming
         run: |
@@ -36,7 +37,7 @@ jobs:
             ARTIFACT="${GITHUB_REF}";;
           esac
           echo "artifact=$ARTIFACT-$(date -u +'%Y-%m-%dT%H-%M')" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+      - uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
         with:
           name: ${{steps.naming.outputs.artifact}}
           path: dist/*.zip

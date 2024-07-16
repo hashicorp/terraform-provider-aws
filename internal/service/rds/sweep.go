@@ -235,7 +235,7 @@ func sweepClusters(region string) error {
 			d.Set(names.AttrApplyImmediately, true)
 			d.Set(names.AttrARN, arn)
 			d.Set("delete_automated_backups", true)
-			d.Set("deletion_protection", false)
+			d.Set(names.AttrDeletionProtection, false)
 			d.Set("skip_final_snapshot", true)
 
 			if engineMode := aws.StringValue(v.EngineMode); engineMode == EngineModeGlobal || engineMode == EngineModeProvisioned {
@@ -384,7 +384,7 @@ func sweepInstances(region string) error {
 			d.SetId(aws.StringValue(v.DbiResourceId))
 			d.Set(names.AttrApplyImmediately, true)
 			d.Set("delete_automated_backups", true)
-			d.Set("deletion_protection", false)
+			d.Set(names.AttrDeletionProtection, false)
 			d.Set(names.AttrIdentifier, v.DBInstanceIdentifier)
 			d.Set("skip_final_snapshot", true)
 

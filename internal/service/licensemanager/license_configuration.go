@@ -74,7 +74,7 @@ func ResourceLicenseConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -149,7 +149,7 @@ func resourceLicenseConfigurationRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("license_counting_type", output.LicenseCountingType)
 	d.Set("license_rules", aws.StringValueSlice(output.LicenseRules))
 	d.Set(names.AttrName, output.Name)
-	d.Set("owner_account_id", output.OwnerAccountId)
+	d.Set(names.AttrOwnerAccountID, output.OwnerAccountId)
 
 	setTagsOut(ctx, output.Tags)
 

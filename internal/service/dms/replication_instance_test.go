@@ -35,7 +35,7 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_replicationInstanceClass(rName, replicationInstanceClass),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
@@ -48,7 +48,7 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_class", replicationInstanceClass),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_private_ips.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_subnet_group_id"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
@@ -104,7 +104,7 @@ func TestAccDMSReplicationInstance_allocatedStorage(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_allocatedStorage(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "5"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "5"),
 				),
 			},
 			{
@@ -117,7 +117,7 @@ func TestAccDMSReplicationInstance_allocatedStorage(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_allocatedStorage(rName, 6),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "6"),
 				),
 			},
 		},
@@ -217,7 +217,7 @@ func TestAccDMSReplicationInstance_engineVersion(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_major_version_upgrade", names.AttrApplyImmediately},
+				ImportStateVerifyIgnore: []string{names.AttrAllowMajorVersionUpgrade, names.AttrApplyImmediately},
 			},
 			{
 				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.5.1"),
@@ -519,7 +519,7 @@ func testAccCheckReplicationInstanceExists(ctx context.Context, n string) resour
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 		_, err := tfdms.FindReplicationInstanceByID(ctx, conn, rs.Primary.ID)
 
@@ -529,7 +529,7 @@ func testAccCheckReplicationInstanceExists(ctx context.Context, n string) resour
 
 func testAccCheckReplicationInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dms_replication_instance" {

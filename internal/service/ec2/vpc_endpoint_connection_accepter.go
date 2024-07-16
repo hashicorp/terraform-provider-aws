@@ -71,7 +71,7 @@ func resourceVPCEndpointConnectionAccepterCreate(ctx context.Context, d *schema.
 
 	d.SetId(id)
 
-	_, err = waitVPCEndpointConnectionAcceptedV2(ctx, conn, serviceID, vpcEndpointID, d.Timeout(schema.TimeoutCreate))
+	_, err = waitVPCEndpointConnectionAccepted(ctx, conn, serviceID, vpcEndpointID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint Connection (%s) to be accepted: %s", d.Id(), err)
@@ -89,7 +89,7 @@ func resourceVPCEndpointConnectionAccepterRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	vpcEndpointConnection, err := findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2(ctx, conn, serviceID, vpcEndpointID)
+	vpcEndpointConnection, err := findVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx, conn, serviceID, vpcEndpointID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint Connection %s not found, removing from state", d.Id())
