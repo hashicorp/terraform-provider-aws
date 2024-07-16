@@ -248,7 +248,7 @@ func TestAccEMRServerlessApplication_interactiveConfiguration(t *testing.T) {
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled.#", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -262,7 +262,7 @@ func TestAccEMRServerlessApplication_interactiveConfiguration(t *testing.T) {
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled.#", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -271,7 +271,7 @@ func TestAccEMRServerlessApplication_interactiveConfiguration(t *testing.T) {
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled.#", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -280,7 +280,7 @@ func TestAccEMRServerlessApplication_interactiveConfiguration(t *testing.T) {
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled.#", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -521,8 +521,8 @@ func testAccApplicationConfig_interactiveConfiguration(rName string, livyEndpoin
 	return fmt.Sprintf(`
 resource "aws_emrserverless_application" "test" {
   name          = %[1]q
-  release_label = "emr-6.14.0"
-  type          = "hive"
+  release_label = "emr-7.1.0"
+  type          = "spark"
   interactive_configuration {
     livy_endpoint_enabled = %[2]t
     studio_enabled        = %[3]t
