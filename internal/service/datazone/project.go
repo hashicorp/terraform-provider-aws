@@ -239,7 +239,7 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if plan.DomainIdentifier.Equal(state.DomainIdentifier) {
+	if !plan.Description.Equal(state.Description) || !plan.GlossaryTerms.Equal(state.GlossaryTerms) || !plan.Name.Equal(state.Name) {
 		in := &datazone.UpdateProjectInput{}
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
 
