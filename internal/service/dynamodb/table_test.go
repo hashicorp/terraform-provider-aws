@@ -3793,10 +3793,10 @@ data "aws_region" "alternate" {
 }
 
 resource "aws_dynamodb_table" "test" {
-  name             = %[1]q
-  hash_key         = "TestTableHashKey"
- billing_mode     = "PAY_PER_REQUEST"
- 
+  name         = %[1]q
+  hash_key     = "TestTableHashKey"
+  billing_mode = "PAY_PER_REQUEST"
+
   attribute {
     name = "TestTableHashKey"
     type = "S"

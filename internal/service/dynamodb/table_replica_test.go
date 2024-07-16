@@ -342,6 +342,32 @@ func TestAccDynamoDBTableReplica_keys(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTableReplica_autoscaleSource(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resourceName := "aws_dynamodb_table_replica.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableReplicaConfig_autoscaleSource(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "global_table_arn", "aws_dynamodb_table.source", "arn"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTableReplicaDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
@@ -759,4 +785,91 @@ resource "aws_kms_key" "source" {
   deletion_window_in_days = 7
 }
 `, rName, key))
+}
+
+func testAccTableReplicaConfig_autoscaleSource(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+resource "aws_dynamodb_table_replica" "test" {
+  global_table_arn = aws_dynamodb_table.source.arn
+
+  depends_on = [
+    aws_appautoscaling_policy.source_read,
+    aws_appautoscaling_policy.source_write
+  ]
+}
+
+resource "aws_dynamodb_table" "source" {
+  provider       = "awsalternate"
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      replica,
+      read_capacity,
+      write_capacity,
+    ]
+  }
+}
+
+resource "aws_appautoscaling_target" "source_read" {
+  provider           = "awsalternate"
+  max_capacity       = 735
+  min_capacity       = 28
+  resource_id        = "table/${aws_dynamodb_table.source.name}"
+  scalable_dimension = "dynamodb:table:ReadCapacityUnits"
+  service_namespace  = "dynamodb"
+}
+
+resource "aws_appautoscaling_policy" "source_read" {
+  provider           = "awsalternate"
+  name               = "%[1]s-read"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.source_read.resource_id
+  scalable_dimension = aws_appautoscaling_target.source_read.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.source_read.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "DynamoDBReadCapacityUtilization"
+    }
+    target_value = 50
+  }
+}
+
+resource "aws_appautoscaling_target" "source_write" {
+  provider     = "awsalternate"
+  max_capacity = 900
+  min_capacity = 28
+
+  resource_id        = "table/${aws_dynamodb_table.source.name}"
+  scalable_dimension = "dynamodb:table:WriteCapacityUnits"
+  service_namespace  = "dynamodb"
+}
+
+resource "aws_appautoscaling_policy" "source_write" {
+  provider           = "awsalternate"
+  name               = "%[1]s-write"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.source_write.resource_id
+  scalable_dimension = aws_appautoscaling_target.source_write.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.source_write.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "DynamoDBWriteCapacityUtilization"
+    }
+    target_value = 50
+  }
+}
+`, rName))
 }
