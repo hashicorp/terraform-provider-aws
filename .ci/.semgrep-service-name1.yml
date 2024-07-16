@@ -567,6 +567,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)databasemigrationservice"
     severity: WARNING
+  - id: databrew-in-func-name
+    languages:
+      - go
+    message: Do not use "DataBrew" in func name inside databrew package
+    paths:
+      include:
+        - internal/service/databrew
+      exclude:
+        - internal/service/databrew/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DataBrew"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: databrew-in-test-name
+    languages:
+      - go
+    message: Include "DataBrew" in test name
+    paths:
+      include:
+        - internal/service/databrew/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccDataBrew"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: databrew-in-const-name
+    languages:
+      - go
+    message: Do not use "DataBrew" in const name inside databrew package
+    paths:
+      include:
+        - internal/service/databrew
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DataBrew"
+    severity: WARNING
+  - id: databrew-in-var-name
+    languages:
+      - go
+    message: Do not use "DataBrew" in var name inside databrew package
+    paths:
+      include:
+        - internal/service/databrew
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DataBrew"
+    severity: WARNING
   - id: dataexchange-in-func-name
     languages:
       - go
@@ -3405,6 +3466,52 @@ rules:
           patterns:
             - pattern-regex: "(?i)Glue"
     severity: WARNING
+  - id: gluedatabrew-in-func-name
+    languages:
+      - go
+    message: Do not use "gluedatabrew" in func name inside databrew package
+    paths:
+      include:
+        - internal/service/databrew
+      exclude:
+        - internal/service/databrew/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)gluedatabrew"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: gluedatabrew-in-const-name
+    languages:
+      - go
+    message: Do not use "gluedatabrew" in const name inside databrew package
+    paths:
+      include:
+        - internal/service/databrew
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)gluedatabrew"
+    severity: WARNING
+  - id: gluedatabrew-in-var-name
+    languages:
+      - go
+    message: Do not use "gluedatabrew" in var name inside databrew package
+    paths:
+      include:
+        - internal/service/databrew
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)gluedatabrew"
+    severity: WARNING
   - id: grafana-in-func-name
     languages:
       - go
@@ -4107,51 +4214,4 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)InternetMonitor"
-    severity: WARNING
-  - id: internetmonitor-in-var-name
-    languages:
-      - go
-    message: Do not use "InternetMonitor" in var name inside internetmonitor package
-    paths:
-      include:
-        - internal/service/internetmonitor
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)InternetMonitor"
-    severity: WARNING
-  - id: iot-in-func-name
-    languages:
-      - go
-    message: Do not use "IoT" in func name inside iot package
-    paths:
-      include:
-        - internal/service/iot
-      exclude:
-        - internal/service/iot/list_pages_gen.go
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)IoT"
-      - focus-metavariable: $NAME
-      - pattern-not: func $NAME($T *testing.T)
-    severity: WARNING
-  - id: iot-in-test-name
-    languages:
-      - go
-    message: Include "IoT" in test name
-    paths:
-      include:
-        - internal/service/iot/*_test.go
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccIoT"
-            - pattern-regex: ^TestAcc.*
     severity: WARNING

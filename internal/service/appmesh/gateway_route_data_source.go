@@ -18,6 +18,8 @@ import (
 )
 
 // @SDKDataSource("aws_appmesh_gateway_route", name="Gateway Route")
+// @Tags
+// @Testing(serialize=true)
 func dataSourceGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGatewayRouteRead,
@@ -67,7 +69,6 @@ func dataSourceGatewayRoute() *schema.Resource {
 func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	gatewayRouteName := d.Get(names.AttrName).(string)
 	gatewayRoute, err := findGatewayRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_gateway_name").(string), gatewayRouteName)
@@ -104,9 +105,7 @@ func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setKeyValueTagsOut(ctx, tags)
 
 	return diags
 }

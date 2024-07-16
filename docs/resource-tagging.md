@@ -480,7 +480,7 @@ If the resource `Update` function applies specific updates to attributes regardl
 
 ## Resource Acceptance Tests
 
-Some services, and some resource types within services, have generated acceptance tests for tagging support.
+Some services, and some resource or data source types within services, have generated acceptance tests for tagging support.
 These tests cover a broad set of tagging behaviors.
 New services should use the generated acceptance tests.
 
@@ -494,8 +494,9 @@ To enable generated acceptance tests for a service, add the following line to th
 
 #### Controlling Test Generation
 
-Individual resource types can be excluded from generated acceptance tests by adding the annotation `@Testing(tagsTest=false)` to the resource type declaration.
-All data source types are excluded.
+By default, all resource or data source types which support transparent tagging will have tagging tests generated.
+Individual resource or data source types can be excluded from generated acceptance tests by adding the annotation `@Testing(tagsTest=false)` to the resource type declaration.
+If a resource or data source type supports tags but does not use transparent tagging, generate the tests by adding the annotion `@Testing(tagsTest=true)`
 
 Additional `@Testing(...)` parameters can be used to control the generated tests.
 
@@ -565,6 +566,10 @@ The generated acceptance tests use `ConfigDirectory` to specify the test configu
 The configuration files are generated from a [Go template](https://pkg.go.dev/text/template) file located in `testdata/tmpl/<name>_tags.gtpl`,
 where `name` is the name of the resource type's implementation file wihtout the `.go` extension.
 For example, the ELB v2 Load Balancer's implementation file is `load_balancer.go`, so the template is `testdata/tmpl/load_balancer_tags.gtpl`.
+
+To generate a configuration for a data source test, the generator reuses the configuration for the corresponding resource type.
+Add an additional file `testdata/tmpl/<name>_data_source.gtpl` which contains only the data source block populated with the parameters needed to associate it with the resource.
+For example, the ELB v2 Load Balancer's data source template is `testdata/tmpl/load_balancer_data_source.gtpl`.
 
 Replace the `tags` attribute with the Go template directive `{{- template "tags" . }}`.
 When the configurations are generated, this will be replaced with the appropriate assignment to the `tags` attribute.

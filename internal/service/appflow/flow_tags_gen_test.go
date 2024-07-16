@@ -5,7 +5,7 @@ package appflow_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
+	"github.com/aws/aws-sdk-go-v2/service/appflow"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -19,7 +19,7 @@ import (
 
 func TestAccAppFlowFlow_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.FlowDefinition
+	var v appflow.DescribeFlowOutput
 	resourceName := "aws_appflow_flow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -190,7 +190,7 @@ func TestAccAppFlowFlow_tags(t *testing.T) {
 
 func TestAccAppFlowFlow_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.FlowDefinition
+	var v appflow.DescribeFlowOutput
 	resourceName := "aws_appflow_flow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -250,7 +250,7 @@ func TestAccAppFlowFlow_tags_null(t *testing.T) {
 
 func TestAccAppFlowFlow_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.FlowDefinition
+	var v appflow.DescribeFlowOutput
 	resourceName := "aws_appflow_flow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -327,7 +327,7 @@ func TestAccAppFlowFlow_tags_AddOnUpdate(t *testing.T) {
 
 func TestAccAppFlowFlow_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.FlowDefinition
+	var v appflow.DescribeFlowOutput
 	resourceName := "aws_appflow_flow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -412,7 +412,7 @@ func TestAccAppFlowFlow_tags_EmptyTag_OnCreate(t *testing.T) {
 
 func TestAccAppFlowFlow_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.FlowDefinition
+	var v appflow.DescribeFlowOutput
 	resourceName := "aws_appflow_flow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -539,7 +539,7 @@ func TestAccAppFlowFlow_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 
 func TestAccAppFlowFlow_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.FlowDefinition
+	var v appflow.DescribeFlowOutput
 	resourceName := "aws_appflow_flow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -622,7 +622,7 @@ func TestAccAppFlowFlow_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 
 func TestAccAppFlowFlow_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.FlowDefinition
+	var v appflow.DescribeFlowOutput
 	resourceName := "aws_appflow_flow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -803,7 +803,7 @@ func TestAccAppFlowFlow_tags_DefaultTags_providerOnly(t *testing.T) {
 
 func TestAccAppFlowFlow_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.FlowDefinition
+	var v appflow.DescribeFlowOutput
 	resourceName := "aws_appflow_flow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -963,7 +963,7 @@ func TestAccAppFlowFlow_tags_DefaultTags_nonOverlapping(t *testing.T) {
 
 func TestAccAppFlowFlow_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.FlowDefinition
+	var v appflow.DescribeFlowOutput
 	resourceName := "aws_appflow_flow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1139,7 +1139,7 @@ func TestAccAppFlowFlow_tags_DefaultTags_overlapping(t *testing.T) {
 
 func TestAccAppFlowFlow_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.FlowDefinition
+	var v appflow.DescribeFlowOutput
 	resourceName := "aws_appflow_flow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1229,7 +1229,7 @@ func TestAccAppFlowFlow_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 
 func TestAccAppFlowFlow_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.FlowDefinition
+	var v appflow.DescribeFlowOutput
 	resourceName := "aws_appflow_flow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1318,7 +1318,7 @@ func TestAccAppFlowFlow_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 
 func TestAccAppFlowFlow_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.FlowDefinition
+	var v appflow.DescribeFlowOutput
 	resourceName := "aws_appflow_flow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1383,7 +1383,7 @@ func TestAccAppFlowFlow_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 
 func TestAccAppFlowFlow_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.FlowDefinition
+	var v appflow.DescribeFlowOutput
 	resourceName := "aws_appflow_flow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1440,7 +1440,7 @@ func TestAccAppFlowFlow_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 
 func TestAccAppFlowFlow_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.FlowDefinition
+	var v appflow.DescribeFlowOutput
 	resourceName := "aws_appflow_flow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1502,7 +1502,7 @@ func TestAccAppFlowFlow_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T
 
 func TestAccAppFlowFlow_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.FlowDefinition
+	var v appflow.DescribeFlowOutput
 	resourceName := "aws_appflow_flow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1564,7 +1564,7 @@ func TestAccAppFlowFlow_tags_DefaultTags_nullNonOverlappingResourceTag(t *testin
 
 func TestAccAppFlowFlow_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.FlowDefinition
+	var v appflow.DescribeFlowOutput
 	resourceName := "aws_appflow_flow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1618,7 +1618,7 @@ func TestAccAppFlowFlow_tags_ComputedTag_OnCreate(t *testing.T) {
 
 func TestAccAppFlowFlow_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.FlowDefinition
+	var v appflow.DescribeFlowOutput
 	resourceName := "aws_appflow_flow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1708,7 +1708,7 @@ func TestAccAppFlowFlow_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 
 func TestAccAppFlowFlow_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.FlowDefinition
+	var v appflow.DescribeFlowOutput
 	resourceName := "aws_appflow_flow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

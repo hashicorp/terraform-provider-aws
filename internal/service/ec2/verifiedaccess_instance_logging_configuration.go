@@ -163,8 +163,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationRead(ctx context.Context,
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	vaiID := d.Id()
-
-	output, err := FindVerifiedAccessInstanceLoggingConfigurationByInstanceID(ctx, conn, vaiID)
+	output, err := findVerifiedAccessInstanceLoggingConfigurationByInstanceID(ctx, conn, vaiID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Verified Access Instance Logging Configuration (%s) not found, removing from state", vaiID)

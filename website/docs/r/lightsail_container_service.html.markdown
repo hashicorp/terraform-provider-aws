@@ -96,7 +96,7 @@ resource "aws_ecr_repository_policy" "default" {
 container service. For more information, see
 [Enabling and managing custom domains for your Amazon Lightsail container services](https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-creating-container-services-certificates).
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `name` - (Required) The name for the container service. Names must be of length 1 to 63, and be
   unique within each AWS Region in your Lightsail account.

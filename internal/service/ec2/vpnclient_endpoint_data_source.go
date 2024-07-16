@@ -23,6 +23,7 @@ import (
 
 // @SDKDataSource("aws_ec2_client_vpn_endpoint", name="Client VPN Endpoint")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceClientVPNEndpoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClientVPNEndpointRead,

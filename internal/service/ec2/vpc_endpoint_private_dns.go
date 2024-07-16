@@ -98,7 +98,7 @@ func (r *resourceEndpointPrivateDNS) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	out, err := findVPCEndpointByIDV2(ctx, conn, state.VpcEndpointID.ValueString())
+	out, err := findVPCEndpointByID(ctx, conn, state.VpcEndpointID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return

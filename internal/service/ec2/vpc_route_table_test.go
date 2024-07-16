@@ -1181,7 +1181,7 @@ func testAccCheckRouteTableExists(ctx context.Context, n string, v *awstypes.Rou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		routeTable, err := tfec2.FindRouteTableByIDV2(ctx, conn, rs.Primary.ID)
+		routeTable, err := tfec2.FindRouteTableByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -1202,7 +1202,7 @@ func testAccCheckRouteTableDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfec2.FindRouteTableByIDV2(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindRouteTableByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

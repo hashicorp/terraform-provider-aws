@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Security Group Rule")
+// @FrameworkDataSource("aws_vpc_security_group_rule", name="Security Group Rule")
 func newSecurityGroupRuleDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &securityGroupRuleDataSource{}
 

@@ -55,6 +55,7 @@ func TestAccAppStreamFleet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
+					resource.TestCheckResourceAttr(resourceName, "idle_disconnect_timeout_in_seconds", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "stream_view", string(awstypes.StreamViewApp)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
