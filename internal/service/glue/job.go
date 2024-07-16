@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -91,9 +90,9 @@ func ResourceJob() *schema.Resource {
 				Optional: true,
 			},
 			"execution_class": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(awstypes.ExecutionClass_Values(), true),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ExecutionClass](),
 			},
 			"execution_property": {
 				Type:     schema.TypeList,
@@ -182,11 +181,11 @@ func ResourceJob() *schema.Resource {
 				Optional: true,
 			},
 			"worker_type": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrMaxCapacity},
-				ValidateFunc:  enum.Validate[awstypes.WorkerType](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ConflictsWith:    []string{names.AttrMaxCapacity},
+				ValidateDiagFunc: enum.Validate[awstypes.WorkerType](),
 			},
 		},
 	}
@@ -206,12 +205,12 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if v, ok := d.GetOk("connections"); ok {
 		input.Connections = &awstypes.ConnectionsList{
-			Connections: flex.ExpandStringList(v.([]interface{})),
+			Connections: flex.ExpandStringValueList(v.([]interface{})),
 		}
 	}
 
 	if v, ok := d.GetOk("default_arguments"); ok {
-		input.DefaultArguments = flex.ExpandStringMap(v.(map[string]interface{}))
+		input.DefaultArguments = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -239,11 +238,11 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("max_retries"); ok {
-		input.MaxRetries = aws.Int64(int64(v.(int)))
+		input.MaxRetries = int32(v.(int))
 	}
 
 	if v, ok := d.GetOk("non_overridable_arguments"); ok {
-		input.NonOverridableArguments = flex.ExpandStringMap(v.(map[string]interface{}))
+		input.NonOverridableArguments = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("notification_property"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -251,7 +250,7 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("number_of_workers"); ok {
-		input.NumberOfWorkers = aws.Int64(int64(v.(int)))
+		input.NumberOfWorkers = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("security_configuration"); ok {
@@ -259,7 +258,7 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk(names.AttrTimeout); ok {
-		input.Timeout = aws.Int64(int64(v.(int)))
+		input.Timeout = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("worker_type"); ok {
@@ -343,12 +342,12 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 		if v, ok := d.GetOk("connections"); ok {
 			jobUpdate.Connections = &awstypes.ConnectionsList{
-				Connections: flex.ExpandStringList(v.([]interface{})),
+				Connections: flex.ExpandStringValueList(v.([]interface{})),
 			}
 		}
 
 		if kv, ok := d.GetOk("default_arguments"); ok {
-			jobUpdate.DefaultArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
+			jobUpdate.DefaultArguments = flex.ExpandStringValueMap(kv.(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -372,11 +371,11 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 
 		if v, ok := d.GetOk("max_retries"); ok {
-			jobUpdate.MaxRetries = aws.Int64(int64(v.(int)))
+			jobUpdate.MaxRetries = int32(v.(int))
 		}
 
 		if kv, ok := d.GetOk("non_overridable_arguments"); ok {
-			jobUpdate.NonOverridableArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
+			jobUpdate.NonOverridableArguments = flex.ExpandStringValueMap(kv.(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("notification_property"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -384,7 +383,7 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 
 		if v, ok := d.GetOk("number_of_workers"); ok {
-			jobUpdate.NumberOfWorkers = aws.Int64(int64(v.(int)))
+			jobUpdate.NumberOfWorkers = aws.Int32(int32(v.(int)))
 		} else {
 			if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
 				jobUpdate.MaxCapacity = aws.Float64(v.(float64))
@@ -396,7 +395,7 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 
 		if v, ok := d.GetOk(names.AttrTimeout); ok {
-			jobUpdate.Timeout = aws.Int64(int64(v.(int)))
+			jobUpdate.Timeout = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk("worker_type"); ok {
@@ -442,7 +441,7 @@ func expandExecutionProperty(l []interface{}) *awstypes.ExecutionProperty {
 	m := l[0].(map[string]interface{})
 
 	executionProperty := &awstypes.ExecutionProperty{
-		MaxConcurrentRuns: aws.Int64(int64(m["max_concurrent_runs"].(int))),
+		MaxConcurrentRuns: int32(m["max_concurrent_runs"].(int)),
 	}
 
 	return executionProperty
@@ -475,7 +474,7 @@ func expandNotificationProperty(tfMap map[string]interface{}) *awstypes.Notifica
 	notificationProperty := &awstypes.NotificationProperty{}
 
 	if v, ok := tfMap["notify_delay_after"].(int); ok && v != 0 {
-		notificationProperty.NotifyDelayAfter = aws.Int64(int64(v))
+		notificationProperty.NotifyDelayAfter = aws.Int32(int32(v))
 	}
 
 	return notificationProperty
@@ -486,7 +485,7 @@ func flattenConnectionsList(connectionsList *awstypes.ConnectionsList) []interfa
 		return []interface{}{}
 	}
 
-	return flex.FlattenStringList(connectionsList.Connections)
+	return flex.FlattenStringValueList(connectionsList.Connections)
 }
 
 func flattenExecutionProperty(executionProperty *awstypes.ExecutionProperty) []map[string]interface{} {
@@ -495,7 +494,7 @@ func flattenExecutionProperty(executionProperty *awstypes.ExecutionProperty) []m
 	}
 
 	m := map[string]interface{}{
-		"max_concurrent_runs": int(aws.ToInt64(executionProperty.MaxConcurrentRuns)),
+		"max_concurrent_runs": int(executionProperty.MaxConcurrentRuns),
 	}
 
 	return []map[string]interface{}{m}
@@ -522,7 +521,7 @@ func flattenNotificationProperty(notificationProperty *awstypes.NotificationProp
 	}
 
 	m := map[string]interface{}{
-		"notify_delay_after": int(aws.ToInt64(notificationProperty.NotifyDelayAfter)),
+		"notify_delay_after": int(aws.ToInt32(notificationProperty.NotifyDelayAfter)),
 	}
 
 	return []map[string]interface{}{m}
