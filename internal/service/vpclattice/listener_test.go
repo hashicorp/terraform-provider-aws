@@ -10,9 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -499,19 +498,17 @@ func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.GetListener(ctx, &vpclattice.GetListenerInput{
-				ListenerIdentifier: aws.String(rs.Primary.Attributes["listener_id"]),
-				ServiceIdentifier:  aws.String(rs.Primary.Attributes["service_identifier"]),
-			})
+			_, err := tfvpclattice.FindListenerByTwoPartKey(ctx, conn, rs.Primary.Attributes["listener_id"], rs.Primary.Attributes["service_identifier"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.VPCLattice, create.ErrActionCheckingDestroyed, tfvpclattice.ResNameListener, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("VPC Lattice Listener %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -530,13 +527,10 @@ func testAccCheckListenerExists(ctx context.Context, name string, listener *vpcl
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
-		resp, err := conn.GetListener(ctx, &vpclattice.GetListenerInput{
-			ListenerIdentifier: aws.String(rs.Primary.Attributes["listener_id"]),
-			ServiceIdentifier:  aws.String(rs.Primary.Attributes["service_identifier"]),
-		})
+		resp, err := tfvpclattice.FindListenerByTwoPartKey(ctx, conn, rs.Primary.Attributes["listener_id"], rs.Primary.Attributes["service_identifier"])
 
 		if err != nil {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameListener, rs.Primary.ID, err)
+			return err
 		}
 
 		*listener = *resp
