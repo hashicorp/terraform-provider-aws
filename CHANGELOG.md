@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_cloudfront_origin_access_control` ([#36301](https://github.com/hashicorp/terraform-provider-aws/issues/36301))
+* **New Data Source:** `aws_timestreamwrite_database` ([#36368](https://github.com/hashicorp/terraform-provider-aws/issues/36368))
 * **New Resource:** `aws_datazone_project` ([#38345](https://github.com/hashicorp/terraform-provider-aws/issues/38345))
 * **New Resource:** `aws_grafana_workspace_service_account` ([#38101](https://github.com/hashicorp/terraform-provider-aws/issues/38101))
 * **New Resource:** `aws_grafana_workspace_service_account_token` ([#38101](https://github.com/hashicorp/terraform-provider-aws/issues/38101))
