@@ -12,7 +12,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -69,9 +68,9 @@ func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"catalog_encryption_mode": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: enum.Validate[awstypes.CatalogEncryptionMode](),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.CatalogEncryptionMode](),
 									},
 									"catalog_encryption_service_role": {
 										Type:         schema.TypeString,
@@ -106,7 +105,7 @@ func resourceDataCatalogEncryptionSettingsPut(ctx context.Context, d *schema.Res
 		input.DataCatalogEncryptionSettings = expandDataCatalogEncryptionSettings(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] Putting Glue Data Catalog Encryption Settings: %s", input)
+	log.Printf("[DEBUG] Putting Glue Data Catalog Encryption Settings: %+v", input)
 	_, err := conn.PutDataCatalogEncryptionSettings(ctx, input)
 
 	if err != nil {
@@ -151,7 +150,7 @@ func resourceDataCatalogEncryptionSettingsDelete(ctx context.Context, d *schema.
 		DataCatalogEncryptionSettings: &awstypes.DataCatalogEncryptionSettings{},
 	}
 
-	log.Printf("[DEBUG] Deleting Glue Data Catalog Encryption Settings: %s", input)
+	log.Printf("[DEBUG] Deleting Glue Data Catalog Encryption Settings: %+v", input)
 	_, err := conn.PutDataCatalogEncryptionSettings(ctx, input)
 
 	if err != nil {
@@ -191,7 +190,7 @@ func expandConnectionPasswordEncryption(tfMap map[string]interface{}) *awstypes.
 	}
 
 	if v, ok := tfMap["return_connection_password_encrypted"].(bool); ok {
-		apiObject.ReturnConnectionPasswordEncrypted = aws.Bool(v)
+		apiObject.ReturnConnectionPasswordEncrypted = v
 	}
 
 	return apiObject
@@ -248,9 +247,7 @@ func flattenConnectionPasswordEncryption(apiObject *awstypes.ConnectionPasswordE
 		tfMap["aws_kms_key_id"] = aws.ToString(v)
 	}
 
-	if v := apiObject.ReturnConnectionPasswordEncrypted; v != nil {
-		tfMap["return_connection_password_encrypted"] = aws.ToBool(v)
-	}
+	tfMap["return_connection_password_encrypted"] = apiObject.ReturnConnectionPasswordEncrypted
 
 	return tfMap
 }
@@ -262,9 +259,7 @@ func flattenEncryptionAtRest(apiObject *awstypes.EncryptionAtRest) map[string]in
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.CatalogEncryptionMode; v != nil {
-		tfMap["catalog_encryption_mode"] = aws.ToString(v)
-	}
+	tfMap["catalog_encryption_mode"] = string(apiObject.CatalogEncryptionMode)
 
 	if v := apiObject.CatalogEncryptionServiceRole; v != nil {
 		tfMap["catalog_encryption_service_role"] = aws.ToString(v)
