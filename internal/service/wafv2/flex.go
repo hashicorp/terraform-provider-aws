@@ -2000,7 +2000,7 @@ func flattenByteMatchStatement(b *awstypes.ByteMatchStatement) interface{} {
 	m := map[string]interface{}{
 		"field_to_match":        flattenFieldToMatch(b.FieldToMatch),
 		"positional_constraint": b.PositionalConstraint,
-		"search_string":         b.SearchString,
+		"search_string":         string(b.SearchString),
 		"text_transformation":   flattenTextTransformations(b.TextTransformations),
 	}
 
