@@ -267,6 +267,17 @@ func RetryWhenNotFound(ctx context.Context, timeout time.Duration, f func() (int
 	})
 }
 
+// RetryGWhenNotFound retries the specified function when it returns a retry.NotFoundError.
+func RetryGWhenNotFound[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
+	return RetryGWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if NotFound(err) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
 // RetryWhenNewResourceNotFound retries the specified function when it returns a retry.NotFoundError and `isNewResource` is true.
 func RetryWhenNewResourceNotFound(ctx context.Context, timeout time.Duration, f func() (interface{}, error), isNewResource bool) (interface{}, error) {
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {

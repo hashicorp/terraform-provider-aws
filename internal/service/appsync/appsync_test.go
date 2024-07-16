@@ -4,7 +4,6 @@
 package appsync_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -112,16 +111,4 @@ func TestAccAppSync_serial(t *testing.T) {
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
-}
-
-func getCertDomain(t *testing.T) string {
-	value := os.Getenv("AWS_APPSYNC_DOMAIN_NAME_CERTIFICATE_DOMAIN")
-	if value == "" {
-		t.Skip(
-			"Environment variable AWS_APPSYNC_DOMAIN_NAME_CERTIFICATE_DOMAIN is not set. " +
-				"This environment variable must be set to any non-empty value " +
-				"to enable the test.")
-	}
-
-	return value
 }

@@ -7,12 +7,14 @@ import (
 	"context"
 	"log"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appflow"
 	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -30,8 +32,8 @@ import (
 )
 
 // @SDKResource("aws_appflow_flow", name="Flow")
-// @Tags(identifierAttribute="id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appflow/types;types.FlowDefinition")
+// @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appflow;appflow.DescribeFlowOutput")
 func resourceFlow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFlowCreate,
@@ -40,7 +42,16 @@ func resourceFlow() *schema.Resource {
 		DeleteWithoutTimeout: resourceFlowDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				p, err := arn.Parse(d.Id())
+				if err != nil {
+					return nil, err
+				}
+				name := strings.TrimPrefix(p.Resource, "flow/")
+				d.Set(names.AttrName, name)
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -1293,22 +1304,22 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
-	flowDefinition, err := findFlowByARN(ctx, conn, d.Id())
+	flowDefinition, err := findFlowByName(ctx, conn, d.Get(names.AttrName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] AppFlow Flow (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] AppFlow Flow (%s) not found, removing from state", d.Get(names.AttrName))
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading AppFlow Flow (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppFlow Flow (%s): %s", d.Get(names.AttrName), err)
 	}
 
 	output, err := findFlowByName(ctx, conn, aws.ToString(flowDefinition.FlowName))
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading AppFlow Flow (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppFlow Flow (%s): %s", d.Get(names.AttrName), err)
 	}
 
 	d.Set(names.AttrARN, output.FlowArn)
@@ -1364,7 +1375,7 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err := conn.UpdateFlow(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating AppFlow Flow (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating AppFlow Flow (%s): %s", d.Get(names.AttrName), err)
 		}
 	}
 
@@ -1376,7 +1387,7 @@ func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interf
 
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
-	log.Printf("[INFO] Deleting AppFlow Flow: %s", d.Id())
+	log.Printf("[INFO] Deleting AppFlow Flow: %s", d.Get(names.AttrName))
 	_, err := conn.DeleteFlow(ctx, &appflow.DeleteFlowInput{
 		FlowName: aws.String(d.Get(names.AttrName).(string)),
 	})
@@ -1386,49 +1397,14 @@ func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting AppFlow Flow (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting AppFlow Flow (%s): %s", d.Get(names.AttrName), err)
 	}
 
-	if _, err := waitFlowDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for AppFlow Flow (%s) delete: %s", d.Id(), err)
+	if _, err := waitFlowDeleted(ctx, conn, d.Get(names.AttrName).(string)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for AppFlow Flow (%s) delete: %s", d.Get(names.AttrName), err)
 	}
 
 	return diags
-}
-
-func findFlowByARN(ctx context.Context, conn *appflow.Client, arn string) (*types.FlowDefinition, error) {
-	input := &appflow.ListFlowsInput{}
-
-	pages := appflow.NewListFlowsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.Flows {
-			if aws.ToString(v.FlowArn) == arn {
-				if status := v.FlowStatus; status == types.FlowStatusDeleted {
-					return nil, &retry.NotFoundError{
-						Message:     string(status),
-						LastRequest: input,
-					}
-				}
-
-				return &v, nil
-			}
-		}
-	}
-
-	return nil, tfresource.NewEmptyResultError(input)
 }
 
 func findFlowByName(ctx context.Context, conn *appflow.Client, name string) (*appflow.DescribeFlowOutput, error) {
@@ -1463,9 +1439,9 @@ func findFlowByName(ctx context.Context, conn *appflow.Client, name string) (*ap
 	return output, nil
 }
 
-func statusFlow(ctx context.Context, conn *appflow.Client, arn string) retry.StateRefreshFunc {
+func statusFlow(ctx context.Context, conn *appflow.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findFlowByARN(ctx, conn, arn)
+		output, err := findFlowByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -1479,13 +1455,13 @@ func statusFlow(ctx context.Context, conn *appflow.Client, arn string) retry.Sta
 	}
 }
 
-func waitFlowDeleted(ctx context.Context, conn *appflow.Client, arn string) (*types.FlowDefinition, error) {
+func waitFlowDeleted(ctx context.Context, conn *appflow.Client, name string) (*types.FlowDefinition, error) {
 	const (
 		timeout = 2 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
 		Target:  []string{},
-		Refresh: statusFlow(ctx, conn, arn),
+		Refresh: statusFlow(ctx, conn, name),
 		Timeout: timeout,
 	}
 

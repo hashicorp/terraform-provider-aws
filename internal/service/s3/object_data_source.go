@@ -5,7 +5,6 @@ package s3
 
 import (
 	"context"
-	"net/http"
 	"regexp"
 	"strings"
 	"time"
@@ -16,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -27,6 +25,7 @@ import (
 )
 
 // @SDKDataSource("aws_s3_object", name="Object")
+// @Tags(identifierAttribute="arn", resourceType="Object")
 func dataSourceObject() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceObjectRead,
@@ -164,7 +163,6 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	var optFns []func(*s3.Options)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get(names.AttrBucket).(string)
 	if isDirectoryBucket(bucket) {
@@ -265,14 +263,6 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		d.Set("body", string(buf.Bytes()))
-	}
-
-	if tags, err := objectListTags(ctx, conn, bucket, key, optFns...); err == nil {
-		if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-		}
-	} else if !tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
-		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
 	return diags

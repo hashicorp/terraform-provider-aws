@@ -128,7 +128,7 @@ func resourceIntegration() *schema.Resource {
 			"timeout_milliseconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IntBetween(50, 29000),
+				ValidateFunc: validation.IntBetween(50, 300000),
 				Default:      29000,
 			},
 			"tls_config": {

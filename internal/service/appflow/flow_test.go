@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
+	"github.com/aws/aws-sdk-go-v2/service/appflow"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +23,7 @@ import (
 
 func TestAccAppFlowFlow_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var flowOutput types.FlowDefinition
+	var flowOutput appflow.DescribeFlowOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_flow.test"
 	scheduleStartTime := time.Now().UTC().AddDate(0, 0, 1).Format(time.RFC3339)
@@ -71,7 +71,7 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 
 func TestAccAppFlowFlow_S3_outputFormatConfig_ParquetFileType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var flowOutput types.FlowDefinition
+	var flowOutput appflow.DescribeFlowOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_flow.test"
 	scheduleStartTime := time.Now().UTC().AddDate(0, 0, 1).Format(time.RFC3339)
@@ -116,7 +116,7 @@ func TestAccAppFlowFlow_S3_outputFormatConfig_ParquetFileType(t *testing.T) {
 
 func TestAccAppFlowFlow_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var flowOutput types.FlowDefinition
+	var flowOutput appflow.DescribeFlowOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_flow.test"
 	description := "test description"
@@ -153,7 +153,7 @@ func TestAccAppFlowFlow_update(t *testing.T) {
 
 func TestAccAppFlowFlow_taskProperties(t *testing.T) {
 	ctx := acctest.Context(t)
-	var flowOutput types.FlowDefinition
+	var flowOutput appflow.DescribeFlowOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_flow.test"
 
@@ -178,7 +178,7 @@ func TestAccAppFlowFlow_taskProperties(t *testing.T) {
 
 func TestAccAppFlowFlow_taskUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var flowOutput types.FlowDefinition
+	var flowOutput appflow.DescribeFlowOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_flow.test"
 
@@ -258,7 +258,7 @@ func TestAccAppFlowFlow_taskUpdate(t *testing.T) {
 
 func TestAccAppFlowFlow_task_mapAll(t *testing.T) {
 	ctx := acctest.Context(t)
-	var flowOutput types.FlowDefinition
+	var flowOutput appflow.DescribeFlowOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_flow.test"
 
@@ -285,7 +285,7 @@ func TestAccAppFlowFlow_task_mapAll(t *testing.T) {
 
 func TestAccAppFlowFlow_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var flowOutput types.FlowDefinition
+	var flowOutput appflow.DescribeFlowOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_flow.test"
 	scheduleStartTime := time.Now().UTC().AddDate(0, 0, 1).Format(time.RFC3339)
@@ -761,7 +761,7 @@ resource "aws_appflow_flow" "test" {
 	)
 }
 
-func testAccCheckFlowExists(ctx context.Context, n string, v *types.FlowDefinition) resource.TestCheckFunc {
+func testAccCheckFlowExists(ctx context.Context, n string, v *appflow.DescribeFlowOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -770,7 +770,7 @@ func testAccCheckFlowExists(ctx context.Context, n string, v *types.FlowDefiniti
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowClient(ctx)
 
-		output, err := tfappflow.FindFlowByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfappflow.FindFlowByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
@@ -791,7 +791,7 @@ func testAccCheckFlowDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfappflow.FindFlowByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfappflow.FindFlowByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue

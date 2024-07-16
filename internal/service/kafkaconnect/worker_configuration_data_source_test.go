@@ -23,7 +23,6 @@ func TestAccKafkaConnectWorkerConfigurationDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kafkaconnect.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
-		CheckDestroy:             nil,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -34,6 +33,7 @@ func TestAccKafkaConnectWorkerConfigurationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "latest_revision", dataSourceName, "latest_revision"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "properties_file_content", dataSourceName, "properties_file_content"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
 				),
 			},
 		},
@@ -49,6 +49,10 @@ resource "aws_mskconnect_worker_configuration" "test" {
 key.converter=org.apache.kafka.connect.storage.StringConverter
 value.converter=org.apache.kafka.connect.storage.StringConverter
 EOF
+
+  tags = {
+    key1 = "value1"
+  }
 }
 
 data "aws_mskconnect_worker_configuration" "test" {

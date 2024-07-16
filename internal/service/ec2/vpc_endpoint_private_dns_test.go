@@ -196,7 +196,7 @@ func testAccCheckVPCEndpointPrivateDNSEnabled(ctx context.Context, name string) 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-		out, err := tfec2.FindVPCEndpointByIDV2(ctx, conn, rs.Primary.ID)
+		out, err := tfec2.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEndpointPrivateDNS, rs.Primary.ID, err)
 		}
@@ -221,7 +221,7 @@ func testAccCheckVPCEndpointPrivateDNSDisabled(ctx context.Context, name string)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-		out, err := tfec2.FindVPCEndpointByIDV2(ctx, conn, rs.Primary.ID)
+		out, err := tfec2.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEndpointPrivateDNS, rs.Primary.ID, err)
 		}

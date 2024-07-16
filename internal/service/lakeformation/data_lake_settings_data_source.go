@@ -41,6 +41,10 @@ func DataSourceDataLakeSettings() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"allow_full_table_external_data_access": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"authorized_session_tag_value_list": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -134,7 +138,8 @@ func dataSourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("create_database_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateDatabaseDefaultPermissions))
 	d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
 	d.Set("external_data_filtering_allow_list", flattenDataLakeSettingsDataFilteringAllowList(settings.ExternalDataFilteringAllowList))
-	d.Set("trusted_resource_owners", flex.FlattenStringValueList(settings.TrustedResourceOwners))
+	d.Set("trusted_resource_owners", flex.FlattenStringyValueList(settings.TrustedResourceOwners))
+	d.Set("allow_full_table_external_data_access", settings.AllowFullTableExternalDataAccess)
 
 	return diags
 }

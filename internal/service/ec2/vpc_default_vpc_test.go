@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -414,14 +415,14 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlockAdoption(t *testing.
 // It verifies that the default VPC still exists.
 func testAccCheckDefaultVPCDestroyExists(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_default_vpc" {
 				continue
 			}
 
-			_, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindVPCByIDV2(ctx, conn, rs.Primary.ID)
 
 			if err != nil {
 				return err
@@ -437,14 +438,14 @@ func testAccCheckDefaultVPCDestroyExists(ctx context.Context) resource.TestCheck
 // A new default VPC is then created.
 func testAccCheckDefaultVPCDestroyNotFound(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_default_vpc" {
 				continue
 			}
 
-			_, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindVPCByIDV2(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -457,7 +458,7 @@ func testAccCheckDefaultVPCDestroyNotFound(ctx context.Context) resource.TestChe
 			return fmt.Errorf("EC2 Default VPC %s still exists", rs.Primary.ID)
 		}
 
-		_, err := conn.CreateDefaultVpcWithContext(ctx, &ec2.CreateDefaultVpcInput{})
+		_, err := conn.CreateDefaultVpc(ctx, &ec2_sdkv2.CreateDefaultVpcInput{})
 
 		if err != nil {
 			return fmt.Errorf("error creating new default VPC: %w", err)

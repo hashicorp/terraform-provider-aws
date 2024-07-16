@@ -57,7 +57,7 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *s
 
 	defaultSecurityGroupID := ""
 	if replaceDefaultAssociation {
-		vpcEndpoint, err := findVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
+		vpcEndpoint, err := findVPCEndpointByID(ctx, conn, vpcEndpointID)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s): %s", vpcEndpointID, err)
@@ -65,7 +65,7 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *s
 
 		vpcID := aws.ToString(vpcEndpoint.VpcId)
 
-		defaultSecurityGroup, err := findVPCDefaultSecurityGroupV2(ctx, conn, vpcID)
+		defaultSecurityGroup, err := findVPCDefaultSecurityGroup(ctx, conn, vpcID)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) default Security Group: %s", vpcID, err)
@@ -118,7 +118,7 @@ func resourceVPCEndpointSecurityGroupAssociationRead(ctx context.Context, d *sch
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", vpcEndpointID, securityGroupID)
 
-	err := findVPCEndpointSecurityGroupAssociationExistsV2(ctx, conn, vpcEndpointID, securityGroupID)
+	err := findVPCEndpointSecurityGroupAssociationExists(ctx, conn, vpcEndpointID, securityGroupID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint Security Group Association (%s) not found, removing from state", id)
@@ -142,7 +142,7 @@ func resourceVPCEndpointSecurityGroupAssociationDelete(ctx context.Context, d *s
 	replaceDefaultAssociation := d.Get("replace_default_association").(bool)
 
 	if replaceDefaultAssociation {
-		vpcEndpoint, err := findVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
+		vpcEndpoint, err := findVPCEndpointByID(ctx, conn, vpcEndpointID)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s): %s", vpcEndpointID, err)
@@ -150,7 +150,7 @@ func resourceVPCEndpointSecurityGroupAssociationDelete(ctx context.Context, d *s
 
 		vpcID := aws.ToString(vpcEndpoint.VpcId)
 
-		defaultSecurityGroup, err := findVPCDefaultSecurityGroupV2(ctx, conn, vpcID)
+		defaultSecurityGroup, err := findVPCDefaultSecurityGroup(ctx, conn, vpcID)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) default Security Group: %s", vpcID, err)

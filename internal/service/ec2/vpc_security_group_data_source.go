@@ -21,6 +21,7 @@ import (
 )
 
 // @SDKDataSource("aws_security_group")
+// @Tags
 func DataSourceSecurityGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecurityGroupRead,
@@ -63,7 +64,6 @@ func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeSecurityGroupsInput{
 		Filters: newAttributeFilterList(
@@ -111,9 +111,7 @@ func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrName, sg.GroupName)
 	d.Set(names.AttrVPCID, sg.VpcId)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, sg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, sg.Tags)
 
 	return diags
 }

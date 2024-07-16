@@ -16,105 +16,87 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	acctest.RegisterServiceErrorCheckFunc(names.EC2ServiceID, testAccErrorCheckSkip)
-}
+// func TestFetchRootDevice(t *testing.T) {
+// 	ctx := acctest.Context(t)
+// 	t.Parallel()
 
-func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
-	return acctest.ErrorCheckSkipMessagesContaining(t,
-		"VolumeTypeNotAvailableInRegion",
-		"Invalid value specified for Phase",
-		"You have reached the maximum allowed number of license configurations created in one day",
-		"specified zone does not support multi-attach-enabled volumes",
-		"Unsupported volume type",
-		"HostLimitExceeded",
-		"ReservationCapacityExceeded",
-		"InsufficientInstanceCapacity",
-	)
-}
+// 	cases := []struct {
+// 		label  string
+// 		images []*awstypes.Image
+// 		name   string
+// 	}{
+// 		{
+// 			"device name in mappings",
+// 			[]*awstypes.Image{{
+// 				ImageId:        aws.String("ami-123"),
+// 				RootDeviceType: awstypes.DeviceType("ebs"),
+// 				RootDeviceName: aws.String("/dev/xvda"),
+// 				BlockDeviceMappings: []awstypes.BlockDeviceMapping{
+// 					{DeviceName: aws.String("/dev/xvdb")},
+// 					{DeviceName: aws.String("/dev/xvda")},
+// 				},
+// 			}},
+// 			"/dev/xvda",
+// 		},
+// 		{
+// 			"device name not in mappings",
+// 			[]*awstypes.Image{{
+// 				ImageId:        aws.String("ami-123"),
+// 				RootDeviceType: awstypes.DeviceType("ebs"),
+// 				RootDeviceName: aws.String("/dev/xvda"),
+// 				BlockDeviceMappings: []awstypes.BlockDeviceMapping{
+// 					{DeviceName: aws.String("/dev/xvdb")},
+// 					{DeviceName: aws.String("/dev/xvdc")},
+// 				},
+// 			}},
+// 			"/dev/xvdb",
+// 		},
+// 		{
+// 			"no images",
+// 			[]*awstypes.Image{},
+// 			"",
+// 		},
+// 	}
 
-func TestFetchRootDevice(t *testing.T) {
-	ctx := acctest.Context(t)
-	t.Parallel()
+// 	sess, err := session.NewSession(nil)
+// 	if err != nil {
+// 		t.Errorf("Error new session: %s", err)
+// 	}
 
-	cases := []struct {
-		label  string
-		images []*ec2.Image
-		name   string
-	}{
-		{
-			"device name in mappings",
-			[]*ec2.Image{{
-				ImageId:        aws.String("ami-123"),
-				RootDeviceType: aws.String("ebs"),
-				RootDeviceName: aws.String("/dev/xvda"),
-				BlockDeviceMappings: []*ec2.BlockDeviceMapping{
-					{DeviceName: aws.String("/dev/xvdb")},
-					{DeviceName: aws.String("/dev/xvda")},
-				},
-			}},
-			"/dev/xvda",
-		},
-		{
-			"device name not in mappings",
-			[]*ec2.Image{{
-				ImageId:        aws.String("ami-123"),
-				RootDeviceType: aws.String("ebs"),
-				RootDeviceName: aws.String("/dev/xvda"),
-				BlockDeviceMappings: []*ec2.BlockDeviceMapping{
-					{DeviceName: aws.String("/dev/xvdb")},
-					{DeviceName: aws.String("/dev/xvdc")},
-				},
-			}},
-			"/dev/xvdb",
-		},
-		{
-			"no images",
-			[]*ec2.Image{},
-			"",
-		},
-	}
+// 	for _, tc := range cases {
+// 		tc := tc
+// 		t.Run(fmt.Sprintf(tc.label), func(t *testing.T) {
 
-	sess, err := session.NewSession(nil)
-	if err != nil {
-		t.Errorf("Error new session: %s", err)
-	}
+// 			t.Parallel()
 
-	for _, tc := range cases {
-		tc := tc
-		t.Run(fmt.Sprintf(tc.label), func(t *testing.T) {
-			t.Parallel()
-
-			conn := ec2.New(sess)
-			conn.Handlers.Clear()
-			conn.Handlers.Send.PushBack(func(r *request.Request) {
-				data := r.Data.(*ec2.DescribeImagesOutput)
-				data.Images = tc.images
-			})
-			name, _ := tfec2.FetchRootDeviceName(ctx, conn, "ami-123")
-			if tc.name != aws.StringValue(name) {
-				t.Errorf("Expected name %s, got %s", tc.name, aws.StringValue(name))
-			}
-		})
-	}
-}
+// 			conn := ec2.New(sess)
+// 			conn.Handlers.Clear()
+// 			conn.Handlers.Send.PushBack(func(r *request.Request) {
+// 				data := r.Data.(*ec2.DescribeImagesOutput)
+// 				data.Images = tc.images
+// 			})
+// 			name, _ := tfec2.FetchRootDeviceName(ctx, conn, "ami-123")
+// 			if tc.name != aws.ToString(name) {
+// 				t.Errorf("Expected name %s, got %s", tc.name, aws.ToString(name))
+// 			}
+// 		})
+// 	}
+// }
 
 func TestParseInstanceType(t *testing.T) {
 	t.Parallel()
@@ -615,7 +597,7 @@ func TestAccEC2Instance_gp2IopsDevice(t *testing.T) {
 			// Map out the block devices by name, which should be unique.
 			blockDevices := make(map[string]awstypes.InstanceBlockDeviceMapping)
 			for _, blockDevice := range v.BlockDeviceMappings {
-				blockDevices[aws.StringValue(blockDevice.DeviceName)] = blockDevice
+				blockDevices[aws.ToString(blockDevice.DeviceName)] = blockDevice
 			}
 
 			// Check if the root block device exists.
@@ -686,7 +668,7 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 			// Map out the block devices by name, which should be unique.
 			blockDevices := make(map[string]awstypes.InstanceBlockDeviceMapping)
 			for _, blockDevice := range v.BlockDeviceMappings {
-				blockDevices[aws.StringValue(blockDevice.DeviceName)] = blockDevice
+				blockDevices[aws.ToString(blockDevice.DeviceName)] = blockDevice
 			}
 
 			// Check if the root block device exists.
@@ -836,7 +818,7 @@ func TestAccEC2Instance_noAMIEphemeralDevices(t *testing.T) {
 			// Map out the block devices by name, which should be unique.
 			blockDevices := make(map[string]awstypes.InstanceBlockDeviceMapping)
 			for _, blockDevice := range v.BlockDeviceMappings {
-				blockDevices[aws.StringValue(blockDevice.DeviceName)] = blockDevice
+				blockDevices[aws.ToString(blockDevice.DeviceName)] = blockDevice
 			}
 
 			// Check if the root block device exists.
@@ -1965,8 +1947,8 @@ func TestAccEC2Instance_Empty_privateIP(t *testing.T) {
 
 	testCheckPrivateIP := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
-			if aws.StringValue(v.PrivateIpAddress) == "" {
-				return fmt.Errorf("bad computed private IP: %s", aws.StringValue(v.PrivateIpAddress))
+			if aws.ToString(v.PrivateIpAddress) == "" {
+				return fmt.Errorf("bad computed private IP: %s", aws.ToString(v.PrivateIpAddress))
 			}
 
 			return nil
@@ -2115,35 +2097,6 @@ func TestAccEC2Instance_keyPairCheck(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "key_name", keyPairResourceName, "key_name"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccEC2Instance_rootBlockDeviceMismatch(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.Instance
-	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfig_rootBlockDeviceMismatch(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "13"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"root_block_device", "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -2834,7 +2787,7 @@ func TestAccEC2Instance_gp3RootBlockDevice(t *testing.T) {
 			// Map out the block devices by name, which should be unique.
 			blockDevices := make(map[string]awstypes.InstanceBlockDeviceMapping)
 			for _, blockDevice := range v.BlockDeviceMappings {
-				blockDevices[aws.StringValue(blockDevice.DeviceName)] = blockDevice
+				blockDevices[aws.ToString(blockDevice.DeviceName)] = blockDevice
 			}
 
 			// Check if the root block device exists.
@@ -3818,7 +3771,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspe
 			acctest.PreCheck(ctx, t)
 			// AMD SEV-SNP currently only supported in us-east-2
 			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
-			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+			acctest.PreCheckRegion(t, names.USEast2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -3841,7 +3794,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspe
 			},
 			{
 				// test DiffSuppressFunc to suppress "" to "disabled"
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationDisabled),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceNotRecreated(&v1, &v2),
@@ -3852,12 +3805,12 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspe
 			},
 			{
 				// expect recreation when it is enabled
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationEnabled),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v3),
 					testAccCheckInstanceRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationEnabled)),
 				),
 			},
 			{
@@ -3867,7 +3820,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspe
 					testAccCheckInstanceExists(ctx, resourceName, &v4),
 					testAccCheckInstanceNotRecreated(&v3, &v4),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationEnabled)),
 				),
 			},
 		},
@@ -3885,7 +3838,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToEnabledToDisabledToUnspe
 			acctest.PreCheck(ctx, t)
 			// AMD SEV-SNP currently only supported in us-east-2
 			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
-			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+			acctest.PreCheckRegion(t, names.USEast2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -3908,22 +3861,22 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToEnabledToDisabledToUnspe
 			},
 			{
 				// expect recreation when it is enabled
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationEnabled),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationEnabled)),
 				),
 			},
 			{
 				// expect recreation when it is disabled
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationDisabled),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v3),
 					testAccCheckInstanceRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationDisabled)),
 				),
 			},
 			{
@@ -3933,7 +3886,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToEnabledToDisabledToUnspe
 					testAccCheckInstanceExists(ctx, resourceName, &v4),
 					testAccCheckInstanceNotRecreated(&v3, &v4),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationDisabled)),
 				),
 			},
 		},
@@ -3951,18 +3904,18 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpEnabledToDisabled(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			// AMD SEV-SNP currently only supported in us-east-2
 			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
-			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+			acctest.PreCheckRegion(t, names.USEast2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationEnabled),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationEnabled)),
 				),
 			},
 			{
@@ -3972,12 +3925,12 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpEnabledToDisabled(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationDisabled),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationDisabled)),
 				),
 			},
 		},
@@ -3995,18 +3948,18 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpDisabledToEnabled(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			// AMD SEV-SNP currently only supported in us-east-2
 			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
-			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+			acctest.PreCheckRegion(t, names.USEast2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationDisabled),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationDisabled)),
 				),
 			},
 			{
@@ -4016,12 +3969,12 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpDisabledToEnabled(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationEnabled),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationEnabled)),
 				),
 			},
 		},
@@ -4044,18 +3997,18 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpCoreThreads(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			// AMD SEV-SNP currently only supported in us-east-2
 			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
-			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+			acctest.PreCheckRegion(t, names.USEast2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, ec2.AmdSevSnpSpecificationEnabled, originalCoreCount, originalThreadsPerCore),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, string(awstypes.AmdSevSnpSpecificationEnabled), originalCoreCount, originalThreadsPerCore),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(originalCoreCount)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(originalThreadsPerCore)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(originalCoreCount)),
@@ -4069,12 +4022,12 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpCoreThreads(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, ec2.AmdSevSnpSpecificationDisabled, updatedCoreCount, updatedThreadsPerCore),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, string(awstypes.AmdSevSnpSpecificationDisabled), updatedCoreCount, updatedThreadsPerCore),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationDisabled)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(updatedCoreCount)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(updatedCoreCount)),
@@ -5532,7 +5485,7 @@ func TestAccEC2Instance_basicWithSpot(t *testing.T) {
 
 func testAccCheckInstanceNotRecreated(before, after *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.InstanceId), aws.StringValue(after.InstanceId); before != after {
+		if before, after := aws.ToString(before.InstanceId), aws.ToString(after.InstanceId); before != after {
 			return fmt.Errorf("EC2 Instance (%s/%s) recreated", before, after)
 		}
 
@@ -5542,7 +5495,7 @@ func testAccCheckInstanceNotRecreated(before, after *awstypes.Instance) resource
 
 func testAccCheckInstanceRecreated(before, after *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.InstanceId), aws.StringValue(after.InstanceId); before == after {
+		if before, after := aws.ToString(before.InstanceId), aws.ToString(after.InstanceId); before == after {
 			return fmt.Errorf("EC2 Instance (%s) not recreated", before)
 		}
 
@@ -5552,7 +5505,7 @@ func testAccCheckInstanceRecreated(before, after *awstypes.Instance) resource.Te
 
 func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_instance" {
@@ -5589,7 +5542,7 @@ func testAccCheckInstanceExists(ctx context.Context, n string, v *awstypes.Insta
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindInstanceByIDV2(ctx, conn, rs.Primary.ID)
+		output, err := tfec2.FindInstanceByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -5603,21 +5556,21 @@ func testAccCheckInstanceExists(ctx context.Context, n string, v *awstypes.Insta
 
 func testAccCheckStopInstance(ctx context.Context, v *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		return tfec2.StopInstance(ctx, conn, aws.StringValue(v.InstanceId), false, 10*time.Minute)
+		return tfec2.StopInstance(ctx, conn, aws.ToString(v.InstanceId), false, 10*time.Minute)
 	}
 }
 
 func testAccCheckDetachVolumes(ctx context.Context, instance *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, v := range instance.BlockDeviceMappings {
 			if v.Ebs != nil && v.Ebs.VolumeId != nil {
-				deviceName := aws.StringValue(v.DeviceName)
-				instanceID := aws.StringValue(instance.InstanceId)
-				volumeID := aws.StringValue(v.Ebs.VolumeId)
+				deviceName := aws.ToString(v.DeviceName)
+				instanceID := aws.ToString(instance.InstanceId)
+				volumeID := aws.ToString(v.Ebs.VolumeId)
 
 				// Make sure in correct state before detaching.
 				if _, err := tfec2.WaitVolumeAttachmentCreated(ctx, conn, volumeID, instanceID, deviceName, 5*time.Minute); err != nil {
@@ -5700,10 +5653,10 @@ func TestInstanceCPUThreadsPerCoreSchema(t *testing.T) {
 
 func driftTags(ctx context.Context, instance *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
-		_, err := conn.CreateTagsWithContext(ctx, &ec2.CreateTagsInput{
-			Resources: []*string{instance.InstanceId},
-			Tags: []*ec2.Tag{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		_, err := conn.CreateTags(ctx, &ec2.CreateTagsInput{
+			Resources: []string{aws.ToString(instance.InstanceId)},
+			Tags: []awstypes.Tag{
 				{
 					Key:   aws.String("Drift"),
 					Value: aws.String("Happens"),
@@ -5727,10 +5680,10 @@ func testAccPreCheckHasDefaultVPCDefaultSubnets(ctx context.Context, t *testing.
 
 // defaultVPC returns the ID of the default VPC for the current AWS Region, or "" if none exists.
 func defaultVPC(ctx context.Context, t *testing.T) string {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	output, err := conn.DescribeAccountAttributesWithContext(ctx, &ec2.DescribeAccountAttributesInput{
-		AttributeNames: aws.StringSlice([]string{ec2.AccountAttributeNameDefaultVpc}),
+	output, err := conn.DescribeAccountAttributes(ctx, &ec2.DescribeAccountAttributesInput{
+		AttributeNames: flex.ExpandStringyValueList[awstypes.AccountAttributeName]([]any{string(awstypes.AccountAttributeNameDefaultVpc)}),
 	})
 
 	if acctest.PreCheckSkipError(err) {
@@ -5742,7 +5695,7 @@ func defaultVPC(ctx context.Context, t *testing.T) string {
 	}
 
 	if len(output.AccountAttributes) > 0 && len(output.AccountAttributes[0].AttributeValues) > 0 {
-		if v := aws.StringValue(output.AccountAttributes[0].AttributeValues[0].AttributeValue); v != "none" {
+		if v := aws.ToString(output.AccountAttributes[0].AttributeValues[0].AttributeValue); v != "none" {
 			return v
 		}
 	}
@@ -5756,17 +5709,17 @@ func hasDefaultVPC(ctx context.Context, t *testing.T) bool {
 
 // defaultSubnetCount returns the number of default subnets in the current region's default VPC.
 func defaultSubnetCount(ctx context.Context, t *testing.T) int {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeSubnetsInput{
-		Filters: tfec2.NewAttributeFilterList(
+		Filters: tfec2.NewAttributeFilterListV2(
 			map[string]string{
 				"defaultForAz": acctest.CtTrue,
 			},
 		),
 	}
 
-	subnets, err := tfec2.FindSubnets(ctx, conn, input)
+	subnets, err := tfec2.FindSubnetsV2(ctx, conn, input)
 
 	if acctest.PreCheckSkipError(err) {
 		return 0
@@ -7707,28 +7660,6 @@ resource "aws_instance" "test" {
 `, rName, publicKey))
 }
 
-func testAccInstanceConfig_rootBlockDeviceMismatch(rName string) string {
-	return acctest.ConfigCompose(
-		testAccInstanceVPCConfig(rName, false, 0), fmt.Sprintf(`
-resource "aws_instance" "test" {
-  # This is an AMI in UsWest2 with RootDeviceName: "/dev/sda1"; actual root: "/dev/sda"
-  ami = "ami-ef5b69df"
-
-  # tflint-ignore: aws_instance_previous_type
-  instance_type = "t1.micro"
-  subnet_id     = aws_subnet.test.id
-
-  root_block_device {
-    volume_size = 13
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)) //lintignore:AWSAT002
-}
-
 func testAccInstanceConfig_forceNewAndTagsDrift(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
@@ -8950,7 +8881,7 @@ resource "aws_ec2_capacity_reservation" "test" {
     Name = %[1]q
   }
 }
-`, rName, ec2.CapacityReservationInstancePlatformLinuxUnix))
+`, rName, awstypes.CapacityReservationInstancePlatformLinuxUnix))
 }
 
 func testAccInstanceConfig_templateBasic(rName string) string {

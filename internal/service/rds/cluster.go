@@ -113,6 +113,14 @@ func ResourceCluster() *schema.Resource {
 				ValidateFunc:  validIdentifier,
 				ConflictsWith: []string{"cluster_identifier_prefix"},
 			},
+			"ca_certificate_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"ca_certificate_valid_till": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cluster_identifier_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -998,6 +1006,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.BackupRetentionPeriod = aws.Int64(int64(v.(int)))
 		}
 
+		if v := d.Get("ca_certificate_identifier"); v.(string) != "" {
+			input.CACertificateIdentifier = aws.String(v.(string))
+		}
+
 		if v := d.Get(names.AttrDatabaseName); v.(string) != "" {
 			input.DatabaseName = aws.String(v.(string))
 		}
@@ -1191,6 +1203,10 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(dbc.AvailabilityZones))
 	d.Set("backtrack_window", dbc.BacktrackWindow)
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
+	if dbc.CertificateDetails != nil {
+		d.Set("ca_certificate_identifier", dbc.CertificateDetails.CAIdentifier)
+		d.Set("ca_certificate_valid_till", dbc.CertificateDetails.ValidTill.Format(time.RFC3339))
+	}
 	d.Set(names.AttrClusterIdentifier, dbc.DBClusterIdentifier)
 	d.Set("cluster_identifier_prefix", create.NamePrefixFromName(aws.StringValue(dbc.DBClusterIdentifier)))
 	var clusterMembers []string
@@ -1336,6 +1352,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("backup_retention_period") {
 			input.BackupRetentionPeriod = aws.Int64(int64(d.Get("backup_retention_period").(int)))
+		}
+
+		if d.HasChange("ca_certificate_identifier") {
+			input.CACertificateIdentifier = aws.String(d.Get("ca_certificate_identifier").(string))
 		}
 
 		if d.HasChange("copy_tags_to_snapshot") {

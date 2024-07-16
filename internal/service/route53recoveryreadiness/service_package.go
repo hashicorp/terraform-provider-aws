@@ -6,36 +6,39 @@ package route53recoveryreadiness
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	route53recoveryreadiness_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*route53recoveryreadiness_sdkv1.Route53RecoveryReadiness, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*route53recoveryreadiness.Route53RecoveryReadiness, error) {
+	sess := config[names.AttrSession].(*session.Session)
 
-	cfg := aws_sdkv1.Config{}
+	cfg := aws.Config{}
 
 	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
 		tflog.Debug(ctx, "setting endpoint", map[string]any{
 			"tf_aws.endpoint": endpoint,
 		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-
-		if sess.Config.UseFIPSEndpoint == endpoints_sdkv1.FIPSEndpointStateEnabled {
-			tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
-			cfg.UseFIPSEndpoint = endpoints_sdkv1.FIPSEndpointStateDisabled
-		}
+		cfg.Endpoint = aws.String(endpoint)
+	} else {
+		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
 	}
 
 	// Force "global" services to correct Regions.
-	if config["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
-		cfg.Region = aws_sdkv1.String(endpoints_sdkv1.UsWest2RegionID)
+	if config["partition"].(string) == endpoints.AwsPartitionID {
+		if aws.StringValue(cfg.Region) != endpoints.UsWest2RegionID {
+			tflog.Info(ctx, "overriding region", map[string]any{
+				"original_region": aws.StringValue(cfg.Region),
+				"override_region": endpoints.UsWest2RegionID,
+			})
+			cfg.Region = aws.String(endpoints.UsWest2RegionID)
+		}
 	}
 
-	return route53recoveryreadiness_sdkv1.New(sess.Copy(&cfg)), nil
+	return route53recoveryreadiness.New(sess.Copy(&cfg)), nil
 }

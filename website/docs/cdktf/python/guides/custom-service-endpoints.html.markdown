@@ -108,6 +108,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>appflow</code></li>
   <li><code>appintegrations</code> (or <code>appintegrationsservice</code>)</li>
   <li><code>applicationinsights</code></li>
+  <li><code>applicationsignals</code></li>
   <li><code>appmesh</code></li>
   <li><code>apprunner</code></li>
   <li><code>appstream</code></li>
@@ -157,6 +158,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>costoptimizationhub</code></li>
   <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
   <li><code>customerprofiles</code></li>
+  <li><code>databrew</code> (or <code>gluedatabrew</code>)</li>
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
   <li><code>datasync</code></li>
@@ -171,6 +173,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>dms</code> (or <code>databasemigration</code> or <code>databasemigrationservice</code>)</li>
   <li><code>docdb</code></li>
   <li><code>docdbelastic</code></li>
+  <li><code>drs</code></li>
   <li><code>ds</code> (or <code>directoryservice</code>)</li>
   <li><code>dynamodb</code></li>
   <li><code>ec2</code></li>
@@ -249,6 +252,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>neptunegraph</code></li>
   <li><code>networkfirewall</code></li>
   <li><code>networkmanager</code></li>
+  <li><code>networkmonitor</code></li>
   <li><code>oam</code> (or <code>cloudwatchobservabilityaccessmanager</code>)</li>
   <li><code>opensearch</code> (or <code>opensearchservice</code>)</li>
   <li><code>opensearchserverless</code></li>
@@ -428,4 +432,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-715899377097cb04e8609e74d778c3a361e886241b44dc5bc853411c3fc69237 -->
+<!-- cache-key: cdktf-0.20.1 input-227dc81e204e7a234b4a0663958241753fb418ed412942f24e32d7208467522e -->

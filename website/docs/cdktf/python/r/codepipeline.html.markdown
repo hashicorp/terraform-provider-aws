@@ -212,7 +212,7 @@ A `trigger` block supports the following arguments:
 
 A `git_configuration` block supports the following arguments:
 
-* `source_action_name` - (Required) The name of the pipeline source action where the trigger configuration.
+* `source_action_name` - (Required) The name of the pipeline source action where the trigger configuration, such as Git tags, is specified. The trigger configuration will start the pipeline upon the specified change only.
 * `pull_request` - (Optional) The field where the repository event that will start the pipeline is specified as pull requests. A `pull_request` block is documented below.
 * `push` - (Optional) The field where the repository event that will start the pipeline, such as pushing Git tags, is specified with details. A `push` block is documented below.
 
@@ -284,4 +284,4 @@ Using `terraform import`, import CodePipelines using the name. For example:
 % terraform import aws_codepipeline.foo example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5520b5342dee2a90566e4663f10c917fd65e66a2734a38eeddba35384d88a406 -->
+<!-- cache-key: cdktf-0.20.1 input-071ecf43335ca92ceee0c2e48e1d18ec59e3738c955fe051ce998af580a98cc9 -->

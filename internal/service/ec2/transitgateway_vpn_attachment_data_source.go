@@ -21,6 +21,7 @@ import (
 
 // @SDKDataSource("aws_ec2_transit_gateway_vpn_attachment", name="Transit Gateway VPN Attachment")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceTransitGatewayVPNAttachment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayVPNAttachmentRead,
