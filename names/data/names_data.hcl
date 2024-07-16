@@ -2663,7 +2663,7 @@ service "dataexchange" {
 
   sdk {
     id             = "DataExchange"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
