@@ -7,13 +7,14 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest/jsoncmp"
 	"github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
-func TestDecodeFromString(t *testing.T) {
+func TestEncodeToString(t *testing.T) {
 	t.Parallel()
 
-	type to struct {
+	type from struct {
 		A string
 		B int
 		C struct {
@@ -21,8 +22,8 @@ func TestDecodeFromString(t *testing.T) {
 		}
 		D []string
 	}
-	var to0, to1, to2, to3 to
-	to4 := to{
+	var from0 from
+	from1 := from{
 		A: "test1",
 		B: 42,
 		C: struct {
@@ -33,28 +34,19 @@ func TestDecodeFromString(t *testing.T) {
 
 	testCases := []struct {
 		testName   string
-		input      string
-		output     any
-		wantOutput any
+		input      any
+		wantOutput string
 		wantErr    bool
 	}{
 		{
 			testName:   "empty JSON",
-			input:      `{}`,
-			output:     &to1,
-			wantOutput: &to0,
+			input:      &from0,
+			wantOutput: `{"A": "", "B": 0, "C": {"A": false}, "D": null}`,
 		},
 		{
-			testName: "bad JSON",
-			input:    `{test`,
-			output:   &to2,
-			wantErr:  true,
-		},
-		{
-			testName:   "full JSON",
-			input:      `{"A": "test1", "D": ["test2", "test3"], "C": {"A": true}, "B": 42}`,
-			output:     &to3,
-			wantOutput: &to4,
+			testName:   "empty JSON",
+			input:      &from1,
+			wantOutput: `{"A": "test1", "D": ["test2", "test3"], "C": {"A": true}, "B": 42}`,
 		},
 	}
 
@@ -63,12 +55,12 @@ func TestDecodeFromString(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			err := json.DecodeFromString(testCase.input, testCase.output)
+			output, err := json.EncodeToString(testCase.input)
 			if got, want := err != nil, testCase.wantErr; !cmp.Equal(got, want) {
-				t.Errorf("DecodeFromString(%s) err %t, want %t", testCase.input, got, want)
+				t.Errorf("EncodeToString(%v) err %t, want %t", testCase.input, got, want)
 			}
 			if err == nil {
-				if diff := cmp.Diff(testCase.output, testCase.wantOutput); diff != "" {
+				if diff := jsoncmp.Diff(output, testCase.wantOutput); diff != "" {
 					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 				}
 			}
