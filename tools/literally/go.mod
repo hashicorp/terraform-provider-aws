@@ -1,3 +1,3 @@
 module github.com/hashicorp/terraform-provider-aws/tools/literally
 
-go 1.22.4
+go 1.22.5

@@ -194,7 +194,7 @@ func (r *resourceCapacityBlockReservation) Create(ctx context.Context, request r
 	output, err := conn.PurchaseCapacityBlock(ctx, input)
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameCapacityBlockReservation, plan.CapacityBlockOfferingID.String(), err),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameCapacityBlockReservation, plan.CapacityBlockOfferingID.ValueString(), err),
 			err.Error(),
 		)
 		return
@@ -202,7 +202,7 @@ func (r *resourceCapacityBlockReservation) Create(ctx context.Context, request r
 
 	if output == nil || output.CapacityReservation == nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameCapacityBlockReservation, plan.CapacityBlockOfferingID.String(), nil),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameCapacityBlockReservation, plan.CapacityBlockOfferingID.ValueString(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
@@ -217,7 +217,7 @@ func (r *resourceCapacityBlockReservation) Create(ctx context.Context, request r
 
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForCreation, ResNameCapacityBlockReservation, state.ID.String(), err),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForCreation, ResNameCapacityBlockReservation, state.ID.ValueString(), err),
 			err.Error(),
 		)
 		return
@@ -247,6 +247,13 @@ func (r *resourceCapacityBlockReservation) Read(ctx context.Context, request res
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.EC2, create.ErrActionReading, ResNameCapacityBlockReservation, data.ID.ValueString(), err),
+			err.Error(),
+		)
 		return
 	}
 

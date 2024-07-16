@@ -5,10 +5,8 @@ package kafkaconnect
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	kafkaconnect_sdkv1 "github.com/aws/aws-sdk-go/service/kafkaconnect"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	kafkaconnect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kafkaconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,16 +25,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceConnector,
+			Factory:  dataSourceConnector,
 			TypeName: "aws_mskconnect_connector",
+			Name:     "Connector",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
-			Factory:  DataSourceCustomPlugin,
+			Factory:  dataSourceCustomPlugin,
 			TypeName: "aws_mskconnect_custom_plugin",
+			Name:     "Custom Plugin",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
-			Factory:  DataSourceWorkerConfiguration,
+			Factory:  dataSourceWorkerConfiguration,
 			TypeName: "aws_mskconnect_worker_configuration",
+			Name:     "Worker Configuration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 	}
 }
@@ -44,16 +54,28 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceConnector,
+			Factory:  resourceConnector,
 			TypeName: "aws_mskconnect_connector",
+			Name:     "Connector",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
-			Factory:  ResourceCustomPlugin,
+			Factory:  resourceCustomPlugin,
 			TypeName: "aws_mskconnect_custom_plugin",
+			Name:     "Custom Plugin",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
-			Factory:  ResourceWorkerConfiguration,
+			Factory:  resourceWorkerConfiguration,
 			TypeName: "aws_mskconnect_worker_configuration",
+			Name:     "Worker Configuration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 	}
 }
@@ -62,22 +84,14 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.KafkaConnect
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*kafkaconnect_sdkv1.KafkaConnect, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*kafkaconnect_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return kafkaconnect_sdkv1.New(sess.Copy(&cfg)), nil
+	return kafkaconnect_sdkv2.NewFromConfig(cfg,
+		kafkaconnect_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

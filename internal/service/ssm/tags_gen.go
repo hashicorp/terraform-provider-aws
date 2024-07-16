@@ -99,12 +99,12 @@ func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 }
 
 // createTags creates ssm service tags for new resources.
-func createTags(ctx context.Context, conn *ssm.Client, identifier, resourceType string, tags []awstypes.Tag) error {
+func createTags(ctx context.Context, conn *ssm.Client, identifier, resourceType string, tags []awstypes.Tag, optFns ...func(*ssm.Options)) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, resourceType, nil, KeyValueTags(ctx, tags))
+	return updateTags(ctx, conn, identifier, resourceType, nil, KeyValueTags(ctx, tags), optFns...)
 }
 
 // updateTags updates ssm service tags.
