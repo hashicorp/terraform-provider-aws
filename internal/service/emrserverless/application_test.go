@@ -279,8 +279,8 @@ func TestAccEMRServerlessApplication_interactiveConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled", acctest.CtFalse),
+					resource.TestCheckNoResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled"),
+					resource.TestCheckNoResourceAttr(resourceName, "interactive_configuration.0.studio_enabled"),
 				),
 			},
 		},
