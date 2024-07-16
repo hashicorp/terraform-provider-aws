@@ -39,24 +39,11 @@ jobs:
 
   comment:
     if: github.event_name == 'pull_request_target'
-    name: Comment if Needed
+    name: Comment on Non-Maintainer Edit
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Community Check
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-        with:
-          sparse-checkout: .github/actions/community_check
-
-      - name: Community Check
-        id: community_check
-        uses: ./.github/actions/community_check
-        with:
-          user_login: ${{ github.event.pull_request.user.login }}
-          maintainers: ${{ secrets.MAINTAINERS }}
-
       - name: Filter Changes
         id: filter
-        if: steps.community_check.outputs.maintainer == 'false'
         uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         with:
           filters: |
@@ -65,9 +52,24 @@ jobs:
               - go.mod
               - go.sum
 
+      - name: Checkout Community Check
+        id: checkout
+        if: steps.filter.outputs.changed == 'true'
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          sparse-checkout: .github/actions/community_check
+
+      - name: Community Check
+        if: steps.checkout.outcome == 'success'
+        id: community_check
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ github.event.pull_request.user.login }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+
       - name: Check for Existing Comment
         id: prc
-        if: steps.filter.outputs.changed == 'true'
+        if: steps.community_check.outputs.maintainer == 'false'
         uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e # v3.1.0
         with:
           issue-number: ${{ github.event.pull_request.number }}
