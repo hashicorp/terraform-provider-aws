@@ -312,7 +312,7 @@ func ResourceInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice(EngineLifecycleSupport_Values(), false),
+				ValidateFunc: validation.StringInSlice(engineLifecycleSupport_Values(), false),
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,

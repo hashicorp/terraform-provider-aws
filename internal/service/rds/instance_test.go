@@ -236,7 +236,7 @@ func TestAccRDSInstance_engineLifecycleSupport_disabled(t *testing.T) {
 					testAccCheckInstanceAttributes(&v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.InstanceEngineMySQL),
-					resource.TestCheckResourceAttr(resourceName, "engine_lifecycle_support", tfrds.EngineLifecycleSupportDisabled),
+					resource.TestCheckResourceAttr(resourceName, "engine_lifecycle_support", "open-source-rds-extended-support-disabled"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 				),
 			},

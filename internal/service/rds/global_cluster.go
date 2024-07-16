@@ -64,13 +64,13 @@ func ResourceGlobalCluster() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"source_db_cluster_identifier"},
-				ValidateFunc:  validation.StringInSlice(GlobalClusterEngine_Values(), false),
+				ValidateFunc:  validation.StringInSlice(globalClusterEngine_Values(), false),
 			},
 			"engine_lifecycle_support": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice(EngineLifecycleSupport_Values(), false),
+				ValidateFunc: validation.StringInSlice(engineLifecycleSupport_Values(), false),
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -170,7 +170,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	// since we cannot have Engine default after adding SourceDBClusterIdentifier:
 	// InvalidParameterValue: When creating standalone global cluster, value for engineName should be specified
 	if input.Engine == nil && input.SourceDBClusterIdentifier == nil {
-		input.Engine = aws.String(GlobalClusterEngineAurora)
+		input.Engine = aws.String(globalClusterEngineAurora)
 	}
 
 	output, err := conn.CreateGlobalClusterWithContext(ctx, input)

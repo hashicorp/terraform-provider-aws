@@ -1387,7 +1387,7 @@ func TestAccRDSCluster_engineVersion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
-					resource.TestCheckResourceAttr(resourceName, "engine_lifecycle_support", tfrds.EngineLifecycleSupport),
+					resource.TestCheckResourceAttr(resourceName, "engine_lifecycle_support", "open-source-rds-extended-support"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceName, names.AttrVersion),
 				),
 			},
@@ -2630,7 +2630,7 @@ func TestAccRDSCluster_engineLifecycleSupport_disabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "backtrack_window", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
-					resource.TestCheckResourceAttr(resourceName, "engine_lifecycle_support", tfrds.EngineLifecycleSupportDisabled),
+					resource.TestCheckResourceAttr(resourceName, "engine_lifecycle_support", "open-source-rds-extended-support-disabled"),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -5262,7 +5262,7 @@ resource "aws_rds_cluster" "test" {
   master_username          = "tfacctest"
   master_password          = "avoid-plaintext-passwords"
   skip_final_snapshot      = true
-  engine_lifecycle_support = %[3]q
+  engine_lifecycle_support = "open-source-rds-extended-support-disabled"
 }
-`, rName, tfrds.ClusterEngineAuroraPostgreSQL, tfrds.EngineLifecycleSupportDisabled)
+`, rName, tfrds.ClusterEngineAuroraPostgreSQL)
 }
