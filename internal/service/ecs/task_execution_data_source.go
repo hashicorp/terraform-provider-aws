@@ -299,7 +299,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if v, ok := d.GetOk(names.AttrCapacityProviderStrategy); ok {
-		input.CapacityProviderStrategy = expandCapacityProviderStrategy(v.(*schema.Set))
+		input.CapacityProviderStrategy = expandCapacityProviderStrategyItems(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("client_token"); ok {
 		input.ClientToken = aws.String(v.(string))

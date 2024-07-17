@@ -185,7 +185,7 @@ func sweepServices(region string) error {
 				}
 
 				for _, v := range page.ServiceArns {
-					r := ResourceService()
+					r := resourceService()
 					d := r.Data(nil)
 					d.SetId(v)
 					d.Set("cluster", clusterARN)

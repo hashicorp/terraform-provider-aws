@@ -288,7 +288,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk(names.AttrCapacityProviderStrategy); ok && v.(*schema.Set).Len() > 0 {
-		input.CapacityProviderStrategy = expandCapacityProviderStrategy(v.(*schema.Set))
+		input.CapacityProviderStrategy = expandCapacityProviderStrategyItems(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk(names.AttrExternalID); ok {
@@ -420,7 +420,7 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("task_definition", taskSet.TaskDefinition)
 	d.Set("task_set_id", taskSet.Id)
 
-	if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategy(taskSet.CapacityProviderStrategy)); err != nil {
+	if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategyItems(taskSet.CapacityProviderStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
 	}
 

@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -55,14 +54,14 @@ func Test_GetRoleNameFromARN(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := tfecs.GetRoleNameFromARN(tt.arn); got != tt.want {
+			if got := tfecs.RoleNameFromARN(tt.arn); got != tt.want {
 				t.Errorf("GetRoleNameFromARN() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_GetClustereNameFromARN(t *testing.T) {
+func TestClustereNameFromARN(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -81,7 +80,7 @@ func Test_GetClustereNameFromARN(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := tfecs.GetClusterNameFromARN(tt.arn); got != tt.want {
+			if got := tfecs.ClusterNameFromARN(tt.arn); got != tt.want {
 				t.Errorf("GetClusterNameFromARN() = %v, want %v", got, tt.want)
 			}
 		})
@@ -1658,17 +1657,18 @@ func TestAccECSService_executeCommand(t *testing.T) {
 func testAccCheckServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
-		partition := acctest.Provider.Meta().(*conns.AWSClient).Partition
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_service" {
 				continue
 			}
 
-			service, err := tfecs.FindServiceNoTagsByID(ctx, conn, partition, rs.Primary.ID, rs.Primary.Attributes["cluster"])
+			service, err := tfecs.FindServiceNoTagsByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["cluster"])
+
 			if tfresource.NotFound(err) {
 				return nil
 			}
+
 			if err != nil {
 				return err
 			}
@@ -1692,17 +1692,15 @@ func testAccCheckServiceExists(ctx context.Context, name string, service *awstyp
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
-		partition := acctest.Provider.Meta().(*conns.AWSClient).Partition
 
 		err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 			var err error
-			service, err = tfecs.FindServiceNoTagsByID(ctx, conn, partition, rs.Primary.ID, rs.Primary.Attributes["cluster"])
+			service, err = tfecs.FindServiceNoTagsByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["cluster"])
+
 			if tfresource.NotFound(err) {
 				return retry.RetryableError(err)
 			}
-			if errs.IsA[*awstypes.ClusterNotFoundException](err) {
-				return retry.RetryableError(err)
-			}
+
 			if err != nil {
 				return retry.NonRetryableError(err)
 			}

@@ -81,7 +81,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Cluster Capacity Providers",
 		},
 		{
-			Factory:  ResourceService,
+			Factory:  resourceService,
 			TypeName: "aws_ecs_service",
 			Name:     "Service",
 			Tags: &types.ServicePackageResourceTags{

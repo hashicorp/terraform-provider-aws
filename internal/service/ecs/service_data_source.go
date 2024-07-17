@@ -60,7 +60,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
-	service, err := findServiceByTwoPartKey(ctx, conn, meta.(*conns.AWSClient).Partition, d.Get(names.AttrServiceName).(string), d.Get("cluster_arn").(string))
+	service, err := findServiceByTwoPartKey(ctx, conn, d.Get(names.AttrServiceName).(string), d.Get("cluster_arn").(string))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("ECS Service", err))

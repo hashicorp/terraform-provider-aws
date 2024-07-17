@@ -9,11 +9,15 @@ var (
 	ResourceCapacityProvider         = resourceCapacityProvider
 	ResourceCluster                  = resourceCluster
 	ResourceClusterCapacityProviders = resourceClusterCapacityProviders
+	ResourceService                  = resourceService
 	ResourceTag                      = resourceTag
 
+	ClusterNameFromARN                      = clusterNameFromARN
 	FindCapacityProviderByARN               = findCapacityProviderByARN
 	FindClusterByNameOrARN                  = findClusterByNameOrARN
 	FindEffectiveAccountSettingByName       = findEffectiveAccountSettingByName
+	FindServiceNoTagsByTwoPartKey           = findServiceNoTagsByTwoPartKey
 	FindTag                                 = findTag
+	RoleNameFromARN                         = roleNameFromARN
 	ValidTaskDefinitionContainerDefinitions = validTaskDefinitionContainerDefinitions
 )

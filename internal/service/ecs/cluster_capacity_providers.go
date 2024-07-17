@@ -88,7 +88,7 @@ func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.Resource
 	input := &ecs.PutClusterCapacityProvidersInput{
 		CapacityProviders:               flex.ExpandStringValueSet(d.Get("capacity_providers").(*schema.Set)),
 		Cluster:                         aws.String(clusterName),
-		DefaultCapacityProviderStrategy: expandCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
+		DefaultCapacityProviderStrategy: expandCapacityProviderStrategyItems(d.Get("default_capacity_provider_strategy").(*schema.Set)),
 	}
 
 	err := retryClusterCapacityProvidersPut(ctx, conn, input)
@@ -128,7 +128,7 @@ func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "setting capacity_providers: %s", err)
 	}
 	d.Set(names.AttrClusterName, cluster.ClusterName)
-	if err := d.Set("default_capacity_provider_strategy", flattenCapacityProviderStrategy(cluster.DefaultCapacityProviderStrategy)); err != nil {
+	if err := d.Set("default_capacity_provider_strategy", flattenCapacityProviderStrategyItems(cluster.DefaultCapacityProviderStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_capacity_provider_strategy: %s", err)
 	}
 
