@@ -46,9 +46,13 @@ var (
 	ResourceInstanceState                            = resourceInstanceState
 	ResourceKeyPair                                  = resourceKeyPair
 	ResourceLaunchTemplate                           = resourceLaunchTemplate
+	ResourceLocalGatewayRoute                        = resourceLocalGatewayRoute
+	ResourceLocalGatewayRouteTableVPCAssociation     = resourceLocalGatewayRouteTableVPCAssociation
 	ResourceMainRouteTableAssociation                = resourceMainRouteTableAssociation
 	ResourceNetworkACL                               = resourceNetworkACL
 	ResourceNetworkACLRule                           = resourceNetworkACLRule
+	ResourceNetworkInsightsAnalysis                  = resourceNetworkInsightsAnalysis
+	ResourceNetworkInsightsPath                      = resourceNetworkInsightsPath
 	ResourceNetworkInterface                         = resourceNetworkInterface
 	ResourcePlacementGroup                           = resourcePlacementGroup
 	ResourceRoute                                    = resourceRoute
@@ -121,8 +125,12 @@ var (
 	FindInstanceStateByID                                      = findInstanceStateByID
 	FindKeyPairByName                                          = findKeyPairByName
 	FindLaunchTemplateByID                                     = findLaunchTemplateByID
+	FindLocalGatewayRouteByTwoPartKey                          = findLocalGatewayRouteByTwoPartKey
+	FindLocalGatewayRouteTableVPCAssociationByID               = findLocalGatewayRouteTableVPCAssociationByID
 	FindMainRouteTableAssociationByID                          = findMainRouteTableAssociationByID
 	FindNetworkACLByIDV2                                       = findNetworkACLByID
+	FindNetworkInsightsAnalysisByID                            = findNetworkInsightsAnalysisByID
+	FindNetworkInsightsPathByID                                = findNetworkInsightsPathByID
 	FindNetworkInterfaceByIDV2                                 = findNetworkInterfaceByID
 	FindNetworkPerformanceMetricSubscriptionByFourPartKey      = findNetworkPerformanceMetricSubscriptionByFourPartKey
 	FindPlacementGroupByName                                   = findPlacementGroupByName

@@ -76,13 +76,40 @@ func resourceStackSetInstance() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"organizational_unit_ids": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MinItems: 1,
+							Type:          schema.TypeSet,
+							Optional:      true,
+							ForceNew:      true,
+							MinItems:      1,
+							ConflictsWith: []string{names.AttrAccountID},
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32}|r-[0-9a-z]{4,32})$`), ""),
 							},
+						},
+						"account_filter_type": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ForceNew:      true,
+							ValidateFunc:  validation.StringInSlice(enum.Slice(awstypes.AccountFilterType.Values("")...), false),
+							ConflictsWith: []string{names.AttrAccountID},
+						},
+						"accounts": {
+							Type:          schema.TypeSet,
+							Optional:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{names.AttrAccountID},
+							MinItems:      1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: verify.ValidAccountID,
+							},
+						},
+						"accounts_url": {
+							Type:          schema.TypeString,
+							ForceNew:      true,
+							Optional:      true,
+							ConflictsWith: []string{names.AttrAccountID},
+							ValidateFunc:  validation.StringMatch(regexache.MustCompile(`(s3://|http(s?)://).+`), ""),
 						},
 					},
 				},
@@ -357,7 +384,6 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 			return sdkdiag.AppendErrorf(diags, "finding CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 		}
 
-		d.Set("deployment_targets", flattenDeploymentTargetsFromSlice(orgIDs))
 		d.Set("stack_instance_summaries", flattenStackInstanceSummaries(summaries))
 	}
 
@@ -368,7 +394,7 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	if d.HasChanges("deployment_targets", "parameter_overrides", "operation_preferences") {
+	if d.HasChanges("parameter_overrides", "operation_preferences") {
 		parts, err := flex.ExpandResourceId(d.Id(), stackSetInstanceResourceIDPartCount, false)
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -386,13 +412,6 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 		callAs := d.Get("call_as").(string)
 		if v, ok := d.GetOk("call_as"); ok {
 			input.CallAs = awstypes.CallAs(v.(string))
-		}
-
-		if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			dt := expandDeploymentTargets(v.([]interface{}))
-			// reset input Accounts as the API accepts only 1 of Accounts and DeploymentTargets
-			input.Accounts = nil
-			input.DeploymentTargets = dt
 		}
 
 		if v, ok := d.GetOk("parameter_overrides"); ok {
@@ -560,24 +579,17 @@ func expandDeploymentTargets(tfList []interface{}) *awstypes.DeploymentTargets {
 	if v, ok := tfMap["organizational_unit_ids"].(*schema.Set); ok && v.Len() > 0 {
 		dt.OrganizationalUnitIds = flex.ExpandStringValueSet(v)
 	}
+	if v, ok := tfMap["account_filter_type"].(string); ok && len(v) > 0 {
+		dt.AccountFilterType = awstypes.AccountFilterType(v)
+	}
+	if v, ok := tfMap["accounts"].(*schema.Set); ok && v.Len() > 0 {
+		dt.Accounts = flex.ExpandStringValueSet(v)
+	}
+	if v, ok := tfMap["accounts_url"].(string); ok && len(v) > 0 {
+		dt.AccountsUrl = aws.String(v)
+	}
 
 	return dt
-}
-
-// flattenDeployment targets converts a list of organizational units (typically
-// parsed from the resource ID) into the Terraform representation of the
-// deployment_targets attribute.
-func flattenDeploymentTargetsFromSlice(orgIDs []string) []interface{} {
-	tfList := []interface{}{}
-	for _, ou := range orgIDs {
-		tfList = append(tfList, ou)
-	}
-
-	m := map[string]interface{}{
-		"organizational_unit_ids": tfList,
-	}
-
-	return []interface{}{m}
 }
 
 func flattenStackInstanceSummaries(apiObject []awstypes.StackInstanceSummary) []interface{} {

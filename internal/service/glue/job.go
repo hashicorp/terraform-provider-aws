@@ -119,6 +119,10 @@ func ResourceJob() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"number_of_workers", "worker_type"},
 			},
+			"maintenance_window": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"max_retries": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -227,6 +231,10 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.MaxCapacity = aws.Float64(v.(float64))
 	}
 
+	if v, ok := d.GetOk("maintenance_window"); ok {
+		input.MaintenanceWindow = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("max_retries"); ok {
 		input.MaxRetries = aws.Int64(int64(v.(int)))
 	}
@@ -303,6 +311,7 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "setting execution_property: %s", err)
 	}
 	d.Set("glue_version", job.GlueVersion)
+	d.Set("maintenance_window", job.MaintenanceWindow)
 	d.Set(names.AttrMaxCapacity, job.MaxCapacity)
 	d.Set("max_retries", job.MaxRetries)
 	d.Set(names.AttrName, job.Name)
@@ -353,6 +362,10 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 		if v, ok := d.GetOk("glue_version"); ok {
 			jobUpdate.GlueVersion = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("maintenance_window"); ok {
+			jobUpdate.MaintenanceWindow = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("max_retries"); ok {

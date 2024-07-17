@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"net"
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -16,8 +18,6 @@ import (
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	elasticloadbalancingv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	elbv2_sdkv1 "github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -93,7 +93,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 	testcases := map[string]endpointTestCase{
 		"no config": {
 			with:     []setupFunc{withNoConfig},
-			expected: expectDefaultEndpoint(expectedEndpointRegion),
+			expected: expectDefaultEndpoint(t, expectedEndpointRegion),
 		},
 
 		// Package name endpoint on Config
@@ -276,7 +276,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			with: []setupFunc{
 				withUseFIPSInConfig,
 			},
-			expected: expectDefaultFIPSEndpoint(expectedEndpointRegion),
+			expected: expectDefaultFIPSEndpoint(t, expectedEndpointRegion),
 		},
 
 		"use fips config with package name endpoint config": {
@@ -288,45 +288,33 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 		},
 	}
 
-	t.Run("v1", func(t *testing.T) {
-		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
+	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
+		testcase := testcase
 
-			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, providerRegion, testcase, callServiceV1)
-			})
-		}
-	})
-
-	t.Run("v2", func(t *testing.T) {
-		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
-
-			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, providerRegion, testcase, callServiceV2)
-			})
-		}
-	})
+		t.Run(name, func(t *testing.T) {
+			testEndpointCase(t, providerRegion, testcase, callService)
+		})
+	}
 }
 
-func defaultEndpoint(region string) string {
+func defaultEndpoint(region string) (url.URL, error) {
 	r := elasticloadbalancingv2_sdkv2.NewDefaultEndpointResolverV2()
 
 	ep, err := r.ResolveEndpoint(context.Background(), elasticloadbalancingv2_sdkv2.EndpointParameters{
 		Region: aws_sdkv2.String(region),
 	})
 	if err != nil {
-		return err.Error()
+		return url.URL{}, err
 	}
 
 	if ep.URI.Path == "" {
 		ep.URI.Path = "/"
 	}
 
-	return ep.URI.String()
+	return ep.URI, nil
 }
 
-func defaultFIPSEndpoint(region string) string {
+func defaultFIPSEndpoint(region string) (url.URL, error) {
 	r := elasticloadbalancingv2_sdkv2.NewDefaultEndpointResolverV2()
 
 	ep, err := r.ResolveEndpoint(context.Background(), elasticloadbalancingv2_sdkv2.EndpointParameters{
@@ -334,17 +322,17 @@ func defaultFIPSEndpoint(region string) string {
 		UseFIPS: aws_sdkv2.Bool(true),
 	})
 	if err != nil {
-		return err.Error()
+		return url.URL{}, err
 	}
 
 	if ep.URI.Path == "" {
 		ep.URI.Path = "/"
 	}
 
-	return ep.URI.String()
+	return ep.URI, nil
 }
 
-func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
+func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
 	client := meta.ELBV2Client(ctx)
@@ -367,21 +355,6 @@ func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) api
 	}
 
 	return result
-}
-
-func callServiceV1(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
-	t.Helper()
-
-	client := meta.ELBV2Conn(ctx)
-
-	req, _ := client.DescribeLoadBalancersRequest(&elbv2_sdkv1.DescribeLoadBalancersInput{})
-
-	req.HTTPRequest.URL.Path = "/"
-
-	return apiCallParams{
-		endpoint: req.HTTPRequest.URL.String(),
-		region:   aws_sdkv1.StringValue(client.Config.Region),
-	}
 }
 
 func withNoConfig(_ *caseSetup) {
@@ -437,16 +410,38 @@ func withUseFIPSInConfig(setup *caseSetup) {
 	setup.config["use_fips_endpoint"] = true
 }
 
-func expectDefaultEndpoint(region string) caseExpectations {
+func expectDefaultEndpoint(t *testing.T, region string) caseExpectations {
+	t.Helper()
+
+	endpoint, err := defaultEndpoint(region)
+	if err != nil {
+		t.Fatalf("resolving accessanalyzer default endpoint: %s", err)
+	}
+
 	return caseExpectations{
-		endpoint: defaultEndpoint(region),
+		endpoint: endpoint.String(),
 		region:   expectedCallRegion,
 	}
 }
 
-func expectDefaultFIPSEndpoint(region string) caseExpectations {
+func expectDefaultFIPSEndpoint(t *testing.T, region string) caseExpectations {
+	t.Helper()
+
+	endpoint, err := defaultFIPSEndpoint(region)
+	if err != nil {
+		t.Fatalf("resolving accessanalyzer FIPS endpoint: %s", err)
+	}
+
+	hostname := endpoint.Hostname()
+	_, err = net.LookupHost(hostname)
+	if dnsErr, ok := errs.As[*net.DNSError](err); ok && dnsErr.IsNotFound {
+		return expectDefaultEndpoint(t, region)
+	} else if err != nil {
+		t.Fatalf("looking up accessanalyzer endpoint %q: %s", hostname, err)
+	}
+
 	return caseExpectations{
-		endpoint: defaultFIPSEndpoint(region),
+		endpoint: endpoint.String(),
 		region:   expectedCallRegion,
 	}
 }

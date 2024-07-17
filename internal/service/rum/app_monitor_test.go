@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudwatchrum"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/rum/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccRUMAppMonitor_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var appMon cloudwatchrum.AppMonitor
+	var appMon awstypes.AppMonitor
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rum_app_monitor.test"
 
@@ -73,7 +73,7 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 
 func TestAccRUMAppMonitor_customEvents(t *testing.T) {
 	ctx := acctest.Context(t)
-	var appMon cloudwatchrum.AppMonitor
+	var appMon awstypes.AppMonitor
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rum_app_monitor.test"
 
@@ -118,7 +118,7 @@ func TestAccRUMAppMonitor_customEvents(t *testing.T) {
 
 func TestAccRUMAppMonitor_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var appMon cloudwatchrum.AppMonitor
+	var appMon awstypes.AppMonitor
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rum_app_monitor.test"
 
@@ -164,7 +164,7 @@ func TestAccRUMAppMonitor_tags(t *testing.T) {
 
 func TestAccRUMAppMonitor_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var appMon cloudwatchrum.AppMonitor
+	var appMon awstypes.AppMonitor
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rum_app_monitor.test"
 
@@ -189,7 +189,7 @@ func TestAccRUMAppMonitor_disappears(t *testing.T) {
 
 func testAccCheckAppMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rum_app_monitor" {
@@ -213,17 +213,14 @@ func testAccCheckAppMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAppMonitorExists(ctx context.Context, n string, v *cloudwatchrum.AppMonitor) resource.TestCheckFunc {
+func testAccCheckAppMonitorExists(ctx context.Context, n string, v *awstypes.AppMonitor) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CloudWatch RUM App Monitor ID is set")
-		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMClient(ctx)
 
 		output, err := tfcloudwatchrum.FindAppMonitorByName(ctx, conn, rs.Primary.ID)
 
