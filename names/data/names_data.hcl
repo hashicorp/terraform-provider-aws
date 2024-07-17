@@ -2663,7 +2663,7 @@ service "dataexchange" {
 
   sdk {
     id             = "DataExchange"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -2692,7 +2692,7 @@ service "datapipeline" {
 
   sdk {
     id             = "Data Pipeline"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -2771,7 +2771,7 @@ service "detective" {
 
   sdk {
     id             = "Detective"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -2915,7 +2915,7 @@ service "dms" {
 
   sdk {
     id             = "Database Migration Service"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {

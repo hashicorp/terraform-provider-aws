@@ -613,7 +613,7 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodePipelineConfig_pipelinetype(rName),
+				Config: testAccCodePipelineConfig_pipelinetype(rName, "V1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.codepipeline_role", names.AttrARN),
@@ -908,7 +908,7 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "variable.1.name", "test_var2"),
 					resource.TestCheckResourceAttr(resourceName, "variable.1.description", "This is test pipeline variable 2."),
 					resource.TestCheckResourceAttr(resourceName, "variable.1.default_value", acctest.CtValue2),
-					resource.TestCheckResourceAttr(resourceName, "trigger.0.git_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.git_configuration.#", acctest.Ct1),
 				),
 			},
 			{
@@ -921,14 +921,14 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccCodePipelineConfig_pipelinetype(rName),
+				Config: testAccCodePipelineConfig_pipelinetype(rName, "V2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.codepipeline_role", names.AttrARN),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codepipeline", regexache.MustCompile(fmt.Sprintf("test-pipeline-%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "execution_mode", string(types.ExecutionModeSuperseded)),
-					resource.TestCheckResourceAttr(resourceName, "pipeline_type", string(types.PipelineTypeV1)),
+					resource.TestCheckResourceAttr(resourceName, "pipeline_type", string(types.PipelineTypeV2)),
 					resource.TestCheckResourceAttr(resourceName, "stage.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.name", "Source"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.#", acctest.Ct1),
@@ -962,7 +962,74 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.run_order", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", ""),
-					resource.TestCheckResourceAttr(resourceName, "trigger.0.git_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.git_configuration.#", acctest.Ct1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCodePipeline_manualApprovalTimeoutInMinutes(t *testing.T) {
+	ctx := acctest.Context(t)
+	var p types.PipelineDeclaration
+	rName := sdkacctest.RandString(10)
+	resourceName := "aws_codepipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodePipelineConfig_manualApprovalTimeoutInMinutes(rName, 5),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipelineExists(ctx, resourceName, &p),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.codepipeline_role", names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codepipeline", regexache.MustCompile(fmt.Sprintf("test-pipeline-%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stage.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.name", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.timeout_in_minutes", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Approval"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.timeout_in_minutes", "5"),
+					resource.TestCheckResourceAttr(resourceName, "stage.2.name", "Build"),
+					resource.TestCheckResourceAttr(resourceName, "stage.2.action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stage.2.action.0.timeout_in_minutes", acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCodePipelineConfig_manualApprovalNoTimeoutInMinutes(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipelineExists(ctx, resourceName, &p),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.codepipeline_role", names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codepipeline", regexache.MustCompile(fmt.Sprintf("test-pipeline-%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stage.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.name", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.timeout_in_minutes", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Approval"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.timeout_in_minutes", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage.2.name", "Build"),
+					resource.TestCheckResourceAttr(resourceName, "stage.2.action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stage.2.action.0.timeout_in_minutes", acctest.Ct0),
 				),
 			},
 			{
@@ -1291,7 +1358,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName))
 }
 
-func testAccCodePipelineConfig_pipelinetype(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
+func testAccCodePipelineConfig_pipelinetype(rName, pipelineType string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -1346,14 +1413,14 @@ resource "aws_codepipeline" "test" {
     }
   }
 
-  pipeline_type = "V1"
+  pipeline_type = %[2]q
 }
 
 resource "aws_codestarconnections_connection" "test" {
   name          = %[1]q
   provider_type = "GitHub"
 }
-`, rName))
+`, rName, pipelineType))
 }
 
 func testAccCodePipelineConfig_pipelinetypeUpdated1(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
@@ -2446,6 +2513,157 @@ resource "aws_codepipeline" "test" {
       }
     }
   }
+}
+`, rName))
+}
+
+func testAccCodePipelineConfig_manualApprovalTimeoutInMinutes(rName string, timeoutInMinutes int) string { // nosemgrep:ci.codepipeline-in-func-name
+	return acctest.ConfigCompose(
+		testAccS3DefaultBucket(rName),
+		testAccServiceIAMRole(rName),
+		fmt.Sprintf(`
+resource "aws_codepipeline" "test" {
+  name     = "test-pipeline-%[1]s"
+  role_arn = aws_iam_role.codepipeline_role.arn
+
+  artifact_store {
+    location = aws_s3_bucket.test.bucket
+    type     = "S3"
+
+    encryption_key {
+      id   = "1234"
+      type = "KMS"
+    }
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeStarSourceConnection"
+      version          = "1"
+      output_artifacts = ["test"]
+
+      configuration = {
+        ConnectionArn    = aws_codestarconnections_connection.test.arn
+        FullRepositoryId = "lifesum-terraform/test"
+        BranchName       = "main"
+      }
+    }
+  }
+
+  stage {
+    name = "Approval"
+
+    action {
+      name               = "Approval"
+      category           = "Approval"
+      owner              = "AWS"
+      provider           = "Manual"
+      version            = "1"
+      timeout_in_minutes = %[2]d
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name            = "Build"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["test"]
+      version         = "1"
+
+      configuration = {
+        ProjectName = "test"
+      }
+    }
+  }
+}
+
+resource "aws_codestarconnections_connection" "test" {
+  name          = %[1]q
+  provider_type = "GitHub"
+}
+`, rName, timeoutInMinutes))
+}
+
+func testAccCodePipelineConfig_manualApprovalNoTimeoutInMinutes(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
+	return acctest.ConfigCompose(
+		testAccS3DefaultBucket(rName),
+		testAccServiceIAMRole(rName),
+		fmt.Sprintf(`
+resource "aws_codepipeline" "test" {
+  name     = "test-pipeline-%[1]s"
+  role_arn = aws_iam_role.codepipeline_role.arn
+
+  artifact_store {
+    location = aws_s3_bucket.test.bucket
+    type     = "S3"
+
+    encryption_key {
+      id   = "1234"
+      type = "KMS"
+    }
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeStarSourceConnection"
+      version          = "1"
+      output_artifacts = ["test"]
+
+      configuration = {
+        ConnectionArn    = aws_codestarconnections_connection.test.arn
+        FullRepositoryId = "lifesum-terraform/test"
+        BranchName       = "main"
+      }
+    }
+  }
+
+  stage {
+    name = "Approval"
+
+    action {
+      name     = "Approval"
+      category = "Approval"
+      owner    = "AWS"
+      provider = "Manual"
+      version  = "1"
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name            = "Build"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["test"]
+      version         = "1"
+
+      configuration = {
+        ProjectName = "test"
+      }
+    }
+  }
+}
+
+resource "aws_codestarconnections_connection" "test" {
+  name          = %[1]q
+  provider_type = "GitHub"
 }
 `, rName))
 }

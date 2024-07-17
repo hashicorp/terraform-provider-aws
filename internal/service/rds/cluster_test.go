@@ -1387,6 +1387,7 @@ func TestAccRDSCluster_engineVersion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, "engine_lifecycle_support", "open-source-rds-extended-support"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceName, names.AttrVersion),
 				),
 			},
@@ -2605,6 +2606,34 @@ func TestAccRDSCluster_NoDeleteAutomatedBackups(t *testing.T) {
 					waitUntilAutomatedBackupCreated,
 				),
 			},
+		},
+	})
+}
+
+func TestAccRDSCluster_engineLifecycleSupport_disabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_engineLifecycleSupport_disabled(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "backtrack_window", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, "engine_lifecycle_support", "open-source-rds-extended-support-disabled"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
 		},
 	})
 }
@@ -5222,4 +5251,18 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot           = true
 }
 `, rName)
+}
+
+func testAccClusterConfig_engineLifecycleSupport_disabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier       = %[1]q
+  database_name            = "test"
+  engine                   = %[2]q
+  master_username          = "tfacctest"
+  master_password          = "avoid-plaintext-passwords"
+  skip_final_snapshot      = true
+  engine_lifecycle_support = "open-source-rds-extended-support-disabled"
+}
+`, rName, tfrds.ClusterEngineAuroraPostgreSQL)
 }
