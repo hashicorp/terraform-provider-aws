@@ -1663,7 +1663,7 @@ func testAccCheckServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			service, err := tfecs.FindServiceNoTagsByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["cluster"])
+			output, err := tfecs.FindServiceNoTagsByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["cluster"])
 
 			if tfresource.NotFound(err) {
 				return nil
@@ -1673,7 +1673,7 @@ func testAccCheckServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			if aws.ToString(service.Status) == "INACTIVE" {
+			if aws.ToString(output.Status) == "INACTIVE" {
 				return nil
 			}
 
