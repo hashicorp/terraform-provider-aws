@@ -546,6 +546,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	taskDefinition := output.TaskDefinition
 
 	d.SetId(aws.ToString(taskDefinition.Family))
+	d.Set(names.AttrARN, taskDefinition.TaskDefinitionArn)
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
@@ -585,8 +586,9 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(aws.ToString(taskDefinition.Family))
-	d.Set(names.AttrARN, taskDefinition.TaskDefinitionArn)
-	d.Set("arn_without_revision", taskDefinitionARNStripRevision(aws.ToString(taskDefinition.TaskDefinitionArn)))
+	arn := aws.ToString(taskDefinition.TaskDefinitionArn)
+	d.Set(names.AttrARN, arn)
+	d.Set("arn_without_revision", taskDefinitionARNStripRevision(arn))
 	d.Set("cpu", taskDefinition.Cpu)
 	if err := d.Set("ephemeral_storage", flattenTaskDefinitionEphemeralStorage(taskDefinition.EphemeralStorage)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
