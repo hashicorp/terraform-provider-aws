@@ -1,3 +1,2 @@
 ```release-note:bug
-resource/aws_cloudtrail: Convert `insight_selector` to a set type, preventing persistent differences
-```
+resource/aws_cloudtrail: Change `insight_selector` from `TypeList` to `TypeSet` as order is not significant

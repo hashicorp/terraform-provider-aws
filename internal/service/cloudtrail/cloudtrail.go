@@ -855,11 +855,8 @@ func flattenAdvancedEventSelectorFieldSelector(configured []types.AdvancedFieldS
 
 func setInsightSelectors(ctx context.Context, conn *cloudtrail.Client, d *schema.ResourceData) error {
 	input := &cloudtrail.PutInsightSelectorsInput{
-		TrailName: aws.String(d.Id()),
-	}
-
-	if v, ok := d.Get("insight_selector").(*schema.Set); ok {
-		input.InsightSelectors = expandInsightSelector(v.List())
+		InsightSelectors: expandInsightSelector(d.Get("insight_selector").(*schema.Set).List()),
+		TrailName:        aws.String(d.Id()),
 	}
 
 	if _, err := conn.PutInsightSelectors(ctx, input); err != nil {
