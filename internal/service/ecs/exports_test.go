@@ -7,10 +7,12 @@ package ecs
 var (
 	ResourceAccountSettingDefault    = resourceAccountSettingDefault
 	ResourceCapacityProvider         = resourceCapacityProvider
+	ResourceCluster                  = resourceCluster
 	ResourceClusterCapacityProviders = resourceClusterCapacityProviders
 	ResourceTag                      = resourceTag
 
 	FindCapacityProviderByARN               = findCapacityProviderByARN
+	FindClusterByNameOrARN                  = findClusterByNameOrARN
 	FindEffectiveAccountSettingByName       = findEffectiveAccountSettingByName
 	FindTag                                 = findTag
 	ValidTaskDefinitionContainerDefinitions = validTaskDefinitionContainerDefinitions

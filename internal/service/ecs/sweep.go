@@ -124,7 +124,7 @@ func sweepClusters(region string) error {
 		}
 
 		for _, v := range page.ClusterArns {
-			r := ResourceCluster()
+			r := resourceCluster()
 			d := r.Data(nil)
 			d.SetId(v)
 

@@ -316,14 +316,13 @@ func TestAccECSCluster_managedStorageConfiguration(t *testing.T) {
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
-		partition := acctest.Provider.Meta().(*conns.AWSClient).Partition
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_cluster" {
 				continue
 			}
 
-			_, err := tfecs.FindClusterByNameOrARN(ctx, conn, partition, rs.Primary.ID)
+			_, err := tfecs.FindClusterByNameOrARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -347,14 +346,9 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.Cluste
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ECS Cluster ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
-		partition := acctest.Provider.Meta().(*conns.AWSClient).Partition
 
-		output, err := tfecs.FindClusterByNameOrARN(ctx, conn, partition, rs.Primary.ID)
+		output, err := tfecs.FindClusterByNameOrARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

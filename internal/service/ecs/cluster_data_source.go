@@ -80,14 +80,11 @@ func DataSourceCluster() *schema.Resource {
 
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
-	partition := meta.(*conns.AWSClient).Partition
-
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterName := d.Get(names.AttrClusterName).(string)
-	cluster, err := FindClusterByNameOrARN(ctx, conn, partition, d.Get(names.AttrClusterName).(string))
+	cluster, err := findClusterByNameOrARN(ctx, conn, d.Get(names.AttrClusterName).(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Cluster (%s): %s", clusterName, err)
