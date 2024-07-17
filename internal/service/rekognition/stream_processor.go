@@ -42,6 +42,14 @@ import (
 )
 
 const (
+	connectedHomeConfidenceMin     float64 = 0
+	connectedHomeConfidenceMax     float64 = 100
+	connectedHomeConfidenceDefault float64 = 50
+
+	faceMatchThresholdMin     float64 = 0
+	faceMatchThresholdMax     float64 = 100
+	faceMatchThresholdDefault float64 = 80
+
 	labelPerson  = "PERSON"
 	labelPet     = "PET"
 	labelPackage = "PACKAGE"
@@ -356,9 +364,9 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 							"min_confidence": schema.Float64Attribute{
 								Description: "The minimum confidence required to label an object in the video.",
 								Validators: []validator.Float64{
-									float64validator.Between(0.0, 100.0), //nolint:mnd
+									float64validator.Between(connectedHomeConfidenceMin, connectedHomeConfidenceMax),
 								},
-								Default:  float64default.StaticFloat64(50), //nolint:mnd
+								Default:  float64default.StaticFloat64(connectedHomeConfidenceDefault),
 								Computed: true,
 								Optional: true,
 							},
@@ -388,12 +396,12 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 							"face_match_threshold": schema.Float64Attribute{
 								Description: "Minimum face match confidence score that must be met to return a result for a recognized face.",
 								Validators: []validator.Float64{
-									float64validator.Between(0.0, 100.0), //nolint:mnd
+									float64validator.Between(faceMatchThresholdMin, faceMatchThresholdMax),
 								},
 								PlanModifiers: []planmodifier.Float64{
 									float64planmodifier.RequiresReplace(),
 								},
-								Default:  float64default.StaticFloat64(80), //nolint:mnd
+								Default:  float64default.StaticFloat64(faceMatchThresholdDefault),
 								Computed: true,
 								Optional: true,
 							},
