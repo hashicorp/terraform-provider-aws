@@ -1430,10 +1430,12 @@ func TestAccVPCSecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Because of the cyclic dependancy created in testAddCycle, we add data outside of terraform to this resource.
+				// During an import this cannot be accounted for and should be ignored.
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "egress"},
 			},
 			// Verify the DependencyViolation error by using a configuration with the
 			// groups removed. Terraform tries to destroy them but cannot. Expect a
@@ -1517,10 +1519,12 @@ func TestAccVPCSecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Because of the cyclic dependancy created in testAddCycle, we add data outside of terraform to this resource.
+				// During an import this cannot be accounted for and should be ignored.
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "egress"},
 			},
 			// Verify the DependencyViolation error by using a configuration with the
 			// groups removed, and the Groups not configured to revoke their ruls.
@@ -2748,7 +2752,7 @@ func testRemoveRuleCycle(ctx context.Context, primary, secondary *awstypes.Secur
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 		for _, sg := range []*awstypes.SecurityGroup{primary, secondary} {
 			var err error
-			if sg.IpPermissions != nil {
+			if sg.IpPermissions != nil && len(sg.IpPermissions) > 0 {
 				req := &ec2.RevokeSecurityGroupIngressInput{
 					GroupId:       sg.GroupId,
 					IpPermissions: sg.IpPermissions,
@@ -2759,7 +2763,7 @@ func testRemoveRuleCycle(ctx context.Context, primary, secondary *awstypes.Secur
 				}
 			}
 
-			if sg.IpPermissionsEgress != nil {
+			if sg.IpPermissionsEgress != nil && len(sg.IpPermissionsEgress) > 0 {
 				req := &ec2.RevokeSecurityGroupEgressInput{
 					GroupId:       sg.GroupId,
 					IpPermissions: sg.IpPermissionsEgress,
