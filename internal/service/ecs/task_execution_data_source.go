@@ -14,16 +14,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ecs_task_execution")
-func DataSourceTaskExecution() *schema.Resource {
+// @SDKDataSource("aws_ecs_task_execution", name="Task Execution")
+func dataSourceTaskExecution() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTaskExecutionRead,
 
@@ -86,22 +86,20 @@ func DataSourceTaskExecution() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"assign_public_ip": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						names.AttrSecurityGroups: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
 						},
 						names.AttrSubnets: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-						"assign_public_ip": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
 						},
 					},
 				},
@@ -275,19 +273,14 @@ func DataSourceTaskExecution() *schema.Resource {
 	}
 }
 
-const (
-	DSNameTaskExecution = "Task Execution Data Source"
-)
-
 func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
 	cluster := d.Get("cluster").(string)
 	taskDefinition := d.Get("task_definition").(string)
-	d.SetId(strings.Join([]string{cluster, taskDefinition}, ","))
-
-	input := ecs.RunTaskInput{
+	id := strings.Join([]string{cluster, taskDefinition}, ",")
+	input := &ecs.RunTaskInput{
 		Cluster:        aws.String(cluster),
 		TaskDefinition: aws.String(taskDefinition),
 	}
@@ -326,18 +319,20 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 		input.Overrides = expandTaskOverride(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("placement_constraints"); ok {
-		pc, err := expandPlacementConstraints(v.(*schema.Set).List())
+		apiObject, err := expandPlacementConstraints(v.(*schema.Set).List())
 		if err != nil {
-			return create.AppendDiagError(diags, names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-		input.PlacementConstraints = pc
+
+		input.PlacementConstraints = apiObject
 	}
 	if v, ok := d.GetOk("placement_strategy"); ok {
-		ps, err := expandPlacementStrategy(v.([]interface{}))
+		apiObject, err := expandPlacementStrategy(v.([]interface{}))
 		if err != nil {
-			return create.AppendDiagError(diags, names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-		input.PlacementStrategy = ps
+
+		input.PlacementStrategy = apiObject
 	}
 	if v, ok := d.GetOk("platform_version"); ok {
 		input.PlatformVersion = aws.String(v.(string))
@@ -352,19 +347,16 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 		input.StartedBy = aws.String(v.(string))
 	}
 
-	out, err := conn.RunTask(ctx, &input)
+	output, err := conn.RunTask(ctx, input)
+
 	if err != nil {
-		return create.AppendDiagError(diags, names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), err)
-	}
-	if out == nil || len(out.Tasks) == 0 {
-		return create.AppendDiagError(diags, names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), tfresource.NewEmptyResultError(input))
+		return sdkdiag.AppendErrorf(diags, "running ECS Task (%s): %s", id, err)
 	}
 
-	var taskArns []*string
-	for _, t := range out.Tasks {
-		taskArns = append(taskArns, t.TaskArn)
-	}
-	d.Set("task_arns", flex.FlattenStringList(taskArns))
+	d.SetId(id)
+	d.Set("task_arns", tfslices.ApplyToAll(output.Tasks, func(v awstypes.Task) string {
+		return aws.ToString(v.TaskArn)
+	}))
 
 	return diags
 }
