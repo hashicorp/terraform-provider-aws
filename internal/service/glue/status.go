@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -38,7 +37,7 @@ func statusMLTransform(ctx context.Context, conn *glue.Client, transformId strin
 			return output, mlTransformStatusUnknown, nil
 		}
 
-		return output, aws.ToString(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
@@ -54,7 +53,7 @@ func statusRegistry(ctx context.Context, conn *glue.Client, id string) retry.Sta
 			return output, registryStatusUnknown, nil
 		}
 
-		return output, aws.ToString(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
@@ -86,7 +85,7 @@ func statusSchemaVersion(ctx context.Context, conn *glue.Client, id string) retr
 			return output, schemaVersionStatusUnknown, nil
 		}
 
-		return output, aws.ToString(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
@@ -107,7 +106,7 @@ func statusTrigger(ctx context.Context, conn *glue.Client, triggerName string) r
 			return output, triggerStatusUnknown, nil
 		}
 
-		return output, aws.ToString(output.Trigger.State), nil
+		return output, string(output.Trigger.State), nil
 	}
 }
 
@@ -139,6 +138,6 @@ func statusPartitionIndex(ctx context.Context, conn *glue.Client, id string) ret
 			return nil, "", err
 		}
 
-		return output, aws.ToString(output.IndexStatus), nil
+		return output, string(output.IndexStatus), nil
 	}
 }
