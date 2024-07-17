@@ -163,6 +163,146 @@ func TestAccEventsBus_disappears(t *testing.T) {
 	})
 }
 
+func TestAccEventsBus_kmsKeyCreateID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1 eventbridge.DescribeEventBusOutput
+	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_bus.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBusConfig_kmsKeyCreateID(busName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusExists(ctx, resourceName, &v1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
+					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, busName),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.output", names.AttrKeyID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:   testAccBusConfig_kmsKeyCreateARN(busName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccEventsBus_kmsKeyCreateARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1 eventbridge.DescribeEventBusOutput
+	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_bus.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBusConfig_kmsKeyCreateARN(busName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusExists(ctx, resourceName, &v1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
+					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, busName),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.output", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:   testAccBusConfig_kmsKeyCreateID(busName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccEventsBus_kmsKeyCreateAliasName(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1 eventbridge.DescribeEventBusOutput
+	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_bus.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBusConfig_kmsKeyCreateAliasName(busName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusExists(ctx, resourceName, &v1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
+					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, busName),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_alias.output", names.AttrName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:   testAccBusConfig_kmsKeyCreateAliasARN(busName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccEventsBus_kmsKeyCreateAliasARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1 eventbridge.DescribeEventBusOutput
+	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_bus.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBusConfig_kmsKeyCreateAliasARN(busName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusExists(ctx, resourceName, &v1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
+					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, busName),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_alias.output", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:   testAccBusConfig_kmsKeyCreateAliasName(busName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccEventsBus_partnerEventSource(t *testing.T) {
 	ctx := acctest.Context(t)
 	key := "EVENT_BRIDGE_PARTNER_EVENT_SOURCE_NAME"
@@ -290,6 +430,68 @@ resource "aws_cloudwatch_event_bus" "test" {
   }
 }
 `, name, key1, value1, key2, value2)
+}
+
+func testAccBusConfig_kmsKeyCreateID(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name       = %[1]q
+  kms_key_id = aws_kms_key.output.key_id
+}
+
+resource "aws_kms_key" "output" {
+  deletion_window_in_days = 7
+}
+`, name)
+}
+
+func testAccBusConfig_kmsKeyCreateARN(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name       = %[1]q
+  kms_key_id = aws_kms_key.output.arn
+}
+
+resource "aws_kms_key" "output" {
+  deletion_window_in_days = 7
+}
+`, name)
+}
+
+func testAccBusConfig_kmsKeyCreateAliasName(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name       = %[1]q
+  kms_key_id = aws_kms_alias.output.name
+}
+
+resource "aws_kms_alias" "output" {
+  name          = "alias/%[1]s"
+  target_key_id = aws_kms_key.output.key_id
+}
+
+resource "aws_kms_key" "output" {
+  deletion_window_in_days = 7
+}
+`, name)
+}
+
+func testAccBusConfig_kmsKeyCreateAliasARN(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name       = %[1]q
+  kms_key_id = aws_kms_alias.output.arn
+}
+
+resource "aws_kms_alias" "output" {
+  name          = "alias/%[1]s"
+  target_key_id = aws_kms_key.output.key_id
+}
+
+resource "aws_kms_key" "output" {
+  deletion_window_in_days = 7
+}
+`, name)
 }
 
 func testAccBusConfig_partnerSource(name string) string {

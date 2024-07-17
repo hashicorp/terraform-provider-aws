@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -46,6 +47,12 @@ func resourceBus() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validSourceName,
 			},
+			names.AttrKMSKeyID: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: tfkms.DiffSuppressKeyOrAlias,
+				ValidateFunc:     tfkms.ValidateKeyOrAlias,
+			},
 			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -72,6 +79,10 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if v, ok := d.GetOk("event_source_name"); ok {
 		input.EventSourceName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
+		input.KmsKeyIdentifier = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateEventBus(ctx, input)
@@ -123,6 +134,7 @@ func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrKMSKeyID, output.KmsKeyIdentifier)
 	d.Set(names.AttrName, output.Name)
 
 	return diags
