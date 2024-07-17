@@ -25,8 +25,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceCluster,
+			Factory:  dataSourceCluster,
 			TypeName: "aws_ecs_cluster",
+			Name:     "Cluster",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceContainerDefinition,
