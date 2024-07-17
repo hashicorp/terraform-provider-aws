@@ -158,34 +158,46 @@ func ClusterInstanceEngine_Values() []string {
 }
 
 const (
-	GlobalClusterEngineAurora           = "aurora"
-	GlobalClusterEngineAuroraMySQL      = "aurora-mysql"
-	GlobalClusterEngineAuroraPostgreSQL = "aurora-postgresql"
+	globalClusterEngineAurora           = "aurora"
+	globalClusterEngineAuroraMySQL      = "aurora-mysql"
+	globalClusterEngineAuroraPostgreSQL = "aurora-postgresql"
 )
 
-func GlobalClusterEngine_Values() []string {
+func globalClusterEngine_Values() []string {
 	return []string{
-		GlobalClusterEngineAurora,
-		GlobalClusterEngineAuroraMySQL,
-		GlobalClusterEngineAuroraPostgreSQL,
+		globalClusterEngineAurora,
+		globalClusterEngineAuroraMySQL,
+		globalClusterEngineAuroraPostgreSQL,
 	}
 }
 
 const (
-	EngineModeGlobal        = "global"
-	EngineModeMultiMaster   = "multimaster"
-	EngineModeParallelQuery = "parallelquery"
-	EngineModeProvisioned   = "provisioned"
-	EngineModeServerless    = "serverless"
+	engineModeGlobal        = "global"
+	engineModeMultiMaster   = "multimaster"
+	engineModeParallelQuery = "parallelquery"
+	engineModeProvisioned   = "provisioned"
+	engineModeServerless    = "serverless"
 )
 
-func EngineMode_Values() []string {
+func engineMode_Values() []string {
 	return []string{
-		EngineModeGlobal,
-		EngineModeMultiMaster,
-		EngineModeParallelQuery,
-		EngineModeProvisioned,
-		EngineModeServerless,
+		engineModeGlobal,
+		engineModeMultiMaster,
+		engineModeParallelQuery,
+		engineModeProvisioned,
+		engineModeServerless,
+	}
+}
+
+const (
+	engineLifecycleSupport         = "open-source-rds-extended-support"
+	engineLifecycleSupportDisabled = "open-source-rds-extended-support-disabled"
+)
+
+func engineLifecycleSupport_Values() []string {
+	return []string{
+		engineLifecycleSupport,
+		engineLifecycleSupportDisabled,
 	}
 }
 

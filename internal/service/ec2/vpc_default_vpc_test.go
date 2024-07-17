@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -96,17 +97,17 @@ func testAccDefaultVPC_Existing_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", "172.31.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "172.31.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_network_acl_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_route_table_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dhcp_options_id"),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "false"),
-					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "true"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
@@ -143,17 +144,17 @@ func testAccDefaultVPC_Existing_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", "172.31.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "172.31.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_network_acl_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_route_table_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dhcp_options_id"),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "false"),
-					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "true"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexache.MustCompile(`/56$`)),
@@ -189,8 +190,8 @@ func testAccDefaultVPC_Existing_forceDestroy(t *testing.T) {
 				Config: testAccVPCDefaultVPCConfig_forceDestroy,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "true"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "true"),
+					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtTrue),
 					testAccCheckDefaultVPCEmpty(ctx, &v),
 				),
 			},
@@ -218,17 +219,17 @@ func testAccDefaultVPC_NotFound_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", "172.31.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "172.31.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_network_acl_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_route_table_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dhcp_options_id"),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "false"),
-					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "false"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
@@ -265,17 +266,17 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", "172.31.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "172.31.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_network_acl_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_route_table_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dhcp_options_id"),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "false"),
-					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "false"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexache.MustCompile(`/56$`)),
@@ -311,8 +312,8 @@ func testAccDefaultVPC_NotFound_forceDestroy(t *testing.T) {
 				Config: testAccVPCDefaultVPCConfig_forceDestroy,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "false"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "true"),
+					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtTrue),
 					testAccCheckDefaultVPCEmpty(ctx, &v),
 				),
 			},
@@ -341,17 +342,17 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlockAdoption(t *testing.
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", "172.31.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "172.31.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_network_acl_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_route_table_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dhcp_options_id"),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "false"),
-					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "false"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexache.MustCompile(`/56$`)),
@@ -383,17 +384,17 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlockAdoption(t *testing.
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", "172.31.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "172.31.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_network_acl_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_route_table_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dhcp_options_id"),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "false"),
-					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "true"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexache.MustCompile(`/56$`)),
@@ -414,14 +415,14 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlockAdoption(t *testing.
 // It verifies that the default VPC still exists.
 func testAccCheckDefaultVPCDestroyExists(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_default_vpc" {
 				continue
 			}
 
-			_, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindVPCByIDV2(ctx, conn, rs.Primary.ID)
 
 			if err != nil {
 				return err
@@ -437,14 +438,14 @@ func testAccCheckDefaultVPCDestroyExists(ctx context.Context) resource.TestCheck
 // A new default VPC is then created.
 func testAccCheckDefaultVPCDestroyNotFound(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_default_vpc" {
 				continue
 			}
 
-			_, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindVPCByIDV2(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -457,7 +458,7 @@ func testAccCheckDefaultVPCDestroyNotFound(ctx context.Context) resource.TestChe
 			return fmt.Errorf("EC2 Default VPC %s still exists", rs.Primary.ID)
 		}
 
-		_, err := conn.CreateDefaultVpcWithContext(ctx, &ec2.CreateDefaultVpcInput{})
+		_, err := conn.CreateDefaultVpc(ctx, &ec2_sdkv2.CreateDefaultVpcInput{})
 
 		if err != nil {
 			return fmt.Errorf("error creating new default VPC: %w", err)
@@ -507,7 +508,7 @@ func testAccEmptyDefaultVPC(ctx context.Context, vpcID string) error {
 	subnets, err := tfec2.FindSubnets(ctx, conn, &ec2.DescribeSubnetsInput{
 		Filters: tfec2.NewAttributeFilterList(
 			map[string]string{
-				"defaultForAz": "true",
+				"defaultForAz": acctest.CtTrue,
 			},
 		),
 	})

@@ -95,7 +95,7 @@ func resourceAccelerator() *schema.Resource {
 				Default:          awstypes.IpAddressTypeIpv4,
 				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
 			},
-			"ip_addresses": {
+			names.AttrIPAddresses: {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -106,7 +106,7 @@ func resourceAccelerator() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ip_addresses": {
+						names.AttrIPAddresses: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -152,7 +152,7 @@ func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.IpAddressType = awstypes.IpAddressType(v.(string))
 	}
 
-	if v, ok := d.GetOk("ip_addresses"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrIPAddresses); ok && len(v.([]interface{})) > 0 {
 		input.IpAddresses = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
@@ -443,7 +443,7 @@ func flattenIPSet(apiObject *awstypes.IpSet) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.IpAddresses; v != nil {
-		tfMap["ip_addresses"] = v
+		tfMap[names.AttrIPAddresses] = v
 	}
 
 	if v := apiObject.IpFamily; v != nil {

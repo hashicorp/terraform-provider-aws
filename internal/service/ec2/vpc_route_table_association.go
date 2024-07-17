@@ -90,7 +90,7 @@ func resourceRouteTableAssociationCreate(ctx context.Context, d *schema.Resource
 
 	d.SetId(aws.ToString(output.(*ec2.AssociateRouteTableOutput).AssociationId))
 
-	if _, err := waitRouteTableAssociationCreatedV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitRouteTableAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route Table Association (%s) create: %s", d.Id(), err)
 	}
 
@@ -102,7 +102,7 @@ func resourceRouteTableAssociationRead(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return findRouteTableAssociationByIDV2(ctx, conn, d.Id())
+		return findRouteTableAssociationByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -153,7 +153,7 @@ func resourceRouteTableAssociationUpdate(ctx context.Context, d *schema.Resource
 
 	d.SetId(aws.ToString(output.NewAssociationId))
 
-	if _, err := waitRouteTableAssociationUpdatedV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitRouteTableAssociationUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route Table Association (%s) update: %s", d.Id(), err)
 	}
 
@@ -183,7 +183,7 @@ func resourceRouteTableAssociationImport(ctx context.Context, d *schema.Resource
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
 
 	if err != nil {
 		return nil, err
@@ -232,7 +232,7 @@ func routeTableAssociationDelete(ctx context.Context, conn *ec2.Client, associat
 		return fmt.Errorf("deleting Route Table Association (%s): %w", associationID, err)
 	}
 
-	if _, err := waitRouteTableAssociationDeletedV2(ctx, conn, associationID, timeout); err != nil {
+	if _, err := waitRouteTableAssociationDeleted(ctx, conn, associationID, timeout); err != nil {
 		return fmt.Errorf("deleting Route Table Association (%s): waiting for completion: %w", associationID, err)
 	}
 

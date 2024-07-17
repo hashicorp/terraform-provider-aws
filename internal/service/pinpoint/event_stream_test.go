@@ -37,7 +37,7 @@ func TestAccPinpointEventStream_basic(t *testing.T) {
 				Config: testAccEventStreamConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrPair(resourceName, "application_id", "aws_pinpoint_app.test", "application_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, "aws_pinpoint_app.test", names.AttrApplicationID),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_stream_arn", "aws_kinesis_stream.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 				),
@@ -51,7 +51,7 @@ func TestAccPinpointEventStream_basic(t *testing.T) {
 				Config: testAccEventStreamConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrPair(resourceName, "application_id", "aws_pinpoint_app.test", "application_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, "aws_pinpoint_app.test", names.AttrApplicationID),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_stream_arn", "aws_kinesis_stream.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 				),

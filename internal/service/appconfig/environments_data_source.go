@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_appconfig_environments")
+// @SDKDataSource("aws_appconfig_environments", name="Environments")
 func DataSourceEnvironments() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEnvironmentsRead,
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-z\d]{4,7}`), ""),
@@ -45,7 +45,7 @@ func dataSourceEnvironmentsRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
-	appID := d.Get("application_id").(string)
+	appID := d.Get(names.AttrApplicationID).(string)
 
 	out, err := findEnvironmentsByApplication(ctx, conn, appID)
 	if err != nil {

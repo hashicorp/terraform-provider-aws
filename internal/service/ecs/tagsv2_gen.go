@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// GetTag fetches an individual ecs service tag for a resource.
+// findTag fetches an individual ecs service tag for a resource.
 // Returns whether the key value and any errors. A NotFoundError is used to signal that no value was found.
 // This function will optimise the handling over listTagsV2, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(ctx context.Context, conn *ecs.Client, identifier, key string, optFns ...func(*ecs.Options)) (*string, error) {
+func findTag(ctx context.Context, conn *ecs.Client, identifier, key string, optFns ...func(*ecs.Options)) (*string, error) {
 	listTags, err := listTagsV2(ctx, conn, identifier, optFns...)
 
 	if err != nil {

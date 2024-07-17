@@ -5,5 +5,15 @@ package storagegateway
 
 // Exports for use in tests only.
 var (
-	Valid4ByteASN = valid4ByteASN
+	ResourceCache                 = resourceCache
+	ResourceCachediSCSIVolume     = resourceCachediSCSIVolume
+	ResourceFileSystemAssociation = resourceFileSystemAssociation
+	ResourceGateway               = resourceGateway
+	ResourceNFSFileShare          = resourceNFSFileShare
+	ResourceSMBFileShare          = resourceSMBFileShare
+	ResourceStorediSCSIVolume     = resourceStorediSCSIVolume
+	ResourceTapePool              = resourceTapePool
+	ResourceUploadBuffer          = resourceUploadBuffer
+
+	CacheParseResourceID = cacheParseResourceID
 )

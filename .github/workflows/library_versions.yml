@@ -13,17 +13,25 @@ on:
     branches:
       - main
 
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
 jobs:
   diffgrep:
     runs-on: ubuntu-latest
     outputs:
       found: ${{ steps.diff.outputs.found }}
+    env:
+      BASE_REF: ${{ github.event.pull_request.base.ref }}
     steps:
       # checkout base ref
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       # checkout pull request head ref
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}

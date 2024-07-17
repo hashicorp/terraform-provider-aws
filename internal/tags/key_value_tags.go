@@ -626,7 +626,7 @@ type TagData struct {
 }
 
 func (td *TagData) ValueString() string {
-	if td.Value == nil {
+	if td == nil || td.Value == nil {
 		return ""
 	}
 

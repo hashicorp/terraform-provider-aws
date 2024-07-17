@@ -146,7 +146,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The unique identifier (ID) of the macie classification job.
 * `created_at` -  The date and time, in UTC and extended RFC 3339 format, when the job was created.
-* `user_paused_details` - If the current status of the job is `USER_PAUSED`, specifies when the job was paused and when the job or job run will expire and be cancelled if it isn't resumed. This value is present only if the value for `job-status` is `USER_PAUSED`.
+* `user_paused_details` - If the current status of the job is `USER_PAUSED`, specifies when the job was paused and when the job or job run will expire and be canceled if it isn't resumed. This value is present only if the value for `job-status` is `USER_PAUSED`.
 
 ## Import
 
@@ -173,4 +173,4 @@ Using `terraform import`, import `aws_macie2_classification_job` using the id. F
 % terraform import aws_macie2_classification_job.example abcd1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9a222992d46777a40eb5928a868c445f448ac2d2331bda106271060c834b0a4f -->
+<!-- cache-key: cdktf-0.20.1 input-f8a6a44b0b04d3be9cd1a4c9c046e920cea6b8d1c93db6603c3f6b18b8e1f25c -->

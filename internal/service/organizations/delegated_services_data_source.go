@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -48,18 +49,19 @@ func dataSourceDelegatedServices() *schema.Resource {
 }
 
 func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	accountID := d.Get(names.AttrAccountID).(string)
 	output, err := findDelegatedServicesByAccountID(ctx, conn, accountID)
 
 	if err != nil {
-		return diag.Errorf("reading Organizations Delegated Services (%s): %s", accountID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Organizations Delegated Services (%s): %s", accountID, err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 	if err = d.Set("delegated_services", flattenDelegatedServices(output)); err != nil {
-		return diag.Errorf("setting delegated_services: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting delegated_services: %s", err)
 	}
 
 	return nil

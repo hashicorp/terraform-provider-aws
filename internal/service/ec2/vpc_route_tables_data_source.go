@@ -68,7 +68,7 @@ func dataSourceRouteTablesRead(ctx context.Context, d *schema.ResourceData, meta
 		input.Filters = nil
 	}
 
-	output, err := findRouteTablesV2(ctx, conn, input)
+	output, err := findRouteTables(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Route Tables: %s", err)

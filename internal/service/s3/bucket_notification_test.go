@@ -36,7 +36,7 @@ func TestAccS3BucketNotification_eventbridge(t *testing.T) {
 				Config: testAccBucketNotificationConfig_eventBridge(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "eventbridge", "true"),
+					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct0),
@@ -67,7 +67,7 @@ func TestAccS3BucketNotification_lambdaFunction(t *testing.T) {
 				Config: testAccBucketNotificationConfig_lambdaFunction(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "eventbridge", "false"),
+					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.events.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.filter_prefix", "tf-acc-test/"),
@@ -101,7 +101,7 @@ func TestAccS3BucketNotification_LambdaFunctionLambdaFunctionARN_alias(t *testin
 				Config: testAccBucketNotificationConfig_lambdaFunctionLambdaFunctionARNAlias(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "eventbridge", "false"),
+					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.events.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.filter_prefix", ""),
@@ -135,7 +135,7 @@ func TestAccS3BucketNotification_queue(t *testing.T) {
 				Config: testAccBucketNotificationConfig_queue(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "eventbridge", "false"),
+					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "queue.0.events.#", acctest.Ct2),
@@ -169,7 +169,7 @@ func TestAccS3BucketNotification_topic(t *testing.T) {
 				Config: testAccBucketNotificationConfig_topic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "eventbridge", "false"),
+					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct1),
@@ -203,7 +203,7 @@ func TestAccS3BucketNotification_Topic_multiple(t *testing.T) {
 				Config: testAccBucketNotificationConfig_topicMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "eventbridge", "false"),
+					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct2),

@@ -18,11 +18,11 @@ func TestAccGlue_serial(t *testing.T) {
 			"dataSource":    testAccDataCatalogEncryptionSettingsDataSource_basic,
 		},
 		"ResourcePolicy": {
-			acctest.CtBasic: testAccResourcePolicy_basic,
-			"update":        testAccResourcePolicy_update,
-			"hybrid":        testAccResourcePolicy_hybrid,
-			"disappears":    testAccResourcePolicy_disappears,
-			"equivalent":    testAccResourcePolicy_ignoreEquivalent,
+			acctest.CtBasic:      testAccResourcePolicy_basic,
+			"update":             testAccResourcePolicy_update,
+			"hybrid":             testAccResourcePolicy_hybrid,
+			acctest.CtDisappears: testAccResourcePolicy_disappears,
+			"equivalent":         testAccResourcePolicy_ignoreEquivalent,
 		},
 	}
 

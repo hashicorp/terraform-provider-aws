@@ -106,6 +106,7 @@ func ResourceReplicationSet() *schema.Resource {
 }
 
 func resourceReplicationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	input := &ssmincidents.CreateReplicationSetInput{
@@ -115,11 +116,11 @@ func resourceReplicationSetCreate(ctx context.Context, d *schema.ResourceData, m
 
 	createReplicationSetOutput, err := client.CreateReplicationSet(ctx, input)
 	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionCreating, ResNameReplicationSet, "", err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionCreating, ResNameReplicationSet, "", err)
 	}
 
 	if createReplicationSetOutput == nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionCreating, ResNameReplicationSet, "", errors.New("empty output"))
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionCreating, ResNameReplicationSet, "", errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(createReplicationSetOutput.Arn))
@@ -129,13 +130,14 @@ func resourceReplicationSetCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err := ssmincidents.NewWaitForReplicationSetActiveWaiter(client).Wait(ctx, getReplicationSetInput, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionWaitingForCreation, ResNameReplicationSet, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionWaitingForCreation, ResNameReplicationSet, d.Id(), err)
 	}
 
-	return resourceReplicationSetRead(ctx, d, meta)
+	return append(diags, resourceReplicationSetRead(ctx, d, meta)...)
 }
 
 func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	replicationSet, err := FindReplicationSetByID(ctx, client, d.Id())
@@ -143,11 +145,11 @@ func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSMIncidents ReplicationSet (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionReading, ResNameReplicationSet, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionReading, ResNameReplicationSet, d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, replicationSet.Arn)
@@ -155,14 +157,15 @@ func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("deletion_protected", replicationSet.DeletionProtected)
 	d.Set("last_modified_by", replicationSet.LastModifiedBy)
 	if err := d.Set(names.AttrRegion, flattenRegions(replicationSet.RegionMap)); err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, ResNameReplicationSet, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionSetting, ResNameReplicationSet, d.Id(), err)
 	}
 	d.Set(names.AttrStatus, replicationSet.Status)
 
-	return nil
+	return diags
 }
 
 func resourceReplicationSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	if d.HasChanges(names.AttrRegion) {
@@ -171,13 +174,13 @@ func resourceReplicationSetUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if err := updateRegionsInput(d, input); err != nil {
-			return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameReplicationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionUpdating, ResNameReplicationSet, d.Id(), err)
 		}
 
 		log.Printf("[DEBUG] Updating SSMIncidents ReplicationSet (%s): %#v", d.Id(), input)
 		_, err := client.UpdateReplicationSet(ctx, input)
 		if err != nil {
-			return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameReplicationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionUpdating, ResNameReplicationSet, d.Id(), err)
 		}
 
 		getReplicationSetInput := &ssmincidents.GetReplicationSetInput{
@@ -185,14 +188,15 @@ func resourceReplicationSetUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if err := ssmincidents.NewWaitForReplicationSetActiveWaiter(client).Wait(ctx, getReplicationSetInput, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.SSMIncidents, create.ErrActionWaitingForUpdate, ResNameReplicationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionWaitingForUpdate, ResNameReplicationSet, d.Id(), err)
 		}
 	}
 
-	return resourceReplicationSetRead(ctx, d, meta)
+	return append(diags, resourceReplicationSetRead(ctx, d, meta)...)
 }
 
 func resourceReplicationSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	log.Printf("[INFO] Deleting SSMIncidents ReplicationSet: %s", d.Id())
@@ -203,10 +207,10 @@ func resourceReplicationSetDelete(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		var notFoundError *types.ResourceNotFoundException
 		if errors.As(err, &notFoundError) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.SSMIncidents, create.ErrActionDeleting, ResNameReplicationSet, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionDeleting, ResNameReplicationSet, d.Id(), err)
 	}
 
 	getReplicationSetInput := &ssmincidents.GetReplicationSetInput{
@@ -214,10 +218,10 @@ func resourceReplicationSetDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err := ssmincidents.NewWaitForReplicationSetDeletedWaiter(client).Wait(ctx, getReplicationSetInput, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionWaitingForDeletion, ResNameReplicationSet, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionWaitingForDeletion, ResNameReplicationSet, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 // converts a list of regions to a map which maps region name to kms key arn

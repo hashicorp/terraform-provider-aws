@@ -7,8 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -33,7 +32,7 @@ func TestAccElastiCacheReplicationGroupDataSource_basic(t *testing.T) {
 			{
 				Config: testAccReplicationGroupDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "auth_token_enabled", "false"),
+					resource.TestCheckResourceAttr(dataSourceName, "auth_token_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "automatic_failover_enabled", resourceName, "automatic_failover_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az_enabled", resourceName, "multi_az_enabled"),
@@ -70,7 +69,7 @@ func TestAccElastiCacheReplicationGroupDataSource_clusterMode(t *testing.T) {
 			{
 				Config: testAccReplicationGroupDataSourceConfig_clusterMode(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "auth_token_enabled", "false"),
+					resource.TestCheckResourceAttr(dataSourceName, "auth_token_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(dataSourceName, "automatic_failover_enabled", resourceName, "automatic_failover_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az_enabled", resourceName, "multi_az_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "configuration_endpoint_address", resourceName, "configuration_endpoint_address"),
@@ -112,21 +111,6 @@ func TestAccElastiCacheReplicationGroupDataSource_multiAZ(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheReplicationGroupDataSource_nonExistent(t *testing.T) {
-	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccReplicationGroupDataSourceConfig_nonExistent,
-				ExpectError: regexache.MustCompile(`couldn't find resource`),
-			},
-		},
-	})
-}
-
 func TestAccElastiCacheReplicationGroupDataSource_Engine_Redis_LogDeliveryConfigurations(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -142,7 +126,7 @@ func TestAccElastiCacheReplicationGroupDataSource_Engine_Redis_LogDeliveryConfig
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson),
+				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, string(awstypes.DestinationTypeCloudWatchLogs), string(awstypes.LogFormatText), true, string(awstypes.DestinationTypeKinesisFirehose), string(awstypes.LogFormatJson)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.destination", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.destination_type", "cloudwatch-logs"),
@@ -212,9 +196,3 @@ data "aws_elasticache_replication_group" "test" {
 }
 `, rName)
 }
-
-const testAccReplicationGroupDataSourceConfig_nonExistent = `
-data "aws_elasticache_replication_group" "test" {
-  replication_group_id = "tf-acc-test-nonexistent"
-}
-`

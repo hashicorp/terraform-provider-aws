@@ -26,9 +26,9 @@ func TestAccFSxFileCache_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"FSxFileCache": {
-			acctest.CtBasic: testAccFileCache_basic,
-			"disappears":    testAccFileCache_disappears,
-			"kms_key_id":    testAccFileCache_kmsKeyID,
+			acctest.CtBasic:      testAccFileCache_basic,
+			acctest.CtDisappears: testAccFileCache_disappears,
+			"kms_key_id":         testAccFileCache_kmsKeyID,
 			"copy_tags_to_data_repository_associations": testAccFileCache_copyTagsToDataRepositoryAssociations,
 			"data_repository_association_multiple":      testAccFileCache_dataRepositoryAssociation_multiple,
 			"data_repository_association_nfs":           testAccFileCache_dataRepositoryAssociation_nfs,
@@ -140,7 +140,7 @@ func testAccFileCache_copyTagsToDataRepositoryAssociations(t *testing.T) {
 				Config: testAccFileCacheConfig_copyTagsToDataRepositoryAssociations(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache1),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_data_repository_associations", "true"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_data_repository_associations", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.tags.%", acctest.Ct2),
 				),
 			},

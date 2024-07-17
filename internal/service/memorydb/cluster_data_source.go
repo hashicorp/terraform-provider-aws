@@ -81,7 +81,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"parameter_group_name": {
+			names.AttrParameterGroupName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -213,7 +213,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("num_replicas_per_shard", numReplicasPerShard)
 
 	d.Set("num_shards", cluster.NumberOfShards)
-	d.Set("parameter_group_name", cluster.ParameterGroupName)
+	d.Set(names.AttrParameterGroupName, cluster.ParameterGroupName)
 
 	var securityGroupIds []*string
 	for _, v := range cluster.SecurityGroups {

@@ -6,8 +6,8 @@ package backup
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -45,7 +45,7 @@ func DataSourceVault() *schema.Resource {
 
 func dataSourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
@@ -53,18 +53,18 @@ func dataSourceVaultRead(ctx context.Context, d *schema.ResourceData, meta inter
 		BackupVaultName: aws.String(name),
 	}
 
-	resp, err := conn.DescribeBackupVaultWithContext(ctx, input)
+	resp, err := conn.DescribeBackupVault(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Backup Vault: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.BackupVaultName))
+	d.SetId(aws.ToString(resp.BackupVaultName))
 	d.Set(names.AttrARN, resp.BackupVaultArn)
 	d.Set(names.AttrKMSKeyARN, resp.EncryptionKeyArn)
 	d.Set(names.AttrName, resp.BackupVaultName)
 	d.Set("recovery_points", resp.NumberOfRecoveryPoints)
 
-	tags, err := listTags(ctx, conn, aws.StringValue(resp.BackupVaultArn))
+	tags, err := listTags(ctx, conn, aws.ToString(resp.BackupVaultArn))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Vault (%s): %s", name, err)
 	}

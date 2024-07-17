@@ -27,6 +27,7 @@ import (
 
 // @SDKResource("aws_db_option_group", name="DB Option Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceOptionGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOptionGroupCreate,

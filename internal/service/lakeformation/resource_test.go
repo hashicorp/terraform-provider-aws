@@ -37,9 +37,9 @@ func TestAccLakeFormationResource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, bucketResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "hybrid_access_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "hybrid_access_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "with_federation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "with_federation", acctest.CtFalse),
 				),
 			},
 		},
@@ -190,7 +190,7 @@ func TestAccLakeFormationResource_hybridAccessEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, bucketResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "hybrid_access_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "hybrid_access_enabled", acctest.CtTrue),
 				),
 			},
 		},

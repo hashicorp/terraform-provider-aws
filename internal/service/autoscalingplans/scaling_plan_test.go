@@ -49,7 +49,7 @@ func TestAccAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": acctest.Ct0,
-						"disable_dynamic_scaling":                "false",
+						"disable_dynamic_scaling":                acctest.CtFalse,
 						names.AttrMaxCapacity:                    acctest.Ct3,
 						"min_capacity":                           acctest.Ct0,
 						"predefined_load_metric_specification.#": acctest.Ct0,
@@ -61,7 +61,7 @@ func TestAccAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*.target_tracking_configuration.*", map[string]string{
 						"customized_scaling_metric_specification.#":                                acctest.Ct0,
-						"disable_scale_in":                                                         "false",
+						"disable_scale_in":                                                         acctest.CtFalse,
 						"predefined_scaling_metric_specification.#":                                acctest.Ct1,
 						"predefined_scaling_metric_specification.0.predefined_scaling_metric_type": "ASGAverageCPUUtilization",
 						"target_value": "75",
@@ -109,7 +109,7 @@ func TestAccAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": acctest.Ct0,
-						"disable_dynamic_scaling":                "true",
+						"disable_dynamic_scaling":                acctest.CtTrue,
 						names.AttrMaxCapacity:                    acctest.Ct3,
 						"min_capacity":                           acctest.Ct0,
 						"predefined_load_metric_specification.#": acctest.Ct1,
@@ -124,7 +124,7 @@ func TestAccAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*.target_tracking_configuration.*", map[string]string{
 						"customized_scaling_metric_specification.#":                                acctest.Ct0,
-						"disable_scale_in":                                                         "false",
+						"disable_scale_in":                                                         acctest.CtFalse,
 						"predefined_scaling_metric_specification.#":                                acctest.Ct1,
 						"predefined_scaling_metric_specification.0.predefined_scaling_metric_type": "ASGAverageCPUUtilization",
 						"target_value": "75",
@@ -173,7 +173,7 @@ func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": acctest.Ct0,
-						"disable_dynamic_scaling":                "false",
+						"disable_dynamic_scaling":                acctest.CtFalse,
 						names.AttrMaxCapacity:                    acctest.Ct3,
 						"min_capacity":                           acctest.Ct0,
 						"predefined_load_metric_specification.#": acctest.Ct0,
@@ -185,7 +185,7 @@ func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*.target_tracking_configuration.*", map[string]string{
 						"customized_scaling_metric_specification.#":                                acctest.Ct0,
-						"disable_scale_in":                                                         "false",
+						"disable_scale_in":                                                         acctest.CtFalse,
 						"predefined_scaling_metric_specification.#":                                acctest.Ct1,
 						"predefined_scaling_metric_specification.0.predefined_scaling_metric_type": "ASGAverageCPUUtilization",
 						"target_value": "75",
@@ -206,7 +206,7 @@ func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": acctest.Ct0,
-						"disable_dynamic_scaling":                "true",
+						"disable_dynamic_scaling":                acctest.CtTrue,
 						names.AttrMaxCapacity:                    acctest.Ct3,
 						"min_capacity":                           acctest.Ct0,
 						"predefined_load_metric_specification.#": acctest.Ct1,
@@ -221,7 +221,7 @@ func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*.target_tracking_configuration.*", map[string]string{
 						"customized_scaling_metric_specification.#":                                acctest.Ct0,
-						"disable_scale_in":                                                         "false",
+						"disable_scale_in":                                                         acctest.CtFalse,
 						"predefined_scaling_metric_specification.#":                                acctest.Ct1,
 						"predefined_scaling_metric_specification.0.predefined_scaling_metric_type": "ASGAverageCPUUtilization",
 						"target_value": "75",
@@ -290,7 +290,7 @@ func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSp
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": acctest.Ct0,
-						"disable_dynamic_scaling":                "false",
+						"disable_dynamic_scaling":                acctest.CtFalse,
 						names.AttrMaxCapacity:                    acctest.Ct3,
 						"min_capacity":                           acctest.Ct0,
 						"predefined_load_metric_specification.#": acctest.Ct0,
@@ -309,7 +309,7 @@ func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSp
 						"customized_scaling_metric_specification.0.namespace":                       "test",
 						"customized_scaling_metric_specification.0.statistic":                       "Average",
 						"customized_scaling_metric_specification.0.unit":                            "",
-						"disable_scale_in":                          "false",
+						"disable_scale_in":                          acctest.CtFalse,
 						"predefined_scaling_metric_specification.#": acctest.Ct0,
 						"target_value":                              "90",
 					}),
@@ -329,7 +329,7 @@ func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSp
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": acctest.Ct0,
-						"disable_dynamic_scaling":                "false",
+						"disable_dynamic_scaling":                acctest.CtFalse,
 						names.AttrMaxCapacity:                    acctest.Ct3,
 						"min_capacity":                           acctest.Ct0,
 						"predefined_load_metric_specification.#": acctest.Ct0,
@@ -348,7 +348,7 @@ func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSp
 						"customized_scaling_metric_specification.0.namespace":                       "test",
 						"customized_scaling_metric_specification.0.statistic":                       "Average",
 						"customized_scaling_metric_specification.0.unit":                            "",
-						"disable_scale_in":                          "false",
+						"disable_scale_in":                          acctest.CtFalse,
 						"predefined_scaling_metric_specification.#": acctest.Ct0,
 						"target_value":                              "75",
 					}),

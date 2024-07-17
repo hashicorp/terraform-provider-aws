@@ -47,7 +47,7 @@ func TestAccCloudFormationStackSetInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
-					resource.TestCheckResourceAttr(resourceName, "retain_stack", "false"),
+					resource.TestCheckResourceAttr(resourceName, "retain_stack", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "stack_id"),
 					resource.TestCheckResourceAttr(resourceName, "stack_instance_summaries.#", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, "stack_set_name", cloudformationStackSetResourceName, names.AttrName),
@@ -219,6 +219,9 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.account_filter_type", "INTERSECTION"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.accounts.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.accounts_url", ""),
 				),
 			},
 			{
@@ -228,6 +231,7 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"retain_stack",
 					"call_as",
+					"deployment_targets",
 				},
 			},
 			{
@@ -273,6 +277,7 @@ func TestAccCloudFormationStackSetInstance_DeploymentTargets_emptyOU(t *testing.
 				ImportStateVerifyIgnore: []string{
 					"retain_stack",
 					"call_as",
+					"deployment_targets",
 				},
 			},
 			{
@@ -812,6 +817,8 @@ resource "aws_cloudformation_stack_set_instance" "test" {
 
   deployment_targets {
     organizational_unit_ids = [data.aws_organizations_organization.test.roots[0].id]
+    account_filter_type     = "INTERSECTION"
+    accounts                = [data.aws_organizations_organization.test.non_master_accounts[0].id]
   }
 
   stack_set_name = aws_cloudformation_stack_set.test.name

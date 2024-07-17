@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -180,6 +181,7 @@ func resourceTable() *schema.Resource {
 }
 
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
 	databaseName := d.Get(names.AttrDatabaseName).(string)
@@ -206,20 +208,21 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	_, err := conn.CreateTable(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Timestream Table (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Timestream Table (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourceTableRead(ctx, d, meta)
+	return append(diags, resourceTableRead(ctx, d, meta)...)
 }
 
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
 	tableName, databaseName, err := tableParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	table, err := findTableByTwoPartKey(ctx, conn, databaseName, tableName)
@@ -227,36 +230,37 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Timestream Table %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set(names.AttrARN, table.Arn)
 	d.Set(names.AttrDatabaseName, table.DatabaseName)
 	if err := d.Set("magnetic_store_write_properties", flattenMagneticStoreWriteProperties(table.MagneticStoreWriteProperties)); err != nil {
-		return diag.Errorf("setting magnetic_store_write_properties: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting magnetic_store_write_properties: %s", err)
 	}
 	if err := d.Set("retention_properties", flattenRetentionProperties(table.RetentionProperties)); err != nil {
-		return diag.Errorf("setting retention_properties: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting retention_properties: %s", err)
 	}
 	if table.Schema != nil {
 		if err := d.Set(names.AttrSchema, []interface{}{flattenSchema(table.Schema)}); err != nil {
-			return diag.Errorf("setting schema: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting schema: %s", err)
 		}
 	} else {
 		d.Set(names.AttrSchema, nil)
 	}
 	d.Set(names.AttrTableName, table.TableName)
 
-	return nil
+	return diags
 }
 
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		tableName, databaseName, err := tableParseResourceID(d.Id())
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &timestreamwrite.UpdateTableInput{
@@ -281,19 +285,20 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateTable(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Timestream Table (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Timestream Table (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceTableRead(ctx, d, meta)
+	return append(diags, resourceTableRead(ctx, d, meta)...)
 }
 
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
 	tableName, databaseName, err := tableParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[INFO] Deleting Timestream Table: %s", d.Id())
@@ -303,14 +308,14 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Timestream Table (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Timestream Table (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findTableByTwoPartKey(ctx context.Context, conn *timestreamwrite.Client, databaseName, tableName string) (*types.Table, error) {

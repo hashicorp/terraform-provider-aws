@@ -51,7 +51,7 @@ func TestAccIoTTopicRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "http.#", acctest.Ct0),
@@ -260,7 +260,7 @@ func TestAccIoTTopicRule_cloudWatchLogs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "http.#", acctest.Ct0),
@@ -298,7 +298,89 @@ func TestAccIoTTopicRule_cloudWatchLogs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "http.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", acctest.Ct0),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIoTTopicRule_cloudWatchLogs_batch_mode(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := testAccTopicRuleName()
+	resourceName := "aws_iot_topic_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicRuleConfig_cloudWatchLogsBatchMode(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cloudwatch_logs.*", map[string]string{
+						"batch_mode":           acctest.CtFalse,
+						names.AttrLogGroupName: "mylogs1",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "http.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTopicRuleConfig_cloudWatchLogsBatchMode(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cloudwatch_logs.*", map[string]string{
+						"batch_mode":           acctest.CtTrue,
+						names.AttrLogGroupName: "mylogs1",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "http.#", acctest.Ct0),
@@ -845,7 +927,7 @@ func TestAccIoTTopicRule_Firehose_batch_mode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firehose.*", map[string]string{
 						"delivery_stream_name": "mystream",
-						"batch_mode":           "false",
+						"batch_mode":           acctest.CtFalse,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "http.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", acctest.Ct0),
@@ -880,7 +962,7 @@ func TestAccIoTTopicRule_Firehose_batch_mode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firehose.*", map[string]string{
 						"delivery_stream_name": "mystream",
-						"batch_mode":           "true",
+						"batch_mode":           acctest.CtTrue,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "http.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", acctest.Ct0),
@@ -1168,7 +1250,7 @@ func TestAccIoTTopicRule_IoT_analytics_batch_mode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "iot_analytics.*", map[string]string{
 						"channel_name": "fakedata",
-						"batch_mode":   "false",
+						"batch_mode":   acctest.CtFalse,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", acctest.Ct0),
@@ -1198,7 +1280,7 @@ func TestAccIoTTopicRule_IoT_analytics_batch_mode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "iot_analytics.*", map[string]string{
 						"channel_name": "fakedata",
-						"batch_mode":   "true",
+						"batch_mode":   acctest.CtTrue,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", acctest.Ct0),
@@ -1290,7 +1372,7 @@ func TestAccIoTTopicRule_IoT_events_batch_mode(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "iot_events.*", map[string]string{
 						"input_name": "fake_input_name",
 						"message_id": "fake_message_id",
-						"batch_mode": "false",
+						"batch_mode": acctest.CtFalse,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "kinesis.#", acctest.Ct0),
@@ -1321,7 +1403,7 @@ func TestAccIoTTopicRule_IoT_events_batch_mode(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "iot_events.*", map[string]string{
 						"input_name": "fake_input_name",
 						"message_id": "fake_message_id",
-						"batch_mode": "true",
+						"batch_mode": acctest.CtTrue,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "kinesis.#", acctest.Ct0),
@@ -1939,7 +2021,7 @@ func TestAccIoTTopicRule_sqs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sqs.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sqs.*", map[string]string{
 						"queue_url":  "fakedata",
-						"use_base64": "false",
+						"use_base64": acctest.CtFalse,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "step_functions.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "timestream.#", acctest.Ct0),
@@ -1969,7 +2051,7 @@ func TestAccIoTTopicRule_sqs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sqs.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sqs.*", map[string]string{
 						"queue_url":  "yourdata",
-						"use_base64": "false",
+						"use_base64": acctest.CtFalse,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "step_functions.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "timestream.#", acctest.Ct0),
@@ -2338,7 +2420,7 @@ func TestAccIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 
 func testAccCheckTopicRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_topic_rule" {
@@ -2373,7 +2455,7 @@ func testAccCheckTopicRuleExists(ctx context.Context, n string) resource.TestChe
 			return fmt.Errorf("No IoT Topic Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		_, err := tfiot.FindTopicRuleByName(ctx, conn, rs.Primary.ID)
 
@@ -2515,6 +2597,25 @@ resource "aws_iot_topic_rule" "test" {
   }
 }
 `, rName, logGroupName))
+}
+
+func testAccTopicRuleConfig_cloudWatchLogsBatchMode(rName string, batchMode bool) string {
+	return acctest.ConfigCompose(
+		testAccTopicRuleConfig_destinationRole(rName),
+		fmt.Sprintf(`
+resource "aws_iot_topic_rule" "test" {
+  name        = %[1]q
+  enabled     = false
+  sql         = "SELECT * FROM 'topic/test'"
+  sql_version = "2015-10-08"
+
+  cloudwatch_logs {
+    batch_mode     = %[2]t
+    log_group_name = "mylogs1"
+    role_arn       = aws_iam_role.test.arn
+  }
+}
+`, rName, batchMode))
 }
 
 func testAccTopicRuleConfig_cloudWatchMetric(rName string, metricName string) string {
