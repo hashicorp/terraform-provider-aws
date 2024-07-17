@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -68,9 +67,9 @@ func ResourceUserDefinedFunction() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"owner_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: enum.Validate[awstypes.PrincipalType](),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.PrincipalType](),
 			},
 			"resource_uris": {
 				Type:     schema.TypeSet,
@@ -79,9 +78,9 @@ func ResourceUserDefinedFunction() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrResourceType: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: enum.Validate[awstypes.ResourceType](),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ResourceType](),
 						},
 						names.AttrURI: {
 							Type:         schema.TypeString,
@@ -226,12 +225,12 @@ func ReadUDFID(id string) (catalogID string, dbName string, funcName string, err
 	return idParts[0], idParts[1], idParts[2], nil
 }
 
-func expandUserDefinedFunctionInput(d *schema.ResourceData) *glue.UserDefinedFunctionInput {
-	udf := &glue.UserDefinedFunctionInput{
+func expandUserDefinedFunctionInput(d *schema.ResourceData) *awstypes.UserDefinedFunctionInput {
+	udf := &awstypes.UserDefinedFunctionInput{
 		ClassName:    aws.String(d.Get("class_name").(string)),
 		FunctionName: aws.String(d.Get(names.AttrName).(string)),
 		OwnerName:    aws.String(d.Get("owner_name").(string)),
-		OwnerType:    aws.String(d.Get("owner_type").(string)),
+		OwnerType:    awstypes.PrincipalType(d.Get("owner_type").(string)),
 	}
 
 	if v, ok := d.GetOk("resource_uris"); ok && v.(*schema.Set).Len() > 0 {
@@ -241,8 +240,8 @@ func expandUserDefinedFunctionInput(d *schema.ResourceData) *glue.UserDefinedFun
 	return udf
 }
 
-func expandUserDefinedFunctionResourceURI(conf *schema.Set) []*awstypes.ResourceUri {
-	result := make([]*awstypes.ResourceUri, 0, conf.Len())
+func expandUserDefinedFunctionResourceURI(conf *schema.Set) []awstypes.ResourceUri {
+	result := make([]awstypes.ResourceUri, 0, conf.Len())
 
 	for _, r := range conf.List() {
 		uriRaw, ok := r.(map[string]interface{})
@@ -251,8 +250,8 @@ func expandUserDefinedFunctionResourceURI(conf *schema.Set) []*awstypes.Resource
 			continue
 		}
 
-		uri := &awstypes.ResourceUri{
-			ResourceType: aws.String(uriRaw[names.AttrResourceType].(string)),
+		uri := awstypes.ResourceUri{
+			ResourceType: awstypes.ResourceType(uriRaw[names.AttrResourceType].(string)),
 			Uri:          aws.String(uriRaw[names.AttrURI].(string)),
 		}
 
@@ -262,7 +261,7 @@ func expandUserDefinedFunctionResourceURI(conf *schema.Set) []*awstypes.Resource
 	return result
 }
 
-func flattenUserDefinedFunctionResourceURI(uris []*awstypes.ResourceUri) []map[string]interface{} {
+func flattenUserDefinedFunctionResourceURI(uris []awstypes.ResourceUri) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(uris))
 
 	for _, i := range uris {
