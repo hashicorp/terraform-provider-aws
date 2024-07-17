@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -155,29 +154,29 @@ func ResourceTrigger() *schema.Resource {
 										Optional: true,
 									},
 									"logical_operator": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      awstypes.LogicalOperatorEquals,
-										ValidateFunc: enum.Validate[awstypes.LogicalOperator](),
+										Type:             schema.TypeString,
+										Optional:         true,
+										Default:          awstypes.LogicalOperatorEquals,
+										ValidateDiagFunc: enum.Validate[awstypes.LogicalOperator](),
 									},
 									names.AttrState: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: enum.Validate[awstypes.JobRunState](),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.JobRunState](),
 									},
 									"crawl_state": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: enum.Validate[awstypes.CrawlState](),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.CrawlState](),
 									},
 								},
 							},
 						},
 						"logical": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      awstypes.LogicalAnd,
-							ValidateFunc: enum.Validate[awstypes.Logical](),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.LogicalAnd,
+							ValidateDiagFunc: enum.Validate[awstypes.Logical](),
 						},
 					},
 				},
@@ -197,10 +196,10 @@ func ResourceTrigger() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrType: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: enum.Validate[awstypes.TriggerType](),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.TriggerType](),
 			},
 			"workflow_name": {
 				Type:     schema.TypeString,
@@ -221,8 +220,8 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Actions:         expandActions(d.Get(names.AttrActions).([]interface{})),
 		Name:            aws.String(name),
 		Tags:            getTagsIn(ctx),
-		Type:            aws.String(triggerType),
-		StartOnCreation: aws.Bool(d.Get("start_on_creation").(bool)),
+		Type:            awstypes.TriggerType(triggerType),
+		StartOnCreation: d.Get("start_on_creation").(bool),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -245,14 +244,14 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.WorkflowName = aws.String(v.(string))
 	}
 
-	if d.Get(names.AttrEnabled).(bool) && triggerType != awstypes.TriggerTypeOnDemand {
+	if d.Get(names.AttrEnabled).(bool) && triggerType != string(awstypes.TriggerTypeOnDemand) {
 		start := true
 
-		if triggerType == awstypes.TriggerTypeEvent {
+		if triggerType == string(awstypes.TriggerTypeEvent) {
 			start = false
 		}
 
-		input.StartOnCreation = aws.Bool(start)
+		input.StartOnCreation = start
 	}
 
 	if v, ok := d.GetOk("workflow_name"); ok {
@@ -260,19 +259,19 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("start_on_creation"); ok {
-		input.StartOnCreation = aws.Bool(v.(bool))
+		input.StartOnCreation = v.(bool)
 	}
 
-	log.Printf("[DEBUG] Creating Glue Trigger: %s", input)
+	log.Printf("[DEBUG] Creating Glue Trigger: %+v", input)
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.CreateTrigger(ctx, input)
 		if err != nil {
 			// Retry IAM propagation errors
-			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidInputException, "Service is unable to assume provided role") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Service is unable to assume provided role") {
 				return retry.RetryableError(err)
 			}
 			// Retry concurrent workflow modification errors
-			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeConcurrentModificationException, "was modified while adding trigger") {
+			if errs.IsAErrorMessageContains[*awstypes.ConcurrentModificationException](err, "was modified while adding trigger") {
 				return retry.RetryableError(err)
 			}
 
@@ -297,12 +296,12 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "waiting for Glue Trigger (%s) to be Created: %s", d.Id(), err)
 	}
 
-	if d.Get(names.AttrEnabled).(bool) && triggerType == awstypes.TriggerTypeOnDemand {
+	if d.Get(names.AttrEnabled).(bool) && triggerType == string(awstypes.TriggerTypeOnDemand) {
 		input := &glue.StartTriggerInput{
 			Name: aws.String(d.Id()),
 		}
 
-		log.Printf("[DEBUG] Starting Glue Trigger: %s", input)
+		log.Printf("[DEBUG] Starting Glue Trigger: %+v", input)
 		_, err := conn.StartTrigger(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "starting Glue Trigger (%s): %s", d.Id(), err)
@@ -349,13 +348,12 @@ func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrDescription, trigger.Description)
 
 	var enabled bool
-	state := aws.ToString(trigger.State)
-	d.Set(names.AttrState, state)
+	d.Set(names.AttrState, string(trigger.State))
 
-	if aws.ToString(trigger.Type) == awstypes.TriggerTypeOnDemand || aws.ToString(trigger.Type) == awstypes.TriggerTypeEvent {
-		enabled = (state == awstypes.TriggerStateCreated || state == awstypes.TriggerStateCreating) && d.Get(names.AttrEnabled).(bool)
+	if trigger.Type == awstypes.TriggerTypeOnDemand || trigger.Type == awstypes.TriggerTypeEvent {
+		enabled = (trigger.State == awstypes.TriggerStateCreated || trigger.State == awstypes.TriggerStateCreating) && d.Get(names.AttrEnabled).(bool)
 	} else {
-		enabled = (state == awstypes.TriggerStateActivated || state == awstypes.TriggerStateActivating)
+		enabled = (trigger.State == awstypes.TriggerStateActivated || trigger.State == awstypes.TriggerStateActivating)
 	}
 	d.Set(names.AttrEnabled, enabled)
 
@@ -405,7 +403,7 @@ func resourceTriggerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			TriggerUpdate: triggerUpdate,
 		}
 
-		log.Printf("[DEBUG] Updating Glue Trigger: %s", input)
+		log.Printf("[DEBUG] Updating Glue Trigger: %+v", input)
 		_, err := conn.UpdateTrigger(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Trigger (%s): %s", d.Id(), err)
@@ -422,19 +420,19 @@ func resourceTriggerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				Name: aws.String(d.Id()),
 			}
 
-			log.Printf("[DEBUG] Starting Glue Trigger: %s", input)
+			log.Printf("[DEBUG] Starting Glue Trigger: %+v", input)
 			_, err := conn.StartTrigger(ctx, input)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "starting Glue Trigger (%s): %s", d.Id(), err)
 			}
 		} else {
 			//Skip if Trigger is type is ON_DEMAND and is in CREATED state as this means the trigger is not running or has ran already.
-			if !(d.Get(names.AttrType).(string) == awstypes.TriggerTypeOnDemand && d.Get(names.AttrState).(string) == awstypes.TriggerStateCreated) {
+			if !(d.Get(names.AttrType).(string) == string(awstypes.TriggerTypeOnDemand) && d.Get(names.AttrState).(string) == string(awstypes.TriggerStateCreated)) {
 				input := &glue.StopTriggerInput{
 					Name: aws.String(d.Id()),
 				}
 
-				log.Printf("[DEBUG] Stopping Glue Trigger: %s", input)
+				log.Printf("[DEBUG] Stopping Glue Trigger: %+v", input)
 				_, err := conn.StopTrigger(ctx, input)
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "stopping Glue Trigger (%s): %s", d.Id(), err)
@@ -483,13 +481,13 @@ func deleteTrigger(ctx context.Context, conn *glue.Client, Name string) error {
 	return nil
 }
 
-func expandActions(l []interface{}) []*awstypes.Action {
-	actions := []*awstypes.Action{}
+func expandActions(l []interface{}) []awstypes.Action {
+	actions := []awstypes.Action{}
 
 	for _, mRaw := range l {
 		m := mRaw.(map[string]interface{})
 
-		action := &awstypes.Action{}
+		action := awstypes.Action{}
 
 		if v, ok := m["crawler_name"].(string); ok && v != "" {
 			action.CrawlerName = aws.String(v)
@@ -500,11 +498,11 @@ func expandActions(l []interface{}) []*awstypes.Action {
 		}
 
 		if v, ok := m["arguments"].(map[string]interface{}); ok && len(v) > 0 {
-			action.Arguments = flex.ExpandStringMap(v)
+			action.Arguments = flex.ExpandStringValueMap(v)
 		}
 
 		if v, ok := m[names.AttrTimeout].(int); ok && v > 0 {
-			action.Timeout = aws.Int64(int64(v))
+			action.Timeout = aws.Int32(int32(v))
 		}
 
 		if v, ok := m["security_configuration"].(string); ok && v != "" {
@@ -527,20 +525,20 @@ func expandTriggerNotificationProperty(l []interface{}) *awstypes.NotificationPr
 	property := &awstypes.NotificationProperty{}
 
 	if v, ok := m["notify_delay_after"].(int); ok && v > 0 {
-		property.NotifyDelayAfter = aws.Int64(int64(v))
+		property.NotifyDelayAfter = aws.Int32(int32(v))
 	}
 
 	return property
 }
 
-func expandConditions(l []interface{}) []*awstypes.Condition {
-	conditions := []*awstypes.Condition{}
+func expandConditions(l []interface{}) []awstypes.Condition {
+	conditions := []awstypes.Condition{}
 
 	for _, mRaw := range l {
 		m := mRaw.(map[string]interface{})
 
-		condition := &awstypes.Condition{
-			LogicalOperator: aws.String(m["logical_operator"].(string)),
+		condition := awstypes.Condition{
+			LogicalOperator: awstypes.LogicalOperator(m["logical_operator"].(string)),
 		}
 
 		if v, ok := m["crawler_name"].(string); ok && v != "" {
@@ -556,7 +554,7 @@ func expandConditions(l []interface{}) []*awstypes.Condition {
 		}
 
 		if v, ok := m[names.AttrState].(string); ok && v != "" {
-			condition.State = aws.String(v)
+			condition.State = awstypes.JobRunState(v)
 		}
 
 		conditions = append(conditions, condition)
@@ -579,13 +577,13 @@ func expandPredicate(l []interface{}) *awstypes.Predicate {
 	return predicate
 }
 
-func flattenActions(actions []*awstypes.Action) []interface{} {
+func flattenActions(actions []awstypes.Action) []interface{} {
 	l := []interface{}{}
 
 	for _, action := range actions {
 		m := map[string]interface{}{
 			"arguments":       action.Arguments,
-			names.AttrTimeout: int(aws.ToInt64(action.Timeout)),
+			names.AttrTimeout: int(aws.ToInt32(action.Timeout)),
 		}
 
 		if v := aws.ToString(action.CrawlerName); v != "" {
@@ -610,7 +608,7 @@ func flattenActions(actions []*awstypes.Action) []interface{} {
 	return l
 }
 
-func flattenConditions(conditions []*awstypes.Condition) []interface{} {
+func flattenConditions(conditions []awstypes.Condition) []interface{} {
 	l := []interface{}{}
 
 	for _, condition := range conditions {
@@ -630,7 +628,7 @@ func flattenConditions(conditions []*awstypes.Condition) []interface{} {
 			m["job_name"] = v
 		}
 
-		if v := aws.ToString(condition.State); v != "" {
+		if v := string(condition.State); v != "" {
 			m[names.AttrState] = v
 		}
 
@@ -659,7 +657,7 @@ func flattenTriggerNotificationProperty(property *awstypes.NotificationProperty)
 	}
 
 	m := map[string]interface{}{
-		"notify_delay_after": aws.ToInt64(property.NotifyDelayAfter),
+		"notify_delay_after": aws.ToInt32(property.NotifyDelayAfter),
 	}
 
 	return []map[string]interface{}{m}
@@ -669,11 +667,11 @@ func expandEventBatchingCondition(l []interface{}) *awstypes.EventBatchingCondit
 	m := l[0].(map[string]interface{})
 
 	ebc := &awstypes.EventBatchingCondition{
-		BatchSize: aws.Int64(int64(m["batch_size"].(int))),
+		BatchSize: aws.Int32(int32(m["batch_size"].(int))),
 	}
 
 	if v, ok := m["batch_window"].(int); ok && v > 0 {
-		ebc.BatchWindow = aws.Int64(int64(v))
+		ebc.BatchWindow = aws.Int32(int32(v))
 	}
 
 	return ebc
@@ -685,8 +683,8 @@ func flattenEventBatchingCondition(ebc *awstypes.EventBatchingCondition) []map[s
 	}
 
 	m := map[string]interface{}{
-		"batch_size":   aws.ToInt64(ebc.BatchSize),
-		"batch_window": aws.ToInt64(ebc.BatchWindow),
+		"batch_size":   aws.ToInt32(ebc.BatchSize),
+		"batch_window": aws.ToInt32(ebc.BatchWindow),
 	}
 
 	return []map[string]interface{}{m}
