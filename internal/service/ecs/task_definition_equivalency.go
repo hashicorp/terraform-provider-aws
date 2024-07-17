@@ -11,15 +11,13 @@ import (
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
-// ContainerDefinitionsAreEquivalent determines equality between two ECS container definition JSON strings
-// Note: This function will be moved out of the aws package in the future.
-func ContainerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (bool, error) {
+func containerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (bool, error) {
 	var obj1 containerDefinitions
 	err := tfjson.DecodeFromString(def1, &obj1)
 	if err != nil {
 		return false, err
 	}
-	err = obj1.Reduce(isAWSVPC)
+	err = obj1.reduce(isAWSVPC)
 	if err != nil {
 		return false, err
 	}
@@ -33,7 +31,7 @@ func ContainerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (bool, 
 	if err != nil {
 		return false, err
 	}
-	err = obj2.Reduce(isAWSVPC)
+	err = obj2.reduce(isAWSVPC)
 	if err != nil {
 		return false, err
 	}
@@ -47,11 +45,11 @@ func ContainerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (bool, 
 
 type containerDefinitions []awstypes.ContainerDefinition
 
-func (cd containerDefinitions) Reduce(isAWSVPC bool) error {
+func (cd containerDefinitions) reduce(isAWSVPC bool) error {
 	// Deal with fields which may be re-ordered in the API.
-	cd.OrderContainers()
-	cd.OrderEnvironmentVariables()
-	cd.OrderSecrets()
+	cd.orderContainers()
+	cd.orderEnvironmentVariables()
+	cd.orderSecrets()
 
 	for i, def := range cd {
 		// Deal with special fields which have defaults.
@@ -129,7 +127,7 @@ func (cd containerDefinitions) Reduce(isAWSVPC bool) error {
 	return nil
 }
 
-func (cd containerDefinitions) OrderEnvironmentVariables() {
+func (cd containerDefinitions) orderEnvironmentVariables() {
 	for _, def := range cd {
 		sort.Slice(def.Environment, func(i, j int) bool {
 			return aws.ToString(def.Environment[i].Name) < aws.ToString(def.Environment[j].Name)
@@ -137,7 +135,7 @@ func (cd containerDefinitions) OrderEnvironmentVariables() {
 	}
 }
 
-func (cd containerDefinitions) OrderSecrets() {
+func (cd containerDefinitions) orderSecrets() {
 	for _, def := range cd {
 		sort.Slice(def.Secrets, func(i, j int) bool {
 			return aws.ToString(def.Secrets[i].Name) < aws.ToString(def.Secrets[j].Name)
@@ -145,7 +143,7 @@ func (cd containerDefinitions) OrderSecrets() {
 	}
 }
 
-func (cd containerDefinitions) OrderContainers() {
+func (cd containerDefinitions) orderContainers() {
 	sort.Slice(cd, func(i, j int) bool {
 		return aws.ToString(cd[i].Name) < aws.ToString(cd[j].Name)
 	})

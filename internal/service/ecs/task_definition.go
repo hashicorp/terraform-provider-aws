@@ -6,7 +6,6 @@ package ecs
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -16,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
-	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -27,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -85,9 +84,9 @@ func ResourceTaskDefinition() *schema.Resource {
 					// spurious reorderings in plans (diff is suppressed if the environment variables haven't changed,
 					// but they still show in the plan if some other property changes).
 					orderedCDs, _ := expandContainerDefinitions(v.(string))
-					containerDefinitions(orderedCDs).OrderContainers()
-					containerDefinitions(orderedCDs).OrderEnvironmentVariables()
-					containerDefinitions(orderedCDs).OrderSecrets()
+					containerDefinitions(orderedCDs).orderContainers()
+					containerDefinitions(orderedCDs).orderEnvironmentVariables()
+					containerDefinitions(orderedCDs).orderSecrets()
 					unnormalizedJson, _ := flattenContainerDefinitions(orderedCDs)
 					json, _ := structure.NormalizeJsonString(unnormalizedJson)
 					return json
@@ -95,10 +94,10 @@ func ResourceTaskDefinition() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					networkMode, ok := d.GetOk("network_mode")
 					isAWSVPC := ok && networkMode.(string) == string(awstypes.NetworkModeAwsvpc)
-					equal, _ := ContainerDefinitionsAreEquivalent(old, new, isAWSVPC)
+					equal, _ := containerDefinitionsAreEquivalent(old, new, isAWSVPC)
 					return equal
 				},
-				ValidateFunc: ValidTaskDefinitionContainerDefinitions,
+				ValidateFunc: validTaskDefinitionContainerDefinitions,
 			},
 			"cpu": {
 				Type:     schema.TypeString,
@@ -451,9 +450,8 @@ func ResourceTaskDefinition() *schema.Resource {
 	}
 }
 
-func ValidTaskDefinitionContainerDefinitions(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	_, err := expandContainerDefinitions(value)
+func validTaskDefinitionContainerDefinitions(v interface{}, k string) (ws []string, errors []error) {
+	_, err := expandContainerDefinitions(v.(string))
 	if err != nil {
 		errors = append(errors, fmt.Errorf("ECS Task Definition container_definitions is invalid: %s", err))
 	}
@@ -465,10 +463,9 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 	partition := meta.(*conns.AWSClient).Partition
 
-	rawDefinitions := d.Get("container_definitions").(string)
-	definitions, err := expandContainerDefinitions(rawDefinitions)
+	definitions, err := expandContainerDefinitions(d.Get("container_definitions").(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get(names.AttrFamily).(string), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &ecs.RegisterTaskDefinitionInput{
@@ -624,9 +621,9 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	// Sort the lists of environment variables as they come in, so we won't get spurious reorderings in plans
 	// (diff is suppressed if the environment variables haven't changed, but they still show in the plan if
 	// some other property changes).
-	containerDefinitions(taskDefinition.ContainerDefinitions).OrderContainers()
-	containerDefinitions(taskDefinition.ContainerDefinitions).OrderEnvironmentVariables()
-	containerDefinitions(taskDefinition.ContainerDefinitions).OrderSecrets()
+	containerDefinitions(taskDefinition.ContainerDefinitions).orderContainers()
+	containerDefinitions(taskDefinition.ContainerDefinitions).orderEnvironmentVariables()
+	containerDefinitions(taskDefinition.ContainerDefinitions).orderSecrets()
 
 	defs, err := flattenContainerDefinitions(taskDefinition.ContainerDefinitions)
 	if err != nil {
@@ -1194,24 +1191,18 @@ func flattenFSxWinVolumeAuthorizationConfig(config *awstypes.FSxWindowsFileServe
 	return items
 }
 
-func flattenContainerDefinitions(definitions []awstypes.ContainerDefinition) (string, error) {
-	b, err := jsonutil.BuildJSON(definitions)
-	if err != nil {
-		return "", err
-	}
-
-	return string(b), nil
+func flattenContainerDefinitions(apiObjects []awstypes.ContainerDefinition) (string, error) {
+	return tfjson.EncodeToString(apiObjects)
 }
 
-func expandContainerDefinitions(rawDefinitions string) ([]awstypes.ContainerDefinition, error) {
-	var definitions []awstypes.ContainerDefinition
+func expandContainerDefinitions(tfString string) ([]awstypes.ContainerDefinition, error) {
+	var apiObjects []awstypes.ContainerDefinition
 
-	err := json.Unmarshal([]byte(rawDefinitions), &definitions)
-	if err != nil {
-		return nil, fmt.Errorf("decoding JSON: %s", err)
+	if err := tfjson.DecodeFromString(tfString, &apiObjects); err != nil {
+		return nil, err
 	}
 
-	return definitions, nil
+	return apiObjects, nil
 }
 
 func expandTaskDefinitionEphemeralStorage(config []interface{}) *awstypes.EphemeralStorage {

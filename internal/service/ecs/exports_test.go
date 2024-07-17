@@ -8,6 +8,7 @@ var (
 	ResourceAccountSettingDefault = resourceAccountSettingDefault
 	ResourceTag                   = resourceTag
 
-	FindEffectiveAccountSettingByName = findEffectiveAccountSettingByName
-	FindTag                           = findTag
+	FindEffectiveAccountSettingByName       = findEffectiveAccountSettingByName
+	FindTag                                 = findTag
+	ValidTaskDefinitionContainerDefinitions = validTaskDefinitionContainerDefinitions
 )
