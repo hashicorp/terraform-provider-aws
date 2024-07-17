@@ -230,6 +230,7 @@ func resourcePipeline() *schema.Resource {
 			"trigger": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 50,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -663,7 +664,7 @@ func expandPipelineDeclaration(d *schema.ResourceData) (*types.PipelineDeclarati
 		case 1:
 			for region, v := range artifactStores {
 				if region != "" {
-					return nil, errors.New("region cannot be set for a single-region CodePipeline")
+					return nil, errors.New("region cannot be set for a single-region CodePipeline Pipeline")
 				}
 				v := v
 				apiObject.ArtifactStore = &v
@@ -672,11 +673,11 @@ func expandPipelineDeclaration(d *schema.ResourceData) (*types.PipelineDeclarati
 		default:
 			for region := range artifactStores {
 				if region == "" {
-					return nil, errors.New("region must be set for a cross-region CodePipeline")
+					return nil, errors.New("region must be set for a cross-region CodePipeline Pipeline")
 				}
 			}
 			if n != v.(*schema.Set).Len() {
-				return nil, errors.New("only one Artifact Store can be defined per region for a cross-region CodePipeline")
+				return nil, errors.New("only one Artifact Store can be defined per region for a cross-region CodePipeline Pipeline")
 			}
 			apiObject.ArtifactStores = artifactStores
 		}
