@@ -15,17 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ecs_task_definition")
-func DataSourceTaskDefinition() *schema.Resource {
+// @SDKDataSource("aws_ecs_task_definition", name="Task Definition")
+func dataSourceTaskDefinition() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTaskDefinitionRead,
 
 		Schema: map[string]*schema.Schema{
-			"task_definition": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			// Computed values.
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -54,6 +49,10 @@ func DataSourceTaskDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"task_definition": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"task_role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -71,13 +70,12 @@ func dataSourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 		TaskDefinition: aws.String(taskDefinitionName),
 	}
 
-	output, err := conn.DescribeTaskDefinition(ctx, input)
+	taskDefinition, _, err := findTaskDefinition(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", taskDefinitionName, err)
 	}
 
-	taskDefinition := output.TaskDefinition
 	d.SetId(aws.ToString(taskDefinition.TaskDefinitionArn))
 	d.Set(names.AttrARN, taskDefinition.TaskDefinitionArn)
 	d.Set("arn_without_revision", taskDefinitionARNStripRevision(aws.ToString(taskDefinition.TaskDefinitionArn)))
