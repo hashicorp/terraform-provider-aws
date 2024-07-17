@@ -820,21 +820,20 @@ func expandIPPermission(d *schema.ResourceData, sg *awstypes.SecurityGroup) awst
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		description := v.(string)
-
-		for _, v := range apiObject.IpRanges {
-			v.Description = aws.String(description)
+		for i := range apiObject.IpRanges {
+			apiObject.IpRanges[i].Description = aws.String(description)
 		}
 
-		for _, v := range apiObject.Ipv6Ranges {
-			v.Description = aws.String(description)
+		for i := range apiObject.Ipv6Ranges {
+			apiObject.Ipv6Ranges[i].Description = aws.String(description)
 		}
 
-		for _, v := range apiObject.PrefixListIds {
-			v.Description = aws.String(description)
+		for i := range apiObject.PrefixListIds {
+			apiObject.PrefixListIds[i].Description = aws.String(description)
 		}
 
-		for _, v := range apiObject.UserIdGroupPairs {
-			v.Description = aws.String(description)
+		for i := range apiObject.UserIdGroupPairs {
+			apiObject.UserIdGroupPairs[i].Description = aws.String(description)
 		}
 	}
 
