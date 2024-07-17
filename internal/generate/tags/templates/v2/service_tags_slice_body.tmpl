@@ -22,11 +22,11 @@ func listOfMap(tags tftags.KeyValueTags) []any {
 
 {{- if .TagKeyType }}
 // TagKeys returns {{ .ServicePackage }} service tag keys.
-func TagKeys(tags tftags.KeyValueTags) []*{{ .AWSService }}.{{ .TagKeyType }} {
-	result := make([]*{{ .AWSService }}.{{ .TagKeyType }}, 0, len(tags))
+func TagKeys(tags tftags.KeyValueTags) []awstypes.{{ .TagKeyType }} {
+	result := make([]awstypes.{{ .TagKeyType }}, 0, len(tags))
 
 	for k := range tags.Map() {
-		tagKey := &{{ .AWSService }}.{{ .TagKeyType }}{
+		tagKey := awstypes.{{ .TagKeyType }}{
 			{{ .TagTypeKeyElem }}: aws.String(k),
 		}
 
@@ -247,11 +247,11 @@ func {{ .SetTagsOutFunc }}(ctx context.Context, tags []awstypes.{{ .TagType }}) 
 
 {{- if ne .CreateTagsFunc "" }}
 // {{ .CreateTagsFunc }} creates {{ .ServicePackage }} service tags for new resources.
-func {{ .CreateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, tags []awstypes.{{ .TagType }}) error {
+func {{ .CreateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, tags []awstypes.{{ .TagType }}, optFns ...func(*{{ .AWSService }}.Options)) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return  {{ .UpdateTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, nil, {{ .KeyValueTagsFunc }}(ctx, tags))
+	return  {{ .UpdateTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, nil, {{ .KeyValueTagsFunc }}(ctx, tags), optFns...)
 }
 {{- end }}

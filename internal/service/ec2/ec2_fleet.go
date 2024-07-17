@@ -299,6 +299,11 @@ func resourceFleet() *schema.Resource {
 														ValidateDiagFunc: enum.Validate[awstypes.LocalStorageType](),
 													},
 												},
+												"max_spot_price_as_percentage_of_optimal_on_demand_price": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntAtLeast(1),
+												},
 												"memory_gib_per_vcpu": {
 													Type:     schema.TypeList,
 													Optional: true,

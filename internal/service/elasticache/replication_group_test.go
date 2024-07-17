@@ -13,8 +13,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -32,7 +33,7 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -76,7 +77,7 @@ func TestAccElastiCacheReplicationGroup_basic_v5(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -113,7 +114,7 @@ func TestAccElastiCacheReplicationGroup_uppercase(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -146,7 +147,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_v7(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -181,7 +182,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v1, v2, v3, v4, v5, v6 elasticache.ReplicationGroup
+	var v1, v2, v3, v4, v5, v6 awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -260,7 +261,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_6xToRealVersion(t *testing
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v1, v2 elasticache.ReplicationGroup
+	var v1, v2 awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -299,7 +300,7 @@ func TestAccElastiCacheReplicationGroup_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -327,7 +328,7 @@ func TestAccElastiCacheReplicationGroup_updateDescription(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -369,7 +370,7 @@ func TestAccElastiCacheReplicationGroup_updateMaintenanceWindow(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -409,7 +410,7 @@ func TestAccElastiCacheReplicationGroup_updateUserGroups(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	userGroup := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -453,7 +454,7 @@ func TestAccElastiCacheReplicationGroup_updateNodeSize(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -496,7 +497,7 @@ func TestAccElastiCacheReplicationGroup_updateParameterGroup(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	parameterGroupResourceName1 := "aws_elasticache_parameter_group.test.0"
 	parameterGroupResourceName2 := "aws_elasticache_parameter_group.test.1"
 	resourceName := "aws_elasticache_replication_group.test"
@@ -542,7 +543,7 @@ func TestAccElastiCacheReplicationGroup_authToken(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 	token1 := sdkacctest.RandString(16)
@@ -569,21 +570,21 @@ func TestAccElastiCacheReplicationGroup_authToken(t *testing.T) {
 			{
 				// When adding an auth_token to a previously passwordless replication
 				// group, the SET strategy can be used.
-				Config: testAccReplicationGroupConfig_authToken(rName, token1, elasticache.AuthTokenUpdateStrategyTypeSet),
+				Config: testAccReplicationGroupConfig_authToken(rName, token1, string(awstypes.AuthTokenUpdateStrategyTypeSet)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auth_token", token1),
-					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", elasticache.AuthTokenUpdateStrategyTypeSet),
+					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", string(awstypes.AuthTokenUpdateStrategyTypeSet)),
 				),
 			},
 			{
-				Config: testAccReplicationGroupConfig_authToken(rName, token2, elasticache.AuthTokenUpdateStrategyTypeRotate),
+				Config: testAccReplicationGroupConfig_authToken(rName, token2, string(awstypes.AuthTokenUpdateStrategyTypeRotate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auth_token", token2),
-					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", elasticache.AuthTokenUpdateStrategyTypeRotate),
+					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", string(awstypes.AuthTokenUpdateStrategyTypeRotate)),
 				),
 			},
 			{
@@ -591,12 +592,12 @@ func TestAccElastiCacheReplicationGroup_authToken(t *testing.T) {
 				// should include the auth_token to be kept and the SET auth_token_update_strategy.
 				//
 				// Ref: https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/auth.html#auth-modifyng-token
-				Config: testAccReplicationGroupConfig_authToken(rName, token2, elasticache.AuthTokenUpdateStrategyTypeSet),
+				Config: testAccReplicationGroupConfig_authToken(rName, token2, string(awstypes.AuthTokenUpdateStrategyTypeSet)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auth_token", token2),
-					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", elasticache.AuthTokenUpdateStrategyTypeSet),
+					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", string(awstypes.AuthTokenUpdateStrategyTypeSet)),
 				),
 			},
 		},
@@ -609,7 +610,7 @@ func TestAccElastiCacheReplicationGroup_stateUpgrade5270(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -648,7 +649,7 @@ func TestAccElastiCacheReplicationGroup_vpc(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	resourceName := "aws_elasticache_replication_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -682,7 +683,7 @@ func TestAccElastiCacheReplicationGroup_multiAzNotInVPC(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -720,7 +721,7 @@ func TestAccElastiCacheReplicationGroup_multiAzNotInVPC_repeated(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -760,7 +761,7 @@ func TestAccElastiCacheReplicationGroup_multiAzInVPC(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -781,11 +782,11 @@ func TestAccElastiCacheReplicationGroup_multiAzInVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "7"),
 					resource.TestCheckResourceAttrSet(resourceName, "primary_endpoint_address"),
 					func(s *terraform.State) error {
-						return resource.TestMatchResourceAttr(resourceName, "primary_endpoint_address", regexache.MustCompile(fmt.Sprintf("%s\\..+\\.%s", aws.StringValue(rg.ReplicationGroupId), acctest.PartitionDNSSuffix())))(s)
+						return resource.TestMatchResourceAttr(resourceName, "primary_endpoint_address", regexache.MustCompile(fmt.Sprintf("%s\\..+\\.%s", aws.ToString(rg.ReplicationGroupId), acctest.PartitionDNSSuffix())))(s)
 					},
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint_address"),
 					func(s *terraform.State) error {
-						return resource.TestMatchResourceAttr(resourceName, "reader_endpoint_address", regexache.MustCompile(fmt.Sprintf("%s-ro\\..+\\.%s", aws.StringValue(rg.ReplicationGroupId), acctest.PartitionDNSSuffix())))(s)
+						return resource.TestMatchResourceAttr(resourceName, "reader_endpoint_address", regexache.MustCompile(fmt.Sprintf("%s-ro\\..+\\.%s", aws.ToString(rg.ReplicationGroupId), acctest.PartitionDNSSuffix())))(s)
 					},
 				),
 			},
@@ -805,7 +806,7 @@ func TestAccElastiCacheReplicationGroup_deprecatedAvailabilityZones_multiAzInVPC
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -826,11 +827,11 @@ func TestAccElastiCacheReplicationGroup_deprecatedAvailabilityZones_multiAzInVPC
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "7"),
 					resource.TestCheckResourceAttrSet(resourceName, "primary_endpoint_address"),
 					func(s *terraform.State) error {
-						return resource.TestMatchResourceAttr(resourceName, "primary_endpoint_address", regexache.MustCompile(fmt.Sprintf("%s\\..+\\.%s", aws.StringValue(rg.ReplicationGroupId), acctest.PartitionDNSSuffix())))(s)
+						return resource.TestMatchResourceAttr(resourceName, "primary_endpoint_address", regexache.MustCompile(fmt.Sprintf("%s\\..+\\.%s", aws.ToString(rg.ReplicationGroupId), acctest.PartitionDNSSuffix())))(s)
 					},
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint_address"),
 					func(s *terraform.State) error {
-						return resource.TestMatchResourceAttr(resourceName, "reader_endpoint_address", regexache.MustCompile(fmt.Sprintf("%s-ro\\..+\\.%s", aws.StringValue(rg.ReplicationGroupId), acctest.PartitionDNSSuffix())))(s)
+						return resource.TestMatchResourceAttr(resourceName, "reader_endpoint_address", regexache.MustCompile(fmt.Sprintf("%s-ro\\..+\\.%s", aws.ToString(rg.ReplicationGroupId), acctest.PartitionDNSSuffix())))(s)
 					},
 				),
 			},
@@ -868,7 +869,7 @@ func TestAccElastiCacheReplicationGroup_ipDiscovery(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	resourceName := "aws_elasticache_replication_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -909,7 +910,7 @@ func TestAccElastiCacheReplicationGroup_networkType(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	resourceName := "aws_elasticache_replication_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -951,7 +952,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -993,7 +994,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_nonClusteredParameterGroup(t
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -1037,7 +1038,7 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroups_scaleUp(t
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 	clusterDataSourcePrefix := "data.aws_elasticache_cluster.test"
@@ -1087,7 +1088,7 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroups_scaleDown
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -1131,7 +1132,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_updateReplicasPerNodeGroup(t
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -1187,7 +1188,7 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroupsAndReplica
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -1231,7 +1232,7 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroupsAndReplica
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -1275,7 +1276,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_singleNode(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -1319,7 +1320,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_updateFromDisabled_Compatibl
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -1393,7 +1394,7 @@ func TestAccElastiCacheReplicationGroup_enableSnapshotting(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -1433,7 +1434,7 @@ func TestAccElastiCacheReplicationGroup_transitEncryptionWithAuthToken(t *testin
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 	authToken := sdkacctest.RandString(16)
@@ -1469,7 +1470,7 @@ func TestAccElastiCacheReplicationGroup_transitEncryption5x(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg1, rg2 elasticache.ReplicationGroup
+	var rg1, rg2 awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -1513,7 +1514,7 @@ func TestAccElastiCacheReplicationGroup_transitEncryption7x(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg1, rg2, rg3, rg4 elasticache.ReplicationGroup
+	var rg1, rg2, rg3, rg4 awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -1524,11 +1525,11 @@ func TestAccElastiCacheReplicationGroup_transitEncryption7x(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_transitEncryptionEnabled7x(rName, elasticache.TransitEncryptionModePreferred),
+				Config: testAccReplicationGroupConfig_transitEncryptionEnabled7x(rName, string(awstypes.TransitEncryptionModePreferred)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg1),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", elasticache.TransitEncryptionModePreferred),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", string(awstypes.TransitEncryptionModePreferred)),
 				),
 			},
 			{
@@ -1539,22 +1540,22 @@ func TestAccElastiCacheReplicationGroup_transitEncryption7x(t *testing.T) {
 			},
 			{
 				// With Redis engine versions >= 7.0.5, transit_encryption_mode can be modified in-place.
-				Config: testAccReplicationGroupConfig_transitEncryptionEnabled7x(rName, elasticache.TransitEncryptionModeRequired),
+				Config: testAccReplicationGroupConfig_transitEncryptionEnabled7x(rName, string(awstypes.TransitEncryptionModeRequired)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg2),
 					testAccCheckReplicationGroupNotRecreated(&rg1, &rg2),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", elasticache.TransitEncryptionModeRequired),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", string(awstypes.TransitEncryptionModeRequired)),
 				),
 			},
 			{
 				// Before disabling transit encryption, mode must be transitioned back to "preferred" first.
-				Config: testAccReplicationGroupConfig_transitEncryptionEnabled7x(rName, elasticache.TransitEncryptionModePreferred),
+				Config: testAccReplicationGroupConfig_transitEncryptionEnabled7x(rName, string(awstypes.TransitEncryptionModePreferred)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg3),
 					testAccCheckReplicationGroupNotRecreated(&rg2, &rg3),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", elasticache.TransitEncryptionModePreferred),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", string(awstypes.TransitEncryptionModePreferred)),
 				),
 			},
 			{
@@ -1576,7 +1577,7 @@ func TestAccElastiCacheReplicationGroup_enableAtRestEncryption(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -1609,7 +1610,7 @@ func TestAccElastiCacheReplicationGroup_useCMKKMSKeyID(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -1635,7 +1636,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_basic(t *testing.T) 
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var replicationGroup elasticache.ReplicationGroup
+	var replicationGroup awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 	clusterDataSourcePrefix := "data.aws_elasticache_cluster.test"
@@ -1701,7 +1702,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var replicationGroup elasticache.ReplicationGroup
+	var replicationGroup awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -1733,7 +1734,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 			{
 				PreConfig: func() {
 					// Ensure that primary is on the node we are trying to delete
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 					timeout := 40 * time.Minute
 
 					if err := resourceReplicationGroupSetPrimaryClusterID(ctx, conn, rName, formatReplicationGroupClusterID(rName, 3), timeout); err != nil {
@@ -1759,7 +1760,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var replicationGroup elasticache.ReplicationGroup
+	var replicationGroup awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -1785,7 +1786,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 			{
 				PreConfig: func() {
 					// Ensure that primary is on the node we are trying to delete
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 					timeout := 40 * time.Minute
 
 					// Must disable automatic failover first
@@ -1822,7 +1823,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_multiAZEnabled(t *te
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var replicationGroup elasticache.ReplicationGroup
+	var replicationGroup awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -1848,7 +1849,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_multiAZEnabled(t *te
 			{
 				PreConfig: func() {
 					// Ensure that primary is on the node we are trying to delete
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 					timeout := 40 * time.Minute
 
 					// Must disable automatic failover first
@@ -1885,7 +1886,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var replicationGroup elasticache.ReplicationGroup
+	var replicationGroup awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -1906,7 +1907,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 			{
 				PreConfig: func() {
 					// Remove one of the Cache Clusters
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 					timeout := 40 * time.Minute
 
 					cacheClusterID := formatReplicationGroupClusterID(rName, 2)
@@ -1936,7 +1937,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var replicationGroup elasticache.ReplicationGroup
+	var replicationGroup awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -1957,7 +1958,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 			{
 				PreConfig: func() {
 					// Remove one of the Cache Clusters
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 					timeout := 40 * time.Minute
 
 					cacheClusterID := formatReplicationGroupClusterID(rName, 2)
@@ -1987,7 +1988,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var replicationGroup elasticache.ReplicationGroup
+	var replicationGroup awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -2008,7 +2009,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 			{
 				PreConfig: func() {
 					// Remove one of the Cache Clusters
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 					timeout := 40 * time.Minute
 
 					cacheClusterID := formatReplicationGroupClusterID(rName, 2)
@@ -2038,7 +2039,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var replicationGroup elasticache.ReplicationGroup
+	var replicationGroup awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -2059,7 +2060,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 			{
 				PreConfig: func() {
 					// Remove one of the Cache Clusters
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 					timeout := 40 * time.Minute
 
 					cacheClusterID := formatReplicationGroupClusterID(rName, 2)
@@ -2089,7 +2090,7 @@ func TestAccElastiCacheReplicationGroup_tags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 	clusterDataSourcePrefix := "data.aws_elasticache_cluster.test"
@@ -2144,7 +2145,7 @@ func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 	clusterDataSourcePrefix := "data.aws_elasticache_cluster.test"
@@ -2185,7 +2186,7 @@ func TestAccElastiCacheReplicationGroup_finalSnapshot(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -2212,7 +2213,7 @@ func TestAccElastiCacheReplicationGroup_autoMinorVersionUpgrade(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -2298,8 +2299,8 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_basic(t *testin
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
-	var pg elasticache.CacheParameterGroup
+	var rg awstypes.ReplicationGroup
+	var pg awstypes.CacheParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 	primaryGroupResourceName := "aws_elasticache_replication_group.primary"
@@ -2347,8 +2348,8 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg1, rg2 elasticache.ReplicationGroup
-	var pg1, pg2 elasticache.CacheParameterGroup
+	var rg1, rg2 awstypes.ReplicationGroup
+	var pg1, pg2 awstypes.CacheParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 	primaryGroupResourceName := "aws_elasticache_replication_group.primary"
@@ -2417,7 +2418,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_disappears(t *t
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -2448,8 +2449,8 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg1, rg2 elasticache.ReplicationGroup
-	var pg1, pg2 elasticache.CacheParameterGroup
+	var rg1, rg2 awstypes.ReplicationGroup
+	var pg1, pg2 awstypes.CacheParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 	primaryGroupResourceName := "aws_elasticache_replication_group.primary"
@@ -2536,8 +2537,8 @@ func TestAccElastiCacheReplicationGroup_dataTiering(t *testing.T) {
 	}
 
 	var (
-		rg      elasticache.ReplicationGroup
-		version elasticache.CacheEngineVersion
+		rg      awstypes.ReplicationGroup
+		version awstypes.CacheEngineVersion
 	)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -2576,7 +2577,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -2587,7 +2588,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText),
+				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, string(awstypes.DestinationTypeCloudWatchLogs), string(awstypes.LogFormatText), true, string(awstypes.DestinationTypeCloudWatchLogs), string(awstypes.LogFormatText)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -2613,7 +2614,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				},
 			},
 			{
-				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson),
+				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, string(awstypes.DestinationTypeCloudWatchLogs), string(awstypes.LogFormatText), true, string(awstypes.DestinationTypeKinesisFirehose), string(awstypes.LogFormatJson)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -2629,7 +2630,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				),
 			},
 			{
-				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson, false, "", ""),
+				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, string(awstypes.DestinationTypeKinesisFirehose), string(awstypes.LogFormatJson), false, "", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -2679,7 +2680,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var rg elasticache.ReplicationGroup
+	var rg awstypes.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -2690,7 +2691,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText),
+				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, true, string(awstypes.DestinationTypeCloudWatchLogs), string(awstypes.LogFormatText), true, string(awstypes.DestinationTypeCloudWatchLogs), string(awstypes.LogFormatText)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -2717,7 +2718,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				},
 			},
 			{
-				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson),
+				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, true, string(awstypes.DestinationTypeCloudWatchLogs), string(awstypes.LogFormatText), true, string(awstypes.DestinationTypeKinesisFirehose), string(awstypes.LogFormatJson)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -2734,7 +2735,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				),
 			},
 			{
-				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson, false, "", ""),
+				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, true, string(awstypes.DestinationTypeKinesisFirehose), string(awstypes.LogFormatJson), false, "", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -2780,14 +2781,14 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 	})
 }
 
-func testAccCheckReplicationGroupExists(ctx context.Context, n string, v *elasticache.ReplicationGroup) resource.TestCheckFunc {
+func testAccCheckReplicationGroupExists(ctx context.Context, n string, v *awstypes.ReplicationGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
 		output, err := tfelasticache.FindReplicationGroupByID(ctx, conn, rs.Primary.ID)
 
@@ -2803,7 +2804,7 @@ func testAccCheckReplicationGroupExists(ctx context.Context, n string, v *elasti
 
 func testAccCheckReplicationGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elasticache_replication_group" {
@@ -2826,18 +2827,18 @@ func testAccCheckReplicationGroupDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckReplicationGroupParameterGroupExists(ctx context.Context, rg *elasticache.ReplicationGroup, v *elasticache.CacheParameterGroup) resource.TestCheckFunc {
+func testAccCheckReplicationGroupParameterGroupExists(ctx context.Context, rg *awstypes.ReplicationGroup, v *awstypes.CacheParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
-		cacheClusterID := aws.StringValue(rg.NodeGroups[0].NodeGroupMembers[0].CacheClusterId)
+		cacheClusterID := aws.ToString(rg.NodeGroups[0].NodeGroupMembers[0].CacheClusterId)
 		cluster, err := tfelasticache.FindCacheClusterByID(ctx, conn, cacheClusterID)
 
 		if err != nil {
 			return fmt.Errorf("reading ElastiCache Cluster (%s): %w", cacheClusterID, err)
 		}
 
-		name := aws.StringValue(cluster.CacheParameterGroup.CacheParameterGroupName)
+		name := aws.ToString(cluster.CacheParameterGroup.CacheParameterGroupName)
 		output, err := tfelasticache.FindCacheParameterGroupByName(ctx, conn, name)
 
 		if err != nil {
@@ -2850,11 +2851,11 @@ func testAccCheckReplicationGroupParameterGroupExists(ctx context.Context, rg *e
 	}
 }
 
-func testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(ctx context.Context, v *elasticache.CacheParameterGroup) resource.TestCheckFunc {
+func testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(ctx context.Context, v *awstypes.CacheParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
-		name := aws.StringValue(v.CacheParameterGroupName)
+		name := aws.ToString(v.CacheParameterGroupName)
 		_, err := tfelasticache.FindCacheParameterGroupByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -2876,7 +2877,7 @@ func testAccCheckReplicationGroupUserGroup(ctx context.Context, n, userGroupID s
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
 		id := rs.Primary.ID
 		output, err := tfelasticache.FindReplicationGroupByID(ctx, conn, id)
@@ -2889,7 +2890,7 @@ func testAccCheckReplicationGroupUserGroup(ctx context.Context, n, userGroupID s
 			return fmt.Errorf("ElastiCache Replication Group (%s) was not assigned any User Groups", id)
 		}
 
-		if v := aws.StringValue(output.UserGroupIds[0]); v != userGroupID {
+		if v := output.UserGroupIds[0]; v != userGroupID {
 			return fmt.Errorf("ElastiCache Replication Group (%s) was not assigned User Group (%s), User Group was (%s) instead", n, userGroupID, v)
 		}
 
@@ -2897,9 +2898,9 @@ func testAccCheckReplicationGroupUserGroup(ctx context.Context, n, userGroupID s
 	}
 }
 
-func testAccCheckReplicationGroupRecreated(i, j *elasticache.ReplicationGroup) resource.TestCheckFunc {
+func testAccCheckReplicationGroupRecreated(i, j *awstypes.ReplicationGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.ReplicationGroupCreateTime).Equal(aws.TimeValue(j.ReplicationGroupCreateTime)) {
+		if aws.ToTime(i.ReplicationGroupCreateTime).Equal(aws.ToTime(j.ReplicationGroupCreateTime)) {
 			return errors.New("ElastiCache Replication Group not recreated")
 		}
 
@@ -2907,9 +2908,9 @@ func testAccCheckReplicationGroupRecreated(i, j *elasticache.ReplicationGroup) r
 	}
 }
 
-func testAccCheckReplicationGroupNotRecreated(i, j *elasticache.ReplicationGroup) resource.TestCheckFunc {
+func testAccCheckReplicationGroupNotRecreated(i, j *awstypes.ReplicationGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.ReplicationGroupCreateTime).Equal(aws.TimeValue(j.ReplicationGroupCreateTime)) {
+		if !aws.ToTime(i.ReplicationGroupCreateTime).Equal(aws.ToTime(j.ReplicationGroupCreateTime)) {
 			return errors.New("ElastiCache Replication Group recreated")
 		}
 
@@ -2919,8 +2920,8 @@ func testAccCheckReplicationGroupNotRecreated(i, j *elasticache.ReplicationGroup
 
 func testCheckEngineStuffDefault(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	var (
-		version        elasticache.CacheEngineVersion
-		parameterGroup elasticache.CacheParameterGroup
+		version        awstypes.CacheEngineVersion
+		parameterGroup awstypes.CacheParameterGroup
 	)
 
 	checks := []resource.TestCheckFunc{
@@ -2940,11 +2941,11 @@ func testCheckEngineStuffDefault(ctx context.Context, resourceName string) resou
 	return resource.ComposeAggregateTestCheckFunc(checks...)
 }
 
-func testCheckRedisEngineVersionLatest(ctx context.Context, v *elasticache.CacheEngineVersion) resource.TestCheckFunc {
+func testCheckRedisEngineVersionLatest(ctx context.Context, v *awstypes.CacheEngineVersion) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
-		versions, err := conn.DescribeCacheEngineVersionsWithContext(ctx, &elasticache.DescribeCacheEngineVersionsInput{
+		versions, err := conn.DescribeCacheEngineVersions(ctx, &elasticache.DescribeCacheEngineVersionsInput{
 			Engine:      aws.String("redis"),
 			DefaultOnly: aws.Bool(true),
 		})
@@ -2958,22 +2959,22 @@ func testCheckRedisEngineVersionLatest(ctx context.Context, v *elasticache.Cache
 			return fmt.Errorf("too many results: %d", l)
 		}
 
-		*v = *(versions.CacheEngineVersions[0])
+		*v = versions.CacheEngineVersions[0]
 
 		return nil
 	}
 }
 
-func testCheckRedisParameterGroupDefault(ctx context.Context, version *elasticache.CacheEngineVersion, v *elasticache.CacheParameterGroup) resource.TestCheckFunc {
+func testCheckRedisParameterGroupDefault(ctx context.Context, version *awstypes.CacheEngineVersion, v *awstypes.CacheParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
 		output, err := tfelasticache.FindCacheParameterGroup(ctx, conn, &elasticache.DescribeCacheParameterGroupsInput{}, tfslices.PredicateAnd(
-			func(v *elasticache.CacheParameterGroup) bool {
-				return aws.StringValue(v.CacheParameterGroupFamily) == aws.StringValue(version.CacheParameterGroupFamily)
+			func(v *awstypes.CacheParameterGroup) bool {
+				return aws.ToString(v.CacheParameterGroupFamily) == aws.ToString(version.CacheParameterGroupFamily)
 			},
-			func(v *elasticache.CacheParameterGroup) bool {
-				name := aws.StringValue(v.CacheParameterGroupName)
+			func(v *awstypes.CacheParameterGroup) bool {
+				name := aws.ToString(v.CacheParameterGroupName)
 				return strings.HasPrefix(name, "default.") && !strings.HasSuffix(name, ".cluster.on")
 			},
 		))
@@ -2990,8 +2991,8 @@ func testCheckRedisParameterGroupDefault(ctx context.Context, version *elasticac
 
 func testCheckEngineStuffClusterEnabledDefault(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	var (
-		version        elasticache.CacheEngineVersion
-		parameterGroup elasticache.CacheParameterGroup
+		version        awstypes.CacheEngineVersion
+		parameterGroup awstypes.CacheParameterGroup
 	)
 
 	checks := []resource.TestCheckFunc{
@@ -3011,16 +3012,16 @@ func testCheckEngineStuffClusterEnabledDefault(ctx context.Context, resourceName
 	return resource.ComposeAggregateTestCheckFunc(checks...)
 }
 
-func testCheckRedisParameterGroupClusterEnabledDefault(ctx context.Context, version *elasticache.CacheEngineVersion, v *elasticache.CacheParameterGroup) resource.TestCheckFunc {
+func testCheckRedisParameterGroupClusterEnabledDefault(ctx context.Context, version *awstypes.CacheEngineVersion, v *awstypes.CacheParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
 		output, err := tfelasticache.FindCacheParameterGroup(ctx, conn, &elasticache.DescribeCacheParameterGroupsInput{}, tfslices.PredicateAnd(
-			func(v *elasticache.CacheParameterGroup) bool {
-				return aws.StringValue(v.CacheParameterGroupFamily) == aws.StringValue(version.CacheParameterGroupFamily)
+			func(v *awstypes.CacheParameterGroup) bool {
+				return aws.ToString(v.CacheParameterGroupFamily) == aws.ToString(version.CacheParameterGroupFamily)
 			},
-			func(v *elasticache.CacheParameterGroup) bool {
-				name := aws.StringValue(v.CacheParameterGroupName)
+			func(v *awstypes.CacheParameterGroup) bool {
+				name := aws.ToString(v.CacheParameterGroupName)
 				return strings.HasPrefix(name, "default.") && strings.HasSuffix(name, ".cluster.on")
 			},
 		))
@@ -4439,7 +4440,7 @@ data "aws_elasticache_replication_group" "test" {
 `, rName, enableClusterMode, slowLogDeliveryEnabled, slowDeliveryDestination, slowDeliveryFormat, engineLogDeliveryEnabled, engineDeliveryDestination, engineLogDeliveryFormat)
 }
 
-func resourceReplicationGroupDisableAutomaticFailover(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) error {
+func resourceReplicationGroupDisableAutomaticFailover(ctx context.Context, conn *elasticache.Client, replicationGroupID string, timeout time.Duration) error {
 	return resourceReplicationGroupModify(ctx, conn, timeout, &elasticache.ModifyReplicationGroupInput{
 		ReplicationGroupId:       aws.String(replicationGroupID),
 		ApplyImmediately:         aws.Bool(true),
@@ -4448,7 +4449,7 @@ func resourceReplicationGroupDisableAutomaticFailover(ctx context.Context, conn 
 	})
 }
 
-func resourceReplicationGroupEnableAutomaticFailover(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string, multiAZEnabled bool, timeout time.Duration) error {
+func resourceReplicationGroupEnableAutomaticFailover(ctx context.Context, conn *elasticache.Client, replicationGroupID string, multiAZEnabled bool, timeout time.Duration) error {
 	return resourceReplicationGroupModify(ctx, conn, timeout, &elasticache.ModifyReplicationGroupInput{
 		ReplicationGroupId:       aws.String(replicationGroupID),
 		ApplyImmediately:         aws.Bool(true),
@@ -4457,7 +4458,7 @@ func resourceReplicationGroupEnableAutomaticFailover(ctx context.Context, conn *
 	})
 }
 
-func resourceReplicationGroupSetPrimaryClusterID(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID, primaryClusterID string, timeout time.Duration) error {
+func resourceReplicationGroupSetPrimaryClusterID(ctx context.Context, conn *elasticache.Client, replicationGroupID, primaryClusterID string, timeout time.Duration) error {
 	return resourceReplicationGroupModify(ctx, conn, timeout, &elasticache.ModifyReplicationGroupInput{
 		ReplicationGroupId: aws.String(replicationGroupID),
 		ApplyImmediately:   aws.Bool(true),
@@ -4465,8 +4466,8 @@ func resourceReplicationGroupSetPrimaryClusterID(ctx context.Context, conn *elas
 	})
 }
 
-func resourceReplicationGroupModify(ctx context.Context, conn *elasticache.ElastiCache, timeout time.Duration, input *elasticache.ModifyReplicationGroupInput) error {
-	_, err := conn.ModifyReplicationGroupWithContext(ctx, input)
+func resourceReplicationGroupModify(ctx context.Context, conn *elasticache.Client, timeout time.Duration, input *elasticache.ModifyReplicationGroupInput) error {
+	_, err := conn.ModifyReplicationGroup(ctx, input)
 	if err != nil {
 		return fmt.Errorf("error requesting modification: %w", err)
 	}
@@ -4474,7 +4475,7 @@ func resourceReplicationGroupModify(ctx context.Context, conn *elasticache.Elast
 	const (
 		delay = 30 * time.Second
 	)
-	_, err = tfelasticache.WaitReplicationGroupAvailable(ctx, conn, aws.StringValue(input.ReplicationGroupId), timeout, delay)
+	_, err = tfelasticache.WaitReplicationGroupAvailable(ctx, conn, aws.ToString(input.ReplicationGroupId), timeout, delay)
 	if err != nil {
 		return fmt.Errorf("error waiting for modification: %w", err)
 	}
