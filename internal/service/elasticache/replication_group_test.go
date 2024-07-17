@@ -1370,6 +1370,28 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_updateFromDisabled_Compatibl
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_cacheClustersConflictsWithReplicasPerNodeGroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccReplicationGroupConfig_cacheClustersConflictsWithReplicasPerNodeGroup(rName),
+				ExpectError: regexache.MustCompile(`"replicas_per_node_group": conflicts with num_cache_clusters`),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_clusteringAndCacheNodesCausesError(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1696,7 +1718,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_basic(t *testing.T) 
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailoverDisabled(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_NumberCacheClusters_autoFailoverDisabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1754,7 +1776,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailoverEnabled(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_NumberCacheClusters_autoFailoverEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1812,6 +1834,33 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", acctest.Ct2),
 				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_autoFailoverEnabled_validateNumberCacheClusters(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	const (
+		autoFailoverEnabled = true
+		multiAZDisabled     = false
+	)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccReplicationGroupConfig_failoverMultiAZ(rName, 1, autoFailoverEnabled, multiAZDisabled),
+				ExpectError: regexache.MustCompile(`"num_cache_clusters": must be at least 2 if automatic_failover_enabled is true`),
 			},
 		},
 	})
@@ -3075,6 +3124,20 @@ resource "aws_elasticache_replication_group" "test" {
 `, rName)
 }
 
+func testAccReplicationGroupConfig_cacheClustersConflictsWithReplicasPerNodeGroup(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[1]q
+  description          = "test description"
+  node_type            = "cache.t3.small"
+
+  automatic_failover_enabled = true
+  num_cache_clusters         = 2
+  replicas_per_node_group    = 0
+}
+`, rName)
+}
+
 func testAccReplicationGroupConfig_v5(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
@@ -3929,7 +3992,7 @@ resource "aws_elasticache_replication_group" "test" {
   node_type            = "cache.t2.micro"
   num_cache_clusters   = %[2]d
   replication_group_id = %[1]q
-  description          = "Terraform Acceptance Testing - num_cache_clusters"
+  description          = "test description"
   subnet_group_name    = aws_elasticache_subnet_group.test.name
 
   tags = {
@@ -3956,7 +4019,7 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                  = "cache.t3.medium"
   num_cache_clusters         = %[2]d
   replication_group_id       = %[1]q
-  description                = "Terraform Acceptance Testing - num_cache_clusters"
+  description                = "test description"
   subnet_group_name          = aws_elasticache_subnet_group.test.name
 }
 
