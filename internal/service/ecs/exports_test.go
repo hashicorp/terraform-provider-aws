@@ -6,8 +6,10 @@ package ecs
 // Exports for use in tests only.
 var (
 	ResourceAccountSettingDefault = resourceAccountSettingDefault
+	ResourceCapacityProvider      = resourceCapacityProvider
 	ResourceTag                   = resourceTag
 
+	FindCapacityProviderByARN               = findCapacityProviderByARN
 	FindEffectiveAccountSettingByName       = findEffectiveAccountSettingByName
 	FindTag                                 = findTag
 	ValidTaskDefinitionContainerDefinitions = validTaskDefinitionContainerDefinitions

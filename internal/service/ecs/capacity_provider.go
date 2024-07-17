@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -28,7 +29,7 @@ import (
 
 // @SDKResource("aws_ecs_capacity_provider", name="Capacity Provider")
 // @Tags(identifierAttribute="id")
-func ResourceCapacityProvider() *schema.Resource {
+func resourceCapacityProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCapacityProviderCreate,
 		ReadWithoutTimeout:   resourceCapacityProviderRead,
@@ -131,8 +132,8 @@ func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData,
 
 	name := d.Get(names.AttrName).(string)
 	input := ecs.CreateCapacityProviderInput{
-		Name:                     aws.String(name),
 		AutoScalingGroupProvider: expandAutoScalingGroupProviderCreate(d.Get("auto_scaling_group_provider")),
+		Name:                     aws.String(name),
 		Tags:                     getTagsIn(ctx),
 	}
 
@@ -171,9 +172,8 @@ func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData,
 func resourceCapacityProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
-	partition := meta.(*conns.AWSClient).Partition
 
-	output, err := FindCapacityProviderByARN(ctx, conn, partition, d.Id())
+	output, err := findCapacityProviderByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ECS Capacity Provider (%s) not found, removing from state", d.Id())
@@ -186,11 +186,9 @@ func resourceCapacityProviderRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.Set(names.AttrARN, output.CapacityProviderArn)
-
 	if err := d.Set("auto_scaling_group_provider", flattenAutoScalingGroupProvider(output.AutoScalingGroupProvider)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting auto_scaling_group_provider: %s", err)
 	}
-
 	d.Set(names.AttrName, output.Name)
 
 	setTagsOut(ctx, output.Tags)
@@ -201,7 +199,6 @@ func resourceCapacityProviderRead(ctx context.Context, d *schema.ResourceData, m
 func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
-	partition := meta.(*conns.AWSClient).Partition
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ecs.UpdateCapacityProviderInput{
@@ -209,31 +206,19 @@ func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 			Name:                     aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		log.Printf("[DEBUG] Updating ECS Capacity Provider: %+v", input)
-		err := retry.RetryContext(ctx, capacityProviderUpdateTimeout, func() *retry.RetryError {
-			_, err := conn.UpdateCapacityProvider(ctx, input)
-
-			if errs.IsA[*awstypes.UpdateInProgressException](err) {
-				return retry.RetryableError(err)
-			}
-
-			if err != nil {
-				return retry.NonRetryableError(err)
-			}
-
-			return nil
+		const (
+			timeout = 10 * time.Minute
+		)
+		_, err := tfresource.RetryWhenIsA[*awstypes.UpdateInProgressException](ctx, timeout, func() (interface{}, error) {
+			return conn.UpdateCapacityProvider(ctx, input)
 		})
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateCapacityProvider(ctx, input)
-		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating ECS Capacity Provider (%s): %s", d.Id(), err)
 		}
 
-		if _, err = waitCapacityProviderUpdated(ctx, conn, partition, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for ECS Capacity Provider (%s) to update: %s", d.Id(), err)
+		if _, err = waitCapacityProviderUpdated(ctx, conn, d.Id(), timeout); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ECS Capacity Provider (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -243,9 +228,8 @@ func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
-	partition := meta.(*conns.AWSClient).Partition
 
-	log.Printf("[DEBUG] Deleting ECS Capacity Provider (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting ECS Capacity Provider: %s", d.Id())
 	_, err := conn.DeleteCapacityProvider(ctx, &ecs.DeleteCapacityProviderInput{
 		CapacityProvider: aws.String(d.Id()),
 	})
@@ -259,8 +243,11 @@ func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "deleting ECS Capacity Provider (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitCapacityProviderDeleted(ctx, conn, partition, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for ECS Capacity Provider (%s) to delete: %s", d.Id(), err)
+	const (
+		timeout = 20 * time.Minute
+	)
+	if _, err := waitCapacityProviderDeleted(ctx, conn, d.Id(), timeout); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ECS Capacity Provider (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -275,7 +262,137 @@ func resourceCapacityProviderImport(ctx context.Context, d *schema.ResourceData,
 		Service:   "ecs",
 		Resource:  fmt.Sprintf("capacity-provider/%s", d.Id()),
 	}.String())
+
 	return []*schema.ResourceData{d}, nil
+}
+
+func partitionFromConn(conn *ecs.Client) string {
+	return names.PartitionForRegion(conn.Options().Region)
+}
+
+func findCapacityProvider(ctx context.Context, conn *ecs.Client, input *ecs.DescribeCapacityProvidersInput) (*awstypes.CapacityProvider, error) {
+	output, err := findCapacityProviders(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findCapacityProviders(ctx context.Context, conn *ecs.Client, input *ecs.DescribeCapacityProvidersInput) ([]awstypes.CapacityProvider, error) {
+	var output []awstypes.CapacityProvider
+
+	err := describeCapacityProvidersPages(ctx, conn, input, func(page *ecs.DescribeCapacityProvidersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.CapacityProviders...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Some partitions (i.e., ISO) may not support tagging, giving error.
+	if input.Include != nil && errs.IsUnsupportedOperationInPartitionError(partitionFromConn(conn), err) {
+		input.Include = nil
+
+		return findCapacityProviders(ctx, conn, input)
+	}
+
+	return output, nil
+}
+
+func findCapacityProviderByARN(ctx context.Context, conn *ecs.Client, arn string) (*awstypes.CapacityProvider, error) {
+	input := &ecs.DescribeCapacityProvidersInput{
+		CapacityProviders: []string{arn},
+		Include:           []awstypes.CapacityProviderField{awstypes.CapacityProviderFieldTags},
+	}
+
+	output, err := findCapacityProvider(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := output.Status; status == awstypes.CapacityProviderStatusInactive {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func statusCapacityProvider(ctx context.Context, conn *ecs.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findCapacityProviderByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findCapacityProviderByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.UpdateStatus), nil
+	}
+}
+
+func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.CapacityProviderUpdateStatusUpdateInProgress),
+		Target:  enum.Slice(awstypes.CapacityProviderUpdateStatusUpdateComplete),
+		Refresh: statusCapacityProviderUpdate(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if v, ok := outputRaw.(*awstypes.CapacityProvider); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+func waitCapacityProviderDeleted(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.CapacityProviderStatusActive),
+		Target:  []string{},
+		Refresh: statusCapacityProvider(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if v, ok := outputRaw.(*awstypes.CapacityProvider); ok {
+		return v, err
+	}
+
+	return nil, err
 }
 
 func expandAutoScalingGroupProviderCreate(configured interface{}) *awstypes.AutoScalingGroupProvider {

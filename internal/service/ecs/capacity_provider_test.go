@@ -236,14 +236,13 @@ func TestAccECSCapacityProvider_tags(t *testing.T) {
 func testAccCheckCapacityProviderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
-		partition := acctest.Provider.Meta().(*conns.AWSClient).Partition
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_capacity_provider" {
 				continue
 			}
 
-			_, err := tfecs.FindCapacityProviderByARN(ctx, conn, partition, rs.Primary.ID)
+			_, err := tfecs.FindCapacityProviderByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -266,14 +265,9 @@ func testAccCheckCapacityProviderExists(ctx context.Context, resourceName string
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ECS Capacity Provider ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
-		partition := acctest.Provider.Meta().(*conns.AWSClient).Partition
 
-		output, err := tfecs.FindCapacityProviderByARN(ctx, conn, partition, rs.Primary.ID)
+		output, err := tfecs.FindCapacityProviderByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

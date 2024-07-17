@@ -6,7 +6,6 @@ package ecs
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
@@ -15,45 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-func FindCapacityProviderByARN(ctx context.Context, conn *ecs.Client, partition, arn string) (*awstypes.CapacityProvider, error) {
-	input := &ecs.DescribeCapacityProvidersInput{
-		CapacityProviders: []string{arn},
-		Include:           []awstypes.CapacityProviderField{awstypes.CapacityProviderFieldTags},
-	}
-
-	output, err := conn.DescribeCapacityProviders(ctx, input)
-
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if errs.IsUnsupportedOperationInPartitionError(partition, err) {
-		log.Printf("[WARN] ECS tagging failed describing Capacity Provider (%s) with tags: %s; retrying without tags", arn, err)
-
-		input.Include = nil
-		output, err = conn.DescribeCapacityProviders(ctx, input)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.CapacityProviders) == 0 {
-		return nil, &retry.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
-	}
-
-	capacityProvider := output.CapacityProviders[0]
-
-	if status := capacityProvider.Status; status == awstypes.CapacityProviderStatusInactive {
-		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
-		}
-	}
-
-	return &capacityProvider, nil
-}
 
 func findServiceByTwoPartKey(ctx context.Context, conn *ecs.Client, partition, serviceName, clusterNameOrARN string) (*awstypes.Service, error) {
 	input := &ecs.DescribeServicesInput{

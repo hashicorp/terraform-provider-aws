@@ -26,38 +26,6 @@ const (
 	taskSetStatusPrimary  = "PRIMARY"
 )
 
-func statusCapacityProvider(ctx context.Context, conn *ecs.Client, partition, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindCapacityProviderByARN(ctx, conn, partition, arn)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.Status), nil
-	}
-}
-
-func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.Client, partition, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindCapacityProviderByARN(ctx, conn, partition, arn)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.UpdateStatus), nil
-	}
-}
-
 func statusServiceNoTags(ctx context.Context, conn *ecs.Client, partition, id, cluster string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		service, err := FindServiceNoTagsByID(ctx, conn, partition, id, cluster)

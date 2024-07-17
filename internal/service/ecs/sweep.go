@@ -71,7 +71,7 @@ func sweepCapacityProviders(region string) error {
 				continue
 			}
 
-			r := ResourceCapacityProvider()
+			r := resourceCapacityProvider()
 			d := r.Data(nil)
 			d.SetId(arn)
 
