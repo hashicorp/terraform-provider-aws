@@ -81,6 +81,7 @@ const (
 	errCodeInvalidPoolIDNotFound                                   = "InvalidPoolID.NotFound"
 	errCodeInvalidPrefixListIDNotFound                             = "InvalidPrefixListID.NotFound"
 	errCodeInvalidPrefixListIdNotFound                             = "InvalidPrefixListId.NotFound"
+	errCodeInvalidPrefixListModification                           = "InvalidPrefixListModification"
 	errCodeInvalidPublicIpv4PoolIDNotFound                         = "InvalidPublicIpv4PoolID.NotFound" // nosemgrep:ci.caps5-in-const-name,ci.caps5-in-var-name
 	errCodeInvalidReservationNotFound                              = "InvalidReservationID.NotFound"
 	errCodeInvalidRouteNotFound                                    = "InvalidRoute.NotFound"
