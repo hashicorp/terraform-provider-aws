@@ -4293,7 +4293,7 @@ service "guardduty" {
 
   sdk {
     id             = "GuardDuty"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
