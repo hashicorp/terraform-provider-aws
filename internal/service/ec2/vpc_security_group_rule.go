@@ -298,7 +298,10 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	flattenIpPermission(d, &ipPermission)
-	d.Set(names.AttrDescription, description)
+
+	if description != nil {
+		d.Set(names.AttrDescription, description)
+	}
 	d.Set(names.AttrType, ruleType)
 
 	if strings.Contains(d.Id(), securityGroupRuleIDSeparator) {
@@ -514,9 +517,9 @@ func resourceSecurityGroupRuleImport(_ context.Context, d *schema.ResourceData, 
 	return []*schema.ResourceData{d}, nil
 }
 
-func findRuleMatch(p awstypes.IpPermission, rules []awstypes.IpPermission) (*awstypes.IpPermission, string) {
+func findRuleMatch(p awstypes.IpPermission, rules []awstypes.IpPermission) (*awstypes.IpPermission, *string) {
 	var rule awstypes.IpPermission
-	var description string
+	var description *string
 
 	for _, r := range rules {
 		if p.ToPort != nil && r.ToPort != nil && aws.ToInt32(p.ToPort) != aws.ToInt32(r.ToPort) {
@@ -540,7 +543,7 @@ func findRuleMatch(p awstypes.IpPermission, rules []awstypes.IpPermission) (*aws
 				if aws.ToString(v1.CidrIp) == aws.ToString(v2.CidrIp) {
 					remaining--
 
-					if v := aws.ToString(v2.Description); v != "" && description == "" {
+					if v := v2.Description; v != nil && description == nil {
 						description = v
 					}
 				}
@@ -560,7 +563,7 @@ func findRuleMatch(p awstypes.IpPermission, rules []awstypes.IpPermission) (*aws
 				if aws.ToString(v1.CidrIpv6) == aws.ToString(v2.CidrIpv6) {
 					remaining--
 
-					if v := aws.ToString(v2.Description); v != "" && description == "" {
+					if v := v2.Description; v != nil && description == nil {
 						description = v
 					}
 				}
@@ -580,7 +583,7 @@ func findRuleMatch(p awstypes.IpPermission, rules []awstypes.IpPermission) (*aws
 				if aws.ToString(v1.PrefixListId) == aws.ToString(v2.PrefixListId) {
 					remaining--
 
-					if v := aws.ToString(v2.Description); v != "" && description == "" {
+					if v := v2.Description; v != nil && description == nil {
 						description = v
 					}
 				}
@@ -600,7 +603,7 @@ func findRuleMatch(p awstypes.IpPermission, rules []awstypes.IpPermission) (*aws
 				if aws.ToString(v1.GroupId) == aws.ToString(v2.GroupId) {
 					remaining--
 
-					if v := aws.ToString(v2.Description); v != "" && description == "" {
+					if v := v2.Description; v != nil && description == nil {
 						description = v
 					}
 				}
@@ -608,7 +611,7 @@ func findRuleMatch(p awstypes.IpPermission, rules []awstypes.IpPermission) (*aws
 		}
 
 		if remaining > 0 {
-			description = ""
+			description = nil
 
 			continue
 		}
