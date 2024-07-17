@@ -31,8 +31,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceContainerDefinition,
+			Factory:  dataSourceContainerDefinition,
 			TypeName: "aws_ecs_container_definition",
+			Name:     "Container Definition",
 		},
 		{
 			Factory:  dataSourceService,

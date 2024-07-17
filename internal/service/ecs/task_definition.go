@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -700,6 +701,20 @@ func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
+}
+
+func findTaskDefinition(ctx context.Context, conn *ecs.Client, input *ecs.DescribeTaskDefinitionInput) (*awstypes.TaskDefinition, error) {
+	output, err := conn.DescribeTaskDefinition(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.TaskDefinition == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.TaskDefinition, nil
 }
 
 func resourceTaskDefinitionVolumeHash(v interface{}) int {
