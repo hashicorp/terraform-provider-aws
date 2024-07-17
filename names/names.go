@@ -81,6 +81,7 @@ const (
 	KendraEndpointID                     = "kendra"
 	LambdaEndpointID                     = "lambda"
 	LexV2ModelsEndpointID                = "models-v2-lex"
+	LocationEndpointID                   = "location"
 	M2EndpointID                         = "m2"
 	MQEndpointID                         = "mq"
 	MediaConvertEndpointID               = "mediaconvert"

@@ -5628,7 +5628,7 @@ service "location" {
 
   sdk {
     id             = "Location"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
