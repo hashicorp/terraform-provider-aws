@@ -2476,7 +2476,7 @@ resource "aws_ecs_service" "test" {
   task_definition = aws_ecs_task_definition.test.arn
 
   ordered_placement_strategy {
-    type = %[1]q
+    type = %[2]q
   }
 }
 `, rName, placementStrategyType)
