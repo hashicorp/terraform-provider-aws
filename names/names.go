@@ -3,14 +3,14 @@
 
 // Package names provides constants for AWS service names that are used as keys
 // for the endpoints slice in internal/conns/conns.go. The package also exposes
-// access to data found in the data/names_data.csv file, which provides additional
+// access to data found in the data/names_data.hcl file, which provides additional
 // service-related name information.
 //
 // Consumers of the names package include the conns package
 // (internal/conn/conns.go), the provider package
 // (internal/provider/provider.go), generators, and the skaff tool.
 //
-// It is very important that information in the data/names_data.csv be exactly
+// It is very important that information in the data/names_data.hcl be exactly
 // correct because the Terrform AWS Provider relies on the information to
 // function correctly.
 package names
@@ -61,9 +61,12 @@ const (
 	CognitoIdentityEndpointID            = "cognito-identity"
 	ComprehendEndpointID                 = "comprehend"
 	ConfigServiceEndpointID              = "config"
-	DLMEndpointID                        = "dlm"
-	DevOpsGuruEndpointID                 = "devops-guru"
+	DataExchangeEndpointID               = "dataexchange"
+	DataPipelineEndpointID               = "datapipeline"
+	DetectiveEndpointID                  = "api.detective"
 	DeviceFarmEndpointID                 = "devicefarm"
+	DevOpsGuruEndpointID                 = "devops-guru"
+	DLMEndpointID                        = "dlm"
 	ECREndpointID                        = "api.ecr"
 	EFSEndpointID                        = "elasticfilesystem"
 	EKSEndpointID                        = "eks"
@@ -117,6 +120,7 @@ const (
 	VerifiedPermissionsEndpointID        = "verifiedpermissions"
 	WAFEndpointID                        = "waf"
 	WAFRegionalEndpointID                = "waf-regional"
+	DataZoneEndpointID                   = "datazone"
 )
 
 // These should move to aws-sdk-go-base.
@@ -294,7 +298,7 @@ func ReverseDNS(hostname string) string {
 	return strings.Join(parts, ".")
 }
 
-// Type serviceDatum corresponds closely to columns in `data/names_data.csv` and are
+// Type ServiceDatum corresponds closely to attributes and blocks in `data/names_data.hcl` and are
 // described in detail in README.md.
 type serviceDatum struct {
 	Aliases            []string
@@ -315,19 +319,19 @@ var serviceData map[string]serviceDatum
 func init() {
 	serviceData = make(map[string]serviceDatum)
 
-	// Data from names_data.csv
-	if err := readCSVIntoServiceData(); err != nil {
-		log.Fatalf("reading CSV into service data: %s", err)
+	// Data from names_data.hcl
+	if err := readHCLIntoServiceData(); err != nil {
+		log.Fatalf("reading HCL into service data: %s", err)
 	}
 }
 
-func readCSVIntoServiceData() error {
-	// names_data.csv is dynamically embedded so changes, additions should be made
+func readHCLIntoServiceData() error {
+	// names_data.hcl is dynamically embedded so changes, additions should be made
 	// there also
 
 	d, err := data.ReadAllServiceData()
 	if err != nil {
-		return fmt.Errorf("reading CSV into service data: %w", err)
+		return fmt.Errorf("reading HCL into service data: %w", err)
 	}
 
 	for _, l := range d {
