@@ -626,7 +626,7 @@ const (
 )
 
 // Does not return tags.
-func waitTaskSetStable(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string, timeout time.Duration) (*awstypes.TaskSet, error) {
+func waitTaskSetStable(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string, timeout time.Duration) (*awstypes.TaskSet, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StabilityStatusStabilizing),
 		Target:  enum.Slice(awstypes.StabilityStatusSteadyState),
