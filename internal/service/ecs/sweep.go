@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -110,7 +109,6 @@ func sweepClusters(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := ecs.NewListClustersPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -149,21 +147,19 @@ func sweepServices(region string) error {
 	}
 	conn := client.ECSClient(ctx)
 	input := &ecs.ListClustersInput{}
-	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := ecs.NewListClustersPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping ECS Service sweep for %s: %s", region, err)
-			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+			return nil
 		}
 
 		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing ECS Clusters (%s): %w", region, err))
+			return fmt.Errorf("error listing ECS Clusters (%s): %w", region, err)
 		}
 
 		for _, clusterARN := range page.ClusterArns {
@@ -172,16 +168,11 @@ func sweepServices(region string) error {
 			}
 
 			pages := ecs.NewListServicesPaginator(conn, input)
-
 			for pages.HasMorePages() {
 				page, err := pages.NextPage(ctx)
 
-				if awsv2.SkipSweepError(err) {
-					continue
-				}
-
 				if err != nil {
-					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing ECS Services (%s): %w", region, err))
+					continue
 				}
 
 				for _, v := range page.ServiceArns {
@@ -199,10 +190,10 @@ func sweepServices(region string) error {
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping ECS Services (%s): %w", region, err))
+		return fmt.Errorf("error sweeping ECS Services (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }
 
 func sweepTaskDefinitions(region string) error {
@@ -216,7 +207,6 @@ func sweepTaskDefinitions(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := ecs.NewListTaskDefinitionsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
