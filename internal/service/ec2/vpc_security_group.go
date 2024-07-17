@@ -897,17 +897,17 @@ func expandIPPerms(group *awstypes.SecurityGroup, configured []interface{}) ([]a
 		if raw, ok := m[names.AttrDescription]; ok {
 			description := raw.(string)
 			if description != "" {
-				for _, v := range perm.IpRanges {
-					v.Description = aws.String(description)
+				for i := range perm.IpRanges {
+					perm.IpRanges[i].Description = aws.String(description)
 				}
-				for _, v := range perm.Ipv6Ranges {
-					v.Description = aws.String(description)
+				for i := range perm.Ipv6Ranges {
+					perm.Ipv6Ranges[i].Description = aws.String(description)
 				}
-				for _, v := range perm.PrefixListIds {
-					v.Description = aws.String(description)
+				for i := range perm.PrefixListIds {
+					perm.PrefixListIds[i].Description = aws.String(description)
 				}
-				for _, v := range perm.UserIdGroupPairs {
-					v.Description = aws.String(description)
+				for i := range perm.UserIdGroupPairs {
+					perm.UserIdGroupPairs[i].Description = aws.String(description)
 				}
 			}
 		}
@@ -1525,7 +1525,7 @@ func initSecurityGroupRule(ruleMap map[string]map[string]interface{}, perm awsty
 	if v := perm.ToPort; v != nil {
 		toPort = aws.ToInt32(v)
 	}
-	k := fmt.Sprintf("%s-%d-%d-%s", *perm.IpProtocol, fromPort, toPort, desc)
+	k := fmt.Sprintf("%s-%d-%d-%s", aws.ToString(perm.IpProtocol), fromPort, toPort, desc)
 	rule, ok := ruleMap[k]
 	if !ok {
 		rule = make(map[string]interface{})
