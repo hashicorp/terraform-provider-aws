@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -80,7 +79,7 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if kv, ok := d.GetOk("default_run_properties"); ok {
-		input.DefaultRunProperties = flex.ExpandStringMap(kv.(map[string]interface{}))
+		input.DefaultRunProperties = flex.ExpandStringValueMap(kv.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -88,10 +87,10 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("max_concurrent_runs"); ok {
-		input.MaxConcurrentRuns = aws.Int64(int64(v.(int)))
+		input.MaxConcurrentRuns = aws.Int32(int32(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Creating Glue Workflow: %s", input)
+	log.Printf("[DEBUG] Creating Glue Workflow: %+v", input)
 	_, err := conn.CreateWorkflow(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Trigger (%s): %s", name, err)
@@ -156,7 +155,7 @@ func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if kv, ok := d.GetOk("default_run_properties"); ok {
-			input.DefaultRunProperties = flex.ExpandStringMap(kv.(map[string]interface{}))
+			input.DefaultRunProperties = flex.ExpandStringValueMap(kv.(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -164,7 +163,7 @@ func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("max_concurrent_runs"); ok {
-			input.MaxConcurrentRuns = aws.Int64(int64(v.(int)))
+			input.MaxConcurrentRuns = aws.Int32(int32(v.(int)))
 		}
 
 		log.Printf("[DEBUG] Updating Glue Workflow: %#v", input)
