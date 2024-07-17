@@ -41,6 +41,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	labelPerson  = "PERSON"
+	labelPet     = "PET"
+	labelPackage = "PACKAGE"
+	labelAll     = "ALL"
+)
+
+// AWS SDK doesn't have a Labels enum available as of 5/13/24
+//
+// Ref: https://docs.aws.amazon.com/rekognition/latest/APIReference/API_ConnectedHomeSettings.html#API_ConnectedHomeSettings_Contents
+func labelsEnumValues() []string {
+	return []string{
+		labelPerson,
+		labelPet,
+		labelPackage,
+		labelAll,
+	}
+}
+
 var (
 	nameRegex         = regexache.MustCompile(`[a-zA-Z0-9_.\-]+`)
 	collectionIdRegex = regexache.MustCompile(`[a-zA-Z0-9_.\-]+`)
@@ -331,7 +350,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 								Optional:    true,
 								Validators: []validator.List{
 									listvalidator.SizeAtLeast(1),
-									listvalidator.ValueStringsAre(stringvalidator.OneOf(connectedHomeLabels()...)),
+									listvalidator.ValueStringsAre(stringvalidator.OneOf(labelsEnumValues()...)),
 								},
 							},
 							"min_confidence": schema.Float64Attribute{
@@ -850,25 +869,4 @@ type connectedHomeModel struct {
 type faceSearchModel struct {
 	CollectionId       types.String  `tfsdk:"collection_id"`
 	FaceMatchThreshold types.Float64 `tfsdk:"face_match_threshold"`
-}
-
-const (
-	person_label  = "PERSON"
-	pet_label     = "PET"
-	package_label = "PACKAGE"
-	all_label     = "ALL"
-)
-
-/*
-- AWS SDK doesn't have a CreateStreamProcessorInput.StreamProcessorSettings.ConnectedHomeSettings.Labels enum available as of 5/13/24
-
-- see docs https://docs.aws.amazon.com/rekognition/latest/APIReference/API_ConnectedHomeSettings.html#API_ConnectedHomeSettings_Contents
-*/
-func connectedHomeLabels() []string {
-	return []string{
-		person_label,
-		pet_label,
-		package_label,
-		all_label,
-	}
 }
