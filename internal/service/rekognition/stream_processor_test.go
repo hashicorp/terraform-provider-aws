@@ -86,7 +86,7 @@ func TestAccRekognitionStreamProcessor_disappears(t *testing.T) {
 	})
 }
 
-func TestAccRekognitionStreamProcessor_connectedHome_boundingBox_to_polygon(t *testing.T) {
+func TestAccRekognitionStreamProcessor_connectedHome(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var streamprocessor, streamprocessor2 rekognition.DescribeStreamProcessorOutput
@@ -316,7 +316,7 @@ func testAccCheckStreamProcessorNotRecreated(before, after *rekognition.Describe
 func testAccStreamProcessorConfigBase_connectedHome(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = "%[1]s-acctest-role"
+  name = %[1]q
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -334,15 +334,15 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = "%[1]s-acctest-bucket"
+  bucket = %[1]q
 }
 
 resource "aws_sns_topic" "test" {
-  name = "%[1]s-acctest-topic"
+  name = %[1]q
 }
 
 resource "aws_kinesis_video_stream" "test" {
-  name                    = "%[1]s-acctest-kinesis-input"
+  name                    = %[1]q
   data_retention_in_hours = 1
   device_name             = "kinesis-video-device-name"
   media_type              = "video/h264"
@@ -353,19 +353,19 @@ resource "aws_kinesis_video_stream" "test" {
 func testAccStreamProcessorConfigBase_faceRecognition(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_video_stream" "test" {
-  name                    = "%[1]s-acctest-kinesis-input"
+  name                    = %[1]q
   data_retention_in_hours = 1
   device_name             = "kinesis-video-device-name"
   media_type              = "video/h264"
 }
 
 resource "aws_kinesis_stream" "test_output" {
-  name        = "%[1]s-acctest-kinesis-stream"
+  name        = %[1]q
   shard_count = 1
 }
 
 resource "aws_iam_role" "test" {
-  name = "%[1]s-acctest-role"
+  name = %[1]q
 
   inline_policy {
     name = "Rekognition-Access"
@@ -406,7 +406,7 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_rekognition_collection" "test" {
-  collection_id = "%[1]s-acctest-rekognition-collection"
+  collection_id = %[1]q
 }
 `, rName)
 }
