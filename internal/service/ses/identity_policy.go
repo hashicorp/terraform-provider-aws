@@ -12,7 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -160,7 +159,7 @@ func resourceIdentityPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("identity", identity)
 	d.Set(names.AttrName, policyName)
 
-	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(policy))
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SES Identity Policy (%s): %s", d.Id(), err)
 	}
