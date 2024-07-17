@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -59,13 +60,10 @@ func ResourceReceiptFilter() *schema.Resource {
 			},
 
 			names.AttrPolicy: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					awstypes.ReceiptFilterPolicyBlock,
-					awstypes.ReceiptFilterPolicyAllow,
-				}, false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ReceiptFilterPolicy](),
 			},
 		},
 	}
@@ -82,7 +80,7 @@ func resourceReceiptFilterCreate(ctx context.Context, d *schema.ResourceData, me
 			Name: aws.String(name),
 			IpFilter: &awstypes.ReceiptIpFilter{
 				Cidr:   aws.String(d.Get("cidr").(string)),
-				Policy: aws.String(d.Get(names.AttrPolicy).(string)),
+				Policy: awstypes.ReceiptFilterPolicy(d.Get(names.AttrPolicy).(string)),
 			},
 		},
 	}
@@ -112,7 +110,7 @@ func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta
 
 	for _, responseFilter := range response.Filters {
 		if aws.ToString(responseFilter.Name) == d.Id() {
-			filter = responseFilter
+			filter = &responseFilter
 			break
 		}
 	}
