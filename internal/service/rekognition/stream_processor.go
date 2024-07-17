@@ -134,56 +134,68 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"data_sharing_preference": schema.SingleNestedBlock{
-				CustomType:  fwtypes.NewObjectTypeOf[dataSharingPreferenceModel](ctx),
+			"data_sharing_preference": schema.ListNestedBlock{
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[dataSharingPreferenceModel](ctx),
 				Description: "Shows whether you are sharing data with Rekognition to improve model performance.",
-				Validators: []validator.Object{
-					objectvalidator.IsRequired(),
-					objectvalidator.AlsoRequires(path.MatchRelative().AtName("opt_in")),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
 				},
-				Attributes: map[string]schema.Attribute{
-					"opt_in": schema.BoolAttribute{
-						Description: "Do you want to share data with Rekognition to improve model performance.",
-						Optional:    true,
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"opt_in": schema.BoolAttribute{
+							Description: "Do you want to share data with Rekognition to improve model performance.",
+							Required:    true,
+						},
 					},
 				},
 			},
-			"input": schema.SingleNestedBlock{
-				CustomType:  fwtypes.NewObjectTypeOf[inputModel](ctx),
+			"input": schema.ListNestedBlock{
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[inputModel](ctx),
 				Description: "Information about the source streaming video.",
-				Validators: []validator.Object{
-					objectvalidator.IsRequired(),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtMost(1),
 				},
-				Blocks: map[string]schema.Block{
-					"kinesis_video_stream": schema.SingleNestedBlock{
-						Validators: []validator.Object{
-							objectvalidator.IsRequired(),
-						},
-						CustomType:  fwtypes.NewObjectTypeOf[kinesisVideoStreamInputModel](ctx),
-						Description: "Kinesis video stream stream that provides the source streaming video for a Amazon Rekognition Video stream processor.",
-						Attributes: map[string]schema.Attribute{
-							names.AttrARN: schema.StringAttribute{
-								CustomType:  fwtypes.ARNType,
-								Description: "ARN of the Kinesis video stream stream that streams the source video.",
-								Required:    true,
-								PlanModifiers: []planmodifier.String{
-									stringplanmodifier.RequiresReplace(),
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"kinesis_video_stream": schema.ListNestedBlock{
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtMost(1),
+							},
+							CustomType:  fwtypes.NewListNestedObjectTypeOf[kinesisVideoStreamInputModel](ctx),
+							Description: "Kinesis video stream stream that provides the source streaming video for a Amazon Rekognition Video stream processor.",
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrARN: schema.StringAttribute{
+										CustomType:  fwtypes.ARNType,
+										Description: "ARN of the Kinesis video stream stream that streams the source video.",
+										Required:    true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
 								},
 							},
 						},
 					},
 				},
 			},
-			"notification_channel": schema.SingleNestedBlock{
-				CustomType:  fwtypes.NewObjectTypeOf[notificationChannelModel](ctx),
+			"notification_channel": schema.ListNestedBlock{
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[notificationChannelModel](ctx),
 				Description: "The Amazon Simple Notification Service topic to which Amazon Rekognition publishes the object detection results and completion status of a video analysis operation.",
-				Attributes: map[string]schema.Attribute{
-					names.AttrSNSTopicARN: schema.StringAttribute{
-						Description: "The Amazon Resource Number (ARN) of the Amazon Amazon Simple Notification Service topic to which Amazon Rekognition posts the completion status.",
-						CustomType:  fwtypes.ARNType,
-						Optional:    true,
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.RequiresReplace(),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrSNSTopicARN: schema.StringAttribute{
+							Description: "The Amazon Resource Number (ARN) of the Amazon Amazon Simple Notification Service topic to which Amazon Rekognition posts the completion status.",
+							CustomType:  fwtypes.ARNType,
+							Optional:    true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					},
 				},
@@ -276,132 +288,149 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 					},
 				},
 			},
-			"output": schema.SingleNestedBlock{
-				CustomType:  fwtypes.NewObjectTypeOf[outputModel](ctx),
+			"output": schema.ListNestedBlock{
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[outputModel](ctx),
 				Description: "Kinesis data stream stream or Amazon S3 bucket location to which Amazon Rekognition Video puts the analysis results.",
-				Validators: []validator.Object{
-					objectvalidator.AtLeastOneOf(
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtMost(1),
+					listvalidator.AtLeastOneOf(
 						path.MatchRelative().AtName("kinesis_data_stream"),
 						path.MatchRelative().AtName("s3_destination"),
 					),
 				},
-				Blocks: map[string]schema.Block{
-					"kinesis_data_stream": schema.SingleNestedBlock{
-						CustomType:  fwtypes.NewObjectTypeOf[kinesisDataStreamModel](ctx),
-						Description: "The Amazon Kinesis Data Streams stream to which the Amazon Rekognition stream processor streams the analysis results.",
-						Validators: []validator.Object{
-							objectvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("s3_destination")),
-						},
-						Attributes: map[string]schema.Attribute{
-							names.AttrARN: schema.StringAttribute{
-								CustomType:  fwtypes.ARNType,
-								Description: "ARN of the output Amazon Kinesis Data Streams stream.",
-								Optional:    true,
-								PlanModifiers: []planmodifier.String{
-									stringplanmodifier.RequiresReplace(),
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"kinesis_data_stream": schema.ListNestedBlock{
+							CustomType:  fwtypes.NewListNestedObjectTypeOf[kinesisDataStreamModel](ctx),
+							Description: "The Amazon Kinesis Data Streams stream to which the Amazon Rekognition stream processor streams the analysis results.",
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("s3_destination")),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrARN: schema.StringAttribute{
+										CustomType:  fwtypes.ARNType,
+										Description: "ARN of the output Amazon Kinesis Data Streams stream.",
+										Optional:    true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
 								},
 							},
 						},
-					},
-					"s3_destination": schema.SingleNestedBlock{
-						CustomType:  fwtypes.NewObjectTypeOf[s3DestinationModel](ctx),
-						Description: "The Amazon S3 bucket location to which Amazon Rekognition publishes the detailed inference results of a video analysis operation.",
-						Validators: []validator.Object{
-							objectvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("kinesis_data_stream")),
-						},
-						Attributes: map[string]schema.Attribute{
-							names.AttrBucket: schema.StringAttribute{
-								Description: "The name of the Amazon S3 bucket you want to associate with the streaming video project.",
-								Optional:    true,
-								Validators: []validator.String{
-									stringvalidator.LengthBetween(3, 255),
-								},
-								PlanModifiers: []planmodifier.String{
-									stringplanmodifier.RequiresReplace(),
-								},
+						"s3_destination": schema.ListNestedBlock{
+							CustomType:  fwtypes.NewListNestedObjectTypeOf[s3DestinationModel](ctx),
+							Description: "The Amazon S3 bucket location to which Amazon Rekognition publishes the detailed inference results of a video analysis operation.",
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("kinesis_data_stream")),
 							},
-							"key_prefix": schema.StringAttribute{
-								Description: "The prefix value of the location within the bucket that you want the information to be published to.",
-								Optional:    true,
-								Validators: []validator.String{
-									stringvalidator.LengthAtMost(1024),
-								},
-								PlanModifiers: []planmodifier.String{
-									stringplanmodifier.RequiresReplace(),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrBucket: schema.StringAttribute{
+										Description: "The name of the Amazon S3 bucket you want to associate with the streaming video project.",
+										Optional:    true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(3, 255),
+										},
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"key_prefix": schema.StringAttribute{
+										Description: "The prefix value of the location within the bucket that you want the information to be published to.",
+										Optional:    true,
+										Validators: []validator.String{
+											stringvalidator.LengthAtMost(1024),
+										},
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
 								},
 							},
 						},
 					},
 				},
 			},
-			"settings": schema.SingleNestedBlock{
-				CustomType:  fwtypes.NewObjectTypeOf[settingsModel](ctx),
+			"settings": schema.ListNestedBlock{
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[settingsModel](ctx),
 				Description: "Input parameters used in a streaming video analyzed by a stream processor.",
-				Validators: []validator.Object{
-					objectvalidator.AtLeastOneOf(
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtMost(1),
+					listvalidator.AtLeastOneOf(
 						path.MatchRelative().AtName("connected_home"),
 						path.MatchRelative().AtName("face_search"),
 					),
 				},
-				Blocks: map[string]schema.Block{
-					"connected_home": schema.SingleNestedBlock{
-						CustomType:  fwtypes.NewObjectTypeOf[connectedHomeModel](ctx),
-						Description: "Label detection settings to use on a streaming video.",
-						Validators: []validator.Object{
-							objectvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("face_search")),
-						},
-						Attributes: map[string]schema.Attribute{
-							"labels": schema.ListAttribute{
-								Description: "Specifies what you want to detect in the video, such as people, packages, or pets.",
-								CustomType:  fwtypes.ListOfStringType,
-								Optional:    true,
-								Validators: []validator.List{
-									listvalidator.SizeAtLeast(1),
-									listvalidator.ValueStringsAre(stringvalidator.OneOf(labelsEnumValues()...)),
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"connected_home": schema.ListNestedBlock{
+							CustomType:  fwtypes.NewListNestedObjectTypeOf[connectedHomeModel](ctx),
+							Description: "Label detection settings to use on a streaming video.",
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("face_search")),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"labels": schema.ListAttribute{
+										Description: "Specifies what you want to detect in the video, such as people, packages, or pets.",
+										CustomType:  fwtypes.ListOfStringType,
+										Optional:    true,
+										Validators: []validator.List{
+											listvalidator.SizeAtLeast(1),
+											listvalidator.ValueStringsAre(stringvalidator.OneOf(labelsEnumValues()...)),
+										},
+									},
+									"min_confidence": schema.Float64Attribute{
+										Description: "The minimum confidence required to label an object in the video.",
+										Validators: []validator.Float64{
+											float64validator.Between(connectedHomeConfidenceMin, connectedHomeConfidenceMax),
+										},
+										Computed: true,
+										Optional: true,
+									},
 								},
 							},
-							"min_confidence": schema.Float64Attribute{
-								Description: "The minimum confidence required to label an object in the video.",
-								Validators: []validator.Float64{
-									float64validator.Between(connectedHomeConfidenceMin, connectedHomeConfidenceMax),
-								},
-								Computed: true,
-								Optional: true,
-							},
 						},
-					},
-					"face_search": schema.SingleNestedBlock{
-						CustomType:  fwtypes.NewObjectTypeOf[faceSearchModel](ctx),
-						Description: "Face search settings to use on a streaming video.",
-						Validators: []validator.Object{
-							objectvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("connected_home")),
-							objectvalidator.AlsoRequires(
-								path.MatchRelative().AtName("collection_id"),
-							),
-						},
-						Attributes: map[string]schema.Attribute{
-							"collection_id": schema.StringAttribute{
-								Description: "The ID of a collection that contains faces that you want to search for.",
-								Validators: []validator.String{
-									stringvalidator.LengthAtMost(2048),
-									stringvalidator.RegexMatches(collectionIdRegex, ""),
-								},
-								Optional: true,
-								PlanModifiers: []planmodifier.String{
-									stringplanmodifier.RequiresReplace(),
-								},
+						"face_search": schema.ListNestedBlock{
+							CustomType:  fwtypes.NewListNestedObjectTypeOf[faceSearchModel](ctx),
+							Description: "Face search settings to use on a streaming video.",
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("connected_home")),
 							},
-							"face_match_threshold": schema.Float64Attribute{
-								Description: "Minimum face match confidence score that must be met to return a result for a recognized face.",
-								Validators: []validator.Float64{
-									float64validator.Between(faceMatchThresholdMin, faceMatchThresholdMax),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"collection_id": schema.StringAttribute{
+										Description: "The ID of a collection that contains faces that you want to search for.",
+										Validators: []validator.String{
+											stringvalidator.LengthAtMost(2048),
+											stringvalidator.RegexMatches(collectionIdRegex, ""),
+										},
+										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"face_match_threshold": schema.Float64Attribute{
+										Description: "Minimum face match confidence score that must be met to return a result for a recognized face.",
+										Validators: []validator.Float64{
+											float64validator.Between(faceMatchThresholdMin, faceMatchThresholdMax),
+										},
+										PlanModifiers: []planmodifier.Float64{
+											float64planmodifier.RequiresReplace(),
+										},
+										Default:  float64default.StaticFloat64(faceMatchThresholdDefault),
+										Optional: true,
+										Computed: true,
+									},
 								},
-								PlanModifiers: []planmodifier.Float64{
-									float64planmodifier.RequiresReplace(),
-								},
-								Default:  float64default.StaticFloat64(faceMatchThresholdDefault),
-								Computed: true,
-								Optional: true,
 							},
 						},
 					},
@@ -453,7 +482,7 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 	plan.ID = plan.Name
 
 	if plan.DataSharingPreference.IsNull() {
-		dataSharing, diag := fwtypes.NewObjectValueOf(ctx, &dataSharingPreferenceModel{OptIn: basetypes.NewBoolValue(false)})
+		dataSharing, diag := fwtypes.NewListNestedObjectValueOfPtr(ctx, &dataSharingPreferenceModel{OptIn: basetypes.NewBoolValue(false)})
 		resp.Diagnostics.Append(diag...)
 		plan.DataSharingPreference = dataSharing
 		resp.Diagnostics.Append(req.Plan.Set(ctx, &plan)...)
@@ -527,7 +556,7 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 		}
 
 		if !plan.DataSharingPreference.Equal(state.DataSharingPreference) {
-			dspPlan, dspState := unwrapObjectValueOf(ctx, resp.Diagnostics, plan.DataSharingPreference, state.DataSharingPreference)
+			dspPlan, dspState := unwrapListNestedObjectValueOf(ctx, resp.Diagnostics, plan.DataSharingPreference, state.DataSharingPreference)
 			if resp.Diagnostics.HasError() {
 				return
 			}
@@ -544,12 +573,12 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 				ConnectedHomeForUpdate: &awstypes.ConnectedHomeSettingsForUpdate{},
 			}
 
-			settingsPlan, settingsState := unwrapObjectValueOf(ctx, resp.Diagnostics, plan.Settings, state.Settings)
+			settingsPlan, settingsState := unwrapListNestedObjectValueOf(ctx, resp.Diagnostics, plan.Settings, state.Settings)
 			if resp.Diagnostics.HasError() {
 				return
 			}
 
-			connectedHomePlan, connectedHomeState := unwrapObjectValueOf(ctx, resp.Diagnostics, settingsPlan.ConnectedHome, settingsState.ConnectedHome)
+			connectedHomePlan, connectedHomeState := unwrapListNestedObjectValueOf(ctx, resp.Diagnostics, settingsPlan.ConnectedHome, settingsState.ConnectedHome)
 			if resp.Diagnostics.HasError() {
 				return
 			}
@@ -645,14 +674,12 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
-	// TIP: -- 2. Fetch the state
 	var state resourceStreamProcessorDataModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a delete input structure
 	in := &rekognition.DeleteStreamProcessorInput{
 		Name: aws.String(state.ID.ValueString()),
 	}
@@ -670,7 +697,6 @@ func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.Delet
 		return
 	}
 
-	// TIP: -- 5. Use a waiter to wait for delete to complete
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitStreamProcessorDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
@@ -788,7 +814,7 @@ func findStreamProcessorByID(ctx context.Context, conn *rekognition.Client, name
 	return out, nil
 }
 
-func unwrapObjectValueOf[T any](ctx context.Context, diagnostics diag.Diagnostics, plan fwtypes.ObjectValueOf[T], state fwtypes.ObjectValueOf[T]) (*T, *T) {
+func unwrapListNestedObjectValueOf[T any](ctx context.Context, diagnostics diag.Diagnostics, plan fwtypes.ListNestedObjectValueOf[T], state fwtypes.ListNestedObjectValueOf[T]) (*T, *T) {
 	ptrPlan, diags := plan.ToPtr(ctx)
 	diagnostics.Append(diags...)
 
@@ -799,20 +825,20 @@ func unwrapObjectValueOf[T any](ctx context.Context, diagnostics diag.Diagnostic
 }
 
 type resourceStreamProcessorDataModel struct {
-	ARN                   types.String                                           `tfsdk:"arn"`
-	DataSharingPreference fwtypes.ObjectValueOf[dataSharingPreferenceModel]      `tfsdk:"data_sharing_preference"`
-	ID                    types.String                                           `tfsdk:"id"`
-	Input                 fwtypes.ObjectValueOf[inputModel]                      `tfsdk:"input"`
-	KmsKeyId              types.String                                           `tfsdk:"kms_key_id"`
-	NotificationChannel   fwtypes.ObjectValueOf[notificationChannelModel]        `tfsdk:"notification_channel"`
-	Name                  types.String                                           `tfsdk:"name"`
-	Output                fwtypes.ObjectValueOf[outputModel]                     `tfsdk:"output"`
-	RegionsOfInterest     fwtypes.ListNestedObjectValueOf[regionOfInterestModel] `tfsdk:"regions_of_interest"`
-	RoleARN               fwtypes.ARN                                            `tfsdk:"role_arn"`
-	Settings              fwtypes.ObjectValueOf[settingsModel]                   `tfsdk:"settings"`
-	Tags                  types.Map                                              `tfsdk:"tags"`
-	TagsAll               types.Map                                              `tfsdk:"tags_all"`
-	Timeouts              timeouts.Value                                         `tfsdk:"timeouts"`
+	ARN                   types.String                                                `tfsdk:"arn"`
+	DataSharingPreference fwtypes.ListNestedObjectValueOf[dataSharingPreferenceModel] `tfsdk:"data_sharing_preference"`
+	ID                    types.String                                                `tfsdk:"id"`
+	Input                 fwtypes.ListNestedObjectValueOf[inputModel]                 `tfsdk:"input"`
+	KmsKeyId              types.String                                                `tfsdk:"kms_key_id"`
+	NotificationChannel   fwtypes.ListNestedObjectValueOf[notificationChannelModel]   `tfsdk:"notification_channel"`
+	Name                  types.String                                                `tfsdk:"name"`
+	Output                fwtypes.ListNestedObjectValueOf[outputModel]                `tfsdk:"output"`
+	RegionsOfInterest     fwtypes.ListNestedObjectValueOf[regionOfInterestModel]      `tfsdk:"regions_of_interest"`
+	RoleARN               fwtypes.ARN                                                 `tfsdk:"role_arn"`
+	Settings              fwtypes.ListNestedObjectValueOf[settingsModel]              `tfsdk:"settings"`
+	Tags                  types.Map                                                   `tfsdk:"tags"`
+	TagsAll               types.Map                                                   `tfsdk:"tags_all"`
+	Timeouts              timeouts.Value                                              `tfsdk:"timeouts"`
 }
 
 type dataSharingPreferenceModel struct {
@@ -820,7 +846,7 @@ type dataSharingPreferenceModel struct {
 }
 
 type inputModel struct {
-	KinesisVideoStream fwtypes.ObjectValueOf[kinesisVideoStreamInputModel] `tfsdk:"kinesis_video_stream"`
+	KinesisVideoStream fwtypes.ListNestedObjectValueOf[kinesisVideoStreamInputModel] `tfsdk:"kinesis_video_stream"`
 }
 
 type kinesisVideoStreamInputModel struct {
@@ -832,8 +858,8 @@ type notificationChannelModel struct {
 }
 
 type outputModel struct {
-	KinesisDataStream fwtypes.ObjectValueOf[kinesisDataStreamModel] `tfsdk:"kinesis_data_stream"`
-	S3Destination     fwtypes.ObjectValueOf[s3DestinationModel]     `tfsdk:"s3_destination"`
+	KinesisDataStream fwtypes.ListNestedObjectValueOf[kinesisDataStreamModel] `tfsdk:"kinesis_data_stream"`
+	S3Destination     fwtypes.ListNestedObjectValueOf[s3DestinationModel]     `tfsdk:"s3_destination"`
 }
 
 type kinesisDataStreamModel struct {
@@ -863,8 +889,8 @@ type polygonModel struct {
 }
 
 type settingsModel struct {
-	ConnectedHome fwtypes.ObjectValueOf[connectedHomeModel] `tfsdk:"connected_home"`
-	FaceSearch    fwtypes.ObjectValueOf[faceSearchModel]    `tfsdk:"face_search"`
+	ConnectedHome fwtypes.ListNestedObjectValueOf[connectedHomeModel] `tfsdk:"connected_home"`
+	FaceSearch    fwtypes.ListNestedObjectValueOf[faceSearchModel]    `tfsdk:"face_search"`
 }
 
 type connectedHomeModel struct {
