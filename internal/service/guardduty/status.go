@@ -78,11 +78,11 @@ func getOrganizationAdminAccount(ctx context.Context, conn *guardduty.Client, ad
 		}
 
 		for _, adminAccount := range page.AdminAccounts {
+			account := adminAccount
 			if aws.ToString(adminAccount.AdminAccountId) == adminAccountID {
-				result = &adminAccount
+				result = &account
 			}
 		}
-
 	}
 
 	return result, nil

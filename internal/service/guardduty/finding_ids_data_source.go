@@ -104,7 +104,6 @@ func findFindingIds(ctx context.Context, conn *guardduty.Client, id string) ([]s
 		}
 
 		findingIds = append(findingIds, page.FindingIds...)
-
 	}
 
 	return findingIds, nil
