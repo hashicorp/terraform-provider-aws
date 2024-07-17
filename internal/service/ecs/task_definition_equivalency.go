@@ -17,10 +17,7 @@ func containerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (bool, 
 	if err != nil {
 		return false, err
 	}
-	err = obj1.reduce(isAWSVPC)
-	if err != nil {
-		return false, err
-	}
+	obj1.reduce(isAWSVPC)
 	b1, err := tfjson.EncodeToBytes(obj1)
 	if err != nil {
 		return false, err
@@ -31,10 +28,7 @@ func containerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (bool, 
 	if err != nil {
 		return false, err
 	}
-	err = obj2.reduce(isAWSVPC)
-	if err != nil {
-		return false, err
-	}
+	obj2.reduce(isAWSVPC)
 	b2, err := tfjson.EncodeToBytes(obj2)
 	if err != nil {
 		return false, err
@@ -45,7 +39,7 @@ func containerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (bool, 
 
 type containerDefinitions []awstypes.ContainerDefinition
 
-func (cd containerDefinitions) reduce(isAWSVPC bool) error {
+func (cd containerDefinitions) reduce(isAWSVPC bool) {
 	// Deal with fields which may be re-ordered in the API.
 	cd.orderContainers()
 	cd.orderEnvironmentVariables()
@@ -124,7 +118,6 @@ func (cd containerDefinitions) reduce(isAWSVPC bool) error {
 			cd[i].VolumesFrom = nil
 		}
 	}
-	return nil
 }
 
 func (cd containerDefinitions) orderEnvironmentVariables() {
