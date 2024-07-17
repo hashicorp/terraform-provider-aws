@@ -349,6 +349,7 @@ func TestAccVPCNetworkInterface_attachment(t *testing.T) {
 func TestAccVPCNetworkInterface_ignoreExternalAttachment(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf types.NetworkInterface
+	var attachmentId string
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -362,7 +363,7 @@ func TestAccVPCNetworkInterface_ignoreExternalAttachment(t *testing.T) {
 				Config: testAccVPCNetworkInterfaceConfig_externalAttachment(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(ctx, resourceName, &conf),
-					testAccCheckENIMakeExternalAttachment(ctx, "aws_instance.test", &conf),
+					testAccCheckENIMakeExternalAttachment(ctx, "aws_instance.test", &conf, &attachmentId),
 				),
 			},
 			{
@@ -374,6 +375,13 @@ func TestAccVPCNetworkInterface_ignoreExternalAttachment(t *testing.T) {
 					"ipv6_address_list_enabled",
 					"private_ip_list_enabled",
 				},
+			},
+			{
+				Config: testAccVPCNetworkInterfaceConfig_externalAttachment(rName),
+				Check: resource.ComposeTestCheckFunc(
+					// Detach the external network interface attachment for the post-destroy to be able to the delete network interface
+					testAccCheckENIRemoveExternalAttachment(ctx, &attachmentId),
+				),
 			},
 		},
 	})
@@ -1027,7 +1035,7 @@ func testAccCheckENIDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckENIMakeExternalAttachment(ctx context.Context, n string, networkInterface *types.NetworkInterface) resource.TestCheckFunc {
+func testAccCheckENIMakeExternalAttachment(ctx context.Context, n string, networkInterface *types.NetworkInterface, attachmentId *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok || rs.Primary.ID == "" {
@@ -1040,10 +1048,26 @@ func testAccCheckENIMakeExternalAttachment(ctx context.Context, n string, networ
 			NetworkInterfaceId: networkInterface.NetworkInterfaceId,
 		}
 
-		_, err := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx).AttachNetworkInterface(ctx, input)
+		output, err := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx).AttachNetworkInterface(ctx, input)
+		*attachmentId = *output.AttachmentId
 
 		if err != nil {
 			return fmt.Errorf("error attaching ENI: %w", err)
+		}
+		return nil
+	}
+}
+
+func testAccCheckENIRemoveExternalAttachment(ctx context.Context, attachmentId *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		input := &ec2.DetachNetworkInterfaceInput{
+			AttachmentId: attachmentId,
+		}
+
+		_, err := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx).DetachNetworkInterface(ctx, input)
+
+		if err != nil {
+			return fmt.Errorf("error detaching ENI: %w", err)
 		}
 		return nil
 	}
