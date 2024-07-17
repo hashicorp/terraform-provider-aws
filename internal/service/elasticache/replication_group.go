@@ -281,7 +281,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"num_cache_clusters", "global_replication_group_id"},
+				ConflictsWith: []string{"num_cache_clusters"},
 				ValidateFunc:  validation.IntBetween(0, 5),
 			},
 			"replication_group_id": {
@@ -402,7 +402,6 @@ func resourceReplicationGroup() *schema.Resource {
 				return semver.LessThan(d.Get("engine_version_actual").(string), "7.0.5")
 			}),
 			customizeDiffValidateReplicationGroupAutomaticFailoverNumCacheClusters,
-			customizeDiffValidateReplicationGroupReplicasPerNodeGroupConflictsWithNumCacheClusters,
 			verify.SetTagsDiff,
 		),
 	}

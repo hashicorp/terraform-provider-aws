@@ -3992,7 +3992,7 @@ resource "aws_elasticache_replication_group" "test" {
   node_type            = "cache.t2.micro"
   num_cache_clusters   = %[2]d
   replication_group_id = %[1]q
-  description          = "Terraform Acceptance Testing - num_cache_clusters"
+  description          = "test description"
   subnet_group_name    = aws_elasticache_subnet_group.test.name
 
   tags = {
@@ -4019,7 +4019,7 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                  = "cache.t3.medium"
   num_cache_clusters         = %[2]d
   replication_group_id       = %[1]q
-  description                = "Terraform Acceptance Testing - num_cache_clusters"
+  description                = "test description"
   subnet_group_name          = aws_elasticache_subnet_group.test.name
 }
 

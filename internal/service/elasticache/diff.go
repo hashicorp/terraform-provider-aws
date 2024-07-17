@@ -8,6 +8,7 @@ import (
 	"errors"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -74,19 +75,12 @@ func customizeDiffValidateReplicationGroupAutomaticFailoverNumCacheClusters(_ co
 	if v := diff.Get("automatic_failover_enabled").(bool); !v {
 		return nil
 	}
-	if v, ok := diff.GetOk("num_cache_clusters"); !ok || v.(int) > 1 {
-		return nil
-	}
-	return errors.New(`"num_cache_clusters": must be at least 2 if automatic_failover_enabled is true`)
-}
-
-func customizeDiffValidateReplicationGroupReplicasPerNodeGroupConflictsWithNumCacheClusters(_ context.Context, diff *schema.ResourceDiff, v any) error {
-	if v, ok := diff.GetOk("num_cache_clusters"); !ok || v.(int) == 0 {
-		return nil
-	}
-	raw := diff.GetRawConfig().GetAttr("replicas_per_node_group")
+	raw := diff.GetRawConfig().GetAttr("num_cache_clusters")
 	if !raw.IsKnown() || raw.IsNull() {
 		return nil
 	}
-	return errors.New(`"replicas_per_node_group": conflicts with num_cache_clusters`)
+	if raw.GreaterThanOrEqualTo(cty.NumberIntVal(2)).True() {
+		return nil
+	}
+	return errors.New(`"num_cache_clusters": must be at least 2 if automatic_failover_enabled is true`)
 }
