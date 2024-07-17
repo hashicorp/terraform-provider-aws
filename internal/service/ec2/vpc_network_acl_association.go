@@ -98,6 +98,10 @@ func resourceNetworkACLAssociationDelete(ctx context.Context, d *schema.Resource
 
 	nacl, err := findNetworkACL(ctx, conn, input)
 
+	if tfresource.NotFound(err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL for Association (%s): %s", d.Id(), err)
 	}
