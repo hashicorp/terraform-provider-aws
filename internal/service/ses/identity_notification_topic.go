@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -40,14 +41,10 @@ func ResourceIdentityNotificationTopic() *schema.Resource {
 			},
 
 			"notification_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					awstypes.NotificationTypeBounce,
-					awstypes.NotificationTypeComplaint,
-					awstypes.NotificationTypeDelivery,
-				}, false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.NotificationType](),
 			},
 
 			"identity": {
@@ -74,7 +71,7 @@ func resourceNotificationTopicSet(ctx context.Context, d *schema.ResourceData, m
 
 	setOpts := &ses.SetIdentityNotificationTopicInput{
 		Identity:         aws.String(identity),
-		NotificationType: aws.String(notification),
+		NotificationType: awstypes.NotificationType(notification),
 	}
 
 	if v, ok := d.GetOk(names.AttrTopicARN); ok {
@@ -91,8 +88,8 @@ func resourceNotificationTopicSet(ctx context.Context, d *schema.ResourceData, m
 
 	setHeadersOpts := &ses.SetIdentityHeadersInNotificationsEnabledInput{
 		Identity:         aws.String(identity),
-		NotificationType: aws.String(notification),
-		Enabled:          aws.Bool(includeOriginalHeaders),
+		NotificationType: awstypes.NotificationType(notification),
+		Enabled:          includeOriginalHeaders,
 	}
 
 	log.Printf("[DEBUG] Setting SES Identity Notification Topic Headers: %#v", setHeadersOpts)
@@ -117,7 +114,7 @@ func resourceIdentityNotificationTopicRead(ctx context.Context, d *schema.Resour
 	d.Set("notification_type", notificationType)
 
 	getOpts := &ses.GetIdentityNotificationAttributesInput{
-		Identities: []*string{aws.String(identity)},
+		Identities: []string{identity},
 	}
 
 	response, err := conn.GetIdentityNotificationAttributes(ctx, getOpts)
@@ -137,13 +134,13 @@ func resourceIdentityNotificationTopicRead(ctx context.Context, d *schema.Resour
 	}
 
 	switch notificationType {
-	case awstypes.NotificationTypeBounce:
+	case string(awstypes.NotificationTypeBounce):
 		d.Set(names.AttrTopicARN, notificationAttributes.BounceTopic)
 		d.Set("include_original_headers", notificationAttributes.HeadersInBounceNotificationsEnabled)
-	case awstypes.NotificationTypeComplaint:
+	case string(awstypes.NotificationTypeComplaint):
 		d.Set(names.AttrTopicARN, notificationAttributes.ComplaintTopic)
 		d.Set("include_original_headers", notificationAttributes.HeadersInComplaintNotificationsEnabled)
-	case awstypes.NotificationTypeDelivery:
+	case string(awstypes.NotificationTypeDelivery):
 		d.Set(names.AttrTopicARN, notificationAttributes.DeliveryTopic)
 		d.Set("include_original_headers", notificationAttributes.HeadersInDeliveryNotificationsEnabled)
 	}
@@ -162,7 +159,7 @@ func resourceIdentityNotificationTopicDelete(ctx context.Context, d *schema.Reso
 
 	setOpts := &ses.SetIdentityNotificationTopicInput{
 		Identity:         aws.String(identity),
-		NotificationType: aws.String(notificationType),
+		NotificationType: awstypes.NotificationType(notificationType),
 		SnsTopic:         nil,
 	}
 
