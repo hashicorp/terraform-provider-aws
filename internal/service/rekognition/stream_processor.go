@@ -41,6 +41,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+var (
+	nameRegex         = regexache.MustCompile(`[a-zA-Z0-9_.\-]+`)
+	collectionIdRegex = regexache.MustCompile(`[a-zA-Z0-9_.\-]+`)
+)
+
 // @FrameworkResource("aws_rekognition_stream_processor", name="Stream Processor")
 func newResourceStreamProcessor(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceStreamProcessor{}
@@ -66,15 +71,6 @@ func (r *resourceStreamProcessor) Metadata(_ context.Context, req resource.Metad
 }
 
 func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	kmsKeyIdRegex := regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9:_/+=,@.-]$`)
-	nameRegex := regexache.MustCompile(`[a-zA-Z0-9_.\-]+`)
-	collectionIdRegex := regexache.MustCompile(`[a-zA-Z0-9_.\-]+`)
-	s3bucketRegex := regexache.MustCompile(`[0-9A-Za-z\.\-_]*`)
-	kinesisStreamArnRegex := regexache.MustCompile(`(^arn:([a-z\d-]+):kinesis:([a-z\d-]+):\d{12}:.+$)`)           // lintignore:AWSAT005
-	kinesisVideoStreamArnRegex := regexache.MustCompile(`(^arn:([a-z\d-]+):kinesisvideo:([a-z\d-]+):\d{12}:.+$)`) // lintignore:AWSAT005
-	snsArnRegex := regexache.MustCompile(`(^arn:aws:sns:.*:\w{12}:.+$)`)                                          // lintignore:AWSAT005
-	roleArnRegex := regexache.MustCompile(`arn:aws:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+`)                     // lintignore:AWSAT005
-
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -83,7 +79,6 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 2048),
-					stringvalidator.RegexMatches(kmsKeyIdRegex, "must conform to: ^[A-Za-z0-9][A-Za-z0-9:_/+=,@.-]$"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -95,7 +90,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(128),
-					stringvalidator.RegexMatches(nameRegex, "must conform to: [a-zA-Z0-9_.\\-]+"),
+					stringvalidator.RegexMatches(nameRegex, ""),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -105,9 +100,6 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				Description: "The Amazon Resource Number (ARN) of the IAM role that allows access to the stream processor.",
 				// CustomType:  fwtypes.ARNType,
 				Required: true,
-				Validators: []validator.String{
-					stringvalidator.RegexMatches(roleArnRegex, "must conform to: arn:aws:iam::\\d{12}:role/?[a-zA-Z_0-9+=,.@\\-_/]+"), // lintignore:AWSAT005
-				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -148,11 +140,6 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 								CustomType:  fwtypes.ARNType,
 								Description: "ARN of the Kinesis video stream stream that streams the source video.",
 								Required:    true,
-								Validators: []validator.String{
-									stringvalidator.All(
-										stringvalidator.RegexMatches(kinesisVideoStreamArnRegex, "must conform to: (^arn:([a-z\\d-]+):kinesisvideo:([a-z\\d-]+):\\d{12}:.+$)"), // lintignore:AWSAT005
-									),
-								},
 								PlanModifiers: []planmodifier.String{
 									stringplanmodifier.RequiresReplace(),
 								},
@@ -169,9 +156,6 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 						Description: "The Amazon Resource Number (ARN) of the Amazon Amazon Simple Notification Service topic to which Amazon Rekognition posts the completion status.",
 						CustomType:  fwtypes.ARNType,
 						Optional:    true,
-						Validators: []validator.String{
-							stringvalidator.RegexMatches(snsArnRegex, "must conform to: (^arn:aws:sns:.*:\\w{12}:.+$)"), // lintignore:AWSAT005
-						},
 						PlanModifiers: []planmodifier.String{
 							stringplanmodifier.RequiresReplace(),
 						},
@@ -287,9 +271,6 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 								CustomType:  fwtypes.ARNType,
 								Description: "ARN of the output Amazon Kinesis Data Streams stream.",
 								Optional:    true,
-								Validators: []validator.String{
-									stringvalidator.RegexMatches(kinesisStreamArnRegex, "must conform to: (^arn:([a-z\\d-]+):kinesis:([a-z\\d-]+):\\d{12}:.+$)"),
-								},
 								PlanModifiers: []planmodifier.String{
 									stringplanmodifier.RequiresReplace(),
 								},
@@ -308,7 +289,6 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 								Optional:    true,
 								Validators: []validator.String{
 									stringvalidator.LengthBetween(3, 255),
-									stringvalidator.RegexMatches(s3bucketRegex, "must conform to: [0-9A-Za-z\\.\\-_]*"),
 								},
 								PlanModifiers: []planmodifier.String{
 									stringplanmodifier.RequiresReplace(),
@@ -379,7 +359,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 								Description: "The ID of a collection that contains faces that you want to search for.",
 								Validators: []validator.String{
 									stringvalidator.LengthAtMost(2048),
-									stringvalidator.RegexMatches(collectionIdRegex, "must conform to: [a-zA-Z0-9_.\\-]+"),
+									stringvalidator.RegexMatches(collectionIdRegex, ""),
 								},
 								Optional: true,
 								PlanModifiers: []planmodifier.String{
