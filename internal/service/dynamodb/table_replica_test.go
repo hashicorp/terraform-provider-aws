@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -363,6 +364,50 @@ func TestAccDynamoDBTableReplica_autoscaleSource(t *testing.T) {
 					testAccCheckTableReplicaExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "global_table_arn", "aws_dynamodb_table.source", "arn"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTableReplica_autoscaleSourceWithoutDependsOn(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTableReplicaConfig_autoscaleSourceWithoutDependsOn(rName),
+				ExpectError: regexache.MustCompile("For a DynamoDB Table Replica, the source table must either have a"),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTableReplica_billingModeProvisionedSource(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTableReplicaConfig_billingModeProvisionedSource(rName),
+				ExpectError: regexache.MustCompile("For a DynamoDB Table Replica, the source table must either have a"),
 			},
 		},
 	})
@@ -869,6 +914,123 @@ resource "aws_appautoscaling_policy" "source_write" {
       predefined_metric_type = "DynamoDBWriteCapacityUtilization"
     }
     target_value = 50
+  }
+}
+`, rName))
+}
+
+func testAccTableReplicaConfig_autoscaleSourceWithoutDependsOn(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+resource "aws_dynamodb_table_replica" "test" {
+  global_table_arn = aws_dynamodb_table.source.arn
+
+  # Explicitly does not include depends_on
+}
+
+resource "aws_dynamodb_table" "source" {
+  provider       = "awsalternate"
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      replica,
+      read_capacity,
+      write_capacity,
+    ]
+  }
+}
+
+resource "aws_appautoscaling_target" "source_read" {
+  provider           = "awsalternate"
+  max_capacity       = 735
+  min_capacity       = 28
+  resource_id        = "table/${aws_dynamodb_table.source.name}"
+  scalable_dimension = "dynamodb:table:ReadCapacityUnits"
+  service_namespace  = "dynamodb"
+}
+
+resource "aws_appautoscaling_policy" "source_read" {
+  provider           = "awsalternate"
+  name               = "%[1]s-read"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.source_read.resource_id
+  scalable_dimension = aws_appautoscaling_target.source_read.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.source_read.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "DynamoDBReadCapacityUtilization"
+    }
+    target_value = 50
+  }
+}
+
+resource "aws_appautoscaling_target" "source_write" {
+  provider     = "awsalternate"
+  max_capacity = 900
+  min_capacity = 28
+
+  resource_id        = "table/${aws_dynamodb_table.source.name}"
+  scalable_dimension = "dynamodb:table:WriteCapacityUnits"
+  service_namespace  = "dynamodb"
+}
+
+resource "aws_appautoscaling_policy" "source_write" {
+  provider           = "awsalternate"
+  name               = "%[1]s-write"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.source_write.resource_id
+  scalable_dimension = aws_appautoscaling_target.source_write.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.source_write.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "DynamoDBWriteCapacityUtilization"
+    }
+    target_value = 50
+  }
+}
+`, rName))
+}
+
+func testAccTableReplicaConfig_billingModeProvisionedSource(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+resource "aws_dynamodb_table_replica" "test" {
+  global_table_arn = aws_dynamodb_table.source.arn
+
+  tags = {
+    Name = %[1]q
+    Pozo = "Amargo"
+  }
+}
+
+resource "aws_dynamodb_table" "source" {
+  provider       = "awsalternate"
+  name           = %[1]q
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  lifecycle {
+    ignore_changes = [replica]
   }
 }
 `, rName))
