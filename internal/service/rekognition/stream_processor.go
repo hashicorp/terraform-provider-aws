@@ -42,9 +42,8 @@ import (
 )
 
 const (
-	connectedHomeConfidenceMin     float64 = 0
-	connectedHomeConfidenceMax     float64 = 100
-	connectedHomeConfidenceDefault float64 = 50
+	connectedHomeConfidenceMin float64 = 0
+	connectedHomeConfidenceMax float64 = 100
 
 	faceMatchThresholdMin     float64 = 0
 	faceMatchThresholdMax     float64 = 100
@@ -366,7 +365,6 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 								Validators: []validator.Float64{
 									float64validator.Between(connectedHomeConfidenceMin, connectedHomeConfidenceMax),
 								},
-								Default:  float64default.StaticFloat64(connectedHomeConfidenceDefault),
 								Computed: true,
 								Optional: true,
 							},
