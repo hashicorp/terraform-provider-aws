@@ -14,12 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -65,9 +65,9 @@ func ResourceEventDestination() *schema.Resource {
 							),
 						},
 						"value_source": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: enum.Validate[awstypes.DimensionValueSource](),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.DimensionValueSource](),
 						},
 					},
 				},
@@ -110,8 +110,8 @@ func ResourceEventDestination() *schema.Resource {
 				ForceNew: true,
 				Set:      schema.HashString,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: enum.Validate[awstypes.EventType](),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[awstypes.EventType](),
 				},
 			},
 			names.AttrName: {
@@ -150,14 +150,19 @@ func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData,
 	configurationSetName := d.Get("configuration_set_name").(string)
 	eventDestinationName := d.Get(names.AttrName).(string)
 	enabled := d.Get(names.AttrEnabled).(bool)
-	matchingEventTypes := d.Get("matching_types").(*schema.Set)
+	matchingEventTypes := flex.ExpandStringValueSet(d.Get("matching_types").(*schema.Set))
+
+	matchingEventTypesEnum := make([]awstypes.EventType, len(matchingEventTypes))
+	for i, v := range matchingEventTypes {
+		matchingEventTypesEnum[i] = awstypes.EventType(v)
+	}
 
 	createOpts := &ses.CreateConfigurationSetEventDestinationInput{
 		ConfigurationSetName: aws.String(configurationSetName),
 		EventDestination: &awstypes.EventDestination{
 			Name:               aws.String(eventDestinationName),
-			Enabled:            aws.Bool(enabled),
-			MatchingEventTypes: flex.ExpandStringSet(matchingEventTypes),
+			Enabled:            enabled,
+			MatchingEventTypes: matchingEventTypesEnum,
 		},
 	}
 
@@ -206,12 +211,12 @@ func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, m
 
 	configurationSetName := d.Get("configuration_set_name").(string)
 	input := &ses.DescribeConfigurationSetInput{
-		ConfigurationSetAttributeNames: []string{awstypes.ConfigurationSetAttributeEventDestinations},
+		ConfigurationSetAttributeNames: []awstypes.ConfigurationSetAttribute{awstypes.ConfigurationSetAttributeEventDestinations},
 		ConfigurationSetName:           aws.String(configurationSetName),
 	}
 
 	output, err := conn.DescribeConfigurationSet(ctx, input)
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeConfigurationSetDoesNotExistException) {
+	if errs.IsA[*awstypes.ConfigurationSetDoesNotExistException](err) {
 		log.Printf("[WARN] SES Configuration Set (%s) not found, removing from state", configurationSetName)
 		d.SetId("")
 		return diags
@@ -223,7 +228,7 @@ func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, m
 	var thisEventDestination *awstypes.EventDestination
 	for _, eventDestination := range output.EventDestinations {
 		if aws.ToString(eventDestination.Name) == d.Id() {
-			thisEventDestination = eventDestination
+			thisEventDestination = &eventDestination
 			break
 		}
 	}
@@ -242,7 +247,7 @@ func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("kinesis_destination", flattenKinesisFirehoseDestination(thisEventDestination.KinesisFirehoseDestination)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting kinesis_destination: %s", err)
 	}
-	if err := d.Set("matching_types", flex.FlattenStringSet(thisEventDestination.MatchingEventTypes)); err != nil {
+	if err := d.Set("matching_types", thisEventDestination.MatchingEventTypes); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting matching_types: %s", err)
 	}
 	if err := d.Set("sns_destination", flattenSNSDestination(thisEventDestination.SNSDestination)); err != nil {
@@ -293,15 +298,15 @@ func resourceEventDestinationImport(ctx context.Context, d *schema.ResourceData,
 	return []*schema.ResourceData{d}, nil
 }
 
-func generateCloudWatchDestination(v []interface{}) []*awstypes.CloudWatchDimensionConfiguration {
-	b := make([]*awstypes.CloudWatchDimensionConfiguration, len(v))
+func generateCloudWatchDestination(v []interface{}) []awstypes.CloudWatchDimensionConfiguration {
+	b := make([]awstypes.CloudWatchDimensionConfiguration, len(v))
 
 	for i, vI := range v {
 		cloudwatch := vI.(map[string]interface{})
-		b[i] = &awstypes.CloudWatchDimensionConfiguration{
+		b[i] = awstypes.CloudWatchDimensionConfiguration{
 			DefaultDimensionValue: aws.String(cloudwatch[names.AttrDefaultValue].(string)),
 			DimensionName:         aws.String(cloudwatch["dimension_name"].(string)),
-			DimensionValueSource:  aws.String(cloudwatch["value_source"].(string)),
+			DimensionValueSource:  awstypes.DimensionValueSource(cloudwatch["value_source"].(string)),
 		}
 	}
 
