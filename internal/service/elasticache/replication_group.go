@@ -5,6 +5,7 @@ package elasticache
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"slices"
@@ -35,6 +36,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	failoverMinNumCacheClusters = 2
 )
 
 // @SDKResource("aws_elasticache_replication_group", name="Replication Group")
@@ -389,7 +394,7 @@ func resourceReplicationGroup() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			customizeDiffValidateReplicationGroupMultiAZAutomaticFailover,
+			replicationGroupValidateMultiAZAutomaticFailover,
 			customizeDiffEngineVersionForceNewOnDowngrade,
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("num_cache_clusters") ||
@@ -401,7 +406,7 @@ func resourceReplicationGroup() *schema.Resource {
 				// be configured during creation of the cluster.
 				return semver.LessThan(d.Get("engine_version_actual").(string), "7.0.5")
 			}),
-			customizeDiffValidateReplicationGroupAutomaticFailoverNumCacheClusters,
+			replicationGroupValidateAutomaticFailoverNumCacheClusters,
 			verify.SetTagsDiff,
 		),
 	}
@@ -1406,3 +1411,29 @@ var validateReplicationGroupID schema.SchemaValidateFunc = validation.All(
 	validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
 	validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 )
+
+// replicationGroupValidateMultiAZAutomaticFailover validates that `automatic_failover_enabled` is set when `multi_az_enabled` is true
+func replicationGroupValidateMultiAZAutomaticFailover(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if v := diff.Get("multi_az_enabled").(bool); !v {
+		return nil
+	}
+	if v := diff.Get("automatic_failover_enabled").(bool); !v {
+		return errors.New(`automatic_failover_enabled must be true if multi_az_enabled is true`)
+	}
+	return nil
+}
+
+// replicationGroupValidateAutomaticFailoverNumCacheClusters validates that `automatic_failover_enabled` is set when `multi_az_enabled` is true
+func replicationGroupValidateAutomaticFailoverNumCacheClusters(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if v := diff.Get("automatic_failover_enabled").(bool); !v {
+		return nil
+	}
+	raw := diff.GetRawConfig().GetAttr("num_cache_clusters")
+	if !raw.IsKnown() || raw.IsNull() {
+		return nil
+	}
+	if raw.GreaterThanOrEqualTo(cty.NumberIntVal(failoverMinNumCacheClusters)).True() {
+		return nil
+	}
+	return errors.New(`"num_cache_clusters": must be at least 2 if automatic_failover_enabled is true`)
+}
