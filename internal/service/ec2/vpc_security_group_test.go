@@ -1433,7 +1433,7 @@ func TestAccVPCSecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// Because of the cyclic dependancy created in testAddCycle, we add data outside of terraform to this resource.
+				// Because of the cyclic dependency created in testAddCycle, we add data outside of terraform to this resource.
 				// During an import this cannot be accounted for and should be ignored.
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "egress"},
 			},
@@ -1522,7 +1522,7 @@ func TestAccVPCSecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// Because of the cyclic dependancy created in testAddCycle, we add data outside of terraform to this resource.
+				// Because of the cyclic dependency created in testAddCycle, we add data outside of terraform to this resource.
 				// During an import this cannot be accounted for and should be ignored.
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "egress"},
 			},
