@@ -12,6 +12,7 @@ var (
 	ResourceService                  = resourceService
 	ResourceTag                      = resourceTag
 	ResourceTaskDefinition           = resourceTaskDefinition
+	ResourceTaskSet                  = resourceTaskSet
 
 	ClusterNameFromARN                      = clusterNameFromARN
 	FindCapacityProviderByARN               = findCapacityProviderByARN
@@ -20,6 +21,7 @@ var (
 	FindServiceNoTagsByTwoPartKey           = findServiceNoTagsByTwoPartKey
 	FindTag                                 = findTag
 	FindTaskDefinitionByFamilyOrARN         = findTaskDefinitionByFamilyOrARN
+	FindTaskSetNoTagsByThreePartKey         = findTaskSetNoTagsByThreePartKey
 	RoleNameFromARN                         = roleNameFromARN
 	TaskDefinitionARNStripRevision          = taskDefinitionARNStripRevision
 	ValidTaskDefinitionContainerDefinitions = validTaskDefinitionContainerDefinitions

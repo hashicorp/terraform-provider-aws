@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,7 +30,7 @@ import (
 
 // @SDKResource("aws_ecs_task_set", name="Task Set")
 // @Tags(identifierAttribute="arn")
-func ResourceTaskSet() *schema.Resource {
+func resourceTaskSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTaskSetCreate,
 		ReadWithoutTimeout:   resourceTaskSetRead,
@@ -332,13 +333,12 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "creating ECS TaskSet: %s", err)
 	}
 
-	taskSetId := aws.ToString(output.TaskSet.Id)
-
-	d.SetId(fmt.Sprintf("%s,%s,%s", taskSetId, service, cluster))
+	taskSetID := aws.ToString(output.TaskSet.Id)
+	d.SetId(taskSetCreateResourceID(taskSetID, service, cluster))
 
 	if d.Get("wait_until_stable").(bool) {
 		timeout, _ := time.ParseDuration(d.Get("wait_until_stable_timeout").(string))
-		if err := waitTaskSetStable(ctx, conn, timeout, taskSetId, service, cluster); err != nil {
+		if _, err := waitTaskSetStable(ctx, conn, taskSetID, service, cluster, timeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for ECS Task Set (%s) create: %s", d.Id(), err)
 		}
 	}
@@ -363,82 +363,49 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
-	partition := meta.(*conns.AWSClient).Partition
 
-	taskSetId, service, cluster, err := TaskSetParseID(d.Id())
-
+	taskSetID, service, cluster, err := taskSetParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ECS Task Set (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &ecs.DescribeTaskSetsInput{
-		Cluster:  aws.String(cluster),
-		Include:  []awstypes.TaskSetField{awstypes.TaskSetFieldTags},
-		Service:  aws.String(service),
-		TaskSets: []string{taskSetId},
-	}
+	taskSet, err := findTaskSetByThreePartKey(ctx, conn, taskSetID, service, cluster)
 
-	out, err := conn.DescribeTaskSets(ctx, input)
-
-	if !d.IsNewResource() && (errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) || errs.IsA[*awstypes.TaskSetNotFoundException](err)) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ECS Task Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if errs.IsUnsupportedOperationInPartitionError(partition, err) {
-		log.Printf("[WARN] ECS tagging failed describing Task Set (%s) with tags: %s; retrying without tags", d.Id(), err)
-
-		input.Include = nil
-		out, err = conn.DescribeTaskSets(ctx, input)
-	}
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Task Set (%s): %s", d.Id(), err)
 	}
-
-	if out == nil || len(out.TaskSets) == 0 {
-		if d.IsNewResource() {
-			return sdkdiag.AppendErrorf(diags, "reading ECS Task Set (%s): empty output after creation", d.Id())
-		}
-		log.Printf("[WARN] ECS Task Set (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	taskSet := out.TaskSets[0]
 
 	d.Set(names.AttrARN, taskSet.TaskSetArn)
-	d.Set("cluster", cluster)
-	d.Set("launch_type", taskSet.LaunchType)
-	d.Set("platform_version", taskSet.PlatformVersion)
-	d.Set(names.AttrExternalID, taskSet.ExternalId)
-	d.Set("service", service)
-	d.Set(names.AttrStatus, taskSet.Status)
-	d.Set("stability_status", taskSet.StabilityStatus)
-	d.Set("task_definition", taskSet.TaskDefinition)
-	d.Set("task_set_id", taskSet.Id)
-
 	if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategyItems(taskSet.CapacityProviderStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
 	}
-
+	d.Set("cluster", cluster)
+	d.Set(names.AttrExternalID, taskSet.ExternalId)
+	d.Set("launch_type", taskSet.LaunchType)
 	if err := d.Set("load_balancer", flattenTaskSetLoadBalancers(taskSet.LoadBalancers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting load_balancer: %s", err)
 	}
-
 	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(taskSet.NetworkConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
-
+	d.Set("platform_version", taskSet.PlatformVersion)
 	if err := d.Set("scale", flattenScale(taskSet.Scale)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting scale: %s", err)
 	}
-
+	d.Set("service", service)
 	if err := d.Set("service_registries", flattenServiceRegistries(taskSet.ServiceRegistries)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting service_registries: %s", err)
 	}
+	d.Set("stability_status", taskSet.StabilityStatus)
+	d.Set(names.AttrStatus, taskSet.Status)
+	d.Set("task_definition", taskSet.TaskDefinition)
+	d.Set("task_set_id", taskSet.Id)
 
 	setTagsOut(ctx, taskSet.Tags)
 
@@ -450,17 +417,16 @@ func resourceTaskSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		taskSetId, service, cluster, err := TaskSetParseID(d.Id())
-
+		taskSetID, service, cluster, err := taskSetParseResourceID(d.Id())
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating ECS Task Set (%s): %s", d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &ecs.UpdateTaskSetInput{
 			Cluster: aws.String(cluster),
-			Service: aws.String(service),
-			TaskSet: aws.String(taskSetId),
 			Scale:   expandScale(d.Get("scale").([]interface{})),
+			Service: aws.String(service),
+			TaskSet: aws.String(taskSetID),
 		}
 
 		_, err = conn.UpdateTaskSet(ctx, input)
@@ -471,8 +437,8 @@ func resourceTaskSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.Get("wait_until_stable").(bool) {
 			timeout, _ := time.ParseDuration(d.Get("wait_until_stable_timeout").(string))
-			if err := waitTaskSetStable(ctx, conn, timeout, taskSetId, service, cluster); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for ECS Task Set (%s) to be stable after update: %s", d.Id(), err)
+			if _, err := waitTaskSetStable(ctx, conn, taskSetID, service, cluster, timeout); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for ECS Task Set (%s) update: %s", d.Id(), err)
 			}
 		}
 	}
@@ -484,20 +450,18 @@ func resourceTaskSetDelete(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
-	taskSetId, service, cluster, err := TaskSetParseID(d.Id())
-
+	taskSetID, service, cluster, err := taskSetParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting ECS Task Set (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &ecs.DeleteTaskSetInput{
+	log.Printf("[DEBUG] Deleting ECS Task Set: %s", d.Id())
+	_, err = conn.DeleteTaskSet(ctx, &ecs.DeleteTaskSetInput{
 		Cluster: aws.String(cluster),
-		Service: aws.String(service),
-		TaskSet: aws.String(taskSetId),
 		Force:   aws.Bool(d.Get(names.AttrForceDelete).(bool)),
-	}
-
-	_, err = conn.DeleteTaskSet(ctx, input)
+		Service: aws.String(service),
+		TaskSet: aws.String(taskSetID),
+	})
 
 	if errs.IsA[*awstypes.TaskSetNotFoundException](err) {
 		return diags
@@ -507,44 +471,195 @@ func resourceTaskSetDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "deleting ECS Task Set (%s): %s", d.Id(), err)
 	}
 
-	if err := waitTaskSetDeleted(ctx, conn, taskSetId, service, cluster); err != nil {
-		if errs.IsA[*awstypes.TaskSetNotFoundException](err) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "deleting ECS Task Set (%s): waiting for completion: %s", d.Id(), err)
+	if _, err := waitTaskSetDeleted(ctx, conn, taskSetID, service, cluster); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ECS Task Set (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func TaskSetParseID(id string) (string, string, string, error) {
-	parts := strings.Split(id, ",")
+const taskSetResourceIDSeparator = ","
+
+func taskSetCreateResourceID(taskSetID, service, cluster string) string {
+	parts := []string{taskSetID, service, cluster}
+	id := strings.Join(parts, taskSetResourceIDSeparator)
+
+	return id
+}
+
+func taskSetParseResourceID(id string) (string, string, string, error) {
+	parts := strings.Split(id, taskSetResourceIDSeparator)
 
 	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
-		return "", "", "", fmt.Errorf("unexpected format of ID (%q), expected TASK_SET_ID,SERVICE,CLUSTER", id)
+		return parts[0], parts[1], parts[2], nil
 	}
 
-	return parts[0], parts[1], parts[2], nil
+	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected TASK_SET_ID%[2]sSERVICE%[2]sCLUSTER", id, taskSetResourceIDSeparator)
 }
 
 func retryTaskSetCreate(ctx context.Context, conn *ecs.Client, input *ecs.CreateTaskSetInput) (*ecs.CreateTaskSetOutput, error) {
-	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout+taskSetCreateTimeout,
+	const (
+		taskSetCreateTimeout = 10 * time.Minute
+		timeout              = propagationTimeout + taskSetCreateTimeout
+	)
+	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
 		func() (interface{}, error) {
 			return conn.CreateTaskSet(ctx, input)
 		},
 		func(err error) (bool, error) {
-			if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) || errs.IsA[*awstypes.TaskSetNotFoundException](err) ||
-				errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "does not have an associated load balancer") {
+			if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) || errs.IsA[*awstypes.TaskSetNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "does not have an associated load balancer") {
 				return true, err
 			}
+
 			return false, err
 		},
 	)
 
-	output, ok := outputRaw.(*ecs.CreateTaskSetOutput)
-	if !ok || output == nil || output.TaskSet == nil {
-		return nil, fmt.Errorf("creating ECS TaskSet: empty output")
+	if err != nil {
+		return nil, err
 	}
 
-	return output, err
+	return outputRaw.(*ecs.CreateTaskSetOutput), nil
+}
+
+func findTaskSet(ctx context.Context, conn *ecs.Client, input *ecs.DescribeTaskSetsInput) (*awstypes.TaskSet, error) {
+	output, err := findTaskSets(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTaskSets(ctx context.Context, conn *ecs.Client, input *ecs.DescribeTaskSetsInput) ([]awstypes.TaskSet, error) {
+	output, err := conn.DescribeTaskSets(ctx, input)
+
+	if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) || errs.IsA[*awstypes.TaskSetNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.TaskSets, nil
+}
+
+func findTaskSetByThreePartKey(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) (*awstypes.TaskSet, error) {
+	input := &ecs.DescribeTaskSetsInput{
+		Cluster:  aws.String(cluster),
+		Include:  []awstypes.TaskSetField{awstypes.TaskSetFieldTags},
+		Service:  aws.String(service),
+		TaskSets: []string{taskSetID},
+	}
+
+	output, err := findTaskSet(ctx, conn, input)
+
+	// Some partitions (i.e., ISO) may not support tagging, giving error.
+	if errs.IsUnsupportedOperationInPartitionError(partitionFromConn(conn), err) {
+		input.Include = nil
+
+		output, err = findTaskSet(ctx, conn, input)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findTaskSetNoTagsByThreePartKey(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) (*awstypes.TaskSet, error) {
+	input := &ecs.DescribeTaskSetsInput{
+		Cluster:  aws.String(cluster),
+		Service:  aws.String(service),
+		TaskSets: []string{taskSetID},
+	}
+
+	return findTaskSet(ctx, conn, input)
+}
+
+func statusTaskSetStability(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findTaskSetNoTagsByThreePartKey(ctx, conn, taskSetID, service, cluster)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.StabilityStatus), err
+	}
+}
+
+func statusTaskSet(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findTaskSetNoTagsByThreePartKey(ctx, conn, taskSetID, service, cluster)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.Status), err
+	}
+}
+
+const (
+	taskSetStatusActive   = "ACTIVE"
+	taskSetStatusDraining = "DRAINING"
+	taskSetStatusPrimary  = "PRIMARY"
+)
+
+// Does not return tags.
+func waitTaskSetStable(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string, timeout time.Duration) (*awstypes.TaskSet, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.StabilityStatusStabilizing),
+		Target:  enum.Slice(awstypes.StabilityStatusSteadyState),
+		Refresh: statusTaskSetStability(ctx, conn, taskSetID, service, cluster),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TaskSet); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// Does not return tags.
+func waitTaskSetDeleted(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) (*awstypes.TaskSet, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{taskSetStatusActive, taskSetStatusPrimary, taskSetStatusDraining},
+		Target:  []string{},
+		Refresh: statusTaskSet(ctx, conn, taskSetID, service, cluster),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TaskSet); ok {
+		return output, err
+	}
+
+	return nil, err
 }

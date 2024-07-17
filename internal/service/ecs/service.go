@@ -1282,7 +1282,7 @@ const (
 
 func statusService(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		service, err := findServiceNoTagsByTwoPartKey(ctx, conn, serviceName, clusterNameOrARN)
+		output, err := findServiceNoTagsByTwoPartKey(ctx, conn, serviceName, clusterNameOrARN)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -1292,7 +1292,7 @@ func statusService(ctx context.Context, conn *ecs.Client, serviceName, clusterNa
 			return nil, "", err
 		}
 
-		return service, aws.ToString(service.Status), err
+		return output, aws.ToString(output.Status), err
 	}
 }
 
@@ -1332,8 +1332,8 @@ func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clust
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*awstypes.Service); ok {
-		return v, err
+	if output, ok := outputRaw.(*awstypes.Service); ok {
+		return output, err
 	}
 
 	return nil, err
