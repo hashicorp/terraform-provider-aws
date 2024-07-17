@@ -117,8 +117,8 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 			},
 			names.AttrRoleARN: schema.StringAttribute{
 				Description: "The Amazon Resource Number (ARN) of the IAM role that allows access to the stream processor.",
-				// CustomType:  fwtypes.ARNType,
-				Required: true,
+				CustomType:  fwtypes.ARNType,
+				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -802,7 +802,7 @@ type resourceStreamProcessorDataModel struct {
 	Name                  types.String                                           `tfsdk:"name"`
 	Output                fwtypes.ObjectValueOf[outputModel]                     `tfsdk:"output"`
 	RegionsOfInterest     fwtypes.ListNestedObjectValueOf[regionOfInterestModel] `tfsdk:"regions_of_interest"`
-	RoleARN               types.String                                           `tfsdk:"role_arn"` //TODO ARN types?
+	RoleARN               fwtypes.ARN                                            `tfsdk:"role_arn"`
 	Settings              fwtypes.ObjectValueOf[settingsModel]                   `tfsdk:"settings"`
 	Tags                  types.Map                                              `tfsdk:"tags"`
 	TagsAll               types.Map                                              `tfsdk:"tags_all"`
@@ -818,11 +818,11 @@ type inputModel struct {
 }
 
 type kinesisVideoStreamInputModel struct {
-	ARN types.String `tfsdk:"arn"`
+	ARN fwtypes.ARN `tfsdk:"arn"`
 }
 
 type notificationChannelModel struct {
-	SNSTopicArn fwtypes.ARN `tfsdk:"sns_topic_arn"`
+	SNSTopicARN fwtypes.ARN `tfsdk:"sns_topic_arn"`
 }
 
 type outputModel struct {
@@ -831,7 +831,7 @@ type outputModel struct {
 }
 
 type kinesisDataStreamModel struct {
-	ARN types.String `tfsdk:"arn"`
+	ARN fwtypes.ARN `tfsdk:"arn"`
 }
 
 type s3DestinationModel struct {
