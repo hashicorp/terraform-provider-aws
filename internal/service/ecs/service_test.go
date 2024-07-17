@@ -1677,7 +1677,7 @@ func testAccCheckServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 				return nil
 			}
 
-			return fmt.Errorf("ECS service still exists:\n%#v", service)
+			return fmt.Errorf("ECS Service %s still exists", rs.Primary.ID)
 		}
 
 		return nil

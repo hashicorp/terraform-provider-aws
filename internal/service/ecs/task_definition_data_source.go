@@ -80,7 +80,7 @@ func dataSourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 	taskDefinition := output.TaskDefinition
 	d.SetId(aws.ToString(taskDefinition.TaskDefinitionArn))
 	d.Set(names.AttrARN, taskDefinition.TaskDefinitionArn)
-	d.Set("arn_without_revision", StripRevision(aws.ToString(taskDefinition.TaskDefinitionArn)))
+	d.Set("arn_without_revision", taskDefinitionARNStripRevision(aws.ToString(taskDefinition.TaskDefinitionArn)))
 	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
 	d.Set(names.AttrFamily, taskDefinition.Family)
 	d.Set("network_mode", taskDefinition.NetworkMode)

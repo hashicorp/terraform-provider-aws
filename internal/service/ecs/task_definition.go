@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -34,7 +35,7 @@ import (
 
 // @SDKResource("aws_ecs_task_definition", name="Task Definition")
 // @Tags(identifierAttribute="arn")
-func ResourceTaskDefinition() *schema.Resource {
+func resourceTaskDefinition() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTaskDefinitionCreate,
@@ -291,6 +292,12 @@ func ResourceTaskDefinition() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"configure_at_launch": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
 						"docker_volume_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -437,26 +444,12 @@ func ResourceTaskDefinition() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"configure_at_launch": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
 					},
 				},
 				Set: resourceTaskDefinitionVolumeHash,
 			},
 		},
 	}
-}
-
-func validTaskDefinitionContainerDefinitions(v interface{}, k string) (ws []string, errors []error) {
-	_, err := expandContainerDefinitions(v.(string))
-	if err != nil {
-		errors = append(errors, fmt.Errorf("ECS Task Definition container_definitions is invalid: %s", err))
-	}
-	return
 }
 
 func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -507,12 +500,13 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		input.PidMode = awstypes.PidMode(v.(string))
 	}
 
-	if constraints := d.Get("placement_constraints").(*schema.Set).List(); len(constraints) > 0 {
-		cons, err := expandTaskDefinitionPlacementConstraints(constraints)
+	if v := d.Get("placement_constraints").(*schema.Set).List(); len(v) > 0 {
+		apiObject, err := expandTaskDefinitionPlacementConstraints(v)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get(names.AttrFamily).(string), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-		input.PlacementConstraints = cons
+
+		input.PlacementConstraints = apiObject
 	}
 
 	if proxyConfigs := d.Get("proxy_configuration").([]interface{}); len(proxyConfigs) > 0 {
@@ -549,11 +543,9 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get(names.AttrFamily).(string), err)
 	}
 
-	taskDefinition := *output.TaskDefinition // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment // false positive
+	taskDefinition := output.TaskDefinition
 
 	d.SetId(aws.ToString(taskDefinition.Family))
-	d.Set(names.AttrARN, taskDefinition.TaskDefinitionArn)
-	d.Set("arn_without_revision", StripRevision(aws.ToString(taskDefinition.TaskDefinitionArn)))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
@@ -575,49 +567,55 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
-	partition := meta.(*conns.AWSClient).Partition
 
-	trackedTaskDefinition := d.Get(names.AttrARN).(string)
+	familyOrARN := d.Get(names.AttrARN).(string)
 	if _, ok := d.GetOk("track_latest"); ok {
-		trackedTaskDefinition = d.Get(names.AttrFamily).(string)
+		familyOrARN = d.Get(names.AttrFamily).(string)
 	}
+	taskDefinition, tags, err := findTaskDefinitionByFamilyOrARN(ctx, conn, familyOrARN)
 
-	input := ecs.DescribeTaskDefinitionInput{
-		Include:        []awstypes.TaskDefinitionField{awstypes.TaskDefinitionFieldTags},
-		TaskDefinition: aws.String(trackedTaskDefinition),
-	}
-
-	out, err := conn.DescribeTaskDefinition(ctx, &input)
-
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if errs.IsUnsupportedOperationInPartitionError(partition, err) {
-		log.Printf("[WARN] ECS tagging failed describing Task Definition (%s) with tags: %s; retrying without tags", d.Id(), err)
-
-		input.Include = nil
-		out, err = conn.DescribeTaskDefinition(ctx, &input)
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", d.Id(), err)
-	}
-
-	log.Printf("[DEBUG] Received task definition %s, status:%s\n %+v", aws.ToString(out.TaskDefinition.Family),
-		string(out.TaskDefinition.Status), out)
-
-	taskDefinition := out.TaskDefinition
-
-	if taskDefinition.Status == awstypes.TaskDefinitionStatusInactive {
-		log.Printf("[DEBUG] Removing ECS task definition %s because it's INACTIVE", aws.ToString(out.TaskDefinition.Family))
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] ECS Task Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", familyOrARN, err)
+	}
+
 	d.SetId(aws.ToString(taskDefinition.Family))
 	d.Set(names.AttrARN, taskDefinition.TaskDefinitionArn)
-	d.Set("arn_without_revision", StripRevision(aws.ToString(taskDefinition.TaskDefinitionArn)))
+	d.Set("arn_without_revision", taskDefinitionARNStripRevision(aws.ToString(taskDefinition.TaskDefinitionArn)))
+	d.Set("cpu", taskDefinition.Cpu)
+	if err := d.Set("ephemeral_storage", flattenTaskDefinitionEphemeralStorage(taskDefinition.EphemeralStorage)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
+	}
+	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
 	d.Set(names.AttrFamily, taskDefinition.Family)
+	if err := d.Set("inference_accelerator", flattenInferenceAccelerators(taskDefinition.InferenceAccelerators)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting inference accelerators: %s", err)
+	}
+	d.Set("ipc_mode", taskDefinition.IpcMode)
+	d.Set("memory", taskDefinition.Memory)
+	d.Set("network_mode", taskDefinition.NetworkMode)
+	d.Set("pid_mode", taskDefinition.PidMode)
+	if err := d.Set("placement_constraints", flattenPlacementConstraints(taskDefinition.PlacementConstraints)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting placement_constraints: %s", err)
+	}
+	if err := d.Set("proxy_configuration", flattenProxyConfiguration(taskDefinition.ProxyConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting proxy_configuration: %s", err)
+	}
+	d.Set("requires_compatibilities", taskDefinition.RequiresCompatibilities)
 	d.Set("revision", taskDefinition.Revision)
+	if err := d.Set("runtime_platform", flattenRuntimePlatform(taskDefinition.RuntimePlatform)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting runtime_platform: %s", err)
+	}
+	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
 	d.Set("track_latest", d.Get("track_latest"))
+	if err := d.Set("volume", flattenVolumes(taskDefinition.Volumes)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting volume: %s", err)
+	}
 
 	// Sort the lists of environment variables as they come in, so we won't get spurious reorderings in plans
 	// (diff is suppressed if the environment variables haven't changed, but they still show in the plan if
@@ -628,50 +626,11 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 
 	defs, err := flattenContainerDefinitions(taskDefinition.ContainerDefinitions)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	err = d.Set("container_definitions", defs)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", d.Id(), err)
-	}
+	d.Set("container_definitions", defs)
 
-	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
-	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
-	d.Set("cpu", taskDefinition.Cpu)
-	d.Set("memory", taskDefinition.Memory)
-	d.Set("network_mode", taskDefinition.NetworkMode)
-	d.Set("ipc_mode", taskDefinition.IpcMode)
-	d.Set("pid_mode", taskDefinition.PidMode)
-
-	if err := d.Set("volume", flattenVolumes(taskDefinition.Volumes)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting volume: %s", err)
-	}
-
-	if err := d.Set("inference_accelerator", flattenInferenceAccelerators(taskDefinition.InferenceAccelerators)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting inference accelerators: %s", err)
-	}
-
-	if err := d.Set("placement_constraints", flattenPlacementConstraints(taskDefinition.PlacementConstraints)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting placement_constraints: %s", err)
-	}
-
-	if err := d.Set("requires_compatibilities", flex.FlattenStringyValueList(taskDefinition.RequiresCompatibilities)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting requires_compatibilities: %s", err)
-	}
-
-	if err := d.Set("runtime_platform", flattenRuntimePlatform(taskDefinition.RuntimePlatform)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting runtime_platform: %s", err)
-	}
-
-	if err := d.Set("proxy_configuration", flattenProxyConfiguration(taskDefinition.ProxyConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting proxy_configuration: %s", err)
-	}
-
-	if err := d.Set("ephemeral_storage", flattenTaskDefinitionEphemeralStorage(taskDefinition.EphemeralStorage)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
-	}
-
-	setTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, tags)
 
 	return diags
 }
@@ -687,7 +646,7 @@ func resourceTaskDefinitionUpdate(ctx context.Context, d *schema.ResourceData, m
 func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
-		log.Printf("[DEBUG] Retaining ECS Task Definition Revision %q", d.Id())
+		log.Printf("[DEBUG] Retaining ECS Task Definition Revision: %s", d.Id())
 		return diags
 	}
 
@@ -696,6 +655,7 @@ func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.DeregisterTaskDefinition(ctx, &ecs.DeregisterTaskDefinitionInput{
 		TaskDefinition: aws.String(d.Get(names.AttrARN).(string)),
 	})
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ECS Task Definition (%s): %s", d.Id(), err)
 	}
@@ -703,18 +663,55 @@ func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func findTaskDefinition(ctx context.Context, conn *ecs.Client, input *ecs.DescribeTaskDefinitionInput) (*awstypes.TaskDefinition, error) {
+func findTaskDefinition(ctx context.Context, conn *ecs.Client, input *ecs.DescribeTaskDefinitionInput) (*awstypes.TaskDefinition, []awstypes.Tag, error) {
 	output, err := conn.DescribeTaskDefinition(ctx, input)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if output == nil || output.TaskDefinition == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.TaskDefinition, nil
+	return output.TaskDefinition, output.Tags, nil
+}
+
+func findTaskDefinitionByFamilyOrARN(ctx context.Context, conn *ecs.Client, familyOrARN string) (*awstypes.TaskDefinition, []awstypes.Tag, error) {
+	input := &ecs.DescribeTaskDefinitionInput{
+		Include:        []awstypes.TaskDefinitionField{awstypes.TaskDefinitionFieldTags},
+		TaskDefinition: aws.String(familyOrARN),
+	}
+
+	taskDefinition, tags, err := findTaskDefinition(ctx, conn, input)
+
+	// Some partitions (i.e., ISO) may not support tagging, giving error.
+	if errs.IsUnsupportedOperationInPartitionError(partitionFromConn(conn), err) {
+		input.Include = nil
+
+		taskDefinition, tags, err = findTaskDefinition(ctx, conn, input)
+	}
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if status := taskDefinition.Status; status == awstypes.TaskDefinitionStatusInactive {
+		return nil, nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	return taskDefinition, tags, nil
+}
+
+func validTaskDefinitionContainerDefinitions(v interface{}, k string) (ws []string, errors []error) {
+	_, err := expandContainerDefinitions(v.(string))
+	if err != nil {
+		errors = append(errors, fmt.Errorf("ECS Task Definition container_definitions is invalid: %s", err))
+	}
+	return
 }
 
 func resourceTaskDefinitionVolumeHash(v interface{}) int {
@@ -1241,11 +1238,11 @@ func flattenTaskDefinitionEphemeralStorage(pc *awstypes.EphemeralStorage) []map[
 	return []map[string]interface{}{m}
 }
 
-// StripRevision strips the trailing revision number from a task definition ARN
+// taskDefinitionARNStripRevision strips the trailing revision number from a task definition ARN
 //
 // Invalid ARNs will return an empty string. ARNs with an unexpected number of
 // separators in the resource section are returned unmodified.
-func StripRevision(s string) string {
+func taskDefinitionARNStripRevision(s string) string {
 	tdArn, err := arn.Parse(s)
 	if err != nil {
 		return ""

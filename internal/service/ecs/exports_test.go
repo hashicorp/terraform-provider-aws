@@ -11,6 +11,7 @@ var (
 	ResourceClusterCapacityProviders = resourceClusterCapacityProviders
 	ResourceService                  = resourceService
 	ResourceTag                      = resourceTag
+	ResourceTaskDefinition           = resourceTaskDefinition
 
 	ClusterNameFromARN                      = clusterNameFromARN
 	FindCapacityProviderByARN               = findCapacityProviderByARN
@@ -18,6 +19,8 @@ var (
 	FindEffectiveAccountSettingByName       = findEffectiveAccountSettingByName
 	FindServiceNoTagsByTwoPartKey           = findServiceNoTagsByTwoPartKey
 	FindTag                                 = findTag
+	FindTaskDefinitionByFamilyOrARN         = findTaskDefinitionByFamilyOrARN
 	RoleNameFromARN                         = roleNameFromARN
+	TaskDefinitionARNStripRevision          = taskDefinitionARNStripRevision
 	ValidTaskDefinitionContainerDefinitions = validTaskDefinitionContainerDefinitions
 )

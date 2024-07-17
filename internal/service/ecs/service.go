@@ -749,7 +749,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ECS service (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ECS Service (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(aws.ToString(service.ServiceArn))

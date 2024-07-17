@@ -94,7 +94,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "ECS Resource Tag",
 		},
 		{
-			Factory:  ResourceTaskDefinition,
+			Factory:  resourceTaskDefinition,
 			TypeName: "aws_ecs_task_definition",
 			Name:     "Task Definition",
 			Tags: &types.ServicePackageResourceTags{

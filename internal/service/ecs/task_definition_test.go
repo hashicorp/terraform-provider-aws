@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -19,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -61,7 +61,7 @@ func Test_StripRevision(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			if got := tfecs.StripRevision(tc.s); got != tc.want {
+			if got := tfecs.TaskDefinitionARNStripRevision(tc.s); got != tc.want {
 				t.Errorf("StripRevision() = %v, want %v", got, tc.want)
 			}
 		})
@@ -1344,41 +1344,39 @@ func testAccCheckTaskDefinitionDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			input := ecs.DescribeTaskDefinitionInput{
-				TaskDefinition: aws.String(rs.Primary.Attributes[names.AttrARN]),
-			}
+			_, _, err := tfecs.FindTaskDefinitionByFamilyOrARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
-			out, err := conn.DescribeTaskDefinition(ctx, &input)
+			if tfresource.NotFound(err) {
+				return nil
+			}
 
 			if err != nil {
 				return err
 			}
 
-			if out.TaskDefinition != nil && out.TaskDefinition.Status != awstypes.TaskDefinitionStatusInactive {
-				return fmt.Errorf("ECS task definition still exists:\n%#v", *out.TaskDefinition)
-			}
+			return fmt.Errorf("ECS Task Definition %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTaskDefinitionExists(ctx context.Context, name string, def *awstypes.TaskDefinition) resource.TestCheckFunc {
+func testAccCheckTaskDefinitionExists(ctx context.Context, n string, v *awstypes.TaskDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
 
-		out, err := conn.DescribeTaskDefinition(ctx, &ecs.DescribeTaskDefinitionInput{
-			TaskDefinition: aws.String(rs.Primary.Attributes[names.AttrARN]),
-		})
+		output, _, err := tfecs.FindTaskDefinitionByFamilyOrARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
 		if err != nil {
 			return err
 		}
-		*def = *out.TaskDefinition
+
+		*v = *output
 
 		return nil
 	}

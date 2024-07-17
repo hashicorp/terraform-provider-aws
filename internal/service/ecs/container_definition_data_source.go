@@ -108,7 +108,7 @@ func findContainerDefinitionByTwoPartKey(ctx context.Context, conn *ecs.Client, 
 		TaskDefinition: aws.String(taskDefinitionName),
 	}
 
-	taskDefinition, err := findTaskDefinition(ctx, conn, input)
+	taskDefinition, _, err := findTaskDefinition(ctx, conn, input)
 
 	if err != nil {
 		return nil, err

@@ -230,7 +230,7 @@ func sweepTaskDefinitions(region string) error {
 		}
 
 		for _, v := range page.TaskDefinitionArns {
-			r := ResourceTaskDefinition()
+			r := resourceTaskDefinition()
 			d := r.Data(nil)
 			d.SetId(v)
 			d.Set(names.AttrARN, v)
