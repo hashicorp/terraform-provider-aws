@@ -35,6 +35,10 @@ func dataSourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"cluster_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"configuration_endpoint_address": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -125,9 +129,7 @@ func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
-	groupID := d.Get("replication_group_id").(string)
-
-	rg, err := findReplicationGroupByID(ctx, conn, groupID)
+	rg, err := findReplicationGroupByID(ctx, conn, d.Get("replication_group_id").(string))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("ElastiCache Replication Group", err))
@@ -174,6 +176,7 @@ func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("node_type", rg.CacheNodeType)
 	d.Set("num_node_groups", len(rg.NodeGroups))
 	d.Set("replicas_per_node_group", len(rg.NodeGroups[0].NodeGroupMembers)-1)
+	d.Set("cluster_mode", rg.ClusterMode)
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(rg.LogDeliveryConfigurations))
 	d.Set("snapshot_window", rg.SnapshotWindow)
 	d.Set("snapshot_retention_limit", rg.SnapshotRetentionLimit)
