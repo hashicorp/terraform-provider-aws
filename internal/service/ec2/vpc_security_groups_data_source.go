@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_security_groups")
@@ -28,18 +29,18 @@ func DataSourceSecurityGroups() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": CustomFiltersSchema(),
-			"ids": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"vpc_ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -56,12 +57,12 @@ func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, m
 
 	input := &ec2.DescribeSecurityGroupsInput{}
 
-	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterList(
+		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -90,8 +91,8 @@ func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", arns)
-	d.Set("ids", securityGroupIDs)
+	d.Set(names.AttrARNs, arns)
+	d.Set(names.AttrIDs, securityGroupIDs)
 	d.Set("vpc_ids", vpcIDs)
 
 	return diags

@@ -8,6 +8,7 @@ import (
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandCognitoOptions(c []interface{}) *elasticsearch.CognitoOptions {
@@ -20,17 +21,17 @@ func expandCognitoOptions(c []interface{}) *elasticsearch.CognitoOptions {
 
 	m := c[0].(map[string]interface{})
 
-	if cognitoEnabled, ok := m["enabled"]; ok {
+	if cognitoEnabled, ok := m[names.AttrEnabled]; ok {
 		options.Enabled = aws.Bool(cognitoEnabled.(bool))
 
 		if cognitoEnabled.(bool) {
-			if v, ok := m["user_pool_id"]; ok && v.(string) != "" {
+			if v, ok := m[names.AttrUserPoolID]; ok && v.(string) != "" {
 				options.UserPoolId = aws.String(v.(string))
 			}
 			if v, ok := m["identity_pool_id"]; ok && v.(string) != "" {
 				options.IdentityPoolId = aws.String(v.(string))
 			}
-			if v, ok := m["role_arn"]; ok && v.(string) != "" {
+			if v, ok := m[names.AttrRoleARN]; ok && v.(string) != "" {
 				options.RoleArn = aws.String(v.(string))
 			}
 		}
@@ -79,18 +80,18 @@ func expandEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 		options.EBSEnabled = aws.Bool(ebsEnabled.(bool))
 
 		if ebsEnabled.(bool) {
-			if v, ok := m["volume_size"]; ok && v.(int) > 0 {
+			if v, ok := m[names.AttrVolumeSize]; ok && v.(int) > 0 {
 				options.VolumeSize = aws.Int64(int64(v.(int)))
 			}
 			var volumeType string
-			if v, ok := m["volume_type"]; ok && v.(string) != "" {
+			if v, ok := m[names.AttrVolumeType]; ok && v.(string) != "" {
 				volumeType = v.(string)
 				options.VolumeType = aws.String(volumeType)
 			}
-			if v, ok := m["iops"]; ok && v.(int) > 0 && EBSVolumeTypePermitsIopsInput(volumeType) {
+			if v, ok := m[names.AttrIOPS]; ok && v.(int) > 0 && EBSVolumeTypePermitsIopsInput(volumeType) {
 				options.Iops = aws.Int64(int64(v.(int)))
 			}
-			if v, ok := m["throughput"]; ok && v.(int) > 0 && EBSVolumeTypePermitsThroughputInput(volumeType) {
+			if v, ok := m[names.AttrThroughput]; ok && v.(int) > 0 && EBSVolumeTypePermitsThroughputInput(volumeType) {
 				options.Throughput = aws.Int64(int64(v.(int)))
 			}
 		}
@@ -102,10 +103,10 @@ func expandEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 func expandEncryptAtRestOptions(m map[string]interface{}) *elasticsearch.EncryptionAtRestOptions {
 	options := elasticsearch.EncryptionAtRestOptions{}
 
-	if v, ok := m["enabled"]; ok {
+	if v, ok := m[names.AttrEnabled]; ok {
 		options.Enabled = aws.Bool(v.(bool))
 	}
-	if v, ok := m["kms_key_id"]; ok && v.(string) != "" {
+	if v, ok := m[names.AttrKMSKeyID]; ok && v.(string) != "" {
 		options.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -119,10 +120,10 @@ func expandVPCOptions(m map[string]interface{}) *elasticsearch.VPCOptions {
 
 	options := elasticsearch.VPCOptions{}
 
-	if v, ok := m["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		options.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
-	if v, ok := m["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
 		options.SubnetIds = flex.ExpandStringSet(v)
 	}
 
@@ -132,12 +133,12 @@ func expandVPCOptions(m map[string]interface{}) *elasticsearch.VPCOptions {
 func flattenCognitoOptions(c *elasticsearch.CognitoOptions) []map[string]interface{} {
 	m := map[string]interface{}{}
 
-	m["enabled"] = aws.BoolValue(c.Enabled)
+	m[names.AttrEnabled] = aws.BoolValue(c.Enabled)
 
 	if aws.BoolValue(c.Enabled) {
 		m["identity_pool_id"] = aws.StringValue(c.IdentityPoolId)
-		m["user_pool_id"] = aws.StringValue(c.UserPoolId)
-		m["role_arn"] = aws.StringValue(c.RoleArn)
+		m[names.AttrUserPoolID] = aws.StringValue(c.UserPoolId)
+		m[names.AttrRoleARN] = aws.StringValue(c.RoleArn)
 	}
 
 	return []map[string]interface{}{m}
@@ -174,16 +175,16 @@ func flattenEBSOptions(o *elasticsearch.EBSOptions) []map[string]interface{} {
 
 	if aws.BoolValue(o.EBSEnabled) {
 		if o.Iops != nil {
-			m["iops"] = aws.Int64Value(o.Iops)
+			m[names.AttrIOPS] = aws.Int64Value(o.Iops)
 		}
 		if o.Throughput != nil {
-			m["throughput"] = aws.Int64Value(o.Throughput)
+			m[names.AttrThroughput] = aws.Int64Value(o.Throughput)
 		}
 		if o.VolumeSize != nil {
-			m["volume_size"] = aws.Int64Value(o.VolumeSize)
+			m[names.AttrVolumeSize] = aws.Int64Value(o.VolumeSize)
 		}
 		if o.VolumeType != nil {
-			m["volume_type"] = aws.StringValue(o.VolumeType)
+			m[names.AttrVolumeType] = aws.StringValue(o.VolumeType)
 		}
 	}
 
@@ -198,10 +199,10 @@ func flattenEncryptAtRestOptions(o *elasticsearch.EncryptionAtRestOptions) []map
 	m := map[string]interface{}{}
 
 	if o.Enabled != nil {
-		m["enabled"] = aws.BoolValue(o.Enabled)
+		m[names.AttrEnabled] = aws.BoolValue(o.Enabled)
 	}
 	if o.KmsKeyId != nil {
-		m["kms_key_id"] = aws.StringValue(o.KmsKeyId)
+		m[names.AttrKMSKeyID] = aws.StringValue(o.KmsKeyId)
 	}
 
 	return []map[string]interface{}{m}
@@ -227,16 +228,16 @@ func flattenVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) map[string]interface
 	m := map[string]interface{}{}
 
 	if o.AvailabilityZones != nil {
-		m["availability_zones"] = flex.FlattenStringSet(o.AvailabilityZones)
+		m[names.AttrAvailabilityZones] = flex.FlattenStringSet(o.AvailabilityZones)
 	}
 	if o.SecurityGroupIds != nil {
-		m["security_group_ids"] = flex.FlattenStringSet(o.SecurityGroupIds)
+		m[names.AttrSecurityGroupIDs] = flex.FlattenStringSet(o.SecurityGroupIds)
 	}
 	if o.SubnetIds != nil {
-		m["subnet_ids"] = flex.FlattenStringSet(o.SubnetIds)
+		m[names.AttrSubnetIDs] = flex.FlattenStringSet(o.SubnetIds)
 	}
 	if o.VPCId != nil {
-		m["vpc_id"] = aws.StringValue(o.VPCId)
+		m[names.AttrVPCID] = aws.StringValue(o.VPCId)
 	}
 
 	return m

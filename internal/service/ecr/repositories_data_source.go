@@ -8,11 +8,17 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	fwtypes "github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource(name="Repositories")
@@ -24,53 +30,72 @@ type repositoriesDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *repositoriesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_ecr_repositories"
+func (d *repositoriesDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_ecr_repositories"
 }
 
-func (d *repositoriesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *repositoriesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
-			"names": schema.SetAttribute{
-				ElementType: fwtypes.StringType,
+			names.AttrID: framework.IDAttribute(),
+			names.AttrNames: schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
 				Computed:    true,
 			},
 		},
 	}
 }
 func (d *repositoriesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	conn := d.Meta().ECRClient(ctx)
-
 	var data repositoriesDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var names []string
+	conn := d.Meta().ECRClient(ctx)
 
-	pages := ecr.NewDescribeRepositoriesPaginator(conn, &ecr.DescribeRepositoriesInput{})
-	for pages.HasMorePages() {
-		output, err := pages.NextPage(ctx)
+	output, err := findRepositories(ctx, conn, &ecr.DescribeRepositoriesInput{})
 
-		if err != nil {
-			resp.Diagnostics.AddError("reading ECR Repositories", err.Error())
-			return
-		}
+	if err != nil {
+		resp.Diagnostics.AddError("reading ECR Repositories", err.Error())
 
-		for _, v := range output.Repositories {
-			names = append(names, aws.ToString(v.RepositoryName))
-		}
+		return
 	}
 
-	data.ID = flex.StringValueToFramework(ctx, d.Meta().Region)
-	data.Names = flex.FlattenFrameworkStringValueSet(ctx, names)
+	data.ID = fwflex.StringValueToFramework(ctx, d.Meta().Region)
+	data.Names.SetValue = fwflex.FlattenFrameworkStringValueSet(ctx, tfslices.ApplyToAll(output, func(v awstypes.Repository) string {
+		return aws.ToString(v.RepositoryName)
+	}))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
+func findRepositories(ctx context.Context, conn *ecr.Client, input *ecr.DescribeRepositoriesInput) ([]awstypes.Repository, error) {
+	var output []awstypes.Repository
+
+	pages := ecr.NewDescribeRepositoriesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.RepositoryNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Repositories...)
+	}
+
+	return output, nil
+}
+
 type repositoriesDataSourceModel struct {
-	ID    fwtypes.String `tfsdk:"id"`
-	Names fwtypes.Set    `tfsdk:"names"`
+	ID    types.String                     `tfsdk:"id"`
+	Names fwtypes.SetValueOf[types.String] `tfsdk:"names"`
 }

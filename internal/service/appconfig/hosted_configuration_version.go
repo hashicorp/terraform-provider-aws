@@ -11,15 +11,17 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/appconfig"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appconfig_hosted_configuration_version")
@@ -33,13 +35,13 @@ func ResourceHostedConfigurationVersion() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,19 +51,19 @@ func ResourceHostedConfigurationVersion() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
-			"content": {
+			names.AttrContent: {
 				Type:      schema.TypeString,
 				Required:  true,
 				ForceNew:  true,
 				Sensitive: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -77,36 +79,36 @@ func ResourceHostedConfigurationVersion() *schema.Resource {
 
 func resourceHostedConfigurationVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	appID := d.Get("application_id").(string)
+	appID := d.Get(names.AttrApplicationID).(string)
 	profileID := d.Get("configuration_profile_id").(string)
 
 	input := &appconfig.CreateHostedConfigurationVersionInput{
 		ApplicationId:          aws.String(appID),
 		ConfigurationProfileId: aws.String(profileID),
-		Content:                []byte(d.Get("content").(string)),
-		ContentType:            aws.String(d.Get("content_type").(string)),
+		Content:                []byte(d.Get(names.AttrContent).(string)),
+		ContentType:            aws.String(d.Get(names.AttrContentType).(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateHostedConfigurationVersionWithContext(ctx, input)
+	output, err := conn.CreateHostedConfigurationVersion(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating AppConfig HostedConfigurationVersion for Application (%s): %s", appID, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s/%d", aws.StringValue(output.ApplicationId), aws.StringValue(output.ConfigurationProfileId), aws.Int64Value(output.VersionNumber)))
+	d.SetId(fmt.Sprintf("%s/%s/%d", aws.ToString(output.ApplicationId), aws.ToString(output.ConfigurationProfileId), output.VersionNumber))
 
 	return append(diags, resourceHostedConfigurationVersionRead(ctx, d, meta)...)
 }
 
 func resourceHostedConfigurationVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	appID, confProfID, versionNumber, err := HostedConfigurationVersionParseID(d.Id())
 
@@ -117,12 +119,12 @@ func resourceHostedConfigurationVersionRead(ctx context.Context, d *schema.Resou
 	input := &appconfig.GetHostedConfigurationVersionInput{
 		ApplicationId:          aws.String(appID),
 		ConfigurationProfileId: aws.String(confProfID),
-		VersionNumber:          aws.Int64(int64(versionNumber)),
+		VersionNumber:          aws.Int32(versionNumber),
 	}
 
-	output, err := conn.GetHostedConfigurationVersionWithContext(ctx, input)
+	output, err := conn.GetHostedConfigurationVersion(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Appconfig Hosted Configuration Version (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -136,11 +138,11 @@ func resourceHostedConfigurationVersionRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "reading AppConfig Hosted Configuration Version (%s): empty response", d.Id())
 	}
 
-	d.Set("application_id", output.ApplicationId)
+	d.Set(names.AttrApplicationID, output.ApplicationId)
 	d.Set("configuration_profile_id", output.ConfigurationProfileId)
-	d.Set("content", string(output.Content))
-	d.Set("content_type", output.ContentType)
-	d.Set("description", output.Description)
+	d.Set(names.AttrContent, string(output.Content))
+	d.Set(names.AttrContentType, output.ContentType)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("version_number", output.VersionNumber)
 
 	arn := arn.ARN{
@@ -151,14 +153,14 @@ func resourceHostedConfigurationVersionRead(ctx context.Context, d *schema.Resou
 		Service:   "appconfig",
 	}.String()
 
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	return diags
 }
 
 func resourceHostedConfigurationVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	appID, confProfID, versionNumber, err := HostedConfigurationVersionParseID(d.Id())
 	if err != nil {
@@ -166,13 +168,13 @@ func resourceHostedConfigurationVersionDelete(ctx context.Context, d *schema.Res
 	}
 
 	log.Printf("[INFO] Deleting AppConfig Hosted Configuration Version: %s", d.Id())
-	_, err = conn.DeleteHostedConfigurationVersionWithContext(ctx, &appconfig.DeleteHostedConfigurationVersionInput{
+	_, err = conn.DeleteHostedConfigurationVersion(ctx, &appconfig.DeleteHostedConfigurationVersionInput{
 		ApplicationId:          aws.String(appID),
 		ConfigurationProfileId: aws.String(confProfID),
-		VersionNumber:          aws.Int64(int64(versionNumber)),
+		VersionNumber:          aws.Int32(versionNumber),
 	})
 
-	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -183,17 +185,17 @@ func resourceHostedConfigurationVersionDelete(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func HostedConfigurationVersionParseID(id string) (string, string, int, error) {
+func HostedConfigurationVersionParseID(id string) (string, string, int32, error) {
 	parts := strings.Split(id, "/")
 
 	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
 		return "", "", 0, fmt.Errorf("unexpected format of ID (%q), expected ApplicationID/ConfigurationProfileID/VersionNumber", id)
 	}
 
-	version, err := strconv.Atoi(parts[2])
+	version, err := strconv.ParseInt(parts[2], 0, 32)
 	if err != nil {
 		return "", "", 0, fmt.Errorf("parsing Hosted Configuration Version version_number: %w", err)
 	}
 
-	return parts[0], parts[1], version, nil
+	return parts[0], parts[1], int32(version), nil
 }

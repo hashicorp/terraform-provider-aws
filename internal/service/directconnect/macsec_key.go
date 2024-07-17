@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dx_macsec_key_association")
@@ -48,7 +49,7 @@ func ResourceMacSecKeyAssociation() *schema.Resource {
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
 				ForceNew:     true,
 			},
-			"connection_id": {
+			names.AttrConnectionID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -64,7 +65,7 @@ func ResourceMacSecKeyAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -77,7 +78,7 @@ func resourceMacSecKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	input := &directconnect.AssociateMacSecKeyInput{
-		ConnectionId: aws.String(d.Get("connection_id").(string)),
+		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
 	}
 
 	if d.Get("ckn").(string) != "" {
@@ -127,10 +128,10 @@ func resourceMacSecKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 	for _, key := range connection.MacSecKeys {
 		if aws.StringValue(key.SecretARN) == aws.StringValue(&secretArn) {
 			d.Set("ckn", key.Ckn)
-			d.Set("connection_id", connId)
+			d.Set(names.AttrConnectionID, connId)
 			d.Set("secret_arn", key.SecretARN)
 			d.Set("start_on", key.StartOn)
-			d.Set("state", key.State)
+			d.Set(names.AttrState, key.State)
 		}
 	}
 
@@ -142,7 +143,7 @@ func resourceMacSecKeyDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	input := &directconnect.DisassociateMacSecKeyInput{
-		ConnectionId: aws.String(d.Get("connection_id").(string)),
+		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
 		SecretARN:    aws.String(d.Get("secret_arn").(string)),
 	}
 

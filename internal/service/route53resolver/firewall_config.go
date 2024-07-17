@@ -14,7 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_resolver_firewall_config")
@@ -36,11 +38,11 @@ func ResourceFirewallConfig() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(route53resolver.FirewallFailOpenStatus_Values(), false),
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,10 +52,11 @@ func ResourceFirewallConfig() *schema.Resource {
 }
 
 func resourceFirewallConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	input := &route53resolver.UpdateFirewallConfigInput{
-		ResourceId: aws.String(d.Get("resource_id").(string)),
+		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
 	}
 
 	if v, ok := d.GetOk("firewall_fail_open"); ok {
@@ -63,15 +66,16 @@ func resourceFirewallConfigCreate(ctx context.Context, d *schema.ResourceData, m
 	output, err := conn.UpdateFirewallConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Route53 Resolver Firewall Config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Resolver Firewall Config: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.FirewallConfig.Id))
 
-	return resourceFirewallConfigRead(ctx, d, meta)
+	return append(diags, resourceFirewallConfigRead(ctx, d, meta)...)
 }
 
 func resourceFirewallConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	firewallConfig, err := FindFirewallConfigByID(ctx, conn, d.Id())
@@ -79,25 +83,26 @@ func resourceFirewallConfigRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Firewall Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Firewall Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Firewall Config (%s): %s", d.Id(), err)
 	}
 
 	d.Set("firewall_fail_open", firewallConfig.FirewallFailOpen)
-	d.Set("owner_id", firewallConfig.OwnerId)
-	d.Set("resource_id", firewallConfig.ResourceId)
+	d.Set(names.AttrOwnerID, firewallConfig.OwnerId)
+	d.Set(names.AttrResourceID, firewallConfig.ResourceId)
 
-	return nil
+	return diags
 }
 
 func resourceFirewallConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	input := &route53resolver.UpdateFirewallConfigInput{
-		ResourceId: aws.String(d.Get("resource_id").(string)),
+		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
 	}
 
 	if v, ok := d.GetOk("firewall_fail_open"); ok {
@@ -107,26 +112,27 @@ func resourceFirewallConfigUpdate(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.UpdateFirewallConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating Route53 Resolver Firewall Config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating Route53 Resolver Firewall Config: %s", err)
 	}
 
-	return resourceFirewallConfigRead(ctx, d, meta)
+	return append(diags, resourceFirewallConfigRead(ctx, d, meta)...)
 }
 
 func resourceFirewallConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Config: %s", d.Id())
 	_, err := conn.UpdateFirewallConfigWithContext(ctx, &route53resolver.UpdateFirewallConfigInput{
-		ResourceId:       aws.String(d.Get("resource_id").(string)),
+		ResourceId:       aws.String(d.Get(names.AttrResourceID).(string)),
 		FirewallFailOpen: aws.String(route53resolver.FirewallFailOpenStatusDisabled),
 	})
 
 	if err != nil {
-		return diag.Errorf("deleting Route53 Resolver Firewall Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 Resolver Firewall Config (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindFirewallConfigByID(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.FirewallConfig, error) {

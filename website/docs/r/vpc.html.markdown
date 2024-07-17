@@ -89,6 +89,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of VPC
 * `id` - The ID of the VPC
 * `instance_tenancy` - Tenancy of instances spin up within VPC
+* `dhcp_options_id` - DHCP options id of the desired VPC.
 * `enable_dns_support` - Whether or not the VPC has DNS support
 * `enable_network_address_usage_metrics` - Whether Network Address Usage metrics are enabled for the VPC
 * `enable_dns_hostnames` - Whether or not the VPC has DNS hostname support

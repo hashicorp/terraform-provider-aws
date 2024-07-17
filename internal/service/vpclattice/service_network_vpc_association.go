@@ -47,7 +47,7 @@ func resourceServiceNetworkVPCAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +55,7 @@ func resourceServiceNetworkVPCAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeList,
 				MaxItems: 5,
 				Optional: true,
@@ -67,7 +67,7 @@ func resourceServiceNetworkVPCAssociation() *schema.Resource {
 				ForceNew:         true,
 				DiffSuppressFunc: suppressEquivalentIDOrARN,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,6 +89,7 @@ const (
 )
 
 func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	in := &vpclattice.CreateServiceNetworkVpcAssociationInput{
@@ -98,29 +99,30 @@ func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.R
 		Tags:                     getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
 		in.SecurityGroupIds = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	out, err := conn.CreateServiceNetworkVpcAssociation(ctx, in)
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameServiceNetworkVPCAssociation, "", err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionCreating, ResNameServiceNetworkVPCAssociation, "", err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameServiceNetworkVPCAssociation, "", errors.New("empty output"))
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionCreating, ResNameServiceNetworkVPCAssociation, "", errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Id))
 
 	if _, err := waitServiceNetworkVPCAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameServiceNetworkVPCAssociation, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionWaitingForCreation, ResNameServiceNetworkVPCAssociation, d.Id(), err)
 	}
 
-	return resourceServiceNetworkVPCAssociationRead(ctx, d, meta)
+	return append(diags, resourceServiceNetworkVPCAssociationRead(ctx, d, meta)...)
 }
 
 func resourceServiceNetworkVPCAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	out, err := findServiceNetworkVPCAssociationByID(ctx, conn, d.Id())
@@ -128,45 +130,47 @@ func resourceServiceNetworkVPCAssociationRead(ctx context.Context, d *schema.Res
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPCLattice Service Network VPC Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameServiceNetworkVPCAssociation, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, ResNameServiceNetworkVPCAssociation, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("created_by", out.CreatedBy)
 	d.Set("vpc_identifier", out.VpcId)
 	d.Set("service_network_identifier", out.ServiceNetworkId)
-	d.Set("security_group_ids", out.SecurityGroupIds)
-	d.Set("status", out.Status)
+	d.Set(names.AttrSecurityGroupIDs, out.SecurityGroupIds)
+	d.Set(names.AttrStatus, out.Status)
 
-	return nil
+	return diags
 }
 
 func resourceServiceNetworkVPCAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &vpclattice.UpdateServiceNetworkVpcAssociationInput{
 			ServiceNetworkVpcAssociationIdentifier: aws.String(d.Id()),
 		}
 
-		if d.HasChange("security_group_ids") {
-			in.SecurityGroupIds = flex.ExpandStringValueList(d.Get("security_group_ids").([]interface{}))
+		if d.HasChange(names.AttrSecurityGroupIDs) {
+			in.SecurityGroupIds = flex.ExpandStringValueList(d.Get(names.AttrSecurityGroupIDs).([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating VPCLattice ServiceNetwork VPC Association (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateServiceNetworkVpcAssociation(ctx, in)
 		if err != nil {
-			return create.DiagError(names.VPCLattice, create.ErrActionUpdating, ResNameServiceNetworkVPCAssociation, d.Id(), err)
+			return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionUpdating, ResNameServiceNetworkVPCAssociation, d.Id(), err)
 		}
 	}
 
-	return resourceServiceNetworkVPCAssociationRead(ctx, d, meta)
+	return append(diags, resourceServiceNetworkVPCAssociationRead(ctx, d, meta)...)
 }
 
 func resourceServiceNetworkVPCAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPCLattice Service Network VPC Association %s", d.Id())
@@ -176,18 +180,18 @@ func resourceServiceNetworkVPCAssociationDelete(ctx context.Context, d *schema.R
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameServiceNetworkVPCAssociation, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionDeleting, ResNameServiceNetworkVPCAssociation, d.Id(), err)
 	}
 
 	if _, err := waitServiceNetworkVPCAssociationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameServiceNetworkVPCAssociation, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameServiceNetworkVPCAssociation, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findServiceNetworkVPCAssociationByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetServiceNetworkVpcAssociationOutput, error) {

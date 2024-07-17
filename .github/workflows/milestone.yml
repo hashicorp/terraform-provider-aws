@@ -13,7 +13,7 @@ jobs:
     name: 'Post-Release Comment'
     runs-on: ubuntu-latest
     steps:
-      - uses: bflad/action-milestone-comment@ae6c9fdf5778064d4e09b4632604a16b7289096c # v1.0.2
+      - uses: bflad/action-milestone-comment@4618cbf8bf938d31af1c576beeaaa77f486f5af3 # v2.0.0
         with:
           body: |
             This functionality has been released in [${{ github.event.milestone.title }} of the Terraform AWS Provider](https://github.com/${{ github.repository }}/blob/${{ github.event.milestone.title }}/CHANGELOG.md).  Please see the [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#provider-versions) or reach out if you need any assistance upgrading.
@@ -27,7 +27,7 @@ jobs:
       MILESTONE: ${{ github.event.milestone.number }}
     steps:
       - name: 'Checkout Repo'
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: 'Remove Prioritized Label'
         env:

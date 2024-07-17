@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_elastic_beanstalk_configuration_template")
@@ -33,7 +34,7 @@ func ResourceConfigurationTemplate() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -42,7 +43,7 @@ func ResourceConfigurationTemplate() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -67,14 +68,14 @@ func resourceConfigurationTemplateCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &elasticbeanstalk.CreateConfigurationTemplateInput{
 		ApplicationName: aws.String(d.Get("application").(string)),
 		OptionSettings:  gatherOptionSettings(d),
 		TemplateName:    aws.String(name),
 	}
 
-	if attr, ok := d.GetOk("description"); ok {
+	if attr, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(attr.(string))
 	}
 
@@ -114,8 +115,8 @@ func resourceConfigurationTemplateRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("application", settings.ApplicationName)
-	d.Set("description", settings.Description)
-	d.Set("name", settings.TemplateName)
+	d.Set(names.AttrDescription, settings.Description)
+	d.Set(names.AttrName, settings.TemplateName)
 	d.Set("solution_stack_name", settings.SolutionStackName)
 
 	return diags
@@ -125,10 +126,10 @@ func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		input := &elasticbeanstalk.UpdateConfigurationTemplateInput{
 			ApplicationName: aws.String(d.Get("application").(string)),
-			Description:     aws.String(d.Get("description").(string)),
+			Description:     aws.String(d.Get(names.AttrDescription).(string)),
 			TemplateName:    aws.String(d.Id()),
 		}
 

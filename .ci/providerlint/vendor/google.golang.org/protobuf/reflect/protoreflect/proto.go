@@ -161,7 +161,7 @@ const (
 // IsValid reports whether the syntax is valid.
 func (s Syntax) IsValid() bool {
 	switch s {
-	case Proto2, Proto3:
+	case Proto2, Proto3, Editions:
 		return true
 	default:
 		return false
@@ -175,6 +175,8 @@ func (s Syntax) String() string {
 		return "proto2"
 	case Proto3:
 		return "proto3"
+	case Editions:
+		return "editions"
 	default:
 		return fmt.Sprintf("<unknown:%d>", s)
 	}

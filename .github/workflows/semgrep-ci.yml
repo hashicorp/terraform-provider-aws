@@ -11,33 +11,65 @@ on:
       - .semgrep*yml
       - .github/workflows/semgrep-ci.yml
 
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
 env:
   SEMGREP_SEND_METRICS: "off"
   SEMGREP_ENABLE_VERSION_CHECK: false
-  COMMON_PARAMS: --error --quiet
+  SEMGREP_TIMEOUT: 300
+  SEMGREP_ARGS: --error --quiet
 
 jobs:
-  semgrep:
-    name: Code Quality Scan
+  semgrep-validate:
+    name: Validate Code Quality Rules
     runs-on: ubuntu-latest
     container:
       image: "returntocorp/semgrep:1.52.0"
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - run: |
           semgrep --validate \
-            --config .ci/.semgrep.yml \
-            --config .ci/semgrep/
+          --config .ci/.semgrep.yml \
+          --config .ci/.semgrep-constants.yml \
+          --config .ci/.semgrep-test-constants.yml \
+          --config .ci/semgrep/
+
+  semgrep-test:
+    name: Semgrep Rule Tests
+    needs: [semgrep-validate]
+    runs-on: ubuntu-latest
+    container:
+      image: "returntocorp/semgrep:1.52.0"
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - run: |
-          semgrep $COMMON_PARAMS \
-            --config .ci/.semgrep.yml \
-            --config .ci/semgrep/ \
-            --config 'r/dgryski.semgrep-go.badnilguard' \
-            --config 'r/dgryski.semgrep-go.errnilcheck' \
-            --config 'r/dgryski.semgrep-go.marshaljson' \
-            --config 'r/dgryski.semgrep-go.nilerr' \
-            --config 'r/dgryski.semgrep-go.oddifsequence' \
-            --config 'r/dgryski.semgrep-go.oserrors'
+          semgrep --quiet --test .ci/semgrep/
+
+  semgrep:
+    name: Code Quality Scan
+    needs: [semgrep-test]
+    runs-on: ubuntu-latest
+    container:
+      image: "returntocorp/semgrep:1.52.0"
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - run: |
+          semgrep $SEMGREP_ARGS \
+          --exclude .ci/semgrep/**/*.go \
+          --config .ci/.semgrep.yml \
+          --config .ci/.semgrep-constants.yml \
+          --config .ci/.semgrep-test-constants.yml \
+          --config .ci/semgrep/ \
+          --config 'r/dgryski.semgrep-go.badnilguard' \
+          --config 'r/dgryski.semgrep-go.errnilcheck' \
+          --config 'r/dgryski.semgrep-go.marshaljson' \
+          --config 'r/dgryski.semgrep-go.nilerr' \
+          --config 'r/dgryski.semgrep-go.oddifsequence' \
+          --config 'r/dgryski.semgrep-go.oserrors'
 
   naming_cae:
     name: Naming Scan Caps/AWS/EC2
@@ -46,9 +78,9 @@ jobs:
       image: "returntocorp/semgrep:1.52.0"
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - run: semgrep --validate --config .ci/.semgrep-caps-aws-ec2.yml
-      - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-caps-aws-ec2.yml
+      - run: semgrep $SEMGREP_ARGS --config .ci/.semgrep-caps-aws-ec2.yml
 
   naming_tests:
     name: Test Configs Scan
@@ -57,9 +89,9 @@ jobs:
       image: "returntocorp/semgrep:1.52.0"
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - run: semgrep --validate --config .ci/.semgrep-configs.yml
-      - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-configs.yml
+      - run: semgrep $SEMGREP_ARGS --config .ci/.semgrep-configs.yml
 
   naming_semgrep0:
     name: Service Name Scan A-C
@@ -68,9 +100,9 @@ jobs:
       image: "returntocorp/semgrep:1.52.0"
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - run: semgrep --validate --config .ci/.semgrep-service-name0.yml
-      - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-service-name0.yml
+      - run: semgrep $SEMGREP_ARGS --config .ci/.semgrep-service-name0.yml
 
   naming_semgrep1:
     name: Service Name Scan C-I
@@ -79,9 +111,9 @@ jobs:
       image: "returntocorp/semgrep:1.52.0"
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - run: semgrep --validate --config .ci/.semgrep-service-name1.yml
-      - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-service-name1.yml
+      - run: semgrep $SEMGREP_ARGS --config .ci/.semgrep-service-name1.yml
 
   naming_semgrep2:
     name: Service Name Scan I-Q
@@ -90,9 +122,9 @@ jobs:
       image: "returntocorp/semgrep:1.52.0"
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - run: semgrep --validate --config .ci/.semgrep-service-name2.yml
-      - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-service-name2.yml
+      - run: semgrep $SEMGREP_ARGS --config .ci/.semgrep-service-name2.yml
 
   naming_semgrep3:
     name: Service Name Scan Q-Z
@@ -101,6 +133,6 @@ jobs:
       image: "returntocorp/semgrep:1.52.0"
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - run: semgrep --validate --config .ci/.semgrep-service-name3.yml
-      - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-service-name3.yml
+      - run: semgrep $SEMGREP_ARGS --config .ci/.semgrep-service-name3.yml

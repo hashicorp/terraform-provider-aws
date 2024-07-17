@@ -5,34 +5,35 @@ package cognitoidp
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_cognito_user_pools")
-func DataSourceUserPools() *schema.Resource {
+// @SDKDataSource("aws_cognito_user_pools", name="User Pools")
+func dataSourceUserPools() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserPoolsRead,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -42,29 +43,25 @@ func DataSourceUserPools() *schema.Resource {
 
 func dataSourceUserPoolsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
-	output, err := findUserPoolDescriptionTypes(ctx, conn)
+	name := d.Get(names.AttrName).(string)
+	output, err := findUserPoolDescriptionTypesByName(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pools: %s", err)
 	}
 
-	name := d.Get("name").(string)
 	var arns, userPoolIDs []string
 
 	for _, v := range output {
-		if name != aws.StringValue(v.Name) {
-			continue
-		}
-
-		userPoolID := aws.StringValue(v.Id)
+		userPoolID := aws.ToString(v.Id)
 		arn := arn.ARN{
 			Partition: meta.(*conns.AWSClient).Partition,
-			Service:   cognitoidentityprovider.ServiceName,
+			Service:   "cognito-idp",
 			Region:    meta.(*conns.AWSClient).Region,
 			AccountID: meta.(*conns.AWSClient).AccountID,
-			Resource:  fmt.Sprintf("userpool/%s", userPoolID),
+			Resource:  "userpool/" + userPoolID,
 		}.String()
 
 		userPoolIDs = append(userPoolIDs, userPoolID)
@@ -72,34 +69,31 @@ func dataSourceUserPoolsRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.SetId(name)
-	d.Set("ids", userPoolIDs)
-	d.Set("arns", arns)
+	d.Set(names.AttrIDs, userPoolIDs)
+	d.Set(names.AttrARNs, arns)
 
 	return diags
 }
 
-func findUserPoolDescriptionTypes(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider) ([]*cognitoidentityprovider.UserPoolDescriptionType, error) {
+func findUserPoolDescriptionTypesByName(ctx context.Context, conn *cognitoidentityprovider.Client, name string) ([]awstypes.UserPoolDescriptionType, error) {
 	input := &cognitoidentityprovider.ListUserPoolsInput{
-		MaxResults: aws.Int64(60),
+		MaxResults: aws.Int32(60),
 	}
-	var output []*cognitoidentityprovider.UserPoolDescriptionType
+	var output []awstypes.UserPoolDescriptionType
 
-	err := conn.ListUserPoolsPagesWithContext(ctx, input, func(page *cognitoidentityprovider.ListUserPoolsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := cognitoidentityprovider.NewListUserPoolsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
 		for _, v := range page.UserPools {
-			if v != nil {
+			if aws.ToString(v.Name) == name {
 				output = append(output, v)
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
 	}
 
 	return output, nil

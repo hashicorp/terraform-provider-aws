@@ -23,8 +23,8 @@ func TestAccNetworkManagerTransitGatewayConnectPeerAssociation_serial(t *testing
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":                  testAccTransitGatewayConnectPeerAssociation_basic,
-		"disappears":             testAccTransitGatewayConnectPeerAssociation_disappears,
+		acctest.CtBasic:          testAccTransitGatewayConnectPeerAssociation_basic,
+		acctest.CtDisappears:     testAccTransitGatewayConnectPeerAssociation_disappears,
 		"disappears_ConnectPeer": testAccTransitGatewayConnectPeerAssociation_Disappears_connectPeer,
 	}
 

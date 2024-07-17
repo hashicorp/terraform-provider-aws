@@ -34,15 +34,15 @@ func testAccDomain_basic(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codeartifact", fmt.Sprintf("domain/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "domain", rName),
-					resource.TestCheckResourceAttr(resourceName, "asset_size_bytes", "0"),
-					resource.TestCheckResourceAttr(resourceName, "repository_count", "0"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codeartifact", fmt.Sprintf("domain/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
+					resource.TestCheckResourceAttr(resourceName, "asset_size_bytes", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "repository_count", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "s3_bucket_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_key", "aws_kms_key.test", "arn"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_key", "aws_kms_key.test", names.AttrARN),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -69,14 +69,14 @@ func testAccDomain_defaultEncryptionKey(t *testing.T) {
 				Config: testAccDomainConfig_defaultEncryptionKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codeartifact", fmt.Sprintf("domain/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codeartifact", fmt.Sprintf("domain/%s", rName)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "encryption_key", "kms", regexache.MustCompile(`key/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "domain", rName),
-					resource.TestCheckResourceAttr(resourceName, "asset_size_bytes", "0"),
-					resource.TestCheckResourceAttr(resourceName, "repository_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
+					resource.TestCheckResourceAttr(resourceName, "asset_size_bytes", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "repository_count", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "s3_bucket_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
 				),
 			},
 			{
@@ -100,11 +100,11 @@ func testAccDomain_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDomainConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -113,20 +113,20 @@ func testAccDomain_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDomainConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDomainConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDomainConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2")),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2)),
 			},
 		},
 	})
@@ -175,8 +175,8 @@ func testAccDomain_MigrateAssetSizeBytesToString(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "domain", rName),
-					resource.TestCheckResourceAttr(resourceName, "asset_size_bytes", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
+					resource.TestCheckResourceAttr(resourceName, "asset_size_bytes", acctest.Ct0),
 				),
 			},
 			{
@@ -197,7 +197,7 @@ func testAccCheckDomainExists(ctx context.Context, n string) resource.TestCheckF
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactClient(ctx)
 
-		_, err := tfcodeartifact.FindDomainByTwoPartKey(ctx, conn, rs.Primary.Attributes["owner"], rs.Primary.Attributes["domain"])
+		_, err := tfcodeartifact.FindDomainByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrOwner], rs.Primary.Attributes[names.AttrDomain])
 
 		return err
 	}
@@ -212,7 +212,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactClient(ctx)
 
-			_, err := tfcodeartifact.FindDomainByTwoPartKey(ctx, conn, rs.Primary.Attributes["owner"], rs.Primary.Attributes["domain"])
+			_, err := tfcodeartifact.FindDomainByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrOwner], rs.Primary.Attributes[names.AttrDomain])
 
 			if tfresource.NotFound(err) {
 				continue
