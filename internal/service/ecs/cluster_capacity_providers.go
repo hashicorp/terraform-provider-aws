@@ -6,6 +6,7 @@ package ecs
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
@@ -21,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ecs_cluster_capacity_providers")
-func ResourceClusterCapacityProviders() *schema.Resource {
+// @SDKResource("aws_ecs_cluster_capacity_providers", name="Cluster Capacity Providers")
+func resourceClusterCapacityProviders() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCapacityProvidersPut,
 		ReadWithoutTimeout:   resourceClusterCapacityProvidersRead,
@@ -109,14 +110,13 @@ func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.Resource
 
 func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 	partition := meta.(*conns.AWSClient).Partition
 
 	cluster, err := FindClusterByNameOrARN(ctx, conn, partition, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		sdkdiag.AppendErrorf(diags, "[WARN] ECS Cluster (%s) not found, removing from state", d.Id())
+		sdkdiag.AppendErrorf(diags, "[WARN] ECS Cluster Capacity Providers (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -138,7 +138,6 @@ func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.Resourc
 
 func resourceClusterCapacityProvidersDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
 	input := &ecs.PutClusterCapacityProvidersInput{
@@ -166,7 +165,10 @@ func resourceClusterCapacityProvidersDelete(ctx context.Context, d *schema.Resou
 }
 
 func retryClusterCapacityProvidersPut(ctx context.Context, conn *ecs.Client, input *ecs.PutClusterCapacityProvidersInput) error {
-	_, err := tfresource.RetryWhen(ctx, clusterUpdateTimeout,
+	const (
+		timeout = 10 * time.Minute
+	)
+	_, err := tfresource.RetryWhen(ctx, timeout,
 		func() (interface{}, error) {
 			return conn.PutClusterCapacityProviders(ctx, input)
 		},

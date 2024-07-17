@@ -24,7 +24,6 @@ const (
 	clusterAvailableTimeout = 10 * time.Minute
 	clusterDeleteTimeout    = 10 * time.Minute
 	clusterReadTimeout      = 2 * time.Second
-	clusterUpdateTimeout    = 10 * time.Minute
 
 	taskSetCreateTimeout = 10 * time.Minute
 	taskSetDeleteTimeout = 10 * time.Minute

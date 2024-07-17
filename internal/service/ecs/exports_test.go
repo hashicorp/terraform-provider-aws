@@ -5,9 +5,10 @@ package ecs
 
 // Exports for use in tests only.
 var (
-	ResourceAccountSettingDefault = resourceAccountSettingDefault
-	ResourceCapacityProvider      = resourceCapacityProvider
-	ResourceTag                   = resourceTag
+	ResourceAccountSettingDefault    = resourceAccountSettingDefault
+	ResourceCapacityProvider         = resourceCapacityProvider
+	ResourceClusterCapacityProviders = resourceClusterCapacityProviders
+	ResourceTag                      = resourceTag
 
 	FindCapacityProviderByARN               = findCapacityProviderByARN
 	FindEffectiveAccountSettingByName       = findEffectiveAccountSettingByName

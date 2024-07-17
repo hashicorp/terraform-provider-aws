@@ -5,7 +5,7 @@ package ecs
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"log"
 	"time"
 
@@ -260,7 +260,7 @@ func resourceCapacityProviderImport(ctx context.Context, d *schema.ResourceData,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Service:   "ecs",
-		Resource:  fmt.Sprintf("capacity-provider/%s", d.Id()),
+		Resource:  "capacity-provider/" + d.Id(),
 	}.String())
 
 	return []*schema.ResourceData{d}, nil
@@ -297,13 +297,6 @@ func findCapacityProviders(ctx context.Context, conn *ecs.Client, input *ecs.Des
 		return nil, err
 	}
 
-	// Some partitions (i.e., ISO) may not support tagging, giving error.
-	if input.Include != nil && errs.IsUnsupportedOperationInPartitionError(partitionFromConn(conn), err) {
-		input.Include = nil
-
-		return findCapacityProviders(ctx, conn, input)
-	}
-
 	return output, nil
 }
 
@@ -314,6 +307,13 @@ func findCapacityProviderByARN(ctx context.Context, conn *ecs.Client, arn string
 	}
 
 	output, err := findCapacityProvider(ctx, conn, input)
+
+	// Some partitions (i.e., ISO) may not support tagging, giving error.
+	if errs.IsUnsupportedOperationInPartitionError(partitionFromConn(conn), err) {
+		input.Include = nil
+
+		output, err = findCapacityProvider(ctx, conn, input)
+	}
 
 	if err != nil {
 		return nil, err
@@ -371,8 +371,10 @@ func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.Client, arn stri
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*awstypes.CapacityProvider); ok {
-		return v, err
+	if output, ok := outputRaw.(*awstypes.CapacityProvider); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.UpdateStatusReason)))
+
+		return output, err
 	}
 
 	return nil, err
@@ -388,8 +390,8 @@ func waitCapacityProviderDeleted(ctx context.Context, conn *ecs.Client, arn stri
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*awstypes.CapacityProvider); ok {
-		return v, err
+	if output, ok := outputRaw.(*awstypes.CapacityProvider); ok {
+		return output, err
 	}
 
 	return nil, err

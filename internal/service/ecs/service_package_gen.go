@@ -73,8 +73,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceClusterCapacityProviders,
+			Factory:  resourceClusterCapacityProviders,
 			TypeName: "aws_ecs_cluster_capacity_providers",
+			Name:     "Cluster Capacity Providers",
 		},
 		{
 			Factory:  ResourceService,
