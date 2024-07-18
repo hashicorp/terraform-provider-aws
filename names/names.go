@@ -78,6 +78,7 @@ const (
 	EvidentlyEndpointID                  = "evidently"
 	FMSEndpointID                        = "fms"
 	GrafanaEndpointID                    = "grafana"
+	IVSEndpointID                        = "ivs"
 	IVSChatEndpointID                    = "ivschat"
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
