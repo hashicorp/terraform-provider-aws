@@ -789,6 +789,7 @@ The `managed_rule_group_configs` block support the following arguments:
 
 ### `aws_managed_rules_bot_control_rule_set` Block
 
+* `enable_machine_learning` - (Optional) Applies only to the targeted inspection level. Determines whether to use machine learning (ML) to analyze your web traffic for bot-related activity. Defaults to `true`.
 * `inspection_level` - (Optional) The inspection level to use for the Bot Control rule group.
 
 ### `aws_managed_rules_acfp_rule_set` Block
@@ -946,7 +947,7 @@ Inspect a single header. Provide the name of the header to inspect, for example,
 
 The `single_header` block supports the following arguments:
 
-* `name` - (Optional) Name of the query header to inspect. This setting must be provided as lower case characters.
+* `name` - (Required) Name of the query header to inspect. This setting must be provided as lower case characters.
 
 ### `single_query_argument` Block
 
@@ -954,7 +955,7 @@ Inspect a single query argument. Provide the name of the query argument to inspe
 
 The `single_query_argument` block supports the following arguments:
 
-* `name` - (Optional) Name of the query header to inspect. This setting must be provided as lower case characters.
+* `name` - (Required) Name of the query header to inspect. This setting must be provided as lower case characters.
 
 ### `body` Block
 

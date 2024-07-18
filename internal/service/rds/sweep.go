@@ -238,7 +238,7 @@ func sweepClusters(region string) error {
 			d.Set(names.AttrDeletionProtection, false)
 			d.Set("skip_final_snapshot", true)
 
-			if engineMode := aws.StringValue(v.EngineMode); engineMode == EngineModeGlobal || engineMode == EngineModeProvisioned {
+			if engineMode := aws.StringValue(v.EngineMode); engineMode == engineModeGlobal || engineMode == engineModeProvisioned {
 				globalCluster, err := FindGlobalClusterByDBClusterARN(ctx, conn, arn)
 				if err != nil {
 					if !tfresource.NotFound(err) {

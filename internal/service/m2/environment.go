@@ -279,34 +279,17 @@ func (r *environmentResource) Create(ctx context.Context, request resource.Creat
 	conn := r.Meta().M2Client(ctx)
 
 	name := data.Name.ValueString()
-	input := &m2.CreateEnvironmentInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := m2.CreateEnvironmentInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
-	}
-
-	// AutoFlEx doesn't yet handle union types.
-	if !data.StorageConfigurations.IsNull() {
-		storageConfigurationsData, diags := data.StorageConfigurations.ToSlice(ctx)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		storageConfigurations, diags := expandStorageConfigurations(ctx, storageConfigurationsData)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		input.StorageConfigurations = storageConfigurations
 	}
 
 	// Additional fields.
 	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateEnvironment(ctx, input)
+	output, err := conn.CreateEnvironment(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating Mainframe Modernization Environment (%s)", name), err.Error())
@@ -626,6 +609,42 @@ type storageConfigurationModel struct {
 	FSX fwtypes.ListNestedObjectValueOf[fsxStorageConfigurationModel] `tfsdk:"fsx"`
 }
 
+func (m storageConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.EFS.IsNull():
+		efsStorageConfigurationData, d := m.EFS.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.StorageConfigurationMemberEfs
+		diags.Append(fwflex.Expand(ctx, efsStorageConfigurationData, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+
+	case !m.FSX.IsNull():
+		fsxStorageConfigurationData, d := m.FSX.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.StorageConfigurationMemberFsx
+		diags.Append(fwflex.Expand(ctx, fsxStorageConfigurationData, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
 type efsStorageConfigurationModel struct {
 	FileSystemID types.String `tfsdk:"file_system_id"`
 	MountPoint   types.String `tfsdk:"mount_point"`
@@ -638,46 +657,6 @@ type fsxStorageConfigurationModel struct {
 
 type highAvailabilityConfigModel struct {
 	DesiredCapacity types.Int64 `tfsdk:"desired_capacity"`
-}
-
-func expandStorageConfigurations(ctx context.Context, storageConfigurationsData []*storageConfigurationModel) ([]awstypes.StorageConfiguration, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	apiObjects := []awstypes.StorageConfiguration{}
-
-	for _, item := range storageConfigurationsData {
-		if !item.EFS.IsNull() {
-			efsStorageConfigurationData, d := item.EFS.ToPtr(ctx)
-			diags.Append(d...)
-			if diags.HasError() {
-				return nil, diags
-			}
-
-			apiObject := &awstypes.StorageConfigurationMemberEfs{}
-			diags.Append(fwflex.Expand(ctx, efsStorageConfigurationData, &apiObject.Value)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-
-			apiObjects = append(apiObjects, apiObject)
-		}
-		if !item.FSX.IsNull() {
-			fsxStorageConfigurationData, d := item.FSX.ToPtr(ctx)
-			diags.Append(d...)
-			if diags.HasError() {
-				return nil, diags
-			}
-
-			apiObject := &awstypes.StorageConfigurationMemberFsx{}
-			diags.Append(fwflex.Expand(ctx, fsxStorageConfigurationData, &apiObject.Value)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-
-			apiObjects = append(apiObjects, apiObject)
-		}
-	}
-
-	return apiObjects, diags
 }
 
 func flattenStorageConfigurations(ctx context.Context, apiObjects []awstypes.StorageConfiguration) ([]*storageConfigurationModel, diag.Diagnostics) {

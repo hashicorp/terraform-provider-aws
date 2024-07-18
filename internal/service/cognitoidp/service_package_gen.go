@@ -24,6 +24,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory: newUserGroupsDataSource,
 			Name:    "User Groups",
 		},
+		{
+			Factory: newUserPoolDataSource,
+			Name:    "User Pool",
+		},
 	}
 }
 

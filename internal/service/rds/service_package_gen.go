@@ -200,6 +200,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  resourceCertificate,
+			TypeName: "aws_rds_certificate",
+			Name:     "Default Certificate",
+		},
+		{
 			Factory:  ResourceCluster,
 			TypeName: "aws_rds_cluster",
 			Name:     "Cluster",

@@ -95,6 +95,7 @@ The `cloudwatch_alarm` object takes the following arguments:
 
 The `cloudwatch_logs` object takes the following arguments:
 
+* `batch_mode` - (Optional) The payload that contains a JSON array of records will be sent to CloudWatch via a batch call.
 * `log_group_name` - (Required) The CloudWatch log group name.
 * `role_arn` - (Required) The IAM role ARN that allows access to the CloudWatch alarm.
 
