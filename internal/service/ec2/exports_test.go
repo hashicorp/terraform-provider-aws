@@ -244,10 +244,12 @@ var (
 	ManagedPrefixListEntryCreateResourceID                     = managedPrefixListEntryCreateResourceID
 	ManagedPrefixListEntryParseResourceID                      = managedPrefixListEntryParseResourceID
 	MatchRules                                                 = matchRules
+	NetworkACLRuleImportIDSeparator                            = networkACLRuleImportIDSeparator
 	NewAttributeFilterList                                     = newAttributeFilterList
 	NewCustomFilterList                                        = newCustomFilterList
 	NewTagFilterList                                           = newTagFilterList
 	ProtocolForValue                                           = protocolForValue
+	ProtocolStateFunc                                          = protocolStateFunc
 	SecurityGroupExpandRules                                   = securityGroupExpandRules
 	SecurityGroupCollapseRules                                 = securityGroupCollapseRules
 	SecurityGroupIPPermGather                                  = securityGroupIPPermGather

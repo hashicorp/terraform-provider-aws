@@ -285,7 +285,7 @@ func statusPlacementGroup(ctx context.Context, conn *ec2.Client, name string) re
 }
 
 const (
-	SecurityGroupStatusCreated = "Created"
+	securityGroupStatusCreated = "Created"
 )
 
 func statusSecurityGroup(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
@@ -300,7 +300,7 @@ func statusSecurityGroup(ctx context.Context, conn *ec2.Client, id string) retry
 			return nil, "", err
 		}
 
-		return output, SecurityGroupStatusCreated, nil
+		return output, securityGroupStatusCreated, nil
 	}
 }
 
@@ -775,7 +775,7 @@ func fetchVPCEndpointServiceDeletionStatus(ctx context.Context, conn *ec2.Client
 }
 
 const (
-	VPCEndpointRouteTableAssociationStatusReady = "ready"
+	vpcEndpointRouteTableAssociationStatusReady = "ready"
 )
 
 func statusVPCEndpointRouteTableAssociation(ctx context.Context, conn *ec2.Client, vpcEndpointID, routeTableID string) retry.StateRefreshFunc {
@@ -790,7 +790,7 @@ func statusVPCEndpointRouteTableAssociation(ctx context.Context, conn *ec2.Clien
 			return nil, "", err
 		}
 
-		return "", VPCEndpointRouteTableAssociationStatusReady, nil
+		return "", vpcEndpointRouteTableAssociationStatusReady, nil
 	}
 }
 

@@ -49,7 +49,7 @@ func resourceVPCIPv4CIDRBlockAssociation() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IsCIDRNetwork(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
+				ValidateFunc: validation.IsCIDRNetwork(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
 			},
 			"ipv4_ipam_pool_id": {
 				Type:     schema.TypeString,
@@ -60,7 +60,7 @@ func resourceVPCIPv4CIDRBlockAssociation() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
+				ValidateFunc: validation.IntBetween(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
 			},
 			names.AttrVPCID: {
 				Type:     schema.TypeString,

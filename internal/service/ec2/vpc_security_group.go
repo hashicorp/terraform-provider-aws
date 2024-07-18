@@ -166,7 +166,7 @@ var (
 			names.AttrProtocol: {
 				Type:      schema.TypeString,
 				Required:  true,
-				StateFunc: ProtocolStateFunc,
+				StateFunc: protocolStateFunc,
 			},
 			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
@@ -1455,8 +1455,8 @@ func idHash(rType, protocol string, toPort, fromPort int32, self bool) string {
 	return fmt.Sprintf("rule-%d", create.StringHashcode(buf.String()))
 }
 
-// ProtocolStateFunc ensures we only store a string in any protocol field
-func ProtocolStateFunc(v interface{}) string {
+// protocolStateFunc ensures we only store a string in any protocol field
+func protocolStateFunc(v interface{}) string {
 	switch v := v.(type) {
 	case string:
 		p := protocolForValue(v)

@@ -1607,7 +1607,7 @@ func waitRouteTableReady(ctx context.Context, conn *ec2.Client, id string, timeo
 func waitSecurityGroupCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SecurityGroup, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
-		Target:                    []string{SecurityGroupStatusCreated},
+		Target:                    []string{securityGroupStatusCreated},
 		Refresh:                   statusSecurityGroup(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            securityGroupNotFoundChecks,
@@ -2825,7 +2825,7 @@ func waitVPCEndpointDeleted(ctx context.Context, conn *ec2.Client, vpcEndpointID
 
 func waitVPCEndpointRouteTableAssociationDeleted(ctx context.Context, conn *ec2.Client, vpcEndpointID, routeTableID string) error {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(VPCEndpointRouteTableAssociationStatusReady),
+		Pending:                   enum.Slice(vpcEndpointRouteTableAssociationStatusReady),
 		Target:                    []string{},
 		Refresh:                   statusVPCEndpointRouteTableAssociation(ctx, conn, vpcEndpointID, routeTableID),
 		Timeout:                   ec2PropagationTimeout,
@@ -2840,7 +2840,7 @@ func waitVPCEndpointRouteTableAssociationDeleted(ctx context.Context, conn *ec2.
 func waitVPCEndpointRouteTableAssociationReady(ctx context.Context, conn *ec2.Client, vpcEndpointID, routeTableID string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
-		Target:                    enum.Slice(VPCEndpointRouteTableAssociationStatusReady),
+		Target:                    enum.Slice(vpcEndpointRouteTableAssociationStatusReady),
 		Refresh:                   statusVPCEndpointRouteTableAssociation(ctx, conn, vpcEndpointID, routeTableID),
 		Timeout:                   ec2PropagationTimeout,
 		ContinuousTargetOccurence: 2,

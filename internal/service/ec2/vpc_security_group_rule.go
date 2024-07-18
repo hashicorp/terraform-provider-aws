@@ -105,7 +105,7 @@ func resourceSecurityGroupRule() *schema.Resource {
 				Type:      schema.TypeString,
 				Required:  true,
 				ForceNew:  true,
-				StateFunc: ProtocolStateFunc,
+				StateFunc: protocolStateFunc,
 			},
 			"security_group_id": {
 				Type:     schema.TypeString,

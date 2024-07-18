@@ -32,9 +32,9 @@ import (
 )
 
 const (
-	VPCCIDRMaxIPv4 = 28
-	VPCCIDRMinIPv4 = 16
-	VPCCIDRMaxIPv6 = 56
+	vpcCIDRMaxIPv4Netmask = 28
+	vpcCIDRMinIPv4Netmask = 16
+	vpcCIDRMaxIPv6Netmask = 56
 )
 
 // @SDKResource("aws_vpc", name="VPC")
@@ -77,7 +77,7 @@ func resourceVPC() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IsCIDRNetwork(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
+				ValidateFunc:  validation.IsCIDRNetwork(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
 				ConflictsWith: []string{"ipv4_netmask_length"},
 			},
 			"default_network_acl_id": {
@@ -126,7 +126,7 @@ func resourceVPC() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IntBetween(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
+				ValidateFunc:  validation.IntBetween(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
 				ConflictsWith: []string{names.AttrCIDRBlock},
 				RequiredWith:  []string{"ipv4_ipam_pool_id"},
 			},
@@ -142,7 +142,7 @@ func resourceVPC() *schema.Resource {
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 				ValidateFunc: validation.All(
 					verify.ValidIPv6CIDRNetworkAddress,
-					validation.IsCIDRNetwork(VPCCIDRMaxIPv6, VPCCIDRMaxIPv6)),
+					validation.IsCIDRNetwork(vpcCIDRMaxIPv6Netmask, vpcCIDRMaxIPv6Netmask)),
 			},
 			"ipv6_cidr_block_network_border_group": {
 				Type:         schema.TypeString,
@@ -158,7 +158,7 @@ func resourceVPC() *schema.Resource {
 			"ipv6_netmask_length": {
 				Type:          schema.TypeInt,
 				Optional:      true,
-				ValidateFunc:  validation.IntInSlice([]int{VPCCIDRMaxIPv6}),
+				ValidateFunc:  validation.IntInSlice([]int{vpcCIDRMaxIPv6Netmask}),
 				ConflictsWith: []string{"ipv6_cidr_block"},
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 			},

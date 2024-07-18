@@ -265,10 +265,10 @@ func resourceNetworkACLRuleDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceNetworkACLRuleImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	parts := strings.Split(d.Id(), NetworkACLRuleImportIDSeparator)
+	parts := strings.Split(d.Id(), networkACLRuleImportIDSeparator)
 
 	if len(parts) != 4 || parts[0] == "" || parts[1] == "" || parts[2] == "" || parts[3] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%[1]s), expected NETWORK_ACL_ID%[2]sRULE_NUMBER%[2]sPROTOCOL%[2]sEGRESS", d.Id(), NetworkACLRuleImportIDSeparator)
+		return nil, fmt.Errorf("unexpected format of ID (%[1]s), expected NETWORK_ACL_ID%[2]sRULE_NUMBER%[2]sPROTOCOL%[2]sEGRESS", d.Id(), networkACLRuleImportIDSeparator)
 	}
 
 	naclID := parts[0]
@@ -293,7 +293,7 @@ func resourceNetworkACLRuleImport(ctx context.Context, d *schema.ResourceData, m
 	return []*schema.ResourceData{d}, nil
 }
 
-const NetworkACLRuleImportIDSeparator = ":"
+const networkACLRuleImportIDSeparator = ":"
 
 func networkACLRuleCreateResourceID(naclID string, ruleNumber int, egress bool, protocol string) string {
 	var buf bytes.Buffer
