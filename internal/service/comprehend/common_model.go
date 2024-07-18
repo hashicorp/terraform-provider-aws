@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -40,18 +40,18 @@ func (m *safeMutex) Unlock() {
 
 var modelVPCENILock safeMutex
 
-func findNetworkInterfaces(ctx context.Context, conn *ec2.Client, securityGroups []string, subnets []string) ([]awstypes.NetworkInterface, error) {
+func findNetworkInterfaces(ctx context.Context, conn *ec2.Client, securityGroups []string, subnets []string) ([]ec2types.NetworkInterface, error) {
 	networkInterfaces, err := tfec2.FindNetworkInterfaces(ctx, conn, &ec2.DescribeNetworkInterfacesInput{
-		Filters: []awstypes.Filter{
+		Filters: []ec2types.Filter{
 			tfec2.NewFilter("group-id", securityGroups),
 			tfec2.NewFilter("subnet-id", subnets),
 		},
 	})
 	if err != nil {
-		return []awstypes.NetworkInterface{}, err
+		return []ec2types.NetworkInterface{}, err
 	}
 
-	comprehendENIs := make([]awstypes.NetworkInterface, 0, len(networkInterfaces))
+	comprehendENIs := make([]ec2types.NetworkInterface, 0, len(networkInterfaces))
 	for _, v := range networkInterfaces {
 		if strings.HasSuffix(aws.ToString(v.RequesterId), ":Comprehend") {
 			comprehendENIs = append(comprehendENIs, v)
@@ -61,10 +61,10 @@ func findNetworkInterfaces(ctx context.Context, conn *ec2.Client, securityGroups
 	return comprehendENIs, nil
 }
 
-func waitNetworkInterfaceCreated(ctx context.Context, conn *ec2.Client, initialENIIds map[string]bool, securityGroups []string, subnets []string, timeout time.Duration) (*awstypes.NetworkInterface, error) {
+func waitNetworkInterfaceCreated(ctx context.Context, conn *ec2.Client, initialENIIds map[string]bool, securityGroups []string, subnets []string, timeout time.Duration) (*ec2types.NetworkInterface, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
-		Target:     enum.Slice(awstypes.NetworkInterfaceStatusInUse),
+		Target:     enum.Slice(ec2types.NetworkInterfaceStatusInUse),
 		Refresh:    statusNetworkInterfaces(ctx, conn, initialENIIds, securityGroups, subnets),
 		Delay:      4 * time.Minute,
 		MinTimeout: 10 * time.Second,
@@ -73,7 +73,7 @@ func waitNetworkInterfaceCreated(ctx context.Context, conn *ec2.Client, initialE
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(awstypes.NetworkInterface); ok {
+	if output, ok := outputRaw.(ec2types.NetworkInterface); ok {
 		return &output, err
 	}
 
@@ -87,7 +87,7 @@ func statusNetworkInterfaces(ctx context.Context, conn *ec2.Client, initialENIs 
 			return nil, "", err
 		}
 
-		var added awstypes.NetworkInterface
+		var added ec2types.NetworkInterface
 		for _, v := range out {
 			if _, ok := initialENIs[aws.ToString(v.NetworkInterfaceId)]; !ok {
 				added = v
