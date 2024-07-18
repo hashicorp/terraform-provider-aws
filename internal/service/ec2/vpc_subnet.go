@@ -49,7 +49,7 @@ func resourceSubnet() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  SubnetMigrateState,
+		MigrateState:  subnetMigrateState,
 
 		// Keep in sync with aws_default_subnet's schema.
 		// See notes in vpc_default_subnet.go.

@@ -241,6 +241,7 @@ var (
 	InternetGatewayAttachmentParseResourceID                   = internetGatewayAttachmentParseResourceID
 	InstanceMigrateState                                       = instanceMigrateState
 	IPAMServicePrincipal                                       = ipamServicePrincipal
+	KeyPairMigrateState                                        = keyPairMigrateState
 	ManagedPrefixListEntryCreateResourceID                     = managedPrefixListEntryCreateResourceID
 	ManagedPrefixListEntryParseResourceID                      = managedPrefixListEntryParseResourceID
 	MatchRules                                                 = matchRules
@@ -259,6 +260,7 @@ var (
 	SpotFleetRequestMigrateState                               = spotFleetRequestMigrateState
 	StopEBSVolumeAttachmentInstance                            = stopVolumeAttachmentInstance
 	StopInstance                                               = stopInstance
+	SubnetMigrateState                                         = subnetMigrateState
 	UnsuccessfulItemError                                      = unsuccessfulItemError
 	UnsuccessfulItemsError                                     = unsuccessfulItemsError
 	UpdateTags                                                 = updateTags

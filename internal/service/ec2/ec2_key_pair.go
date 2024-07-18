@@ -45,7 +45,7 @@ func resourceKeyPair() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaVersion: 1,
-		MigrateState:  KeyPairMigrateState,
+		MigrateState:  keyPairMigrateState,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

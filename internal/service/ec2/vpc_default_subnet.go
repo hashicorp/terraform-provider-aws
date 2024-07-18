@@ -45,7 +45,7 @@ func resourceDefaultSubnet() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  SubnetMigrateState,
+		MigrateState:  subnetMigrateState,
 
 		// Keep in sync with aws_subnet's schema with the following changes:
 		//   - availability_zone is Required/ForceNew
