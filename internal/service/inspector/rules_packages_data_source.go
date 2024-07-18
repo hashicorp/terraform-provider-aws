@@ -7,9 +7,7 @@ import (
 	"context"
 	"sort"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -50,26 +48,20 @@ func dataSourceRulesPackagesRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func findRulesPackageARNs(ctx context.Context, conn *inspector.Client) ([]*string, error) {
+func findRulesPackageARNs(ctx context.Context, conn *inspector.Client) ([]string, error) {
 	input := &inspector.ListRulesPackagesInput{}
-	var output []*string
+	var output []string
 
-	err := conn.ListRulesPackagesPagesWithContext(ctx, input, func(page *inspector.ListRulesPackagesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := inspector.NewListRulesPackagesPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
-		for _, v := range page.RulesPackageArns {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
+		output = append(output, page.RulesPackageArns...)
 	}
 
 	return output, nil
