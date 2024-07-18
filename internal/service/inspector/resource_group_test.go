@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -73,7 +72,7 @@ func testAccCheckResourceGroupExists(ctx context.Context, name string, rg *awsty
 			return fmt.Errorf("No matching Inspector Classic Resource Groups")
 		}
 
-		*rg = *output.ResourceGroups[0]
+		*rg = output.ResourceGroups[0]
 
 		return nil
 	}

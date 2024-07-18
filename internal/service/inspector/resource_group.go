@@ -72,14 +72,13 @@ func resourceResourceGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 	if len(resp.ResourceGroups) == 0 {
 		if failedItem, ok := resp.FailedItems[d.Id()]; ok {
-			failureCode := aws.ToString(failedItem.FailureCode)
-			if failureCode == awstypes.FailedItemErrorCodeItemDoesNotExist {
+			if failedItem.FailureCode == awstypes.FailedItemErrorCodeItemDoesNotExist {
 				log.Printf("[WARN] Inspector Classic Resource Group (%s) not found, removing from state", d.Id())
 				d.SetId("")
 				return diags
 			}
 
-			return sdkdiag.AppendErrorf(diags, "reading Inspector Classic Resource Group (%s): %s", d.Id(), failureCode)
+			return sdkdiag.AppendErrorf(diags, "reading Inspector Classic Resource Group (%s): %s", d.Id(), string(failedItem.FailureCode))
 		}
 
 		return sdkdiag.AppendErrorf(diags, "reading Inspector Classic Resource Group (%s): %v", d.Id(), resp.FailedItems)
@@ -101,11 +100,11 @@ func resourceResourceGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func expandResourceGroupTags(m map[string]interface{}) []*awstypes.ResourceGroupTag {
-	var result []*awstypes.ResourceGroupTag
+func expandResourceGroupTags(m map[string]interface{}) []awstypes.ResourceGroupTag {
+	var result []awstypes.ResourceGroupTag
 
 	for k, v := range m {
-		result = append(result, &awstypes.ResourceGroupTag{
+		result = append(result, awstypes.ResourceGroupTag{
 			Key:   aws.String(k),
 			Value: aws.String(v.(string)),
 		})
@@ -114,7 +113,7 @@ func expandResourceGroupTags(m map[string]interface{}) []*awstypes.ResourceGroup
 	return result
 }
 
-func flattenResourceGroupTags(tags []*awstypes.ResourceGroupTag) map[string]interface{} {
+func flattenResourceGroupTags(tags []awstypes.ResourceGroupTag) map[string]interface{} {
 	m := map[string]interface{}{}
 
 	for _, tag := range tags {
