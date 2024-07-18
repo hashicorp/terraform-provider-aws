@@ -430,6 +430,28 @@ func TestKeyValueTagsIgnoreConfig(t *testing.T) {
 			want: map[string]string{},
 		},
 		{
+			name: "no tags with suffix",
+			tags: New(ctx, map[string]string{}),
+			ignoreConfig: &IgnoreConfig{
+				KeySuffixes: New(ctx, []string{
+					"key1",
+					"key2",
+					"key3",
+				}),
+			},
+			want: map[string]string{},
+		},
+		{
+			name: "no tags with regex",
+			tags: New(ctx, map[string]string{}),
+			ignoreConfig: &IgnoreConfig{
+				KeyRegexPatterns: New(ctx, []string{
+					`^key\d{2}$`,
+				}),
+			},
+			want: map[string]string{},
+		},
+		{
 			name: "keys all matching",
 			tags: New(ctx, map[string]string{
 				"key1": "value1",
@@ -502,6 +524,50 @@ func TestKeyValueTagsIgnoreConfig(t *testing.T) {
 			},
 		},
 		{
+			name: "keys and key prefixes and key suffixes",
+			tags: New(ctx, map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreConfig: &IgnoreConfig{
+				Keys: New(ctx, []string{
+					"key1",
+				}),
+				KeyPrefixes: New(ctx, []string{
+					"key2",
+				}),
+				KeySuffixes: New(ctx, []string{
+					"key3",
+				}),
+			},
+			want: map[string]string{},
+		},
+		{
+			name: "keys and key prefixes and key suffixes and key regex",
+			tags: New(ctx, map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+				"key4": "value4",
+			}),
+			ignoreConfig: &IgnoreConfig{
+				Keys: New(ctx, []string{
+					"key1",
+				}),
+				KeyPrefixes: New(ctx, []string{
+					"key2",
+				}),
+				KeySuffixes: New(ctx, []string{
+					"key3",
+				}),
+				KeyRegexPatterns: New(ctx, []string{
+					"^key4$",
+				}),
+			},
+			want: map[string]string{},
+		},
+		{
 			name: "key prefixes all exact",
 			tags: New(ctx, map[string]string{
 				"key1": "value1",
@@ -513,6 +579,36 @@ func TestKeyValueTagsIgnoreConfig(t *testing.T) {
 					"key1",
 					"key2",
 					"key3",
+				}),
+			},
+			want: map[string]string{},
+		},
+		{
+			name: "key suffixes all exact",
+			tags: New(ctx, map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreConfig: &IgnoreConfig{
+				KeySuffixes: New(ctx, []string{
+					"key1",
+					"key2",
+					"key3",
+				}),
+			},
+			want: map[string]string{},
+		},
+		{
+			name: "key suffixes all exact",
+			tags: New(ctx, map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreConfig: &IgnoreConfig{
+				KeyRegexPatterns: New(ctx, []string{
+					`^key\d{1}`,
 				}),
 			},
 			want: map[string]string{},
@@ -530,6 +626,23 @@ func TestKeyValueTagsIgnoreConfig(t *testing.T) {
 				}),
 			},
 			want: map[string]string{},
+		},
+		{
+			name: "key suffixes some suffixed",
+			tags: New(ctx, map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreConfig: &IgnoreConfig{
+				KeySuffixes: New(ctx, []string{
+					"key1",
+				}),
+			},
+			want: map[string]string{
+				"key2": "value2",
+				"key3": "value3",
+			},
 		},
 		{
 			name: "key prefixes some prefixed",
@@ -560,6 +673,44 @@ func TestKeyValueTagsIgnoreConfig(t *testing.T) {
 					"key4",
 					"key5",
 					"key6",
+				}),
+			},
+			want: map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			},
+		},
+		{
+			name: "key suffixes none suffixed",
+			tags: New(ctx, map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreConfig: &IgnoreConfig{
+				KeySuffixes: New(ctx, []string{
+					"key4",
+					"key5",
+					"key6",
+				}),
+			},
+			want: map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			},
+		},
+		{
+			name: "key suffixes none regexed",
+			tags: New(ctx, map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreConfig: &IgnoreConfig{
+				KeyRegexPatterns: New(ctx, []string{
+					`^key\d{2}$`,
 				}),
 			},
 			want: map[string]string{

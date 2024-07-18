@@ -124,6 +124,18 @@ func New(ctx context.Context) (*schema.Provider, error) {
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Description: "Resource tag key prefixes to ignore across all resources.",
 						},
+						"key_suffixes": {
+							Type:        schema.TypeSet,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "Resource tag key prefixes to ignore across all resources.",
+						},
+						"key_regex_patterns": {
+							Type:        schema.TypeSet,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "Resource tag key prefixes to ignore across all resources.",
+						},
 					},
 				},
 			},
@@ -865,6 +877,14 @@ func expandIgnoreTags(ctx context.Context, tfMap map[string]interface{}) *tftags
 
 	if v, ok := tfMap["key_prefixes"].(*schema.Set); ok {
 		ignoreConfig.KeyPrefixes = tftags.New(ctx, v.List())
+	}
+
+	if v, ok := tfMap["key_suffixes"].(*schema.Set); ok {
+		ignoreConfig.KeySuffixes = tftags.New(ctx, v.List())
+	}
+
+	if v, ok := tfMap["key_regex_patterns"].(*schema.Set); ok {
+		ignoreConfig.KeyRegexPatterns = tftags.New(ctx, v.List())
 	}
 
 	return ignoreConfig
