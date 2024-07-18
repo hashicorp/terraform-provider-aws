@@ -211,7 +211,7 @@ func resourceTrail() *schema.Resource {
 				Default:  true,
 			},
 			"insight_selector": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -855,7 +855,7 @@ func flattenAdvancedEventSelectorFieldSelector(configured []types.AdvancedFieldS
 
 func setInsightSelectors(ctx context.Context, conn *cloudtrail.Client, d *schema.ResourceData) error {
 	input := &cloudtrail.PutInsightSelectorsInput{
-		InsightSelectors: expandInsightSelector(d.Get("insight_selector").([]interface{})),
+		InsightSelectors: expandInsightSelector(d.Get("insight_selector").(*schema.Set).List()),
 		TrailName:        aws.String(d.Id()),
 	}
 

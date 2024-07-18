@@ -41,50 +41,6 @@ const (
 	InternetGatewayNotFoundChecks              = 1000 // Should exceed any reasonable custom timeout value.
 )
 
-const (
-	// Maximum amount of time to wait for a LocalGatewayRouteTableVpcAssociation to return Associated
-	LocalGatewayRouteTableVPCAssociationAssociatedTimeout = 5 * time.Minute
-
-	// Maximum amount of time to wait for a LocalGatewayRouteTableVpcAssociation to return Disassociated
-	LocalGatewayRouteTableVPCAssociationDisassociatedTimeout = 5 * time.Minute
-)
-
-// WaitLocalGatewayRouteTableVPCAssociationAssociated waits for a LocalGatewayRouteTableVpcAssociation to return Associated
-func WaitLocalGatewayRouteTableVPCAssociationAssociated(ctx context.Context, conn *ec2.EC2, localGatewayRouteTableVpcAssociationID string) (*ec2.LocalGatewayRouteTableVpcAssociation, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{ec2.RouteTableAssociationStateCodeAssociating},
-		Target:  []string{ec2.RouteTableAssociationStateCodeAssociated},
-		Refresh: StatusLocalGatewayRouteTableVPCAssociationState(ctx, conn, localGatewayRouteTableVpcAssociationID),
-		Timeout: LocalGatewayRouteTableVPCAssociationAssociatedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.LocalGatewayRouteTableVpcAssociation); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-// WaitLocalGatewayRouteTableVPCAssociationDisassociated waits for a LocalGatewayRouteTableVpcAssociation to return Disassociated
-func WaitLocalGatewayRouteTableVPCAssociationDisassociated(ctx context.Context, conn *ec2.EC2, localGatewayRouteTableVpcAssociationID string) (*ec2.LocalGatewayRouteTableVpcAssociation, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{ec2.RouteTableAssociationStateCodeDisassociating},
-		Target:  []string{ec2.RouteTableAssociationStateCodeDisassociated},
-		Refresh: StatusLocalGatewayRouteTableVPCAssociationState(ctx, conn, localGatewayRouteTableVpcAssociationID),
-		Timeout: LocalGatewayRouteTableVPCAssociationAssociatedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.LocalGatewayRouteTableVpcAssociation); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 const ManagedPrefixListEntryCreateTimeout = 5 * time.Minute
 
 func WaitSecurityGroupCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SecurityGroup, error) {

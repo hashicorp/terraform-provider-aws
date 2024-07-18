@@ -17,40 +17,6 @@ import (
 // Move functions to statusv2.go as they are migrated to AWS SDK for Go v2.
 //
 
-// StatusLocalGatewayRouteTableVPCAssociationState fetches the LocalGatewayRouteTableVpcAssociation and its State
-func StatusLocalGatewayRouteTableVPCAssociationState(ctx context.Context, conn *ec2.EC2, localGatewayRouteTableVpcAssociationID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &ec2.DescribeLocalGatewayRouteTableVpcAssociationsInput{
-			LocalGatewayRouteTableVpcAssociationIds: aws.StringSlice([]string{localGatewayRouteTableVpcAssociationID}),
-		}
-
-		output, err := conn.DescribeLocalGatewayRouteTableVpcAssociationsWithContext(ctx, input)
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		var association *ec2.LocalGatewayRouteTableVpcAssociation
-
-		for _, outputAssociation := range output.LocalGatewayRouteTableVpcAssociations {
-			if outputAssociation == nil {
-				continue
-			}
-
-			if aws.StringValue(outputAssociation.LocalGatewayRouteTableVpcAssociationId) == localGatewayRouteTableVpcAssociationID {
-				association = outputAssociation
-				break
-			}
-		}
-
-		if association == nil {
-			return association, ec2.RouteTableAssociationStateCodeDisassociated, nil
-		}
-
-		return association, aws.StringValue(association.State), nil
-	}
-}
-
 func StatusNATGatewayState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindNATGatewayByID(ctx, conn, id)

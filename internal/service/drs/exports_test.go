@@ -5,5 +5,7 @@ package drs
 
 // Exports for use in tests only.
 var (
+	ResourceReplicationConfigurationTemplate = newReplicationConfigurationTemplateResource
+
 	FindReplicationConfigurationTemplateByID = findReplicationConfigurationTemplateByID
 )

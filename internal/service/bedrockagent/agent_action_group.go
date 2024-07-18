@@ -14,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -169,27 +170,6 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 		return
 	}
 
-	// AutoFlEx doesn't yet handle union types.
-	if !data.ActionGroupExecutor.IsNull() {
-		actionGroupExecutorData, diags := data.ActionGroupExecutor.ToPtr(ctx)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		input.ActionGroupExecutor = expandActionGroupExecutor(ctx, actionGroupExecutorData)
-	}
-
-	if !data.APISchema.IsNull() {
-		apiSchemaData, diags := data.APISchema.ToPtr(ctx)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		input.ApiSchema = expandAPISchema(ctx, apiSchemaData)
-	}
-
 	output, err := conn.CreateAgentActionGroup(ctx, input)
 
 	if err != nil {
@@ -271,27 +251,6 @@ func (r *agentActionGroupResource) Update(ctx context.Context, request resource.
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if response.Diagnostics.HasError() {
 			return
-		}
-
-		// AutoFlEx doesn't yet handle union types.
-		if !new.ActionGroupExecutor.IsNull() {
-			actionGroupExecutorData, diags := new.ActionGroupExecutor.ToPtr(ctx)
-			response.Diagnostics.Append(diags...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-
-			input.ActionGroupExecutor = expandActionGroupExecutor(ctx, actionGroupExecutorData)
-		}
-
-		if !new.APISchema.IsNull() {
-			apiSchemaData, diags := new.APISchema.ToPtr(ctx)
-			response.Diagnostics.Append(diags...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-
-			input.ApiSchema = expandAPISchema(ctx, apiSchemaData)
 		}
 
 		_, err := conn.UpdateAgentActionGroup(ctx, input)
@@ -410,24 +369,54 @@ type actionGroupExecutorModel struct {
 	Lambda fwtypes.ARN `tfsdk:"lambda"`
 }
 
+var (
+	_ fwflex.Expander = actionGroupExecutorModel{}
+)
+
+func (m actionGroupExecutorModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.Lambda.IsNull():
+		return &awstypes.ActionGroupExecutorMemberLambda{
+			Value: m.Lambda.ValueString(),
+		}, diags
+	}
+
+	return nil, diags
+}
+
 type apiSchemaModel struct {
 	Payload types.String                                       `tfsdk:"payload"`
 	S3      fwtypes.ListNestedObjectValueOf[s3IdentifierModel] `tfsdk:"s3"`
 }
 
+var (
+	_ fwflex.Expander = apiSchemaModel{}
+)
+
+func (m apiSchemaModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.Payload.IsNull():
+		return &awstypes.APISchemaMemberPayload{
+			Value: m.Payload.ValueString(),
+		}, diags
+
+	case !m.S3.IsNull():
+		s3IdentifierModel := fwdiag.Must(m.S3.ToPtr(ctx))
+
+		return &awstypes.APISchemaMemberS3{
+			Value: awstypes.S3Identifier{
+				S3BucketName: fwflex.StringFromFramework(ctx, s3IdentifierModel.S3BucketName),
+				S3ObjectKey:  fwflex.StringFromFramework(ctx, s3IdentifierModel.S3ObjectKey),
+			},
+		}, diags
+	}
+
+	return nil, diags
+}
+
 type s3IdentifierModel struct {
 	S3BucketName types.String `tfsdk:"s3_bucket_name"`
 	S3ObjectKey  types.String `tfsdk:"s3_object_key"`
-}
-
-func expandActionGroupExecutor(_ context.Context, actionGroupExecutorData *actionGroupExecutorModel) awstypes.ActionGroupExecutor {
-	if !actionGroupExecutorData.Lambda.IsNull() {
-		return &awstypes.ActionGroupExecutorMemberLambda{
-			Value: actionGroupExecutorData.Lambda.ValueString(),
-		}
-	}
-
-	return nil
 }
 
 func flattenActionGroupExecutor(ctx context.Context, apiObject awstypes.ActionGroupExecutor) fwtypes.ListNestedObjectValueOf[actionGroupExecutorModel] {
@@ -443,27 +432,6 @@ func flattenActionGroupExecutor(ctx context.Context, apiObject awstypes.ActionGr
 	}
 
 	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &actionGroupExecutorData)
-}
-
-func expandAPISchema(ctx context.Context, apiSchemaData *apiSchemaModel) awstypes.APISchema {
-	if !apiSchemaData.Payload.IsNull() {
-		return &awstypes.APISchemaMemberPayload{
-			Value: apiSchemaData.Payload.ValueString(),
-		}
-	}
-
-	if !apiSchemaData.S3.IsNull() {
-		s3IdentifierModel := fwdiag.Must(apiSchemaData.S3.ToPtr(ctx))
-
-		return &awstypes.APISchemaMemberS3{
-			Value: awstypes.S3Identifier{
-				S3BucketName: fwflex.StringFromFramework(ctx, s3IdentifierModel.S3BucketName),
-				S3ObjectKey:  fwflex.StringFromFramework(ctx, s3IdentifierModel.S3ObjectKey),
-			},
-		}
-	}
-
-	return nil
 }
 
 func flattenAPISchema(ctx context.Context, apiObject awstypes.APISchema) fwtypes.ListNestedObjectValueOf[apiSchemaModel] {
