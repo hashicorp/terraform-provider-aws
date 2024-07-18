@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"time"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -63,8 +62,8 @@ func SharedRegionalSweepClient(ctx context.Context, region string) (*conns.AWSCl
 	meta.ServicePackages = servicePackageMap
 
 	conf := &conns.Config{
+		MaxRetries:       5,
 		Region:           region,
-		RetryMode:        aws_sdkv2.RetryModeAdaptive,
 		SuppressDebugLog: true,
 	}
 

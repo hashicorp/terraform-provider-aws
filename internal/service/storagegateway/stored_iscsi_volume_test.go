@@ -37,10 +37,10 @@ func TestAccStorageGatewayStorediSCSIVolume_basic(t *testing.T) {
 				Config: testAccStorediSCSIVolumeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorediSCSIVolumeExists(ctx, resourceName, &storedIscsiVolume),
-					resource.TestCheckResourceAttr(resourceName, "preserve_existing_data", "false"),
+					resource.TestCheckResourceAttr(resourceName, "preserve_existing_data", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "disk_id", "data.aws_storagegateway_local_disk.test", names.AttrID),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "chap_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "chap_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", "aws_storagegateway_gateway.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "lun_number", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, "aws_instance.test", "private_ip"),
@@ -51,7 +51,7 @@ func TestAccStorageGatewayStorediSCSIVolume_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "volume_id", regexache.MustCompile(`^vol-+`)),
 					resource.TestCheckResourceAttr(resourceName, "volume_size_in_bytes", "10737418240"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", acctest.CtFalse),
 				),
 			},
 			{
@@ -80,7 +80,7 @@ func TestAccStorageGatewayStorediSCSIVolume_kms(t *testing.T) {
 				Config: testAccStorediSCSIVolumeConfig_kmsEncrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorediSCSIVolumeExists(ctx, resourceName, &storedIscsiVolume),
-					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "true"),
+					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKey, keyResourceName, names.AttrARN),
 				),
 			},
@@ -159,7 +159,7 @@ func TestAccStorageGatewayStorediSCSIVolume_snapshotID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorediSCSIVolumeExists(ctx, resourceName, &storedIscsiVolume),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "chap_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "chap_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", "aws_storagegateway_gateway.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "lun_number", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, "aws_instance.test", "private_ip"),

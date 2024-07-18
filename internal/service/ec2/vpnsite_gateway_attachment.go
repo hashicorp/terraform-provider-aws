@@ -7,9 +7,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -42,7 +42,7 @@ func resourceVPNGatewayAttachment() *schema.Resource {
 
 func resourceVPNGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	vpcID := d.Get(names.AttrVPCID).(string)
 	vpnGatewayID := d.Get("vpn_gateway_id").(string)
@@ -51,8 +51,8 @@ func resourceVPNGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceD
 		VpnGatewayId: aws.String(vpnGatewayID),
 	}
 
-	log.Printf("[DEBUG] Creating EC2 VPN Gateway Attachment: %s", input)
-	_, err := conn.AttachVpnGatewayWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating EC2 VPN Gateway Attachment: %s", vpnGatewayID)
+	_, err := conn.AttachVpnGateway(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Gateway (%s) Attachment (%s): %s", vpnGatewayID, vpcID, err)
@@ -60,7 +60,7 @@ func resourceVPNGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(VPNGatewayVPCAttachmentCreateID(vpnGatewayID, vpcID))
 
-	_, err = WaitVPNGatewayVPCAttachmentAttached(ctx, conn, vpnGatewayID, vpcID)
+	_, err = waitVPNGatewayVPCAttachmentAttached(ctx, conn, vpnGatewayID, vpcID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Gateway (%s) Attachment (%s) to become attached: %s", vpnGatewayID, vpcID, err)
@@ -71,12 +71,12 @@ func resourceVPNGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceVPNGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	vpcID := d.Get(names.AttrVPCID).(string)
 	vpnGatewayID := d.Get("vpn_gateway_id").(string)
 
-	_, err := FindVPNGatewayVPCAttachment(ctx, conn, vpnGatewayID, vpcID)
+	_, err := findVPNGatewayVPCAttachmentByTwoPartKey(ctx, conn, vpnGatewayID, vpcID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VPN Gateway (%s) Attachment (%s) not found, removing from state", vpnGatewayID, vpcID)
@@ -93,13 +93,13 @@ func resourceVPNGatewayAttachmentRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceVPNGatewayAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	vpcID := d.Get(names.AttrVPCID).(string)
 	vpnGatewayID := d.Get("vpn_gateway_id").(string)
 
 	log.Printf("[INFO] Deleting EC2 VPN Gateway (%s) Attachment (%s)", vpnGatewayID, vpcID)
-	_, err := conn.DetachVpnGatewayWithContext(ctx, &ec2.DetachVpnGatewayInput{
+	_, err := conn.DetachVpnGateway(ctx, &ec2.DetachVpnGatewayInput{
 		VpcId:        aws.String(vpcID),
 		VpnGatewayId: aws.String(vpnGatewayID),
 	})
@@ -112,7 +112,7 @@ func resourceVPNGatewayAttachmentDelete(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPN Gateway (%s) Attachment (%s): %s", vpnGatewayID, vpcID, err)
 	}
 
-	_, err = WaitVPNGatewayVPCAttachmentDetached(ctx, conn, vpnGatewayID, vpcID)
+	_, err = waitVPNGatewayVPCAttachmentDetached(ctx, conn, vpnGatewayID, vpcID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Gateway (%s) Attachment (%s) to become detached: %s", vpnGatewayID, vpcID, err)

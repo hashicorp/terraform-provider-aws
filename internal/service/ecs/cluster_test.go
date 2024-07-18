@@ -238,7 +238,7 @@ func TestAccECSCluster_configuration(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execute_command_configuration.0.kms_key_id", "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.logging", "OVERRIDE"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_encryption_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_encryption_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_log_group_name", "aws_cloudwatch_log_group.test", names.AttrName),
 				),
 			},
@@ -257,9 +257,57 @@ func TestAccECSCluster_configuration(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execute_command_configuration.0.kms_key_id", "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.logging", "OVERRIDE"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_encryption_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_encryption_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execute_command_configuration.0.log_configuration.0.cloud_watch_log_group_name", "aws_cloudwatch_log_group.test", names.AttrName),
 				),
+			},
+		},
+	})
+}
+
+func TestAccECSCluster_managedStorageConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster1 ecs.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_managedStorageConfiguration(rName, "aws_kms_key.test.arn", "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_storage_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.managed_storage_configuration.0.fargate_ephemeral_storage_kms_key_id", "aws_kms_key.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_storage_configuration.0.kms_key_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterConfig_managedStorageConfiguration(rName, "null", "aws_kms_key.test.arn"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_storage_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_storage_configuration.0.fargate_ephemeral_storage_kms_key_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.managed_storage_configuration.0.kms_key_id", "aws_kms_key.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     rName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -407,4 +455,95 @@ resource "aws_ecs_cluster" "test" {
   }
 }
 `, rName, enable)
+}
+
+func testAccClusterConfig_managedStorageConfiguration(rName, fargateEphemeralStorageKmsKeyId, kmsKeyId string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key_policy" "test" {
+  key_id = aws_kms_key.test.id
+  policy = jsonencode({
+    Id = "ECSClusterFargatePolicy"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          "AWS" : "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow generate data key access for Fargate tasks."
+        Effect = "Allow"
+        Principal = {
+          Service = "fargate.amazonaws.com"
+        }
+        Action = [
+          "kms:GenerateDataKeyWithoutPlaintext"
+        ]
+        Condition = {
+          StringEquals = {
+            "kms:EncryptionContext:aws:ecs:clusterAccount" = [
+              data.aws_caller_identity.current.account_id
+            ]
+            "kms:EncryptionContext:aws:ecs:clusterName" = [
+              %[1]q
+            ]
+          }
+        }
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow grant creation permission for Fargate tasks."
+        Effect = "Allow"
+        Principal = {
+          Service = "fargate.amazonaws.com"
+        }
+        Action = [
+          "kms:CreateGrant"
+        ]
+        Condition = {
+          StringEquals = {
+            "kms:EncryptionContext:aws:ecs:clusterAccount" = [
+              data.aws_caller_identity.current.account_id
+            ]
+            "kms:EncryptionContext:aws:ecs:clusterName" = [
+              %[1]q
+            ]
+          }
+          "ForAllValues:StringEquals" = {
+            "kms:GrantOperations" = [
+              "Decrypt"
+            ]
+          }
+        }
+        Resource = "*"
+      }
+    ]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+
+  configuration {
+    managed_storage_configuration {
+      fargate_ephemeral_storage_kms_key_id = %[2]s
+      kms_key_id                           = %[3]s
+    }
+  }
+  depends_on = [
+    aws_kms_key_policy.test
+  ]
+}
+`, rName, fargateEphemeralStorageKmsKeyId, kmsKeyId)
 }

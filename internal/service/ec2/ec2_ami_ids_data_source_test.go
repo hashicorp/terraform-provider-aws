@@ -85,7 +85,7 @@ data "aws_ami_ids" "test" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/ubuntu-*-*-amd64-server-*"]
+    values = ["ubuntu/images/hvm-instance/ubuntu-*"]
   }
 }
 `
@@ -97,7 +97,7 @@ data "aws_ami" "test1" {
 
   filter {
     name   = "name"
-    values = ["amzn-ami-hvm-2018.03.0.20221018.0-x86_64-gp2"]
+    values = ["al2023-ami-2023.4.20240401.1-kernel-6.1-x86_64"]
   }
 }
 
@@ -106,7 +106,7 @@ data "aws_ami" "test2" {
 
   filter {
     name   = "name"
-    values = ["amzn-ami-hvm-2018.03.0.20221209.1-x86_64-gp2"]
+    values = ["al2023-ami-2023.4.20240513.0-kernel-6.1-x86_64"]
   }
 }
 
@@ -131,7 +131,7 @@ data "aws_ami_ids" "test" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/ubuntu-*-*-amd64-server-*"]
+    values = ["ubuntu/images/hvm-instance/ubuntu-*"]
   }
 }
 `, includeDeprecated)

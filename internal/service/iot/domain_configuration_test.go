@@ -149,7 +149,7 @@ func TestAccIoTDomainConfiguration_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_config.0.allow_authorizer_override", "true"),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_config.0.allow_authorizer_override", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.0.security_policy", "IoTSecurityPolicy_TLS13_1_3_2022_10"),
 				),
@@ -164,7 +164,7 @@ func TestAccIoTDomainConfiguration_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_config.0.allow_authorizer_override", "false"),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_config.0.allow_authorizer_override", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.0.security_policy", "IoTSecurityPolicy_TLS13_1_2_2022_10"),
 				),
@@ -215,7 +215,7 @@ func testAccCheckDomainConfigurationExists(ctx context.Context, n string) resour
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		_, err := tfiot.FindDomainConfigurationByName(ctx, conn, rs.Primary.ID)
 
@@ -225,7 +225,7 @@ func testAccCheckDomainConfigurationExists(ctx context.Context, n string) resour
 
 func testAccCheckDomainConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_domain_configuration" {

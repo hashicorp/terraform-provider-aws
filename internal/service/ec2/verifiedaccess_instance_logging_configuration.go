@@ -44,7 +44,7 @@ func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_logs": {
+						names.AttrCloudWatchLogs: {
 							Type:             schema.TypeList,
 							MaxItems:         1,
 							Optional:         true,
@@ -163,8 +163,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationRead(ctx context.Context,
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	vaiID := d.Id()
-
-	output, err := FindVerifiedAccessInstanceLoggingConfigurationByInstanceID(ctx, conn, vaiID)
+	output, err := findVerifiedAccessInstanceLoggingConfigurationByInstanceID(ctx, conn, vaiID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Verified Access Instance Logging Configuration (%s) not found, removing from state", vaiID)
@@ -278,7 +277,7 @@ func expandVerifiedAccessInstanceAccessLogs(accessLogs []interface{}) *types.Ver
 
 	result := &types.VerifiedAccessLogOptions{}
 
-	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 {
 		result.CloudWatchLogs = expandVerifiedAccessLogCloudWatchLogs(v)
 	}
 
@@ -380,7 +379,7 @@ func flattenVerifiedAccessInstanceAccessLogs(apiObject *types.VerifiedAccessLogs
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CloudWatchLogs; v != nil {
-		tfMap["cloudwatch_logs"] = flattenVerifiedAccessLogCloudWatchLogs(v)
+		tfMap[names.AttrCloudWatchLogs] = flattenVerifiedAccessLogCloudWatchLogs(v)
 	}
 
 	if v := apiObject.IncludeTrustContext; v != nil {

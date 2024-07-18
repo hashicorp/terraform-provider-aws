@@ -42,7 +42,8 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `bgp_asn` - (Required) The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN).
+* `bgp_asn` - (Optional, Forces new resource) The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN). Valid values are from  `1` to `2147483647`. Conflicts with `bgp_asn_extended`.
+* `bgp_asn_extended` - (Optional, Forces new resource) The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN). Valid values are from  `2147483648` to `4294967295` Conflicts with `bgp_asn`.
 * `certificate_arn` - (Optional) The Amazon Resource Name (ARN) for the customer gateway certificate.
 * `device_name` - (Optional) A name for the customer gateway device.
 * `ip_address` - (Optional) The IPv4 address for the customer gateway device's outside interface.
@@ -83,4 +84,4 @@ Using `terraform import`, import Customer Gateways using the `id`. For example:
 % terraform import aws_customer_gateway.main cgw-b4dc3961
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-88fc55069a35af7318bebf35b35547af61fdd41a1afa9f74484f765b22315549 -->
+<!-- cache-key: cdktf-0.20.1 input-307f6d74eba03e018eb74b5a5dd43419005726131327845a42a10924c9765f9d -->

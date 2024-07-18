@@ -28,6 +28,9 @@ import (
 
 // @SDKResource("aws_appmesh_virtual_gateway", name="Virtual Gateway")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/appmesh;appmesh.VirtualGatewayData")
+// @Testing(serialize=true)
+// @Testing(importStateIdFunc=testAccVirtualGatewayImportStateIdFunc)
 func resourceVirtualGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualGatewayCreate,
@@ -72,7 +75,7 @@ func resourceVirtualGateway() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
-				"resource_owner": {
+				names.AttrResourceOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -707,7 +710,7 @@ func resourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("mesh_name", virtualGateway.MeshName)
 	d.Set("mesh_owner", virtualGateway.Metadata.MeshOwner)
 	d.Set(names.AttrName, virtualGateway.VirtualGatewayName)
-	d.Set("resource_owner", virtualGateway.Metadata.ResourceOwner)
+	d.Set(names.AttrResourceOwner, virtualGateway.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenVirtualGatewaySpec(virtualGateway.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}

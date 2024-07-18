@@ -24,7 +24,7 @@ func TestAccS3BucketObjectDataSource_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resourceName := "aws_s3_object.object"
-	dataSourceName := "data.aws_s3_object.obj"
+	dataSourceName := "data.aws_s3_bucket_object.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
@@ -54,7 +54,7 @@ func TestAccS3BucketObjectDataSource_basicViaAccessPoint(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	dataSourceName := "data.aws_s3_object.test"
+	dataSourceName := "data.aws_s3_bucket_object.test"
 	resourceName := "aws_s3_object.test"
 	accessPointResourceName := "aws_s3_access_point.test"
 
@@ -79,7 +79,7 @@ func TestAccS3BucketObjectDataSource_readableBody(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resourceName := "aws_s3_object.object"
-	dataSourceName := "data.aws_s3_object.obj"
+	dataSourceName := "data.aws_s3_bucket_object.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
@@ -109,7 +109,7 @@ func TestAccS3BucketObjectDataSource_kmsEncrypted(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resourceName := "aws_s3_object.object"
-	dataSourceName := "data.aws_s3_object.obj"
+	dataSourceName := "data.aws_s3_bucket_object.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
@@ -141,7 +141,7 @@ func TestAccS3BucketObjectDataSource_bucketKeyEnabled(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resourceName := "aws_s3_object.object"
-	dataSourceName := "data.aws_s3_object.obj"
+	dataSourceName := "data.aws_s3_bucket_object.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
@@ -174,7 +174,7 @@ func TestAccS3BucketObjectDataSource_allParams(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resourceName := "aws_s3_object.object"
-	dataSourceName := "data.aws_s3_object.obj"
+	dataSourceName := "data.aws_s3_bucket_object.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
@@ -200,7 +200,7 @@ func TestAccS3BucketObjectDataSource_allParams(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "server_side_encryption", resourceName, "server_side_encryption"),
 					resource.TestCheckResourceAttr(dataSourceName, "sse_kms_key_id", ""),
 					// Supported, but difficult to reproduce in short testing time
-					resource.TestCheckResourceAttrPair(dataSourceName, "storage_class", resourceName, "storage_class"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStorageClass, resourceName, names.AttrStorageClass),
 					resource.TestCheckResourceAttr(dataSourceName, "expiration", ""),
 					// Currently unsupported in aws_s3_object resource
 					resource.TestCheckResourceAttr(dataSourceName, "expires", ""),
@@ -221,7 +221,7 @@ func TestAccS3BucketObjectDataSource_objectLockLegalHoldOff(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resourceName := "aws_s3_object.object"
-	dataSourceName := "data.aws_s3_object.obj"
+	dataSourceName := "data.aws_s3_bucket_object.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
@@ -252,7 +252,7 @@ func TestAccS3BucketObjectDataSource_objectLockLegalHoldOn(t *testing.T) {
 	retainUntilDate := time.Now().UTC().AddDate(0, 0, 10).Format(time.RFC3339)
 
 	resourceName := "aws_s3_object.object"
-	dataSourceName := "data.aws_s3_object.obj"
+	dataSourceName := "data.aws_s3_bucket_object.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
@@ -281,9 +281,9 @@ func TestAccS3BucketObjectDataSource_leadingSlash(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_object.object"
-	dataSourceName1 := "data.aws_s3_object.obj1"
-	dataSourceName2 := "data.aws_s3_object.obj2"
-	dataSourceName3 := "data.aws_s3_object.obj3"
+	dataSourceName1 := "data.aws_s3_bucket_object.obj1"
+	dataSourceName2 := "data.aws_s3_bucket_object.obj2"
+	dataSourceName3 := "data.aws_s3_bucket_object.obj3"
 
 	rInt := sdkacctest.RandInt()
 	resourceOnlyConf, conf := testAccBucketObjectDataSourceConfig_leadingSlash(rInt)
@@ -328,9 +328,9 @@ func TestAccS3BucketObjectDataSource_multipleSlashes(t *testing.T) {
 
 	resourceName1 := "aws_s3_object.object1"
 	resourceName2 := "aws_s3_object.object2"
-	dataSourceName1 := "data.aws_s3_object.obj1"
-	dataSourceName2 := "data.aws_s3_object.obj2"
-	dataSourceName3 := "data.aws_s3_object.obj3"
+	dataSourceName1 := "data.aws_s3_bucket_object.obj1"
+	dataSourceName2 := "data.aws_s3_bucket_object.obj2"
+	dataSourceName3 := "data.aws_s3_bucket_object.obj3"
 
 	rInt := sdkacctest.RandInt()
 	resourceOnlyConf, conf := testAccBucketObjectDataSourceConfig_multipleSlashes(rInt)
@@ -376,7 +376,7 @@ resource "aws_s3_object" "object" {
   content = "Hello World"
 }
 
-data "aws_s3_object" "obj" {
+data "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.object_bucket.bucket
   key    = aws_s3_object.object.key
 }
@@ -400,7 +400,7 @@ resource "aws_s3_object" "test" {
   content = "Hello World"
 }
 
-data "aws_s3_object" "test" {
+data "aws_s3_bucket_object" "test" {
   bucket = aws_s3_access_point.test.arn
   key    = aws_s3_object.test.key
 }
@@ -420,7 +420,7 @@ resource "aws_s3_object" "object" {
   content_type = "text/plain"
 }
 
-data "aws_s3_object" "obj" {
+data "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.object_bucket.bucket
   key    = aws_s3_object.object.key
 }
@@ -446,7 +446,7 @@ resource "aws_s3_object" "object" {
   kms_key_id   = aws_kms_key.example.arn
 }
 
-data "aws_s3_object" "obj" {
+data "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.object_bucket.bucket
   key    = aws_s3_object.object.key
 }
@@ -473,7 +473,7 @@ resource "aws_s3_object" "object" {
   bucket_key_enabled = true
 }
 
-data "aws_s3_object" "obj" {
+data "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.object_bucket.bucket
   key    = aws_s3_object.object.key
 }
@@ -516,7 +516,7 @@ CONTENT
   }
 }
 
-data "aws_s3_object" "obj" {
+data "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.object_bucket.bucket
   key    = aws_s3_object.object.key
 }
@@ -548,7 +548,7 @@ resource "aws_s3_object" "object" {
   object_lock_legal_hold_status = "OFF"
 }
 
-data "aws_s3_object" "obj" {
+data "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.object_bucket.bucket
   key    = aws_s3_object.object.key
 }
@@ -583,7 +583,7 @@ resource "aws_s3_object" "object" {
   object_lock_retain_until_date = "%[2]s"
 }
 
-data "aws_s3_object" "obj" {
+data "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.object_bucket.bucket
   key    = aws_s3_object.object.key
 }
@@ -607,17 +607,17 @@ resource "aws_s3_object" "object" {
 	both := fmt.Sprintf(`
 %[1]s
 
-data "aws_s3_object" "obj1" {
+data "aws_s3_bucket_object" "obj1" {
   bucket = aws_s3_bucket.object_bucket.bucket
   key    = "tf-testing-obj-%[2]d-readable"
 }
 
-data "aws_s3_object" "obj2" {
+data "aws_s3_bucket_object" "obj2" {
   bucket = aws_s3_bucket.object_bucket.bucket
   key    = "/tf-testing-obj-%[2]d-readable"
 }
 
-data "aws_s3_object" "obj3" {
+data "aws_s3_bucket_object" "obj3" {
   bucket = aws_s3_bucket.object_bucket.bucket
   key    = "//tf-testing-obj-%[2]d-readable"
 }
@@ -651,17 +651,17 @@ resource "aws_s3_object" "object2" {
 	both := fmt.Sprintf(`
 %s
 
-data "aws_s3_object" "obj1" {
+data "aws_s3_bucket_object" "obj1" {
   bucket = aws_s3_bucket.object_bucket.bucket
   key    = "first/second/third/"
 }
 
-data "aws_s3_object" "obj2" {
+data "aws_s3_bucket_object" "obj2" {
   bucket = aws_s3_bucket.object_bucket.bucket
   key    = "first//second///third//"
 }
 
-data "aws_s3_object" "obj3" {
+data "aws_s3_bucket_object" "obj3" {
   bucket = aws_s3_bucket.object_bucket.bucket
   key    = "first/second/third"
 }

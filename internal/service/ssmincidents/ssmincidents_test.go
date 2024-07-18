@@ -15,12 +15,12 @@ func TestAccSSMIncidents_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Replication Set Resource Tests": {
-			acctest.CtBasic:    testAccReplicationSet_basic,
-			"updateDefaultKey": testAccReplicationSet_updateRegionsWithoutCMK,
-			"updateCMK":        testAccReplicationSet_updateRegionsWithCMK,
-			"updateTags":       testAccReplicationSet_updateTags,
-			"updateEmptyTags":  testAccReplicationSet_updateEmptyTags,
-			"disappears":       testAccReplicationSet_disappears,
+			acctest.CtBasic:      testAccReplicationSet_basic,
+			"updateDefaultKey":   testAccReplicationSet_updateRegionsWithoutCMK,
+			"updateCMK":          testAccReplicationSet_updateRegionsWithCMK,
+			"updateTags":         testAccReplicationSet_updateTags,
+			"updateEmptyTags":    testAccReplicationSet_updateEmptyTags,
+			acctest.CtDisappears: testAccReplicationSet_disappears,
 		},
 		"Replication Set Data Source Tests": {
 			acctest.CtBasic: testAccReplicationSetDataSource_basic,
@@ -30,7 +30,7 @@ func TestAccSSMIncidents_serial(t *testing.T) {
 			"update":                 testAccResponsePlan_updateRequiredFields,
 			"updateTags":             testAccResponsePlan_updateTags,
 			"updateEmptyTags":        testAccResponsePlan_updateEmptyTags,
-			"disappears":             testAccResponsePlan_disappears,
+			acctest.CtDisappears:     testAccResponsePlan_disappears,
 			"incidentTemplateFields": testAccResponsePlan_incidentTemplateOptionalFields,
 			"displayName":            testAccResponsePlan_displayName,
 			"chatChannel":            testAccResponsePlan_chatChannel,
