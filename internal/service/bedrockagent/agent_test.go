@@ -70,7 +70,7 @@ func TestAccBedrockAgentAgent_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
-					resource.TestCheckResourceAttr(resourceName, "skip_resource_in_use_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_resource_in_use_check", acctest.CtTrue),
 				),
 			},
 			{
