@@ -689,32 +689,6 @@ func resourceLustreFileSystemDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func expandFinalBackupTags(cfg *schema.Set) []*fsx.Tag {
-	tags := []*fsx.Tag{}
-
-	for _, tag := range cfg.List() {
-		expandedTag := expandFinalBackupTag(tag.(map[string]interface{}))
-		if expandedTag != nil {
-			tags = append(tags, expandedTag)
-		}
-	}
-
-	return tags
-}
-
-func expandFinalBackupTag(cfg map[string]interface{}) *fsx.Tag {
-	out := fsx.Tag{}
-
-	if v, ok := cfg[names.AttrKey].(string); ok {
-		out.Key = aws.String(v)
-	}
-	if v, ok := cfg[names.AttrValue].(string); ok {
-		out.Value = aws.String(v)
-	}
-
-	return &out
-}
-
 func expandLustreRootSquashConfiguration(l []interface{}) *fsx.LustreRootSquashConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil

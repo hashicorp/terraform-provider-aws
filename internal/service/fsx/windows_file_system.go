@@ -165,26 +165,7 @@ func resourceWindowsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"final_backup_tags": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 50,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-						names.AttrValue: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(0, 128),
-						},
-					},
-				},
-			},
+			"final_backup_tags": tftags.TagsSchema(),
 			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -637,8 +618,8 @@ func resourceWindowsFileSystemDelete(ctx context.Context, d *schema.ResourceData
 		},
 	}
 
-	if v, ok := d.GetOk("final_backup_tags"); ok {
-		input.WindowsConfiguration.FinalBackupTags = expandFinalBackupTags(v.(*schema.Set))
+	if v, ok := d.GetOk("final_backup_tags"); ok && len(v.(map[string]interface{})) > 0 {
+		input.WindowsConfiguration.FinalBackupTags = Tags(tftags.New(ctx, v))
 	}
 
 	log.Printf("[DEBUG] Deleting FSx for Windows File Server File System: %s", d.Id())
