@@ -10,14 +10,17 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ivs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ivs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ivs/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -61,7 +64,7 @@ func ResourceChannel() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice(ivs.ChannelLatencyMode_Values(), false),
+				ValidateFunc: enum.Validate[awstypes.ChannelLatencyMode](),
 			},
 			names.AttrName: {
 				Type:         schema.TypeString,
@@ -85,7 +88,7 @@ func ResourceChannel() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice(ivs.ChannelType_Values(), false),
+				ValidateFunc: enum.Validate[awstypes.ChannelType](),
 			},
 		},
 
@@ -100,7 +103,7 @@ const (
 func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).IVSConn(ctx)
+	conn := meta.(*conns.AWSClient).IVSClient(ctx)
 
 	in := &ivs.CreateChannelInput{
 		Tags: getTagsIn(ctx),
@@ -126,7 +129,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 		in.Type = aws.String(v.(string))
 	}
 
-	out, err := conn.CreateChannelWithContext(ctx, in)
+	out, err := conn.CreateChannel(ctx, in)
 	if err != nil {
 		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameChannel, d.Get(names.AttrName).(string), err)
 	}
@@ -135,7 +138,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameChannel, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
-	d.SetId(aws.StringValue(out.Channel.Arn))
+	d.SetId(aws.ToString(out.Channel.Arn))
 
 	if _, err := waitChannelCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.AppendDiagError(diags, names.IVS, create.ErrActionWaitingForCreation, ResNameChannel, d.Id(), err)
@@ -147,7 +150,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).IVSConn(ctx)
+	conn := meta.(*conns.AWSClient).IVSClient(ctx)
 
 	out, err := FindChannelByID(ctx, conn, d.Id())
 
@@ -176,7 +179,7 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).IVSConn(ctx)
+	conn := meta.(*conns.AWSClient).IVSClient(ctx)
 
 	update := false
 
@@ -216,7 +219,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] Updating IVS Channel (%s): %#v", d.Id(), in)
 
-	out, err := conn.UpdateChannelWithContext(ctx, in)
+	out, err := conn.UpdateChannel(ctx, in)
 	if err != nil {
 		return create.AppendDiagError(diags, names.IVS, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 	}
@@ -231,16 +234,16 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).IVSConn(ctx)
+	conn := meta.(*conns.AWSClient).IVSClient(ctx)
 
 	log.Printf("[INFO] Deleting IVS Channel %s", d.Id())
 
-	_, err := conn.DeleteChannelWithContext(ctx, &ivs.DeleteChannelInput{
+	_, err := conn.DeleteChannel(ctx, &ivs.DeleteChannelInput{
 		Arn: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return diags
 		}
 
