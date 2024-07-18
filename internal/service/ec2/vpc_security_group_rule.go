@@ -299,7 +299,7 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 
 	flattenIpPermission(d, &ipPermission)
 
-	if description != nil {
+	if description != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set(names.AttrDescription, description)
 	}
 	d.Set(names.AttrType, ruleType)
