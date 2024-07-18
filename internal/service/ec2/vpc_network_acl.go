@@ -114,7 +114,7 @@ func networkACLRuleNestedBlock() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return strings.EqualFold(old, new)
 				},
-				// Accept pascal case to for compatibility reasons, See: TestAccVPCNetworkACL_caseSensitivityNoChanges
+				// Accept pascal case for backwards compatibility reasons, See: TestAccVPCNetworkACL_caseSensitivityNoChanges
 				ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.RuleAction.Values("")...), true),
 			},
 			names.AttrCIDRBlock: {
