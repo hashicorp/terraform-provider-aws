@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ivs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ivs/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -103,10 +102,10 @@ func ResourceRecordingConfiguration() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"recording_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: enum.Validate[awstypes.RecordingMode](),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.RecordingMode](),
 						},
 						"target_interval_seconds": {
 							Type:         schema.TypeInt,
@@ -142,13 +141,13 @@ func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	if v, ok := d.GetOk("recording_reconnect_window_seconds"); ok {
-		in.RecordingReconnectWindowSeconds = aws.Int64(int64(v.(int)))
+		in.RecordingReconnectWindowSeconds = int32(v.(int))
 	}
 
 	if v, ok := d.GetOk("thumbnail_configuration"); ok {
 		in.ThumbnailConfiguration = expandThumbnailConfiguration(v.([]interface{}))
 
-		if aws.ToString(in.ThumbnailConfiguration.RecordingMode) == awstypes.RecordingModeDisabled && in.ThumbnailConfiguration.TargetIntervalSeconds != nil {
+		if in.ThumbnailConfiguration.RecordingMode == awstypes.RecordingModeDisabled && in.ThumbnailConfiguration.TargetIntervalSeconds != nil {
 			return sdkdiag.AppendErrorf(diags, "thumbnail configuration target interval cannot be set if recording_mode is \"DISABLED\"")
 		}
 	}
@@ -266,9 +265,7 @@ func flattenThumbnailConfiguration(apiObject *awstypes.ThumbnailConfiguration) [
 
 	m := map[string]interface{}{}
 
-	if v := apiObject.RecordingMode; v != nil {
-		m["recording_mode"] = aws.ToString(v)
-	}
+	m["recording_mode"] = string(apiObject.RecordingMode)
 
 	if v := apiObject.TargetIntervalSeconds; v != nil {
 		m["target_interval_seconds"] = aws.ToInt64(v)
