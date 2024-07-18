@@ -90,57 +90,6 @@ func TestAccAMPScraper_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAMPScraper_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var scraper types.ScraperDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_prometheus_scraper.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScraperDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccScraperConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccScraperConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccScraperConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAMPScraper_alias(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -422,57 +371,6 @@ resource "aws_prometheus_scraper" "test" {
   }
 }
 `, scrapeConfigBlob))
-}
-
-func testAccScraperConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccScraperConfig_base(rName), fmt.Sprintf(`
-resource "aws_prometheus_scraper" "test" {
-  scrape_configuration = %[3]q
-
-  source {
-    eks {
-      cluster_arn = aws_eks_cluster.test.arn
-      subnet_ids  = aws_subnet.test[*].id
-    }
-  }
-
-  destination {
-    amp {
-      workspace_arn = aws_prometheus_workspace.test.arn
-    }
-  }
-
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1, scrapeConfigBlob))
-}
-
-func testAccScraperConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccScraperConfig_base(rName), fmt.Sprintf(`
-resource "aws_prometheus_scraper" "test" {
-  scrape_configuration = %[5]q
-
-  source {
-    eks {
-      cluster_arn = aws_eks_cluster.test.arn
-      subnet_ids  = aws_subnet.test[*].id
-    }
-  }
-
-  destination {
-    amp {
-      workspace_arn = aws_prometheus_workspace.test.arn
-    }
-  }
-
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, tagKey1, tagValue1, tagKey2, tagValue2, scrapeConfigBlob))
 }
 
 func testAccScraperConfig_alias(rName string) string {

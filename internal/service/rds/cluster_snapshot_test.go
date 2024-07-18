@@ -36,7 +36,7 @@ func TestAccRDSClusterSnapshot_basic(t *testing.T) {
 				Config: testAccClusterSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(ctx, resourceName, &dbClusterSnapshot),
-					resource.TestCheckResourceAttrSet(resourceName, "allocated_storage"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAllocatedStorage),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zones.#"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "db_cluster_snapshot_arn", "rds", regexache.MustCompile(fmt.Sprintf("cluster-snapshot:%s$", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),

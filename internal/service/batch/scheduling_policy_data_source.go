@@ -19,7 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_batch_scheduling_policy")
+// @SDKDataSource("aws_batch_scheduling_policy", name="Scheduling Policy")
+// @Tags
 func DataSourceSchedulingPolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSchedulingPolicyRead,
@@ -81,7 +82,6 @@ func DataSourceSchedulingPolicy() *schema.Resource {
 func dataSourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	schedulingPolicy, err := FindSchedulingPolicyByARN(ctx, conn, d.Get(names.AttrARN).(string))
 
@@ -95,9 +95,7 @@ func dataSourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData,
 	}
 	d.Set(names.AttrName, schedulingPolicy.Name)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, schedulingPolicy.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, schedulingPolicy.Tags)
 
 	return diags
 }

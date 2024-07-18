@@ -76,15 +76,15 @@ func newTagFilterListV2(tags []awstypes.Tag) []awstypes.Filter {
 // The values of the specified map are lists of resource attribute values used in the filter. The resource can
 // match any of the filter values to be included in the result.
 // See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Filtering.html#Filtering_Resources_CLI for more details.
-func attributeFiltersFromMultimap(m map[string][]string) []*ec2_sdkv1.Filter {
+func attributeFiltersFromMultimap(m map[string][]string) []awstypes.Filter {
 	if len(m) == 0 {
 		return nil
 	}
 
-	filters := []*ec2_sdkv1.Filter{}
+	filters := []awstypes.Filter{}
 
 	for k, v := range m {
-		filters = append(filters, newFilter(k, v))
+		filters = append(filters, newFilterV2(k, v))
 	}
 
 	return filters
@@ -213,7 +213,7 @@ func newCustomFilterListV2(s *schema.Set) []awstypes.Filter {
 
 	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) awstypes.Filter {
 		tfMap := tfList.(map[string]interface{})
-		return newFilterV2(tfMap[names.AttrName].(string), flex.ExpandStringValueSet(tfMap[names.AttrValues].(*schema.Set)))
+		return newFilterV2(tfMap[names.AttrName].(string), flex.ExpandStringValueEmptySet(tfMap[names.AttrValues].(*schema.Set)))
 	})
 }
 

@@ -10,6 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -42,8 +45,10 @@ func testAccVirtualRouterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.listener.0.port_mapping.#", dataSourceName, "spec.0.listener.0.port_mapping.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.listener.0.port_mapping.0.port", dataSourceName, "spec.0.listener.0.port_mapping.0.port"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.listener.0.port_mapping.0.protocol", dataSourceName, "spec.0.listener.0.port_mapping.0.protocol"),
-					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 		},
 	})
@@ -66,10 +71,6 @@ resource "aws_appmesh_virtual_router" "test" {
         protocol = "http"
       }
     }
-  }
-
-  tags = {
-    Name = %[2]q
   }
 }
 

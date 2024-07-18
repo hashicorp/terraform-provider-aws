@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ebs_snapshot_ids")
-func DataSourceEBSSnapshotIDs() *schema.Resource {
+// @SDKDataSource("aws_ebs_snapshot_ids", name="EBS Snapshot IDs")
+func dataSourceEBSSnapshotIDs() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEBSSnapshotIDsRead,
 
@@ -70,7 +70,7 @@ func dataSourceEBSSnapshotIDsRead(ctx context.Context, d *schema.ResourceData, m
 		input.Filters = nil
 	}
 
-	snapshots, err := FindSnapshots(ctx, conn, input)
+	snapshots, err := findSnapshots(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS Snapshots: %s", err)

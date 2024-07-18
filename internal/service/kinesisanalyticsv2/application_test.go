@@ -336,6 +336,34 @@ func TestAccKinesisAnalyticsV2Application_basicSQLApplication(t *testing.T) {
 	})
 }
 
+func TestAccKinesisAnalyticsV2Application_applicationMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v kinesisanalyticsv2.ApplicationDetail
+	resourceName := "aws_kinesisanalyticsv2_application.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisAnalyticsV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_applicationMode(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_mode", "STREAMING"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccKinesisAnalyticsV2Application_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v kinesisanalyticsv2.ApplicationDetail
@@ -4482,6 +4510,19 @@ func testAccApplicationConfig_basicSQL(rName string) string {
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
+  service_execution_role = aws_iam_role.test[0].arn
+}
+`, rName))
+}
+
+func testAccApplicationConfig_applicationMode(rName string) string {
+	return acctest.ConfigCompose(
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
+		fmt.Sprintf(`
+resource "aws_kinesisanalyticsv2_application" "test" {
+  name                   = %[1]q
+  application_mode       = "STREAMING"
+  runtime_environment    = "FLINK-1_13"
   service_execution_role = aws_iam_role.test[0].arn
 }
 `, rName))

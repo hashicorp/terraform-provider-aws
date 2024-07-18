@@ -28,6 +28,9 @@ import (
 
 // @SDKResource("aws_appmesh_gateway_route", name="Gateway Route")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/appmesh;appmesh.GatewayRouteData")
+// @Testing(serialize=true)
+// @Testing(importStateIdFunc=testAccGatewayRouteImportStateIdFunc)
 func resourceGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayRouteCreate,

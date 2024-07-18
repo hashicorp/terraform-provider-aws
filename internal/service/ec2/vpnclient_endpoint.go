@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_ec2_client_vpn_endpoint", name="Client VPN Endpoint")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceClientVPNEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientVPNEndpointCreate,

@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/networkfirewall"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -39,14 +40,14 @@ func TestAccNetworkFirewallRuleGroup_Basic_rulesSourceList(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, networkfirewall.RuleGroupTypeStateful),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.RuleGroupTypeStateful)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.generated_rules_type", networkfirewall.GeneratedRulesTypeAllowlist),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.generated_rules_type", string(awstypes.GeneratedRulesTypeAllowlist)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.*", networkfirewall.TargetTypeHttpHost),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.*", string(awstypes.TargetTypeHttpHost)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.*", "test.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.#", acctest.Ct0),
@@ -82,7 +83,7 @@ func TestAccNetworkFirewallRuleGroup_Basic_referenceSets(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, networkfirewall.RuleGroupTypeStateful),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.RuleGroupTypeStateful)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.#", acctest.Ct3),
@@ -119,7 +120,7 @@ func TestAccNetworkFirewallRuleGroup_Basic_updateReferenceSets(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, networkfirewall.RuleGroupTypeStateful),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.RuleGroupTypeStateful)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.#", acctest.Ct3),
@@ -140,7 +141,7 @@ func TestAccNetworkFirewallRuleGroup_Basic_updateReferenceSets(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, networkfirewall.RuleGroupTypeStateful),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.RuleGroupTypeStateful)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.#", acctest.Ct3),
@@ -172,16 +173,16 @@ func TestAccNetworkFirewallRuleGroup_Basic_statefulRule(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, networkfirewall.RuleGroupTypeStateful),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.RuleGroupTypeStateful)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", networkfirewall.StatefulActionPass),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", string(awstypes.StatefulActionPass)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.destination", "124.1.1.24/32"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.destination_port", "53"),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.direction", networkfirewall.StatefulRuleDirectionAny),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.protocol", networkfirewall.StatefulRuleProtocolTcp),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.direction", string(awstypes.StatefulRuleDirectionAny)),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.protocol", string(awstypes.StatefulRuleProtocolTcp)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source", "1.2.3.4/32"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source_port", "53"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.#", acctest.Ct1),
@@ -222,7 +223,7 @@ func TestAccNetworkFirewallRuleGroup_Basic_statelessRule(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateless-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, networkfirewall.RuleGroupTypeStateless),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.RuleGroupTypeStateless)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.#", acctest.Ct1),
@@ -268,7 +269,7 @@ alert http any any -> any any (http_response_line; content:"403 Forbidden"; sid:
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, networkfirewall.RuleGroupTypeStateful),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.RuleGroupTypeStateful)),
 					resource.TestCheckResourceAttr(resourceName, "rules", rules),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", acctest.Ct1),
@@ -305,7 +306,7 @@ func TestAccNetworkFirewallRuleGroup_statefulRuleOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.0.rule_order", networkfirewall.RuleOrderStrictOrder),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.0.rule_order", string(awstypes.RuleOrderStrictOrder)),
 				),
 			},
 			{
@@ -335,7 +336,7 @@ func TestAccNetworkFirewallRuleGroup_updateStatefulRuleOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.0.rule_order", networkfirewall.RuleOrderStrictOrder),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.0.rule_order", string(awstypes.RuleOrderStrictOrder)),
 				),
 			},
 			{
@@ -344,7 +345,7 @@ func TestAccNetworkFirewallRuleGroup_updateStatefulRuleOptions(t *testing.T) {
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup2),
 					testAccCheckRuleGroupRecreated(&ruleGroup1, &ruleGroup2),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.0.rule_order", networkfirewall.RuleOrderDefaultActionOrder),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.0.rule_order", string(awstypes.RuleOrderDefaultActionOrder)),
 				),
 			},
 			{
@@ -383,7 +384,7 @@ func TestAccNetworkFirewallRuleGroup_statelessRuleWithCustomAction(t *testing.T)
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateless-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, networkfirewall.RuleGroupTypeStateless),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.RuleGroupTypeStateless)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.#", acctest.Ct1),
@@ -482,14 +483,14 @@ func TestAccNetworkFirewallRuleGroup_updateRulesSourceList(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("stateful-rulegroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, networkfirewall.RuleGroupTypeStateful),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.RuleGroupTypeStateful)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.generated_rules_type", networkfirewall.GeneratedRulesTypeDenylist),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.generated_rules_type", string(awstypes.GeneratedRulesTypeDenylist)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.#", acctest.Ct2),
-					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.*", networkfirewall.TargetTypeHttpHost),
-					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.*", networkfirewall.TargetTypeTlsSni),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.*", string(awstypes.TargetTypeHttpHost)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.*", string(awstypes.TargetTypeTlsSni)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.*", "test.example.com"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.*", "test2.example.com"),
@@ -608,12 +609,12 @@ func TestAccNetworkFirewallRuleGroup_updateStatefulRule(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", networkfirewall.StatefulActionDrop),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", string(awstypes.StatefulActionDrop)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.destination", "1.2.3.4/32"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.destination_port", "1001"),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.direction", networkfirewall.StatefulRuleDirectionForward),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.protocol", networkfirewall.StatefulRuleProtocolIp),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.direction", string(awstypes.StatefulRuleDirectionForward)),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.protocol", string(awstypes.StatefulRuleProtocolAny)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source", "124.1.1.24/32"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source_port", "1001"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.#", acctest.Ct2),
@@ -665,23 +666,23 @@ func TestAccNetworkFirewallRuleGroup_updateMultipleStatefulRules(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", networkfirewall.StatefulActionPass),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", string(awstypes.StatefulActionPass)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.destination", "124.1.1.24/32"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.destination_port", "53"),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.direction", networkfirewall.StatefulRuleDirectionAny),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.protocol", networkfirewall.StatefulRuleProtocolTcp),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.direction", string(awstypes.StatefulRuleDirectionAny)),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.protocol", string(awstypes.StatefulRuleProtocolTcp)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source", "1.2.3.4/32"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source_port", "53"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.action", networkfirewall.StatefulActionAlert),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.action", string(awstypes.StatefulActionAlert)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.0.destination", networkfirewall.StatefulRuleDirectionAny),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.0.destination_port", networkfirewall.StatefulRuleDirectionAny),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.0.direction", networkfirewall.StatefulRuleDirectionAny),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.0.protocol", networkfirewall.StatefulRuleProtocolIp),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.0.source", networkfirewall.StatefulRuleDirectionAny),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.0.source_port", networkfirewall.StatefulRuleDirectionAny),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.0.destination", string(awstypes.StatefulRuleDirectionAny)),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.0.destination_port", string(awstypes.StatefulRuleDirectionAny)),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.0.direction", string(awstypes.StatefulRuleDirectionAny)),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.0.protocol", string(awstypes.StatefulRuleProtocolAny)),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.0.source", string(awstypes.StatefulRuleDirectionAny)),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.header.0.source_port", string(awstypes.StatefulRuleDirectionAny)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.1.rule_option.#", acctest.Ct1),
 				),
 			},
@@ -695,12 +696,12 @@ func TestAccNetworkFirewallRuleGroup_updateMultipleStatefulRules(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", networkfirewall.StatefulActionDrop),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", string(awstypes.StatefulActionDrop)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.destination", "1.2.3.4/32"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.destination_port", "1001"),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.direction", networkfirewall.StatefulRuleDirectionForward),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.protocol", networkfirewall.StatefulRuleProtocolIp),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.direction", string(awstypes.StatefulRuleDirectionForward)),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.protocol", string(awstypes.StatefulRuleProtocolAny)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source", "124.1.1.24/32"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source_port", "1001"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.#", acctest.Ct2),
@@ -731,11 +732,11 @@ func TestAccNetworkFirewallRuleGroup_StatefulRule_action(t *testing.T) {
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_statefulAction(rName, networkfirewall.StatefulActionAlert),
+				Config: testAccRuleGroupConfig_statefulAction(rName, string(awstypes.StatefulActionAlert)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", networkfirewall.StatefulActionAlert),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", string(awstypes.StatefulActionAlert)),
 				),
 			},
 			{
@@ -744,11 +745,11 @@ func TestAccNetworkFirewallRuleGroup_StatefulRule_action(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRuleGroupConfig_statefulAction(rName, networkfirewall.StatefulActionPass),
+				Config: testAccRuleGroupConfig_statefulAction(rName, string(awstypes.StatefulActionPass)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", networkfirewall.StatefulActionPass),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", string(awstypes.StatefulActionPass)),
 				),
 			},
 			{
@@ -757,11 +758,11 @@ func TestAccNetworkFirewallRuleGroup_StatefulRule_action(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRuleGroupConfig_statefulAction(rName, networkfirewall.StatefulActionDrop),
+				Config: testAccRuleGroupConfig_statefulAction(rName, string(awstypes.StatefulActionDrop)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", networkfirewall.StatefulActionDrop),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", string(awstypes.StatefulActionDrop)),
 				),
 			},
 			{
@@ -770,11 +771,11 @@ func TestAccNetworkFirewallRuleGroup_StatefulRule_action(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRuleGroupConfig_statefulAction(rName, networkfirewall.StatefulActionReject),
+				Config: testAccRuleGroupConfig_statefulAction(rName, string(awstypes.StatefulActionReject)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", networkfirewall.StatefulActionReject),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", string(awstypes.StatefulActionReject)),
 				),
 			},
 			{
@@ -804,12 +805,12 @@ func TestAccNetworkFirewallRuleGroup_StatefulRule_header(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", networkfirewall.StatefulActionPass),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", string(awstypes.StatefulActionPass)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.destination", "ANY"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.destination_port", "1990"),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.direction", networkfirewall.StatefulRuleDirectionAny),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.protocol", networkfirewall.StatefulRuleProtocolTcp),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.direction", string(awstypes.StatefulRuleDirectionAny)),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.protocol", string(awstypes.StatefulRuleProtocolTcp)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source", "ANY"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source_port", "1994"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.#", acctest.Ct1),
@@ -825,12 +826,12 @@ func TestAccNetworkFirewallRuleGroup_StatefulRule_header(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", networkfirewall.StatefulActionPass),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", string(awstypes.StatefulActionPass)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.destination", "ANY"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.destination_port", "ANY"),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.direction", networkfirewall.StatefulRuleDirectionAny),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.protocol", networkfirewall.StatefulRuleProtocolTcp),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.direction", string(awstypes.StatefulRuleDirectionAny)),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.protocol", string(awstypes.StatefulRuleProtocolTcp)),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source", "ANY"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source_port", "ANY"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.#", acctest.Ct1),
@@ -1024,7 +1025,7 @@ func testAccCheckRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
 
 			_, err := tfnetworkfirewall.FindRuleGroupByARN(ctx, conn, rs.Primary.ID)
 
@@ -1050,11 +1051,7 @@ func testAccCheckRuleGroupExists(ctx context.Context, n string, v *networkfirewa
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No NetworkFirewall Rule Group ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
 
 		output, err := tfnetworkfirewall.FindRuleGroupByARN(ctx, conn, rs.Primary.ID)
 
@@ -1070,7 +1067,7 @@ func testAccCheckRuleGroupExists(ctx context.Context, n string, v *networkfirewa
 
 func testAccCheckRuleGroupNotRecreated(i, j *networkfirewall.DescribeRuleGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(i.RuleGroupResponse.RuleGroupId), aws.StringValue(j.RuleGroupResponse.RuleGroupId); before != after {
+		if before, after := aws.ToString(i.RuleGroupResponse.RuleGroupId), aws.ToString(j.RuleGroupResponse.RuleGroupId); before != after {
 			return fmt.Errorf("NetworkFirewall Rule Group was recreated. got: %s, expected: %s", after, before)
 		}
 		return nil
@@ -1079,7 +1076,7 @@ func testAccCheckRuleGroupNotRecreated(i, j *networkfirewall.DescribeRuleGroupOu
 
 func testAccCheckRuleGroupRecreated(i, j *networkfirewall.DescribeRuleGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(i.RuleGroupResponse.RuleGroupId), aws.StringValue(j.RuleGroupResponse.RuleGroupId); before == after {
+		if before, after := aws.ToString(i.RuleGroupResponse.RuleGroupId), aws.ToString(j.RuleGroupResponse.RuleGroupId); before == after {
 			return fmt.Errorf("NetworkFirewall Rule Group (%s) was not recreated", before)
 		}
 		return nil

@@ -68,5 +68,5 @@ func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrFamily, output.DBParameterGroups[0].DBParameterGroupFamily)
 	d.Set(names.AttrDescription, output.DBParameterGroups[0].Description)
 
-	return nil
+	return diags
 }

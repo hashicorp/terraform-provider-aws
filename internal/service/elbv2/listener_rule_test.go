@@ -5,7 +5,6 @@ package elbv2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"slices"
@@ -21,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -135,47 +134,6 @@ func TestAccELBV2ListenerRule_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelbv2.ResourceListenerRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccELBV2ListenerRule_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_listener_rule.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccListenerRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				Config: testAccListenerRuleConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccListenerRuleConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
 			},
 		},
 	})
@@ -1511,6 +1469,7 @@ func TestAccELBV2ListenerRule_EmptyAction(t *testing.T) {
 	}
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/35668.
 func TestAccELBV2ListenerRule_redirectWithTargetGroupARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Rule
@@ -1544,10 +1503,15 @@ func TestAccELBV2ListenerRule_redirectWithTargetGroupARN(t *testing.T) {
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccListenerRuleConfig_redirectWithTargetGroupARN(lbName),
-				PlanOnly:                 true,
-				ExpectNonEmptyPlan:       false,
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.36.0",
+					},
+				},
+				Config:             testAccListenerRuleConfig_redirectWithTargetGroupARN(lbName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
 			},
 		},
 	})
@@ -2188,33 +2152,23 @@ func testAccCheckListenerRuleRecreated(t *testing.T, before, after *awstypes.Rul
 	}
 }
 
-func testAccCheckListenerRuleExists(ctx context.Context, n string, res *awstypes.Rule) resource.TestCheckFunc {
+func testAccCheckListenerRuleExists(ctx context.Context, n string, v *awstypes.Rule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return errors.New("No Listener Rule ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
-		describe, err := conn.DescribeRules(ctx, &elasticloadbalancingv2.DescribeRulesInput{
-			RuleArns: []string{rs.Primary.ID},
-		})
+		output, err := tfelbv2.FindListenerRuleByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(describe.Rules) != 1 ||
-			*describe.Rules[0].RuleArn != rs.Primary.ID {
-			return errors.New("Listener Rule not found")
-		}
+		*v = *output
 
-		*res = describe.Rules[0]
 		return nil
 	}
 }
@@ -2228,23 +2182,17 @@ func testAccCheckListenerRuleDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			describe, err := conn.DescribeRules(ctx, &elasticloadbalancingv2.DescribeRulesInput{
-				RuleArns: []string{rs.Primary.ID},
-			})
+			_, err := tfelbv2.FindListenerRuleByARN(ctx, conn, rs.Primary.ID)
 
-			if err == nil {
-				if len(describe.Rules) != 0 &&
-					*describe.Rules[0].RuleArn == rs.Primary.ID {
-					return fmt.Errorf("Listener Rule %q still exists", rs.Primary.ID)
-				}
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			// Verify the error
-			if errs.IsA[*awstypes.RuleNotFoundException](err) {
-				return nil
-			} else {
-				return fmt.Errorf("Unexpected error checking LB Listener Rule destroyed: %s", err)
+			if err != nil {
+				return err
 			}
+
+			return fmt.Errorf("ELBv2 Listener Rule %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -4923,53 +4871,4 @@ condition {
   }
 }
 `, lbName)
-}
-
-func testAccListenerRuleConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), fmt.Sprintf(`
-resource "aws_lb_listener_rule" "test" {
-  listener_arn = aws_lb_listener.test.arn
-  priority     = 100
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/static/*"]
-    }
-  }
-
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1))
-}
-
-func testAccListenerRuleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), fmt.Sprintf(`
-resource "aws_lb_listener_rule" "test" {
-  listener_arn = aws_lb_listener.test.arn
-  priority     = 100
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/static/*"]
-    }
-  }
-
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, tagKey1, tagValue1, tagKey2, tagValue2))
 }

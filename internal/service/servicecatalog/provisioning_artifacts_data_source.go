@@ -97,7 +97,7 @@ func dataSourceProvisioningArtifactsRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "setting provisioning_artifact_details: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenProvisioningArtifactDetails(apiObjects []*servicecatalog.ProvisioningArtifactDetail) []interface{} {

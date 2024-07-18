@@ -174,7 +174,7 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 											},
 										},
 									},
-									"storage_class": {
+									names.AttrStorageClass: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.StorageClass](),
@@ -581,7 +581,7 @@ func expandDestination(l []interface{}) *types.Destination {
 		result.ReplicationTime = expandReplicationTime(v)
 	}
 
-	if v, ok := tfMap["storage_class"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStorageClass].(string); ok && v != "" {
 		result.StorageClass = types.StorageClass(v)
 	}
 
@@ -932,7 +932,7 @@ func flattenDestination(dest *types.Destination) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"storage_class": dest.StorageClass,
+		names.AttrStorageClass: dest.StorageClass,
 	}
 
 	if dest.AccessControlTranslation != nil {

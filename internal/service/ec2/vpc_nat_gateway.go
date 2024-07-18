@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_nat_gateway", name="NAT Gateway")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceNATGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNATGatewayCreate,
@@ -52,7 +53,7 @@ func ResourceNATGateway() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"association_id": {
+			names.AttrAssociationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -189,7 +190,7 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 		// Length check guarantees the attributes are always set (#30865).
 		if isPrimary := aws.BoolValue(address.IsPrimary); isPrimary || len(ng.NatGatewayAddresses) == 1 {
 			d.Set("allocation_id", address.AllocationId)
-			d.Set("association_id", address.AssociationId)
+			d.Set(names.AttrAssociationID, address.AssociationId)
 			d.Set(names.AttrNetworkInterfaceID, address.NetworkInterfaceId)
 			d.Set("private_ip", address.PrivateIp)
 			d.Set("public_ip", address.PublicIp)

@@ -313,7 +313,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err != nil {
-		return diag.Errorf("creating S3 Bucket (%s) Notification: %s", bucket, err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Notification: %s", bucket, err)
 	}
 
 	if d.IsNewResource() {
@@ -324,7 +324,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		})
 
 		if err != nil {
-			return diag.Errorf("waiting for S3 Bucket Notification (%s) create: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Notification (%s) create: %s", d.Id(), err)
 		}
 	}
 
@@ -375,11 +375,11 @@ func resourceBucketNotificationDelete(ctx context.Context, d *schema.ResourceDat
 	_, err := conn.PutBucketNotificationConfiguration(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting S3 Bucket Notification (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Notification (%s): %s", d.Id(), err)
 	}
 
 	// Don't wait for the notification configuration to disappear as it still exists after update.

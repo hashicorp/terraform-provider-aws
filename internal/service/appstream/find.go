@@ -182,3 +182,29 @@ func FindFleetStackAssociation(ctx context.Context, conn *appstream.Client, flee
 
 	return nil
 }
+
+// findImages finds all images from a describe images input
+func findImages(ctx context.Context, conn *appstream.Client, input *appstream.DescribeImagesInput) ([]awstypes.Image, error) {
+	var output []awstypes.Image
+
+	pages := appstream.NewDescribeImagesPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Images...)
+	}
+
+	return output, nil
+}

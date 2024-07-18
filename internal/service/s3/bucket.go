@@ -265,7 +265,7 @@ func resourceBucket() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(0),
 									},
-									"storage_class": {
+									names.AttrStorageClass: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
@@ -293,7 +293,7 @@ func resourceBucket() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(0),
 									},
-									"storage_class": {
+									names.AttrStorageClass: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
@@ -501,7 +501,7 @@ func resourceBucket() *schema.Resource {
 														},
 													},
 												},
-												"storage_class": {
+												names.AttrStorageClass: {
 													Type:             schema.TypeString,
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[types.StorageClass](),
@@ -835,7 +835,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
 		d.Set(names.AttrPolicy, nil)
 	default:
-		return diag.Errorf("reading S3 Bucket (%s) policy: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) policy: %s", d.Id(), err)
 	}
 
 	//
@@ -859,7 +859,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
 		d.Set("grant", nil)
 	default:
-		return diag.Errorf("reading S3 Bucket (%s) ACL: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) ACL: %s", d.Id(), err)
 	}
 
 	//
@@ -883,7 +883,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeNoSuchCORSConfiguration, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
 		d.Set("cors_rule", nil)
 	default:
-		return diag.Errorf("reading S3 Bucket (%s) CORS configuration: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) CORS configuration: %s", d.Id(), err)
 	}
 
 	//
@@ -911,7 +911,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
 		d.Set("website", nil)
 	default:
-		return diag.Errorf("reading S3 Bucket (%s) website configuration: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) website configuration: %s", d.Id(), err)
 	}
 
 	//
@@ -935,7 +935,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
 		d.Set("versioning", nil)
 	default:
-		return diag.Errorf("reading S3 Bucket (%s) versioning: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) versioning: %s", d.Id(), err)
 	}
 
 	//
@@ -954,10 +954,10 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	switch {
 	case err == nil:
 		d.Set("acceleration_status", bucketAccelerate.Status)
-	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented, errCodeUnsupportedArgument):
+	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented, errCodeUnsupportedArgument, errCodeUnsupportedOperation):
 		d.Set("acceleration_status", nil)
 	default:
-		return diag.Errorf("reading S3 Bucket (%s) accelerate configuration: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) accelerate configuration: %s", d.Id(), err)
 	}
 
 	//
@@ -979,7 +979,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
 		d.Set("request_payer", nil)
 	default:
-		return diag.Errorf("reading S3 Bucket (%s) request payment configuration: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) request payment configuration: %s", d.Id(), err)
 	}
 
 	//
@@ -1003,7 +1003,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
 		d.Set("logging", nil)
 	default:
-		return diag.Errorf("reading S3 Bucket (%s) logging: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) logging: %s", d.Id(), err)
 	}
 
 	//
@@ -1027,7 +1027,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
 		d.Set("lifecycle_rule", nil)
 	default:
-		return diag.Errorf("reading S3 Bucket (%s) lifecycle configuration: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) lifecycle configuration: %s", d.Id(), err)
 	}
 
 	//
@@ -1051,7 +1051,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
 		d.Set("replication_configuration", nil)
 	default:
-		return diag.Errorf("reading S3 Bucket (%s) replication configuration: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) replication configuration: %s", d.Id(), err)
 	}
 
 	//
@@ -1072,10 +1072,10 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		if err := d.Set("server_side_encryption_configuration", flattenBucketServerSideEncryptionConfiguration(encryptionConfiguration)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting server_side_encryption_configuration: %s", err)
 		}
-	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented, errCodeUnsupportedOperation):
 		d.Set("server_side_encryption_configuration", nil)
 	default:
-		return diag.Errorf("reading S3 Bucket (%s) server-side encryption configuration: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) server-side encryption configuration: %s", d.Id(), err)
 	}
 
 	//
@@ -1102,7 +1102,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("object_lock_enabled", nil)
 	default:
 		if partition := meta.(*conns.AWSClient).Partition; partition == names.StandardPartitionID || partition == names.USGovCloudPartitionID {
-			return diag.Errorf("reading S3 Bucket (%s) object lock configuration: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) object lock configuration: %s", d.Id(), err)
 		}
 		log.Printf("[WARN] Unable to read S3 Bucket (%s) Object Lock Configuration: %s", d.Id(), err)
 		d.Set("object_lock_configuration", nil)
@@ -1566,7 +1566,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 
 			if n, err := emptyBucket(ctx, conn, d.Id(), objectLockEnabled); err != nil {
-				return diag.Errorf("emptying S3 Bucket (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "emptying S3 Bucket (%s): %s", d.Id(), err)
 			} else {
 				log.Printf("[DEBUG] Deleted %d S3 objects", n)
 			}
@@ -2230,7 +2230,7 @@ func expandBucketNoncurrentVersionTransition(l []interface{}) []types.Noncurrent
 			transition.NoncurrentDays = aws.Int32(int32(v))
 		}
 
-		if v, ok := tfMap["storage_class"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrStorageClass].(string); ok && v != "" {
 			transition.StorageClass = types.TransitionStorageClass(v)
 		}
 
@@ -2262,7 +2262,7 @@ func expandBucketTransitions(l []interface{}) []types.Transition {
 			transition.Days = aws.Int32(int32(v))
 		}
 
-		if v, ok := tfMap["storage_class"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrStorageClass].(string); ok && v != "" {
 			transition.StorageClass = types.TransitionStorageClass(v)
 		}
 
@@ -2373,7 +2373,7 @@ func flattenBucketNoncurrentVersionTransitions(transitions []types.NoncurrentVer
 
 	for _, transition := range transitions {
 		m := map[string]interface{}{
-			"storage_class": transition.StorageClass,
+			names.AttrStorageClass: transition.StorageClass,
 		}
 
 		if transition.NoncurrentDays != nil {
@@ -2395,7 +2395,7 @@ func flattenBucketTransitions(transitions []types.Transition) []interface{} {
 
 	for _, transition := range transitions {
 		m := map[string]interface{}{
-			"storage_class": transition.StorageClass,
+			names.AttrStorageClass: transition.StorageClass,
 		}
 
 		if transition.Date != nil {
@@ -2527,7 +2527,7 @@ func expandBucketDestination(l []interface{}) *types.Destination {
 		apiObject.Bucket = aws.String(v)
 	}
 
-	if v, ok := tfMap["storage_class"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStorageClass].(string); ok && v != "" {
 		apiObject.StorageClass = types.StorageClass(v)
 	}
 
@@ -2674,7 +2674,7 @@ func flattenBucketDestination(dest *types.Destination) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"storage_class": dest.StorageClass,
+		names.AttrStorageClass: dest.StorageClass,
 	}
 
 	if apiObject := dest.AccessControlTranslation; apiObject != nil {

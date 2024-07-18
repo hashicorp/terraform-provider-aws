@@ -27,6 +27,9 @@ import (
 
 // @SDKResource("aws_appmesh_virtual_service", name="Virtual Service")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/appmesh;appmesh.VirtualServiceData")
+// @Testing(serialize=true)
+// @Testing(importStateIdFunc=testAccVirtualServiceImportStateIdFunc)
 func resourceVirtualService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualServiceCreate,

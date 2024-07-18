@@ -337,7 +337,7 @@ func TestAccStorageGatewayGateway_cloudWatchLogs(t *testing.T) {
 				Config: testAccGatewayConfig_logGroup(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", resourceName2, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCloudWatchLogGroupARN, resourceName2, names.AttrARN),
 				),
 			},
 			{
