@@ -90,7 +90,6 @@ const (
 type resourceStreamProcessor struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-	framework.WithImportByID
 }
 
 func (r *resourceStreamProcessor) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -110,7 +109,6 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Description: "An identifier you assign to the stream processor.",
 				Required:    true,
@@ -485,7 +483,6 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	plan.ID = plan.Name
 	plan.StreamProcessorARN = fwflex.StringToFrameworkARN(ctx, out.StreamProcessorArn)
 
 	if plan.DataSharingPreference.IsNull() {
@@ -496,10 +493,10 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	created, err := waitStreamProcessorCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	created, err := waitStreamProcessorCreated(ctx, conn, plan.Name.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForCreation, ResNameStreamProcessor, plan.ID.String(), err),
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForCreation, ResNameStreamProcessor, plan.Name.String(), err),
 			err.Error(),
 		)
 		return
@@ -522,7 +519,7 @@ func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	out, err := findStreamProcessorByID(ctx, conn, state.ID.ValueString())
+	out, err := findStreamProcessorByName(ctx, conn, state.Name.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -530,7 +527,7 @@ func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadReq
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionSetting, ResNameStreamProcessor, state.ID.String(), err),
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionSetting, ResNameStreamProcessor, state.Name.String(), err),
 			err.Error(),
 		)
 		return
@@ -688,7 +685,7 @@ func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.Delet
 	}
 
 	in := &rekognition.DeleteStreamProcessorInput{
-		Name: aws.String(state.ID.ValueString()),
+		Name: aws.String(state.Name.ValueString()),
 	}
 
 	_, err := conn.DeleteStreamProcessor(ctx, in)
@@ -698,32 +695,36 @@ func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.Delet
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionDeleting, ResNameStreamProcessor, state.ID.String(), err),
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionDeleting, ResNameStreamProcessor, state.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitStreamProcessorDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	_, err = waitStreamProcessorDeleted(ctx, conn, state.Name.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForDeletion, ResNameStreamProcessor, state.ID.String(), err),
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForDeletion, ResNameStreamProcessor, state.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 }
 
+func (r *resourceStreamProcessor) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), req, resp)
+}
+
 func (r *resourceStreamProcessor) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
 
-func waitStreamProcessorCreated(ctx context.Context, conn *rekognition.Client, id string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
+func waitStreamProcessorCreated(ctx context.Context, conn *rekognition.Client, name string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.StreamProcessorStatusStopped),
-		Refresh:                   statusStreamProcessor(ctx, conn, id),
+		Refresh:                   statusStreamProcessor(ctx, conn, name),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -737,11 +738,11 @@ func waitStreamProcessorCreated(ctx context.Context, conn *rekognition.Client, i
 	return nil, err
 }
 
-func waitStreamProcessorUpdated(ctx context.Context, conn *rekognition.Client, id string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
+func waitStreamProcessorUpdated(ctx context.Context, conn *rekognition.Client, name string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.StreamProcessorStatusUpdating),
 		Target:                    enum.Slice(awstypes.StreamProcessorStatusStopped),
-		Refresh:                   statusStreamProcessor(ctx, conn, id),
+		Refresh:                   statusStreamProcessor(ctx, conn, name),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -755,7 +756,7 @@ func waitStreamProcessorUpdated(ctx context.Context, conn *rekognition.Client, i
 	return nil, err
 }
 
-func waitStreamProcessorDeleted(ctx context.Context, conn *rekognition.Client, id string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
+func waitStreamProcessorDeleted(ctx context.Context, conn *rekognition.Client, name string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.StreamProcessorStatusStopped,
@@ -766,7 +767,7 @@ func waitStreamProcessorDeleted(ctx context.Context, conn *rekognition.Client, i
 			awstypes.StreamProcessorStatusUpdating,
 		),
 		Target:  []string{},
-		Refresh: statusStreamProcessor(ctx, conn, id),
+		Refresh: statusStreamProcessor(ctx, conn, name),
 		Timeout: timeout,
 	}
 
@@ -778,9 +779,9 @@ func waitStreamProcessorDeleted(ctx context.Context, conn *rekognition.Client, i
 	return nil, err
 }
 
-func statusStreamProcessor(ctx context.Context, conn *rekognition.Client, id string) retry.StateRefreshFunc {
+func statusStreamProcessor(ctx context.Context, conn *rekognition.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findStreamProcessorByID(ctx, conn, id)
+		out, err := findStreamProcessorByName(ctx, conn, name)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -793,7 +794,7 @@ func statusStreamProcessor(ctx context.Context, conn *rekognition.Client, id str
 	}
 }
 
-func findStreamProcessorByID(ctx context.Context, conn *rekognition.Client, name string) (*rekognition.DescribeStreamProcessorOutput, error) {
+func findStreamProcessorByName(ctx context.Context, conn *rekognition.Client, name string) (*rekognition.DescribeStreamProcessorOutput, error) {
 	in := &rekognition.DescribeStreamProcessorInput{
 		Name: aws.String(name),
 	}
@@ -829,7 +830,6 @@ func unwrapListNestedObjectValueOf[T any](ctx context.Context, diagnostics diag.
 
 type resourceStreamProcessorDataModel struct {
 	DataSharingPreference fwtypes.ListNestedObjectValueOf[dataSharingPreferenceModel] `tfsdk:"data_sharing_preference"`
-	ID                    types.String                                                `tfsdk:"id"`
 	Input                 fwtypes.ListNestedObjectValueOf[inputModel]                 `tfsdk:"input"`
 	KmsKeyId              types.String                                                `tfsdk:"kms_key_id"`
 	NotificationChannel   fwtypes.ListNestedObjectValueOf[notificationChannelModel]   `tfsdk:"notification_channel"`

@@ -46,7 +46,6 @@ func TestAccRekognitionStreamProcessor_basic(t *testing.T) {
 				Config: testAccStreamProcessorConfig_connectedHome(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
-					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "data_sharing_preference.0.opt_in", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "output.0.s3_destination.0.bucket", s3BucketResourceName, names.AttrBucket),
@@ -55,12 +54,15 @@ func TestAccRekognitionStreamProcessor_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "settings.0.connected_home.0.labels.*", "ALL"),
 					resource.TestCheckResourceAttrPair(resourceName, "input.0.kinesis_video_stream.0.arn", kinesisVideoStreamResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "notification_channel.0.sns_topic_arn", snsTopicResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "stream_processor_arn"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccStreamProcessorImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -165,14 +167,15 @@ func TestAccRekognitionStreamProcessor_faceRecognition(t *testing.T) {
 				Config: testAccStreamProcessorConfig_faceRecognition(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
-					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccStreamProcessorImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -272,9 +275,11 @@ func TestAccRekognitionStreamProcessor_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccStreamProcessorImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
 				Config: testAccStreamProcessorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -306,16 +311,17 @@ func testAccCheckStreamProcessorDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := tfrekognition.FindCollectionByID(ctx, conn, rs.Primary.ID)
+			streamName := rs.Primary.Attributes[names.AttrName]
+			_, err := tfrekognition.FindStreamProcessorByName(ctx, conn, streamName)
 			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return create.Error(names.Rekognition, create.ErrActionCheckingDestroyed, tfrekognition.ResNameStreamProcessor, rs.Primary.ID, err)
+				return create.Error(names.Rekognition, create.ErrActionCheckingDestroyed, tfrekognition.ResNameStreamProcessor, streamName, err)
 			}
 
-			return create.Error(names.Rekognition, create.ErrActionCheckingDestroyed, tfrekognition.ResNameStreamProcessor, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.Rekognition, create.ErrActionCheckingDestroyed, tfrekognition.ResNameStreamProcessor, streamName, errors.New("not destroyed"))
 		}
 
 		return nil
@@ -329,22 +335,31 @@ func testAccCheckStreamProcessorExists(ctx context.Context, name string, streamp
 			return create.Error(names.Rekognition, create.ErrActionCheckingExistence, tfrekognition.ResNameStreamProcessor, name, errors.New("not found"))
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.Rekognition, create.ErrActionCheckingExistence, tfrekognition.ResNameStreamProcessor, name, errors.New("not set"))
+		streamName := rs.Primary.Attributes[names.AttrName]
+		if streamName == "" {
+			return create.Error(names.Rekognition, create.ErrActionCheckingExistence, tfrekognition.ResNameStreamProcessor, name, errors.New("name not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RekognitionClient(ctx)
-		resp, err := conn.DescribeStreamProcessor(ctx, &rekognition.DescribeStreamProcessorInput{
-			Name: aws.String(rs.Primary.ID),
-		})
-
+		resp, err := tfrekognition.FindStreamProcessorByName(ctx, conn, streamName)
 		if err != nil {
-			return create.Error(names.Rekognition, create.ErrActionCheckingExistence, tfrekognition.ResNameStreamProcessor, rs.Primary.ID, err)
+			return create.Error(names.Rekognition, create.ErrActionCheckingExistence, tfrekognition.ResNameStreamProcessor, streamName, err)
 		}
 
 		*streamprocessor = *resp
 
 		return nil
+	}
+}
+
+func testAccStreamProcessorImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes[names.AttrName], nil
 	}
 }
 

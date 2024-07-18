@@ -12,7 +12,7 @@ var (
 )
 
 var (
-	FindCollectionByID      = findCollectionByID
-	FindProjectByName       = findProjectByName
-	FindStreamProcessorByID = findStreamProcessorByID
+	FindCollectionByID        = findCollectionByID
+	FindProjectByName         = findProjectByName
+	FindStreamProcessorByName = findStreamProcessorByName
 )

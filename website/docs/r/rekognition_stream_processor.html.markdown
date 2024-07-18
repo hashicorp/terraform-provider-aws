@@ -301,7 +301,6 @@ If using `polygon`, a minimum of 3 per region is required, with a maximum of 10.
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Name of the Stream Processor.
 * `stream_processor_arn` - ARN of the Stream Processor.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
@@ -315,17 +314,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Rekognition Stream Processor using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Rekognition Stream Processor using the `name`. For example:
 
 ```terraform
 import {
   to = aws_rekognition_stream_processor.example
-  id = "stream_processor-id-12345678"
+  id = "my-stream"
 }
 ```
 
-Using `terraform import`, import Rekognition Stream Processor using the `id`. For example:
+Using `terraform import`, import Rekognition Stream Processor using the `name`. For example:
 
 ```console
-% terraform import aws_rekognition_stream_processor.example stream_processor-id-12345678
+% terraform import aws_rekognition_stream_processor.example my-stream 
 ```
