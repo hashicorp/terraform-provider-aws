@@ -56,7 +56,7 @@ The following arguments are optional:
 * `aggregate_configuration` - (Optional) The Aggregate configuration only applies to `FLEXGROUP` volumes. See [`aggregate_configuration` Block] for details.
 * `bypass_snaplock_enterprise_retention` - (Optional) Setting this to `true` allows a SnapLock administrator to delete an FSx for ONTAP SnapLock Enterprise volume with unexpired write once, read many (WORM) files. This configuration must be applied separately before attempting to delete the resource to have the desired behavior. Defaults to `false`.
 * `copy_tags_to_backups` - (Optional) A boolean flag indicating whether tags for the volume should be copied to backups. This value defaults to `false`.
-* `final_backup_tags` - (Optional) List of tags to apply to the file system's final backup. Maximum of 50 items. See [`final_backup_tags` Block](#final_backup_tags-block) for details.
+* `final_backup_tags` - (Optional) A map of tags to apply to the volume's final backup.
 * `junction_path` - (Optional) Specifies the location in the storage virtual machine's namespace where the volume is mounted. The junction_path must have a leading forward slash, such as `/vol3`
 * `ontap_volume_type` - (Optional) Specifies the type of volume, valid values are `RW`, `DP`. Default value is `RW`. These can be set by the ONTAP CLI or API. This setting is used as part of migration and replication [Migrating to Amazon FSx for NetApp ONTAP](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/migrating-fsx-ontap.html)
 * `security_style` - (Optional) Specifies the volume security style, Valid values are `UNIX`, `NTFS`, and `MIXED`.
@@ -76,13 +76,6 @@ The `aggregate_configuration` configuration block supports the following argumen
 
 * `aggregates` - (Optional) Used to specify the names of the aggregates on which the volume will be created. Each aggregate needs to be in the format aggrX where X is the number of the aggregate.
 * `constituents_per_aggregate` - (Optional) Used to explicitly set the number of constituents within the FlexGroup per storage aggregate. the default value is `8`.
-
-### `final_backup_tags` Block
-
-The `final_backup_tags` configuration block supports the following arguments:
-
-* `key` - (Required) The name of the tag.
-* `value` - (Required) The value assigned to the corresponding tag key. To create a key-only tag, use an empty string as the value.
 
 ### `snaplock_configuration` Block
 

@@ -105,26 +105,7 @@ func resourceONTAPVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"final_backup_tags": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 50,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-						names.AttrValue: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(0, 128),
-						},
-					},
-				},
-			},
+			"final_backup_tags": tftags.TagsSchema(),
 			"flexcache_endpoint_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -593,8 +574,8 @@ func resourceONTAPVolumeDelete(ctx context.Context, d *schema.ResourceData, meta
 		VolumeId: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("final_backup_tags"); ok {
-		input.OntapConfiguration.FinalBackupTags = expandFinalBackupTags(v.(*schema.Set))
+	if v, ok := d.GetOk("final_backup_tags"); ok && len(v.(map[string]interface{})) > 0 {
+		input.OntapConfiguration.FinalBackupTags = Tags(tftags.New(ctx, v))
 	}
 
 	log.Printf("[DEBUG] Deleting FSx for NetApp ONTAP Volume: %s", d.Id())

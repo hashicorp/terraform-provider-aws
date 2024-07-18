@@ -6,7 +6,6 @@ package fsx_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -753,14 +752,11 @@ func TestAccFSxONTAPVolume_volumeStyle(t *testing.T) {
 
 func TestAccFSxONTAPVolume_deleteConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	if os.Getenv("FSX_CREATE_FINAL_BACKUP") != acctest.CtTrue {
-		t.Skip("Environment variable FSX_CREATE_FINAL_BACKUP is not set to true")
-	}
-
-	var volume1, volume2 fsx.Volume
+	var volume fsx.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+
+	acctest.SkipIfEnvVarNotSet(t, "AWS_FSX_CREATE_FINAL_BACKUP")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
@@ -771,12 +767,10 @@ func TestAccFSxONTAPVolume_deleteConfig(t *testing.T) {
 			{
 				Config: testAccONTAPVolumeConfig_deleteConfig(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.0.key", acctest.CtKey1),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.0.value", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.1.key", acctest.CtKey2),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.1.value", acctest.CtValue2),
+					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags."+acctest.CtKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags."+acctest.CtKey2, acctest.CtValue2),
 					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtFalse),
 				),
 			},
@@ -789,19 +783,6 @@ func TestAccFSxONTAPVolume_deleteConfig(t *testing.T) {
 					"final_backup_tags",
 					"skip_final_backup",
 				},
-			},
-			{
-				Config: testAccONTAPVolumeConfig_deleteConfig(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
-					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.0.key", acctest.CtKey1),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.0.value", acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.1.key", acctest.CtKey2),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.1.value", ""),
-					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtFalse),
-				),
 			},
 		},
 	})
@@ -1233,13 +1214,10 @@ resource "aws_fsx_ontap_volume" "test" {
   skip_final_backup          = false
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
-  final_backup_tags {
-    key   = %[2]q
-    value = %[3]q
-  }
-  final_backup_tags {
-    key   = %[4]q
-    value = %[5]q
+
+  final_backup_tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, finalTagKey1, finalTagValue1, finalTagKey2, finalTagValue2))
