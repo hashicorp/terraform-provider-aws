@@ -135,26 +135,7 @@ func resourceLustreFileSystem() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9].[0-9]+$`), "must be in format x.y"),
 				),
 			},
-			"final_backup_tags": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 50,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-						names.AttrValue: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(0, 128),
-						},
-					},
-				},
-			},
+			"final_backup_tags": tftags.TagsSchema(),
 			"import_path": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -683,8 +664,8 @@ func resourceLustreFileSystemDelete(ctx context.Context, d *schema.ResourceData,
 			SkipFinalBackup: aws.Bool(d.Get("skip_final_backup").(bool)),
 		}
 
-		if v, ok := d.GetOk("final_backup_tags"); ok {
-			lustreConfig.FinalBackupTags = expandFinalBackupTags(v.(*schema.Set))
+		if v, ok := d.GetOk("final_backup_tags"); ok && len(v.(map[string]interface{})) > 0 {
+			lustreConfig.FinalBackupTags = Tags(tftags.New(ctx, v))
 		}
 
 		input.LustreConfiguration = lustreConfig

@@ -40,7 +40,7 @@ The following arguments are optional:
 * `deployment_type` - (Optional) - The filesystem deployment type. One of: `SCRATCH_1`, `SCRATCH_2`, `PERSISTENT_1`, `PERSISTENT_2`.
 * `export_path` - (Optional) S3 URI (with optional prefix) where the root of your Amazon FSx file system is exported. Can only be specified with `import_path` argument and the path must use the same Amazon S3 bucket as specified in `import_path`. Set equal to `import_path` to overwrite files on export. Defaults to `s3://{IMPORT BUCKET}/FSxLustre{CREATION TIMESTAMP}`. Only supported on `PERSISTENT_1` deployment types.
 * `file_system_type_version` - (Optional) Sets the Lustre version for the file system that you're creating. Valid values are 2.10 for `SCRATCH_1`, `SCRATCH_2` and `PERSISTENT_1` deployment types. Valid values for 2.12 include all deployment types.
-* `final_backup_tags` - (Optional) List of tags to apply to the file system's final backup. Maximum of 50 items. See [`final_backup_tags` Block](#final_backup_tags-block) for details.
+* `final_backup_tags` - (Optional) A map of tags to apply to the file system's final backup.
 
   **Note:** If the filesystem uses a Scratch deployment type, final backup during delete will always be skipped and this argument will not be used even when set.
 * `imported_file_chunk_size` - (Optional) For files imported from a data repository, this value determines the stripe count and maximum amount of data per file (in MiB) stored on a single physical disk. Can only be specified with `import_path` argument. Defaults to `1024`. Minimum of `1` and maximum of `512000`. Only supported on `PERSISTENT_1` deployment types.
@@ -58,13 +58,6 @@ The following arguments are optional:
 * `storage_type` - (Optional) - The filesystem storage type. Either `SSD` or `HDD`, defaults to `SSD`. `HDD` is only supported on `PERSISTENT_1` deployment types.
 * `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `weekly_maintenance_start_time` - (Optional) The preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
-
-### `final_backup_tags` Block
-
-The `final_backup_tags` configuration block supports the following arguments:
-
-* `key` - (Required) The name of the tag.
-* `value` - (Required) The value assigned to the corresponding tag key. To create a key-only tag, use an empty string as the value.
 
 ### `log_configuration` Block
 
