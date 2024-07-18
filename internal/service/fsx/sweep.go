@@ -26,6 +26,7 @@ func RegisterSweepers() {
 		F:    sweepLustreFileSystems,
 		Dependencies: []string{
 			"aws_datasync_location",
+			"aws_m2_environment",
 		},
 	})
 
@@ -35,6 +36,7 @@ func RegisterSweepers() {
 		Dependencies: []string{
 			"aws_datasync_location",
 			"aws_fsx_ontap_storage_virtual_machine",
+			"aws_m2_environment",
 		},
 	})
 
@@ -57,6 +59,7 @@ func RegisterSweepers() {
 		Dependencies: []string{
 			"aws_datasync_location",
 			"aws_fsx_openzfs_volume",
+			"aws_m2_environment",
 		},
 	})
 
@@ -70,6 +73,7 @@ func RegisterSweepers() {
 		F:    sweepWindowsFileSystems,
 		Dependencies: []string{
 			"aws_datasync_location",
+			"aws_m2_environment",
 			"aws_storagegateway_file_system_association",
 		},
 	})

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -79,6 +80,7 @@ func ResourceMedicalVocabulary() *schema.Resource {
 }
 
 func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	vocabularyName := d.Get("vocabulary_name").(string)
@@ -91,23 +93,24 @@ func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData
 
 	out, err := conn.CreateMedicalVocabulary(ctx, in)
 	if err != nil {
-		return diag.Errorf("creating Amazon Transcribe MedicalVocabulary (%s): %s", d.Get("vocabulary_name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating Amazon Transcribe MedicalVocabulary (%s): %s", d.Get("vocabulary_name").(string), err)
 	}
 
 	if out == nil {
-		return diag.Errorf("creating Amazon Transcribe MedicalVocabulary (%s): empty output", d.Get(names.AttrName).(string))
+		return sdkdiag.AppendErrorf(diags, "creating Amazon Transcribe MedicalVocabulary (%s): empty output", d.Get(names.AttrName).(string))
 	}
 
 	d.SetId(aws.ToString(out.VocabularyName))
 
 	if _, err := waitMedicalVocabularyCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Amazon Transcribe MedicalVocabulary (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Amazon Transcribe MedicalVocabulary (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceMedicalVocabularyRead(ctx, d, meta)
+	return append(diags, resourceMedicalVocabularyRead(ctx, d, meta)...)
 }
 
 func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	out, err := FindMedicalVocabularyByName(ctx, conn, d.Id())
@@ -115,11 +118,11 @@ func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transcribe MedicalVocabulary (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Transcribe MedicalVocabulary (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Transcribe MedicalVocabulary (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -135,10 +138,11 @@ func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("vocabulary_name", out.VocabularyName)
 	d.Set(names.AttrLanguageCode, out.LanguageCode)
 
-	return nil
+	return diags
 }
 
 func resourceMedicalVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
@@ -154,18 +158,19 @@ func resourceMedicalVocabularyUpdate(ctx context.Context, d *schema.ResourceData
 		log.Printf("[DEBUG] Updating Transcribe MedicalVocabulary (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateMedicalVocabulary(ctx, in)
 		if err != nil {
-			return diag.Errorf("updating Transcribe MedicalVocabulary (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Transcribe MedicalVocabulary (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitMedicalVocabularyUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Transcribe MedicalVocabulary (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Transcribe MedicalVocabulary (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceMedicalVocabularyRead(ctx, d, meta)
+	return append(diags, resourceMedicalVocabularyRead(ctx, d, meta)...)
 }
 
 func resourceMedicalVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	log.Printf("[INFO] Deleting Transcribe MedicalVocabulary %s", d.Id())
@@ -176,18 +181,18 @@ func resourceMedicalVocabularyDelete(ctx context.Context, d *schema.ResourceData
 
 	var badRequestException *types.BadRequestException
 	if errors.As(err, &badRequestException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Transcribe MedicalVocabulary (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Transcribe MedicalVocabulary (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitMedicalVocabularyDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Transcribe MedicalVocabulary (%s) to be deleted: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Transcribe MedicalVocabulary (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func waitMedicalVocabularyCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetMedicalVocabularyOutput, error) {

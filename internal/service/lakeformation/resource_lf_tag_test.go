@@ -236,7 +236,7 @@ func testAccCheckResourceLFTagDestroy(ctx context.Context) resource.TestCheckFun
 					input.Resource.Table.Name = aws.String(v)
 				}
 
-				if v, ok := rs.Primary.Attributes["table.0.wildcard"]; ok && v == "true" {
+				if v, ok := rs.Primary.Attributes["table.0.wildcard"]; ok && v == acctest.CtTrue {
 					input.Resource.Table.TableWildcard = &awstypes.TableWildcard{}
 				}
 			}
@@ -345,7 +345,7 @@ func testAccCheckResourceLFTagExists(ctx context.Context, name string, resourcel
 				input.Resource.Table.Name = aws.String(v)
 			}
 
-			if v, ok := rs.Primary.Attributes["table.0.wildcard"]; ok && v == "true" {
+			if v, ok := rs.Primary.Attributes["table.0.wildcard"]; ok && v == acctest.CtTrue {
 				input.Resource.Table.TableWildcard = &awstypes.TableWildcard{}
 			}
 		}

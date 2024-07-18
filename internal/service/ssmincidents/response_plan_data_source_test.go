@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testResponsePlanDataSource_basic(t *testing.T) {
+func testAccResponsePlanDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rTitle := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

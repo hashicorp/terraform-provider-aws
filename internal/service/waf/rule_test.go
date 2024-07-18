@@ -133,7 +133,7 @@ func TestAccWAFRule_changePredicates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
-						"negated":      "false",
+						"negated":      acctest.CtFalse,
 						names.AttrType: "IPMatch",
 					}),
 				),
@@ -146,7 +146,7 @@ func TestAccWAFRule_changePredicates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
-						"negated":      "true",
+						"negated":      acctest.CtTrue,
 						names.AttrType: "ByteMatch",
 					}),
 				),
@@ -177,7 +177,7 @@ func TestAccWAFRule_geoMatchSetPredicate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
-						"negated":      "true",
+						"negated":      acctest.CtTrue,
 						names.AttrType: "GeoMatch",
 					}),
 				),

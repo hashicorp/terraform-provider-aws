@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -24,7 +25,7 @@ import (
 )
 
 // @SDKResource("aws_lightsail_lb", name="LB")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="id", resourceType="LB")
 func ResourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCreate,
@@ -205,6 +206,10 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 	out, err := conn.DeleteLoadBalancer(ctx, &lightsail.DeleteLoadBalancerInput{
 		LoadBalancerName: aws.String(d.Id()),
 	})
+
+	if err != nil && errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeDeleteLoadBalancer), ResLoadBalancer, lbName, err)

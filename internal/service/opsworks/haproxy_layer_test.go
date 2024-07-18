@@ -34,7 +34,7 @@ func TestAccOpsWorksHAProxyLayer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "healthcheck_method", "OPTIONS"),
 					resource.TestCheckResourceAttr(resourceName, "healthcheck_url", "/"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "HAProxy"),
-					resource.TestCheckResourceAttr(resourceName, "stats_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stats_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "stats_password"),
 					resource.TestCheckResourceAttr(resourceName, "stats_url", "/haproxy?stats"),
 					resource.TestCheckResourceAttr(resourceName, "stats_user", "opsworks"),

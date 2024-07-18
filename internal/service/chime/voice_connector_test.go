@@ -42,7 +42,7 @@ func testAccVoiceConnector_basic(t *testing.T) {
 					testAccCheckVoiceConnectorExists(ctx, resourceName, voiceConnector),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vc-%s", vcName)),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
-					resource.TestCheckResourceAttr(resourceName, "require_encryption", "true"),
+					resource.TestCheckResourceAttr(resourceName, "require_encryption", acctest.CtTrue),
 				),
 			},
 			{
@@ -104,13 +104,13 @@ func testAccVoiceConnector_update(t *testing.T) {
 					testAccCheckVoiceConnectorExists(ctx, resourceName, voiceConnector),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vc-%s", vcName)),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
-					resource.TestCheckResourceAttr(resourceName, "require_encryption", "true"),
+					resource.TestCheckResourceAttr(resourceName, "require_encryption", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccVoiceConnectorConfig_updated(vcName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "require_encryption", "false"),
+					resource.TestCheckResourceAttr(resourceName, "require_encryption", acctest.CtFalse),
 				),
 			},
 			{

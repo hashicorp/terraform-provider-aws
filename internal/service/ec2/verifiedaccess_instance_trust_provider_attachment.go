@@ -79,7 +79,7 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentRead(ctx context.Conte
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	err = FindVerifiedAccessInstanceTrustProviderAttachmentExists(ctx, conn, vaiID, vatpID)
+	err = findVerifiedAccessInstanceTrustProviderAttachmentExists(ctx, conn, vaiID, vatpID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Verified Access Instance Trust Provider Attachment (%s) not found, removing from state", d.Id())

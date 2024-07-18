@@ -96,7 +96,7 @@ func TestAccStorageGatewayCachediSCSIVolume_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachediSCSIVolumeExists(ctx, resourceName, &cachedIscsiVolume),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "chap_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "chap_enabled", acctest.CtFalse),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "gateway_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "lun_number", acctest.Ct0),
 					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile(`^\d+\.\d+\.\d+\.\d+$`)),
@@ -107,7 +107,7 @@ func TestAccStorageGatewayCachediSCSIVolume_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "volume_id", regexache.MustCompile(`^vol-.+$`)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "volume_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.`)),
 					resource.TestCheckResourceAttr(resourceName, "volume_size_in_bytes", "5368709120"),
-					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", acctest.CtFalse),
 				),
 			},
 			{
@@ -136,7 +136,7 @@ func TestAccStorageGatewayCachediSCSIVolume_kms(t *testing.T) {
 				Config: testAccCachediSCSIVolumeConfig_kmsEncrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachediSCSIVolumeExists(ctx, resourceName, &cachedIscsiVolume),
-					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "true"),
+					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKey, keyResourceName, names.AttrARN),
 				),
 			},
@@ -215,7 +215,7 @@ func TestAccStorageGatewayCachediSCSIVolume_snapshotID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachediSCSIVolumeExists(ctx, resourceName, &cachedIscsiVolume),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "chap_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "chap_enabled", acctest.CtFalse),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "gateway_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "lun_number", acctest.Ct0),
 					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile(`^\d+\.\d+\.\d+\.\d+$`)),

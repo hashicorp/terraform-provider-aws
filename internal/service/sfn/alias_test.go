@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -103,7 +103,7 @@ func testAccCheckAliasAttributes(mapping *sfn.DescribeStateMachineAliasOutput) r
 
 func testAccCheckAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sfn_alias" {
@@ -134,11 +134,7 @@ func testAccCheckAliasExists(ctx context.Context, name string, v *sfn.DescribeSt
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Step Functions State Machine Alias ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNClient(ctx)
 
 		output, err := tfsfn.FindAliasByARN(ctx, conn, rs.Primary.ID)
 

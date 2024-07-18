@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testRotation_basic(t *testing.T) {
+func testAccRotation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -76,7 +76,7 @@ func testRotation_basic(t *testing.T) {
 	})
 }
 
-func testRotation_disappears(t *testing.T) {
+func testAccRotation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -108,7 +108,7 @@ func testRotation_disappears(t *testing.T) {
 	})
 }
 
-func testRotation_updateRequiredFields(t *testing.T) {
+func testAccRotation_updateRequiredFields(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -156,7 +156,7 @@ func testRotation_updateRequiredFields(t *testing.T) {
 	})
 }
 
-func testRotation_startTime(t *testing.T) {
+func testAccRotation_startTime(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -200,7 +200,7 @@ func testRotation_startTime(t *testing.T) {
 	})
 }
 
-func testRotation_contactIds(t *testing.T) {
+func testAccRotation_contactIds(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -241,7 +241,7 @@ func testRotation_contactIds(t *testing.T) {
 	})
 }
 
-func testRotation_recurrence(t *testing.T) {
+func testAccRotation_recurrence(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -352,7 +352,7 @@ func testRotation_recurrence(t *testing.T) {
 	})
 }
 
-func testRotation_tags(t *testing.T) {
+func testAccRotation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

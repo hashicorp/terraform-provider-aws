@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testContact_basic(t *testing.T) {
+func testAccContact_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -66,7 +66,7 @@ func testContact_basic(t *testing.T) {
 	})
 }
 
-func testContact_updateAlias(t *testing.T) {
+func testAccContact_updateAlias(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -114,7 +114,7 @@ func testContact_updateAlias(t *testing.T) {
 	})
 }
 
-func testContact_updateType(t *testing.T) {
+func testAccContact_updateType(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -163,7 +163,7 @@ func testContact_updateType(t *testing.T) {
 	})
 }
 
-func testContact_disappears(t *testing.T) {
+func testAccContact_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -193,7 +193,7 @@ func testContact_disappears(t *testing.T) {
 	})
 }
 
-func testContact_updateDisplayName(t *testing.T) {
+func testAccContact_updateDisplayName(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -241,7 +241,7 @@ func testContact_updateDisplayName(t *testing.T) {
 	})
 }
 
-func testContact_updateTags(t *testing.T) {
+func testAccContact_updateTags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}

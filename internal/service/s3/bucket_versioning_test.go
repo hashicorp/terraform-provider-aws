@@ -184,7 +184,7 @@ func TestAccS3BucketVersioning_migrate_versioningDisabledNoChange(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.enabled", "false"),
+					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -216,7 +216,7 @@ func TestAccS3BucketVersioning_migrate_versioningDisabledWithChange(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.enabled", "false"),
+					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -248,7 +248,7 @@ func TestAccS3BucketVersioning_migrate_versioningEnabledNoChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.enabled", "true"),
+					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -280,7 +280,7 @@ func TestAccS3BucketVersioning_migrate_versioningEnabledWithChange(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.enabled", "true"),
+					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -314,7 +314,7 @@ func TestAccS3BucketVersioning_migrate_mfaDeleteNoChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.mfa_delete", "false"),
+					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.mfa_delete", acctest.CtFalse),
 				),
 			},
 			{

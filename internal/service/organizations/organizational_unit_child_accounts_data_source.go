@@ -6,8 +6,9 @@ package organizations
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/organizations"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -15,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_organizations_organizational_unit_child_accounts")
-func DataSourceOrganizationalUnitChildAccounts() *schema.Resource {
+// @SDKDataSource("aws_organizations_organizational_unit_child_accounts", name="Organizational Unit Child Accounts")
+func dataSourceOrganizationalUnitChildAccounts() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrganizationalUnitChildAccountsRead,
 
@@ -59,10 +60,10 @@ func DataSourceOrganizationalUnitChildAccounts() *schema.Resource {
 
 func dataSourceOrganizationalUnitChildAccountsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	parentID := d.Get("parent_id").(string)
-	accounts, err := findAccountsForParent(ctx, conn, parentID)
+	accounts, err := findAccountsForParentByID(ctx, conn, parentID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing Organizations Accounts for parent (%s): %s", parentID, err)
@@ -77,20 +78,26 @@ func dataSourceOrganizationalUnitChildAccountsRead(ctx context.Context, d *schem
 	return diags
 }
 
-func findAccountsForParent(ctx context.Context, conn *organizations.Organizations, id string) ([]*organizations.Account, error) {
+func findAccountsForParentByID(ctx context.Context, conn *organizations.Client, id string) ([]awstypes.Account, error) {
 	input := &organizations.ListAccountsForParentInput{
 		ParentId: aws.String(id),
 	}
-	var output []*organizations.Account
 
-	err := conn.ListAccountsForParentPagesWithContext(ctx, input, func(page *organizations.ListAccountsForParentOutput, lastPage bool) bool {
+	return findAccountsForParent(ctx, conn, input)
+}
+
+func findAccountsForParent(ctx context.Context, conn *organizations.Client, input *organizations.ListAccountsForParentInput) ([]awstypes.Account, error) {
+	var output []awstypes.Account
+
+	pages := organizations.NewListAccountsForParentPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
 		output = append(output, page.Accounts...)
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
 	}
 
 	return output, nil

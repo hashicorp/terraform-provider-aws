@@ -46,11 +46,11 @@ func testAccBranch_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_branch", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
-					resource.TestCheckResourceAttr(resourceName, "enable_auto_build", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_notification", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_performance_mode", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_pull_request_preview", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_auto_build", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_notification", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_performance_mode", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_pull_request_preview", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "framework", ""),
 					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", ""),
@@ -93,52 +93,6 @@ func testAccBranch_disappears(t *testing.T) {
 	})
 }
 
-func testAccBranch_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var branch types.Branch
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_amplify_branch.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBranchDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBranchConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBranchExists(ctx, resourceName, &branch),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccBranchConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBranchExists(ctx, resourceName, &branch),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccBranchConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBranchExists(ctx, resourceName, &branch),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func testAccBranch_BasicAuthCredentials(t *testing.T) {
 	ctx := acctest.Context(t)
 	var branch types.Branch
@@ -159,7 +113,7 @@ func testAccBranch_BasicAuthCredentials(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
 					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", credentials1),
-					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", acctest.CtTrue),
 				),
 			},
 			{
@@ -172,7 +126,7 @@ func testAccBranch_BasicAuthCredentials(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
 					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", credentials2),
-					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", acctest.CtTrue),
 				),
 			},
 			{
@@ -181,7 +135,7 @@ func testAccBranch_BasicAuthCredentials(t *testing.T) {
 					testAccCheckBranchExists(ctx, resourceName, &branch),
 					// Clearing basic_auth_credentials not reflected in API.
 					// resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
-					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", acctest.CtFalse),
 				),
 			},
 		},
@@ -255,10 +209,10 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "backend_environment_arn", backendEnvironment1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "testdescription1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "testdisplayname1"),
-					resource.TestCheckResourceAttr(resourceName, "enable_auto_build", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_notification", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_performance_mode", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_pull_request_preview", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_auto_build", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_notification", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_performance_mode", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_pull_request_preview", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "framework", "React"),
 					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", "testpr1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStage, "DEVELOPMENT"),
@@ -277,10 +231,10 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "backend_environment_arn", backendEnvironment2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "testdescription2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "testdisplayname2"),
-					resource.TestCheckResourceAttr(resourceName, "enable_auto_build", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_notification", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_performance_mode", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_pull_request_preview", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_auto_build", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_notification", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_performance_mode", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_pull_request_preview", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "framework", "Angular"),
 					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", "testpr2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStage, "EXPERIMENTAL"),
@@ -349,41 +303,6 @@ resource "aws_amplify_branch" "test" {
   branch_name = %[1]q
 }
 `, rName)
-}
-
-func testAccBranchConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_amplify_app" "test" {
-  name = %[1]q
-}
-
-resource "aws_amplify_branch" "test" {
-  app_id      = aws_amplify_app.test.id
-  branch_name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccBranchConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_amplify_app" "test" {
-  name = %[1]q
-}
-
-resource "aws_amplify_branch" "test" {
-  app_id      = aws_amplify_app.test.id
-  branch_name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccBranchConfig_basicAuthCredentials(rName, basicAuthCredentials string) string {

@@ -43,7 +43,7 @@ func TestAccS3ControlObjectLambdaAccessPoint_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_features.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cloud_watch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cloud_watch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.supporting_access_point", accessPointResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.transformation_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration.0.transformation_configuration.*", map[string]string{
@@ -113,7 +113,7 @@ func TestAccS3ControlObjectLambdaAccessPoint_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_features.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.allowed_features.*", "GetObject-PartNumber"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.allowed_features.*", "GetObject-Range"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cloud_watch_metrics_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cloud_watch_metrics_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.supporting_access_point", accessPointResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.transformation_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration.0.transformation_configuration.*", map[string]string{
@@ -139,7 +139,7 @@ func TestAccS3ControlObjectLambdaAccessPoint_update(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_features.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cloud_watch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.cloud_watch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.supporting_access_point", accessPointResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.transformation_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration.0.transformation_configuration.*", map[string]string{

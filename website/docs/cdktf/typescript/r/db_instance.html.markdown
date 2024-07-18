@@ -41,7 +41,7 @@ For more information please read the AWS RDS documentation about [DB Instance Cl
 By default, RDS applies updates to DB Instances in-place, which can lead to service interruptions.
 Low-downtime updates minimize service interruptions by performing the updates with an [RDS Blue/Green deployment][blue-green] and switching over the instances when complete.
 
-Low-downtime updates are only available for DB Instances using MySQL and MariaDB,
+Low-downtime updates are only available for DB Instances using MySQL, MariaDB and PostgreSQL,
 as other engines are not supported by RDS Blue/Green deployments.
 They cannot be used with DB Instances with replicas.
 
@@ -394,7 +394,7 @@ class MyConvertedCode extends TerraformStack {
 For more detailed documentation about each argument, refer to the [AWS official
 documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `allocatedStorage` - (Required unless a `snapshotIdentifier` or `replicateSourceDb` is provided) The allocated storage in gibibytes. If `maxAllocatedStorage` is configured, this argument represents the initial storage allocation and differences from the configuration will be ignored automatically when Storage Autoscaling occurs. If `replicateSourceDb` is set, the value is ignored during the creation of the instance.
 * `allowMajorVersionUpgrade` - (Optional) Indicates that major version
@@ -706,4 +706,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b3cc09d8138c80aec20a1609f61064943c765d24c949d975ce7e0ed3c5858a0e -->
+<!-- cache-key: cdktf-0.20.1 input-bdb5abf13d6aa4c71c12b4842a5b31828587608e3321f860616855f6f2f7edb7 -->

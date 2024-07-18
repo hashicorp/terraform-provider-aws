@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -22,7 +22,7 @@ import (
 
 func TestAccIPAMPoolCIDR_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cidr ec2.IpamPoolCidr
+	var cidr awstypes.IpamPoolCidr
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
 	cidrBlock := "10.0.0.0/24"
 
@@ -54,7 +54,7 @@ func TestAccIPAMPoolCIDR_basic(t *testing.T) {
 
 func TestAccIPAMPoolCIDR_basicNetmaskLength(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cidr ec2.IpamPoolCidr
+	var cidr awstypes.IpamPoolCidr
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
 	netmaskLength := "24"
 
@@ -87,7 +87,7 @@ func TestAccIPAMPoolCIDR_basicNetmaskLength(t *testing.T) {
 
 func TestAccIPAMPoolCIDR_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cidr ec2.IpamPoolCidr
+	var cidr awstypes.IpamPoolCidr
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
 	cidrBlock := "10.0.0.0/24"
 
@@ -111,7 +111,7 @@ func TestAccIPAMPoolCIDR_disappears(t *testing.T) {
 
 func TestAccIPAMPoolCIDR_Disappears_ipam(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cidr ec2.IpamPoolCidr
+	var cidr awstypes.IpamPoolCidr
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
 	ipamResourceName := "aws_vpc_ipam.test"
 	cidrBlock := "10.0.0.0/24"
@@ -134,7 +134,7 @@ func TestAccIPAMPoolCIDR_Disappears_ipam(t *testing.T) {
 	})
 }
 
-func testAccCheckIPAMPoolCIDRExists(ctx context.Context, n string, v *ec2.IpamPoolCidr) resource.TestCheckFunc {
+func testAccCheckIPAMPoolCIDRExists(ctx context.Context, n string, v *awstypes.IpamPoolCidr) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -151,7 +151,7 @@ func testAccCheckIPAMPoolCIDRExists(ctx context.Context, n string, v *ec2.IpamPo
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindIPAMPoolCIDRByTwoPartKey(ctx, conn, cidrBlock, poolID)
 
@@ -167,7 +167,7 @@ func testAccCheckIPAMPoolCIDRExists(ctx context.Context, n string, v *ec2.IpamPo
 
 func testAccCheckIPAMPoolCIDRDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_ipam_pool_cidr" {
@@ -197,10 +197,10 @@ func testAccCheckIPAMPoolCIDRDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckIPAMPoolCIDRPrefix(cidr *ec2.IpamPoolCidr, expected string) resource.TestCheckFunc {
+func testAccCheckIPAMPoolCIDRPrefix(cidr *awstypes.IpamPoolCidr, expected string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if strings.Split(aws.StringValue(cidr.Cidr), "/")[1] != expected {
-			return fmt.Errorf("Bad cidr prefix: got %s, expected %s", aws.StringValue(cidr.Cidr), expected)
+		if strings.Split(aws.ToString(cidr.Cidr), "/")[1] != expected {
+			return fmt.Errorf("Bad cidr prefix: got %s, expected %s", aws.ToString(cidr.Cidr), expected)
 		}
 
 		return nil

@@ -6,8 +6,9 @@ rules:
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
+    pattern-either:
       - pattern: '"0"'
+      - pattern: 'acctest.CtZero'
     severity: ERROR
     fix: "acctest.Ct0"
   - id: literal-1-string-test-constant
@@ -16,8 +17,9 @@ rules:
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
+    pattern-either:
       - pattern: '"1"'
+      - pattern: 'acctest.CtOne'
     severity: ERROR
     fix: "acctest.Ct1"
   - id: literal-10-string-test-constant
@@ -26,8 +28,9 @@ rules:
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
+    pattern-either:
       - pattern: '"10"'
+      - pattern: 'acctest.CtTen'
     severity: ERROR
     fix: "acctest.Ct10"
   - id: literal-2-string-test-constant
@@ -36,8 +39,9 @@ rules:
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
+    pattern-either:
       - pattern: '"2"'
+      - pattern: 'acctest.CtTwo'
     severity: ERROR
     fix: "acctest.Ct2"
   - id: literal-3-string-test-constant
@@ -46,8 +50,9 @@ rules:
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
+    pattern-either:
       - pattern: '"3"'
+      - pattern: 'acctest.CtThree'
     severity: ERROR
     fix: "acctest.Ct3"
   - id: literal-4-string-test-constant
@@ -56,8 +61,9 @@ rules:
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
+    pattern-either:
       - pattern: '"4"'
+      - pattern: 'acctest.CtFour'
     severity: ERROR
     fix: "acctest.Ct4"
   - id: literal-Basic-string-test-constant
@@ -66,18 +72,43 @@ rules:
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"basic"'
+    pattern: '"basic"'
     severity: ERROR
     fix: "acctest.CtBasic"
+  - id: literal-CertificatePEM-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtCertificatePEM` for the string literal "certificate_pem" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"certificate_pem"'
+    severity: ERROR
+    fix: "acctest.CtCertificatePEM"
+  - id: literal-Disappears-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtDisappears` for the string literal "disappears" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"disappears"'
+    severity: ERROR
+    fix: "acctest.CtDisappears"
+  - id: literal-False-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtFalse` for the string literal "false" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"false"'
+    severity: ERROR
+    fix: "acctest.CtFalse"
   - id: literal-FalseCaps-string-test-constant
     languages: [go]
     message: Use the constant `acctest.CtFalseCaps` for the string literal "FALSE" in test files
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"FALSE"'
+    pattern: '"FALSE"'
     severity: ERROR
     fix: "acctest.CtFalseCaps"
   - id: literal-Key1-string-test-constant
@@ -86,8 +117,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"key1"'
+    pattern: '"key1"'
     severity: ERROR
     fix: "acctest.CtKey1"
   - id: literal-Key2-string-test-constant
@@ -96,18 +126,61 @@ rules:
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"key2"'
+    pattern: '"key2"'
     severity: ERROR
     fix: "acctest.CtKey2"
+  - id: literal-Name-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtName` for the string literal "name" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"name"'
+    severity: ERROR
+    fix: "acctest.CtName"
+  - id: literal-OverlapKey1-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtOverlapKey1` for the string literal "overlapkey1" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"overlapkey1"'
+    severity: ERROR
+    fix: "acctest.CtOverlapKey1"
+  - id: literal-OverlapKey2-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtOverlapKey2` for the string literal "overlapkey2" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"overlapkey2"'
+    severity: ERROR
+    fix: "acctest.CtOverlapKey2"
+  - id: literal-PrivateKeyPEM-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtPrivateKeyPEM` for the string literal "private_key_pem" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"private_key_pem"'
+    severity: ERROR
+    fix: "acctest.CtPrivateKeyPEM"
+  - id: literal-ProviderKey1-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtProviderKey1` for the string literal "providerkey1" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"providerkey1"'
+    severity: ERROR
+    fix: "acctest.CtProviderKey1"
   - id: literal-ProviderTags-string-test-constant
     languages: [go]
     message: Use the constant `acctest.CtProviderTags` for the string literal "provider_tags" in test files
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"provider_tags"'
+    pattern: '"provider_tags"'
     severity: ERROR
     fix: "acctest.CtProviderTags"
   - id: literal-ProviderValue1-string-test-constant
@@ -116,8 +189,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"providervalue1"'
+    pattern: '"providervalue1"'
     severity: ERROR
     fix: "acctest.CtProviderValue1"
   - id: literal-RName-string-test-constant
@@ -126,28 +198,70 @@ rules:
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"rName"'
+    pattern: '"rName"'
     severity: ERROR
     fix: "acctest.CtRName"
+  - id: literal-ResourceKey1-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtResourceKey1` for the string literal "resourcekey1" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"resourcekey1"'
+    severity: ERROR
+    fix: "acctest.CtResourceKey1"
+  - id: literal-ResourceKey2-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtResourceKey2` for the string literal "resourcekey2" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"resourcekey2"'
+    severity: ERROR
+    fix: "acctest.CtResourceKey2"
+  - id: literal-ResourceOwner-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtResourceOwner` for the string literal "resource_owner" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"resource_owner"'
+    severity: ERROR
+    fix: "acctest.CtResourceOwner"
+  - id: literal-ResourceTags-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtResourceTags` for the string literal "resource_tags" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"resource_tags"'
+    severity: ERROR
+    fix: "acctest.CtResourceTags"
   - id: literal-ResourceValue1-string-test-constant
     languages: [go]
     message: Use the constant `acctest.CtResourceValue1` for the string literal "resourcevalue1" in test files
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"resourcevalue1"'
+    pattern: '"resourcevalue1"'
     severity: ERROR
     fix: "acctest.CtResourceValue1"
+  - id: literal-ResourceValue1Updated-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtResourceValue1Updated` for the string literal "resourcevalue1updated" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"resourcevalue1updated"'
+    severity: ERROR
+    fix: "acctest.CtResourceValue1Updated"
   - id: literal-ResourceValue2-string-test-constant
     languages: [go]
     message: Use the constant `acctest.CtResourceValue2` for the string literal "resourcevalue2" in test files
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"resourcevalue2"'
+    pattern: '"resourcevalue2"'
     severity: ERROR
     fix: "acctest.CtResourceValue2"
   - id: literal-RulePound-string-test-constant
@@ -156,8 +270,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"rule.#"'
+    pattern: '"rule.#"'
     severity: ERROR
     fix: "acctest.CtRulePound"
   - id: literal-TagsAllPercent-string-test-constant
@@ -166,8 +279,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"tags_all.%"'
+    pattern: '"tags_all.%"'
     severity: ERROR
     fix: "acctest.CtTagsAllPercent"
   - id: literal-TagsKey1-string-test-constant
@@ -176,8 +288,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"tags.key1"'
+    pattern: '"tags.key1"'
     severity: ERROR
     fix: "acctest.CtTagsKey1"
   - id: literal-TagsKey2-string-test-constant
@@ -186,8 +297,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"tags.key2"'
+    pattern: '"tags.key2"'
     severity: ERROR
     fix: "acctest.CtTagsKey2"
   - id: literal-TagsPercent-string-test-constant
@@ -196,18 +306,25 @@ rules:
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"tags.%"'
+    pattern: '"tags.%"'
     severity: ERROR
     fix: "acctest.CtTagsPercent"
+  - id: literal-True-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtTrue` for the string literal "true" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"true"'
+    severity: ERROR
+    fix: "acctest.CtTrue"
   - id: literal-TrueCaps-string-test-constant
     languages: [go]
     message: Use the constant `acctest.CtTrueCaps` for the string literal "TRUE" in test files
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"TRUE"'
+    pattern: '"TRUE"'
     severity: ERROR
     fix: "acctest.CtTrueCaps"
   - id: literal-Value1-string-test-constant
@@ -216,8 +333,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"value1"'
+    pattern: '"value1"'
     severity: ERROR
     fix: "acctest.CtValue1"
   - id: literal-Value1Updated-string-test-constant
@@ -226,8 +342,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"value1updated"'
+    pattern: '"value1updated"'
     severity: ERROR
     fix: "acctest.CtValue1Updated"
   - id: literal-Value2-string-test-constant
@@ -236,7 +351,6 @@ rules:
     paths:
       include:
         - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"value2"'
+    pattern: '"value2"'
     severity: ERROR
     fix: "acctest.CtValue2"

@@ -52,7 +52,7 @@ func TestAccRDSProxyEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestMatchResourceAttr(resourceName, names.AttrEndpoint, regexache.MustCompile(`^[\w\-\.]+\.rds\.amazonaws\.com$`)),
-					resource.TestCheckResourceAttr(resourceName, "is_default", "false"),
+					resource.TestCheckResourceAttr(resourceName, "is_default", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", acctest.Ct0),
 				),
 			},

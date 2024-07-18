@@ -182,14 +182,14 @@ func TestAccLambdaLayerVersionPermission_skipDestroy(t *testing.T) {
 				Config: testAccLayerVersionPermissionConfig_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccLayerVersionPermissionConfig_skipDestroy(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
 				),
 			},
 		},

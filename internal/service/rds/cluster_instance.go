@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_rds_cluster_instance", name="Cluster Instance")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceClusterInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterInstanceCreate,
@@ -108,7 +109,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -221,7 +222,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -253,7 +254,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		DBClusterIdentifier:     aws.String(clusterID),
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 		DBInstanceIdentifier:    aws.String(identifier),
-		Engine:                  aws.String(d.Get("engine").(string)),
+		Engine:                  aws.String(d.Get(names.AttrEngine).(string)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 		Tags:                    getTagsIn(ctx),
@@ -362,7 +363,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS Cluster Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster Instance (%s): %s", d.Id(), err)
@@ -408,7 +409,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("db_subnet_group_name", db.DBSubnetGroup.DBSubnetGroupName)
 	}
 	d.Set("dbi_resource_id", db.DbiResourceId)
-	d.Set("engine", db.Engine)
+	d.Set(names.AttrEngine, db.Engine)
 	d.Set(names.AttrIdentifier, db.DBInstanceIdentifier)
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(db.DBInstanceIdentifier)))
 	d.Set("instance_class", db.DBInstanceClass)
@@ -423,13 +424,13 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrPreferredMaintenanceWindow, db.PreferredMaintenanceWindow)
 	d.Set("promotion_tier", db.PromotionTier)
 	d.Set(names.AttrPubliclyAccessible, db.PubliclyAccessible)
-	d.Set("storage_encrypted", db.StorageEncrypted)
+	d.Set(names.AttrStorageEncrypted, db.StorageEncrypted)
 
 	clusterSetResourceDataEngineVersionFromClusterInstance(d, db)
 
 	setTagsOut(ctx, db.TagList)
 
-	return nil
+	return diags
 }
 
 func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
@@ -524,8 +525,8 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Automatically set skip_final_snapshot = true for RDS Custom instances
-	if strings.HasPrefix(d.Get("engine").(string), InstanceEngineCustomPrefix) {
-		log.Printf("[DEBUG] RDS Custom engine detected (%s) applying SkipFinalSnapshot: %s", d.Get("engine").(string), "true")
+	if strings.HasPrefix(d.Get(names.AttrEngine).(string), InstanceEngineCustomPrefix) {
+		log.Printf("[DEBUG] RDS Custom engine detected (%s) applying SkipFinalSnapshot: %s", d.Get(names.AttrEngine).(string), "true")
 		input.SkipFinalSnapshot = aws.Bool(true)
 	}
 
@@ -537,7 +538,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 		rds.ErrCodeInvalidDBClusterStateFault, "Delete the replica cluster before deleting")
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil && !tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
@@ -548,7 +549,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func clusterSetResourceDataEngineVersionFromClusterInstance(d *schema.ResourceData, c *rds.DBInstance) {

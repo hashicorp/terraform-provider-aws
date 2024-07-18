@@ -44,7 +44,7 @@ func TestAccEvidentlySegment_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttrSet(resourceName, "experiment_count"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrID, "evidently", fmt.Sprintf("segment/%s", rName)),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedTime),
 					resource.TestCheckResourceAttrSet(resourceName, "launch_count"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", pattern),

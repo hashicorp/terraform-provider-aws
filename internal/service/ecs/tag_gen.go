@@ -72,7 +72,7 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	value, err := GetTag(ctx, conn, identifier, key)
+	value, err := findTag(ctx, conn, identifier, key)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] %s resource (%s) tag (%s) not found, removing from state", names.ECS, identifier, key)

@@ -184,7 +184,7 @@ func TestAccElasticBeanstalkApplication_appVersionLifecycle(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "appversion_lifecycle.0.service_role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_age_in_days", "90"),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_count", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.delete_source_from_s3", "true"),
+					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.delete_source_from_s3", acctest.CtTrue),
 				),
 			},
 			{
@@ -200,7 +200,7 @@ func TestAccElasticBeanstalkApplication_appVersionLifecycle(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "appversion_lifecycle.0.service_role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_age_in_days", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_count", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.delete_source_from_s3", "false"),
+					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.delete_source_from_s3", acctest.CtFalse),
 				),
 			},
 			{
@@ -218,7 +218,7 @@ func TestAccElasticBeanstalkApplication_appVersionLifecycle(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "appversion_lifecycle.0.service_role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_age_in_days", "90"),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_count", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.delete_source_from_s3", "true"),
+					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.delete_source_from_s3", acctest.CtTrue),
 				),
 			},
 		},

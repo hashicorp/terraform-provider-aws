@@ -21,12 +21,13 @@ import (
 
 // @SDKDataSource("aws_db_snapshot", name="DB Snapshot")
 // @Tags
+// @Testing(tagsTest=false)
 func DataSourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -50,7 +51,7 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -180,13 +181,13 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.SetId(aws.StringValue(snapshot.DBSnapshotIdentifier))
-	d.Set("allocated_storage", snapshot.AllocatedStorage)
+	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
 	d.Set(names.AttrAvailabilityZone, snapshot.AvailabilityZone)
 	d.Set("db_instance_identifier", snapshot.DBInstanceIdentifier)
 	d.Set("db_snapshot_arn", snapshot.DBSnapshotArn)
 	d.Set("db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
 	d.Set(names.AttrEncrypted, snapshot.Encrypted)
-	d.Set("engine", snapshot.Engine)
+	d.Set(names.AttrEngine, snapshot.Engine)
 	d.Set(names.AttrEngineVersion, snapshot.EngineVersion)
 	d.Set(names.AttrIOPS, snapshot.Iops)
 	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
