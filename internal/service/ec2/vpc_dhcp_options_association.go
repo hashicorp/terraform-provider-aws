@@ -110,7 +110,7 @@ func resourceVPCDHCPOptionsAssociationDelete(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if dhcpOptionsID == DefaultDHCPOptionsID {
+	if dhcpOptionsID == defaultDHCPOptionsID {
 		return diags
 	}
 
@@ -119,7 +119,7 @@ func resourceVPCDHCPOptionsAssociationDelete(ctx context.Context, d *schema.Reso
 
 	log.Printf("[DEBUG] Deleting EC2 VPC DHCP Options Set Association: %s", d.Id())
 	_, err = conn.AssociateDhcpOptions(ctx, &ec2.AssociateDhcpOptionsInput{
-		DhcpOptionsId: aws.String(DefaultDHCPOptionsID),
+		DhcpOptionsId: aws.String(defaultDHCPOptionsID),
 		VpcId:         aws.String(vpcID),
 	})
 
@@ -169,7 +169,7 @@ func vpcDHCPOptionsAssociationParseResourceID(id string) (string, string, error)
 	// The VPC ID contains '-'.
 	switch n := len(parts); n {
 	case 3:
-		if parts[0] == DefaultDHCPOptionsID && parts[1] != "" && parts[2] != "" {
+		if parts[0] == defaultDHCPOptionsID && parts[1] != "" && parts[2] != "" {
 			return parts[0], strings.Join([]string{parts[1], parts[2]}, vpcDHCPOptionsAssociationResourceIDSeparator), nil
 		}
 	case 4:

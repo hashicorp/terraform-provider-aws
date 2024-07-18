@@ -491,8 +491,8 @@ func resourceFleet() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							Default:      FleetOnDemandAllocationStrategyLowestPrice,
-							ValidateFunc: validation.StringInSlice(FleetOnDemandAllocationStrategy_Values(), false),
+							Default:      fleetOnDemandAllocationStrategyLowestPrice,
+							ValidateFunc: validation.StringInSlice(fleetOnDemandAllocationStrategy_Values(), false),
 						},
 						"capacity_reservation_options": {
 							Type:     schema.TypeList,
@@ -544,8 +544,8 @@ func resourceFleet() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							Default:      SpotAllocationStrategyLowestPrice,
-							ValidateFunc: validation.StringInSlice(SpotAllocationStrategy_Values(), false),
+							Default:      spotAllocationStrategyLowestPrice,
+							ValidateFunc: validation.StringInSlice(spotAllocationStrategy_Values(), false),
 						},
 						"instance_interruption_behavior": {
 							Type:             schema.TypeString,
@@ -1137,7 +1137,7 @@ func expandSpotOptionsRequest(tfMap map[string]interface{}) *awstypes.SpotOption
 		apiObject.AllocationStrategy = awstypes.SpotAllocationStrategy(v)
 
 		// InvalidFleetConfig: InstancePoolsToUseCount option is only available with the lowestPrice allocation strategy.
-		if v == SpotAllocationStrategyLowestPrice {
+		if v == spotAllocationStrategyLowestPrice {
 			if v, ok := tfMap["instance_pools_to_use_count"].(int); ok {
 				apiObject.InstancePoolsToUseCount = aws.Int32(int32(v))
 			}

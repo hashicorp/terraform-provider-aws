@@ -90,7 +90,7 @@ func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceD
 	input := &ec2.DescribeSecurityGroupsInput{
 		Filters: newAttributeFilterList(
 			map[string]string{
-				"group-name": DefaultSecurityGroupName,
+				"group-name": defaultSecurityGroupName,
 			},
 		),
 	}

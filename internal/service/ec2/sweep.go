@@ -2656,7 +2656,7 @@ func sweepCustomerGateways(region string) error {
 	}
 
 	for _, v := range output.CustomerGateways {
-		if aws.ToString(v.State) == CustomerGatewayStateDeleted {
+		if aws.ToString(v.State) == customerGatewayStateDeleted {
 			continue
 		}
 

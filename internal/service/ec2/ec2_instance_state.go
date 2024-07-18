@@ -60,6 +60,11 @@ func resourceInstanceState() *schema.Resource {
 	}
 }
 
+const (
+	ResInstance      = "Instance"
+	ResInstanceState = "Instance State"
+)
+
 func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 

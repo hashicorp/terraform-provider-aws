@@ -327,8 +327,8 @@ func waitCustomerGatewayCreated(ctx context.Context, conn *ec2.Client, id string
 		timeout = 10 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(CustomerGatewayStatePending),
-		Target:     enum.Slice(CustomerGatewayStateAvailable),
+		Pending:    enum.Slice(customerGatewayStatePending),
+		Target:     enum.Slice(customerGatewayStateAvailable),
 		Refresh:    statusCustomerGateway(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
@@ -349,7 +349,7 @@ func waitCustomerGatewayDeleted(ctx context.Context, conn *ec2.Client, id string
 		timeout = 5 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(CustomerGatewayStateAvailable, CustomerGatewayStateDeleting),
+		Pending: enum.Slice(customerGatewayStateAvailable, customerGatewayStateDeleting),
 		Target:  []string{},
 		Refresh: statusCustomerGateway(ctx, conn, id),
 		Timeout: timeout,
@@ -367,13 +367,13 @@ func waitCustomerGatewayDeleted(ctx context.Context, conn *ec2.Client, id string
 func waitEBSSnapshotImportComplete(ctx context.Context, conn *ec2.Client, importTaskID string, timeout time.Duration) (*awstypes.SnapshotTaskDetail, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			EBSSnapshotImportStateActive,
-			EBSSnapshotImportStateUpdating,
-			EBSSnapshotImportStateValidating,
-			EBSSnapshotImportStateValidated,
-			EBSSnapshotImportStateConverting,
+			ebsSnapshotImportStateActive,
+			ebsSnapshotImportStateUpdating,
+			ebsSnapshotImportStateValidating,
+			ebsSnapshotImportStateValidated,
+			ebsSnapshotImportStateConverting,
 		},
-		Target:  []string{EBSSnapshotImportStateCompleted},
+		Target:  []string{ebsSnapshotImportStateCompleted},
 		Refresh: statusEBSSnapshotImport(ctx, conn, importTaskID),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
@@ -392,7 +392,7 @@ func waitEBSSnapshotImportComplete(ctx context.Context, conn *ec2.Client, import
 
 func waitEBSSnapshotTierArchive(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SnapshotTierStatus, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(TargetStorageTierStandard),
+		Pending: enum.Slice(targetStorageTierStandard),
 		Target:  enum.Slice(awstypes.TargetStorageTierArchive),
 		Refresh: statusSnapshotStorageTier(ctx, conn, id),
 		Timeout: timeout,
@@ -412,7 +412,7 @@ func waitEBSSnapshotTierArchive(ctx context.Context, conn *ec2.Client, id string
 
 func waitEIPDomainNameAttributeDeleted(ctx context.Context, conn *ec2.Client, allocationID string, timeout time.Duration) (*awstypes.AddressAttribute, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{PTRUpdateStatusPending},
+		Pending: []string{ptrUpdateStatusPending},
 		Target:  []string{},
 		Timeout: timeout,
 		Refresh: statusEIPDomainNameAttribute(ctx, conn, allocationID),
@@ -433,7 +433,7 @@ func waitEIPDomainNameAttributeDeleted(ctx context.Context, conn *ec2.Client, al
 
 func waitEIPDomainNameAttributeUpdated(ctx context.Context, conn *ec2.Client, allocationID string, timeout time.Duration) (*awstypes.AddressAttribute, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{PTRUpdateStatusPending},
+		Pending: []string{ptrUpdateStatusPending},
 		Target:  []string{""},
 		Timeout: timeout,
 		Refresh: statusEIPDomainNameAttribute(ctx, conn, allocationID),
@@ -744,7 +744,7 @@ func waitInstanceRootBlockDeviceDeleteOnTerminationUpdated(ctx context.Context, 
 func waitInternetGatewayAttached(ctx context.Context, conn *ec2.Client, internetGatewayID, vpcID string, timeout time.Duration) (*awstypes.InternetGatewayAttachment, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.AttachmentStatusAttaching),
-		Target:         enum.Slice(InternetGatewayAttachmentStateAvailable),
+		Target:         enum.Slice(internetGatewayAttachmentStateAvailable),
 		Timeout:        timeout,
 		NotFoundChecks: internetGatewayNotFoundChecks,
 		Refresh:        statusInternetGatewayAttachmentState(ctx, conn, internetGatewayID, vpcID),
@@ -761,7 +761,7 @@ func waitInternetGatewayAttached(ctx context.Context, conn *ec2.Client, internet
 
 func waitInternetGatewayDetached(ctx context.Context, conn *ec2.Client, internetGatewayID, vpcID string, timeout time.Duration) (*awstypes.InternetGatewayAttachment, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(InternetGatewayAttachmentStateAvailable, awstypes.AttachmentStatusDetaching),
+		Pending: enum.Slice(internetGatewayAttachmentStateAvailable, awstypes.AttachmentStatusDetaching),
 		Target:  []string{},
 		Timeout: timeout,
 		Refresh: statusInternetGatewayAttachmentState(ctx, conn, internetGatewayID, vpcID),
@@ -1383,7 +1383,7 @@ func waitNetworkInterfaceAvailableAfterUse(ctx context.Context, conn *ec2.Client
 
 func waitNetworkInterfaceCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.NetworkInterface, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{NetworkInterfaceStatusPending},
+		Pending: []string{networkInterfaceStatusPending},
 		Target:  enum.Slice(awstypes.NetworkInterfaceStatusAvailable),
 		Timeout: timeout,
 		Refresh: statusNetworkInterface(ctx, conn, id),

@@ -198,7 +198,7 @@ func resourceInstance() *schema.Resource {
 						"cpu_credits": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice(CPUCredits_Values(), false),
+							ValidateFunc: validation.StringInSlice(cpuCredits_Values(), false),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// Only work with existing instances
 								if d.Id() == "" {
@@ -519,7 +519,7 @@ func resourceInstance() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
-							Default:      LaunchTemplateVersionDefault,
+							Default:      launchTemplateVersionDefault,
 						},
 					},
 				},
@@ -876,11 +876,11 @@ func resourceInstance() *schema.Resource {
 					}
 
 					switch stateVersion {
-					case LaunchTemplateVersionDefault:
+					case launchTemplateVersionDefault:
 						if instanceVersion != defaultVersion {
 							diff.ForceNew("launch_template.0.version")
 						}
-					case LaunchTemplateVersionLatest:
+					case launchTemplateVersionLatest:
 						if instanceVersion != latestVersion {
 							diff.ForceNew("launch_template.0.version")
 						}
@@ -2919,7 +2919,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	// Set default cpu_credits as Unlimited for T3/T3a instance type
 	if strings.HasPrefix(instanceType, "t3") {
 		opts.CreditSpecification = &awstypes.CreditSpecificationRequest{
-			CpuCredits: aws.String(CPUCreditsUnlimited),
+			CpuCredits: aws.String(cpuCreditsUnlimited),
 		}
 	}
 
@@ -3853,15 +3853,15 @@ func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.Client, instan
 	}
 
 	switch previousLaunchTemplateVersion {
-	case LaunchTemplateVersionDefault:
+	case launchTemplateVersionDefault:
 		if currentLaunchTemplateVersion == defaultVersion {
-			tfMap[names.AttrVersion] = LaunchTemplateVersionDefault
+			tfMap[names.AttrVersion] = launchTemplateVersionDefault
 		} else {
 			tfMap[names.AttrVersion] = currentLaunchTemplateVersion
 		}
-	case LaunchTemplateVersionLatest:
+	case launchTemplateVersionLatest:
 		if currentLaunchTemplateVersion == latestVersion {
-			tfMap[names.AttrVersion] = LaunchTemplateVersionLatest
+			tfMap[names.AttrVersion] = launchTemplateVersionLatest
 		} else {
 			tfMap[names.AttrVersion] = currentLaunchTemplateVersion
 		}
@@ -3905,11 +3905,11 @@ func findLaunchTemplateData(ctx context.Context, conn *ec2.Client, launchTemplat
 
 	if v := aws.ToString(launchTemplateSpecification.Version); v != "" {
 		switch v {
-		case LaunchTemplateVersionDefault:
+		case launchTemplateVersionDefault:
 			input.Filters = newAttributeFilterList(map[string]string{
 				"is-default-version": "true",
 			})
-		case LaunchTemplateVersionLatest:
+		case launchTemplateVersionLatest:
 			latestVersion = true
 		default:
 			input.Versions = []string{v}

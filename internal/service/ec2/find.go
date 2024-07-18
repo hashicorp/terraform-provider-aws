@@ -1800,7 +1800,7 @@ func findNetworkACLEntryByThreePartKey(ctx context.Context, conn *ec2.Client, na
 func findVPCDefaultSecurityGroup(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecurityGroup, error) {
 	input := &ec2.DescribeSecurityGroupsInput{
 		Filters: newAttributeFilterList(map[string]string{
-			"group-name": DefaultSecurityGroupName,
+			"group-name": defaultSecurityGroupName,
 			"vpc-id":     id,
 		}),
 	}
@@ -3676,7 +3676,7 @@ func findCustomerGatewayByID(ctx context.Context, conn *ec2.Client, id string) (
 		return nil, err
 	}
 
-	if state := aws.ToString(output.State); state == CustomerGatewayStateDeleted {
+	if state := aws.ToString(output.State); state == customerGatewayStateDeleted {
 		return nil, &retry.NotFoundError{
 			Message:     state,
 			LastRequest: input,
