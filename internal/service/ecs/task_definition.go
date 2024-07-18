@@ -29,6 +29,7 @@ import (
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -1214,6 +1215,12 @@ func expandContainerDefinitions(tfString string) ([]awstypes.ContainerDefinition
 
 	if err := tfjson.DecodeFromString(tfString, &apiObjects); err != nil {
 		return nil, err
+	}
+
+	for i, apiObject := range apiObjects {
+		if itypes.IsZero(&apiObject) {
+			return nil, fmt.Errorf("invalid container definition supplied at index (%d)", i)
+		}
 	}
 
 	return apiObjects, nil
