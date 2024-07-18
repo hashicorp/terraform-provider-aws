@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock_test
+
 // **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
 //
 // TIP: ==== INTRODUCTION ====
@@ -33,113 +34,20 @@ import (
 	// need to import types and reference the nested types, e.g., as
 	// types.<Type Name>.
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
-	"github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
-
 	// TIP: You will often need to import the package that this test file lives
 	// in. Since it is in the "test" context, it must import the package to use
 	// any normal context constants, variables, or functions.
-	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-func TestEvaluationJobExampleUnitTest(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-			got, err := tfbedrock.FunctionFromResource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance test access AWS and cost money to run.
 func TestAccBedrockEvaluationJob_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	// TIP: This is a long-running test guard for tests that run longer than
@@ -148,9 +56,13 @@ func TestAccBedrockEvaluationJob_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var evaluationjob bedrock.DescribeEvaluationJobResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	//var evaluationjob bedrock.DescribeEvaluationJobResponse
+	rName := name_regex(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
 	resourceName := "aws_bedrock_evaluation_job.test"
+	bName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	//bucketName := "aws_s3_bucket.test"
+	modelName := "aws_bedrock_foundation_model.test"
+	iamName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -160,21 +72,31 @@ func TestAccBedrockEvaluationJob_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEvaluationJobDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEvaluationJobConfig_basic(rName),
+				Config: testAccEvaluationJobConfig_basic(rName, iamName, bName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEvaluationJobExists(ctx, resourceName, &evaluationjob),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "bedrock", regexache.MustCompile(`evaluationjob:+.`)),
+					//testAccCheckEvaluationJobExists(ctx, resourceName, &evaluationjob),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					//resource.TestCheckResourceAttrPair(resourceName, "customer_cencryption_key_id", ""),
+					// eval config
+					resource.TestCheckResourceAttr(resourceName, "evaluation_job.automated_evaluation_config.metric_names.0", "Builtin.Accuracy"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_job.automated_evaluation_config.task_type.0", "Summarization"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_job.automated_evaluation_config.data_set.data_set.name", "Builtin.Bold"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_job.automated_evaluation_config.data_set.name", "Builtin.Bold"),
+					// eval config end
+					// inf config
+					resource.TestCheckResourceAttrPair(resourceName, "evaluation_job_inference_config.models.bedrock_model.inference_params", modelName, "inference_types_supported.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "evaluation_job_inference_config.models.bedrock_model.id", modelName, names.AttrID),
+					// inf config end
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "Summarization"),
+					resource.TestCheckResourceAttrSet(resourceName, "output_data_config[0].s3_uri"),
+					resource.TestCheckResourceAttrSet(resourceName, "role_arn"), // not sure what to do here
+					//resource.TestCheckResourceAttrSet(resourceName, "failure_messages"), // not sure if this should be set
+					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					// resource.TestCheckResourceAttrPairSet(resourceName, "last_modified_time") don't think I need this
 				),
 			},
 			{
@@ -187,6 +109,25 @@ func TestAccBedrockEvaluationJob_basic(t *testing.T) {
 	})
 }
 
+func name_regex(in string) string {
+	return in
+	var out string
+	for index, char := range in {
+		if index == 1 {
+			out += "-"
+		} else if index == 2 {
+			out += "*"
+		} else {
+			out += string(char)
+		}
+	}
+	for len(in) < 61 {
+		in += "e"
+	}
+	return out
+}
+
+/*
 func TestAccBedrockEvaluationJob_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -224,36 +165,8 @@ func TestAccBedrockEvaluationJob_disappears(t *testing.T) {
 		},
 	})
 }
-
-func testAccCheckEvaluationJobDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_bedrock_evaluation_job" {
-				continue
-			}
-
-			input := &bedrock.DescribeEvaluationJobInput{
-				EvaluationJobId: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.DescribeEvaluationJob(ctx, &bedrock.DescribeEvaluationJobInput{
-				EvaluationJobId: aws.String(rs.Primary.ID),
-			})
-			if errs.IsA[*types.ResourceNotFoundException](err){
-				return nil
-			}
-			if err != nil {
-			        return create.Error(names.Bedrock, create.ErrActionCheckingDestroyed, tfbedrock.ResNameEvaluationJob, rs.Primary.ID, err)
-			}
-
-			return create.Error(names.Bedrock, create.ErrActionCheckingDestroyed, tfbedrock.ResNameEvaluationJob, rs.Primary.ID, errors.New("not destroyed"))
-		}
-
-		return nil
-	}
-}
-
+*/
+/*
 func testAccCheckEvaluationJobExists(ctx context.Context, name string, evaluationjob *bedrock.DescribeEvaluationJobResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -279,6 +192,7 @@ func testAccCheckEvaluationJobExists(ctx context.Context, name string, evaluatio
 		return nil
 	}
 }
+*/
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
@@ -294,39 +208,131 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckEvaluationJobNotRecreated(before, after *bedrock.DescribeEvaluationJobResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.EvaluationJobId), aws.ToString(after.EvaluationJobId); before != after {
-			return create.Error(names.Bedrock, create.ErrActionCheckingNotRecreated, tfbedrock.ResNameEvaluationJob, aws.ToString(before.EvaluationJobId), errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
-func testAccEvaluationJobConfig_basic(rName, version string) string {
+func testAccEvaluationJobConfig_base(iamName, bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
+data "aws_bedrock_foundation_models" "test" {}
+
+data "aws_bedrock_foundation_model" "test" {
+  model_id = data.aws_bedrock_foundation_models.test.model_summaries[0].model_id
 }
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[2]q
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT", "POST", "DELETE"]
+    allowed_origins = ["*"]
+    expose_headers  = ["Access-Control-Allow-Origin"]
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = <<EOF
+  {
+      "Version": "2012-10-17",
+    "Statement": [{
+        "Sid": "AllowBedrockToAssumeRole",
+        "Effect": "Allow",
+        "Principal": {
+            "Service": "bedrock.amazonaws.com"
+        },
+        "Action": "sts:AssumeRole",
+        "Condition": {
+            "StringEquals": {
+                "aws:SourceArn": "111122223333"
+            },
+            "ArnEquals": {
+                "aws:SourceArn": "arn:aws:bedrock:AWS Region:111122223333:evaluation-job/*"
+            }
+        }
+    }]
+  }
+EOF
+}
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Sid" : "BedrockConsole",
+        "Effect" : "Allow",
+        "Action" : [
+          "bedrock:CreateEvaluationJob",
+          "bedrock:GetEvaluationJob",
+          "bedrock:ListEvaluationJobs",
+          "bedrock:StopEvaluationJob",
+          "bedrock:GetCustomModel",
+          "bedrock:ListCustomModels",
+          "bedrock:CreateProvisionedModelThroughput",
+          "bedrock:UpdateProvisionedModelThroughput",
+          "bedrock:GetProvisionedModelThroughput",
+          "bedrock:ListProvisionedModelThroughputs",
+          "bedrock:ListTagsForResource",
+          "bedrock:UntagResource",
+          "bedrock:TagResource"
+        ],
+        "Resource" : "*"
+      },
+      {
+        "Sid" : "AllowConsoleS3AccessForModelEvaluation",
+        "Effect" : "Allow",
+        "Action" : [
+          "s3:GetObject",
+          "s3:GetBucketCORS",
+          "s3:ListBucket",
+          "s3:ListBucketVersions",
+          "s3:GetBucketLocation"
+        ],
+        "Resource" : "*"
+      }
+    ]
+  })
+}
+	`, iamName, bucketName)
+}
+
+func testAccEvaluationJobConfig_basic(iamName, jobName, bucketName string) string {
+	return acctest.ConfigCompose(testAccEvaluationJobConfig_base(iamName, bucketName), fmt.Sprintf(`
+
 
 resource "aws_bedrock_evaluation_job" "test" {
-  evaluation_job_name             = %[1]q
-  engine_type             = "ActiveBedrock"
-  engine_version          = %[2]q
-  host_instance_type      = "bedrock.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
 
-  logs {
-    general = true
+  evaluation_config {
+    automated {
+      automated_evaluation_config {
+        dataset_metric_configs {
+          data_set {
+            name = "Builtin.Bold"
+          }
+          metric_names = ["Builtin.Accuracy"]
+          task_type    = "Summarization"
+        }
+      }
+    }
   }
 
-  user {
-    username = "Test"
-    password = "TestTest1234"
+  inference_config {
+    models {
+      bedrock_model {
+        inference_params = tolist(data.aws_bedrock_foundation_model.test.inference_types_supported)[0]
+        model_identifier = data.aws_bedrock_foundation_model.test.id
+      }
+    }
   }
+
+  description = "test"
+  name        = %[1]q
+
+  output_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/bedrock/evaluation_jobs}"
+  }
+
+  role_arn = aws_iam_role.test.arn
 }
-`, rName, version)
+`, jobName))
 }
