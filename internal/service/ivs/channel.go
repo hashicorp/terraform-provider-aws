@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ivs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ivs/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -61,10 +60,10 @@ func ResourceChannel() *schema.Resource {
 				Computed: true,
 			},
 			"latency_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: enum.Validate[awstypes.ChannelLatencyMode](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ChannelLatencyMode](),
 			},
 			names.AttrName: {
 				Type:         schema.TypeString,
@@ -85,10 +84,10 @@ func ResourceChannel() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrType: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: enum.Validate[awstypes.ChannelType](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ChannelType](),
 			},
 		},
 
@@ -110,11 +109,11 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("authorized"); ok {
-		in.Authorized = aws.Bool(v.(bool))
+		in.Authorized = v.(bool)
 	}
 
 	if v, ok := d.GetOk("latency_mode"); ok {
-		in.LatencyMode = aws.String(v.(string))
+		in.LatencyMode = awstypes.ChannelLatencyMode(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrName); ok {
@@ -126,7 +125,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk(names.AttrType); ok {
-		in.Type = aws.String(v.(string))
+		in.Type = awstypes.ChannelType(v.(string))
 	}
 
 	out, err := conn.CreateChannel(ctx, in)
@@ -189,12 +188,12 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChanges("authorized") {
-		in.Authorized = aws.Bool(d.Get("authorized").(bool))
+		in.Authorized = d.Get("authorized").(bool)
 		update = true
 	}
 
 	if d.HasChanges("latency_mode") {
-		in.LatencyMode = aws.String(d.Get("latency_mode").(string))
+		in.LatencyMode = awstypes.ChannelLatencyMode(d.Get("latency_mode").(string))
 		update = true
 	}
 
@@ -209,7 +208,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChanges(names.AttrType) {
-		in.Type = aws.String(d.Get(names.AttrType).(string))
+		in.Type = awstypes.ChannelType(d.Get(names.AttrType).(string))
 		update = true
 	}
 
