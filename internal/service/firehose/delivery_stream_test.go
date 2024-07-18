@@ -1550,9 +1550,9 @@ func TestAccFirehoseDeliveryStream_HTTPEndpoint_SecretsManagerConfiguration(t *t
 				Config: testAccDeliveryStreamConfig_httpEndpointSecretsManager(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.secret_manager_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.secret_manager_configuration.0.enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttrPair(resourceName, "http_endpoint_configuration.0.secret_manager_configuration.0.secret_arn", "aws_secretsmanager_secret.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.secrets_manager_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.secrets_manager_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "http_endpoint_configuration.0.secrets_manager_configuration.0.secret_arn", "aws_secretsmanager_secret.test", names.AttrARN),
 				),
 			},
 			{
@@ -4227,7 +4227,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
       bucket_arn = aws_s3_bucket.bucket.arn
     }
 
-    secret_manager_configuration {
+    secrets_manager_configuration {
       enabled    = true
       role_arn   = aws_iam_role.firehose.arn
       secret_arn = aws_secretsmanager_secret.test.arn
