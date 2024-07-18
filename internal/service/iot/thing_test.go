@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -103,7 +103,7 @@ func TestAccIoTThing_full(t *testing.T) {
 				),
 			},
 			{ // Remove thing type association
-				Config: testAccThingConfig_basic(thingName),
+				Config: testAccThingConfig_fullUpdated(thingName, typeName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingExists(ctx, resourceName, &thing),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, thingName),
@@ -129,7 +129,7 @@ func testAccCheckThingExists(ctx context.Context, n string, v *iot.DescribeThing
 			return fmt.Errorf("No IoT Thing ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		output, err := tfiot.FindThingByName(ctx, conn, rs.Primary.ID)
 
@@ -145,7 +145,7 @@ func testAccCheckThingExists(ctx context.Context, n string, v *iot.DescribeThing
 
 func testAccCheckThingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_thing" {
@@ -195,4 +195,16 @@ resource "aws_iot_thing_type" "test" {
   name = "%s"
 }
 `, thingName, answer, typeName)
+}
+
+func testAccThingConfig_fullUpdated(thingName, typeName string) string {
+	return fmt.Sprintf(`
+resource "aws_iot_thing" "test" {
+  name = %[1]q
+}
+
+resource "aws_iot_thing_type" "test" {
+  name = %[2]q
+}
+`, thingName, typeName)
 }

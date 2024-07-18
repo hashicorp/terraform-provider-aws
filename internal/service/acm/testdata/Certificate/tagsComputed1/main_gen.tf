@@ -14,8 +14,6 @@ resource "aws_acm_certificate" "test" {
 
 resource "null_resource" "test" {}
 
-
-
 variable "certificate_pem" {
   type     = string
   nullable = false
@@ -30,4 +28,3 @@ variable "unknownTagKey" {
   type     = string
   nullable = false
 }
-

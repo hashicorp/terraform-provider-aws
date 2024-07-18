@@ -117,7 +117,7 @@ func TestAccChimeSDKVoiceSipRule_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipRuleExists(ctx, resourceName, chimeSipRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "disabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disabled", acctest.CtTrue),
 				),
 			},
 			{

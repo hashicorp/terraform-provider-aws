@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -267,7 +267,7 @@ func TestAccBackupPlan_withLifecycle(t *testing.T) {
 						"lifecycle.#":                    acctest.Ct1,
 						"lifecycle.0.cold_storage_after": "30",
 						"lifecycle.0.delete_after":       "180",
-						"lifecycle.0.opt_in_to_archive_for_supported_resources": "true",
+						"lifecycle.0.opt_in_to_archive_for_supported_resources": acctest.CtTrue,
 					}),
 				),
 			},
@@ -634,7 +634,7 @@ func TestAccBackupPlan_enableContinuousBackup(t *testing.T) {
 						"rule_name":                rName,
 						"target_vault_name":        rName,
 						names.AttrSchedule:         "cron(0 12 * * ? *)",
-						"enable_continuous_backup": "true",
+						"enable_continuous_backup": acctest.CtTrue,
 						"lifecycle.#":              acctest.Ct1,
 						"lifecycle.0.delete_after": "35",
 					}),
@@ -677,7 +677,7 @@ func TestAccBackupPlan_disappears(t *testing.T) {
 
 func testAccCheckPlanDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_plan" {
 				continue
@@ -702,7 +702,7 @@ func testAccCheckPlanDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckPlanExists(ctx context.Context, n string, v *backup.GetBackupPlanOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

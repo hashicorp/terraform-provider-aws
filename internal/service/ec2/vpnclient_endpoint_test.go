@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +23,7 @@ import (
 
 func testAccClientVPNEndpoint_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnEndpoint
+	var v awstypes.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
@@ -47,14 +47,14 @@ func testAccClientVPNEndpoint_basic(t *testing.T, semaphore tfsync.Semaphore) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "client_cidr_block", "10.0.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.lambda_function_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.cloudwatch_log_group", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.cloudwatch_log_stream", ""),
-					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
 					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", acctest.Ct0),
@@ -63,7 +63,7 @@ func testAccClientVPNEndpoint_basic(t *testing.T, semaphore tfsync.Semaphore) {
 					resource.TestCheckResourceAttr(resourceName, "self_service_portal_url", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "server_certificate_arn"),
 					resource.TestCheckResourceAttr(resourceName, "session_timeout_hours", "24"),
-					resource.TestCheckResourceAttr(resourceName, "split_tunnel", "false"),
+					resource.TestCheckResourceAttr(resourceName, "split_tunnel", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "transport_protocol", "udp"),
@@ -82,7 +82,7 @@ func testAccClientVPNEndpoint_basic(t *testing.T, semaphore tfsync.Semaphore) {
 
 func testAccClientVPNEndpoint_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnEndpoint
+	var v awstypes.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
@@ -109,7 +109,7 @@ func testAccClientVPNEndpoint_disappears(t *testing.T, semaphore tfsync.Semaphor
 
 func testAccClientVPNEndpoint_tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnEndpoint
+	var v awstypes.ClientVpnEndpoint
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -157,7 +157,7 @@ func testAccClientVPNEndpoint_tags(t *testing.T, semaphore tfsync.Semaphore) {
 
 func testAccClientVPNEndpoint_msADAuth(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnEndpoint
+	var v awstypes.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 	domainName := acctest.RandomDomainName()
@@ -196,7 +196,7 @@ func testAccClientVPNEndpoint_msADAuth(t *testing.T, semaphore tfsync.Semaphore)
 
 func testAccClientVPNEndpoint_msADAuthAndMutualAuth(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnEndpoint
+	var v awstypes.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 	domainName := acctest.RandomDomainName()
@@ -238,7 +238,7 @@ func testAccClientVPNEndpoint_msADAuthAndMutualAuth(t *testing.T, semaphore tfsy
 
 func testAccClientVPNEndpoint_federatedAuth(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnEndpoint
+	var v awstypes.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
@@ -273,7 +273,7 @@ func testAccClientVPNEndpoint_federatedAuth(t *testing.T, semaphore tfsync.Semap
 
 func testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnEndpoint
+	var v awstypes.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
@@ -308,7 +308,7 @@ func testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider(t *testing.T,
 
 func testAccClientVPNEndpoint_withClientConnectOptions(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnEndpoint
+	var v awstypes.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 	lambdaFunction1ResourceName := "aws_lambda_function.test1"
@@ -328,7 +328,7 @@ func testAccClientVPNEndpoint_withClientConnectOptions(t *testing.T, semaphore t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "client_connect_options.0.lambda_function_arn", lambdaFunction1ResourceName, names.AttrARN),
 				),
 			},
@@ -342,7 +342,7 @@ func testAccClientVPNEndpoint_withClientConnectOptions(t *testing.T, semaphore t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "client_connect_options.0.lambda_function_arn", lambdaFunction2ResourceName, names.AttrARN),
 				),
 			},
@@ -351,7 +351,7 @@ func testAccClientVPNEndpoint_withClientConnectOptions(t *testing.T, semaphore t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.lambda_function_arn", ""),
 				),
 			},
@@ -361,7 +361,7 @@ func testAccClientVPNEndpoint_withClientConnectOptions(t *testing.T, semaphore t
 
 func testAccClientVPNEndpoint_withClientLoginBannerOptions(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnEndpoint
+	var v awstypes.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
@@ -379,7 +379,7 @@ func testAccClientVPNEndpoint_withClientLoginBannerOptions(t *testing.T, semapho
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.banner_text", "Options 1"),
 				),
 			},
@@ -393,7 +393,7 @@ func testAccClientVPNEndpoint_withClientLoginBannerOptions(t *testing.T, semapho
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.banner_text", "Options 2"),
 				),
 			},
@@ -402,7 +402,7 @@ func testAccClientVPNEndpoint_withClientLoginBannerOptions(t *testing.T, semapho
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.banner_text", ""),
 				),
 			},
@@ -412,7 +412,7 @@ func testAccClientVPNEndpoint_withClientLoginBannerOptions(t *testing.T, semapho
 
 func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnEndpoint
+	var v awstypes.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
@@ -435,7 +435,7 @@ func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T, semaphore t
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_log_options.0.cloudwatch_log_group", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_log_options.0.cloudwatch_log_stream"),
-					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -445,7 +445,7 @@ func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T, semaphore t
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_log_options.0.cloudwatch_log_group", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_log_options.0.cloudwatch_log_stream", logStream1ResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -460,7 +460,7 @@ func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T, semaphore t
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_log_options.0.cloudwatch_log_group", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_log_options.0.cloudwatch_log_stream", logStream2ResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -470,7 +470,7 @@ func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T, semaphore t
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.cloudwatch_log_group", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.cloudwatch_log_stream", ""),
-					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -479,7 +479,7 @@ func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T, semaphore t
 
 func testAccClientVPNEndpoint_withDNSServers(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnEndpoint
+	var v awstypes.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
@@ -527,7 +527,7 @@ func testAccClientVPNEndpoint_withDNSServers(t *testing.T, semaphore tfsync.Sema
 
 func testAccClientVPNEndpoint_simpleAttributesUpdate(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnEndpoint
+	var v awstypes.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 	serverCertificate1ResourceName := "aws_acm_certificate.test1"
@@ -549,7 +549,7 @@ func testAccClientVPNEndpoint_simpleAttributesUpdate(t *testing.T, semaphore tfs
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Description1"),
 					resource.TestCheckResourceAttrPair(resourceName, "server_certificate_arn", serverCertificate1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "session_timeout_hours", "12"),
-					resource.TestCheckResourceAttr(resourceName, "split_tunnel", "true"),
+					resource.TestCheckResourceAttr(resourceName, "split_tunnel", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "transport_protocol", "tcp"),
 					resource.TestCheckResourceAttr(resourceName, "vpn_port", "1194"),
 				),
@@ -566,7 +566,7 @@ func testAccClientVPNEndpoint_simpleAttributesUpdate(t *testing.T, semaphore tfs
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Description2"),
 					resource.TestCheckResourceAttrPair(resourceName, "server_certificate_arn", serverCertificate2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "session_timeout_hours", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "split_tunnel", "false"),
+					resource.TestCheckResourceAttr(resourceName, "split_tunnel", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "transport_protocol", "tcp"),
 					resource.TestCheckResourceAttr(resourceName, "vpn_port", "443"),
 				),
@@ -577,7 +577,7 @@ func testAccClientVPNEndpoint_simpleAttributesUpdate(t *testing.T, semaphore tfs
 
 func testAccClientVPNEndpoint_selfServicePortal(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnEndpoint
+	var v awstypes.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
@@ -618,7 +618,7 @@ func testAccClientVPNEndpoint_selfServicePortal(t *testing.T, semaphore tfsync.S
 
 func testAccClientVPNEndpoint_vpcNoSecurityGroups(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnEndpoint
+	var v awstypes.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 	defaultSecurityGroupResourceName := "aws_default_security_group.test"
@@ -653,7 +653,7 @@ func testAccClientVPNEndpoint_vpcNoSecurityGroups(t *testing.T, semaphore tfsync
 
 func testAccClientVPNEndpoint_vpcSecurityGroups(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnEndpoint
+	var v awstypes.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 	securityGroup1ResourceName := "aws_security_group.test.0"
@@ -699,7 +699,7 @@ func testAccClientVPNEndpoint_vpcSecurityGroups(t *testing.T, semaphore tfsync.S
 
 func testAccCheckClientVPNEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_client_vpn_endpoint" {
@@ -722,14 +722,14 @@ func testAccCheckClientVPNEndpointDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-func testAccCheckClientVPNEndpointExists(ctx context.Context, name string, v *ec2.ClientVpnEndpoint) resource.TestCheckFunc {
+func testAccCheckClientVPNEndpointExists(ctx context.Context, name string, v *awstypes.ClientVpnEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindClientVPNEndpointByID(ctx, conn, rs.Primary.ID)
 
@@ -821,7 +821,7 @@ resource "aws_lambda_function" "test1" {
   function_name = "AWSClientVPN-%[1]s-1"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "index.handler"
-  runtime       = "nodejs14.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_lambda_function" "test2" {
@@ -829,7 +829,7 @@ resource "aws_lambda_function" "test2" {
   function_name = "AWSClientVPN-%[1]s-2"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "index.handler"
-  runtime       = "nodejs14.x"
+  runtime       = "nodejs20.x"
 }
 
 locals {

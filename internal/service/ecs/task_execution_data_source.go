@@ -26,7 +26,7 @@ func DataSourceTaskExecution() *schema.Resource {
 		ReadWithoutTimeout: dataSourceTaskExecutionRead,
 
 		Schema: map[string]*schema.Schema{
-			"capacity_provider_strategy": {
+			names.AttrCapacityProviderStrategy: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -296,7 +296,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	if v, ok := d.GetOk("capacity_provider_strategy"); ok {
+	if v, ok := d.GetOk(names.AttrCapacityProviderStrategy); ok {
 		input.CapacityProviderStrategy = expandCapacityProviderStrategy(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("client_token"); ok {

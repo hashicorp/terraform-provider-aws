@@ -53,7 +53,7 @@ func (r *resourceTemplateAlias) Schema(ctx context.Context, req resource.SchemaR
 				},
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"aws_account_id": schema.StringAttribute{
+			names.AttrAWSAccountID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{

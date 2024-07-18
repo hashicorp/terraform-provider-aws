@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/docdb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -22,7 +22,7 @@ import (
 
 func TestAccDocDBEventSubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var eventSubscription docdb.EventSubscription
+	var eventSubscription awstypes.EventSubscription
 	resourceName := "aws_docdb_event_subscription.test"
 	snsTopicResourceName := "aws_sns_topic.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -37,7 +37,7 @@ func TestAccDocDBEventSubscription_basic(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "failure"),
@@ -59,7 +59,7 @@ func TestAccDocDBEventSubscription_basic(t *testing.T) {
 
 func TestAccDocDBEventSubscription_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var eventSubscription docdb.EventSubscription
+	var eventSubscription awstypes.EventSubscription
 	resourceName := "aws_docdb_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -88,7 +88,7 @@ func TestAccDocDBEventSubscription_nameGenerated(t *testing.T) {
 
 func TestAccDocDBEventSubscription_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var eventSubscription docdb.EventSubscription
+	var eventSubscription awstypes.EventSubscription
 	resourceName := "aws_docdb_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -112,7 +112,7 @@ func TestAccDocDBEventSubscription_disappears(t *testing.T) {
 
 func TestAccDocDBEventSubscription_enabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var eventSubscription docdb.EventSubscription
+	var eventSubscription awstypes.EventSubscription
 	resourceName := "aws_docdb_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -126,7 +126,7 @@ func TestAccDocDBEventSubscription_enabled(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
@@ -138,14 +138,14 @@ func TestAccDocDBEventSubscription_enabled(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccEventSubscriptionConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 		},
@@ -154,7 +154,7 @@ func TestAccDocDBEventSubscription_enabled(t *testing.T) {
 
 func TestAccDocDBEventSubscription_eventCategories(t *testing.T) {
 	ctx := acctest.Context(t)
-	var eventSubscription docdb.EventSubscription
+	var eventSubscription awstypes.EventSubscription
 	resourceName := "aws_docdb_event_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -193,7 +193,7 @@ func TestAccDocDBEventSubscription_eventCategories(t *testing.T) {
 
 func TestAccDocDBEventSubscription_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var eventSubscription docdb.EventSubscription
+	var eventSubscription awstypes.EventSubscription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_event_subscription.test"
 
@@ -244,7 +244,7 @@ func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 			_, err := tfdocdb.FindEventSubscriptionByName(ctx, conn, rs.Primary.ID)
 
@@ -263,7 +263,7 @@ func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-func testAccCheckEventSubscriptionExists(ctx context.Context, n string, eventSubscription *docdb.EventSubscription) resource.TestCheckFunc {
+func testAccCheckEventSubscriptionExists(ctx context.Context, n string, eventSubscription *awstypes.EventSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -274,7 +274,7 @@ func testAccCheckEventSubscriptionExists(ctx context.Context, n string, eventSub
 			return fmt.Errorf("No DocumentDB Event Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 		res, err := tfdocdb.FindEventSubscriptionByName(ctx, conn, rs.Primary.ID)
 

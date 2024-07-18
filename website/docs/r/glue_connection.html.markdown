@@ -30,14 +30,14 @@ resource "aws_glue_connection" "example" {
 
 ```terraform
 
-data "aws_secretmanager_secret" "example" {
+data "aws_secretsmanager_secret" "example" {
   name = "example-secret"
 }
 
 resource "aws_glue_connection" "example" {
   connection_properties = {
     JDBC_CONNECTION_URL = "jdbc:mysql://example.com/exampledatabase"
-    SECRET_ID           = data.aws_secretmanager_secret.example.name
+    SECRET_ID           = data.aws_secretsmanager_secret.example.name
   }
 
   name = "example"
@@ -72,7 +72,7 @@ resource "aws_glue_connection" "example" {
 # Define the custom connector using the connection_type of `CUSTOM` with the match_criteria of `template_connection`
 # Example here being a snowflake jdbc connector with a secret having user and password as keys
 
-data "aws_secretmanager_secret" "example" {
+data "aws_secretsmanager_secret" "example" {
   name = "example-secret"
 }
 
@@ -101,7 +101,7 @@ resource "aws_glue_connection" "example_connection" {
     CONNECTION_TYPE      = "Jdbc"
     CONNECTOR_URL        = "s3://example/snowflake-jdbc.jar"
     JDBC_CONNECTION_URL  = "jdbc:snowflake://example.com/?user=$${user}&password=$${password}"
-    SECRET_ID            = data.aws_secretmanager_secret.example.name
+    SECRET_ID            = data.aws_secretsmanager_secret.example.name
   }
   name           = "example"
   match_criteria = ["Connection", aws_glue_connection.example_connector.name]

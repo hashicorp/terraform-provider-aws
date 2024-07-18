@@ -164,7 +164,7 @@ func TestAccEKSAddon_preserve(t *testing.T) {
 				Config: testAccAddonConfig_preserve(rName, addonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, resourceName, &addon),
-					resource.TestCheckResourceAttr(resourceName, "preserve", "true"),
+					resource.TestCheckResourceAttr(resourceName, "preserve", acctest.CtTrue),
 				),
 			},
 			{

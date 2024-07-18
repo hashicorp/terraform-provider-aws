@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -77,6 +78,7 @@ func resourcePolicy() *schema.Resource {
 }
 
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -93,15 +95,16 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if err != nil {
-		return diag.Errorf("creating Organizations Policy (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Organizations Policy (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(outputRaw.(*organizations.CreatePolicyOutput).Policy.PolicySummary.Id))
 
-	return resourcePolicyRead(ctx, d, meta)
+	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
 func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	policy, err := findPolicyByID(ctx, conn, d.Id())
@@ -113,7 +116,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Organizations Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Organizations Policy (%s): %s", d.Id(), err)
 	}
 
 	policySummary := policy.PolicySummary
@@ -137,6 +140,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
@@ -159,14 +163,15 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		_, err := conn.UpdatePolicy(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Organizations Policy (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Organizations Policy (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourcePolicyRead(ctx, d, meta)
+	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
 func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
@@ -184,7 +189,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Organizations Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Organizations Policy (%s): %s", d.Id(), err)
 	}
 
 	return nil

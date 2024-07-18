@@ -36,7 +36,7 @@ func testAccControlPanel_basic(t *testing.T) {
 					testAccCheckControlPanelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
-					resource.TestCheckResourceAttr(resourceName, "default_control_panel", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_control_panel", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "routing_control_count", acctest.Ct0),
 				),
 			},

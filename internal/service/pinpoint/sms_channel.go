@@ -29,7 +29,7 @@ func ResourceSMSChannel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -63,7 +63,7 @@ func resourceSMSChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	applicationId := d.Get("application_id").(string)
+	applicationId := d.Get(names.AttrApplicationID).(string)
 
 	params := &pinpoint.SMSChannelRequest{
 		Enabled: aws.Bool(d.Get(names.AttrEnabled).(bool)),
@@ -112,7 +112,7 @@ func resourceSMSChannelRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	res := output.SMSChannelResponse
-	d.Set("application_id", res.ApplicationId)
+	d.Set(names.AttrApplicationID, res.ApplicationId)
 	d.Set(names.AttrEnabled, res.Enabled)
 	d.Set("sender_id", res.SenderId)
 	d.Set("short_code", res.ShortCode)

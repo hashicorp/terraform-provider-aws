@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func testAccAgreement_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedAgreement
+	var conf awstypes.DescribedAgreement
 	baseDirectory1 := "/DOC-EXAMPLE-BUCKET/home/mydirectory1"
 	baseDirectory2 := "/DOC-EXAMPLE-BUCKET/home/mydirectory2"
 	resourceName := "aws_transfer_agreement.test"
@@ -30,7 +30,7 @@ func testAccAgreement_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -68,7 +68,7 @@ func testAccAgreement_basic(t *testing.T) {
 
 func testAccAgreement_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedAgreement
+	var conf awstypes.DescribedAgreement
 	resourceName := "aws_transfer_agreement.test"
 	baseDirectory := "/DOC-EXAMPLE-BUCKET/home/mydirectory"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -76,7 +76,7 @@ func testAccAgreement_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -97,7 +97,7 @@ func testAccAgreement_disappears(t *testing.T) {
 
 func testAccAgreement_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedAgreement
+	var conf awstypes.DescribedAgreement
 	baseDirectory := "/DOC-EXAMPLE-BUCKET/home/mydirectory"
 	resourceName := "aws_transfer_agreement.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -105,7 +105,7 @@ func testAccAgreement_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -147,26 +147,16 @@ func testAccAgreement_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAgreementExists(ctx context.Context, n string, v *transfer.DescribedAgreement) resource.TestCheckFunc {
+func testAccCheckAgreementExists(ctx context.Context, n string, v *awstypes.DescribedAgreement) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Transfer Agreement ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
-		serverID, agreementID, err := tftransfer.AgreementParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
-
-		output, err := tftransfer.FindAgreementByTwoPartKey(ctx, conn, serverID, agreementID)
+		output, err := tftransfer.FindAgreementByTwoPartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes["agreement_id"])
 
 		if err != nil {
 			return err
@@ -180,20 +170,14 @@ func testAccCheckAgreementExists(ctx context.Context, n string, v *transfer.Desc
 
 func testAccCheckAgreementDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_agreement" {
 				continue
 			}
 
-			serverID, agreementID, err := tftransfer.AgreementParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tftransfer.FindAgreementByTwoPartKey(ctx, conn, serverID, agreementID)
+			_, err := tftransfer.FindAgreementByTwoPartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes["agreement_id"])
 
 			if tfresource.NotFound(err) {
 				continue

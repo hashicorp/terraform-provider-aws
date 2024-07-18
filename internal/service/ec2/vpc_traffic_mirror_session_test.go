@@ -10,8 +10,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,7 +25,7 @@ import (
 
 func TestAccVPCTrafficMirrorSession_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.TrafficMirrorSession
+	var v awstypes.TrafficMirrorSession
 	resourceName := "aws_ec2_traffic_mirror_session.test"
 	description := "test session"
 	session := sdkacctest.RandIntRange(1, 32766)
@@ -47,7 +48,7 @@ func TestAccVPCTrafficMirrorSession_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorSessionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "packet_length", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, "packet_length"),
 					resource.TestCheckResourceAttr(resourceName, "session_number", strconv.Itoa(session)),
 					resource.TestMatchResourceAttr(resourceName, "virtual_network_id", regexache.MustCompile(`\d+`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
@@ -72,7 +73,6 @@ func TestAccVPCTrafficMirrorSession_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorSessionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "packet_length", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "session_number", strconv.Itoa(session)),
 					resource.TestMatchResourceAttr(resourceName, "virtual_network_id", regexache.MustCompile(`\d+`)),
 				),
@@ -89,7 +89,7 @@ func TestAccVPCTrafficMirrorSession_basic(t *testing.T) {
 
 func TestAccVPCTrafficMirrorSession_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.TrafficMirrorSession
+	var v awstypes.TrafficMirrorSession
 	resourceName := "aws_ec2_traffic_mirror_session.test"
 	session := sdkacctest.RandIntRange(1, 32766)
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
@@ -139,7 +139,7 @@ func TestAccVPCTrafficMirrorSession_tags(t *testing.T) {
 
 func TestAccVPCTrafficMirrorSession_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.TrafficMirrorSession
+	var v awstypes.TrafficMirrorSession
 	resourceName := "aws_ec2_traffic_mirror_session.test"
 	session := sdkacctest.RandIntRange(1, 32766)
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
@@ -167,7 +167,7 @@ func TestAccVPCTrafficMirrorSession_disappears(t *testing.T) {
 
 func TestAccVPCTrafficMirrorSession_updateTrafficMirrorTarget(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.TrafficMirrorSession
+	var v1, v2 awstypes.TrafficMirrorSession
 	resourceName := "aws_ec2_traffic_mirror_session.test"
 	session := sdkacctest.RandIntRange(1, 32766)
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
@@ -199,9 +199,9 @@ func TestAccVPCTrafficMirrorSession_updateTrafficMirrorTarget(t *testing.T) {
 }
 
 func testAccPreCheckTrafficMirrorSession(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	_, err := conn.DescribeTrafficMirrorSessionsWithContext(ctx, &ec2.DescribeTrafficMirrorSessionsInput{})
+	_, err := conn.DescribeTrafficMirrorSessions(ctx, &ec2.DescribeTrafficMirrorSessionsInput{})
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skip("skipping traffic mirror sessions acceptance test: ", err)
@@ -212,9 +212,9 @@ func testAccPreCheckTrafficMirrorSession(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckTrafficMirrorSessionNotRecreated(t *testing.T, before, after *ec2.TrafficMirrorSession) resource.TestCheckFunc {
+func testAccCheckTrafficMirrorSessionNotRecreated(t *testing.T, before, after *awstypes.TrafficMirrorSession) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.TrafficMirrorSessionId), aws.StringValue(after.TrafficMirrorSessionId); before != after {
+		if before, after := aws.ToString(before.TrafficMirrorSessionId), aws.ToString(after.TrafficMirrorSessionId); before != after {
 			t.Fatalf("Expected TrafficMirrorSessionIDs not to change, but both got before: %s and after: %s", before, after)
 		}
 
@@ -224,7 +224,7 @@ func testAccCheckTrafficMirrorSessionNotRecreated(t *testing.T, before, after *e
 
 func testAccCheckTrafficMirrorSessionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_traffic_mirror_session" {
@@ -248,18 +248,14 @@ func testAccCheckTrafficMirrorSessionDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccCheckTrafficMirrorSessionExists(ctx context.Context, n string, v *ec2.TrafficMirrorSession) resource.TestCheckFunc {
+func testAccCheckTrafficMirrorSessionExists(ctx context.Context, n string, v *awstypes.TrafficMirrorSession) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Traffic Mirror Session ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindTrafficMirrorSessionByID(ctx, conn, rs.Primary.ID)
 

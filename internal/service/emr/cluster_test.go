@@ -1208,17 +1208,17 @@ func TestAccEMRCluster_terminationProtected(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_terminationPolicy(rName, "false"),
+				Config: testAccClusterConfig_terminationPolicy(rName, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "termination_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "termination_protection", acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccClusterConfig_terminationPolicy(rName, "true"),
+				Config: testAccClusterConfig_terminationPolicy(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "termination_protection", "true"),
+					resource.TestCheckResourceAttr(resourceName, "termination_protection", acctest.CtTrue),
 				),
 			},
 			{
@@ -1233,10 +1233,10 @@ func TestAccEMRCluster_terminationProtected(t *testing.T) {
 			},
 			{
 				//Need to turn off termination_protection to allow the job to be deleted
-				Config: testAccClusterConfig_terminationPolicy(rName, "false"),
+				Config: testAccClusterConfig_terminationPolicy(rName, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "termination_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "termination_protection", acctest.CtFalse),
 				),
 			},
 			{
@@ -1269,7 +1269,7 @@ func TestAccEMRCluster_keepJob(t *testing.T) {
 				Config: testAccClusterConfig_keepJob(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "keep_job_flow_alive_when_no_steps", "false"),
+					resource.TestCheckResourceAttr(resourceName, "keep_job_flow_alive_when_no_steps", acctest.CtFalse),
 				),
 			},
 			{
@@ -1302,7 +1302,7 @@ func TestAccEMRCluster_visibleToAllUsers(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "visible_to_all_users", "true"),
+					resource.TestCheckResourceAttr(resourceName, "visible_to_all_users", acctest.CtTrue),
 				),
 			},
 			{
@@ -1319,7 +1319,7 @@ func TestAccEMRCluster_visibleToAllUsers(t *testing.T) {
 				Config: testAccClusterConfig_visibleToAllUsersUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "visible_to_all_users", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visible_to_all_users", acctest.CtFalse),
 				),
 			},
 			{
@@ -1715,10 +1715,10 @@ func TestAccEMRCluster_unhealthyNodeReplacement(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_unhealthyNodeReplacement(rName, "true"),
+				Config: testAccClusterConfig_unhealthyNodeReplacement(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "unhealthy_node_replacement", "true"),
+					resource.TestCheckResourceAttr(resourceName, "unhealthy_node_replacement", acctest.CtTrue),
 				),
 			},
 			{
@@ -1732,10 +1732,10 @@ func TestAccEMRCluster_unhealthyNodeReplacement(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterConfig_unhealthyNodeReplacement(rName, "false"),
+				Config: testAccClusterConfig_unhealthyNodeReplacement(rName, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "unhealthy_node_replacement", "false"),
+					resource.TestCheckResourceAttr(resourceName, "unhealthy_node_replacement", acctest.CtFalse),
 				),
 			},
 			{

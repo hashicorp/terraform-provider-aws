@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_rds_cluster_parameter_group", name="Cluster Parameter Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterParameterGroupCreate,

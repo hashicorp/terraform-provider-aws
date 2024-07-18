@@ -1,5 +1,5 @@
 ---
-subcategory: "Amazon Bedrock"
+subcategory: "Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_model_invocation_logging_configuration"
 description: |-
@@ -136,4 +136,4 @@ Using `terraform import`, import Bedrock custom model using the `id` set to the 
 % terraform import aws_bedrock_model_invocation_logging_configuration.my_config us-east-1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3509a05976230aba1bc1f25a4b8f34a599a32065ee0f1b9f0635d96168f32175 -->
+<!-- cache-key: cdktf-0.20.1 input-133dcfe3fbb6e947216f40d4368e641199f134fa245d8476c232eb1f6c5b8f5a -->

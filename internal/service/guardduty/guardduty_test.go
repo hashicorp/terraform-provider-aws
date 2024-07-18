@@ -34,10 +34,10 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"multiple":                 testAccDetectorFeature_multiple,
 		},
 		"Filter": {
-			acctest.CtBasic: testAccFilter_basic,
-			"update":        testAccFilter_update,
-			"tags":          testAccFilter_tags,
-			"disappears":    testAccFilter_disappears,
+			acctest.CtBasic:      testAccFilter_basic,
+			"update":             testAccFilter_update,
+			"tags":               testAccFilter_tags,
+			acctest.CtDisappears: testAccFilter_disappears,
 		},
 		"FindingIDs": {
 			"datasource_basic": testAccFindingIDsDataSource_basic,
@@ -75,8 +75,8 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"invitationMessage":  testAccMember_invitationMessage,
 		},
 		"PublishingDestination": {
-			acctest.CtBasic: testAccPublishingDestination_basic,
-			"disappears":    testAccPublishingDestination_disappears,
+			acctest.CtBasic:      testAccPublishingDestination_basic,
+			acctest.CtDisappears: testAccPublishingDestination_disappears,
 		},
 	}
 

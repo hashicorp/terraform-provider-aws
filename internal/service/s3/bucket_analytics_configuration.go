@@ -164,7 +164,7 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 	}
 
 	if err != nil {
-		return diag.Errorf("creating S3 Bucket (%s) Analytics Configuration (%s): %s", bucket, name, err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Analytics Configuration (%s): %s", bucket, name, err)
 	}
 
 	if d.IsNewResource() {
@@ -196,11 +196,11 @@ func resourceBucketAnalyticsConfigurationRead(ctx context.Context, d *schema.Res
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Analytics Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading S3 Bucket Analytics Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Analytics Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrBucket, bucket)
@@ -246,7 +246,7 @@ func resourceBucketAnalyticsConfigurationDelete(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Analytics Configuration (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func BucketAnalyticsConfigurationParseID(id string) (string, string, error) {
