@@ -4,9 +4,7 @@
 package ecr
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"log"
 	"sort"
 	"strings"
@@ -14,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
-	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -236,37 +234,27 @@ func equivalentLifecyclePolicyJSON(str1, str2 string) (bool, error) {
 		str2 = "{}"
 	}
 
-	var lp1, lp2 lifecyclePolicy
-
-	if err := json.Unmarshal([]byte(str1), &lp1); err != nil {
+	var lp1 lifecyclePolicy
+	err := tfjson.DecodeFromString(str1, &lp1)
+	if err != nil {
 		return false, err
 	}
-
 	lp1.reduce()
-
-	canonicalJSON1, err := jsonutil.BuildJSON(lp1)
-
+	b1, err := tfjson.EncodeToBytes(lp1)
 	if err != nil {
 		return false, err
 	}
 
-	if err := json.Unmarshal([]byte(str2), &lp2); err != nil {
+	var lp2 lifecyclePolicy
+	err = tfjson.DecodeFromString(str2, &lp2)
+	if err != nil {
 		return false, err
 	}
-
 	lp2.reduce()
-
-	canonicalJSON2, err := jsonutil.BuildJSON(lp2)
-
+	b2, err := tfjson.EncodeToBytes(lp2)
 	if err != nil {
 		return false, err
 	}
 
-	equal := bytes.Equal(canonicalJSON1, canonicalJSON2)
-
-	if !equal {
-		log.Printf("[DEBUG] Canonical Lifecycle Policy JSONs are not equal.\nFirst: %s\nSecond: %s\n", canonicalJSON1, canonicalJSON2)
-	}
-
-	return equal, nil
+	return tfjson.EqualBytes(b1, b2), nil
 }
