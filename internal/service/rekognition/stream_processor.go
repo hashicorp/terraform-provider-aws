@@ -73,6 +73,7 @@ var (
 )
 
 // @FrameworkResource("aws_rekognition_stream_processor", name="Stream Processor")
+// @Tags(identifierAttribute="stream_processor_arn")
 func newResourceStreamProcessor(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceStreamProcessor{}
 	r.SetDefaultCreateTimeout(30 * time.Minute)
@@ -99,7 +100,6 @@ func (r *resourceStreamProcessor) Metadata(_ context.Context, req resource.Metad
 func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrKMSKeyID: schema.StringAttribute{
 				Description: "The identifier for your AWS Key Management Service key (AWS KMS key). You can supply the Amazon Resource Name (ARN) of your KMS key, the ID of your KMS key, an alias for your KMS key, or an alias ARN.",
 				Optional:    true,
@@ -128,6 +128,13 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"stream_processor_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -478,8 +485,8 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	plan.ARN = fwflex.StringToFramework(ctx, out.StreamProcessorArn)
 	plan.ID = plan.Name
+	plan.StreamProcessorARN = fwflex.StringToFrameworkARN(ctx, out.StreamProcessorArn)
 
 	if plan.DataSharingPreference.IsNull() {
 		dataSharing, diag := fwtypes.NewListNestedObjectValueOfPtr(ctx, &dataSharingPreferenceModel{OptIn: basetypes.NewBoolValue(false)})
@@ -651,24 +658,24 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 			)
 			return
 		}
-	}
 
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	updated, err := waitStreamProcessorUpdated(ctx, conn, plan.Name.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForUpdate, ResNameStreamProcessor, plan.Name.String(), err),
-			err.Error(),
-		)
-		return
-	}
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		updated, err := waitStreamProcessorUpdated(ctx, conn, plan.Name.ValueString(), updateTimeout)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForUpdate, ResNameStreamProcessor, plan.Name.String(), err),
+				err.Error(),
+			)
+			return
+		}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, updated, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, updated, &plan)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	}
 }
 
 func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -825,7 +832,6 @@ func unwrapListNestedObjectValueOf[T any](ctx context.Context, diagnostics diag.
 }
 
 type resourceStreamProcessorDataModel struct {
-	ARN                   types.String                                                `tfsdk:"arn"`
 	DataSharingPreference fwtypes.ListNestedObjectValueOf[dataSharingPreferenceModel] `tfsdk:"data_sharing_preference"`
 	ID                    types.String                                                `tfsdk:"id"`
 	Input                 fwtypes.ListNestedObjectValueOf[inputModel]                 `tfsdk:"input"`
@@ -836,6 +842,7 @@ type resourceStreamProcessorDataModel struct {
 	RegionsOfInterest     fwtypes.ListNestedObjectValueOf[regionOfInterestModel]      `tfsdk:"regions_of_interest"`
 	RoleARN               fwtypes.ARN                                                 `tfsdk:"role_arn"`
 	Settings              fwtypes.ListNestedObjectValueOf[settingsModel]              `tfsdk:"settings"`
+	StreamProcessorARN    fwtypes.ARN                                                 `tfsdk:"stream_processor_arn"`
 	Tags                  types.Map                                                   `tfsdk:"tags"`
 	TagsAll               types.Map                                                   `tfsdk:"tags_all"`
 	Timeouts              timeouts.Value                                              `tfsdk:"timeouts"`

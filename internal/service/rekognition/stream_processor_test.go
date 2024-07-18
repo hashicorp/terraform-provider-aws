@@ -48,10 +48,9 @@ func TestAccRekognitionStreamProcessor_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrARN},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -161,10 +160,9 @@ func TestAccRekognitionStreamProcessor_faceRecognition(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrARN},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -232,6 +230,57 @@ func TestAccRekognitionStreamProcessor_faceRecognition_polygon(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.1.y", "0.5"),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.2.x", "0.5"),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.2.y", "0.5"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRekognitionStreamProcessor_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var streamprocessor rekognition.DescribeStreamProcessorOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rekognition_stream_processor.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamProcessorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamProcessorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccStreamProcessorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccStreamProcessorConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -513,4 +562,87 @@ resource "aws_rekognition_stream_processor" "test" {
   }
 }
 `, rName, regionsOfInterest))
+}
+
+func testAccStreamProcessorConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccStreamProcessorConfigBase_connectedHome(rName),
+		fmt.Sprintf(`
+resource "aws_rekognition_stream_processor" "test" {
+  role_arn = aws_iam_role.test.arn
+  name     = %[1]q
+
+  data_sharing_preference {
+    opt_in = true
+  }
+
+  output {
+    s3_destination {
+      bucket = aws_s3_bucket.test.bucket
+    }
+  }
+
+  settings {
+    connected_home {
+      labels = ["PERSON", "ALL"]
+    }
+  }
+
+  input {
+    kinesis_video_stream {
+      arn = aws_kinesis_video_stream.test.arn
+    }
+  }
+
+  notification_channel {
+    sns_topic_arn = aws_sns_topic.test.arn
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccStreamProcessorConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccStreamProcessorConfigBase_connectedHome(rName),
+		fmt.Sprintf(`
+resource "aws_rekognition_stream_processor" "test" {
+  role_arn = aws_iam_role.test.arn
+  name     = %[1]q
+
+  data_sharing_preference {
+    opt_in = true
+  }
+
+  output {
+    s3_destination {
+      bucket = aws_s3_bucket.test.bucket
+    }
+  }
+
+  settings {
+    connected_home {
+      labels = ["PERSON", "ALL"]
+    }
+  }
+
+  input {
+    kinesis_video_stream {
+      arn = aws_kinesis_video_stream.test.arn
+    }
+  }
+
+  notification_channel {
+    sns_topic_arn = aws_sns_topic.test.arn
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
