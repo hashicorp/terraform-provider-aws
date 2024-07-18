@@ -1009,11 +1009,6 @@ func testAccTableReplicaConfig_billingModeProvisionedSource(rName string) string
 		fmt.Sprintf(`
 resource "aws_dynamodb_table_replica" "test" {
   global_table_arn = aws_dynamodb_table.source.arn
-
-  tags = {
-    Name = %[1]q
-    Pozo = "Amargo"
-  }
 }
 
 resource "aws_dynamodb_table" "source" {
