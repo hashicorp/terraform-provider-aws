@@ -147,10 +147,10 @@ func TestAccBedrockAgentAgentActionGroup_functionSchema(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.0.map_block_key", names.AttrMessage),
 					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.0.type", "string"),
 					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.0.description", "The Hello message"),
-					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.0.required", "true"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.0.required", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.1.map_block_key", "unused"),
 					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.1.type", "integer"),
-					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.1.required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.1.required", acctest.CtFalse),
 				),
 			},
 			{
