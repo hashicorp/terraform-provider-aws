@@ -12,11 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -76,7 +76,7 @@ func resourceReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, met
 
 	resp, err := conn.DescribeReceiptRuleSet(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeRuleSetDoesNotExistException) {
+	if errs.IsA[*awstypes.RuleSetDoesNotExistException](err) {
 		log.Printf("[WARN] SES Receipt Rule Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
