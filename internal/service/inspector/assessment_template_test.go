@@ -9,10 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -200,9 +198,7 @@ func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			resp, err := conn.DescribeAssessmentTemplates(ctx, &inspector.DescribeAssessmentTemplatesInput{
-				AssessmentTemplateArns: []*string{
-					aws.String(rs.Primary.ID),
-				},
+				AssessmentTemplateArns: []string{rs.Primary.ID},
 			})
 
 			if errs.IsA[*awstypes.InvalidInputException](err) {
@@ -214,7 +210,7 @@ func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			if len(resp.AssessmentTemplates) > 0 {
-				return fmt.Errorf("Found Template, expected none: %s", resp)
+				return fmt.Errorf("Found Template, expected none: %+v", resp)
 			}
 		}
 
@@ -258,7 +254,7 @@ func testAccCheckTemplateExists(ctx context.Context, name string, v *awstypes.As
 			return fmt.Errorf("Inspector Classic Assessment template not found")
 		}
 
-		*v = *resp.AssessmentTemplates[0]
+		v = &resp.AssessmentTemplates[0]
 
 		return nil
 	}

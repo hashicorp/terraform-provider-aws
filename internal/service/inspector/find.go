@@ -11,30 +11,28 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
 )
 
-func findSubscriptionsByAssessmentTemplateARN(ctx context.Context, conn *inspector.Client, arn string) ([]*awstypes.Subscription, error) {
+func findSubscriptionsByAssessmentTemplateARN(ctx context.Context, conn *inspector.Client, arn string) ([]awstypes.Subscription, error) {
 	input := &inspector.ListEventSubscriptionsInput{
 		ResourceArn: aws.String(arn),
 	}
 
-	var results []*awstypes.Subscription
+	var results []awstypes.Subscription
 
-	err := conn.ListEventSubscriptionsPagesWithContext(ctx, input, func(page *inspector.ListEventSubscriptionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := inspector.NewListEventSubscriptionsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
 		for _, subscription := range page.Subscriptions {
-			if subscription == nil {
-				continue
-			}
-
 			if aws.ToString(subscription.ResourceArn) == arn {
 				results = append(results, subscription)
 			}
 		}
+	}
 
-		return !lastPage
-	})
-
-	return results, err
+	return results, nil
 }

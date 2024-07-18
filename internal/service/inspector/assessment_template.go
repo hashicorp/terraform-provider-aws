@@ -10,12 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
-
-	// "github.com/aws/aws-sdk-go/aws/awserr"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -59,9 +55,9 @@ func ResourceAssessmentTemplate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"event": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: enum.Validate[awstypes.Event](),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.InspectorEvent](),
 						},
 						names.AttrTopicARN: {
 							Type:         schema.TypeString,
@@ -103,8 +99,8 @@ func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 	input := &inspector.CreateAssessmentTemplateInput{
 		AssessmentTargetArn:    aws.String(d.Get(names.AttrTargetARN).(string)),
 		AssessmentTemplateName: aws.String(name),
-		DurationInSeconds:      aws.Int64(int64(d.Get(names.AttrDuration).(int))),
-		RulesPackageArns:       flex.ExpandStringSet(d.Get("rules_package_arns").(*schema.Set)),
+		DurationInSeconds:      aws.Int32(int32(d.Get(names.AttrDuration).(int))),
+		RulesPackageArns:       flex.ExpandStringValueSet(d.Get("rules_package_arns").(*schema.Set)),
 	}
 
 	output, err := conn.CreateAssessmentTemplate(ctx, input)
@@ -242,7 +238,7 @@ func expandEventSubscription(tfMap map[string]interface{}, templateArn *string) 
 	}
 
 	eventSubscription := &inspector.SubscribeToEventInput{
-		Event:       aws.String(tfMap["event"].(string)),
+		Event:       awstypes.InspectorEvent(tfMap["event"].(string)),
 		ResourceArn: templateArn,
 		TopicArn:    aws.String(tfMap[names.AttrTopicARN].(string)),
 	}
@@ -250,7 +246,7 @@ func expandEventSubscription(tfMap map[string]interface{}, templateArn *string) 
 	return eventSubscription
 }
 
-func flattenSubscriptions(subscriptions []*awstypes.Subscription) []interface{} {
+func flattenSubscriptions(subscriptions []awstypes.Subscription) []interface{} {
 	if len(subscriptions) == 0 {
 		return nil
 	}
@@ -258,15 +254,7 @@ func flattenSubscriptions(subscriptions []*awstypes.Subscription) []interface{} 
 	var tfList []interface{}
 
 	for _, subscription := range subscriptions {
-		if subscription == nil {
-			continue
-		}
-
 		for _, eventSubscription := range subscription.EventSubscriptions {
-			if eventSubscription == nil {
-				continue
-			}
-
 			tfList = append(tfList, flattenEventSubscription(eventSubscription, subscription.TopicArn))
 		}
 	}
@@ -274,11 +262,7 @@ func flattenSubscriptions(subscriptions []*awstypes.Subscription) []interface{} 
 	return tfList
 }
 
-func flattenEventSubscription(eventSubscription *awstypes.EventSubscription, topicArn *string) map[string]interface{} {
-	if eventSubscription == nil {
-		return nil
-	}
-
+func flattenEventSubscription(eventSubscription awstypes.EventSubscription, topicArn *string) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	tfMap["event"] = eventSubscription.Event
