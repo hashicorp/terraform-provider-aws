@@ -1008,6 +1008,173 @@ func resourceDeliveryStream() *schema.Resource {
 						},
 					},
 				},
+				"opensearchserverless_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"buffering_interval": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      300,
+								ValidateFunc: validation.IntBetween(0, 900),
+							},
+							"buffering_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      5,
+								ValidateFunc: validation.IntBetween(1, 100),
+							},
+							"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
+							"collection_endpoint": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"index_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"processing_configuration": processingConfigurationSchema(),
+							"retry_duration": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      300,
+								ValidateFunc: validation.IntBetween(0, 7200),
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"s3_backup_mode": {
+								Type:             schema.TypeString,
+								ForceNew:         true,
+								Optional:         true,
+								Default:          types.AmazonOpenSearchServerlessS3BackupModeFailedDocumentsOnly,
+								ValidateDiagFunc: enum.Validate[types.AmazonOpenSearchServerlessS3BackupMode](),
+							},
+							"s3_configuration": s3ConfigurationSchema(),
+							names.AttrVPCConfig: {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrSecurityGroupIDs: {
+											Type:     schema.TypeSet,
+											Required: true,
+											ForceNew: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										names.AttrSubnetIDs: {
+											Type:     schema.TypeSet,
+											Required: true,
+											ForceNew: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										names.AttrVPCID: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"redshift_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
+							"cluster_jdbcurl": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"copy_options": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"data_table_columns": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"data_table_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrPassword: {
+								Type:      schema.TypeString,
+								Optional:  true,
+								Sensitive: true,
+							},
+							"processing_configuration": processingConfigurationSchema(),
+							"retry_duration": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      3600,
+								ValidateFunc: validation.IntBetween(0, 7200),
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"s3_backup_configuration": s3BackupConfigurationSchema(),
+							"s3_backup_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.RedshiftS3BackupModeDisabled,
+								ValidateDiagFunc: enum.Validate[types.RedshiftS3BackupMode](),
+							},
+							"s3_configuration":              s3ConfigurationSchema(),
+							"secrets_manager_configuration": secretsManagerConfigurationSchema(),
+							names.AttrUsername: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"server_side_encryption": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					ConflictsWith:    []string{"kinesis_source_configuration", "msk_source_configuration"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"key_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+								RequiredWith: []string{"server_side_encryption.0.enabled", "server_side_encryption.0.key_type"},
+							},
+							"key_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.KeyTypeAwsOwnedCmk,
+								ValidateDiagFunc: enum.Validate[types.KeyType](),
+								RequiredWith:     []string{"server_side_encryption.0.enabled"},
+							},
+						},
+					},
+				},
 				"snowflake_configuration": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -1118,172 +1285,6 @@ func resourceDeliveryStream() *schema.Resource {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(1, 255),
-							},
-						},
-					},
-				},
-				"opensearchserverless_configuration": {
-					Type:     schema.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"buffering_interval": {
-								Type:         schema.TypeInt,
-								Optional:     true,
-								Default:      300,
-								ValidateFunc: validation.IntBetween(0, 900),
-							},
-							"buffering_size": {
-								Type:         schema.TypeInt,
-								Optional:     true,
-								Default:      5,
-								ValidateFunc: validation.IntBetween(1, 100),
-							},
-							"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
-							"collection_endpoint": {
-								Type:     schema.TypeString,
-								Required: true,
-							},
-							"index_name": {
-								Type:     schema.TypeString,
-								Required: true,
-							},
-							"processing_configuration": processingConfigurationSchema(),
-							"retry_duration": {
-								Type:         schema.TypeInt,
-								Optional:     true,
-								Default:      300,
-								ValidateFunc: validation.IntBetween(0, 7200),
-							},
-							names.AttrRoleARN: {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: verify.ValidARN,
-							},
-							"s3_backup_mode": {
-								Type:             schema.TypeString,
-								ForceNew:         true,
-								Optional:         true,
-								Default:          types.AmazonOpenSearchServerlessS3BackupModeFailedDocumentsOnly,
-								ValidateDiagFunc: enum.Validate[types.AmazonOpenSearchServerlessS3BackupMode](),
-							},
-							"s3_configuration": s3ConfigurationSchema(),
-							names.AttrVPCConfig: {
-								Type:     schema.TypeList,
-								Optional: true,
-								ForceNew: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										names.AttrRoleARN: {
-											Type:         schema.TypeString,
-											Required:     true,
-											ForceNew:     true,
-											ValidateFunc: verify.ValidARN,
-										},
-										names.AttrSecurityGroupIDs: {
-											Type:     schema.TypeSet,
-											Required: true,
-											ForceNew: true,
-											Elem:     &schema.Schema{Type: schema.TypeString},
-										},
-										names.AttrSubnetIDs: {
-											Type:     schema.TypeSet,
-											Required: true,
-											ForceNew: true,
-											Elem:     &schema.Schema{Type: schema.TypeString},
-										},
-										names.AttrVPCID: {
-											Type:     schema.TypeString,
-											Computed: true,
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-				"redshift_configuration": {
-					Type:     schema.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
-							"cluster_jdbcurl": {
-								Type:     schema.TypeString,
-								Required: true,
-							},
-							"copy_options": {
-								Type:     schema.TypeString,
-								Optional: true,
-							},
-							"data_table_columns": {
-								Type:     schema.TypeString,
-								Optional: true,
-							},
-							"data_table_name": {
-								Type:     schema.TypeString,
-								Required: true,
-							},
-							names.AttrPassword: {
-								Type:      schema.TypeString,
-								Required:  true,
-								Sensitive: true,
-							},
-							"processing_configuration": processingConfigurationSchema(),
-							"retry_duration": {
-								Type:         schema.TypeInt,
-								Optional:     true,
-								Default:      3600,
-								ValidateFunc: validation.IntBetween(0, 7200),
-							},
-							names.AttrRoleARN: {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: verify.ValidARN,
-							},
-							"s3_backup_configuration": s3BackupConfigurationSchema(),
-							"s3_backup_mode": {
-								Type:             schema.TypeString,
-								Optional:         true,
-								Default:          types.RedshiftS3BackupModeDisabled,
-								ValidateDiagFunc: enum.Validate[types.RedshiftS3BackupMode](),
-							},
-							"s3_configuration": s3ConfigurationSchema(),
-							names.AttrUsername: {
-								Type:     schema.TypeString,
-								Required: true,
-							},
-						},
-					},
-				},
-				"server_side_encryption": {
-					Type:             schema.TypeList,
-					Optional:         true,
-					MaxItems:         1,
-					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-					ConflictsWith:    []string{"kinesis_source_configuration", "msk_source_configuration"},
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							names.AttrEnabled: {
-								Type:     schema.TypeBool,
-								Optional: true,
-								Default:  false,
-							},
-							"key_arn": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: verify.ValidARN,
-								RequiredWith: []string{"server_side_encryption.0.enabled", "server_side_encryption.0.key_type"},
-							},
-							"key_type": {
-								Type:             schema.TypeString,
-								Optional:         true,
-								Default:          types.KeyTypeAwsOwnedCmk,
-								ValidateDiagFunc: enum.Validate[types.KeyType](),
-								RequiredWith:     []string{"server_side_encryption.0.enabled"},
 							},
 						},
 					},
@@ -2420,68 +2421,92 @@ func expandPrefix(s3 map[string]interface{}) *string {
 	return nil
 }
 
-func expandRedshiftDestinationConfiguration(redshift map[string]interface{}) *types.RedshiftDestinationConfiguration {
-	roleARN := redshift[names.AttrRoleARN].(string)
-	configuration := &types.RedshiftDestinationConfiguration{
-		ClusterJDBCURL:  aws.String(redshift["cluster_jdbcurl"].(string)),
-		RetryOptions:    expandRedshiftRetryOptions(redshift),
-		Password:        aws.String(redshift[names.AttrPassword].(string)),
-		Username:        aws.String(redshift[names.AttrUsername].(string)),
+func expandRedshiftDestinationConfiguration(tfMap map[string]interface{}) *types.RedshiftDestinationConfiguration {
+	roleARN := tfMap[names.AttrRoleARN].(string)
+	apiObject := &types.RedshiftDestinationConfiguration{
+		ClusterJDBCURL:  aws.String(tfMap["cluster_jdbcurl"].(string)),
+		CopyCommand:     expandCopyCommand(tfMap),
+		RetryOptions:    expandRedshiftRetryOptions(tfMap),
 		RoleARN:         aws.String(roleARN),
-		CopyCommand:     expandCopyCommand(redshift),
-		S3Configuration: expandS3DestinationConfiguration(redshift["s3_configuration"].([]interface{})),
+		S3Configuration: expandS3DestinationConfiguration(tfMap["s3_configuration"].([]interface{})),
 	}
 
-	if _, ok := redshift["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(redshift)
-	}
-	if _, ok := redshift["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(redshift, destinationTypeRedshift, roleARN)
-	}
-	if s3BackupMode, ok := redshift["s3_backup_mode"]; ok {
-		configuration.S3BackupMode = types.RedshiftS3BackupMode(s3BackupMode.(string))
-		configuration.S3BackupConfiguration = expandS3DestinationConfigurationBackup(redshift)
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	return configuration
+	if v, ok := tfMap[names.AttrPassword]; ok && v.(string) != "" {
+		apiObject.Password = aws.String(v.(string))
+	}
+
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeRedshift, roleARN)
+	}
+
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.RedshiftS3BackupMode(v.(string))
+		apiObject.S3BackupConfiguration = expandS3DestinationConfigurationBackup(tfMap)
+	}
+
+	if _, ok := tfMap["secrets_manager_configuration"]; ok {
+		apiObject.SecretsManagerConfiguration = expandSecretsManagerConfiguration(tfMap)
+	}
+
+	if v, ok := tfMap[names.AttrUsername]; ok && v.(string) != "" {
+		apiObject.Username = aws.String(v.(string))
+	}
+
+	return apiObject
 }
 
-func expandRedshiftDestinationUpdate(redshift map[string]interface{}) *types.RedshiftDestinationUpdate {
-	roleARN := redshift[names.AttrRoleARN].(string)
-	configuration := &types.RedshiftDestinationUpdate{
-		ClusterJDBCURL: aws.String(redshift["cluster_jdbcurl"].(string)),
-		RetryOptions:   expandRedshiftRetryOptions(redshift),
-		Password:       aws.String(redshift[names.AttrPassword].(string)),
-		Username:       aws.String(redshift[names.AttrUsername].(string)),
+func expandRedshiftDestinationUpdate(tfMap map[string]interface{}) *types.RedshiftDestinationUpdate {
+	roleARN := tfMap[names.AttrRoleARN].(string)
+	apiObject := &types.RedshiftDestinationUpdate{
+		ClusterJDBCURL: aws.String(tfMap["cluster_jdbcurl"].(string)),
+		CopyCommand:    expandCopyCommand(tfMap),
+		RetryOptions:   expandRedshiftRetryOptions(tfMap),
 		RoleARN:        aws.String(roleARN),
-		CopyCommand:    expandCopyCommand(redshift),
 	}
 
-	s3Config := expandS3DestinationUpdate(redshift["s3_configuration"].([]interface{}))
+	s3Config := expandS3DestinationUpdate(tfMap["s3_configuration"].([]interface{}))
 	// Redshift does not currently support ErrorOutputPrefix,
 	// which is set to the empty string within "updateS3Config",
 	// thus we must remove it here to avoid an InvalidArgumentException.
 	s3Config.ErrorOutputPrefix = nil
-	configuration.S3Update = s3Config
+	apiObject.S3Update = s3Config
 
-	if _, ok := redshift["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(redshift)
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
-	if _, ok := redshift["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(redshift, destinationTypeRedshift, roleARN)
+
+	if v, ok := tfMap[names.AttrPassword]; ok && v.(string) != "" {
+		apiObject.Password = aws.String(v.(string))
 	}
-	if s3BackupMode, ok := redshift["s3_backup_mode"]; ok {
-		configuration.S3BackupMode = types.RedshiftS3BackupMode(s3BackupMode.(string))
-		configuration.S3BackupUpdate = expandS3DestinationUpdateBackup(redshift)
-		if configuration.S3BackupUpdate != nil {
+
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeRedshift, roleARN)
+	}
+
+	if s3BackupMode, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.RedshiftS3BackupMode(s3BackupMode.(string))
+		apiObject.S3BackupUpdate = expandS3DestinationUpdateBackup(tfMap)
+		if apiObject.S3BackupUpdate != nil {
 			// Redshift does not currently support ErrorOutputPrefix,
 			// which is set to the empty string within "updateS3BackupConfig",
 			// thus we must remove it here to avoid an InvalidArgumentException.
-			configuration.S3BackupUpdate.ErrorOutputPrefix = nil
+			apiObject.S3BackupUpdate.ErrorOutputPrefix = nil
 		}
 	}
 
-	return configuration
+	if _, ok := tfMap["secrets_manager_configuration"]; ok {
+		apiObject.SecretsManagerConfiguration = expandSecretsManagerConfiguration(tfMap)
+	}
+
+	if v, ok := tfMap[names.AttrUsername]; ok && v.(string) != "" {
+		apiObject.Username = aws.String(v.(string))
+	}
+
+	return apiObject
 }
 
 func expandElasticsearchDestinationConfiguration(es map[string]interface{}) *types.ElasticsearchDestinationConfiguration {
@@ -3458,34 +3483,35 @@ func flattenExtendedS3DestinationDescription(description *types.ExtendedS3Destin
 	return []map[string]interface{}{m}
 }
 
-func flattenRedshiftDestinationDescription(description *types.RedshiftDestinationDescription, configuredPassword string) []map[string]interface{} {
-	if description == nil {
-		return []map[string]interface{}{}
+func flattenRedshiftDestinationDescription(apiObject *types.RedshiftDestinationDescription, configuredPassword string) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
-		"cluster_jdbcurl":            aws.ToString(description.ClusterJDBCURL),
-		names.AttrPassword:           configuredPassword,
-		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeRedshift, aws.ToString(description.RoleARN)),
-		names.AttrRoleARN:            aws.ToString(description.RoleARN),
-		"s3_backup_configuration":    flattenS3DestinationDescription(description.S3BackupDescription),
-		"s3_backup_mode":             description.S3BackupMode,
-		"s3_configuration":           flattenS3DestinationDescription(description.S3DestinationDescription),
-		names.AttrUsername:           aws.ToString(description.Username),
+	tfMap := map[string]interface{}{
+		"cloudwatch_logging_options":    flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
+		"cluster_jdbcurl":               aws.ToString(apiObject.ClusterJDBCURL),
+		names.AttrPassword:              configuredPassword,
+		"processing_configuration":      flattenProcessingConfiguration(apiObject.ProcessingConfiguration, destinationTypeRedshift, aws.ToString(apiObject.RoleARN)),
+		names.AttrRoleARN:               aws.ToString(apiObject.RoleARN),
+		"s3_backup_configuration":       flattenS3DestinationDescription(apiObject.S3BackupDescription),
+		"s3_backup_mode":                apiObject.S3BackupMode,
+		"s3_configuration":              flattenS3DestinationDescription(apiObject.S3DestinationDescription),
+		"secrets_manager_configuration": flattenSecretsManagerConfiguration(apiObject.SecretsManagerConfiguration),
+		names.AttrUsername:              aws.ToString(apiObject.Username),
 	}
 
-	if description.CopyCommand != nil {
-		m["copy_options"] = aws.ToString(description.CopyCommand.CopyOptions)
-		m["data_table_columns"] = aws.ToString(description.CopyCommand.DataTableColumns)
-		m["data_table_name"] = aws.ToString(description.CopyCommand.DataTableName)
+	if apiObject.CopyCommand != nil {
+		tfMap["copy_options"] = aws.ToString(apiObject.CopyCommand.CopyOptions)
+		tfMap["data_table_columns"] = aws.ToString(apiObject.CopyCommand.DataTableColumns)
+		tfMap["data_table_name"] = aws.ToString(apiObject.CopyCommand.DataTableName)
 	}
 
-	if description.RetryOptions != nil {
-		m["retry_duration"] = int(aws.ToInt32(description.RetryOptions.DurationInSeconds))
+	if apiObject.RetryOptions != nil {
+		tfMap["retry_duration"] = aws.ToInt32(apiObject.RetryOptions.DurationInSeconds)
 	}
 
-	return []map[string]interface{}{m}
+	return []interface{}{tfMap}
 }
 
 func flattenSnowflakeDestinationDescription(apiObject *types.SnowflakeDestinationDescription, configuredKeyPassphrase, configuredPrivateKey string) []interface{} {

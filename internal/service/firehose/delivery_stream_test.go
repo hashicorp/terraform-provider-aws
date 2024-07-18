@@ -1062,6 +1062,36 @@ func TestAccFirehoseDeliveryStream_redshiftUpdates(t *testing.T) {
 	})
 }
 
+func TestAccFirehoseDeliveryStream_Redshift_SecretsManagerConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream types.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_redshiftSecretsManager(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "redshift_configuration.0.secrets_manager_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "redshift_configuration.0.secrets_manager_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "redshift_configuration.0.secrets_manager_configuration.0.secret_arn", "aws_secretsmanager_secret.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccFirehoseDeliveryStream_snowflakeUpdates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stream types.DeliveryStreamDescription
@@ -3865,6 +3895,36 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
           parameter_value = "70"
         }
       }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStreamConfig_redshiftSecretsManager(rName string) string {
+	return acctest.ConfigCompose(testAccDeliveryStreamConfig_baseRedshift(rName), fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  name        = %[1]q
+  destination = "redshift"
+
+  redshift_configuration {
+    role_arn        = aws_iam_role.firehose.arn
+    cluster_jdbcurl = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/${aws_redshift_cluster.test.database_name}"
+    data_table_name = "test-table"
+
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
+
+    secrets_manager_configuration {
+      enabled    = true
+      role_arn   = aws_iam_role.firehose.arn
+      secret_arn = aws_secretsmanager_secret.test.arn
     }
   }
 }
