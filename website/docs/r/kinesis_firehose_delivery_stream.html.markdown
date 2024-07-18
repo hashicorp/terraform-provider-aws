@@ -787,6 +787,7 @@ The `http_endpoint_configuration` configuration block supports the following arg
 * `processing_configuration` - (Optional) The data processing configuration.  See [`processing_configuration` block](#processing_configuration-block) below for details.
 * `request_configuration` - (Optional) The request configuration.  See [`request_configuration` block](#request_configuration-block) below for details.
 * `retry_duration` - (Optional) Total amount of seconds Firehose spends on retries. This duration starts after the initial attempt fails, It does not include the time periods during which Firehose waits for acknowledgment from the specified destination after each attempt. Valid values between `0` and `7200`. Default is `300`.
+* `secrets_manager_configuration` - (Optional) The Secret Manager Configuration. See [`secrets_manager_configuration` block](#secrets_manager_configuration-block) below for details.
 
 ### `snowflake_configuration` block
 
@@ -813,7 +814,7 @@ The `snowflake_configuration` configuration block supports the following argumen
 * `retry_duration` - (Optional) After an initial failure to deliver to Snowflake, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 60s.  There will be no retry if the value is 0.
 * `s3_backup_mode` - (Optional) The S3 backup mode.
 * `s3_configuration` - (Required) The S3 configuration. See [`s3_configuration` block](#s3_configuration-block) below for details.
-* `secrets_manager_configuration` - (Optional) The SecretsManager configuration. See [`secrets_manager_configuration` block](#secrets_manager_configuration-block) below for details. This value is required if `user` and `private_key` is not provided.
+* `secrets_manager_configuration` - (Optional) The Secrets Manager configuration. See [`secrets_manager_configuration` block](#secrets_manager_configuration-block) below for details. This value is required if `user` and `private_key` are not provided.
 
 ### `cloudwatch_logging_options` block
 
@@ -932,7 +933,7 @@ The `s3_configuration` configuration block supports the following arguments:
 
 The `secrets_manager_configuration` configuration block supports the following arguments:
 
-* `enabled` - (Optional) Enables or disables the Secrets Manager configuration. Defaults to `false`.
+* `enabled` - (Optional) Enables or disables the Secrets Manager configuration.
 * `secret_arn` - (Optional) The ARN of the Secrets Manager secret. This value is required if `enabled` is true.
 * `role_arn` - (Optional) The ARN of the role the stream assumes.
 

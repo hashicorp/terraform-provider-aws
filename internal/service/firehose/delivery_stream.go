@@ -192,33 +192,6 @@ func resourceDeliveryStream() *schema.Resource {
 					},
 				}
 			}
-			secretsManagerConfigurationSchema := func() *schema.Schema {
-				return &schema.Schema{
-					Type:     schema.TypeList,
-					MaxItems: 1,
-					Optional: true,
-					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							names.AttrEnabled: {
-								Type:     schema.TypeBool,
-								Optional: true,
-								Default:  false,
-							},
-							"secret_arn": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: verify.ValidARN,
-							},
-							names.AttrRoleARN: {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: verify.ValidARN,
-							},
-						},
-					},
-				}
-			}
 			requestConfigurationSchema := func() *schema.Schema {
 				return &schema.Schema{
 					Type:     schema.TypeList,
@@ -315,6 +288,34 @@ func resourceDeliveryStream() *schema.Resource {
 					MaxItems: 1,
 					Required: true,
 					Elem:     s3ConfigurationElem(),
+				}
+			}
+			secretsManagerConfigurationSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							"secret_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
 				}
 			}
 
@@ -807,7 +808,8 @@ func resourceDeliveryStream() *schema.Resource {
 								Default:          types.HttpEndpointS3BackupModeFailedDataOnly,
 								ValidateDiagFunc: enum.Validate[types.HttpEndpointS3BackupMode](),
 							},
-							"s3_configuration": s3ConfigurationSchema(),
+							"s3_configuration":              s3ConfigurationSchema(),
+							"secrets_manager_configuration": secretsManagerConfigurationSchema(),
 							names.AttrURL: {
 								Type:     schema.TypeString,
 								Required: true,
@@ -2338,12 +2340,9 @@ func expandProcessorParameter(processorParameter map[string]interface{}) types.P
 
 func expandSecretsManagerConfiguration(tfMap map[string]interface{}) *types.SecretsManagerConfiguration {
 	config := tfMap["secrets_manager_configuration"].([]interface{})
+
 	if len(config) == 0 || config[0] == nil {
-		// It is possible to just pass nil here, but this seems to be the
-		// canonical form that AWS uses, and is less likely to produce diffs.
-		return &types.SecretsManagerConfiguration{
-			Enabled: aws.Bool(false),
-		}
+		return nil
 	}
 
 	secretsManagerConfiguration := config[0].(map[string]interface{})
@@ -2891,81 +2890,86 @@ func expandSplunkDestinationUpdate(splunk map[string]interface{}) *types.SplunkD
 	return configuration
 }
 
-func expandHTTPEndpointDestinationConfiguration(httpEndpoint map[string]interface{}) *types.HttpEndpointDestinationConfiguration {
-	roleARN := httpEndpoint[names.AttrRoleARN].(string)
-	configuration := &types.HttpEndpointDestinationConfiguration{
-		RetryOptions:    expandHTTPEndpointRetryOptions(httpEndpoint),
-		RoleARN:         aws.String(roleARN),
-		S3Configuration: expandS3DestinationConfiguration(httpEndpoint["s3_configuration"].([]interface{})),
+func expandHTTPEndpointDestinationConfiguration(tfMap map[string]interface{}) *types.HttpEndpointDestinationConfiguration {
+	roleARN := tfMap[names.AttrRoleARN].(string)
+	apiObject := &types.HttpEndpointDestinationConfiguration{
+		EndpointConfiguration: expandHTTPEndpointConfiguration(tfMap),
+		RetryOptions:          expandHTTPEndpointRetryOptions(tfMap),
+		RoleARN:               aws.String(roleARN),
+		S3Configuration:       expandS3DestinationConfiguration(tfMap["s3_configuration"].([]interface{})),
 	}
-
-	configuration.EndpointConfiguration = expandHTTPEndpointConfiguration(httpEndpoint)
 
 	bufferingHints := &types.HttpEndpointBufferingHints{}
-
-	if bufferingInterval, ok := httpEndpoint["buffering_interval"].(int); ok {
-		bufferingHints.IntervalInSeconds = aws.Int32(int32(bufferingInterval))
+	if v, ok := tfMap["buffering_interval"].(int); ok {
+		bufferingHints.IntervalInSeconds = aws.Int32(int32(v))
 	}
-	if bufferingSize, ok := httpEndpoint["buffering_size"].(int); ok {
-		bufferingHints.SizeInMBs = aws.Int32(int32(bufferingSize))
+	if v, ok := tfMap["buffering_size"].(int); ok {
+		bufferingHints.SizeInMBs = aws.Int32(int32(v))
 	}
-	configuration.BufferingHints = bufferingHints
+	apiObject.BufferingHints = bufferingHints
 
-	if _, ok := httpEndpoint["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(httpEndpoint, destinationTypeHTTPEndpoint, roleARN)
-	}
-
-	if _, ok := httpEndpoint["request_configuration"]; ok {
-		configuration.RequestConfiguration = expandHTTPEndpointRequestConfiguration(httpEndpoint)
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	if _, ok := httpEndpoint["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(httpEndpoint)
-	}
-	if s3BackupMode, ok := httpEndpoint["s3_backup_mode"]; ok {
-		configuration.S3BackupMode = types.HttpEndpointS3BackupMode(s3BackupMode.(string))
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeHTTPEndpoint, roleARN)
 	}
 
-	return configuration
+	if _, ok := tfMap["request_configuration"]; ok {
+		apiObject.RequestConfiguration = expandHTTPEndpointRequestConfiguration(tfMap)
+	}
+
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.HttpEndpointS3BackupMode(v.(string))
+	}
+
+	if _, ok := tfMap["secrets_manager_configuration"]; ok {
+		apiObject.SecretsManagerConfiguration = expandSecretsManagerConfiguration(tfMap)
+	}
+
+	return apiObject
 }
 
-func expandHTTPEndpointDestinationUpdate(httpEndpoint map[string]interface{}) *types.HttpEndpointDestinationUpdate {
-	roleARN := httpEndpoint[names.AttrRoleARN].(string)
-	configuration := &types.HttpEndpointDestinationUpdate{
-		RetryOptions: expandHTTPEndpointRetryOptions(httpEndpoint),
-		RoleARN:      aws.String(roleARN),
-		S3Update:     expandS3DestinationUpdate(httpEndpoint["s3_configuration"].([]interface{})),
+func expandHTTPEndpointDestinationUpdate(tfMap map[string]interface{}) *types.HttpEndpointDestinationUpdate {
+	roleARN := tfMap[names.AttrRoleARN].(string)
+	apiObject := &types.HttpEndpointDestinationUpdate{
+		EndpointConfiguration: expandHTTPEndpointConfiguration(tfMap),
+		RetryOptions:          expandHTTPEndpointRetryOptions(tfMap),
+		RoleARN:               aws.String(roleARN),
+		S3Update:              expandS3DestinationUpdate(tfMap["s3_configuration"].([]interface{})),
 	}
-
-	configuration.EndpointConfiguration = expandHTTPEndpointConfiguration(httpEndpoint)
 
 	bufferingHints := &types.HttpEndpointBufferingHints{}
-
-	if bufferingInterval, ok := httpEndpoint["buffering_interval"].(int); ok {
-		bufferingHints.IntervalInSeconds = aws.Int32(int32(bufferingInterval))
+	if v, ok := tfMap["buffering_interval"].(int); ok {
+		bufferingHints.IntervalInSeconds = aws.Int32(int32(v))
 	}
-	if bufferingSize, ok := httpEndpoint["buffering_size"].(int); ok {
-		bufferingHints.SizeInMBs = aws.Int32(int32(bufferingSize))
+	if v, ok := tfMap["buffering_size"].(int); ok {
+		bufferingHints.SizeInMBs = aws.Int32(int32(v))
 	}
-	configuration.BufferingHints = bufferingHints
+	apiObject.BufferingHints = bufferingHints
 
-	if _, ok := httpEndpoint["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(httpEndpoint, destinationTypeHTTPEndpoint, roleARN)
-	}
-
-	if _, ok := httpEndpoint["request_configuration"]; ok {
-		configuration.RequestConfiguration = expandHTTPEndpointRequestConfiguration(httpEndpoint)
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	if _, ok := httpEndpoint["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(httpEndpoint)
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeHTTPEndpoint, roleARN)
 	}
 
-	if s3BackupMode, ok := httpEndpoint["s3_backup_mode"]; ok {
-		configuration.S3BackupMode = types.HttpEndpointS3BackupMode(s3BackupMode.(string))
+	if _, ok := tfMap["request_configuration"]; ok {
+		apiObject.RequestConfiguration = expandHTTPEndpointRequestConfiguration(tfMap)
 	}
 
-	return configuration
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.HttpEndpointS3BackupMode(v.(string))
+	}
+
+	if _, ok := tfMap["secrets_manager_configuration"]; ok {
+		apiObject.SecretsManagerConfiguration = expandSecretsManagerConfiguration(tfMap)
+	}
+
+	return apiObject
 }
 
 func expandHTTPEndpointCommonAttributes(ca []interface{}) []types.HttpEndpointCommonAttribute {
@@ -3484,9 +3488,9 @@ func flattenRedshiftDestinationDescription(description *types.RedshiftDestinatio
 	return []map[string]interface{}{m}
 }
 
-func flattenSnowflakeDestinationDescription(apiObject *types.SnowflakeDestinationDescription, configuredKeyPassphrase, configuredPrivateKey string) []map[string]interface{} {
+func flattenSnowflakeDestinationDescription(apiObject *types.SnowflakeDestinationDescription, configuredKeyPassphrase, configuredPrivateKey string) []interface{} {
 	if apiObject == nil {
-		return []map[string]interface{}{}
+		return []interface{}{}
 	}
 
 	roleARN := aws.ToString(apiObject.RoleARN)
@@ -3515,7 +3519,7 @@ func flattenSnowflakeDestinationDescription(apiObject *types.SnowflakeDestinatio
 		tfMap["retry_duration"] = int(aws.ToInt32(apiObject.RetryOptions.DurationInSeconds))
 	}
 
-	return []map[string]interface{}{tfMap}
+	return []interface{}{tfMap}
 }
 
 func flattenSplunkDestinationDescription(description *types.SplunkDestinationDescription) []map[string]interface{} {
@@ -3906,32 +3910,34 @@ func flattenKinesisStreamSourceDescription(desc *types.KinesisStreamSourceDescri
 	return []interface{}{mDesc}
 }
 
-func flattenHTTPEndpointDestinationDescription(description *types.HttpEndpointDestinationDescription, configuredAccessKey string) []map[string]interface{} {
-	if description == nil {
-		return []map[string]interface{}{}
-	}
-	m := map[string]interface{}{
-		names.AttrAccessKey:          configuredAccessKey,
-		names.AttrURL:                aws.ToString(description.EndpointConfiguration.Url),
-		names.AttrName:               aws.ToString(description.EndpointConfiguration.Name),
-		names.AttrRoleARN:            aws.ToString(description.RoleARN),
-		"s3_backup_mode":             description.S3BackupMode,
-		"s3_configuration":           flattenS3DestinationDescription(description.S3DestinationDescription),
-		"request_configuration":      flattenHTTPEndpointRequestConfiguration(description.RequestConfiguration),
-		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
-		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeHTTPEndpoint, aws.ToString(description.RoleARN)),
+func flattenHTTPEndpointDestinationDescription(apiObject *types.HttpEndpointDestinationDescription, configuredAccessKey string) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
 	}
 
-	if description.RetryOptions != nil {
-		m["retry_duration"] = int(aws.ToInt32(description.RetryOptions.DurationInSeconds))
+	tfMap := map[string]interface{}{
+		names.AttrAccessKey:             configuredAccessKey,
+		"cloudwatch_logging_options":    flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
+		names.AttrName:                  aws.ToString(apiObject.EndpointConfiguration.Name),
+		"processing_configuration":      flattenProcessingConfiguration(apiObject.ProcessingConfiguration, destinationTypeHTTPEndpoint, aws.ToString(apiObject.RoleARN)),
+		"request_configuration":         flattenHTTPEndpointRequestConfiguration(apiObject.RequestConfiguration),
+		names.AttrRoleARN:               aws.ToString(apiObject.RoleARN),
+		"s3_backup_mode":                apiObject.S3BackupMode,
+		"s3_configuration":              flattenS3DestinationDescription(apiObject.S3DestinationDescription),
+		"secrets_manager_configuration": flattenSecretsManagerConfiguration(apiObject.SecretsManagerConfiguration),
+		names.AttrURL:                   aws.ToString(apiObject.EndpointConfiguration.Url),
 	}
 
-	if description.BufferingHints != nil {
-		m["buffering_interval"] = int(aws.ToInt32(description.BufferingHints.IntervalInSeconds))
-		m["buffering_size"] = int(aws.ToInt32(description.BufferingHints.SizeInMBs))
+	if apiObject.BufferingHints != nil {
+		tfMap["buffering_interval"] = int(aws.ToInt32(apiObject.BufferingHints.IntervalInSeconds))
+		tfMap["buffering_size"] = int(aws.ToInt32(apiObject.BufferingHints.SizeInMBs))
 	}
 
-	return []map[string]interface{}{m}
+	if apiObject.RetryOptions != nil {
+		tfMap["retry_duration"] = int(aws.ToInt32(apiObject.RetryOptions.DurationInSeconds))
+	}
+
+	return []interface{}{tfMap}
 }
 
 func expandDocumentIDOptions(tfMap map[string]interface{}) *types.DocumentIdOptions {
