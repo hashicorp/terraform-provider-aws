@@ -41,7 +41,7 @@ The following arguments are optional:
 * `delete_options` - (Optional) List of delete options, which at present supports only one value that specifies whether to delete all child volumes and snapshots when the file system is deleted. Valid values: `DELETE_CHILD_VOLUMES_AND_SNAPSHOTS`.
 * `disk_iops_configuration` - (Optional) The SSD IOPS configuration for the Amazon FSx for OpenZFS file system. See [`disk_iops_configuration` Block](#disk_iops_configuration-block) for details.
 * `endpoint_ip_address_range` - (Optional) (Multi-AZ only) Specifies the IP address range in which the endpoints to access your file system will be created.
-* `final_backup_tags` - (Optional) List of tags to apply to the file system's final backup. Maximum of 50 items. See [`final_backup_tags` Block](#final_backup_tags-block) for details.
+* `final_backup_tags` - (Optional) A map of tags to apply to the file system's final backup.
 * `kms_key_id` - (Optional) ARN for the KMS Key to encrypt the file system at rest, Defaults to an AWS managed KMS Key.
 * `preferred_subnet_id` - (Optional) (Multi-AZ only) Required when `deployment_type` is set to `MULTI_AZ_1`. This specifies the subnet in which you want the preferred file server to be located.
 * `root_volume_configuration` - (Optional) The configuration for the root volume of the file system. All other volumes are children or the root volume. See [`root_volume_configuration` Block](#root_volume_configuration-block) for details.
@@ -58,13 +58,6 @@ The `disk_iops_configuration` configuration block supports the following argumen
 
 * `iops` - (Optional) The total number of SSD IOPS provisioned for the file system.
 * `mode` - (Optional) Specifies whether the number of IOPS for the file system is using the system. Valid values are `AUTOMATIC` and `USER_PROVISIONED`. Default value is `AUTOMATIC`.
-
-### `final_backup_tags` Block
-
-The `final_backup_tags` configuration block supports the following arguments:
-
-* `key` - (Required) The name of the tag.
-* `value` - (Required) The value assigned to the corresponding tag key. To create a key-only tag, use an empty string as the value.
 
 ### `root_volume_configuration` Block
 

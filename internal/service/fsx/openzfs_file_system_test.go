@@ -6,7 +6,6 @@ package fsx_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -1003,14 +1002,11 @@ func TestAccFSxOpenZFSFileSystem_routeTableIDs(t *testing.T) {
 
 func TestAccFSxOpenZFSFileSystem_deleteConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	if os.Getenv("FSX_CREATE_FINAL_BACKUP") != acctest.CtTrue {
-		t.Skip("Environment variable FSX_CREATE_FINAL_BACKUP is not set to true")
-	}
-
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_openzfs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	acctest.SkipIfEnvVarNotSet(t, "AWS_FSX_CREATE_FINAL_BACKUP")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
@@ -1024,11 +1020,9 @@ func TestAccFSxOpenZFSFileSystem_deleteConfig(t *testing.T) {
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "delete_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "delete_options.0", "DELETE_CHILD_VOLUMES_AND_SNAPSHOTS"),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.0.key", acctest.CtKey1),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.0.value", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.1.key", acctest.CtKey2),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.1.value", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags."+acctest.CtKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags."+acctest.CtKey2, acctest.CtValue2),
 					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtFalse),
 				),
 			},
@@ -1042,20 +1036,6 @@ func TestAccFSxOpenZFSFileSystem_deleteConfig(t *testing.T) {
 					"final_backup_tags",
 					"skip_final_backup",
 				},
-			},
-			{
-				Config: testAccOpenZFSFileSystemConfig_deleteConfig(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "delete_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "delete_options.0", "DELETE_CHILD_VOLUMES_AND_SNAPSHOTS"),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.0.key", acctest.CtKey1),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.0.value", acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.1.key", acctest.CtKey2),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.1.value", ""),
-					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtFalse),
-				),
 			},
 		},
 	})
@@ -1765,13 +1745,10 @@ resource "aws_fsx_openzfs_file_system" "test" {
   deployment_type     = "SINGLE_AZ_1"
   throughput_capacity = 64
   delete_options      = ["DELETE_CHILD_VOLUMES_AND_SNAPSHOTS"]
-  final_backup_tags {
-    key   = %[1]q
-    value = %[2]q
-  }
-  final_backup_tags {
-    key   = %[3]q
-    value = %[4]q
+
+  final_backup_tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
 }
 `, finalTagKey1, finalTagValue1, finalTagKey2, finalTagValue2))
