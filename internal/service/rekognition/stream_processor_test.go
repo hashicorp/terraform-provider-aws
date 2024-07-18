@@ -28,6 +28,9 @@ func TestAccRekognitionStreamProcessor_basic(t *testing.T) {
 	var streamprocessor rekognition.DescribeStreamProcessorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rekognition_stream_processor.test"
+	s3BucketResourceName := "aws_s3_bucket.test"
+	kinesisVideoStreamResourceName := "aws_kinesis_video_stream.test"
+	snsTopicResourceName := "aws_sns_topic.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -45,6 +48,13 @@ func TestAccRekognitionStreamProcessor_basic(t *testing.T) {
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
 					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "data_sharing_preference.0.opt_in", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "output.0.s3_destination.0.bucket", s3BucketResourceName, names.AttrBucket),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.connected_home.0.labels.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemAttr(resourceName, "settings.0.connected_home.0.labels.*", "PERSON"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "settings.0.connected_home.0.labels.*", "ALL"),
+					resource.TestCheckResourceAttrPair(resourceName, "input.0.kinesis_video_stream.0.arn", kinesisVideoStreamResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "notification_channel.0.sns_topic_arn", snsTopicResourceName, names.AttrARN),
 				),
 			},
 			{
