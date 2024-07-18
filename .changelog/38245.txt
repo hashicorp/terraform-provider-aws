@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_kinesis_firehose_delivery_stream: Add `secret_manager_configuration` attribute in `http_endpoint_configuration`
-```
