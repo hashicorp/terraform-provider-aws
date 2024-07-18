@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* resource/aws_kinesis_firehose_delivery_stream: Add `secrets_manager_configuration` to `redshift_configuration`, `snowflake_configuration`, and `splunk_configuration` ([#38151](https://github.com/hashicorp/terraform-provider-aws/issues/38151))
 * **New Data Source:** `aws_cloudfront_origin_access_control` ([#36301](https://github.com/hashicorp/terraform-provider-aws/issues/36301))
 * **New Data Source:** `aws_timestreamwrite_database` ([#36368](https://github.com/hashicorp/terraform-provider-aws/issues/36368))
 * **New Data Source:** `aws_timestreamwrite_table` ([#36599](https://github.com/hashicorp/terraform-provider-aws/issues/36599))
@@ -23,6 +24,7 @@ ENHANCEMENTS:
 * resource/aws_emrserverless_application: Add `interactive_configuration` argument ([#37889](https://github.com/hashicorp/terraform-provider-aws/issues/37889))
 * resource/aws_fis_experiment_template: Add `experiment_options` configuration block ([#36900](https://github.com/hashicorp/terraform-provider-aws/issues/36900))
 * resource/aws_imagebuilder_image_pipeline: Add `execution_role` and `workflow` arguments ([#37317](https://github.com/hashicorp/terraform-provider-aws/issues/37317))
+* resource/aws_kinesis_firehose_delivery_stream: Add `secrets_manager_configuration` to `http_endpoint_configuration` ([#38245](https://github.com/hashicorp/terraform-provider-aws/issues/38245))
 * resource/aws_kinesisanalyticsv2_application: Support `FLINK-1_19` as a valid value for `runtime_environment` ([#38350](https://github.com/hashicorp/terraform-provider-aws/issues/38350))
 * resource/aws_lakeformation_data_lake_settings: Add `allow_full_table_external_data_access` attribute ([#34474](https://github.com/hashicorp/terraform-provider-aws/issues/34474))
 * resource/aws_lb_target_group: Add `target_group_health` configuration block ([#37082](https://github.com/hashicorp/terraform-provider-aws/issues/37082))
