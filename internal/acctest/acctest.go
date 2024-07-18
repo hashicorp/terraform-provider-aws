@@ -29,7 +29,7 @@ import (
 	dstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	iamtypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	organizationstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
@@ -1187,7 +1187,7 @@ func PreCheckIAMServiceLinkedRoleWithProvider(ctx context.Context, t *testing.T,
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String(pathPrefix),
 	}
-	var role awstypes.Role
+	var role iamtypes.Role
 
 	pages := iam.NewListRolesPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -2230,7 +2230,7 @@ data "aws_ec2_instance_type_offering" "%[1]s" {
 `, name, strings.Join(preferredInstanceTypes, "\", \""))
 }
 
-func configLatestAmazonLinux2HVMEBSAMI(architecture string) string {
+func configLatestAmazonLinux2HVMEBSAMI(architecture ec2types.ArchitectureValues) string {
 	return fmt.Sprintf(`
 data "aws_ami" "amzn2-ami-minimal-hvm-ebs-%[1]s" {
   most_recent = true
@@ -2258,14 +2258,14 @@ data "aws_ami" "amzn2-ami-minimal-hvm-ebs-%[1]s" {
 // describes the latest Amazon Linux 2 x86_64 AMI using HVM virtualization and an EBS root device.
 // The data source is named 'amzn2-ami-minimal-hvm-ebs-x86_64'.
 func ConfigLatestAmazonLinux2HVMEBSX8664AMI() string {
-	return configLatestAmazonLinux2HVMEBSAMI(string(ec2types.ArchitectureValuesX8664))
+	return configLatestAmazonLinux2HVMEBSAMI(ec2types.ArchitectureValuesX8664)
 }
 
 // ConfigLatestAmazonLinux2HVMEBSARM64AMI returns the configuration for a data source that
 // describes the latest Amazon Linux 2 arm64 AMI using HVM virtualization and an EBS root device.
 // The data source is named 'amzn2-ami-minimal-hvm-ebs-arm64'.
 func ConfigLatestAmazonLinux2HVMEBSARM64AMI() string {
-	return configLatestAmazonLinux2HVMEBSAMI(string(ec2types.ArchitectureValuesArm64))
+	return configLatestAmazonLinux2HVMEBSAMI(ec2types.ArchitectureValuesArm64)
 }
 
 func ConfigLambdaBase(policyName, roleName, sgName string) string {
