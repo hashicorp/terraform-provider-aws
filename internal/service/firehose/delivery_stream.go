@@ -1326,7 +1326,7 @@ func resourceDeliveryStream() *schema.Resource {
 							},
 							"hec_token": {
 								Type:     schema.TypeString,
-								Required: true,
+								Optional: true,
 							},
 							"processing_configuration": processingConfigurationSchema(),
 							"retry_duration": {
@@ -1341,7 +1341,8 @@ func resourceDeliveryStream() *schema.Resource {
 								Default:          types.SplunkS3BackupModeFailedEventsOnly,
 								ValidateDiagFunc: enum.Validate[types.SplunkS3BackupMode](),
 							},
-							"s3_configuration": s3ConfigurationSchema(),
+							"s3_configuration":              s3ConfigurationSchema(),
+							"secrets_manager_configuration": secretsManagerConfigurationSchema(),
 						},
 					},
 				},
@@ -2487,8 +2488,8 @@ func expandRedshiftDestinationUpdate(tfMap map[string]interface{}) *types.Redshi
 		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeRedshift, roleARN)
 	}
 
-	if s3BackupMode, ok := tfMap["s3_backup_mode"]; ok {
-		apiObject.S3BackupMode = types.RedshiftS3BackupMode(s3BackupMode.(string))
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.RedshiftS3BackupMode(v.(string))
 		apiObject.S3BackupUpdate = expandS3DestinationUpdateBackup(tfMap)
 		if apiObject.S3BackupUpdate != nil {
 			// Redshift does not currently support ErrorOutputPrefix,
@@ -2847,72 +2848,86 @@ func expandSnowflakeDestinationUpdate(tfMap map[string]interface{}) *types.Snowf
 	return apiObject
 }
 
-func expandSplunkDestinationConfiguration(splunk map[string]interface{}) *types.SplunkDestinationConfiguration {
-	configuration := &types.SplunkDestinationConfiguration{
-		HECToken:                          aws.String(splunk["hec_token"].(string)),
-		HECEndpointType:                   types.HECEndpointType(splunk["hec_endpoint_type"].(string)),
-		HECEndpoint:                       aws.String(splunk["hec_endpoint"].(string)),
-		HECAcknowledgmentTimeoutInSeconds: aws.Int32(int32(splunk["hec_acknowledgment_timeout"].(int))),
-		RetryOptions:                      expandSplunkRetryOptions(splunk),
-		S3Configuration:                   expandS3DestinationConfiguration(splunk["s3_configuration"].([]interface{})),
+func expandSplunkDestinationConfiguration(tfMap map[string]interface{}) *types.SplunkDestinationConfiguration {
+	apiObject := &types.SplunkDestinationConfiguration{
+		HECAcknowledgmentTimeoutInSeconds: aws.Int32(int32(tfMap["hec_acknowledgment_timeout"].(int))),
+		HECEndpoint:                       aws.String(tfMap["hec_endpoint"].(string)),
+		HECEndpointType:                   types.HECEndpointType(tfMap["hec_endpoint_type"].(string)),
+		RetryOptions:                      expandSplunkRetryOptions(tfMap),
+		S3Configuration:                   expandS3DestinationConfiguration(tfMap["s3_configuration"].([]interface{})),
 	}
 
 	bufferingHints := &types.SplunkBufferingHints{}
-
-	if bufferingInterval, ok := splunk["buffering_interval"].(int); ok {
+	if bufferingInterval, ok := tfMap["buffering_interval"].(int); ok {
 		bufferingHints.IntervalInSeconds = aws.Int32(int32(bufferingInterval))
 	}
-	if bufferingSize, ok := splunk["buffering_size"].(int); ok {
+	if bufferingSize, ok := tfMap["buffering_size"].(int); ok {
 		bufferingHints.SizeInMBs = aws.Int32(int32(bufferingSize))
 	}
-	configuration.BufferingHints = bufferingHints
+	apiObject.BufferingHints = bufferingHints
 
-	if _, ok := splunk["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(splunk, destinationTypeSplunk, "")
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	if _, ok := splunk["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(splunk)
-	}
-	if s3BackupMode, ok := splunk["s3_backup_mode"]; ok {
-		configuration.S3BackupMode = types.SplunkS3BackupMode(s3BackupMode.(string))
+	if v, ok := tfMap["hec_token"]; ok && v.(string) != "" {
+		apiObject.HECToken = aws.String(v.(string))
 	}
 
-	return configuration
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeSplunk, "")
+	}
+
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.SplunkS3BackupMode(v.(string))
+	}
+
+	if _, ok := tfMap["secrets_manager_configuration"]; ok {
+		apiObject.SecretsManagerConfiguration = expandSecretsManagerConfiguration(tfMap)
+	}
+
+	return apiObject
 }
 
-func expandSplunkDestinationUpdate(splunk map[string]interface{}) *types.SplunkDestinationUpdate {
-	configuration := &types.SplunkDestinationUpdate{
-		HECToken:                          aws.String(splunk["hec_token"].(string)),
-		HECEndpointType:                   types.HECEndpointType(splunk["hec_endpoint_type"].(string)),
-		HECEndpoint:                       aws.String(splunk["hec_endpoint"].(string)),
-		HECAcknowledgmentTimeoutInSeconds: aws.Int32(int32(splunk["hec_acknowledgment_timeout"].(int))),
-		RetryOptions:                      expandSplunkRetryOptions(splunk),
-		S3Update:                          expandS3DestinationUpdate(splunk["s3_configuration"].([]interface{})),
+func expandSplunkDestinationUpdate(tfMap map[string]interface{}) *types.SplunkDestinationUpdate {
+	apiObject := &types.SplunkDestinationUpdate{
+		HECAcknowledgmentTimeoutInSeconds: aws.Int32(int32(tfMap["hec_acknowledgment_timeout"].(int))),
+		HECEndpoint:                       aws.String(tfMap["hec_endpoint"].(string)),
+		HECEndpointType:                   types.HECEndpointType(tfMap["hec_endpoint_type"].(string)),
+		RetryOptions:                      expandSplunkRetryOptions(tfMap),
+		S3Update:                          expandS3DestinationUpdate(tfMap["s3_configuration"].([]interface{})),
 	}
 
 	bufferingHints := &types.SplunkBufferingHints{}
-
-	if bufferingInterval, ok := splunk["buffering_interval"].(int); ok {
+	if bufferingInterval, ok := tfMap["buffering_interval"].(int); ok {
 		bufferingHints.IntervalInSeconds = aws.Int32(int32(bufferingInterval))
 	}
-	if bufferingSize, ok := splunk["buffering_size"].(int); ok {
+	if bufferingSize, ok := tfMap["buffering_size"].(int); ok {
 		bufferingHints.SizeInMBs = aws.Int32(int32(bufferingSize))
 	}
-	configuration.BufferingHints = bufferingHints
+	apiObject.BufferingHints = bufferingHints
 
-	if _, ok := splunk["processing_configuration"]; ok {
-		configuration.ProcessingConfiguration = expandProcessingConfiguration(splunk, destinationTypeSplunk, "")
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
 
-	if _, ok := splunk["cloudwatch_logging_options"]; ok {
-		configuration.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(splunk)
-	}
-	if s3BackupMode, ok := splunk["s3_backup_mode"]; ok {
-		configuration.S3BackupMode = types.SplunkS3BackupMode(s3BackupMode.(string))
+	if v, ok := tfMap["hec_token"]; ok && v.(string) != "" {
+		apiObject.HECToken = aws.String(v.(string))
 	}
 
-	return configuration
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeSplunk, "")
+	}
+
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.SplunkS3BackupMode(v.(string))
+	}
+
+	if _, ok := tfMap["secrets_manager_configuration"]; ok {
+		apiObject.SecretsManagerConfiguration = expandSecretsManagerConfiguration(tfMap)
+	}
+
+	return apiObject
 }
 
 func expandHTTPEndpointDestinationConfiguration(tfMap map[string]interface{}) *types.HttpEndpointDestinationConfiguration {
@@ -3548,31 +3563,33 @@ func flattenSnowflakeDestinationDescription(apiObject *types.SnowflakeDestinatio
 	return []interface{}{tfMap}
 }
 
-func flattenSplunkDestinationDescription(description *types.SplunkDestinationDescription) []map[string]interface{} {
-	if description == nil {
-		return []map[string]interface{}{}
-	}
-	m := map[string]interface{}{
-		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
-		"hec_acknowledgment_timeout": int(aws.ToInt32(description.HECAcknowledgmentTimeoutInSeconds)),
-		"hec_endpoint_type":          description.HECEndpointType,
-		"hec_endpoint":               aws.ToString(description.HECEndpoint),
-		"hec_token":                  aws.ToString(description.HECToken),
-		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeSplunk, ""),
-		"s3_backup_mode":             description.S3BackupMode,
-		"s3_configuration":           flattenS3DestinationDescription(description.S3DestinationDescription),
+func flattenSplunkDestinationDescription(apiObject *types.SplunkDestinationDescription) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
 	}
 
-	if description.BufferingHints != nil {
-		m["buffering_interval"] = int(aws.ToInt32(description.BufferingHints.IntervalInSeconds))
-		m["buffering_size"] = int(aws.ToInt32(description.BufferingHints.SizeInMBs))
+	tfMap := map[string]interface{}{
+		"cloudwatch_logging_options":    flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
+		"hec_acknowledgment_timeout":    int(aws.ToInt32(apiObject.HECAcknowledgmentTimeoutInSeconds)),
+		"hec_endpoint":                  aws.ToString(apiObject.HECEndpoint),
+		"hec_endpoint_type":             apiObject.HECEndpointType,
+		"hec_token":                     aws.ToString(apiObject.HECToken),
+		"processing_configuration":      flattenProcessingConfiguration(apiObject.ProcessingConfiguration, destinationTypeSplunk, ""),
+		"s3_backup_mode":                apiObject.S3BackupMode,
+		"s3_configuration":              flattenS3DestinationDescription(apiObject.S3DestinationDescription),
+		"secrets_manager_configuration": flattenSecretsManagerConfiguration(apiObject.SecretsManagerConfiguration),
 	}
 
-	if description.RetryOptions != nil {
-		m["retry_duration"] = int(aws.ToInt32(description.RetryOptions.DurationInSeconds))
+	if apiObject.BufferingHints != nil {
+		tfMap["buffering_interval"] = int(aws.ToInt32(apiObject.BufferingHints.IntervalInSeconds))
+		tfMap["buffering_size"] = int(aws.ToInt32(apiObject.BufferingHints.SizeInMBs))
 	}
 
-	return []map[string]interface{}{m}
+	if apiObject.RetryOptions != nil {
+		tfMap["retry_duration"] = int(aws.ToInt32(apiObject.RetryOptions.DurationInSeconds))
+	}
+
+	return []interface{}{tfMap}
 }
 
 func flattenS3DestinationDescription(description *types.S3DestinationDescription) []map[string]interface{} {

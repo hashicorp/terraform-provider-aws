@@ -765,9 +765,10 @@ The `splunk_configuration` configuration block supports the following arguments:
 * `hec_acknowledgment_timeout` - (Optional) The amount of time, in seconds between 180 and 600, that Kinesis Firehose waits to receive an acknowledgment from Splunk after it sends it data.
 * `hec_endpoint` - (Required) The HTTP Event Collector (HEC) endpoint to which Kinesis Firehose sends your data.
 * `hec_endpoint_type` - (Optional) The HEC endpoint type. Valid values are `Raw` or `Event`. The default value is `Raw`.
-* `hec_token` - (Required) The GUID that you obtain from your Splunk cluster when you create a new HEC endpoint.
+* `hec_token` - (Optional) The GUID that you obtain from your Splunk cluster when you create a new HEC endpoint. This value is required if `secrets_manager_configuration` is not provided.
 * `s3_configuration` - (Required) The S3 Configuration. See [`s3_configuration` block](#s3_configuration-block) below for details.
 * `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedEventsOnly` and `AllEvents`.  Default value is `FailedEventsOnly`.
+`secrets_manager_configuration` - (Optional) The Secrets Manager configuration. See [`secrets_manager_configuration` block](#secrets_manager_configuration-block) below for details. This value is required if `hec_token` is not provided.
 * `retry_duration` - (Optional) After an initial failure to deliver to Splunk, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. See [`cloudwatch_logging_options` block](#cloudwatch_logging_options-block) below for details.
 * `processing_configuration` - (Optional) The data processing configuration.  See [`processing_configuration` block](#processing_configuration-block) below for details.
