@@ -15,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -124,10 +124,10 @@ func ResourceReceiptRule() *schema.Resource {
 							ValidateFunc: verify.ValidARN,
 						},
 						"invocation_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      awstypes.InvocationTypeEvent,
-							ValidateFunc: enum.Validate[awstypes.InvocationType](),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.InvocationTypeEvent,
+							ValidateDiagFunc: enum.Validate[awstypes.InvocationType](),
 						},
 						"position": {
 							Type:     schema.TypeInt,
@@ -204,10 +204,10 @@ func ResourceReceiptRule() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"encoding": {
-							Type:         schema.TypeString,
-							Default:      awstypes.SNSActionEncodingUtf8,
-							Optional:     true,
-							ValidateFunc: enum.Validate[awstypes.SNSActionEncoding](),
+							Type:             schema.TypeString,
+							Default:          awstypes.SNSActionEncodingUtf8,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SNSActionEncoding](),
 						},
 						"position": {
 							Type:     schema.TypeInt,
@@ -227,9 +227,9 @@ func ResourceReceiptRule() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrScope: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: enum.Validate[awstypes.StopScope](),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.StopScope](),
 						},
 						"position": {
 							Type:     schema.TypeInt,
@@ -244,10 +244,10 @@ func ResourceReceiptRule() *schema.Resource {
 				},
 			},
 			"tls_policy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: enum.Validate[awstypes.TlsPolicy](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.TlsPolicy](),
 			},
 			"workmail_action": {
 				Type:     schema.TypeSet,
@@ -318,7 +318,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set(names.AttrEnabled, rule.Enabled)
-	d.Set("recipients", flex.FlattenStringSet(rule.Recipients))
+	d.Set("recipients", flex.FlattenStringyValueSet(rule.Recipients))
 	d.Set("scan_enabled", rule.ScanEnabled)
 	d.Set("tls_policy", rule.TlsPolicy)
 
@@ -365,8 +365,8 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 				"position":            i + 1,
 			}
 
-			if element.LambdaAction.InvocationType != nil {
-				lambdaAction["invocation_type"] = aws.ToString(element.LambdaAction.InvocationType)
+			if &element.LambdaAction.InvocationType != nil {
+				lambdaAction["invocation_type"] = element.LambdaAction.InvocationType
 			}
 
 			if element.LambdaAction.TopicArn != nil {
@@ -400,7 +400,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 		if element.SNSAction != nil {
 			snsAction := map[string]interface{}{
 				names.AttrTopicARN: aws.ToString(element.SNSAction.TopicArn),
-				"encoding":         aws.ToString(element.SNSAction.Encoding),
+				"encoding":         element.SNSAction.Encoding,
 				"position":         i + 1,
 			}
 
@@ -409,7 +409,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 
 		if element.StopAction != nil {
 			stopAction := map[string]interface{}{
-				names.AttrScope: aws.ToString(element.StopAction.Scope),
+				names.AttrScope: element.StopAction.Scope,
 				"position":      i + 1,
 			}
 
@@ -554,7 +554,7 @@ func FindReceiptRuleByTwoPartKey(ctx context.Context, conn *ses.Client, ruleName
 
 	output, err := conn.DescribeReceiptRule(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeRuleDoesNotExistException, awstypes.ErrCodeRuleSetDoesNotExistException) {
+	if errs.IsA[*awstypes.RuleDoesNotExistException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -578,15 +578,15 @@ func buildReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 	}
 
 	if v, ok := d.GetOk(names.AttrEnabled); ok {
-		receiptRule.Enabled = aws.Bool(v.(bool))
+		receiptRule.Enabled = v.(bool)
 	}
 
 	if v, ok := d.GetOk("recipients"); ok {
-		receiptRule.Recipients = flex.ExpandStringSet(v.(*schema.Set))
+		receiptRule.Recipients = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("scan_enabled"); ok {
-		receiptRule.ScanEnabled = aws.Bool(v.(bool))
+		receiptRule.ScanEnabled = v.(bool)
 	}
 
 	if v, ok := d.GetOk("tls_policy"); ok {
@@ -686,7 +686,7 @@ func buildReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 
 			snsAction := &awstypes.SNSAction{
 				TopicArn: aws.String(elem[names.AttrTopicARN].(string)),
-				Encoding: aws.String(elem["encoding"].(string)),
+				Encoding: awstypes.SNSActionEncoding(elem["encoding"].(string)),
 			}
 
 			actions[elem["position"].(int)] = &awstypes.ReceiptAction{
@@ -700,7 +700,7 @@ func buildReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 			elem := element.(map[string]interface{})
 
 			stopAction := &awstypes.StopAction{
-				Scope: aws.String(elem[names.AttrScope].(string)),
+				Scope: awstypes.StopScope(elem[names.AttrScope].(string)),
 			}
 
 			if elem[names.AttrTopicARN] != "" {
@@ -737,9 +737,9 @@ func buildReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 	}
 	sort.Ints(keys)
 
-	sortedActions := []*awstypes.ReceiptAction{}
+	sortedActions := []awstypes.ReceiptAction{}
 	for _, k := range keys {
-		sortedActions = append(sortedActions, actions[k])
+		sortedActions = append(sortedActions, *actions[k])
 	}
 
 	receiptRule.Actions = sortedActions
