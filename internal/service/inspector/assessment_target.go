@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -147,7 +146,7 @@ func resourceAssessmentTargetDelete(ctx context.Context, d *schema.ResourceData,
 
 func DescribeAssessmentTarget(ctx context.Context, conn *inspector.Client, arn string) (*awstypes.AssessmentTarget, error) {
 	input := &inspector.DescribeAssessmentTargetsInput{
-		AssessmentTargetArns: []*string{aws.String(arn)},
+		AssessmentTargetArns: []string{arn},
 	}
 
 	output, err := conn.DescribeAssessmentTargets(ctx, input)
@@ -160,7 +159,7 @@ func DescribeAssessmentTarget(ctx context.Context, conn *inspector.Client, arn s
 		return nil, err
 	}
 
-	var assessmentTarget *awstypes.AssessmentTarget
+	var assessmentTarget awstypes.AssessmentTarget
 	for _, target := range output.AssessmentTargets {
 		if aws.ToString(target.Arn) == arn {
 			assessmentTarget = target
@@ -168,5 +167,5 @@ func DescribeAssessmentTarget(ctx context.Context, conn *inspector.Client, arn s
 		}
 	}
 
-	return assessmentTarget, nil
+	return &assessmentTarget, nil
 }
