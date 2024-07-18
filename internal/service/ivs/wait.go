@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ivs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ivs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 func waitPlaybackKeyPairCreated(ctx context.Context, conn *ivs.Client, id string, timeout time.Duration) (*awstypes.PlaybackKeyPair, error) {
@@ -48,8 +49,8 @@ func waitPlaybackKeyPairDeleted(ctx context.Context, conn *ivs.Client, id string
 
 func waitRecordingConfigurationCreated(ctx context.Context, conn *ivs.Client, id string, timeout time.Duration) (*awstypes.RecordingConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{awstypes.RecordingConfigurationStateCreating},
-		Target:                    []string{awstypes.RecordingConfigurationStateActive},
+		Pending:                   enum.Slice(awstypes.RecordingConfigurationStateCreating),
+		Target:                    enum.Slice(awstypes.RecordingConfigurationStateActive),
 		Refresh:                   statusRecordingConfiguration(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -66,7 +67,7 @@ func waitRecordingConfigurationCreated(ctx context.Context, conn *ivs.Client, id
 
 func waitRecordingConfigurationDeleted(ctx context.Context, conn *ivs.Client, id string, timeout time.Duration) (*awstypes.RecordingConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.RecordingConfigurationStateActive},
+		Pending: enum.Slice(awstypes.RecordingConfigurationStateActive),
 		Target:  []string{},
 		Refresh: statusRecordingConfiguration(ctx, conn, id),
 		Timeout: timeout,

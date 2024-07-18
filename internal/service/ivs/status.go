@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ivs"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ivs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -45,7 +44,7 @@ func statusRecordingConfiguration(ctx context.Context, conn *ivs.Client, id stri
 			return nil, "", err
 		}
 
-		return out, aws.ToString(out.State), nil
+		return out, string(out.State), nil
 	}
 }
 
@@ -63,11 +62,11 @@ func statusChannel(ctx context.Context, conn *ivs.Client, arn string, updateDeta
 		if updateDetails == nil {
 			return out, statusNormal, nil
 		} else {
-			if (updateDetails.Authorized != nil && aws.ToBool(updateDetails.Authorized) == aws.ToBool(out.Authorized)) ||
-				(updateDetails.LatencyMode != nil && aws.ToString(updateDetails.LatencyMode) == aws.ToString(out.LatencyMode)) ||
+			if (updateDetails.Authorized == out.Authorized) ||
+				(updateDetails.LatencyMode == out.LatencyMode) ||
 				(updateDetails.Name != nil && aws.ToString(updateDetails.Name) == aws.ToString(out.Name)) ||
 				(updateDetails.RecordingConfigurationArn != nil && aws.ToString(updateDetails.RecordingConfigurationArn) == aws.ToString(out.RecordingConfigurationArn)) ||
-				(updateDetails.Type != nil && aws.ToString(updateDetails.Type) == aws.ToString(out.Type)) {
+				(updateDetails.Type == out.Type) {
 				return out, statusUpdated, nil
 			}
 			return out, statusChangePending, nil
