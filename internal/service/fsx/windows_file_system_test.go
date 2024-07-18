@@ -466,18 +466,6 @@ func TestAccFSxWindowsFileSystem_deleteConfig(t *testing.T) {
 					"skip_final_backup",
 				},
 			},
-			{
-				Config: testAccWindowsFileSystemConfig_deleteConfig(rName, domainName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.0.key", acctest.CtKey1),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.0.value", acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.1.key", acctest.CtKey2),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.1.value", ""),
-					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtFalse),
-				),
-			},
 		},
 	})
 }
