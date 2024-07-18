@@ -35,7 +35,7 @@ func TestAccAPIGatewayGatewayResponse_basic(t *testing.T) {
 				Config: testAccGatewayResponseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayResponseExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "status_code", "401"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatusCode, "401"),
 					resource.TestCheckResourceAttr(resourceName, "response_parameters.gatewayresponse.header.Authorization", "'Basic'"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/xml", "#set($inputRoot = $input.path('$'))\n{ }"),
 					resource.TestCheckNoResourceAttr(resourceName, "response_templates.application/json"),
@@ -51,7 +51,7 @@ func TestAccAPIGatewayGatewayResponse_basic(t *testing.T) {
 				Config: testAccGatewayResponseConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayResponseExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "status_code", "477"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatusCode, "477"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/json", "{'message':$context.error.messageString}"),
 					resource.TestCheckNoResourceAttr(resourceName, "response_templates.application/xml"),
 					resource.TestCheckNoResourceAttr(resourceName, "response_parameters.gatewayresponse.header.Authorization"),

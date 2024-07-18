@@ -33,7 +33,7 @@ func TestAccInspectorResourceGroup_basic(t *testing.T) {
 				Config: testAccResourceGroupConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexache.MustCompile(`resourcegroup/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "inspector", regexache.MustCompile(`resourcegroup/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "foo"),
 				),
 			},
@@ -41,7 +41,7 @@ func TestAccInspectorResourceGroup_basic(t *testing.T) {
 				Config: testAccResourceGroupConfig_modified,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexache.MustCompile(`resourcegroup/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "inspector", regexache.MustCompile(`resourcegroup/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "bar"),
 					testAccCheckResourceGroupRecreated(&v1, &v2),
 				),

@@ -64,11 +64,15 @@ func ResourceEnvironment() *schema.Resource {
 				Computed: true,
 				Optional: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"database_vpc_endpoint_service": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -88,12 +92,12 @@ func ResourceEnvironment() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"execution_role_arn": {
+			names.AttrExecutionRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"kms_key": {
+			names.AttrKMSKey: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -104,7 +108,7 @@ func ResourceEnvironment() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"created_at": {
+						names.AttrCreatedAt: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -124,14 +128,14 @@ func ResourceEnvironment() *schema.Resource {
 								},
 							},
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"logging_configuration": {
+			names.AttrLoggingConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -176,11 +180,23 @@ func ResourceEnvironment() *schema.Resource {
 					},
 				},
 			},
+			"max_webservers": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(2, 5),
+			},
 			"max_workers": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IntAtLeast(1),
+			},
+			"min_webservers": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(2, 5),
 			},
 			"min_workers": {
 				Type:         schema.TypeInt,
@@ -188,24 +204,24 @@ func ResourceEnvironment() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"network_configuration": {
+			names.AttrNetworkConfiguration: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
@@ -238,7 +254,7 @@ func ResourceEnvironment() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"service_role_arn": {
+			names.AttrServiceRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -256,7 +272,7 @@ func ResourceEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -269,6 +285,10 @@ func ResourceEnvironment() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.WebserverAccessMode](),
 			},
 			"webserver_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"webserver_vpc_endpoint_service": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -306,12 +326,12 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).MWAAClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &mwaa.CreateEnvironmentInput{
 		DagS3Path:            aws.String(d.Get("dag_s3_path").(string)),
-		ExecutionRoleArn:     aws.String(d.Get("execution_role_arn").(string)),
+		ExecutionRoleArn:     aws.String(d.Get(names.AttrExecutionRoleARN).(string)),
 		Name:                 aws.String(name),
-		NetworkConfiguration: expandEnvironmentNetworkConfigurationCreate(d.Get("network_configuration").([]interface{})),
+		NetworkConfiguration: expandEnvironmentNetworkConfigurationCreate(d.Get(names.AttrNetworkConfiguration).([]interface{})),
 		SourceBucketArn:      aws.String(d.Get("source_bucket_arn").(string)),
 		Tags:                 getTagsIn(ctx),
 	}
@@ -332,11 +352,11 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.EnvironmentClass = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKey); ok {
 		input.KmsKey = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("logging_configuration"); ok {
+	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok {
 		input.LoggingConfiguration = expandEnvironmentLoggingConfiguration(v.([]interface{}))
 	}
 
@@ -347,6 +367,14 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("min_workers"); ok {
 		input.MinWorkers = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("max_webservers"); ok {
+		input.MaxWebservers = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("min_webservers"); ok {
+		input.MinWebservers = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("plugins_s3_object_version"); ok {
@@ -427,23 +455,26 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("airflow_configuration_options", environment.AirflowConfigurationOptions)
 	d.Set("airflow_version", environment.AirflowVersion)
-	d.Set("arn", environment.Arn)
-	d.Set("created_at", aws.ToTime(environment.CreatedAt).String())
+	d.Set(names.AttrARN, environment.Arn)
+	d.Set(names.AttrCreatedAt, aws.ToTime(environment.CreatedAt).String())
 	d.Set("dag_s3_path", environment.DagS3Path)
+	d.Set("database_vpc_endpoint_service", environment.DatabaseVpcEndpointService)
 	d.Set("endpoint_management", environment.EndpointManagement)
 	d.Set("environment_class", environment.EnvironmentClass)
-	d.Set("execution_role_arn", environment.ExecutionRoleArn)
-	d.Set("kms_key", environment.KmsKey)
+	d.Set(names.AttrExecutionRoleARN, environment.ExecutionRoleArn)
+	d.Set(names.AttrKMSKey, environment.KmsKey)
 	if err := d.Set("last_updated", flattenLastUpdate(environment.LastUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting last_updated: %s", err)
 	}
-	if err := d.Set("logging_configuration", flattenLoggingConfiguration(environment.LoggingConfiguration)); err != nil {
+	if err := d.Set(names.AttrLoggingConfiguration, flattenLoggingConfiguration(environment.LoggingConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 	}
 	d.Set("max_workers", environment.MaxWorkers)
 	d.Set("min_workers", environment.MinWorkers)
-	d.Set("name", environment.Name)
-	if err := d.Set("network_configuration", flattenNetworkConfiguration(environment.NetworkConfiguration)); err != nil {
+	d.Set("max_webservers", environment.MaxWebservers)
+	d.Set("min_webservers", environment.MinWebservers)
+	d.Set(names.AttrName, environment.Name)
+	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(environment.NetworkConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 	d.Set("plugins_s3_object_version", environment.PluginsS3ObjectVersion)
@@ -451,13 +482,14 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("requirements_s3_object_version", environment.RequirementsS3ObjectVersion)
 	d.Set("requirements_s3_path", environment.RequirementsS3Path)
 	d.Set("schedulers", environment.Schedulers)
-	d.Set("service_role_arn", environment.ServiceRoleArn)
+	d.Set(names.AttrServiceRoleARN, environment.ServiceRoleArn)
 	d.Set("source_bucket_arn", environment.SourceBucketArn)
 	d.Set("startup_script_s3_object_version", environment.StartupScriptS3ObjectVersion)
 	d.Set("startup_script_s3_path", environment.StartupScriptS3Path)
-	d.Set("status", environment.Status)
+	d.Set(names.AttrStatus, environment.Status)
 	d.Set("webserver_access_mode", environment.WebserverAccessMode)
 	d.Set("webserver_url", environment.WebserverUrl)
+	d.Set("webserver_vpc_endpoint_service", environment.WebserverVpcEndpointService)
 	d.Set("weekly_maintenance_window_start", environment.WeeklyMaintenanceWindowStart)
 
 	setTagsOut(ctx, environment.Tags)
@@ -470,9 +502,9 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).MWAAClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &mwaa.UpdateEnvironmentInput{
-			Name: aws.String(d.Get("name").(string)),
+			Name: aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		if d.HasChange("airflow_configuration_options") {
@@ -496,12 +528,12 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.EnvironmentClass = aws.String(d.Get("environment_class").(string))
 		}
 
-		if d.HasChange("execution_role_arn") {
-			input.ExecutionRoleArn = aws.String(d.Get("execution_role_arn").(string))
+		if d.HasChange(names.AttrExecutionRoleARN) {
+			input.ExecutionRoleArn = aws.String(d.Get(names.AttrExecutionRoleARN).(string))
 		}
 
-		if d.HasChange("logging_configuration") {
-			input.LoggingConfiguration = expandEnvironmentLoggingConfiguration(d.Get("logging_configuration").([]interface{}))
+		if d.HasChange(names.AttrLoggingConfiguration) {
+			input.LoggingConfiguration = expandEnvironmentLoggingConfiguration(d.Get(names.AttrLoggingConfiguration).([]interface{}))
 		}
 
 		if d.HasChange("max_workers") {
@@ -512,8 +544,16 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.MinWorkers = aws.Int32(int32(d.Get("min_workers").(int)))
 		}
 
-		if d.HasChange("network_configuration") {
-			input.NetworkConfiguration = expandEnvironmentNetworkConfigurationUpdate(d.Get("network_configuration").([]interface{}))
+		if d.HasChange("max_webservers") {
+			input.MaxWebservers = aws.Int32(int32(d.Get("max_webservers").(int)))
+		}
+
+		if d.HasChange("min_webservers") {
+			input.MinWebservers = aws.Int32(int32(d.Get("min_webservers").(int)))
+		}
+
+		if d.HasChange(names.AttrNetworkConfiguration) {
+			input.NetworkConfiguration = expandEnvironmentNetworkConfigurationUpdate(d.Get(names.AttrNetworkConfiguration).([]interface{}))
 		}
 
 		if d.HasChange("plugins_s3_object_version") {
@@ -606,7 +646,7 @@ func environmentModuleLoggingConfigurationSchema() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -765,7 +805,7 @@ func expandEnvironmentModuleLoggingConfiguration(l []interface{}) *awstypes.Modu
 	input := &awstypes.ModuleLoggingConfigurationInput{}
 	m := l[0].(map[string]interface{})
 
-	input.Enabled = aws.Bool(m["enabled"].(bool))
+	input.Enabled = aws.Bool(m[names.AttrEnabled].(bool))
 	input.LogLevel = awstypes.LoggingLevel(m["log_level"].(string))
 
 	return input
@@ -775,8 +815,8 @@ func expandEnvironmentNetworkConfigurationCreate(l []interface{}) *awstypes.Netw
 	m := l[0].(map[string]interface{})
 
 	return &awstypes.NetworkConfiguration{
-		SecurityGroupIds: flex.ExpandStringValueSet(m["security_group_ids"].(*schema.Set)),
-		SubnetIds:        flex.ExpandStringValueSet(m["subnet_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
+		SubnetIds:        flex.ExpandStringValueSet(m[names.AttrSubnetIDs].(*schema.Set)),
 	}
 }
 
@@ -784,7 +824,7 @@ func expandEnvironmentNetworkConfigurationUpdate(l []interface{}) *awstypes.Upda
 	m := l[0].(map[string]interface{})
 
 	return &awstypes.UpdateNetworkConfigurationInput{
-		SecurityGroupIds: flex.ExpandStringValueSet(m["security_group_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
 	}
 }
 
@@ -796,7 +836,7 @@ func flattenLastUpdate(lastUpdate *awstypes.LastUpdate) []interface{} {
 	m := map[string]interface{}{}
 
 	if lastUpdate.CreatedAt != nil {
-		m["created_at"] = aws.ToTime(lastUpdate.CreatedAt).String()
+		m[names.AttrCreatedAt] = aws.ToTime(lastUpdate.CreatedAt).String()
 	}
 
 	if lastUpdate.Error != nil {
@@ -804,7 +844,7 @@ func flattenLastUpdate(lastUpdate *awstypes.LastUpdate) []interface{} {
 	}
 
 	if lastUpdate.Status != "" {
-		m["status"] = lastUpdate.Status
+		m[names.AttrStatus] = lastUpdate.Status
 	}
 
 	return []interface{}{m}
@@ -865,7 +905,7 @@ func flattenModuleLoggingConfiguration(moduleLoggingConfiguration *awstypes.Modu
 
 	m := map[string]interface{}{
 		"cloud_watch_log_group_arn": aws.ToString(moduleLoggingConfiguration.CloudWatchLogGroupArn),
-		"enabled":                   aws.ToBool(moduleLoggingConfiguration.Enabled),
+		names.AttrEnabled:           aws.ToBool(moduleLoggingConfiguration.Enabled),
 		"log_level":                 string(moduleLoggingConfiguration.LogLevel),
 	}
 
@@ -878,8 +918,8 @@ func flattenNetworkConfiguration(networkConfiguration *awstypes.NetworkConfigura
 	}
 
 	m := map[string]interface{}{
-		"security_group_ids": flex.FlattenStringValueSet(networkConfiguration.SecurityGroupIds),
-		"subnet_ids":         flex.FlattenStringValueSet(networkConfiguration.SubnetIds),
+		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(networkConfiguration.SecurityGroupIds),
+		names.AttrSubnetIDs:        flex.FlattenStringValueSet(networkConfiguration.SubnetIds),
 	}
 
 	return []interface{}{m}

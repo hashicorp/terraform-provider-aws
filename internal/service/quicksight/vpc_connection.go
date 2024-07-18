@@ -63,8 +63,8 @@ const (
 func (r *resourceVPCConnection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"aws_account_id": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrAWSAccountID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -72,7 +72,7 @@ func (r *resourceVPCConnection) Schema(ctx context.Context, req resource.SchemaR
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"vpc_connection_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -85,19 +85,19 @@ func (r *resourceVPCConnection) Schema(ctx context.Context, req resource.SchemaR
 					),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(128),
 				},
 			},
-			"role_arn": schema.StringAttribute{
+			names.AttrRoleARN: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(20, 2048),
 				},
 			},
-			"security_group_ids": schema.SetAttribute{
+			names.AttrSecurityGroupIDs: schema.SetAttribute{
 				Required:    true,
 				ElementType: types.StringType,
 				Validators: []validator.Set{
@@ -110,7 +110,7 @@ func (r *resourceVPCConnection) Schema(ctx context.Context, req resource.SchemaR
 					),
 				},
 			},
-			"subnet_ids": schema.SetAttribute{
+			names.AttrSubnetIDs: schema.SetAttribute{
 				Required:    true,
 				ElementType: types.StringType,
 				Validators: []validator.Set{
@@ -145,7 +145,7 @@ func (r *resourceVPCConnection) Schema(ctx context.Context, req resource.SchemaR
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -373,7 +373,7 @@ func (r *resourceVPCConnection) Delete(ctx context.Context, req resource.DeleteR
 }
 
 func (r *resourceVPCConnection) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *resourceVPCConnection) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {

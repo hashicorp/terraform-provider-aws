@@ -55,11 +55,7 @@ func StringValueToFrameworkLegacy[T ~string](_ context.Context, v T) types.Strin
 // StringToFramework converts a string pointer to a Framework String value.
 // A nil string pointer is converted to a null String.
 func StringToFramework(ctx context.Context, v *string) types.String {
-	var output types.String
-
-	must(Flatten(ctx, v, &output))
-
-	return output
+	return StringToFrameworkValuable[types.String](ctx, v)
 }
 
 // StringToFrameworkLegacy converts a string pointer to a Framework String value.
@@ -71,7 +67,13 @@ func StringToFrameworkLegacy(_ context.Context, v *string) types.String {
 // StringToFrameworkARN converts a string pointer to a Framework custom ARN value.
 // A nil string pointer is converted to a null ARN.
 func StringToFrameworkARN(ctx context.Context, v *string) fwtypes.ARN {
-	var output fwtypes.ARN
+	return StringToFrameworkValuable[fwtypes.ARN](ctx, v)
+}
+
+// StringToFrameworkValuable converts a string pointer to a Framework StringValuable value.
+// A nil string pointer is converted to a null StringValuable.
+func StringToFrameworkValuable[T basetypes.StringValuable](ctx context.Context, v *string) T {
+	var output T
 
 	must(Flatten(ctx, v, &output))
 
@@ -89,4 +91,16 @@ func StringFromFrameworkLegacy(_ context.Context, v types.String) *string {
 	}
 
 	return aws.String(s)
+}
+
+func EmptyStringAsNull(v types.String) types.String {
+	if v.IsNull() || v.IsUnknown() {
+		return v
+	}
+
+	if v.ValueString() == "" {
+		return types.StringNull()
+	}
+
+	return v
 }

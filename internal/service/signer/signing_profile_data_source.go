@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_signer_signing_profile")
@@ -21,11 +22,11 @@ func DataSourceSigningProfile() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSigningProfileRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,23 +63,23 @@ func DataSourceSigningProfile() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,7 +96,7 @@ func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	profileName := d.Get("name").(string)
+	profileName := d.Get(names.AttrName).(string)
 	signingProfileOutput, err := conn.GetSigningProfile(ctx, &signer.GetSigningProfileInput{
 		ProfileName: aws.String(profileName),
 	})
@@ -110,8 +111,8 @@ func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, m
 
 	if err := d.Set("signature_validity_period", []interface{}{
 		map[string]interface{}{
-			"value": signingProfileOutput.SignatureValidityPeriod.Value,
-			"type":  signingProfileOutput.SignatureValidityPeriod.Type,
+			names.AttrValue: signingProfileOutput.SignatureValidityPeriod.Value,
+			names.AttrType:  signingProfileOutput.SignatureValidityPeriod.Type,
 		},
 	}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile signature validity period: %s", err)
@@ -121,11 +122,11 @@ func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile platform display name: %s", err)
 	}
 
-	if err := d.Set("arn", signingProfileOutput.Arn); err != nil {
+	if err := d.Set(names.AttrARN, signingProfileOutput.Arn); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile arn: %s", err)
 	}
 
-	if err := d.Set("version", signingProfileOutput.ProfileVersion); err != nil {
+	if err := d.Set(names.AttrVersion, signingProfileOutput.ProfileVersion); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile version: %s", err)
 	}
 
@@ -133,11 +134,11 @@ func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile version arn: %s", err)
 	}
 
-	if err := d.Set("status", signingProfileOutput.Status); err != nil {
+	if err := d.Set(names.AttrStatus, signingProfileOutput.Status); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile status: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(ctx, signingProfileOutput.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, signingProfileOutput.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile tags: %s", err)
 	}
 

@@ -12,17 +12,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
+const (
+	// Valid time format is "ddd:hh24:mi".
+	validTimeFormat             = "(sun|mon|tue|wed|thu|fri|sat):([0-1][0-9]|2[0-3]):([0-5][0-9])"
+	validTimeFormatConsolidated = "^(" + validTimeFormat + "-" + validTimeFormat + "|)$"
+)
+
 var (
-	_ xattr.TypeWithValidate                     = (*onceAWeekWindowType)(nil)
-	_ basetypes.StringTypable                    = (*onceAWeekWindowType)(nil)
-	_ basetypes.StringValuable                   = (*OnceAWeekWindow)(nil)
-	_ basetypes.StringValuableWithSemanticEquals = (*OnceAWeekWindow)(nil)
+	validTimeFormatConsolidatedRegex = regexache.MustCompile(validTimeFormatConsolidated)
+)
+
+var (
+	_ basetypes.StringTypable = (*onceAWeekWindowType)(nil)
 )
 
 type onceAWeekWindowType struct {
@@ -82,39 +88,11 @@ func (onceAWeekWindowType) ValueType(context.Context) attr.Value {
 	return OnceAWeekWindow{}
 }
 
-func (t onceAWeekWindowType) Validate(ctx context.Context, in tftypes.Value, path path.Path) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if !in.IsKnown() || in.IsNull() {
-		return diags
-	}
-
-	var value string
-	err := in.As(&value)
-	if err != nil {
-		diags.AddAttributeError(
-			path,
-			"OnceAWeekWindowType Validation Error",
-			ProviderErrorDetailPrefix+fmt.Sprintf("Cannot convert value to string: %s", err),
-		)
-		return diags
-	}
-
-	// Valid time format is "ddd:hh24:mi".
-	validTimeFormat := "(sun|mon|tue|wed|thu|fri|sat):([0-1][0-9]|2[0-3]):([0-5][0-9])"
-	validTimeFormatConsolidated := "^(" + validTimeFormat + "-" + validTimeFormat + "|)$"
-
-	if v := strings.ToLower(value); !regexache.MustCompile(validTimeFormatConsolidated).MatchString(v) {
-		diags.AddAttributeError(
-			path,
-			"OnceAWeekWindowType Validation Error",
-			fmt.Sprintf("Value %q must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".", value),
-		)
-		return diags
-	}
-
-	return diags
-}
+var (
+	_ basetypes.StringValuable                   = (*OnceAWeekWindow)(nil)
+	_ basetypes.StringValuableWithSemanticEquals = (*OnceAWeekWindow)(nil)
+	_ xattr.ValidateableAttribute                = (*OnceAWeekWindow)(nil)
+)
 
 type OnceAWeekWindow struct {
 	basetypes.StringValue
@@ -167,4 +145,20 @@ func (v OnceAWeekWindow) StringSemanticEquals(ctx context.Context, newValuable b
 
 	// Case insensitive comparison.
 	return strings.EqualFold(old.ValueString(), new.ValueString()), diags
+}
+
+func (v OnceAWeekWindow) ValidateAttribute(ctx context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {
+	if v.IsNull() || v.IsUnknown() {
+		return
+	}
+
+	if vs := strings.ToLower(v.ValueString()); !validTimeFormatConsolidatedRegex.MatchString(vs) {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid Once A Week Window Value",
+			"The provided value does not satisfy the format \"ddd:hh24:mi-ddd:hh24:mi\".\n\n"+
+				"Path: "+req.Path.String()+"\n"+
+				"Value: "+vs,
+		)
+	}
 }

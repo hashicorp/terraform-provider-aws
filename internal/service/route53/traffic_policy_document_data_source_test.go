@@ -60,7 +60,7 @@ func testAccCheckTrafficPolicySameJSON(resourceName, jsonExpected string) resour
 		}
 
 		var j, j2 tfrouter53.Route53TrafficPolicyDoc
-		if err := json.Unmarshal([]byte(rs.Primary.Attributes["json"]), &j); err != nil {
+		if err := json.Unmarshal([]byte(rs.Primary.Attributes[names.AttrJSON]), &j); err != nil {
 			return fmt.Errorf("json.Unmarshal: %w", err)
 		}
 		if err := json.Unmarshal([]byte(jsonExpected), &j2); err != nil {

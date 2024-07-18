@@ -11,11 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devopsguru/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -50,7 +51,7 @@ func (r *resourceNotificationChannel) Metadata(_ context.Context, req resource.M
 func (r *resourceNotificationChannel) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"filters": schema.ListNestedBlock{
@@ -60,28 +61,28 @@ func (r *resourceNotificationChannel) Schema(ctx context.Context, req resource.S
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"message_types": schema.ListAttribute{
+						"message_types": schema.SetAttribute{
 							Optional:    true,
-							CustomType:  fwtypes.ListOfStringType,
+							CustomType:  fwtypes.SetOfStringType,
 							ElementType: types.StringType,
-							PlanModifiers: []planmodifier.List{
-								listplanmodifier.RequiresReplace(),
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
 							},
-							Validators: []validator.List{
-								listvalidator.ValueStringsAre(
+							Validators: []validator.Set{
+								setvalidator.ValueStringsAre(
 									enum.FrameworkValidate[awstypes.NotificationMessageType](),
 								),
 							},
 						},
-						"severities": schema.ListAttribute{
+						"severities": schema.SetAttribute{
 							Optional:    true,
-							CustomType:  fwtypes.ListOfStringType,
+							CustomType:  fwtypes.SetOfStringType,
 							ElementType: types.StringType,
-							PlanModifiers: []planmodifier.List{
-								listplanmodifier.RequiresReplace(),
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
 							},
-							Validators: []validator.List{
-								listvalidator.ValueStringsAre(
+							Validators: []validator.Set{
+								setvalidator.ValueStringsAre(
 									enum.FrameworkValidate[awstypes.InsightSeverity](),
 								),
 							},
@@ -97,7 +98,7 @@ func (r *resourceNotificationChannel) Schema(ctx context.Context, req resource.S
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"topic_arn": schema.StringAttribute{
+						names.AttrTopicARN: schema.StringAttribute{
 							Required:   true,
 							CustomType: fwtypes.ARNType,
 							PlanModifiers: []planmodifier.String{
@@ -208,7 +209,7 @@ func (r *resourceNotificationChannel) Delete(ctx context.Context, req resource.D
 }
 
 func (r *resourceNotificationChannel) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findNotificationChannelByID(ctx context.Context, conn *devopsguru.Client, id string) (*awstypes.NotificationChannel, error) {
@@ -241,8 +242,8 @@ type resourceNotificationChannelData struct {
 }
 
 type filtersData struct {
-	MessageTypes fwtypes.ListValueOf[types.String] `tfsdk:"message_types"`
-	Severities   fwtypes.ListValueOf[types.String] `tfsdk:"severities"`
+	MessageTypes fwtypes.SetValueOf[types.String] `tfsdk:"message_types"`
+	Severities   fwtypes.SetValueOf[types.String] `tfsdk:"severities"`
 }
 
 type snsData struct {
