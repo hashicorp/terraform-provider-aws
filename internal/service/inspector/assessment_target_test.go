@@ -9,7 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/inspector"
+	"github.com/aws/aws-sdk-go-v2/service/inspector"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +22,7 @@ import (
 
 func TestAccInspectorAssessmentTarget_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var assessmentTarget1 inspector.AssessmentTarget
+	var assessmentTarget1 awstypes.AssessmentTarget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_inspector_assessment_target.test"
 
@@ -51,7 +52,7 @@ func TestAccInspectorAssessmentTarget_basic(t *testing.T) {
 
 func TestAccInspectorAssessmentTarget_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var assessmentTarget1 inspector.AssessmentTarget
+	var assessmentTarget1 awstypes.AssessmentTarget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_inspector_assessment_target.test"
 
@@ -75,7 +76,7 @@ func TestAccInspectorAssessmentTarget_disappears(t *testing.T) {
 
 func TestAccInspectorAssessmentTarget_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	var assessmentTarget1, assessmentTarget2 inspector.AssessmentTarget
+	var assessmentTarget1, assessmentTarget2 awstypes.AssessmentTarget
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_inspector_assessment_target.test"
@@ -111,7 +112,7 @@ func TestAccInspectorAssessmentTarget_name(t *testing.T) {
 
 func TestAccInspectorAssessmentTarget_resourceGroupARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	var assessmentTarget1, assessmentTarget2, assessmentTarget3, assessmentTarget4 inspector.AssessmentTarget
+	var assessmentTarget1, assessmentTarget2, assessmentTarget3, assessmentTarget4 awstypes.AssessmentTarget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	inspectorResourceGroupResourceName1 := "aws_inspector_resource_group.test1"
 	inspectorResourceGroupResourceName2 := "aws_inspector_resource_group.test2"
@@ -162,7 +163,7 @@ func TestAccInspectorAssessmentTarget_resourceGroupARN(t *testing.T) {
 
 func testAccCheckTargetAssessmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_inspector_assessment_target" {
@@ -184,14 +185,14 @@ func testAccCheckTargetAssessmentDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckTargetExists(ctx context.Context, name string, target *inspector.AssessmentTarget) resource.TestCheckFunc {
+func testAccCheckTargetExists(ctx context.Context, name string, target *awstypes.AssessmentTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorClient(ctx)
 
 		assessmentTarget, err := tfinspector.DescribeAssessmentTarget(ctx, conn, rs.Primary.ID)
 
@@ -209,15 +210,15 @@ func testAccCheckTargetExists(ctx context.Context, name string, target *inspecto
 	}
 }
 
-func testAccCheckTargetDisappears(ctx context.Context, assessmentTarget *inspector.AssessmentTarget) resource.TestCheckFunc {
+func testAccCheckTargetDisappears(ctx context.Context, assessmentTarget *awstypes.AssessmentTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorClient(ctx)
 
 		input := &inspector.DeleteAssessmentTargetInput{
 			AssessmentTargetArn: assessmentTarget.Arn,
 		}
 
-		_, err := conn.DeleteAssessmentTargetWithContext(ctx, input)
+		_, err := conn.DeleteAssessmentTarget(ctx, input)
 
 		return err
 	}
