@@ -945,7 +945,7 @@ func TestAccECSService_PlacementStrategy_missing(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServiceConfig_placementStrategyType(rName, ""),
-				ExpectError: regexache.MustCompile(`expected ordered_placement_strategy.0.type to be one of`),
+				ExpectError: regexache.MustCompile(`expected type to be one of`),
 			},
 		},
 	})
