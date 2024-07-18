@@ -806,7 +806,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set("customer_gateway_configuration", vpnConnection.CustomerGatewayConfiguration)
 
-	tunnelInfo, err := CustomerGatewayConfigurationToTunnelInfo(
+	tunnelInfo, err := customerGatewayConfigurationToTunnelInfo(
 		aws.ToString(vpnConnection.CustomerGatewayConfiguration),
 		d.Get("tunnel1_preshared_key").(string), // Not currently available during import
 		d.Get("tunnel1_inside_cidr").(string),
@@ -1537,11 +1537,11 @@ func flattenVGWTelemetries(apiObjects []awstypes.VgwTelemetry) []interface{} {
 	return tfList
 }
 
-type XmlVpnConnectionConfig struct {
-	Tunnels []XmlIpsecTunnel `xml:"ipsec_tunnel"`
+type xmlVpnConnectionConfig struct {
+	Tunnels []xmlIpsecTunnel `xml:"ipsec_tunnel"`
 }
 
-type XmlIpsecTunnel struct {
+type xmlIpsecTunnel struct {
 	BGPASN           string `xml:"vpn_gateway>bgp>asn"`
 	BGPHoldTime      int    `xml:"vpn_gateway>bgp>hold_time"`
 	CgwInsideAddress string `xml:"customer_gateway>tunnel_inside_address>ip_address"`
@@ -1550,7 +1550,7 @@ type XmlIpsecTunnel struct {
 	VgwInsideAddress string `xml:"vpn_gateway>tunnel_inside_address>ip_address"`
 }
 
-type TunnelInfo struct {
+type tunnelInfo struct {
 	Tunnel1Address          string
 	Tunnel1BGPASN           string
 	Tunnel1BGPHoldTime      int
@@ -1565,23 +1565,23 @@ type TunnelInfo struct {
 	Tunnel2VgwInsideAddress string
 }
 
-func (slice XmlVpnConnectionConfig) Len() int {
+func (slice xmlVpnConnectionConfig) Len() int {
 	return len(slice.Tunnels)
 }
 
-func (slice XmlVpnConnectionConfig) Less(i, j int) bool {
+func (slice xmlVpnConnectionConfig) Less(i, j int) bool {
 	return slice.Tunnels[i].OutsideAddress < slice.Tunnels[j].OutsideAddress
 }
 
-func (slice XmlVpnConnectionConfig) Swap(i, j int) {
+func (slice xmlVpnConnectionConfig) Swap(i, j int) {
 	slice.Tunnels[i], slice.Tunnels[j] = slice.Tunnels[j], slice.Tunnels[i]
 }
 
-// CustomerGatewayConfigurationToTunnelInfo converts the configuration information for the
-// VPN connection's customer gateway (in the native XML format) to a TunnelInfo structure.
+// customerGatewayConfigurationToTunnelInfo converts the configuration information for the
+// VPN connection's customer gateway (in the native XML format) to a tunnelInfo structure.
 // The tunnel1 parameters are optionally used to correctly order tunnel configurations.
-func CustomerGatewayConfigurationToTunnelInfo(xmlConfig string, tunnel1PreSharedKey string, tunnel1InsideCidr string, tunnel1InsideIpv6Cidr string) (*TunnelInfo, error) {
-	var vpnConfig XmlVpnConnectionConfig
+func customerGatewayConfigurationToTunnelInfo(xmlConfig string, tunnel1PreSharedKey string, tunnel1InsideCidr string, tunnel1InsideIpv6Cidr string) (*tunnelInfo, error) {
+	var vpnConfig xmlVpnConnectionConfig
 
 	if err := xml.Unmarshal([]byte(xmlConfig), &vpnConfig); err != nil {
 		return nil, err
@@ -1619,7 +1619,7 @@ func CustomerGatewayConfigurationToTunnelInfo(xmlConfig string, tunnel1PreShared
 		sort.Sort(vpnConfig)
 	}
 
-	tunnelInfo := &TunnelInfo{
+	tunnelInfo := &tunnelInfo{
 		Tunnel1Address:          vpnConfig.Tunnels[0].OutsideAddress,
 		Tunnel1BGPASN:           vpnConfig.Tunnels[0].BGPASN,
 		Tunnel1BGPHoldTime:      vpnConfig.Tunnels[0].BGPHoldTime,

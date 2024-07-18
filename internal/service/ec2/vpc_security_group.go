@@ -919,7 +919,7 @@ func expandIPPerms(group *awstypes.SecurityGroup, configured []interface{}) ([]a
 }
 
 // Like ec2.GroupIdentifier but with additional rule description.
-type GroupIdentifier struct {
+type groupIdentifier struct {
 	// The ID of the security group.
 	GroupId *string
 
@@ -930,8 +930,8 @@ type GroupIdentifier struct {
 }
 
 // Flattens an array of UserSecurityGroups into a []*GroupIdentifier
-func flattenSecurityGroups(list []awstypes.UserIdGroupPair, ownerId *string) []*GroupIdentifier {
-	result := make([]*GroupIdentifier, 0, len(list))
+func flattenSecurityGroups(list []awstypes.UserIdGroupPair, ownerId *string) []*groupIdentifier {
+	result := make([]*groupIdentifier, 0, len(list))
 
 	for _, g := range list {
 		var userID string
@@ -945,7 +945,7 @@ func flattenSecurityGroups(list []awstypes.UserIdGroupPair, ownerId *string) []*
 			id = userID + "/" + id
 		}
 
-		result = append(result, &GroupIdentifier{
+		result = append(result, &groupIdentifier{
 			GroupId:     aws.String(id),
 			Description: g.Description,
 		})

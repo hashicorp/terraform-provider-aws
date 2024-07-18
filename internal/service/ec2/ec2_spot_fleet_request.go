@@ -1431,7 +1431,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 				ebs.Throughput = aws.Int32(int32(v))
 			}
 
-			if dn, err := FetchRootDeviceName(ctx, conn, d["ami"].(string)); err == nil {
+			if dn, err := findRootDeviceName(ctx, conn, d["ami"].(string)); err == nil {
 				if dn == nil {
 					return nil, fmt.Errorf(
 						"Expected 1 AMI for ID: %s, got none",
@@ -1852,7 +1852,7 @@ func expandSpotCapacityRebalance(l []interface{}) *awstypes.SpotCapacityRebalanc
 func launchSpecsToSet(ctx context.Context, conn *ec2.Client, launchSpecs []awstypes.SpotFleetLaunchSpecification) (*schema.Set, error) {
 	specSet := &schema.Set{F: hashLaunchSpecification}
 	for _, spec := range launchSpecs {
-		rootDeviceName, err := FetchRootDeviceName(ctx, conn, aws.ToString(spec.ImageId))
+		rootDeviceName, err := findRootDeviceName(ctx, conn, aws.ToString(spec.ImageId))
 		if err != nil {
 			return nil, err
 		}

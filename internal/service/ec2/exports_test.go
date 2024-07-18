@@ -119,6 +119,7 @@ var (
 	ResourceVPNGatewayRoutePropagation                    = resourceVPNGatewayRoutePropagation
 	ResourceVolumeAttachment                              = resourceVolumeAttachment
 
+	CustomerGatewayConfigurationToTunnelInfo                   = customerGatewayConfigurationToTunnelInfo
 	CustomFiltersSchema                                        = customFiltersSchema
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone
 	ErrCodeInvalidSpotDatafeedNotFound                         = errCodeInvalidSpotDatafeedNotFound
@@ -266,5 +267,7 @@ var (
 )
 
 type (
-	IPProtocol = ipProtocol
+	GroupIdentifier = groupIdentifier
+	IPProtocol      = ipProtocol
+	TunnelInfo      = tunnelInfo
 )

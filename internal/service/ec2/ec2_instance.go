@@ -2424,7 +2424,7 @@ func disassociateInstanceProfile(ctx context.Context, associationId *string, con
 	return nil
 }
 
-func FetchRootDeviceName(ctx context.Context, conn *ec2.Client, amiID string) (*string, error) {
+func findRootDeviceName(ctx context.Context, conn *ec2.Client, amiID string) (*string, error) {
 	if amiID == "" {
 		return nil, errors.New("Cannot fetch root device name for blank AMI ID.")
 	}
@@ -2691,7 +2691,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 				return nil, errors.New("`ami` must be set or provided via `launch_template`")
 			}
 
-			if dn, err := FetchRootDeviceName(ctx, conn, amiID); err == nil {
+			if dn, err := findRootDeviceName(ctx, conn, amiID); err == nil {
 				if dn == nil {
 					return nil, fmt.Errorf(
 						"Expected 1 AMI for ID: %s, got none",
@@ -3969,8 +3969,8 @@ func isSnowballEdgeInstance(id string) bool {
 	return strings.Contains(id, "s.")
 }
 
-// InstanceType describes an EC2 instance type.
-type InstanceType struct {
+// instanceType describes an EC2 instance type.
+type instanceType struct {
 	// e.g. "m6i"
 	Type string
 	// e.g. "m"
@@ -3983,7 +3983,7 @@ type InstanceType struct {
 	Size string
 }
 
-func ParseInstanceType(s string) (*InstanceType, error) {
+func ParseInstanceType(s string) (*instanceType, error) {
 	matches := regexache.MustCompile(`(([[:alpha:]]+)([[:digit:]])+([[:alpha:]]*))\.([[:alnum:]]+)`).FindStringSubmatch(s)
 
 	if matches == nil {
@@ -3996,7 +3996,7 @@ func ParseInstanceType(s string) (*InstanceType, error) {
 		return nil, err
 	}
 
-	return &InstanceType{
+	return &instanceType{
 		Type:                   matches[1],
 		Family:                 matches[2],
 		Generation:             generation,
