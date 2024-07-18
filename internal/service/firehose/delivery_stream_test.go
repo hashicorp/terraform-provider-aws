@@ -4331,7 +4331,7 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = [aws_iam_role_policy.firehose]
+  depends_on = [aws_iam_role_policy.firehose]
 
   name        = %[1]q
   destination = "http_endpoint"
