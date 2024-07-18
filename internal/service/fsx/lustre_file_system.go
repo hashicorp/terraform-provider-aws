@@ -42,7 +42,11 @@ func resourceLustreFileSystem() *schema.Resource {
 		DeleteWithoutTimeout: resourceLustreFileSystemDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("skip_final_backup", true)
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -131,6 +135,7 @@ func resourceLustreFileSystem() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9].[0-9]+$`), "must be in format x.y"),
 				),
 			},
+			"final_backup_tags": tftags.TagsSchema(),
 			"import_path": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -259,6 +264,11 @@ func resourceLustreFileSystem() *schema.Resource {
 				ForceNew: true,
 				MaxItems: 50,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"skip_final_backup": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
 			},
 			"storage_capacity": {
 				Type:         schema.TypeInt,
@@ -567,7 +577,12 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(
+		"final_backup_tags",
+		"skip_final_backup",
+		names.AttrTags,
+		names.AttrTagsAll,
+	) {
 		input := &fsx.UpdateFileSystemInput{
 			ClientRequestToken:  aws.String(id.UniqueId()),
 			FileSystemId:        aws.String(d.Id()),
@@ -637,10 +652,27 @@ func resourceLustreFileSystemDelete(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
+	input := &fsx.DeleteFileSystemInput{
+		ClientRequestToken: aws.String(id.UniqueId()),
+		FileSystemId:       aws.String(d.Id()),
+	}
+
+	// Final backup during delete is not supported on file systems using the Scratch deployment type
+	// LustreConfiguration cannot be supplied at all, even when empty, in this scenario
+	if v, ok := d.GetOk("deployment_type"); ok && !strings.HasPrefix(v.(string), "SCRATCH_") {
+		lustreConfig := &fsx.DeleteFileSystemLustreConfiguration{
+			SkipFinalBackup: aws.Bool(d.Get("skip_final_backup").(bool)),
+		}
+
+		if v, ok := d.GetOk("final_backup_tags"); ok && len(v.(map[string]interface{})) > 0 {
+			lustreConfig.FinalBackupTags = Tags(tftags.New(ctx, v))
+		}
+
+		input.LustreConfiguration = lustreConfig
+	}
+
 	log.Printf("[DEBUG] Deleting FSx for Lustre File System: %s", d.Id())
-	_, err := conn.DeleteFileSystemWithContext(ctx, &fsx.DeleteFileSystemInput{
-		FileSystemId: aws.String(d.Id()),
-	})
+	_, err := conn.DeleteFileSystemWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {
 		return diags
