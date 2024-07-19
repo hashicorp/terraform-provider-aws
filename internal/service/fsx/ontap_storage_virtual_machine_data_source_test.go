@@ -81,7 +81,16 @@ func TestAccFSxONTAPStorageVirtualMachineDataSource_Filter(t *testing.T) {
 }
 
 func testAccONTAPStorageVirtualMachineDataSourceConfig_Id(rName string) string {
-	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_base(rName), `
+resource "aws_fsx_ontap_storage_virtual_machine" "test" {
+  file_system_id = aws_fsx_ontap_file_system.test.id
+  name           = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 data "aws_fsx_ontap_storage_virtual_machine" "test" {
   id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
@@ -89,7 +98,16 @@ data "aws_fsx_ontap_storage_virtual_machine" "test" {
 }
 
 func testAccONTAPStorageVirtualMachineDataSourceConfig_Filter(rName string) string {
-	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_base(rName), `
+resource "aws_fsx_ontap_storage_virtual_machine" "test" {
+  file_system_id = aws_fsx_ontap_file_system.test.id
+  name           = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 data "aws_fsx_ontap_storage_virtual_machine" "test" {
   filter {
     name   = "file-system-id"

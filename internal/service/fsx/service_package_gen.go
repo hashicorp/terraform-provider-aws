@@ -34,7 +34,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceONTAPStorageVirtualMachine,
 			TypeName: "aws_fsx_ontap_storage_virtual_machine",
 			Name:     "ONTAP Storage Virtual Machine",
-			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceONTAPStorageVirtualMachines,
