@@ -150,8 +150,6 @@ func protoV5ProviderFactoriesInit(ctx context.Context, providerNames ...string) 
 		}
 	}
 
-	//tfec2.WriteV1BlockDevice()
-
 	return factories
 }
 
