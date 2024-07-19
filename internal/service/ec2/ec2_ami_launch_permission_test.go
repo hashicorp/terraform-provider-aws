@@ -222,19 +222,9 @@ func testAccCheckAMILaunchPermissionExists(ctx context.Context, n string) resour
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No AMI Launch Permission ID is set")
-		}
-
-		imageID, accountID, group, organizationARN, organizationalUnitARN, err := tfec2.AMILaunchPermissionParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err = tfec2.FindImageLaunchPermission(ctx, conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
+		_, err := tfec2.FindImageLaunchPermission(ctx, conn, rs.Primary.Attributes["image_id"], rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["group"], rs.Primary.Attributes["organization_arn"], rs.Primary.Attributes["organizational_unit_arn"])
 
 		return err
 	}
@@ -249,13 +239,7 @@ func testAccCheckAMILaunchPermissionDestroy(ctx context.Context) resource.TestCh
 				continue
 			}
 
-			imageID, accountID, group, organizationARN, organizationalUnitARN, err := tfec2.AMILaunchPermissionParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfec2.FindImageLaunchPermission(ctx, conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
+			_, err := tfec2.FindImageLaunchPermission(ctx, conn, rs.Primary.Attributes["image_id"], rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["group"], rs.Primary.Attributes["organization_arn"], rs.Primary.Attributes["organizational_unit_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
