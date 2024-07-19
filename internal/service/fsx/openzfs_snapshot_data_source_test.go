@@ -80,6 +80,10 @@ func testAccOpenZFSSnapshotDataSourceConfig_basic(rName string) string {
 resource "aws_fsx_openzfs_snapshot" "test" {
   name      = %[1]q
   volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_fsx_openzfs_snapshot" "test" {
@@ -93,6 +97,10 @@ func testAccOpenZFSSnapshotDataSourceConfig_filterFileSystemId(rName string) str
 resource "aws_fsx_openzfs_snapshot" "test" {
   name      = %[1]q
   volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_fsx_openzfs_snapshot" "test" {
@@ -109,6 +117,10 @@ func testAccOpenZFSSnapshotDataSourceConfig_filterVolumeId(rName string) string 
 resource "aws_fsx_openzfs_snapshot" "test" {
   name      = %[1]q
   volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_fsx_openzfs_snapshot" "test" {
@@ -125,12 +137,20 @@ func testAccOpenZFSSnapshotDataSourceConfig_mostRecent(rName, rName2 string) str
 resource "aws_fsx_openzfs_snapshot" "test" {
   name      = %[1]q
   volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_fsx_openzfs_snapshot" "latest" {
   # Ensure that this snapshot is created after the other.
   name      = %[2]q
   volume_id = aws_fsx_openzfs_snapshot.test.volume_id
+
+  tags = {
+    Name = %[2]q
+  }
 }
 
 data "aws_fsx_openzfs_snapshot" "test" {

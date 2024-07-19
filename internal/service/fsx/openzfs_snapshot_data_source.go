@@ -67,6 +67,8 @@ func dataSourceOpenzfsSnapshot() *schema.Resource {
 func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &fsx.DescribeSnapshotsInput{}
 
@@ -111,7 +113,15 @@ func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrSnapshotID, snapshot.SnapshotId)
 	d.Set("volume_id", snapshot.VolumeId)
 
-	setTagsOut(ctx, snapshot.Tags)
+	// Snapshot tags aren't set in the Describe response.
+	// setTagsOut(ctx, snapshot.Tags)
+
+	tags := KeyValueTags(ctx, snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
 
 	return diags
 }
