@@ -316,7 +316,8 @@ func resourceOpenZFSVolumeRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 	d.Set(names.AttrVolumeType, volume.VolumeType)
 
-	setTagsOut(ctx, volume.Tags)
+	// Volume tags aren't set in the Describe response.
+	// setTagsOut(ctx, volume.Tags)
 
 	return diags
 }

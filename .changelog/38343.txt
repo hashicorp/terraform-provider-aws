@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_fsx_openzfs_volume: Correctly set `tags` on Read
+```
