@@ -182,7 +182,7 @@ func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 // OpenSSHPublicKeysEqual returns whether or not two OpenSSH public key format strings represent the same key.
 // Any key comment is ignored when comparing values.
-func OpenSSHPublicKeysEqual(v1, v2 string) bool {
+func openSSHPublicKeysEqual(v1, v2 string) bool {
 	key1, _, _, _, err := ssh.ParseAuthorizedKey([]byte(v1))
 
 	if err != nil {

@@ -128,7 +128,7 @@ var (
 		Computed:   true,
 		ConfigMode: schema.SchemaConfigModeAttr,
 		Elem:       securityGroupRuleNestedBlock,
-		Set:        SecurityGroupRuleHash,
+		Set:        securityGroupRuleHash,
 	}
 
 	securityGroupRuleNestedBlock = &schema.Resource{
@@ -582,7 +582,7 @@ func relatedSGs(ctx context.Context, conn *ec2.Client, id string) ([]string, err
 	return relatedSGs, nil
 }
 
-func SecurityGroupRuleHash(v interface{}) int {
+func securityGroupRuleHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%d-", m["from_port"].(int)))
@@ -1391,7 +1391,7 @@ func securityGroupCollapseRules(ruleset string, rules []interface{}) []interface
 func securityGroupExpandRules(rules *schema.Set) *schema.Set {
 	var keys_to_expand = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", names.AttrSecurityGroups}
 
-	normalized := schema.NewSet(SecurityGroupRuleHash, nil)
+	normalized := schema.NewSet(securityGroupRuleHash, nil)
 
 	for _, rawRule := range rules.List() {
 		rule := rawRule.(map[string]interface{})

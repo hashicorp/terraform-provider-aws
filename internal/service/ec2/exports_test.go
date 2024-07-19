@@ -249,10 +249,12 @@ var (
 	NewAttributeFilterList                                     = newAttributeFilterList
 	NewCustomFilterList                                        = newCustomFilterList
 	NewTagFilterList                                           = newTagFilterList
+	OpenSSHPublicKeysEqual                                     = openSSHPublicKeysEqual
 	ProtocolForValue                                           = protocolForValue
 	ProtocolStateFunc                                          = protocolStateFunc
 	SecurityGroupExpandRules                                   = securityGroupExpandRules
 	SecurityGroupCollapseRules                                 = securityGroupCollapseRules
+	SecurityGroupRuleHash                                      = securityGroupRuleHash
 	SecurityGroupIPPermGather                                  = securityGroupIPPermGather
 	SecurityGroupMigrateState                                  = securityGroupMigrateState
 	SecurityGroupRuleCreateID                                  = securityGroupRuleCreateID
