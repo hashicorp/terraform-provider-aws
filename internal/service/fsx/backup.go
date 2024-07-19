@@ -191,10 +191,10 @@ func findBackupByID(ctx context.Context, conn *fsx.Client, id string) (*awstypes
 		BackupIds: []string{id},
 	}
 
-	return findBackup(ctx, conn, input, tfslices.PredicateTrue[awstypes.Backup]())
+	return findBackup(ctx, conn, input, tfslices.PredicateTrue[*awstypes.Backup]())
 }
 
-func findBackup(ctx context.Context, conn *fsx.Client, input *fsx.DescribeBackupsInput, filter tfslices.Predicate[awstypes.Backup]) (*awstypes.Backup, error) {
+func findBackup(ctx context.Context, conn *fsx.Client, input *fsx.DescribeBackupsInput, filter tfslices.Predicate[*awstypes.Backup]) (*awstypes.Backup, error) {
 	output, err := findBackups(ctx, conn, input, filter)
 
 	if err != nil {
@@ -204,11 +204,10 @@ func findBackup(ctx context.Context, conn *fsx.Client, input *fsx.DescribeBackup
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findBackups(ctx context.Context, conn *fsx.Client, input *fsx.DescribeBackupsInput, filter tfslices.Predicate[awstypes.Backup]) ([]awstypes.Backup, error) {
+func findBackups(ctx context.Context, conn *fsx.Client, input *fsx.DescribeBackupsInput, filter tfslices.Predicate[*awstypes.Backup]) ([]awstypes.Backup, error) {
 	var output []awstypes.Backup
 
 	pages := fsx.NewDescribeBackupsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -224,7 +223,7 @@ func findBackups(ctx context.Context, conn *fsx.Client, input *fsx.DescribeBacku
 		}
 
 		for _, v := range page.Backups {
-			if filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}

@@ -370,6 +370,134 @@ func resourceONTAPStorageVirtualMachineDelete(ctx context.Context, d *schema.Res
 	return diags
 }
 
+func findStorageVirtualMachineByID(ctx context.Context, conn *fsx.Client, id string) (*awstypes.StorageVirtualMachine, error) {
+	input := &fsx.DescribeStorageVirtualMachinesInput{
+		StorageVirtualMachineIds: []string{id},
+	}
+
+	return findStorageVirtualMachine(ctx, conn, input, tfslices.PredicateTrue[*awstypes.StorageVirtualMachine]())
+}
+
+func findStorageVirtualMachine(ctx context.Context, conn *fsx.Client, input *fsx.DescribeStorageVirtualMachinesInput, filter tfslices.Predicate[*awstypes.StorageVirtualMachine]) (*awstypes.StorageVirtualMachine, error) {
+	output, err := findStorageVirtualMachines(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findStorageVirtualMachines(ctx context.Context, conn *fsx.Client, input *fsx.DescribeStorageVirtualMachinesInput, filter tfslices.Predicate[*awstypes.StorageVirtualMachine]) ([]awstypes.StorageVirtualMachine, error) {
+	var output []awstypes.StorageVirtualMachine
+
+	pages := fsx.NewDescribeStorageVirtualMachinesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.StorageVirtualMachineNotFound](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.StorageVirtualMachines {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func statusStorageVirtualMachine(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findStorageVirtualMachineByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Lifecycle), nil
+	}
+}
+
+func waitStorageVirtualMachineCreated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.StorageVirtualMachine, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecycleCreating, awstypes.StorageVirtualMachineLifecyclePending),
+		Target:  enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleMisconfigured),
+		Refresh: statusStorageVirtualMachine(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.StorageVirtualMachine); ok {
+		if reason := output.LifecycleTransitionReason; reason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitStorageVirtualMachineUpdated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.StorageVirtualMachine, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecyclePending),
+		Target:  enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleMisconfigured),
+		Refresh: statusStorageVirtualMachine(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.StorageVirtualMachine); ok {
+		if reason := output.LifecycleTransitionReason; reason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitStorageVirtualMachineDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.StorageVirtualMachine, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleDeleting),
+		Target:  []string{},
+		Refresh: statusStorageVirtualMachine(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.StorageVirtualMachine); ok {
+		if reason := output.LifecycleTransitionReason; reason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func expandCreateSvmActiveDirectoryConfiguration(cfg []interface{}) *awstypes.CreateSvmActiveDirectoryConfiguration {
 	if len(cfg) < 1 {
 		return nil
@@ -573,133 +701,4 @@ func flattenSvmEndpoint(rs *awstypes.SvmEndpoint) []interface{} {
 	}
 
 	return []interface{}{m}
-}
-
-func findStorageVirtualMachineByID(ctx context.Context, conn *fsx.Client, id string) (*awstypes.StorageVirtualMachine, error) {
-	input := &fsx.DescribeStorageVirtualMachinesInput{
-		StorageVirtualMachineIds: []string{id},
-	}
-
-	return findStorageVirtualMachine(ctx, conn, input, tfslices.PredicateTrue[awstypes.StorageVirtualMachine]())
-}
-
-func findStorageVirtualMachine(ctx context.Context, conn *fsx.Client, input *fsx.DescribeStorageVirtualMachinesInput, filter tfslices.Predicate[awstypes.StorageVirtualMachine]) (*awstypes.StorageVirtualMachine, error) {
-	output, err := findStorageVirtualMachines(ctx, conn, input, filter)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
-func findStorageVirtualMachines(ctx context.Context, conn *fsx.Client, input *fsx.DescribeStorageVirtualMachinesInput, filter tfslices.Predicate[awstypes.StorageVirtualMachine]) ([]awstypes.StorageVirtualMachine, error) {
-	var output []awstypes.StorageVirtualMachine
-
-	pages := fsx.NewDescribeStorageVirtualMachinesPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*awstypes.StorageVirtualMachineNotFound](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.StorageVirtualMachines {
-			if filter(v) {
-				output = append(output, v)
-			}
-		}
-	}
-
-	return output, nil
-}
-
-func statusStorageVirtualMachine(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findStorageVirtualMachineByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.Lifecycle), nil
-	}
-}
-
-func waitStorageVirtualMachineCreated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.StorageVirtualMachine, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecycleCreating, awstypes.StorageVirtualMachineLifecyclePending),
-		Target:  enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleMisconfigured),
-		Refresh: statusStorageVirtualMachine(ctx, conn, id),
-		Timeout: timeout,
-		Delay:   30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.StorageVirtualMachine); ok {
-		if reason := output.LifecycleTransitionReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitStorageVirtualMachineUpdated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.StorageVirtualMachine, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecyclePending),
-		Target:  enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleMisconfigured),
-		Refresh: statusStorageVirtualMachine(ctx, conn, id),
-		Timeout: timeout,
-		Delay:   30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.StorageVirtualMachine); ok {
-		if reason := output.LifecycleTransitionReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitStorageVirtualMachineDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.StorageVirtualMachine, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleDeleting),
-		Target:  []string{},
-		Refresh: statusStorageVirtualMachine(ctx, conn, id),
-		Timeout: timeout,
-		Delay:   30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.StorageVirtualMachine); ok {
-		if reason := output.LifecycleTransitionReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
 }

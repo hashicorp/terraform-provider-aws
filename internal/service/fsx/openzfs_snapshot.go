@@ -189,10 +189,10 @@ func findSnapshotByID(ctx context.Context, conn *fsx.Client, id string) (*awstyp
 		SnapshotIds: []string{id},
 	}
 
-	return findSnapshot(ctx, conn, input, tfslices.PredicateTrue[awstypes.Snapshot]())
+	return findSnapshot(ctx, conn, input, tfslices.PredicateTrue[*awstypes.Snapshot]())
 }
 
-func findSnapshot(ctx context.Context, conn *fsx.Client, input *fsx.DescribeSnapshotsInput, filter tfslices.Predicate[awstypes.Snapshot]) (*awstypes.Snapshot, error) {
+func findSnapshot(ctx context.Context, conn *fsx.Client, input *fsx.DescribeSnapshotsInput, filter tfslices.Predicate[*awstypes.Snapshot]) (*awstypes.Snapshot, error) {
 	output, err := findSnapshots(ctx, conn, input, filter)
 
 	if err != nil {
@@ -202,11 +202,10 @@ func findSnapshot(ctx context.Context, conn *fsx.Client, input *fsx.DescribeSnap
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findSnapshots(ctx context.Context, conn *fsx.Client, input *fsx.DescribeSnapshotsInput, filter tfslices.Predicate[awstypes.Snapshot]) ([]awstypes.Snapshot, error) {
+func findSnapshots(ctx context.Context, conn *fsx.Client, input *fsx.DescribeSnapshotsInput, filter tfslices.Predicate[*awstypes.Snapshot]) ([]awstypes.Snapshot, error) {
 	var output []awstypes.Snapshot
 
 	pages := fsx.NewDescribeSnapshotsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -222,7 +221,7 @@ func findSnapshots(ctx context.Context, conn *fsx.Client, input *fsx.DescribeSna
 		}
 
 		for _, v := range page.Snapshots {
-			if filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}

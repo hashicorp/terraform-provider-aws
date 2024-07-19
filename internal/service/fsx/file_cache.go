@@ -448,10 +448,10 @@ func findFileCacheByID(ctx context.Context, conn *fsx.Client, id string) (*awsty
 		FileCacheIds: []string{id},
 	}
 
-	return findFileCache(ctx, conn, input, tfslices.PredicateTrue[awstypes.FileCache]())
+	return findFileCache(ctx, conn, input, tfslices.PredicateTrue[*awstypes.FileCache]())
 }
 
-func findFileCache(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFileCachesInput, filter tfslices.Predicate[awstypes.FileCache]) (*awstypes.FileCache, error) {
+func findFileCache(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFileCachesInput, filter tfslices.Predicate[*awstypes.FileCache]) (*awstypes.FileCache, error) {
 	output, err := findFileCaches(ctx, conn, input, filter)
 
 	if err != nil {
@@ -461,10 +461,10 @@ func findFileCache(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFil
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findFileCaches(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFileCachesInput, filter tfslices.Predicate[awstypes.FileCache]) ([]awstypes.FileCache, error) {
+func findFileCaches(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFileCachesInput, filter tfslices.Predicate[*awstypes.FileCache]) ([]awstypes.FileCache, error) {
 	var output []awstypes.FileCache
-	pages := fsx.NewDescribeFileCachesPaginator(conn, input)
 
+	pages := fsx.NewDescribeFileCachesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -480,7 +480,7 @@ func findFileCaches(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFi
 		}
 
 		for _, v := range page.FileCaches {
-			if filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}
@@ -575,7 +575,7 @@ func findDataRepositoryAssociationsByIDs(ctx context.Context, conn *fsx.Client, 
 		AssociationIds: ids,
 	}
 
-	return findDataRepositoryAssociations(ctx, conn, input, tfslices.PredicateTrue[awstypes.DataRepositoryAssociation]())
+	return findDataRepositoryAssociations(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DataRepositoryAssociation]())
 }
 
 func flattenDataRepositoryAssociations(ctx context.Context, dataRepositoryAssociations []awstypes.DataRepositoryAssociation, defaultTagsConfig *tftags.DefaultConfig, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {

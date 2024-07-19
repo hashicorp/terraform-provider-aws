@@ -691,141 +691,6 @@ func resourceLustreFileSystemDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func expandLustreRootSquashConfiguration(l []interface{}) *awstypes.LustreRootSquashConfiguration {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	data := l[0].(map[string]interface{})
-	req := &awstypes.LustreRootSquashConfiguration{}
-
-	if v, ok := data["root_squash"].(string); ok && v != "" {
-		req.RootSquash = aws.String(v)
-	}
-
-	if v, ok := data["no_squash_nids"].(*schema.Set); ok && v.Len() > 0 {
-		req.NoSquashNids = flex.ExpandStringValueSet(v)
-	}
-
-	return req
-}
-
-func flattenLustreRootSquashConfiguration(adopts *awstypes.LustreRootSquashConfiguration) []map[string]interface{} {
-	if adopts == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{}
-
-	if adopts.RootSquash != nil {
-		m["root_squash"] = aws.ToString(adopts.RootSquash)
-	}
-
-	if adopts.NoSquashNids != nil {
-		m["no_squash_nids"] = flex.FlattenStringValueSet(adopts.NoSquashNids)
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func expandLustreLogCreateConfiguration(l []interface{}) *awstypes.LustreLogCreateConfiguration {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	data := l[0].(map[string]interface{})
-	req := &awstypes.LustreLogCreateConfiguration{
-		Level: awstypes.LustreAccessAuditLogLevel(data["level"].(string)),
-	}
-
-	if v, ok := data[names.AttrDestination].(string); ok && v != "" {
-		req.Destination = aws.String(logStateFunc(v))
-	}
-
-	return req
-}
-
-func flattenLustreLogConfiguration(adopts *awstypes.LustreLogConfiguration) []map[string]interface{} {
-	if adopts == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"level": string(adopts.Level),
-	}
-
-	if adopts.Destination != nil {
-		m[names.AttrDestination] = aws.ToString(adopts.Destination)
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func expandLustreMetadataCreateConfiguration(l []interface{}) *awstypes.CreateFileSystemLustreMetadataConfiguration {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	data := l[0].(map[string]interface{})
-	req := &awstypes.CreateFileSystemLustreMetadataConfiguration{
-		Mode: awstypes.MetadataConfigurationMode(data[names.AttrMode].(string)),
-	}
-
-	if v, ok := data[names.AttrIOPS].(int); ok && v != 0 {
-		req.Iops = aws.Int32(int32(v))
-	}
-
-	return req
-}
-
-func expandLustreMetadataUpdateConfiguration(l []interface{}) *awstypes.UpdateFileSystemLustreMetadataConfiguration {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	data := l[0].(map[string]interface{})
-	req := &awstypes.UpdateFileSystemLustreMetadataConfiguration{
-		Mode: awstypes.MetadataConfigurationMode(data[names.AttrMode].(string)),
-	}
-
-	if v, ok := data[names.AttrIOPS].(int); ok && v != 0 {
-		req.Iops = aws.Int32(int32(v))
-	}
-
-	return req
-}
-
-func flattenLustreMetadataConfiguration(adopts *awstypes.FileSystemLustreMetadataConfiguration) []map[string]interface{} {
-	if adopts == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		names.AttrMode: string(adopts.Mode),
-	}
-
-	if adopts.Iops != nil {
-		m[names.AttrIOPS] = aws.ToInt32(adopts.Iops)
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func logStateFunc(v interface{}) string {
-	value := v.(string)
-	// API returns the specific log stream arn instead of provided log group
-	logArn, _ := arn.Parse(value)
-	if logArn.Service == "logs" {
-		parts := strings.SplitN(logArn.Resource, ":", 3)
-		if len(parts) == 3 {
-			return strings.TrimSuffix(value, fmt.Sprintf(":%s", parts[2]))
-		} else {
-			return value
-		}
-	}
-	return value
-}
-
 func findLustreFileSystemByID(ctx context.Context, conn *fsx.Client, id string) (*awstypes.FileSystem, error) {
 	output, err := findFileSystemByIDAndType(ctx, conn, id, awstypes.FileSystemTypeLustre)
 
@@ -845,21 +710,21 @@ func findFileSystemByID(ctx context.Context, conn *fsx.Client, id string) (*awst
 		FileSystemIds: []string{id},
 	}
 
-	return findFileSystem(ctx, conn, input, tfslices.PredicateTrue[awstypes.FileSystem]())
+	return findFileSystem(ctx, conn, input, tfslices.PredicateTrue[*awstypes.FileSystem]())
 }
 
 func findFileSystemByIDAndType(ctx context.Context, conn *fsx.Client, fsID string, fsType awstypes.FileSystemType) (*awstypes.FileSystem, error) {
 	input := &fsx.DescribeFileSystemsInput{
 		FileSystemIds: []string{fsID},
 	}
-	filter := func(fs awstypes.FileSystem) bool {
-		return fs.FileSystemType == fsType
+	filter := func(v *awstypes.FileSystem) bool {
+		return v.FileSystemType == fsType
 	}
 
 	return findFileSystem(ctx, conn, input, filter)
 }
 
-func findFileSystem(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFileSystemsInput, filter tfslices.Predicate[awstypes.FileSystem]) (*awstypes.FileSystem, error) {
+func findFileSystem(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFileSystemsInput, filter tfslices.Predicate[*awstypes.FileSystem]) (*awstypes.FileSystem, error) {
 	output, err := findFileSystems(ctx, conn, input, filter)
 
 	if err != nil {
@@ -869,11 +734,10 @@ func findFileSystem(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFi
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findFileSystems(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFileSystemsInput, filter tfslices.Predicate[awstypes.FileSystem]) ([]awstypes.FileSystem, error) {
+func findFileSystems(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFileSystemsInput, filter tfslices.Predicate[*awstypes.FileSystem]) ([]awstypes.FileSystem, error) {
 	var output []awstypes.FileSystem
 
 	pages := fsx.NewDescribeFileSystemsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -889,7 +753,7 @@ func findFileSystems(ctx context.Context, conn *fsx.Client, input *fsx.DescribeF
 		}
 
 		for _, v := range page.FileSystems {
-			if filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}
@@ -1054,4 +918,139 @@ func waitFileSystemAdministrativeActionCompleted(ctx context.Context, conn *fsx.
 	}
 
 	return nil, err
+}
+
+func expandLustreRootSquashConfiguration(l []interface{}) *awstypes.LustreRootSquashConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	data := l[0].(map[string]interface{})
+	req := &awstypes.LustreRootSquashConfiguration{}
+
+	if v, ok := data["root_squash"].(string); ok && v != "" {
+		req.RootSquash = aws.String(v)
+	}
+
+	if v, ok := data["no_squash_nids"].(*schema.Set); ok && v.Len() > 0 {
+		req.NoSquashNids = flex.ExpandStringValueSet(v)
+	}
+
+	return req
+}
+
+func flattenLustreRootSquashConfiguration(adopts *awstypes.LustreRootSquashConfiguration) []map[string]interface{} {
+	if adopts == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if adopts.RootSquash != nil {
+		m["root_squash"] = aws.ToString(adopts.RootSquash)
+	}
+
+	if adopts.NoSquashNids != nil {
+		m["no_squash_nids"] = flex.FlattenStringValueSet(adopts.NoSquashNids)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandLustreLogCreateConfiguration(l []interface{}) *awstypes.LustreLogCreateConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	data := l[0].(map[string]interface{})
+	req := &awstypes.LustreLogCreateConfiguration{
+		Level: awstypes.LustreAccessAuditLogLevel(data["level"].(string)),
+	}
+
+	if v, ok := data[names.AttrDestination].(string); ok && v != "" {
+		req.Destination = aws.String(logStateFunc(v))
+	}
+
+	return req
+}
+
+func flattenLustreLogConfiguration(adopts *awstypes.LustreLogConfiguration) []map[string]interface{} {
+	if adopts == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"level": string(adopts.Level),
+	}
+
+	if adopts.Destination != nil {
+		m[names.AttrDestination] = aws.ToString(adopts.Destination)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandLustreMetadataCreateConfiguration(l []interface{}) *awstypes.CreateFileSystemLustreMetadataConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	data := l[0].(map[string]interface{})
+	req := &awstypes.CreateFileSystemLustreMetadataConfiguration{
+		Mode: awstypes.MetadataConfigurationMode(data[names.AttrMode].(string)),
+	}
+
+	if v, ok := data[names.AttrIOPS].(int); ok && v != 0 {
+		req.Iops = aws.Int32(int32(v))
+	}
+
+	return req
+}
+
+func expandLustreMetadataUpdateConfiguration(l []interface{}) *awstypes.UpdateFileSystemLustreMetadataConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	data := l[0].(map[string]interface{})
+	req := &awstypes.UpdateFileSystemLustreMetadataConfiguration{
+		Mode: awstypes.MetadataConfigurationMode(data[names.AttrMode].(string)),
+	}
+
+	if v, ok := data[names.AttrIOPS].(int); ok && v != 0 {
+		req.Iops = aws.Int32(int32(v))
+	}
+
+	return req
+}
+
+func flattenLustreMetadataConfiguration(adopts *awstypes.FileSystemLustreMetadataConfiguration) []map[string]interface{} {
+	if adopts == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		names.AttrMode: string(adopts.Mode),
+	}
+
+	if adopts.Iops != nil {
+		m[names.AttrIOPS] = aws.ToInt32(adopts.Iops)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func logStateFunc(v interface{}) string {
+	value := v.(string)
+	// API returns the specific log stream arn instead of provided log group
+	logArn, _ := arn.Parse(value)
+	if logArn.Service == "logs" {
+		parts := strings.SplitN(logArn.Resource, ":", 3)
+		if len(parts) == 3 {
+			return strings.TrimSuffix(value, fmt.Sprintf(":%s", parts[2]))
+		} else {
+			return value
+		}
+	}
+	return value
 }

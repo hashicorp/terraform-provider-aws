@@ -214,7 +214,7 @@ func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Res
 		input.Filters = nil
 	}
 
-	svm, err := findStorageVirtualMachine(ctx, conn, input, tfslices.PredicateTrue[awstypes.StorageVirtualMachine]())
+	svm, err := findStorageVirtualMachine(ctx, conn, input, tfslices.PredicateTrue[*awstypes.StorageVirtualMachine]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading FSx ONTAP Storage Virtual Machine: %s", err)

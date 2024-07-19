@@ -82,7 +82,7 @@ func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 		input.Filters = nil
 	}
 
-	snapshots, err := findSnapshots(ctx, conn, input, tfslices.PredicateTrue[awstypes.Snapshot]())
+	snapshots, err := findSnapshots(ctx, conn, input, tfslices.PredicateTrue[*awstypes.Snapshot]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading FSx Snapshots: %s", err)
