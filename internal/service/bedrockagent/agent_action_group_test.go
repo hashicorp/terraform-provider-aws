@@ -48,7 +48,7 @@ func TestAccBedrockAgentAgentActionGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentAgentActionGroup_s3APISchema(t *testing.T) {
+func TestAccBedrockAgentAgentActionGroup_APISchema_s3(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_action_group.test"
@@ -61,7 +61,7 @@ func TestAccBedrockAgentAgentActionGroup_s3APISchema(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentActionGroupConfig_s3APISchema(rName),
+				Config: testAccAgentActionGroupConfig_APISchema_s3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
@@ -92,7 +92,7 @@ func TestAccBedrockAgentAgentActionGroup_update(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentActionGroupConfig_s3APISchema(rName),
+				Config: testAccAgentActionGroupConfig_APISchema_s3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
@@ -164,7 +164,7 @@ func TestAccBedrockAgentAgentActionGroup_FunctionSchema_memberFunctions(t *testi
 	})
 }
 
-func TestAccBedrockAgentAgentActionGroup_returnControl(t *testing.T) {
+func TestAccBedrockAgentAgentActionGroup_ActionGroupExecutor_customControl(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_action_group.test"
@@ -177,7 +177,7 @@ func TestAccBedrockAgentAgentActionGroup_returnControl(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentActionGroupConfig_returnControl(rName),
+				Config: testAccAgentActionGroupConfig_ActionGroupExecutor_customControl(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
@@ -261,7 +261,7 @@ resource "aws_bedrockagent_agent_action_group" "test" {
 `, rName))
 }
 
-func testAccAgentActionGroupConfig_s3APISchema(rName string) string {
+func testAccAgentActionGroupConfig_APISchema_s3(rName string) string {
 	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
 		testAccAgentActionGroupConfig_lambda(rName),
 		fmt.Sprintf(`
@@ -363,7 +363,7 @@ resource "aws_bedrockagent_agent_action_group" "test" {
 `, rName))
 }
 
-func testAccAgentActionGroupConfig_returnControl(rName string) string {
+func testAccAgentActionGroupConfig_ActionGroupExecutor_customControl(rName string) string {
 	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
 		testAccAgentActionGroupConfig_lambda(rName),
 		fmt.Sprintf(`
