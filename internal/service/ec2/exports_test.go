@@ -250,6 +250,7 @@ var (
 	NewCustomFilterList                                        = newCustomFilterList
 	NewTagFilterList                                           = newTagFilterList
 	OpenSSHPublicKeysEqual                                     = openSSHPublicKeysEqual
+	ParseInstanceType                                          = parseInstanceType
 	ProtocolForValue                                           = protocolForValue
 	ProtocolStateFunc                                          = protocolStateFunc
 	SecurityGroupExpandRules                                   = securityGroupExpandRules

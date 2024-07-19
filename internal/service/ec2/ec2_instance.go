@@ -3983,7 +3983,7 @@ type instanceType struct {
 	Size string
 }
 
-func ParseInstanceType(s string) (*instanceType, error) {
+func parseInstanceType(s string) (*instanceType, error) {
 	matches := regexache.MustCompile(`(([[:alpha:]]+)([[:digit:]])+([[:alpha:]]*))\.([[:alnum:]]+)`).FindStringSubmatch(s)
 
 	if matches == nil {
