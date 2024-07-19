@@ -52,7 +52,7 @@ func testAccClusterParameterGroupDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster_parameter_group" "test" {
   name   = %[1]q
-  family = "postgres12"
+  family = "postgres15"
 
   parameter {
     name         = "client_encoding"
