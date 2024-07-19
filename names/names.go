@@ -74,6 +74,7 @@ const (
 	EKSEndpointID                        = "eks"
 	ELBEndpointID                        = "elasticloadbalancing"
 	EMREndpointID                        = "elasticmapreduce"
+	ElasticTranscoderEndpointID          = "elastictranscoder"
 	ElastiCacheEndpointID                = "elasticache"
 	EventsEndpointID                     = "events"
 	EvidentlyEndpointID                  = "evidently"
