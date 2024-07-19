@@ -9823,7 +9823,7 @@ service "ec2" {
 
   sdk {
     id             = "EC2"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {

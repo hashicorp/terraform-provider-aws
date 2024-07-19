@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_vpcs")
-func DataSourceVPCs() *schema.Resource {
+// @SDKDataSource("aws_vpcs", name="VPCs")
+func dataSourceVPCs() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCsRead,
 
@@ -40,7 +40,7 @@ func DataSourceVPCs() *schema.Resource {
 
 func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeVpcsInput{}
 
@@ -59,7 +59,7 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Filters = nil
 	}
 
-	output, err := FindVPCs(ctx, conn, input)
+	output, err := findVPCs(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPCs: %s", err)
@@ -68,7 +68,7 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var vpcIDs []string
 
 	for _, v := range output {
-		vpcIDs = append(vpcIDs, aws.StringValue(v.VpcId))
+		vpcIDs = append(vpcIDs, aws.ToString(v.VpcId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
