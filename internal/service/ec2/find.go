@@ -6519,3 +6519,37 @@ func findNetworkInsightsPathByID(ctx context.Context, conn *ec2.Client, id strin
 
 	return output, nil
 }
+
+func findCapacityBlockOffering(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCapacityBlockOfferingsInput) (*awstypes.CapacityBlockOffering, error) {
+	output, err := findCapacityBlockOfferings(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findCapacityBlockOfferings(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCapacityBlockOfferingsInput) ([]awstypes.CapacityBlockOffering, error) {
+	var output []awstypes.CapacityBlockOffering
+
+	pages := ec2.NewDescribeCapacityBlockOfferingsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInsightsAnalysisIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.CapacityBlockOfferings...)
+	}
+
+	return output, nil
+}
