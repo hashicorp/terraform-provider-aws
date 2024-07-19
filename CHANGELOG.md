@@ -56,6 +56,8 @@ BUG FIXES:
 * resource/aws_elasticache_replication_group: Requires `description`. ([#38396](https://github.com/hashicorp/terraform-provider-aws/issues/38396))
 * resource/aws_elasticache_replication_group: When `num_cache_clusters` is set, prevents setting `replicas_per_node_group`. ([#38396](https://github.com/hashicorp/terraform-provider-aws/issues/38396))
 * resource/aws_elasticache_replication_group: `num_cache_clusters` must be at least 2 when `automatic_failover_enabled` is `true`. ([#38396](https://github.com/hashicorp/terraform-provider-aws/issues/38396))
+* resource/aws_elastictranscoder_pipeline: Properly handle NotFound exceptions during deletion ([#38018](https://github.com/hashicorp/terraform-provider-aws/issues/38018))
+* resource/aws_elastictranscoder_preset: Properly handle NotFound exceptions during deletion ([#38018](https://github.com/hashicorp/terraform-provider-aws/issues/38018))
 * resource/aws_lb_target_group: Use the configured `ip_address_type` value when `target_type` is `instance` ([#36423](https://github.com/hashicorp/terraform-provider-aws/issues/36423))
 * resource/aws_lb_trust_store: Wait until trust store is `ACTIVE` on resource Create ([#38332](https://github.com/hashicorp/terraform-provider-aws/issues/38332))
 * resource/aws_pinpoint_app: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panic when `campaign_hook` is empty (`{}`) ([#38323](https://github.com/hashicorp/terraform-provider-aws/issues/38323))
