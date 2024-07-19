@@ -1201,7 +1201,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceVPCEndpointConnectionAccepter,
 			TypeName: "aws_vpc_endpoint_connection_accepter",
-			Name:     "Endpoint Connection Accepter",
+			Name:     "VPC Endpoint Connection Accepter",
 		},
 		{
 			Factory:  resourceVPCEndpointConnectionNotification,
