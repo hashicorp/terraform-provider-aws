@@ -118,6 +118,7 @@ import (
 	iot_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iot"
 	iotanalytics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iotanalytics"
 	iotevents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iotevents"
+	ivs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ivs"
 	ivschat_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ivschat"
 	kafka_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kafka"
 	kafkaconnect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kafkaconnect"
@@ -221,7 +222,6 @@ import (
 	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	inspector_sdkv1 "github.com/aws/aws-sdk-go/service/inspector"
-	ivs_sdkv1 "github.com/aws/aws-sdk-go/service/ivs"
 	kinesisanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	kinesisanalyticsv2_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
@@ -726,8 +726,8 @@ func (c *AWSClient) IAMClient(ctx context.Context) *iam_sdkv2.Client {
 	return errs.Must(client[*iam_sdkv2.Client](ctx, c, names.IAM, make(map[string]any)))
 }
 
-func (c *AWSClient) IVSConn(ctx context.Context) *ivs_sdkv1.IVS {
-	return errs.Must(conn[*ivs_sdkv1.IVS](ctx, c, names.IVS, make(map[string]any)))
+func (c *AWSClient) IVSClient(ctx context.Context) *ivs_sdkv2.Client {
+	return errs.Must(client[*ivs_sdkv2.Client](ctx, c, names.IVS, make(map[string]any)))
 }
 
 func (c *AWSClient) IVSChatClient(ctx context.Context) *ivschat_sdkv2.Client {
