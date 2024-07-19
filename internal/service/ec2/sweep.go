@@ -2838,7 +2838,7 @@ func sweepNetworkPerformanceMetricSubscriptions(region string) error {
 
 		for _, v := range page.Subscriptions {
 			r := resourceNetworkPerformanceMetricSubscription()
-			id := NetworkPerformanceMetricSubscriptionCreateResourceID(aws.ToString(v.Source), aws.ToString(v.Destination), string(v.Metric), string(v.Statistic))
+			id := networkPerformanceMetricSubscriptionCreateResourceID(aws.ToString(v.Source), aws.ToString(v.Destination), string(v.Metric), string(v.Statistic))
 			d := r.Data(nil)
 			d.SetId(id)
 
