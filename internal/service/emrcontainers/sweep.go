@@ -38,7 +38,6 @@ func sweepVirtualClusters(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := emrcontainers.NewListVirtualClustersPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -84,7 +83,6 @@ func sweepJobTemplates(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := emrcontainers.NewListJobTemplatesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -98,7 +96,7 @@ func sweepJobTemplates(region string) error {
 		}
 
 		for _, v := range page.Templates {
-			r := ResourceJobTemplate()
+			r := resourceJobTemplate()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Id))
 

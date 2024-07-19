@@ -30,7 +30,7 @@ import (
 
 // @SDKResource("aws_emrcontainers_job_template", name="Job Template")
 // @Tags(identifierAttribute="arn")
-func ResourceJobTemplate() *schema.Resource {
+func resourceJobTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobTemplateCreate,
 		ReadWithoutTimeout:   resourceJobTemplateRead,
@@ -261,7 +261,6 @@ func ResourceJobTemplate() *schema.Resource {
 
 func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EMRContainersClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -292,10 +291,9 @@ func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EMRContainersClient(ctx)
 
-	vc, err := FindJobTemplateByID(ctx, conn, d.Id())
+	vc, err := findJobTemplateByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EMR Containers Job Template %s not found, removing from state", d.Id())
@@ -315,8 +313,8 @@ func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("job_template_data", nil)
 	}
-	d.Set(names.AttrName, vc.Name)
 	d.Set(names.AttrKMSKeyARN, vc.KmsKeyArn)
+	d.Set(names.AttrName, vc.Name)
 
 	setTagsOut(ctx, vc.Tags)
 
@@ -325,7 +323,6 @@ func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceJobTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EMRContainersClient(ctx)
 
 	log.Printf("[INFO] Deleting EMR Containers Job Template: %s", d.Id())
@@ -351,6 +348,41 @@ func resourceJobTemplateDelete(ctx context.Context, d *schema.ResourceData, meta
 	// }
 
 	return diags
+}
+
+func findJobTemplate(ctx context.Context, conn *emrcontainers.Client, input *emrcontainers.DescribeJobTemplateInput) (*awstypes.JobTemplate, error) {
+	output, err := conn.DescribeJobTemplate(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.JobTemplate == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.JobTemplate, nil
+}
+
+func findJobTemplateByID(ctx context.Context, conn *emrcontainers.Client, id string) (*awstypes.JobTemplate, error) {
+	input := &emrcontainers.DescribeJobTemplateInput{
+		Id: aws.String(id),
+	}
+
+	output, err := findJobTemplate(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func expandJobTemplateData(tfMap map[string]interface{}) *awstypes.JobTemplateData {
@@ -738,39 +770,4 @@ func flattenSparkSubmitJobDriver(apiObject *awstypes.SparkSubmitJobDriver) map[s
 	}
 
 	return tfMap
-}
-
-func findJobTemplate(ctx context.Context, conn *emrcontainers.Client, input *emrcontainers.DescribeJobTemplateInput) (*awstypes.JobTemplate, error) {
-	output, err := conn.DescribeJobTemplate(ctx, input)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.JobTemplate == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.JobTemplate, nil
-}
-
-func FindJobTemplateByID(ctx context.Context, conn *emrcontainers.Client, id string) (*awstypes.JobTemplate, error) {
-	input := &emrcontainers.DescribeJobTemplateInput{
-		Id: aws.String(id),
-	}
-
-	output, err := findJobTemplate(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
 }
