@@ -124,16 +124,19 @@ The following arguments are optional:
 The `action_group_executor` configuration block supports the following arguments:
 
 * `custom_control` - (Optional) Custom control method for handling the information elicited from the user. Valid values: `RETURN_CONTROL`.
-
-  To skip using a Lambda function and instead return the predicted action group, in addition to the parameters and information required for it, in the `InvokeAgent` response, specify, specify `RETURN_CONTROL`.
+  To skip using a Lambda function and instead return the predicted action group, in addition to the parameters and information required for it, in the `InvokeAgent` response, specify `RETURN_CONTROL`.
+  Only one of `custom_control` or `lambda` can be specified.
 * `lambda` - (Optional) ARN of the Lambda function containing the business logic that is carried out upon invoking the action.
+  Only one of `lambda` or `custom_control` can be specified.
 
 ### `api_schema` Block
 
 The `api_schema` configuration block supports the following arguments:
 
 * `payload` - (Optional) JSON or YAML-formatted payload defining the OpenAPI schema for the action group.
+  Only one of `payload` or `s3` can be specified.
 * `s3` - (Optional) Details about the S3 object containing the OpenAPI schema for the action group. See [`s3` Block](#s3-block) for details.
+  Only one of `s3` or `payload` can be specified.
 
 ### `s3` Block
 
