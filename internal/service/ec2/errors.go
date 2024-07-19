@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
@@ -234,7 +233,7 @@ func enableFastSnapshotRestoreItemsError(apiObjects []awstypes.EnableFastSnapsho
 }
 
 func networkACLEntryAlreadyExistsError(naclID string, egress bool, ruleNumber int) error {
-	return awserr.New(errCodeNetworkACLEntryAlreadyExists, fmt.Sprintf("EC2 Network ACL (%s) Rule (egress: %t)(%d) already exists", naclID, egress, ruleNumber), nil)
+	return errs.APIError(errCodeNetworkACLEntryAlreadyExists, fmt.Sprintf("EC2 Network ACL (%s) Rule (egress: %t)(%d) already exists", naclID, egress, ruleNumber))
 }
 
 func routeAlreadyExistsError(routeTableID, destination string) error {
