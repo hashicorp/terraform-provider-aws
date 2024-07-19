@@ -50,6 +50,10 @@ func ResourceAssessmentTarget() *schema.Resource {
 	}
 }
 
+const (
+	ResNameAssessmentTarget = "Assessment Target"
+)
+
 func resourceAssessmentTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
@@ -76,16 +80,15 @@ func resourceAssessmentTargetRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
-	assessmentTarget, err := DescribeAssessmentTarget(ctx, conn, d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing Inspector Classic Assessment Target (%s): %s", d.Id(), err)
-	}
-
-	if assessmentTarget == nil {
+	assessmentTarget, err := FindAssessmentTargetByID(ctx, conn, d.Id())
+	if errs.IsA[*retry.NotFoundError](err) {
 		log.Printf("[WARN] Inspector Classic Assessment Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "describing Inspector Classic Assessment Target (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, assessmentTarget.Arn)
@@ -144,7 +147,7 @@ func resourceAssessmentTargetDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func DescribeAssessmentTarget(ctx context.Context, conn *inspector.Client, arn string) (*awstypes.AssessmentTarget, error) {
+func FindAssessmentTargetByID(ctx context.Context, conn *inspector.Client, arn string) (*awstypes.AssessmentTarget, error) {
 	input := &inspector.DescribeAssessmentTargetsInput{
 		AssessmentTargetArns: []string{arn},
 	}
@@ -159,13 +162,13 @@ func DescribeAssessmentTarget(ctx context.Context, conn *inspector.Client, arn s
 		return nil, err
 	}
 
-	var assessmentTarget awstypes.AssessmentTarget
 	for _, target := range output.AssessmentTargets {
 		if aws.ToString(target.Arn) == arn {
-			assessmentTarget = target
-			break
+			return &target, nil
 		}
 	}
 
-	return &assessmentTarget, nil
+	return nil, &retry.NotFoundError{
+		LastRequest: input,
+	}
 }
