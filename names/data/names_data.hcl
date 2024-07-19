@@ -1115,7 +1115,7 @@ service "chime" {
 
   sdk {
     id             = "Chime"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -2663,7 +2663,7 @@ service "dataexchange" {
 
   sdk {
     id             = "DataExchange"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -2692,7 +2692,7 @@ service "datapipeline" {
 
   sdk {
     id             = "Data Pipeline"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -2771,7 +2771,7 @@ service "detective" {
 
   sdk {
     id             = "Detective"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -2915,7 +2915,7 @@ service "dms" {
 
   sdk {
     id             = "Database Migration Service"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -3253,16 +3253,12 @@ service "ecs" {
 
   sdk {
     id             = "ECS"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
     provider_name_upper = "ECS"
     human_friendly      = "ECS (Elastic Container)"
-  }
-
-  client {
-    go_v1_client_typename = "ECS"
   }
 
   endpoint_info {
@@ -3419,16 +3415,12 @@ service "elasticache" {
 
   sdk {
     id             = "ElastiCache"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
     provider_name_upper = "ElastiCache"
     human_friendly      = "ElastiCache"
-  }
-
-  client {
-    go_v1_client_typename = "ElastiCache"
   }
 
   endpoint_info {
@@ -3494,7 +3486,7 @@ service "elbv2" {
 
   sdk {
     id             = "Elastic Load Balancing v2"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
@@ -8364,7 +8356,7 @@ service "serverlessrepo" {
 
   sdk {
     id             = "ServerlessApplicationRepository"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {

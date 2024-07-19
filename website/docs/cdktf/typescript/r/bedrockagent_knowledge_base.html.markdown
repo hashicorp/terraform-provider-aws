@@ -200,4 +200,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Knowledge Base using 
 % terraform import aws_bedrockagent_knowledge_base.example EMDPPAYPZI
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2bb4dc30ceb2f14d2e063de3a9e88b0506695f8293141822ad3164e8476c36b5 -->
+<!-- cache-key: cdktf-0.20.1 input-b066f3c025e8bea086ede7687b21c09f70798ae2d17ad6ff5afc8ca5546596a5 -->
