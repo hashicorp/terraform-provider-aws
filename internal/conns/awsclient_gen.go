@@ -33,6 +33,7 @@ import (
 	bedrockagent_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	budgets_sdkv2 "github.com/aws/aws-sdk-go-v2/service/budgets"
 	chatbot_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chatbot"
+	chime_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chime"
 	chimesdkmediapipelines_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines"
 	chimesdkvoice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
@@ -208,7 +209,6 @@ import (
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
-	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
@@ -386,8 +386,8 @@ func (c *AWSClient) ChatbotClient(ctx context.Context) *chatbot_sdkv2.Client {
 	return errs.Must(client[*chatbot_sdkv2.Client](ctx, c, names.Chatbot, make(map[string]any)))
 }
 
-func (c *AWSClient) ChimeConn(ctx context.Context) *chime_sdkv1.Chime {
-	return errs.Must(conn[*chime_sdkv1.Chime](ctx, c, names.Chime, make(map[string]any)))
+func (c *AWSClient) ChimeClient(ctx context.Context) *chime_sdkv2.Client {
+	return errs.Must(client[*chime_sdkv2.Client](ctx, c, names.Chime, make(map[string]any)))
 }
 
 func (c *AWSClient) ChimeSDKMediaPipelinesClient(ctx context.Context) *chimesdkmediapipelines_sdkv2.Client {

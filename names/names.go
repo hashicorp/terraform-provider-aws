@@ -48,6 +48,7 @@ const (
 	BedrockAgentEndpointID               = "bedrockagent"
 	BedrockEndpointID                    = "bedrock"
 	BudgetsEndpointID                    = "budgets"
+	ChimeEndpointID                      = "chime"
 	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"
 	ChimeSDKVoiceEndpointID              = "voice-chime"
 	Cloud9EndpointID                     = "cloud9"
