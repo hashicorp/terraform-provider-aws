@@ -296,8 +296,8 @@ func statusDBClusterSnapshot(ctx context.Context, conn *rds.RDS, id string) retr
 
 func waitDBClusterSnapshotCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBClusterSnapshot, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{ClusterSnapshotStatusCreating},
-		Target:     []string{ClusterSnapshotStatusAvailable},
+		Pending:    []string{clusterSnapshotStatusCreating},
+		Target:     []string{clusterSnapshotStatusAvailable},
 		Refresh:    statusDBClusterSnapshot(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
