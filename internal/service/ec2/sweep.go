@@ -3103,7 +3103,7 @@ func sweepVerifiedAccessTrustProviderAttachments(region string) error {
 
 				r := resourceVerifiedAccessInstanceTrustProviderAttachment()
 				d := r.Data(nil)
-				d.SetId(VerifiedAccessInstanceTrustProviderAttachmentCreateResourceID(vaiID, vatpID))
+				d.SetId(verifiedAccessInstanceTrustProviderAttachmentCreateResourceID(vaiID, vatpID))
 
 				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 			}
