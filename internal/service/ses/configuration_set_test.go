@@ -11,12 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -163,11 +163,11 @@ func TestAccSESConfigurationSet_deliveryOptions(t *testing.T) {
 		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetConfig_deliveryOptions(rName, awstypes.TlsPolicyRequire),
+				Config: testAccConfigurationSetConfig_deliveryOptions(rName, string(awstypes.TlsPolicyRequire)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", awstypes.TlsPolicyRequire),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", string(awstypes.TlsPolicyRequire)),
 				),
 			},
 			{
@@ -200,11 +200,11 @@ func TestAccSESConfigurationSet_Update_deliveryOptions(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfigurationSetConfig_deliveryOptions(rName, awstypes.TlsPolicyRequire),
+				Config: testAccConfigurationSetConfig_deliveryOptions(rName, string(awstypes.TlsPolicyRequire)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", awstypes.TlsPolicyRequire),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", string(awstypes.TlsPolicyRequire)),
 				),
 			},
 			{
@@ -213,11 +213,11 @@ func TestAccSESConfigurationSet_Update_deliveryOptions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationSetConfig_deliveryOptions(rName, awstypes.TlsPolicyOptional),
+				Config: testAccConfigurationSetConfig_deliveryOptions(rName, string(awstypes.TlsPolicyOptional)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", awstypes.TlsPolicyOptional),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", string(awstypes.TlsPolicyOptional)),
 				),
 			},
 			{
@@ -255,7 +255,7 @@ func TestAccSESConfigurationSet_emptyDeliveryOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", awstypes.TlsPolicyOptional),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", string(awstypes.TlsPolicyOptional)),
 				),
 			},
 			{
@@ -293,7 +293,7 @@ func TestAccSESConfigurationSet_Update_emptyDeliveryOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", awstypes.TlsPolicyOptional),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", string(awstypes.TlsPolicyOptional)),
 				),
 			},
 			{
@@ -416,7 +416,7 @@ func testAccCheckConfigurationSetDestroy(ctx context.Context) resource.TestCheck
 			})
 
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeConfigurationSetDoesNotExistException) {
+				if errs.IsA[*awstypes.ConfigurationSetDoesNotExistException](err) {
 					return nil
 				}
 				return err
