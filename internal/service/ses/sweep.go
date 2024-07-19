@@ -13,8 +13,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -25,12 +26,12 @@ func RegisterSweepers() {
 
 	resource.AddTestSweepers("aws_ses_domain_identity", &resource.Sweeper{
 		Name: "aws_ses_domain_identity",
-		F:    func(region string) error { return sweepIdentities(region, awstypes.IdentityTypeDomain) },
+		F:    func(region string) error { return sweepIdentities(region, string(awstypes.IdentityTypeDomain)) },
 	})
 
 	resource.AddTestSweepers("aws_ses_email_identity", &resource.Sweeper{
 		Name: "aws_ses_email_identity",
-		F:    func(region string) error { return sweepIdentities(region, awstypes.IdentityTypeEmailAddress) },
+		F:    func(region string) error { return sweepIdentities(region, string(awstypes.IdentityTypeEmailAddress)) },
 	})
 
 	resource.AddTestSweepers("aws_ses_receipt_rule_set", &resource.Sweeper{
@@ -51,7 +52,7 @@ func sweepConfigurationSets(region string) error {
 
 	for {
 		output, err := conn.ListConfigurationSets(ctx, input)
-		if awsv1.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping SES Configuration Sets sweep for %s: %s", region, err)
 			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
@@ -67,7 +68,7 @@ func sweepConfigurationSets(region string) error {
 			_, err := conn.DeleteConfigurationSet(ctx, &ses.DeleteConfigurationSetInput{
 				ConfigurationSetName: aws.String(name),
 			})
-			if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeConfigurationSetDoesNotExistException) {
+			if errs.IsA[*awstypes.ConfigurationSetDoesNotExistException](err) {
 				continue
 			}
 			if err != nil {
@@ -95,17 +96,20 @@ func sweepIdentities(region, identityType string) error {
 	}
 	conn := client.SESClient(ctx)
 	input := &ses.ListIdentitiesInput{
-		IdentityType: aws.String(identityType),
+		IdentityType: awstypes.IdentityType(identityType),
 	}
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListIdentitiesPagesWithContext(ctx, input, func(page *ses.ListIdentitiesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	paginator := ses.NewListIdentitiesPaginator(conn, input)
+
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(ctx)
+		if err != nil {
+			log.Printf("[ERROR] %s", sweeperErrs)
 		}
 
-		for _, identity := range page.Identities {
-			identity := aws.ToString(identity)
+		for _, identity := range output.Identities {
+			identity := identity
 
 			log.Printf("[INFO] Deleting SES Identity: %s", identity)
 			_, err = conn.DeleteIdentity(ctx, &ses.DeleteIdentityInput{
@@ -118,10 +122,9 @@ func sweepIdentities(region, identityType string) error {
 				continue
 			}
 		}
+	}
 
-		return !lastPage
-	})
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SES Identities sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -145,7 +148,7 @@ func sweepReceiptRuleSets(region string) error {
 	log.Printf("[INFO] Disabling any currently active SES Receipt Rule Set")
 	_, err = conn.SetActiveReceiptRuleSet(ctx, &ses.SetActiveReceiptRuleSetInput{})
 	// In some regions, this will return "InvalidAction" with no message
-	if awsv1.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InvalidAction") {
+	if awsv2.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InvalidAction") {
 		log.Printf("[WARN] Skipping SES Receipt Rule Sets sweep for %s: %s", region, err)
 		return nil
 	}
@@ -158,7 +161,7 @@ func sweepReceiptRuleSets(region string) error {
 
 	for {
 		output, err := conn.ListReceiptRuleSets(ctx, input)
-		if awsv1.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping SES Receipt Rule Sets sweep for %s: %s", region, err)
 			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
@@ -174,7 +177,7 @@ func sweepReceiptRuleSets(region string) error {
 			_, err := conn.DeleteReceiptRuleSet(ctx, &ses.DeleteReceiptRuleSetInput{
 				RuleSetName: aws.String(name),
 			})
-			if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeRuleSetDoesNotExistException) {
+			if errs.IsA[*awstypes.RuleSetDoesNotExistException](err) {
 				continue
 			}
 			if err != nil {
