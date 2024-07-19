@@ -146,7 +146,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "decoding AppStream User ID (%s): %s", d.Id(), err)
 	}
 
-	user, err := FindUserByUserNameAndAuthType(ctx, conn, userName, authType)
+	user, err := FindUserByTwoPartKey(ctx, conn, userName, authType)
 	if tfresource.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] AppStream User (%s) not found, removing from state", d.Id())
 		d.SetId("")

@@ -68,6 +68,7 @@ const (
 	DevOpsGuruEndpointID                 = "devops-guru"
 	DLMEndpointID                        = "dlm"
 	ECREndpointID                        = "api.ecr"
+	ECSEndpointID                        = "ecs"
 	EFSEndpointID                        = "elasticfilesystem"
 	EKSEndpointID                        = "eks"
 	ELBEndpointID                        = "elasticloadbalancing"
