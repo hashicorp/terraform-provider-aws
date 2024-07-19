@@ -251,7 +251,7 @@ func resourceEventSourceMapping() *schema.Resource {
 						"maximum_concurrency": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(2, 1000),
+							ValidateFunc: validation.IntAtLeast(2),
 						},
 					},
 				},

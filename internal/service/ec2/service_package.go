@@ -10,11 +10,8 @@ import (
 	retry_sdkv2 "github.com/aws/aws-sdk-go-v2/aws/retry"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
-	request_sdkv1 "github.com/aws/aws-sdk-go/aws/request"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
-	tfawserr_sdkv1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,70 +29,48 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*e
 			"tf_aws.endpoint": endpoint,
 		})
 		cfg.Endpoint = aws_sdkv1.String(endpoint)
-
-		if sess.Config.UseFIPSEndpoint == endpoints_sdkv1.FIPSEndpointStateEnabled {
-			tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
-			cfg.UseFIPSEndpoint = endpoints_sdkv1.FIPSEndpointStateDisabled
-		}
+	} else {
+		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
 	}
 
 	return ec2_sdkv1.New(sess.Copy(&cfg)), nil
-}
-
-// CustomizeConn customizes a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) CustomizeConn(ctx context.Context, conn *ec2_sdkv1.EC2) (*ec2_sdkv1.EC2, error) {
-	conn.Handlers.Retry.PushBack(func(r *request_sdkv1.Request) {
-		switch err := r.Error; r.Operation.Name {
-		case "RunInstances":
-			// `InsufficientInstanceCapacity` error has status code 500 and AWS SDK try retry this error by default.
-			if tfawserr_sdkv1.ErrCodeEquals(err, errCodeInsufficientInstanceCapacity) {
-				r.Retryable = aws_sdkv1.Bool(false)
-			}
-		}
-	})
-
-	return conn, nil
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ec2_sdkv2.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	return ec2_sdkv2.NewFromConfig(cfg, func(o *ec2_sdkv2.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			tflog.Debug(ctx, "setting endpoint", map[string]any{
-				"tf_aws.endpoint": endpoint,
-			})
-			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+	return ec2_sdkv2.NewFromConfig(cfg,
+		ec2_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *ec2_sdkv2.Options) {
+			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws_sdkv2.RetryerV2), retry_sdkv2.IsErrorRetryableFunc(func(err error) aws_sdkv2.Ternary {
+				if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "This call cannot be completed because there are pending VPNs or Virtual Interfaces") { // AttachVpnGateway, DetachVpnGateway
+					return aws_sdkv2.TrueTernary
+				}
 
-			if o.EndpointOptions.UseFIPSEndpoint == aws_sdkv2.FIPSEndpointStateEnabled {
-				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
-				o.EndpointOptions.UseFIPSEndpoint = aws_sdkv2.FIPSEndpointStateDisabled
-			}
-		}
+				if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInsufficientInstanceCapacity) { // CreateCapacityReservation, RunInstances
+					return aws_sdkv2.TrueTernary
+				}
 
-		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws_sdkv2.RetryerV2), retry_sdkv2.IsErrorRetryableFunc(func(err error) aws_sdkv2.Ternary {
-			if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "This call cannot be completed because there are pending VPNs or Virtual Interfaces") { // AttachVpnGateway, DetachVpnGateway
-				return aws_sdkv2.TrueTernary
-			}
+				if tfawserr_sdkv2.ErrMessageContains(err, errCodeOperationNotPermitted, "Endpoint cannot be created while another endpoint is being created") { // CreateClientVpnEndpoint
+					return aws_sdkv2.TrueTernary
+				}
 
-			if tfawserr_sdkv2.ErrMessageContains(err, errCodeOperationNotPermitted, "Endpoint cannot be created while another endpoint is being created") { // CreateClientVpnEndpoint
-				return aws_sdkv2.TrueTernary
-			}
+				if tfawserr_sdkv2.ErrMessageContains(err, errCodeConcurrentMutationLimitExceeded, "Cannot initiate another change for this endpoint at this time") { // CreateClientVpnRoute, DeleteClientVpnRoute
+					return aws_sdkv2.TrueTernary
+				}
 
-			if tfawserr_sdkv2.ErrMessageContains(err, errCodeConcurrentMutationLimitExceeded, "Cannot initiate another change for this endpoint at this time") { // CreateClientVpnRoute, DeleteClientVpnRoute
-				return aws_sdkv2.TrueTernary
-			}
+				if tfawserr_sdkv2.ErrMessageContains(err, errCodeVPNConnectionLimitExceeded, "maximum number of mutating objects has been reached") { // CreateVpnConnection
+					return aws_sdkv2.TrueTernary
+				}
 
-			if tfawserr_sdkv2.ErrMessageContains(err, errCodeVPNConnectionLimitExceeded, "maximum number of mutating objects has been reached") { // CreateVpnConnection
-				return aws_sdkv2.TrueTernary
-			}
+				if tfawserr_sdkv2.ErrMessageContains(err, errCodeVPNGatewayLimitExceeded, "maximum number of mutating objects has been reached") { // CreateVpnGateway
+					return aws_sdkv2.TrueTernary
+				}
 
-			if tfawserr_sdkv2.ErrMessageContains(err, errCodeVPNGatewayLimitExceeded, "maximum number of mutating objects has been reached") { // CreateVpnGateway
-				return aws_sdkv2.TrueTernary
-			}
-
-			return aws_sdkv2.UnknownTernary // Delegate to configured Retryer.
-		}))
-	}), nil
+				return aws_sdkv2.UnknownTernary // Delegate to configured Retryer.
+			}))
+		},
+	), nil
 }

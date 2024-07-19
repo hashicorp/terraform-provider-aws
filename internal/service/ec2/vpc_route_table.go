@@ -506,6 +506,10 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.Client, routeTableID stri
 			return fmt.Errorf("local route cannot be created but must exist to be adopted, %s %s does not exist", target, destination)
 		}
 
+		if err != nil {
+			return fmt.Errorf("finding local route %s %s: %w", target, destination, err)
+		}
+
 		return nil
 	}
 

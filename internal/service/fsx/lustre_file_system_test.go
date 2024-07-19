@@ -58,6 +58,7 @@ func TestAccFSxLustreFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct2),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1200"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, fsx.StorageTypeSsd),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct1),
@@ -67,10 +68,14 @@ func TestAccFSxLustreFileSystem_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -120,10 +125,14 @@ func TestAccFSxLustreFileSystem_dataCompression(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_basic(rName),
@@ -138,6 +147,44 @@ func TestAccFSxLustreFileSystem_dataCompression(t *testing.T) {
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "data_compression_type", fsx.DataCompressionTypeLz4),
 				),
+			},
+		},
+	})
+}
+
+func TestAccFSxLustreFileSystem_deleteConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	acctest.SkipIfEnvVarNotSet(t, "AWS_FSX_CREATE_FINAL_BACKUP")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLustreFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLustreFileSystemConfig_deleteConfig(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags."+acctest.CtKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags."+acctest.CtKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -164,10 +211,14 @@ func TestAccFSxLustreFileSystem_exportPath(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_exportPath(rName, "/prefix/"),
@@ -203,10 +254,14 @@ func TestAccFSxLustreFileSystem_importPath(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_importPath(rName, "/prefix/"),
@@ -241,10 +296,14 @@ func TestAccFSxLustreFileSystem_importedFileChunkSize(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_importedChunkSize(rName, 4096),
@@ -278,10 +337,14 @@ func TestAccFSxLustreFileSystem_securityGroupIDs(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_securityGroupIDs2(rName),
@@ -315,10 +378,14 @@ func TestAccFSxLustreFileSystem_storageCapacity(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_storageCapacity(rName, 1200),
@@ -352,10 +419,14 @@ func TestAccFSxLustreFileSystem_storageCapacityUpdate(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_storageCapacityScratch2(rName, 1200),
@@ -397,10 +468,14 @@ func TestAccFSxLustreFileSystem_fileSystemTypeVersion(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_typeVersion(rName, "2.12"),
@@ -435,10 +510,14 @@ func TestAccFSxLustreFileSystem_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -483,10 +562,14 @@ func TestAccFSxLustreFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_weeklyMaintenanceStartTime(rName, "2:02:02"),
@@ -520,10 +603,14 @@ func TestAccFSxLustreFileSystem_automaticBackupRetentionDays(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_automaticBackupRetentionDays(rName, 0),
@@ -564,10 +651,14 @@ func TestAccFSxLustreFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_dailyAutomaticBackupStartTime(rName, "02:02"),
@@ -607,10 +698,14 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent1(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -638,10 +733,14 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent1_perUnitStorageThroughp
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_persistent1DeploymentType(rName, 100),
@@ -681,10 +780,14 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent2(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -712,10 +815,14 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent2_perUnitStorageThroughp
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_persistent2DeploymentType(rName, 250),
@@ -751,10 +858,14 @@ func TestAccFSxLustreFileSystem_logConfig(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_log(rName, "ERROR_ONLY"),
@@ -914,10 +1025,14 @@ func TestAccFSxLustreFileSystem_rootSquashConfig(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_rootSquash(rName, "355534:64534"),
@@ -953,10 +1068,14 @@ func TestAccFSxLustreFileSystem_fromBackup(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs, "backup_id"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"backup_id",
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup"},
 			},
 		},
 	})
@@ -985,10 +1104,14 @@ func TestAccFSxLustreFileSystem_kmsKeyID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_kmsKeyID2(rName),
@@ -1025,10 +1148,14 @@ func TestAccFSxLustreFileSystem_deploymentTypeScratch2(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -1055,10 +1182,14 @@ func TestAccFSxLustreFileSystem_storageTypeHddDriveCacheRead(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -1085,10 +1216,14 @@ func TestAccFSxLustreFileSystem_storageTypeHddDriveCacheNone(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -1114,10 +1249,14 @@ func TestAccFSxLustreFileSystem_copyTagsToBackups(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -1143,10 +1282,14 @@ func TestAccFSxLustreFileSystem_autoImportPolicy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_autoImportPolicy(rName, "", "NEW_CHANGED"),
@@ -1240,6 +1383,23 @@ resource "aws_fsx_lustre_file_system" "test" {
   deployment_type  = data.aws_partition.current.partition == "aws-us-gov" ? "SCRATCH_2" : null # GovCloud does not support SCRATCH_1
 }
 `)
+}
+
+func testAccLustreFileSystemConfig_deleteConfig(rName, finalTagKey1, finalTagValue1, finalTagKey2, finalTagValue2 string) string {
+	return acctest.ConfigCompose(testAccLustreFileSystemConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_lustre_file_system" "test" {
+  skip_final_backup           = false
+  storage_capacity            = 1200
+  subnet_ids                  = aws_subnet.test[*].id
+  deployment_type             = "PERSISTENT_1"
+  per_unit_storage_throughput = 50
+
+  final_backup_tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, finalTagKey1, finalTagValue1, finalTagKey2, finalTagValue2))
 }
 
 func testAccLustreFileSystemConfig_exportPath(rName, exportPrefix string) string {

@@ -152,7 +152,7 @@ func (r *resourceSecurityConfig) Create(ctx context.Context, req resource.Create
 	if out == nil || out.SecurityConfigDetail == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, ResNameSecurityConfig, plan.Name.String(), nil),
-			err.Error(),
+			"Empty response.",
 		)
 		return
 	}
@@ -175,6 +175,14 @@ func (r *resourceSecurityConfig) Read(ctx context.Context, req resource.ReadRequ
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameSecurityConfig, state.ID.ValueString(), err),
+			err.Error(),
+		)
 		return
 	}
 

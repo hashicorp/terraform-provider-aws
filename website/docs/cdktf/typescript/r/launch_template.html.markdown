@@ -352,6 +352,7 @@ This configuration block supports the following:
       * ssd - solid state drive
     ```
 
+* `maxSpotPriceAsPercentageOfOptimalOnDemandPrice` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Conflicts with `spotMaxPricePercentageOverLowestPrice`
 * `memoryGibPerVcpu` - (Optional) Block describing the minimum and maximum amount of memory (GiB) per vCPU. Default is no minimum or maximum.
     * `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
     * `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
@@ -368,7 +369,7 @@ This configuration block supports the following:
 
     If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 * `requireHibernateSupport` - (Optional) Indicate whether instance types must support On-Demand Instance Hibernation, either `true` or `false`. Default is `false`.
-* `spotMaxPricePercentageOverLowestPrice` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100.
+* `spotMaxPricePercentageOverLowestPrice` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100. Conflicts with `maxSpotPriceAsPercentageOfOptimalOnDemandPrice`
 
     If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 * `totalLocalStorageGb` - (Optional) Block describing the minimum and maximum total local storage (GB). Default is no minimum or maximum.
@@ -530,4 +531,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8003f9c6450601e32f73e508e3a6c3a1d45c8eceab312b856d0b7abbfa41d04f -->
+<!-- cache-key: cdktf-0.20.1 input-fac8b79da8bd94f9c0667594305112d0c6b21bd2d1bb8287098c2f862313a5bf -->
