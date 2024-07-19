@@ -65,6 +65,31 @@ func comboChartVisualSchema() *schema.Schema {
 							"reference_lines":                  referenceLineSchema(referenceLinesMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
 							"secondary_y_axis_display_options": axisDisplayOptionsSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"secondary_y_axis_label_options":   chartAxisLabelOptionsSchema(),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
+							"single_axis_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SingleAxisOptions.html
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"y_axis_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_YAxisOptions.html
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"y_axis": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringInSlice(quicksight.SingleYAxisOption_Values(), false),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
 							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ComboChartSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
@@ -178,6 +203,9 @@ func expandComboChartConfiguration(tfList []interface{}) *quicksight.ComboChartC
 	if v, ok := tfMap["secondary_y_axis_label_options"].([]interface{}); ok && len(v) > 0 {
 		config.SecondaryYAxisLabelOptions = expandChartAxisLabelOptions(v)
 	}
+	if v, ok := tfMap["single_axis_options"].([]interface{}); ok && len(v) > 0 {
+		config.SingleAxisOptions = expandComboChartSingleAxisOptions(v)
+	}
 	if v, ok := tfMap["sort_configuration"].([]interface{}); ok && len(v) > 0 {
 		config.SortConfiguration = expandComboChartSortConfiguration(v)
 	}
@@ -266,6 +294,44 @@ func expandComboChartSortConfiguration(tfList []interface{}) *quicksight.ComboCh
 	return config
 }
 
+func expandComboChartSingleAxisOptions(tfList []interface{}) *quicksight.SingleAxisOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	config := &quicksight.SingleAxisOptions{}
+
+	if v, ok := tfMap["y_axis_options"].([]interface{}); ok && len(v) > 0 {
+		config.YAxisOptions = expandComboChartYAxisOptions(v)
+	}
+
+	return config
+}
+
+func expandComboChartYAxisOptions(tfList []interface{}) *quicksight.YAxisOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	config := &quicksight.YAxisOptions{}
+
+	if v, ok := tfMap["y_axis"].(string); ok {
+		config.YAxis = aws.String(v)
+	}
+
+	return config
+}
+
 func flattenComboChartVisual(apiObject *quicksight.ComboChartVisual) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -338,6 +404,9 @@ func flattenComboChartConfiguration(apiObject *quicksight.ComboChartConfiguratio
 	if apiObject.SecondaryYAxisLabelOptions != nil {
 		tfMap["secondary_y_axis_label_options"] = flattenChartAxisLabelOptions(apiObject.SecondaryYAxisLabelOptions)
 	}
+	if apiObject.SingleAxisOptions != nil {
+		tfMap["single_axis_options"] = flattenComboChartSingleAxisOptions(apiObject.SingleAxisOptions)
+	}
 	if apiObject.SortConfiguration != nil {
 		tfMap["sort_configuration"] = flattenComboChartSortConfiguration(apiObject.SortConfiguration)
 	}
@@ -381,6 +450,32 @@ func flattenComboChartAggregatedFieldWells(apiObject *quicksight.ComboChartAggre
 	}
 	if apiObject.LineValues != nil {
 		tfMap["line_values"] = flattenMeasureFields(apiObject.LineValues)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenComboChartSingleAxisOptions(apiObject *quicksight.SingleAxisOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.YAxisOptions != nil {
+		tfMap["y_axis_options"] = flattenComboChartYAxisOptions(apiObject.YAxisOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenComboChartYAxisOptions(apiObject *quicksight.YAxisOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.YAxis != nil {
+		tfMap["y_axis"] = aws.StringValue(apiObject.YAxis)
 	}
 
 	return []interface{}{tfMap}

@@ -1,0 +1,9 @@
+```release-note:enhancement
+resource/aws_quicksight_analysis: Add `single_axis_options` argument in `line_chart_visual` and `combo_chart_visual`
+```
+```release-note:enhancement
+resource/aws_quicksight_dashboard:  Add `single_axis_options` argument in `line_chart_visual` and `combo_chart_visual`
+```
+```release-note:enhancement
+resource/aws_quicksight_template:  Add `single_axis_options` argument in `line_chart_visual` and `combo_chart_visual`
+```
