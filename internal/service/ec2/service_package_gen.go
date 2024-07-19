@@ -58,10 +58,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Instance Metadata Defaults",
 		},
 		{
-			Factory: newResourceEndpointServicePrivateDNSVerification,
-			Name:    "Endpoint Service Private DNS Verification",
-		},
-		{
 			Factory: newSecurityGroupEgressRuleResource,
 			Name:    "Security Group Egress Rule",
 			Tags: &types.ServicePackageResourceTags{
@@ -78,6 +74,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newVPCEndpointPrivateDNSResource,
 			Name:    "VPC Endpoint Private DNS",
+		},
+		{
+			Factory: newVPCEndpointServicePrivateDNSVerificationResource,
+			Name:    "VPC Endpoint Service Private DNS Verification",
 		},
 	}
 }
