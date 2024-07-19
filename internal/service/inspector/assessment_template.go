@@ -11,13 +11,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -130,20 +133,15 @@ func resourceAssessmentTemplateRead(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
-	resp, err := conn.DescribeAssessmentTemplates(ctx, &inspector.DescribeAssessmentTemplatesInput{
-		AssessmentTemplateArns: []string{d.Id()},
-	})
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Inspector Classic Assessment Template (%s): %s", d.Id(), err)
-	}
-
-	if resp.AssessmentTemplates == nil || len(resp.AssessmentTemplates) == 0 {
+	template, err := FindAssessmentTemplateByID(ctx, conn, d.Id())
+	if errs.IsA[*retry.NotFoundError](err) {
 		log.Printf("[WARN] Inspector Classic Assessment Template (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
-
-	template := resp.AssessmentTemplates[0]
+	if err != nil {
+		return create.AppendDiagError(diags, names.Inspector, create.ErrActionReading, ResNameAssessmentTemplate, d.Id(), err)
+	}
 
 	arn := aws.ToString(template.Arn)
 	d.Set(names.AttrARN, arn)
@@ -208,6 +206,32 @@ func resourceAssessmentTemplateDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	return diags
+}
+
+func FindAssessmentTemplateByID(ctx context.Context, conn *inspector.Client, arn string) (*awstypes.AssessmentTemplate, error) {
+	in := &inspector.DescribeAssessmentTargetsInput{
+		AssessmentTargetArns: []string{arn},
+	}
+
+	out, err := conn.DescribeAssessmentTemplates(ctx, &inspector.DescribeAssessmentTemplatesInput{
+		AssessmentTemplateArns: []string{arn},
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out.AssessmentTemplates == nil || len(out.AssessmentTemplates) == 0 {
+		return nil, &retry.NotFoundError{
+			LastRequest: in,
+		}
+	}
+
+	if i := len(out.AssessmentTemplates); i > 1 {
+		return nil, tfresource.NewTooManyResultsError(i, in)
+	}
+
+	return &out.AssessmentTemplates[0], nil
 }
 
 func expandEventSubscriptions(tfList []interface{}, templateArn *string) []*inspector.SubscribeToEventInput {
