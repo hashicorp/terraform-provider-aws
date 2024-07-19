@@ -1115,7 +1115,7 @@ service "chime" {
 
   sdk {
     id             = "Chime"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -3386,16 +3386,12 @@ service "elastictranscoder" {
 
   sdk {
     id             = "Elastic Transcoder"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
     provider_name_upper = "ElasticTranscoder"
     human_friendly      = "Elastic Transcoder"
-  }
-
-  client {
-    go_v1_client_typename = "ElasticTranscoder"
   }
 
   endpoint_info {
@@ -3800,7 +3796,7 @@ service "emrcontainers" {
 
   sdk {
     id             = "EMR containers"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4950,7 +4946,7 @@ service "ivs" {
 
   sdk {
     id             = "ivs"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
