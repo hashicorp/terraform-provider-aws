@@ -93,7 +93,7 @@ func findCapacityReservations(ctx context.Context, conn *ec2.Client, input *ec2.
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidCapacityReservationIdNotFound) {
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidCapacityReservationIdNotFound, errCodeInvalidReservationNotFound) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,

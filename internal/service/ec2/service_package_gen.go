@@ -51,7 +51,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Instance Metadata Defaults",
 		},
 		{
-			Factory: newResourceCapacityBlockReservation,
+			Factory: newCapacityBlockReservationResource,
 			Name:    "Capacity Block Reservation",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,

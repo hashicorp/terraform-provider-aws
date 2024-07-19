@@ -132,6 +132,25 @@ func waitCapacityReservationDeleted(ctx context.Context, conn *ec2.Client, id st
 	return nil, err
 }
 
+func waitCapacityBlockReservationActive(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.CapacityReservation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.CapacityReservationStatePaymentPending),
+		Target:     enum.Slice(awstypes.CapacityReservationStateActive, awstypes.CapacityReservationStateScheduled),
+		Refresh:    statusCapacityReservation(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.CapacityReservation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitCarrierGatewayCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.CarrierGateway, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CarrierGatewayStatePending),
