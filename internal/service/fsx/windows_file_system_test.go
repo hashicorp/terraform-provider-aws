@@ -71,6 +71,7 @@ func TestAccFSxWindowsFileSystem_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
 					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
@@ -147,6 +148,7 @@ func TestAccFSxWindowsFileSystem_singleAz2(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
 					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
@@ -181,6 +183,7 @@ func TestAccFSxWindowsFileSystem_storageTypeHdd(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
 					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
@@ -231,6 +234,7 @@ func TestAccFSxWindowsFileSystem_multiAz(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
 					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
@@ -265,6 +269,7 @@ func TestAccFSxWindowsFileSystem_aliases(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
 					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
@@ -317,6 +322,7 @@ func TestAccFSxWindowsFileSystem_automaticBackupRetentionDays(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
 					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
@@ -366,6 +372,7 @@ func TestAccFSxWindowsFileSystem_copyTagsToBackups(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
 					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
@@ -407,6 +414,7 @@ func TestAccFSxWindowsFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
 					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
@@ -418,6 +426,45 @@ func TestAccFSxWindowsFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 					testAccCheckWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", "02:02"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccFSxWindowsFileSystem_deleteConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem awstypes.FileSystem
+	resourceName := "aws_fsx_windows_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
+
+	acctest.SkipIfEnvVarNotSet(t, "AWS_FSX_CREATE_FINAL_BACKUP")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWindowsFileSystemConfig_deleteConfig(rName, domainName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags."+acctest.CtKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags."+acctest.CtKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -450,6 +497,7 @@ func TestAccFSxWindowsFileSystem_kmsKeyID(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
 					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
@@ -491,6 +539,7 @@ func TestAccFSxWindowsFileSystem_securityGroupIDs(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
 					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
@@ -532,8 +581,9 @@ func TestAccFSxWindowsFileSystem_selfManagedActiveDirectory(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrSecurityGroupIDs,
+					"final_backup_tags",
 					"self_managed_active_directory",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -567,6 +617,7 @@ func TestAccFSxWindowsFileSystem_storageCapacity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
 					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
@@ -609,9 +660,10 @@ func TestAccFSxWindowsFileSystem_fromBackup(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"backup_id",
+					"final_backup_tags",
 					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
-					"backup_id",
 				},
 			},
 		},
@@ -644,6 +696,7 @@ func TestAccFSxWindowsFileSystem_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
 					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
@@ -696,6 +749,7 @@ func TestAccFSxWindowsFileSystem_throughputCapacity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
 					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
@@ -737,6 +791,7 @@ func TestAccFSxWindowsFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
 					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
@@ -781,6 +836,7 @@ func TestAccFSxWindowsFileSystem_audit(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
 					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
@@ -835,6 +891,7 @@ func TestAccFSxWindowsFileSystem_diskIops(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
 					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
@@ -1033,6 +1090,23 @@ resource "aws_fsx_windows_file_system" "test" {
   }
 }
 `, rName, dailyAutomaticBackupStartTime))
+}
+
+func testAccWindowsFileSystemConfig_deleteConfig(rName, domain, finalTagKey1, finalTagValue1, finalTagKey2, finalTagValue2 string) string {
+	return acctest.ConfigCompose(testAccWindowsFileSystemConfig_base(rName, domain), fmt.Sprintf(`
+resource "aws_fsx_windows_file_system" "test" {
+  active_directory_id = aws_directory_service_directory.test.id
+  skip_final_backup   = false
+  storage_capacity    = 32
+  subnet_ids          = [aws_subnet.test[0].id]
+  throughput_capacity = 8
+
+  final_backup_tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, finalTagKey1, finalTagValue1, finalTagKey2, finalTagValue2))
 }
 
 func testAccWindowsFileSystemConfig_kmsKeyID1(rName, domain string) string {

@@ -107,6 +107,7 @@ func resourceONTAPVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"final_backup_tags": tftags.TagsSchema(),
 			"flexcache_endpoint_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -488,7 +489,12 @@ func resourceONTAPVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(
+		"final_backup_tags",
+		"skip_final_backup",
+		names.AttrTags,
+		names.AttrTagsAll,
+	) {
 		ontapConfig := &awstypes.UpdateOntapVolumeConfiguration{}
 
 		if d.HasChange("copy_tags_to_backups") {
@@ -562,14 +568,20 @@ func resourceONTAPVolumeDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
-	log.Printf("[DEBUG] Deleting FSx for NetApp ONTAP Volume: %s", d.Id())
-	_, err := conn.DeleteVolume(ctx, &fsx.DeleteVolumeInput{
+	input := &fsx.DeleteVolumeInput{
 		OntapConfiguration: &awstypes.DeleteVolumeOntapConfiguration{
 			BypassSnaplockEnterpriseRetention: aws.Bool(d.Get("bypass_snaplock_enterprise_retention").(bool)),
 			SkipFinalBackup:                   aws.Bool(d.Get("skip_final_backup").(bool)),
 		},
 		VolumeId: aws.String(d.Id()),
-	})
+	}
+
+	if v, ok := d.GetOk("final_backup_tags"); ok && len(v.(map[string]interface{})) > 0 {
+		input.OntapConfiguration.FinalBackupTags = Tags(tftags.New(ctx, v))
+	}
+
+	log.Printf("[DEBUG] Deleting FSx for NetApp ONTAP Volume: %s", d.Id())
+	_, err := conn.DeleteVolume(ctx, input)
 
 	if errs.IsA[*awstypes.VolumeNotFound](err) {
 		return diags

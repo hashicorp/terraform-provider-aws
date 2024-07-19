@@ -88,6 +88,14 @@ func resourceOpenZFSFileSystem() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
 				),
 			},
+			"delete_options": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[awstypes.DeleteFileSystemOpenZFSOption](),
+				},
+			},
 			"deployment_type": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -129,6 +137,7 @@ func resourceOpenZFSFileSystem() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"final_backup_tags": tftags.TagsSchema(),
 			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -536,7 +545,13 @@ func resourceOpenZFSFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(
+		"delete_options",
+		"final_backup_tags",
+		"skip_final_backup",
+		names.AttrTags,
+		names.AttrTagsAll,
+	) {
 		input := &fsx.UpdateFileSystemInput{
 			ClientRequestToken:   aws.String(id.UniqueId()),
 			FileSystemId:         aws.String(d.Id()),
@@ -635,13 +650,23 @@ func resourceOpenZFSFileSystemDelete(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
-	log.Printf("[DEBUG] Deleting FSx for OpenZFS File System: %s", d.Id())
-	_, err := conn.DeleteFileSystem(ctx, &fsx.DeleteFileSystemInput{
+	input := &fsx.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
 		OpenZFSConfiguration: &awstypes.DeleteFileSystemOpenZFSConfiguration{
 			SkipFinalBackup: aws.Bool(d.Get("skip_final_backup").(bool)),
 		},
-	})
+	}
+
+	if v, ok := d.GetOk("delete_options"); ok {
+		input.OpenZFSConfiguration.Options = flex.ExpandStringyValueSet[awstypes.DeleteFileSystemOpenZFSOption](v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("final_backup_tags"); ok && len(v.(map[string]interface{})) > 0 {
+		input.OpenZFSConfiguration.FinalBackupTags = Tags(tftags.New(ctx, v))
+	}
+
+	log.Printf("[DEBUG] Deleting FSx for OpenZFS File System: %s", d.Id())
+	_, err := conn.DeleteFileSystem(ctx, input)
 
 	if errs.IsA[*awstypes.FileSystemNotFound](err) {
 		return diags

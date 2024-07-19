@@ -335,12 +335,12 @@ func resourceCluster() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customizeDiffValidateClusterAZMode,
+			clusterValidateAZMode,
 			customizeDiffValidateClusterEngineVersion,
 			customizeDiffEngineVersionForceNewOnDowngrade,
-			customizeDiffValidateClusterNumCacheNodes,
-			customizeDiffClusterMemcachedNodeType,
-			customizeDiffValidateClusterMemcachedSnapshotIdentifier,
+			clusterValidateNumCacheNodes,
+			clusterForceNewOnMemcachedNodeTypeChange,
+			clusterValidateMemcachedSnapshotIdentifier,
 			verify.SetTagsDiff,
 		),
 	}
@@ -995,4 +995,50 @@ func setFromCacheCluster(d *schema.ResourceData, c *awstypes.CacheCluster) error
 	d.Set("maintenance_window", c.PreferredMaintenanceWindow)
 
 	return nil
+}
+
+// clusterValidateAZMode validates that `num_cache_nodes` is greater than 1 when `az_mode` is "cross-az"
+func clusterValidateAZMode(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if v, ok := diff.GetOk("az_mode"); !ok || awstypes.AZMode(v.(string)) != awstypes.AZModeCrossAz {
+		return nil
+	}
+	if v, ok := diff.GetOk("num_cache_nodes"); !ok || v.(int) != 1 {
+		return nil
+	}
+	return errors.New(`az_mode "cross-az" is not supported with num_cache_nodes = 1`)
+}
+
+// clusterValidateNumCacheNodes validates that `num_cache_nodes` is 1 when `engine` is "redis"
+func clusterValidateNumCacheNodes(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineMemcached {
+		return nil
+	}
+	if v, ok := diff.GetOk("num_cache_nodes"); !ok || v.(int) == 1 {
+		return nil
+	}
+	return errors.New(`engine "redis" does not support num_cache_nodes > 1`)
+}
+
+// clusterForceNewOnMemcachedNodeTypeChange causes re-creation when `node_type` is changed and `engine` is "memcached"
+func clusterForceNewOnMemcachedNodeTypeChange(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	// Engine memcached does not currently support vertical scaling
+	// https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/Scaling.html#Scaling.Memcached.Vertically
+	if diff.Id() == "" || !diff.HasChange("node_type") {
+		return nil
+	}
+	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis {
+		return nil
+	}
+	return diff.ForceNew("node_type")
+}
+
+// clusterValidateMemcachedSnapshotIdentifier validates that `final_snapshot_identifier` is not set when `engine` is "memcached"
+func clusterValidateMemcachedSnapshotIdentifier(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis {
+		return nil
+	}
+	if _, ok := diff.GetOk(names.AttrFinalSnapshotIdentifier); !ok {
+		return nil
+	}
+	return errors.New(`engine "memcached" does not support final_snapshot_identifier`)
 }

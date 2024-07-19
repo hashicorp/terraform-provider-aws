@@ -167,6 +167,7 @@ func resourceWindowsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"final_backup_tags": tftags.TagsSchema(),
 			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -543,7 +544,13 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if d.HasChangesExcept("aliases", names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(
+		"aliases",
+		"final_backup_tags",
+		"skip_final_backup",
+		names.AttrTags,
+		names.AttrTagsAll,
+	) {
 		input := &fsx.UpdateFileSystemInput{
 			ClientRequestToken:   aws.String(id.UniqueId()),
 			FileSystemId:         aws.String(d.Id()),
@@ -611,6 +618,10 @@ func resourceWindowsFileSystemDelete(ctx context.Context, d *schema.ResourceData
 		WindowsConfiguration: &awstypes.DeleteFileSystemWindowsConfiguration{
 			SkipFinalBackup: aws.Bool(d.Get("skip_final_backup").(bool)),
 		},
+	}
+
+	if v, ok := d.GetOk("final_backup_tags"); ok && len(v.(map[string]interface{})) > 0 {
+		input.WindowsConfiguration.FinalBackupTags = Tags(tftags.New(ctx, v))
 	}
 
 	log.Printf("[DEBUG] Deleting FSx for Windows File Server File System: %s", d.Id())

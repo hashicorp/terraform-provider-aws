@@ -33,6 +33,7 @@ import (
 	bedrockagent_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	budgets_sdkv2 "github.com/aws/aws-sdk-go-v2/service/budgets"
 	chatbot_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chatbot"
+	chime_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chime"
 	chimesdkmediapipelines_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines"
 	chimesdkvoice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
@@ -67,10 +68,14 @@ import (
 	costexplorer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	costoptimizationhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	customerprofiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/customerprofiles"
+	databasemigrationservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	databrew_sdkv2 "github.com/aws/aws-sdk-go-v2/service/databrew"
+	dataexchange_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dataexchange"
+	datapipeline_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datapipeline"
 	datasync_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datasync"
 	datazone_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datazone"
 	dax_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dax"
+	detective_sdkv2 "github.com/aws/aws-sdk-go-v2/service/detective"
 	devicefarm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devicefarm"
 	devopsguru_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
@@ -89,7 +94,9 @@ import (
 	elasticbeanstalk_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 	elasticloadbalancing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	elasticloadbalancingv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	elastictranscoder_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elastictranscoder"
 	emr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emr"
+	emrcontainers_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrcontainers"
 	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	eventbridge_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	evidently_sdkv2 "github.com/aws/aws-sdk-go-v2/service/evidently"
@@ -112,6 +119,7 @@ import (
 	iot_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iot"
 	iotanalytics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iotanalytics"
 	iotevents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iotevents"
+	ivs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ivs"
 	ivschat_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ivschat"
 	kafka_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kafka"
 	kafkaconnect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kafkaconnect"
@@ -204,25 +212,16 @@ import (
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
-	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
-	databasemigrationservice_sdkv1 "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	dataexchange_sdkv1 "github.com/aws/aws-sdk-go/service/dataexchange"
-	datapipeline_sdkv1 "github.com/aws/aws-sdk-go/service/datapipeline"
-	detective_sdkv1 "github.com/aws/aws-sdk-go/service/detective"
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
-	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	elastictranscoder_sdkv1 "github.com/aws/aws-sdk-go/service/elastictranscoder"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
-	emrcontainers_sdkv1 "github.com/aws/aws-sdk-go/service/emrcontainers"
 	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
 	glue_sdkv1 "github.com/aws/aws-sdk-go/service/glue"
 	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	inspector_sdkv1 "github.com/aws/aws-sdk-go/service/inspector"
-	ivs_sdkv1 "github.com/aws/aws-sdk-go/service/ivs"
 	kinesisanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	kinesisanalyticsv2_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
@@ -387,8 +386,8 @@ func (c *AWSClient) ChatbotClient(ctx context.Context) *chatbot_sdkv2.Client {
 	return errs.Must(client[*chatbot_sdkv2.Client](ctx, c, names.Chatbot, make(map[string]any)))
 }
 
-func (c *AWSClient) ChimeConn(ctx context.Context) *chime_sdkv1.Chime {
-	return errs.Must(conn[*chime_sdkv1.Chime](ctx, c, names.Chime, make(map[string]any)))
+func (c *AWSClient) ChimeClient(ctx context.Context) *chime_sdkv2.Client {
+	return errs.Must(client[*chime_sdkv2.Client](ctx, c, names.Chime, make(map[string]any)))
 }
 
 func (c *AWSClient) ChimeSDKMediaPipelinesClient(ctx context.Context) *chimesdkmediapipelines_sdkv2.Client {
@@ -523,8 +522,8 @@ func (c *AWSClient) DLMClient(ctx context.Context) *dlm_sdkv2.Client {
 	return errs.Must(client[*dlm_sdkv2.Client](ctx, c, names.DLM, make(map[string]any)))
 }
 
-func (c *AWSClient) DMSConn(ctx context.Context) *databasemigrationservice_sdkv1.DatabaseMigrationService {
-	return errs.Must(conn[*databasemigrationservice_sdkv1.DatabaseMigrationService](ctx, c, names.DMS, make(map[string]any)))
+func (c *AWSClient) DMSClient(ctx context.Context) *databasemigrationservice_sdkv2.Client {
+	return errs.Must(client[*databasemigrationservice_sdkv2.Client](ctx, c, names.DMS, make(map[string]any)))
 }
 
 func (c *AWSClient) DRSClient(ctx context.Context) *drs_sdkv2.Client {
@@ -539,12 +538,12 @@ func (c *AWSClient) DataBrewClient(ctx context.Context) *databrew_sdkv2.Client {
 	return errs.Must(client[*databrew_sdkv2.Client](ctx, c, names.DataBrew, make(map[string]any)))
 }
 
-func (c *AWSClient) DataExchangeConn(ctx context.Context) *dataexchange_sdkv1.DataExchange {
-	return errs.Must(conn[*dataexchange_sdkv1.DataExchange](ctx, c, names.DataExchange, make(map[string]any)))
+func (c *AWSClient) DataExchangeClient(ctx context.Context) *dataexchange_sdkv2.Client {
+	return errs.Must(client[*dataexchange_sdkv2.Client](ctx, c, names.DataExchange, make(map[string]any)))
 }
 
-func (c *AWSClient) DataPipelineConn(ctx context.Context) *datapipeline_sdkv1.DataPipeline {
-	return errs.Must(conn[*datapipeline_sdkv1.DataPipeline](ctx, c, names.DataPipeline, make(map[string]any)))
+func (c *AWSClient) DataPipelineClient(ctx context.Context) *datapipeline_sdkv2.Client {
+	return errs.Must(client[*datapipeline_sdkv2.Client](ctx, c, names.DataPipeline, make(map[string]any)))
 }
 
 func (c *AWSClient) DataSyncClient(ctx context.Context) *datasync_sdkv2.Client {
@@ -559,8 +558,8 @@ func (c *AWSClient) DeployClient(ctx context.Context) *codedeploy_sdkv2.Client {
 	return errs.Must(client[*codedeploy_sdkv2.Client](ctx, c, names.Deploy, make(map[string]any)))
 }
 
-func (c *AWSClient) DetectiveConn(ctx context.Context) *detective_sdkv1.Detective {
-	return errs.Must(conn[*detective_sdkv1.Detective](ctx, c, names.Detective, make(map[string]any)))
+func (c *AWSClient) DetectiveClient(ctx context.Context) *detective_sdkv2.Client {
+	return errs.Must(client[*detective_sdkv2.Client](ctx, c, names.Detective, make(map[string]any)))
 }
 
 func (c *AWSClient) DevOpsGuruClient(ctx context.Context) *devopsguru_sdkv2.Client {
@@ -603,10 +602,6 @@ func (c *AWSClient) ECRPublicClient(ctx context.Context) *ecrpublic_sdkv2.Client
 	return errs.Must(client[*ecrpublic_sdkv2.Client](ctx, c, names.ECRPublic, make(map[string]any)))
 }
 
-func (c *AWSClient) ECSConn(ctx context.Context) *ecs_sdkv1.ECS {
-	return errs.Must(conn[*ecs_sdkv1.ECS](ctx, c, names.ECS, make(map[string]any)))
-}
-
 func (c *AWSClient) ECSClient(ctx context.Context) *ecs_sdkv2.Client {
 	return errs.Must(client[*ecs_sdkv2.Client](ctx, c, names.ECS, make(map[string]any)))
 }
@@ -635,8 +630,8 @@ func (c *AWSClient) EMRClient(ctx context.Context) *emr_sdkv2.Client {
 	return errs.Must(client[*emr_sdkv2.Client](ctx, c, names.EMR, make(map[string]any)))
 }
 
-func (c *AWSClient) EMRContainersConn(ctx context.Context) *emrcontainers_sdkv1.EMRContainers {
-	return errs.Must(conn[*emrcontainers_sdkv1.EMRContainers](ctx, c, names.EMRContainers, make(map[string]any)))
+func (c *AWSClient) EMRContainersClient(ctx context.Context) *emrcontainers_sdkv2.Client {
+	return errs.Must(client[*emrcontainers_sdkv2.Client](ctx, c, names.EMRContainers, make(map[string]any)))
 }
 
 func (c *AWSClient) EMRServerlessClient(ctx context.Context) *emrserverless_sdkv2.Client {
@@ -651,8 +646,8 @@ func (c *AWSClient) ElasticBeanstalkClient(ctx context.Context) *elasticbeanstal
 	return errs.Must(client[*elasticbeanstalk_sdkv2.Client](ctx, c, names.ElasticBeanstalk, make(map[string]any)))
 }
 
-func (c *AWSClient) ElasticTranscoderConn(ctx context.Context) *elastictranscoder_sdkv1.ElasticTranscoder {
-	return errs.Must(conn[*elastictranscoder_sdkv1.ElasticTranscoder](ctx, c, names.ElasticTranscoder, make(map[string]any)))
+func (c *AWSClient) ElasticTranscoderClient(ctx context.Context) *elastictranscoder_sdkv2.Client {
+	return errs.Must(client[*elastictranscoder_sdkv2.Client](ctx, c, names.ElasticTranscoder, make(map[string]any)))
 }
 
 func (c *AWSClient) ElasticsearchConn(ctx context.Context) *elasticsearchservice_sdkv1.ElasticsearchService {
@@ -731,8 +726,8 @@ func (c *AWSClient) IAMClient(ctx context.Context) *iam_sdkv2.Client {
 	return errs.Must(client[*iam_sdkv2.Client](ctx, c, names.IAM, make(map[string]any)))
 }
 
-func (c *AWSClient) IVSConn(ctx context.Context) *ivs_sdkv1.IVS {
-	return errs.Must(conn[*ivs_sdkv1.IVS](ctx, c, names.IVS, make(map[string]any)))
+func (c *AWSClient) IVSClient(ctx context.Context) *ivs_sdkv2.Client {
+	return errs.Must(client[*ivs_sdkv2.Client](ctx, c, names.IVS, make(map[string]any)))
 }
 
 func (c *AWSClient) IVSChatClient(ctx context.Context) *ivschat_sdkv2.Client {
