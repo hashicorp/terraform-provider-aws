@@ -224,6 +224,7 @@ func (r *capacityBlockReservationResource) Read(ctx context.Context, request res
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
+
 		return
 	}
 

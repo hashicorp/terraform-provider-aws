@@ -32,6 +32,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory: newCapacityBlockReservationResource,
+			Name:    "Capacity Block Reservation",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
 			Factory: newEBSFastSnapshotRestoreResource,
 			Name:    "EBS Fast Snapshot Restore",
 		},
@@ -51,17 +58,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Instance Metadata Defaults",
 		},
 		{
-			Factory: newCapacityBlockReservationResource,
-			Name:    "Capacity Block Reservation",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			},
-		},
-		{
-			Factory: newResourceEndpointPrivateDNS,
-			Name:    "Endpoint Private DNS",
-		},
-		{
 			Factory: newResourceEndpointServicePrivateDNSVerification,
 			Name:    "Endpoint Service Private DNS Verification",
 		},
@@ -78,6 +74,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+		},
+		{
+			Factory: newVPCEndpointPrivateDNSResource,
+			Name:    "VPC Endpoint Private DNS",
 		},
 	}
 }
