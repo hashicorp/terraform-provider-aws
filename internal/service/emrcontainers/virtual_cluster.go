@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_emrcontainers_virtual_cluster", name="Virtual Cluster")
 // @Tags(identifierAttribute="arn")
-func ResourceVirtualCluster() *schema.Resource {
+func resourceVirtualCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualClusterCreate,
 		ReadWithoutTimeout:   resourceVirtualClusterRead,
@@ -115,7 +115,6 @@ func ResourceVirtualCluster() *schema.Resource {
 
 func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EMRContainersClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -141,10 +140,9 @@ func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EMRContainersClient(ctx)
 
-	vc, err := FindVirtualClusterByID(ctx, conn, d.Id())
+	vc, err := findVirtualClusterByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EMR Containers Virtual Cluster %s not found, removing from state", d.Id())
@@ -178,7 +176,6 @@ func resourceVirtualClusterUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceVirtualClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EMRContainersClient(ctx)
 
 	log.Printf("[INFO] Deleting EMR Containers Virtual Cluster: %s", d.Id())
@@ -204,11 +201,87 @@ func resourceVirtualClusterDelete(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "deleting EMR Containers Virtual Cluster (%s): %s", d.Id(), err)
 	}
 
-	if _, err = waitVirtualClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitVirtualClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EMR Containers Virtual Cluster (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func findVirtualCluster(ctx context.Context, conn *emrcontainers.Client, input *emrcontainers.DescribeVirtualClusterInput) (*awstypes.VirtualCluster, error) {
+	output, err := conn.DescribeVirtualCluster(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.VirtualCluster == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.VirtualCluster, nil
+}
+
+func findVirtualClusterByID(ctx context.Context, conn *emrcontainers.Client, id string) (*awstypes.VirtualCluster, error) {
+	input := &emrcontainers.DescribeVirtualClusterInput{
+		Id: aws.String(id),
+	}
+
+	output, err := findVirtualCluster(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.State == awstypes.VirtualClusterStateTerminated {
+		return nil, &retry.NotFoundError{
+			Message:     string(output.State),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func statusVirtualCluster(ctx context.Context, conn *emrcontainers.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findVirtualClusterByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func waitVirtualClusterDeleted(ctx context.Context, conn *emrcontainers.Client, id string, timeout time.Duration) (*awstypes.VirtualCluster, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.VirtualClusterStateTerminating),
+		Target:  []string{},
+		Refresh: statusVirtualCluster(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   1 * time.Minute,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if v, ok := outputRaw.(*awstypes.VirtualCluster); ok {
+		return v, err
+	}
+
+	return nil, err
 }
 
 func expandContainerProvider(tfMap map[string]interface{}) *awstypes.ContainerProvider {
@@ -304,80 +377,4 @@ func flattenEKSInfo(apiObject *awstypes.EksInfo) map[string]interface{} {
 	}
 
 	return tfMap
-}
-
-func findVirtualCluster(ctx context.Context, conn *emrcontainers.Client, input *emrcontainers.DescribeVirtualClusterInput) (*awstypes.VirtualCluster, error) {
-	output, err := conn.DescribeVirtualCluster(ctx, input)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.VirtualCluster == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.VirtualCluster, nil
-}
-
-func FindVirtualClusterByID(ctx context.Context, conn *emrcontainers.Client, id string) (*awstypes.VirtualCluster, error) {
-	input := &emrcontainers.DescribeVirtualClusterInput{
-		Id: aws.String(id),
-	}
-
-	output, err := findVirtualCluster(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output.State == awstypes.VirtualClusterStateTerminated {
-		return nil, &retry.NotFoundError{
-			Message:     string(output.State),
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
-func statusVirtualCluster(ctx context.Context, conn *emrcontainers.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindVirtualClusterByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.State), nil
-	}
-}
-
-func waitVirtualClusterDeleted(ctx context.Context, conn *emrcontainers.Client, id string, timeout time.Duration) (*awstypes.VirtualCluster, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.VirtualClusterStateTerminating),
-		Target:  []string{},
-		Refresh: statusVirtualCluster(ctx, conn, id),
-		Timeout: timeout,
-		Delay:   1 * time.Minute,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if v, ok := outputRaw.(*awstypes.VirtualCluster); ok {
-		return v, err
-	}
-
-	return nil, err
 }

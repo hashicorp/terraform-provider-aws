@@ -89,7 +89,7 @@ func dataSourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, m
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("virtual_cluster_id").(string)
-	vc, err := FindVirtualClusterByID(ctx, conn, id)
+	vc, err := findVirtualClusterByID(ctx, conn, id)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EMR Containers Virtual Cluster (%s): %s", id, err)

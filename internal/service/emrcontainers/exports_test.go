@@ -5,7 +5,9 @@ package emrcontainers
 
 // Exports for use in tests only.
 var (
-	ResourceJobTemplate = resourceJobTemplate
+	ResourceJobTemplate    = resourceJobTemplate
+	ResourceVirtualCluster = resourceVirtualCluster
 
-	FindJobTemplateByID = findJobTemplateByID
+	FindJobTemplateByID    = findJobTemplateByID
+	FindVirtualClusterByID = findVirtualClusterByID
 )

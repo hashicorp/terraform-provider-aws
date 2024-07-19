@@ -55,7 +55,7 @@ func sweepVirtualClusters(region string) error {
 				continue
 			}
 
-			r := ResourceVirtualCluster()
+			r := resourceVirtualCluster()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Id))
 
