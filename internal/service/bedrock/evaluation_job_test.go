@@ -80,10 +80,10 @@ func TestAccBedrockEvaluationJob_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					//resource.TestCheckResourceAttrPair(resourceName, "customer_cencryption_key_id", ""),
 					// eval config
-					resource.TestCheckResourceAttr(resourceName, "evaluation_job.automated_evaluation_config.metric_names.0", "Builtin.Accuracy"),
-					resource.TestCheckResourceAttr(resourceName, "evaluation_job.automated_evaluation_config.task_type.0", "Summarization"),
-					resource.TestCheckResourceAttr(resourceName, "evaluation_job.automated_evaluation_config.data_set.data_set.name", "Builtin.Bold"),
-					resource.TestCheckResourceAttr(resourceName, "evaluation_job.automated_evaluation_config.data_set.name", "Builtin.Bold"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_job.automated.evaluation_config.metric_names.0", "Builtin.Accuracy"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_job.automated.evaluation_config.task_type.0", "Summarization"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_job.automated.evaluation_config.data_set.data_set.name", "Builtin.Bold"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_job.automated.evaluation_config.data_set.name", "Builtin.Bold"),
 					// eval config end
 					// inf config
 					resource.TestCheckResourceAttrPair(resourceName, "evaluation_job_inference_config.models.bedrock_model.inference_params", modelName, "inference_types_supported.0"),
@@ -213,7 +213,7 @@ func testAccEvaluationJobConfig_base(iamName, bucketName string) string {
 data "aws_bedrock_foundation_models" "test" {}
 
 data "aws_bedrock_foundation_model" "test" {
-  model_id = data.aws_bedrock_foundation_models.test.model_summaries[0].model_id
+  model_id = "amazon.titan-text-express-v1"
 }
 
 resource "aws_s3_bucket" "test" {
@@ -304,7 +304,6 @@ resource "aws_bedrock_evaluation_job" "test" {
 
   evaluation_config {
     automated {
-      automated_evaluation_config {
         dataset_metric_configs {
           data_set {
             name = "Builtin.Bold"
@@ -312,16 +311,15 @@ resource "aws_bedrock_evaluation_job" "test" {
           metric_names = ["Builtin.Accuracy"]
           task_type    = "Summarization"
         }
-      }
     }
   }
 
   inference_config {
     models {
-      bedrock_model {
+      bedrock_model { 
         inference_params = tolist(data.aws_bedrock_foundation_model.test.inference_types_supported)[0]
         model_identifier = data.aws_bedrock_foundation_model.test.id
-      }
+		}
     }
   }
 

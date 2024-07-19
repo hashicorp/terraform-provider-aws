@@ -18,6 +18,7 @@ import (
 	// awstypes.<Type Name>.
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -28,11 +29,13 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -42,6 +45,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -99,6 +103,7 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 					stringvalidator.RegexMatches(regexache.MustCompile("^[a-z0-9](-*[a-z0-9]){0,62}$"), "arn must conform to ^[a-z0-9](-*[a-z0-9]){0,62}$"),
 				},
 			},
+			//framework.ARNAttributeComputedOnly()
 			"role_arn": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -118,85 +123,103 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 				Computed:   true,
 			},
 			names.AttrType: schema.StringAttribute{
-				Computed: true,
-			},
-			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.EvaluationJobType](),
 				Computed:   true,
 			},
+			names.AttrStatus: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.EvaluationJobStatus](),
+				Computed:   true,
+			},
 
-			//names.AttrTags:    tftags.TagsAttribute(),
-			//names.AttrTagsAll: tftags.TagsAttribute(), // not too sure how to do these
+			names.AttrTags: tftags.TagsAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			"evaluation_config": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[dEvaluationConfig](ctx),
-				Validators: []validator.Object{
-					/*
-						objectvalidator.ConflictsWith(path.Expressions{
-							path.MatchRoot("human_config"),
-						}...),
-					*/
+			"evaluation_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[EvaluationConfig](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
 				},
-				Blocks: map[string]schema.Block{
-					"automated": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[dAutomatedEvaluationConfig](ctx),
-						Blocks: map[string]schema.Block{
-							"dataset_metric_configs": schema.ListNestedBlock{
-								CustomType: fwtypes.NewListNestedObjectTypeOf[dEvaluationDatasetMetricConfig](ctx),
-								Validators: []validator.List{
-									listvalidator.SizeBetween(1, 5),
-									listvalidator.IsRequired(),
-								},
-								NestedObject: schema.NestedBlockObject{
-									Attributes: map[string]schema.Attribute{
-										"metric_names": schema.ListAttribute{
-											ElementType: types.StringType,
-											Required:    true,
-											Validators: []validator.List{
-												listvalidator.SizeBetween(1, 10),
-												listvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 63)),
-												listvalidator.ValueStringsAre(stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-zA-Z-_.]+$`), "metric_names must conform to: ^[0-9a-zA-Z-_.]+$ ")),
-											},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"automated": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[Automated](ctx),
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.List{
+								listvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("automated"),
+									path.MatchRelative().AtParent().AtName("human"),
+								),
+							},
+
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"dataset_metric_configs": schema.SetNestedBlock{
+										CustomType: fwtypes.NewSetNestedObjectTypeOf[DatasetMetricConfigs](ctx),
+										Validators: []validator.Set{
+											setvalidator.SizeBetween(1, 5),
+											setvalidator.IsRequired(),
 										},
-										"task_type": schema.StringAttribute{
-											Required: true,
-											Validators: []validator.String{
-												stringvalidator.LengthBetween(0, 2048),
-												//stringvalidator.RegexMatches(regexache.MustCompile("^arn:aws(-[^:]+)?:iam::([0-9]{12})?:role/.+$"), "role_arn must conform to ^arn:aws(-[^:]+)?:iam::([0-9]{12})?:role/.+$"),
-												stringvalidator.AtLeastOneOf(path.Expressions{
-													path.MatchRoot("Summarization"), path.MatchRoot("Classification"), path.MatchRoot("QuestionAndAnswer"), path.MatchRoot("Generation"), path.MatchRoot("Custom"),
-												}...),
-											},
-										},
-									},
-									Blocks: map[string]schema.Block{
-										"data_set": schema.SingleNestedBlock{
-											CustomType: fwtypes.NewObjectTypeOf[dEvaluationDataset](ctx),
-											Validators: []validator.Object{
-												objectvalidator.IsRequired(),
-											},
+										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"name": schema.StringAttribute{
+												"metric_names": schema.ListAttribute{
+													CustomType: fwtypes.ListOfStringType,
+													Required:   true,
+													Validators: []validator.List{
+														listvalidator.SizeAtLeast(1),
+														listvalidator.ValueStringsAre(stringvalidator.OneOf("Builtin.Accuracy", "Builtin.Robustness", "Builtin.Toxicity")),
+													},
+												},
+												"task_type": schema.StringAttribute{
 													Required: true,
 													Validators: []validator.String{
-														stringvalidator.LengthBetween(0, 63),
-														stringvalidator.RegexMatches(regexache.MustCompile("^[0-9a-zA-Z-_.]+$"), " must conform to ^arn:aws(-[^:]+)?:iam::([0-9]{12})?:role/.+$"),
-														stringvalidator.AtLeastOneOf(path.Expressions{
-															path.MatchRoot("Builtin.Bold"), path.MatchRoot("Builtin.BoolQ"), path.MatchRoot("Builtin.NaturalQuestions"), path.MatchRoot("Builtin.Gigaword"), path.MatchRoot("Builtin.RealToxicityPrompts"), path.MatchRoot("Builtin.TriviaQa"), path.MatchRoot("Builtin.WomensEcommerceClothingReviews"), path.MatchRoot("Builtin.Wikitext2"),
-														}...),
+														//stringvalidator.LengthBetween(0, 2048),
+														stringvalidator.OneOf("Summarization", "Classification", "QuestionAndAnswer", "Generation", "Custom"),
+														//path.Expressions{
+														//path.MatchRoot("Summarization"), path.MatchRoot("Classification"), path.MatchRoot("QuestionAndAnswer"), path.MatchRoot("Generation"), path.MatchRoot("Custom"),
+														//}...),
 													},
 												},
 											},
 											Blocks: map[string]schema.Block{
-												"evaluation_dataset_location": schema.SingleNestedBlock{
-													CustomType: fwtypes.NewObjectTypeOf[awstypes.EvaluationDatasetLocation](ctx),
-													Attributes: map[string]schema.Attribute{
-														"s3_uri": schema.StringAttribute{
-															Optional: true,
-															Validators: []validator.String{
-																stringvalidator.LengthBetween(1, 1024),
-																stringvalidator.RegexMatches(regexache.MustCompile("^s3://[a-z0-9][\\.\\-a-z0-9]{1,61}[a-z0-9](/.*)?$"), "role_arn must conform to ^arn:aws(-[^:]+)?:iam::([0-9]{12})?:role/.+$"),
+												"data_set": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[EvaluationDataset](ctx),
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
+
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"name": schema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	//stringvalidator.LengthBetween(0, 63),
+																	//stringvalidator.RegexMatches(regexache.MustCompile("^[0-9a-zA-Z-_.]+$"), " must conform to ^[0-9a-zA-Z-_.]+$"),
+																	stringvalidator.OneOf("Builtin.Bold", "Builtin.BoolQ", "Builtin.NaturalQuestions", "Builtin.Gigaword", "Builtin.RealToxicityPrompts", "Builtin.TriviaQa", "Builtin.WomensEcommerceClothingReviews", "Builtin.Wikitext2"),
+																},
+															},
+														},
+														Blocks: map[string]schema.Block{
+															"dataset_location": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[DatasetLocation](ctx),
+																PlanModifiers: []planmodifier.List{
+																	listplanmodifier.RequiresReplace(),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		"s3_uri": schema.StringAttribute{
+																			Optional: true,
+																			Validators: []validator.String{
+																				stringvalidator.LengthBetween(1, 1024),
+																				stringvalidator.RegexMatches(regexache.MustCompile("^s3://[a-z0-9][\\.\\-a-z0-9]{1,61}[a-z0-9](/.*)?$"), " must conform to ^^s3://[a-z0-9][\\.\\-a-z0-9]{1,61}[a-z0-9](/.*)?$"),
+																			},
+																		},
+																	},
+																},
 															},
 														},
 													},
@@ -207,26 +230,39 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 								},
 							},
 						},
+						"human": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[Human](ctx),
+							Validators: []validator.List{
+								listvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("automated"),
+									path.MatchRelative().AtParent().AtName("human"),
+								),
+							},
+						},
 					},
 				},
 			},
 			"inference_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dEvaluationInferenceConfig](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[EvaluationInferenceConfig](ctx),
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"models": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[dEvaluationModelConfig](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
+						"models": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[Models](ctx),
+							Validators: []validator.Set{
+								setvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
 									"bedrock_model": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[dEvaluationBedrockModel](ctx),
+										CustomType: fwtypes.NewListNestedObjectTypeOf[BedrockModel](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"inference_params": schema.StringAttribute{
-													Required: true,
+													Optional: true,
 													Validators: []validator.String{
 														stringvalidator.LengthBetween(1, 1023),
 													},
@@ -250,17 +286,23 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"output_data_config": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[dOutputDataConfig](ctx),
-				Validators: []validator.Object{
-					objectvalidator.IsRequired(),
+			"output_data_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[OutputDataConfig](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
 				},
-				Attributes: map[string]schema.Attribute{
-					"s3_uri": schema.StringAttribute{
-						Required: true,
-						Validators: []validator.String{
-							stringvalidator.LengthBetween(1, 1024),
-							stringvalidator.RegexMatches(regexache.MustCompile("^s3://[a-z0-9][\\.\\-a-z0-9]{1,61}[a-z0-9](/.*)?$"), "role_arn must conform to ^arn:aws(-[^:]+)?:iam::([0-9]{12})?:role/.+$"),
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"s3_uri": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 1024),
+								stringvalidator.RegexMatches(regexache.MustCompile("^s3://[a-z0-9][\\.\\-a-z0-9]{1,61}[a-z0-9](/.*)?$"), "role_arn must conform to ^arn:aws(-[^:]+)?:iam::([0-9]{12})?:role/.+$"),
+							},
 						},
 					},
 				},
@@ -269,19 +311,26 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 	}
 }
 func (r *resourceEvaluationJob) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	fmt.Println("real first")
 	conn := r.Meta().BedrockClient(ctx)
 	var plan dataEvaluationJob
-
+	fmt.Println("first")
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	fmt.Println("hello")
+	fmt.Println(plan.Description)
+	fmt.Println(plan.InferenceConfig.Elements())
+	fmt.Println(plan.EvaluationConfig.Elements())
+	fmt.Println(plan.Name)
 
 	in := &bedrock.CreateEvaluationJobInput{}
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	in.JobName = plan.Name.ValueStringPointer()
 
 	out, err := conn.CreateEvaluationJob(ctx, in)
 	if err != nil {
@@ -400,129 +449,65 @@ type dataEvaluationJob struct {
 	Type         fwtypes.StringEnum[awstypes.EvaluationJobType]   `tfsdk:"type"`
 	Status       fwtypes.StringEnum[awstypes.EvaluationJobStatus] `tfsdk:"status"`
 
-	ClientRequestToken      types.String                                      `tfsdk:"client_request_token"`
-	CustomerEncryptionKeyId types.String                                      `tfsdk:"customer_encryption_key_id"`
-	EvaluationConfig        fwtypes.ObjectValueOf[dEvaluationConfig]          `tfsdk:"evaluation_config"`
-	InferenceConfig         fwtypes.ObjectValueOf[dEvaluationInferenceConfig] `tfsdk:"inference_config"`
-	Description             types.String                                      `tfsdk:"description"`
-	Name                    types.String                                      `tfsdk:"name"`
-	//Tags                    types.Map                                         `tfsdk:"tags"`     // check these
-	//TagsAll                 types.Map                                         `tfsdk:"tags_all"` // check these
-	OutputDataConfig fwtypes.ObjectValueOf[dOutputDataConfig] `tfsdk:"output_data_config"`
-	RoleArn          types.String                             `tfsdk:"role_arn"`
-	Arn              types.String                             `tfsdk:"arn"`
-	Timeouts         timeouts.Value                           `tfsdk:"timeouts"`
-}
-
-type dataGetJob struct {
-	CreationTime            timetypes.RFC3339                                 `tfsdk:"creation_time"`
-	CustomerEncryptionKeyId types.String                                      `tfsdk:"customer_encryption_key_id"`
-	EvaluationConfig        fwtypes.ObjectValueOf[dAutomatedEvaluationConfig] `tfsdk:"evaluation_config"`
-	InferenceConfig         fwtypes.ObjectValueOf[dEvaluationInferenceConfig] `tfsdk:"inference_config"`
-	Arn                     types.String                                      `tfsdk:"arn"`
-	Name                    types.String                                      `tfsdk:"name"`
-	Type                    fwtypes.StringEnum[awstypes.EvaluationJobType]    `tfsdk:"type"`
-	//LastModifiedTime        timetypes.RFC3339                                           `tfsdk:"last_modified_time"`
-	OutOutputDataConfig fwtypes.ListNestedObjectValueOf[dEvaluationDatasetLocation] `tfsdk:"output_data_config"`
-	RoleArn             types.String                                                `tfsdk:"role_arn"`
-	Status              fwtypes.StringEnum[awstypes.EvaluationJobStatus]            `tfsdk:"status"`
+	ClientRequestToken      types.String                                               `tfsdk:"client_request_token"`
+	CustomerEncryptionKeyId types.String                                               `tfsdk:"customer_encryption_key_id"`
+	EvaluationConfig        fwtypes.ListNestedObjectValueOf[EvaluationConfig]          `tfsdk:"evaluation_config"`
+	InferenceConfig         fwtypes.ListNestedObjectValueOf[EvaluationInferenceConfig] `tfsdk:"inference_config"`
+	Description             types.String                                               `tfsdk:"description"`
+	Name                    types.String                                               `tfsdk:"name"`
+	Tags                    types.Map                                                  `tfsdk:"tags"` // check these
+	OutputDataConfig        fwtypes.ListNestedObjectValueOf[OutputDataConfig]          `tfsdk:"output_data_config"`
+	RoleArn                 types.String                                               `tfsdk:"role_arn"`
+	Arn                     types.String                                               `tfsdk:"arn"`
+	Timeouts                timeouts.Value                                             `tfsdk:"timeouts"`
 }
 
 // start of evaluation_config
-type dEvaluationConfig struct {
-	Automated fwtypes.ObjectValueOf[dAutomatedEvaluationConfig] `tfsdk:"automated"`
-	// Human             fwtypes.ListNestedObjectValueOf[dsHumanEvaluationConfig]   `tfsdk:"human"`
+type EvaluationConfig struct {
+	Automated fwtypes.ListNestedObjectValueOf[Automated] `tfsdk:"automated"`
+	Human     fwtypes.ListNestedObjectValueOf[Human]     `tfsdk:"human"`
 }
-type dAutomatedEvaluationConfig struct {
-	EvaluationDataSet fwtypes.ListNestedObjectValueOf[dEvaluationDatasetMetricConfig] `tfsdk:"dataset_metric_configs"` // this is a list make sure its a list
-	/*
-		Array Members: Minimum number of 1 item. Maximum number of 5 items.
-	*/
+type Human struct {
 }
-type dEvaluationDatasetMetricConfig struct {
-	Dataset     fwtypes.ObjectValueOf[dEvaluationDataset] `tfsdk:"dataset"`
-	MetricNames types.List                                `tfsdk:"metric_names"` // array members; min 1 max 10 items ; min length of items 1 max 63 ; pattern ^[0-9a-zA-Z-_.]+$ ; required yes
-	TaskType    types.String                              `tfsdk:"task_type"`    // min length of 1 max 63 ; pattern ^[A-Za-z0-9]+$ ; Valid values Summarization | Classification | QuestionAndAnswer | Generation | Custom ; required yes
+type Automated struct {
+	DatasetMetricConfigs fwtypes.SetNestedObjectValueOf[DatasetMetricConfigs] `tfsdk:"dataset_metric_configs"`
 }
-type dEvaluationDataset struct {
-	name types.String `tfsdk:"name"`
-	/*
-		Used to specify supported built-in prompt datasets. Valid values are Builtin.Bold, Builtin.BoolQ, Builtin.NaturalQuestions, Builtin.Gigaword, Builtin.RealToxicityPrompts, Builtin.TriviaQa, Builtin.T-Rex, Builtin.WomensEcommerceClothingReviews and Builtin.Wikitext2.
-
-		Type: String
-
-		Length Constraints: Minimum length of 1. Maximum length of 63.
-
-		Pattern: ^[0-9a-zA-Z-_.]+$
-
-		Required: Yes
-	*/
-	EvaluationDatasetLocation fwtypes.ObjectValueOf[dEvaluationDatasetLocation] `tfsdk:"evaluation_dataset_location"`
-	/*
-		Type: EvaluationDatasetLocation object
-
-		Note: This object is a Union. Only one member of this object can be specified or returned.
-
-		Required: No
-	*/
+type DatasetMetricConfigs struct {
+	Dataset     fwtypes.ListNestedObjectValueOf[EvaluationDataset] `tfsdk:"data_set"`
+	MetricNames fwtypes.ListValueOf[types.String]                  `tfsdk:"metric_names"`
+	TaskType    types.String                                       `tfsdk:"task_type"`
 }
-type dEvaluationDatasetLocation struct {
+type EvaluationDataset struct {
+	Name            types.String                                     `tfsdk:"name"`
+	DatasetLocation fwtypes.ListNestedObjectValueOf[DatasetLocation] `tfsdk:"dataset_location"`
+}
+type DatasetLocation struct {
 	S3Uri types.String `tfsdk:"s3_uri"`
-	/*
-		Length Constraints: Minimum length of 1. Maximum length of 1024.
-
-		Pattern: ^s3://[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9](/.*)?$
-
-		Required: No
-
-	*/
 }
 
 // end of evaluation_config
 
 // start of inference_config
-type dEvaluationInferenceConfig struct {
-	Models fwtypes.ListNestedObjectValueOf[dEvaluationModelConfig] `tfsdk:"models"`
+type EvaluationInferenceConfig struct {
+	Models fwtypes.SetNestedObjectValueOf[Models] `tfsdk:"models"`
 	/*
 		Array Members: Minimum number of 1 item. Maximum number of 2 items.
-
 		Required: No
 	*/
 }
 
-type dEvaluationModelConfig struct {
-	EvaluationModelConfig fwtypes.ObjectValueOf[dEvaluationBedrockModel] `tfsdk:"evaluation_model_config"`
+type Models struct {
+	BedrockModel fwtypes.ListNestedObjectValueOf[BedrockModel] `tfsdk:"bedrock_model"`
 }
 
-type dEvaluationBedrockModel struct {
+type BedrockModel struct {
 	InferenceParams types.String `tfsdk:"inference_params"`
-	/*
-		Each Amazon Bedrock support different inference parameters that change how the model behaves during inference.
 
-		Type: String
-
-		Length Constraints: Minimum length of 1. Maximum length of 1023.
-
-		Required: Yes
-	*/
 	ModelIdentifiers types.String `tfsdk:"model_identifier"`
-	/*
-
-		The ARN of the Amazon Bedrock model specified.
-
-		Type: String
-
-		Length Constraints: Minimum length of 1. Maximum length of 2048.
-
-		Pattern: ^arn:aws(-[^:]+)?:bedrock:[a-z0-9-]{1,20}:(([0-9]{12}:custom-model/[a-z0-9-]{1,63}[.]{1}[a-z0-9-]{1,63}(([:][a-z0-9-]{1,63}){0,2})?/[a-z0-9]{12})|(:foundation-model/([a-z0-9-]{1,63}[.]{1}[a-z0-9-]{1,63}([.]?[a-z0-9-]{1,63})([:][a-z0-9-]{1,63}){0,2})))|(([a-z0-9-]{1,63}[.]{1}[a-z0-9-]{1,63}([.]?[a-z0-9-]{1,63})([:][a-z0-9-]{1,63}){0,2}))|(([0-9a-zA-Z][_-]?)+)$
-
-		Required: Yes
-
-	*/
 }
 
 // end of evaluation_config
 
-type dOutputDataConfig struct {
+type OutputDataConfig struct {
 	S3Uri types.String `tfsdk:"s3_uri"`
 }
