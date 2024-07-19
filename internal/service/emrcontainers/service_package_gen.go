@@ -25,8 +25,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceVirtualCluster,
+			Factory:  dataSourceVirtualCluster,
 			TypeName: "aws_emrcontainers_virtual_cluster",
+			Name:     "Virtual Cluster",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
