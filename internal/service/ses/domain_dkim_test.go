@@ -10,9 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -56,8 +54,8 @@ func testAccCheckDomainDKIMDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			domain := rs.Primary.ID
 			params := &ses.GetIdentityDkimAttributesInput{
-				Identities: []*string{
-					aws.String(domain),
+				Identities: []string{
+					domain,
 				},
 			}
 
@@ -67,7 +65,7 @@ func testAccCheckDomainDKIMDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			if resp.DkimAttributes[domain] != nil {
+			if _, exists := resp.DkimAttributes[domain]; exists {
 				return fmt.Errorf("SES Domain Dkim %s still exists.", domain)
 			}
 		}
@@ -91,8 +89,8 @@ func testAccCheckDomainDKIMExists(ctx context.Context, n string) resource.TestCh
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		params := &ses.GetIdentityDkimAttributesInput{
-			Identities: []*string{
-				aws.String(domain),
+			Identities: []string{
+				domain,
 			},
 		}
 
@@ -101,7 +99,7 @@ func testAccCheckDomainDKIMExists(ctx context.Context, n string) resource.TestCh
 			return err
 		}
 
-		if response.DkimAttributes[domain] == nil {
+		if _, exists := response.DkimAttributes[domain]; !exists {
 			return fmt.Errorf("SES Domain DKIM %s not found in AWS", domain)
 		}
 
