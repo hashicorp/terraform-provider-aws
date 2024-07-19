@@ -537,6 +537,9 @@ func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta in
 		Id: aws.String(d.Id()),
 	})
 	if err != nil {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return diags
+		}
 		return sdkdiag.AppendErrorf(diags, "deleting Elastic Transcoder Pipeline: %s", err)
 	}
 	return diags

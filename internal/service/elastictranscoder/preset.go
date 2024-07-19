@@ -929,6 +929,9 @@ func resourcePresetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if err != nil {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return diags
+		}
 		return sdkdiag.AppendErrorf(diags, "deleting Elastic Transcoder Preset: %s", err)
 	}
 
