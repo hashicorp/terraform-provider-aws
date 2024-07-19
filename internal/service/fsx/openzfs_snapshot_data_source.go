@@ -22,7 +22,6 @@ import (
 )
 
 // @SDKDataSource("aws_fsx_openzfs_snapshot", name="OpenZFS Snapshot")
-// @Tags
 func dataSourceOpenzfsSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOpenZFSSnapshotRead,
@@ -67,7 +66,6 @@ func dataSourceOpenzfsSnapshot() *schema.Resource {
 func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &fsx.DescribeSnapshotsInput{}
@@ -107,7 +105,8 @@ func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 
 	snapshot := snapshots[0]
 	d.SetId(aws.ToString(snapshot.SnapshotId))
-	d.Set(names.AttrARN, snapshot.ResourceARN)
+	arn := aws.ToString(snapshot.ResourceARN)
+	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrCreationTime, snapshot.CreationTime.Format(time.RFC3339))
 	d.Set(names.AttrName, snapshot.Name)
 	d.Set(names.AttrSnapshotID, snapshot.SnapshotId)
@@ -116,10 +115,13 @@ func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	// Snapshot tags aren't set in the Describe response.
 	// setTagsOut(ctx, snapshot.Tags)
 
-	tags := KeyValueTags(ctx, snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags, err := listTags(ctx, conn, arn)
 
-	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing tags for FSx OpenZFS Snapshot (%s): %s", arn, err)
+	}
+
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

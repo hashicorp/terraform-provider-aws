@@ -45,7 +45,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceOpenzfsSnapshot,
 			TypeName: "aws_fsx_openzfs_snapshot",
 			Name:     "OpenZFS Snapshot",
-			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceWindowsFileSystem,
