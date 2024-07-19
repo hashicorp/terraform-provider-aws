@@ -79,6 +79,7 @@ const (
 	EventsEndpointID                     = "events"
 	EvidentlyEndpointID                  = "evidently"
 	FMSEndpointID                        = "fms"
+	FSxEndpointID                        = "fsx"
 	GrafanaEndpointID                    = "grafana"
 	IVSEndpointID                        = "ivs"
 	IVSChatEndpointID                    = "ivschat"

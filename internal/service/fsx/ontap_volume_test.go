@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,12 +23,12 @@ import (
 
 func TestAccFSxONTAPVolume_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume fsx.Volume
+	var volume awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -72,12 +72,12 @@ func TestAccFSxONTAPVolume_basic(t *testing.T) {
 
 func TestAccFSxONTAPVolume_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume fsx.Volume
+	var volume awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -96,13 +96,13 @@ func TestAccFSxONTAPVolume_disappears(t *testing.T) {
 
 func TestAccFSxONTAPVolume_aggregateConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2 fsx.Volume
+	var volume1, volume2 awstypes.Volume
 	ConstituentsPerAggregate := 10
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -146,12 +146,12 @@ func TestAccFSxONTAPVolume_aggregateConfiguration(t *testing.T) {
 
 func TestAccFSxONTAPVolume_copyTagsToBackups(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2 fsx.Volume
+	var volume1, volume2 awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -187,14 +187,14 @@ func TestAccFSxONTAPVolume_copyTagsToBackups(t *testing.T) {
 
 func TestAccFSxONTAPVolume_junctionPath(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2 fsx.Volume
+	var volume1, volume2 awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 	jPath1 := "/path1"
 	jPath2 := "/path2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -232,13 +232,13 @@ func TestAccFSxONTAPVolume_junctionPath(t *testing.T) {
 
 func TestAccFSxONTAPVolume_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2 fsx.Volume
+	var volume1, volume2 awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 	rName2 := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -274,12 +274,12 @@ func TestAccFSxONTAPVolume_name(t *testing.T) {
 
 func TestAccFSxONTAPVolume_ontapVolumeType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume fsx.Volume
+	var volume awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -307,12 +307,12 @@ func TestAccFSxONTAPVolume_ontapVolumeType(t *testing.T) {
 
 func TestAccFSxONTAPVolume_securityStyle(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2, volume3 fsx.Volume
+	var volume1, volume2, volume3 awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -359,7 +359,7 @@ func TestAccFSxONTAPVolume_securityStyle(t *testing.T) {
 
 func TestAccFSxONTAPVolume_size(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2, volume3, volume4 fsx.Volume
+	var volume1, volume2, volume3, volume4 awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 	size1 := 1024
@@ -368,7 +368,7 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 	size4 := int64(1125899906842623)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -424,12 +424,12 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 
 func TestAccFSxONTAPVolume_snaplock(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1 /*, volume2*/ fsx.Volume
+	var volume1 /*, volume2*/ awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -506,14 +506,14 @@ func TestAccFSxONTAPVolume_snaplock(t *testing.T) {
 
 func TestAccFSxONTAPVolume_snapshotPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2 fsx.Volume
+	var volume1, volume2 awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 	policy1 := "default"
 	policy2 := "none"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -551,12 +551,12 @@ func TestAccFSxONTAPVolume_snapshotPolicy(t *testing.T) {
 
 func TestAccFSxONTAPVolume_storageEfficiency(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2 fsx.Volume
+	var volume1, volume2 awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -594,12 +594,12 @@ func TestAccFSxONTAPVolume_storageEfficiency(t *testing.T) {
 
 func TestAccFSxONTAPVolume_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2, volume3 fsx.Volume
+	var volume1, volume2, volume3 awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -647,12 +647,12 @@ func TestAccFSxONTAPVolume_tags(t *testing.T) {
 
 func TestAccFSxONTAPVolume_tieringPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume1, volume2, volume3, volume4 fsx.Volume
+	var volume1, volume2, volume3, volume4 awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -710,14 +710,14 @@ func TestAccFSxONTAPVolume_tieringPolicy(t *testing.T) {
 
 func TestAccFSxONTAPVolume_volumeStyle(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume fsx.Volume
+	var volume awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	style1 := "FLEXVOL"
 	style2 := "FLEXGROUP"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -752,14 +752,14 @@ func TestAccFSxONTAPVolume_volumeStyle(t *testing.T) {
 
 func TestAccFSxONTAPVolume_deleteConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	var volume fsx.Volume
+	var volume awstypes.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	acctest.SkipIfEnvVarNotSet(t, "AWS_FSX_CREATE_FINAL_BACKUP")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
@@ -788,14 +788,14 @@ func TestAccFSxONTAPVolume_deleteConfig(t *testing.T) {
 	})
 }
 
-func testAccCheckONTAPVolumeExists(ctx context.Context, n string, v *fsx.Volume) resource.TestCheckFunc {
+func testAccCheckONTAPVolumeExists(ctx context.Context, n string, v *awstypes.Volume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxClient(ctx)
 
 		output, err := tffsx.FindONTAPVolumeByID(ctx, conn, rs.Primary.ID)
 
@@ -811,7 +811,7 @@ func testAccCheckONTAPVolumeExists(ctx context.Context, n string, v *fsx.Volume)
 
 func testAccCheckONTAPVolumeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fsx_ontap_volume" {
@@ -834,20 +834,20 @@ func testAccCheckONTAPVolumeDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckONTAPVolumeNotRecreated(i, j *fsx.Volume) resource.TestCheckFunc {
+func testAccCheckONTAPVolumeNotRecreated(i, j *awstypes.Volume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.VolumeId) != aws.StringValue(j.VolumeId) {
-			return fmt.Errorf("FSx for NetApp ONTAP Volume (%s) recreated", aws.StringValue(i.VolumeId))
+		if aws.ToString(i.VolumeId) != aws.ToString(j.VolumeId) {
+			return fmt.Errorf("FSx for NetApp ONTAP Volume (%s) recreated", aws.ToString(i.VolumeId))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckONTAPVolumeRecreated(i, j *fsx.Volume) resource.TestCheckFunc {
+func testAccCheckONTAPVolumeRecreated(i, j *awstypes.Volume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.VolumeId) == aws.StringValue(j.VolumeId) {
-			return fmt.Errorf("FSx for NetApp ONTAP Volume (%s) not recreated", aws.StringValue(i.VolumeId))
+		if aws.ToString(i.VolumeId) == aws.ToString(j.VolumeId) {
+			return fmt.Errorf("FSx for NetApp ONTAP Volume (%s) not recreated", aws.ToString(i.VolumeId))
 		}
 
 		return nil

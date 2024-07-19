@@ -4117,7 +4117,7 @@ service "fsx" {
 
   sdk {
     id             = "FSx"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {

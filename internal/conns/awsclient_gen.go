@@ -104,6 +104,7 @@ import (
 	firehose_sdkv2 "github.com/aws/aws-sdk-go-v2/service/firehose"
 	fis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fis"
 	fms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fms"
+	fsx_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fsx"
 	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
 	globalaccelerator_sdkv2 "github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
 	grafana_sdkv2 "github.com/aws/aws-sdk-go-v2/service/grafana"
@@ -215,7 +216,6 @@ import (
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
-	fsx_sdkv1 "github.com/aws/aws-sdk-go/service/fsx"
 	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
 	glue_sdkv1 "github.com/aws/aws-sdk-go/service/glue"
 	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
@@ -665,8 +665,8 @@ func (c *AWSClient) FMSClient(ctx context.Context) *fms_sdkv2.Client {
 	return errs.Must(client[*fms_sdkv2.Client](ctx, c, names.FMS, make(map[string]any)))
 }
 
-func (c *AWSClient) FSxConn(ctx context.Context) *fsx_sdkv1.FSx {
-	return errs.Must(conn[*fsx_sdkv1.FSx](ctx, c, names.FSx, make(map[string]any)))
+func (c *AWSClient) FSxClient(ctx context.Context) *fsx_sdkv2.Client {
+	return errs.Must(client[*fsx_sdkv2.Client](ctx, c, names.FSx, make(map[string]any)))
 }
 
 func (c *AWSClient) FinSpaceClient(ctx context.Context) *finspace_sdkv2.Client {
