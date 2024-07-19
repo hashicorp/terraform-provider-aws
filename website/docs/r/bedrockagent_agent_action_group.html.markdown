@@ -60,20 +60,22 @@ resource "aws_bedrockagent_agent_action_group" "example" {
     lambda = "arn:aws:lambda:us-west-2:123456789012:function:example-function"
   }
   function_schema {
-    functions {
-      name        = "example-function"
-      description = "Example function"
-      parameters {
-        map_block_key = "param1"
-        type          = "string"
-        description   = "The first parameter"
-        required      = true
-      }
-      parameters {
-        map_block_key = "param2"
-        type          = "integer"
-        description   = "The second parameter"
-        required      = false
+    member_functions {
+      functions {
+        name        = "example-function"
+        description = "Example function"
+        parameters {
+          map_block_key = "param1"
+          type          = "string"
+          description   = "The first parameter"
+          required      = true
+        }
+        parameters {
+          map_block_key = "param2"
+          type          = "integer"
+          description   = "The second parameter"
+          required      = false
+        }
       }
     }
   }
@@ -111,7 +113,9 @@ The following arguments are optional:
 * `action_group_state` - (Optional) Whether the action group is available for the agent to invoke or not when sending an [InvokeAgent](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent-runtime_InvokeAgent.html) request. Valid values: `ENABLED`, `DISABLED`.
 * `api_schema` - (Optional) Either details about the S3 object containing the OpenAPI schema for the action group or the JSON or YAML-formatted payload defining the schema. For more information, see [Action group OpenAPI schemas](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-api-schema.html). See [`api_schema` Block](#api_schema-block) for details.
 * `description` - (Optional) Description of the action group.
-* `function_schema` - (Optional) Functions that each define parameters that the agent needs to invoke from the user. Each function represents an action in an action group. See [`function_schema` Block](#function_schema-block) for details.
+* `function_schema` - (Optional) Describes the function schema for the action group.
+  Each function represents an action in an action group.
+  See [`function_schema` Block](#function_schema-block) for details.
 * `parent_action_group_signature` - (Optional) To allow your agent to request the user for additional information when trying to complete a task, set this argument to `AMAZON.UserInput`. You must leave the `description`, `api_schema`, and `action_group_executor` arguments blank for this action group. Valid values: `AMAZON.UserInput`.
 * `skip_resource_in_use_check` - (Optional) Whether the in-use check is skipped when deleting the action group.
 
@@ -141,6 +145,14 @@ The `s3` configuration block supports the following arguments:
 ### `function_schema` Block
 
 The `function_schema` configuration block supports the following arguments:
+
+* `member_functions` - (Optional) Contains a list of functions.
+  Each function describes and action in the action group.
+  See [`member_functions` Block](#member_functions-block) for details.
+
+### `member_functions` Block
+
+The `member_functions` configuration block supports the following arguments:
 
 * `functions` - (Optional) Functions that each define an action in the action group. See [`functions` Block](#functions-block) for details.
 

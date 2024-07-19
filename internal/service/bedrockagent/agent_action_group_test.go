@@ -122,7 +122,7 @@ func TestAccBedrockAgentAgentActionGroup_update(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentAgentActionGroup_functionSchema(t *testing.T) {
+func TestAccBedrockAgentAgentActionGroup_FunctionSchema_memberFunctions(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_action_group.test"
@@ -135,22 +135,23 @@ func TestAccBedrockAgentAgentActionGroup_functionSchema(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentActionGroupConfig_functionSchema(rName),
+				Config: testAccAgentActionGroupConfig_FunctionSchema_memberFunctions(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "function_schema.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.name", "sayHello"),
-					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.description", "Says Hello"),
-					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.0.map_block_key", names.AttrMessage),
-					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.0.type", "string"),
-					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.0.description", "The Hello message"),
-					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.0.required", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.1.map_block_key", "unused"),
-					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.1.type", "integer"),
-					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.1.required", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.name", "sayHello"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.description", "Says Hello"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.parameters.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.parameters.0.map_block_key", names.AttrMessage),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.parameters.0.type", "string"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.parameters.0.description", "The Hello message"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.parameters.0.required", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.parameters.1.map_block_key", "unused"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.parameters.1.type", "integer"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.parameters.1.required", acctest.CtFalse),
 				),
 			},
 			{
@@ -326,7 +327,7 @@ resource "aws_lambda_function" "test_lambda" {
 `, rName)
 }
 
-func testAccAgentActionGroupConfig_functionSchema(rName string) string {
+func testAccAgentActionGroupConfig_FunctionSchema_memberFunctions(rName string) string {
 	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
 		testAccAgentActionGroupConfig_lambda(rName),
 		fmt.Sprintf(`
@@ -340,19 +341,21 @@ resource "aws_bedrockagent_agent_action_group" "test" {
     lambda = aws_lambda_function.test_lambda.arn
   }
   function_schema {
-    functions {
-      name        = "sayHello"
-      description = "Says Hello"
-      parameters {
-        map_block_key = "message"
-        type          = "string"
-        description   = "The Hello message"
-        required      = true
-      }
-      parameters {
-        map_block_key = "unused"
-        type          = "integer"
-        required      = false
+    member_functions {
+      functions {
+        name        = "sayHello"
+        description = "Says Hello"
+        parameters {
+          map_block_key = "message"
+          type          = "string"
+          description   = "The Hello message"
+          required      = true
+        }
+        parameters {
+          map_block_key = "unused"
+          type          = "integer"
+          required      = false
+        }
       }
     }
   }
