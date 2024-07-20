@@ -7,16 +7,18 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // waitApplicationDeleted waits for an Application to return Deleted
-func waitApplicationDeleted(ctx context.Context, conn *kinesisanalyticsv2.KinesisAnalyticsV2, name string, timeout time.Duration) (*kinesisanalyticsv2.ApplicationDetail, error) {
+func waitApplicationDeleted(ctx context.Context, conn *kinesisanalyticsv2.Client, name string, timeout time.Duration) (*awstypes.ApplicationDetail, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{kinesisanalyticsv2.ApplicationStatusDeleting},
+		Pending: enum.Slice(awstypes.ApplicationStatusDeleting),
 		Target:  []string{},
 		Refresh: statusApplication(ctx, conn, name),
 		Timeout: timeout,
@@ -24,7 +26,7 @@ func waitApplicationDeleted(ctx context.Context, conn *kinesisanalyticsv2.Kinesi
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*kinesisanalyticsv2.ApplicationDetail); ok {
+	if v, ok := outputRaw.(*awstypes.ApplicationDetail); ok {
 		return v, err
 	}
 
@@ -32,17 +34,17 @@ func waitApplicationDeleted(ctx context.Context, conn *kinesisanalyticsv2.Kinesi
 }
 
 // waitApplicationStarted waits for an Application to start
-func waitApplicationStarted(ctx context.Context, conn *kinesisanalyticsv2.KinesisAnalyticsV2, name string, timeout time.Duration) (*kinesisanalyticsv2.ApplicationDetail, error) {
+func waitApplicationStarted(ctx context.Context, conn *kinesisanalyticsv2.Client, name string, timeout time.Duration) (*awstypes.ApplicationDetail, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{kinesisanalyticsv2.ApplicationStatusStarting},
-		Target:  []string{kinesisanalyticsv2.ApplicationStatusRunning},
+		Pending: enum.Slice(awstypes.ApplicationStatusStarting),
+		Target:  enum.Slice(awstypes.ApplicationStatusRunning),
 		Refresh: statusApplication(ctx, conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*kinesisanalyticsv2.ApplicationDetail); ok {
+	if v, ok := outputRaw.(*awstypes.ApplicationDetail); ok {
 		return v, err
 	}
 
@@ -50,17 +52,17 @@ func waitApplicationStarted(ctx context.Context, conn *kinesisanalyticsv2.Kinesi
 }
 
 // waitApplicationStopped waits for an Application to stop
-func waitApplicationStopped(ctx context.Context, conn *kinesisanalyticsv2.KinesisAnalyticsV2, name string, timeout time.Duration) (*kinesisanalyticsv2.ApplicationDetail, error) {
+func waitApplicationStopped(ctx context.Context, conn *kinesisanalyticsv2.Client, name string, timeout time.Duration) (*awstypes.ApplicationDetail, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{kinesisanalyticsv2.ApplicationStatusForceStopping, kinesisanalyticsv2.ApplicationStatusStopping},
-		Target:  []string{kinesisanalyticsv2.ApplicationStatusReady},
+		Pending: enum.Slice(awstypes.ApplicationStatusForceStopping, awstypes.ApplicationStatusStopping),
+		Target:  enum.Slice(awstypes.ApplicationStatusReady),
 		Refresh: statusApplication(ctx, conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*kinesisanalyticsv2.ApplicationDetail); ok {
+	if v, ok := outputRaw.(*awstypes.ApplicationDetail); ok {
 		return v, err
 	}
 
@@ -68,17 +70,17 @@ func waitApplicationStopped(ctx context.Context, conn *kinesisanalyticsv2.Kinesi
 }
 
 // waitApplicationUpdated waits for an Application to return Deleted
-func waitApplicationUpdated(ctx context.Context, conn *kinesisanalyticsv2.KinesisAnalyticsV2, name string, timeout time.Duration) (*kinesisanalyticsv2.ApplicationDetail, error) { //nolint:unparam
+func waitApplicationUpdated(ctx context.Context, conn *kinesisanalyticsv2.Client, name string, timeout time.Duration) (*awstypes.ApplicationDetail, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{kinesisanalyticsv2.ApplicationStatusUpdating},
-		Target:  []string{kinesisanalyticsv2.ApplicationStatusReady, kinesisanalyticsv2.ApplicationStatusRunning},
+		Pending: enum.Slice(awstypes.ApplicationStatusUpdating),
+		Target:  enum.Slice(awstypes.ApplicationStatusReady, awstypes.ApplicationStatusRunning),
 		Refresh: statusApplication(ctx, conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*kinesisanalyticsv2.ApplicationDetail); ok {
+	if v, ok := outputRaw.(*awstypes.ApplicationDetail); ok {
 		return v, err
 	}
 
@@ -96,22 +98,22 @@ func waitIAMPropagation(ctx context.Context, f func() (interface{}, error)) (int
 		output, err = f()
 
 		// Kinesis Stream: https://github.com/hashicorp/terraform-provider-aws/issues/7032
-		if tfawserr.ErrMessageContains(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidArgumentException](err, "Kinesis Analytics service doesn't have sufficient privileges") {
 			return retry.RetryableError(err)
 		}
 
 		// Kinesis Firehose: https://github.com/hashicorp/terraform-provider-aws/issues/7394
-		if tfawserr.ErrMessageContains(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics doesn't have sufficient privileges") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidArgumentException](err, "Kinesis Analytics doesn't have sufficient privileges") {
 			return retry.RetryableError(err)
 		}
 
 		// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
-		if tfawserr.ErrMessageContains(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "does not provide Invoke permissions on the Lambda resource") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidArgumentException](err, "does not provide Invoke permissions on the Lambda resource") {
 			return retry.RetryableError(err)
 		}
 
 		// S3: https://github.com/hashicorp/terraform-provider-aws/issues/16104
-		if tfawserr.ErrMessageContains(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Please check the role provided or validity of S3 location you provided") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidArgumentException](err, "Please check the role provided or validity of S3 location you provided") {
 			return retry.RetryableError(err)
 		}
 
@@ -134,17 +136,17 @@ func waitIAMPropagation(ctx context.Context, f func() (interface{}, error)) (int
 }
 
 // waitSnapshotCreated waits for a Snapshot to return Created
-func waitSnapshotCreated(ctx context.Context, conn *kinesisanalyticsv2.KinesisAnalyticsV2, applicationName, snapshotName string, timeout time.Duration) (*kinesisanalyticsv2.SnapshotDetails, error) {
+func waitSnapshotCreated(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, snapshotName string, timeout time.Duration) (*awstypes.SnapshotDetails, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{kinesisanalyticsv2.SnapshotStatusCreating},
-		Target:  []string{kinesisanalyticsv2.SnapshotStatusReady},
+		Pending: enum.Slice(awstypes.SnapshotStatusCreating),
+		Target:  enum.Slice(awstypes.SnapshotStatusReady),
 		Refresh: statusSnapshotDetails(ctx, conn, applicationName, snapshotName),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*kinesisanalyticsv2.SnapshotDetails); ok {
+	if v, ok := outputRaw.(*awstypes.SnapshotDetails); ok {
 		return v, err
 	}
 
@@ -152,9 +154,9 @@ func waitSnapshotCreated(ctx context.Context, conn *kinesisanalyticsv2.KinesisAn
 }
 
 // waitSnapshotDeleted waits for a Snapshot to return Deleted
-func waitSnapshotDeleted(ctx context.Context, conn *kinesisanalyticsv2.KinesisAnalyticsV2, applicationName, snapshotName string, timeout time.Duration) (*kinesisanalyticsv2.SnapshotDetails, error) {
+func waitSnapshotDeleted(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, snapshotName string, timeout time.Duration) (*awstypes.SnapshotDetails, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{kinesisanalyticsv2.SnapshotStatusDeleting},
+		Pending: enum.Slice(awstypes.SnapshotStatusDeleting),
 		Target:  []string{},
 		Refresh: statusSnapshotDetails(ctx, conn, applicationName, snapshotName),
 		Timeout: timeout,
@@ -162,7 +164,7 @@ func waitSnapshotDeleted(ctx context.Context, conn *kinesisanalyticsv2.KinesisAn
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*kinesisanalyticsv2.SnapshotDetails); ok {
+	if v, ok := outputRaw.(*awstypes.SnapshotDetails); ok {
 		return v, err
 	}
 

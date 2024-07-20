@@ -30,7 +30,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 	return []*types.ServicePackageSDKResource{
 		{
 			Factory:  ResourceApplication,
-			TypeName: "aws_awstypes.application",
+			TypeName: "aws_kinesisanalyticsv2_application",
 			Name:     "Application",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
@@ -38,7 +38,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		},
 		{
 			Factory:  ResourceApplicationSnapshot,
-			TypeName: "aws_awstypes.application_snapshot",
+			TypeName: "aws_kinesisanalyticsv2_application_snapshot",
 		},
 	}
 }

@@ -8,18 +8,18 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_kinesisanalyticsv2_application", &resource.Sweeper{
-		Name: "aws_kinesisanalyticsv2_application",
+	resource.AddTestSweepers("aws_awstypes.application", &resource.Sweeper{
+		Name: "aws_awstypes.application",
 		F:    sweepApplication,
 	})
 }
@@ -30,7 +30,7 @@ func sweepApplication(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.KinesisAnalyticsV2Conn(ctx)
+	conn := client.KinesisAnalyticsV2Client(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -42,8 +42,8 @@ func sweepApplication(region string) error {
 		}
 
 		for _, applicationSummary := range page.ApplicationSummaries {
-			arn := aws.StringValue(applicationSummary.ApplicationARN)
-			name := aws.StringValue(applicationSummary.ApplicationName)
+			arn := aws.ToString(applicationSummary.ApplicationARN)
+			name := aws.ToString(applicationSummary.ApplicationName)
 
 			application, err := FindApplicationDetailByName(ctx, conn, name)
 
@@ -57,7 +57,7 @@ func sweepApplication(region string) error {
 			r := ResourceApplication()
 			d := r.Data(nil)
 			d.SetId(arn)
-			d.Set("create_timestamp", aws.TimeValue(application.CreateTimestamp).Format(time.RFC3339))
+			d.Set("create_timestamp", aws.ToTime(application.CreateTimestamp).Format(time.RFC3339))
 			d.Set(names.AttrName, name)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -66,7 +66,7 @@ func sweepApplication(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Kinesis Analytics v2 Application sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
