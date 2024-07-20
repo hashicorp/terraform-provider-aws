@@ -9,13 +9,14 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -72,7 +73,7 @@ func ResourceApplicationSnapshot() *schema.Resource {
 
 func resourceApplicationSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
 	applicationName := d.Get("application_name").(string)
 	snapshotName := d.Get("snapshot_name").(string)
 
@@ -81,9 +82,9 @@ func resourceApplicationSnapshotCreate(ctx context.Context, d *schema.ResourceDa
 		SnapshotName:    aws.String(snapshotName),
 	}
 
-	log.Printf("[DEBUG] Creating Kinesis Analytics v2 Application Snapshot: %s", input)
+	log.Printf("[DEBUG] Creating Kinesis Analytics v2 Application Snapshot: %+v", input)
 
-	_, err := conn.CreateApplicationSnapshotWithContext(ctx, input)
+	_, err := conn.CreateApplicationSnapshot(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Kinesis Analytics v2 Application Snapshot (%s/%s): %s", applicationName, snapshotName, err)
@@ -102,7 +103,7 @@ func resourceApplicationSnapshotCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceApplicationSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
 
 	applicationName, snapshotName, err := applicationSnapshotParseID(d.Id())
 
@@ -124,7 +125,7 @@ func resourceApplicationSnapshotRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("application_name", applicationName)
 	d.Set("application_version_id", snapshot.ApplicationVersionId)
-	d.Set("snapshot_creation_timestamp", aws.TimeValue(snapshot.SnapshotCreationTimestamp).Format(time.RFC3339))
+	d.Set("snapshot_creation_timestamp", aws.ToTime(snapshot.SnapshotCreationTimestamp).Format(time.RFC3339))
 	d.Set("snapshot_name", snapshotName)
 
 	return diags
@@ -132,7 +133,7 @@ func resourceApplicationSnapshotRead(ctx context.Context, d *schema.ResourceData
 
 func resourceApplicationSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
 
 	applicationName, snapshotName, err := applicationSnapshotParseID(d.Id())
 
@@ -146,17 +147,17 @@ func resourceApplicationSnapshotDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application Snapshot (%s)", d.Id())
-	_, err = conn.DeleteApplicationSnapshotWithContext(ctx, &kinesisanalyticsv2.DeleteApplicationSnapshotInput{
+	_, err = conn.DeleteApplicationSnapshot(ctx, &kinesisanalyticsv2.DeleteApplicationSnapshotInput{
 		ApplicationName:           aws.String(applicationName),
 		SnapshotCreationTimestamp: aws.Time(snapshotCreationTimestamp),
 		SnapshotName:              aws.String(snapshotName),
 	})
 
-	if tfawserr.ErrCodeEquals(err, kinesisanalyticsv2.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
-	if tfawserr.ErrMessageContains(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "does not exist") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidArgumentException](err, "does not exist") {
 		return diags
 	}
 
