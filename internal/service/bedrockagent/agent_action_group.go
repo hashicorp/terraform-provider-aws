@@ -162,46 +162,56 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"functions": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[functionModel](ctx),
+						"member_functions": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[memberFunctionsModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									names.AttrDescription: schema.StringAttribute{
-										Optional: true,
-										Validators: []validator.String{
-											stringvalidator.LengthBetween(1, 1200),
-										},
-									},
-									names.AttrName: schema.StringAttribute{
-										Required: true,
-										Validators: []validator.String{
-											stringvalidator.RegexMatches(regexache.MustCompile(`^([0-9a-zA-Z][_-]?){1,100}$`), "valid characters are a-z, A-Z, 0-9, _ (underscore) and - (hyphen). The name can have up to 100 characters"),
-										},
-									},
-								},
 								Blocks: map[string]schema.Block{
-									names.AttrParameters: schema.SetNestedBlock{
-										CustomType: fwtypes.NewSetNestedObjectTypeOf[parameterDetailModel](ctx),
+									"functions": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[functionModel](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												names.AttrDescription: schema.StringAttribute{
 													Optional: true,
 													Validators: []validator.String{
-														stringvalidator.LengthBetween(1, 500),
+														stringvalidator.LengthBetween(1, 1200),
 													},
 												},
-												"map_block_key": schema.StringAttribute{
+												names.AttrName: schema.StringAttribute{
 													Required: true,
 													Validators: []validator.String{
 														stringvalidator.RegexMatches(regexache.MustCompile(`^([0-9a-zA-Z][_-]?){1,100}$`), "valid characters are a-z, A-Z, 0-9, _ (underscore) and - (hyphen). The name can have up to 100 characters"),
 													},
 												},
-												"required": schema.BoolAttribute{
-													Optional: true,
-												},
-												names.AttrType: schema.StringAttribute{
-													Required:   true,
-													CustomType: fwtypes.StringEnumType[awstypes.Type](),
+											},
+											Blocks: map[string]schema.Block{
+												names.AttrParameters: schema.SetNestedBlock{
+													CustomType: fwtypes.NewSetNestedObjectTypeOf[parameterDetailModel](ctx),
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															names.AttrDescription: schema.StringAttribute{
+																Optional: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 500),
+																},
+															},
+															"map_block_key": schema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	stringvalidator.RegexMatches(regexache.MustCompile(`^([0-9a-zA-Z][_-]?){1,100}$`), "valid characters are a-z, A-Z, 0-9, _ (underscore) and - (hyphen). The name can have up to 100 characters"),
+																},
+															},
+															"required": schema.BoolAttribute{
+																Optional: true,
+															},
+															names.AttrType: schema.StringAttribute{
+																Required:   true,
+																CustomType: fwtypes.StringEnumType[awstypes.Type](),
+															},
+														},
+													},
 												},
 											},
 										},
@@ -489,15 +499,15 @@ func (m apiSchemaModel) Expand(ctx context.Context) (result any, diags diag.Diag
 }
 
 type functionSchemaModel struct {
-	Functions fwtypes.ListNestedObjectValueOf[functionModel] `tfsdk:"functions"`
+	MemberFunctions fwtypes.ListNestedObjectValueOf[memberFunctionsModel] `tfsdk:"member_functions"`
 }
 
 func (m functionSchemaModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
 	switch {
-	case !m.Functions.IsNull():
-		functions := m.Functions
-		memberFunctions := make([]awstypes.Function, len(functions.Elements()))
-		diags.Append(fwflex.Expand(ctx, functions, &memberFunctions)...)
+	case !m.MemberFunctions.IsNull():
+		fooModel := fwdiag.Must(m.MemberFunctions.ToPtr(ctx))
+		var memberFunctions []awstypes.Function
+		diags.Append(fwflex.Expand(ctx, fooModel.Functions, &memberFunctions)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -508,6 +518,10 @@ func (m functionSchemaModel) Expand(ctx context.Context) (result any, diags diag
 	}
 
 	return nil, diags
+}
+
+type memberFunctionsModel struct {
+	Functions fwtypes.ListNestedObjectValueOf[functionModel] `tfsdk:"functions"`
 }
 
 type functionModel struct {
@@ -579,12 +593,14 @@ func flattenFunctionSchema(ctx context.Context, apiObject awstypes.FunctionSchem
 
 	switch v := apiObject.(type) {
 	case *awstypes.FunctionSchemaMemberFunctions:
-		functions := fwtypes.NewListNestedObjectValueOfSliceMust[functionModel](ctx, []*functionModel{})
+		var functions fwtypes.ListNestedObjectValueOf[functionModel]
 		diags.Append(fwflex.Flatten(ctx, v.Value, &functions)...)
 		if diags.HasError() {
 			return fwtypes.NewListNestedObjectValueOfNull[functionSchemaModel](ctx), diags
 		}
-		functionSchemaData.Functions = functions
+		functionSchemaData.MemberFunctions = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &memberFunctionsModel{
+			Functions: functions,
+		})
 	}
 
 	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &functionSchemaData), diags

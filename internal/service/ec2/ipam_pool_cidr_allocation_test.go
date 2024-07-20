@@ -231,19 +231,9 @@ func testAccCheckIPAMPoolCIDRAllocationExists(ctx context.Context, n string, v *
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IPAM Pool CIDR Allocation ID is set")
-		}
-
-		allocationID, poolID, err := tfec2.IPAMPoolCIDRAllocationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, poolID)
+		output, err := tfec2.FindIPAMPoolAllocationByTwoPartKey(ctx, conn, rs.Primary.Attributes["ipam_pool_allocation_id"], rs.Primary.Attributes["ipam_pool_id"])
 
 		if err != nil {
 			return err
@@ -262,19 +252,9 @@ func testAccCheckIPAMPoolCIDRAllocationExistsWithProvider(ctx context.Context, n
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IPAM Pool CIDR Allocation ID is set")
-		}
-
-		allocationID, poolID, err := tfec2.IPAMPoolCIDRAllocationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
 		conn := providerF().Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, poolID)
+		output, err := tfec2.FindIPAMPoolAllocationByTwoPartKey(ctx, conn, rs.Primary.Attributes["ipam_pool_allocation_id"], rs.Primary.Attributes["ipam_pool_id"])
 
 		if err != nil {
 			return err
@@ -295,13 +275,7 @@ func testAccCheckIPAMPoolAllocationDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			allocationID, poolID, err := tfec2.IPAMPoolCIDRAllocationParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfec2.FindIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, poolID)
+			_, err := tfec2.FindIPAMPoolAllocationByTwoPartKey(ctx, conn, rs.Primary.Attributes["ipam_pool_allocation_id"], rs.Primary.Attributes["ipam_pool_id"])
 
 			if tfresource.NotFound(err) {
 				continue

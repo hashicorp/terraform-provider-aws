@@ -130,7 +130,7 @@ func resourceIPAMPoolCIDRAllocationCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	allocationID := aws.ToString(output.IpamPoolAllocation.IpamPoolAllocationId)
-	d.SetId(IPAMPoolCIDRAllocationCreateResourceID(allocationID, ipamPoolID))
+	d.SetId(ipamPoolCIDRAllocationCreateResourceID(allocationID, ipamPoolID))
 
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return findIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, ipamPoolID)
@@ -147,8 +147,7 @@ func resourceIPAMPoolCIDRAllocationRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	allocationID, poolID, err := IPAMPoolCIDRAllocationParseResourceID(d.Id())
-
+	allocationID, poolID, err := ipamPoolCIDRAllocationParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -179,8 +178,7 @@ func resourceIPAMPoolCIDRAllocationDelete(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	allocationID, poolID, err := IPAMPoolCIDRAllocationParseResourceID(d.Id())
-
+	allocationID, poolID, err := ipamPoolCIDRAllocationParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -205,14 +203,14 @@ func resourceIPAMPoolCIDRAllocationDelete(ctx context.Context, d *schema.Resourc
 
 const ipamPoolCIDRAllocationIDSeparator = "_"
 
-func IPAMPoolCIDRAllocationCreateResourceID(allocationID, poolID string) string {
+func ipamPoolCIDRAllocationCreateResourceID(allocationID, poolID string) string {
 	parts := []string{allocationID, poolID}
 	id := strings.Join(parts, ipamPoolCIDRAllocationIDSeparator)
 
 	return id
 }
 
-func IPAMPoolCIDRAllocationParseResourceID(id string) (string, string, error) {
+func ipamPoolCIDRAllocationParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, ipamPoolCIDRAllocationIDSeparator)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
