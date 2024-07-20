@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_sagemaker_domain: Add `default_user_settings.domain_settings.docker_settings` block
+```
+
+```release-note:bug
+resource/aws_sagemaker_domain: Fix update for `default_user_settings.domain_settings` to include missing `security_group_ids` and `r_studio_server_pro_domain_settings` block
+```
