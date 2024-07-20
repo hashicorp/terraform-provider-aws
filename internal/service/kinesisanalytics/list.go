@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kinesisanalytics"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalytics/types"
 )
 
 // Custom Kinesisanalytics listing functions using similar formatting as other service generated code.

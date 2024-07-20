@@ -9,8 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/kinesisanalytics"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalytics/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -24,7 +25,7 @@ const (
 // waitApplicationDeleted waits for an Application to return Deleted
 func waitApplicationDeleted(ctx context.Context, conn *kinesisanalytics.Client, name string) (*awstypes.ApplicationDetail, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.ApplicationStatusDeleting},
+		Pending: enum.Slice(awstypes.ApplicationStatusDeleting),
 		Target:  []string{},
 		Refresh: statusApplication(ctx, conn, name),
 		Timeout: applicationDeletedTimeout,
@@ -42,8 +43,8 @@ func waitApplicationDeleted(ctx context.Context, conn *kinesisanalytics.Client, 
 // waitApplicationStarted waits for an Application to start
 func waitApplicationStarted(ctx context.Context, conn *kinesisanalytics.Client, name string) (*awstypes.ApplicationDetail, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.ApplicationStatusStarting},
-		Target:  []string{awstypes.ApplicationStatusRunning},
+		Pending: enum.Slice(awstypes.ApplicationStatusStarting),
+		Target:  enum.Slice(awstypes.ApplicationStatusRunning),
 		Refresh: statusApplication(ctx, conn, name),
 		Timeout: applicationStartedTimeout,
 	}
@@ -60,8 +61,8 @@ func waitApplicationStarted(ctx context.Context, conn *kinesisanalytics.Client, 
 // waitApplicationStopped waits for an Application to stop
 func waitApplicationStopped(ctx context.Context, conn *kinesisanalytics.Client, name string) (*awstypes.ApplicationDetail, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.ApplicationStatusStopping},
-		Target:  []string{awstypes.ApplicationStatusReady},
+		Pending: enum.Slice(awstypes.ApplicationStatusStopping),
+		Target:  enum.Slice(awstypes.ApplicationStatusReady),
 		Refresh: statusApplication(ctx, conn, name),
 		Timeout: applicationStoppedTimeout,
 	}
@@ -78,8 +79,8 @@ func waitApplicationStopped(ctx context.Context, conn *kinesisanalytics.Client, 
 // waitApplicationUpdated waits for an Application to update
 func waitApplicationUpdated(ctx context.Context, conn *kinesisanalytics.Client, name string) (*awstypes.ApplicationDetail, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.ApplicationStatusUpdating},
-		Target:  []string{awstypes.ApplicationStatusReady, awstypes.ApplicationStatusRunning},
+		Pending: enum.Slice(awstypes.ApplicationStatusUpdating),
+		Target:  enum.Slice(awstypes.ApplicationStatusReady, awstypes.ApplicationStatusRunning),
 		Refresh: statusApplication(ctx, conn, name),
 		Timeout: applicationUpdatedTimeout,
 	}
@@ -104,22 +105,22 @@ func waitIAMPropagation(ctx context.Context, f func() (interface{}, error)) (int
 		output, err = f()
 
 		// Kinesis Stream: https://github.com/hashicorp/terraform-provider-aws/issues/7032
-		if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidArgumentException](err, "Kinesis Analytics service doesn't have sufficient privileges") {
 			return retry.RetryableError(err)
 		}
 
 		// Kinesis Firehose: https://github.com/hashicorp/terraform-provider-aws/issues/7394
-		if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidArgumentException, "Kinesis Analytics doesn't have sufficient privileges") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidArgumentException](err, "Kinesis Analytics doesn't have sufficient privileges") {
 			return retry.RetryableError(err)
 		}
 
 		// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
-		if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidArgumentException, "does not provide Invoke permissions on the Lambda resource") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidArgumentException](err, "does not provide Invoke permissions on the Lambda resource") {
 			return retry.RetryableError(err)
 		}
 
 		// S3: https://github.com/hashicorp/terraform-provider-aws/issues/16104
-		if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidArgumentException, "Please check the role provided or validity of S3 location you provided") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidArgumentException](err, "Please check the role provided or validity of S3 location you provided") {
 			return retry.RetryableError(err)
 		}
 

@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kinesisanalytics"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalytics/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -49,7 +49,7 @@ func sweepApplications(region string) error {
 
 			application, err := FindApplicationDetailByName(ctx, conn, name)
 
-			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeUnsupportedOperationException, "was created/updated by kinesisanalyticsv2 SDK") {
+			if errs.IsAErrorMessageContains[*awstypes.UnsupportedOperationException](err, "was created/updated by kinesisanalyticsv2 SDK") {
 				continue
 			}
 
@@ -63,7 +63,7 @@ func sweepApplications(region string) error {
 			r := ResourceApplication()
 			d := r.Data(nil)
 			d.SetId(arn)
-			d.Set("create_timestamp", aws.TimeValue(application.CreateTimestamp).Format(time.RFC3339))
+			d.Set("create_timestamp", aws.ToTime(application.CreateTimestamp).Format(time.RFC3339))
 			d.Set(names.AttrName, name)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
