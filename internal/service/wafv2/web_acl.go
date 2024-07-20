@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 	"strings"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -116,6 +118,7 @@ func resourceWebACL() *schema.Resource {
 				names.AttrRule: {
 					Type:     schema.TypeSet,
 					Optional: true,
+					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrAction: {
@@ -182,8 +185,52 @@ func resourceWebACL() *schema.Resource {
 			}
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			rulesCustomDiff,
+			verify.SetTagsDiff,
+		),
 	}
+}
+
+func rulesCustomDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	if !diff.GetRawState().IsNull() {
+		r, ok := diff.GetOk(names.AttrRule)
+		if !ok {
+			return nil
+		}
+
+		rJson, jsonOk := diff.GetOk("rule_json")
+		if !jsonOk {
+			return nil
+		}
+
+		conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
+		output, err := findWebACLByThreePartKey(ctx, conn, diff.Id(), diff.Get(names.AttrName).(string), diff.Get(names.AttrScope).(string))
+		if err != nil {
+			return err
+		}
+
+		ra := expandWebACLRules(r.(*schema.Set).List())
+		jr, err := expandWebACLRulesJSON(rJson.(string))
+		if err != nil {
+			return err
+		}
+
+		rules := filterWebACLRules(output.WebACL.Rules, ra)
+
+		if !reflect.DeepEqual(rules, jr) {
+			st, err := flattenRuleJSON(rules)
+			if err != nil {
+				return err
+			}
+
+			if err := diff.SetNew("rule_json", st); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -282,26 +329,35 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, webACL.Name)
 
-	// if d.Get(names.AttrRule).(*schema.Set).Len() > 0 {
-	rules := filterWebACLRules(webACL.Rules, expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List()))
-	if err := d.Set(names.AttrRule, flattenWebACLRules(rules)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+	var r []awstypes.Rule
+	if v, ok := d.GetOk(names.AttrRule); ok {
+		r = expandWebACLRules(v.(*schema.Set).List())
 	}
-	// } else if d.Get("rule_json").(string) != "" {
 	if v, ok := d.GetOk("rule_json"); ok {
-		expandRules, err := expandWebACLRulesJSON(v.(string))
+		r, err = expandWebACLRulesJSON(v.(string))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "expanding json rule: %s", err)
 		}
-		rulesJSON := filterWebACLRules(webACL.Rules, expandRules)
-		flattenRules, err := flattenRuleJSON(rulesJSON)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "flattening json rule: %s", err)
-		}
-		if err := d.Set("rule_json", flattenRules); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting JSON rule: %s", err)
-		}
 	}
+
+	rules := filterWebACLRules(webACL.Rules, r)
+	if err := d.Set(names.AttrRule, flattenWebACLRules(rules)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+	}
+
+	// if v, ok := d.GetOk("rule_json"); ok {
+	// 	expandRules, err := expandWebACLRulesJSON(v.(string))
+	// 	if err != nil {
+	// 		return sdkdiag.AppendErrorf(diags, "expanding json rule: %s", err)
+	// 	}
+	// 	rulesJSON := filterWebACLRules(webACL.Rules, expandRules)
+	// 	flattenRules, err := flattenRuleJSON(rulesJSON)
+	// 	if err != nil {
+	// 		return sdkdiag.AppendErrorf(diags, "flattening json rule: %s", err)
+	// 	}
+	// 	if err := d.Set("rule_json", flattenRules); err != nil {
+	// 		return sdkdiag.AppendErrorf(diags, "setting JSON rule: %s", err)
+	// 	}
 	// }
 
 	d.Set("token_domains", aws.StringSlice(webACL.TokenDomains))
