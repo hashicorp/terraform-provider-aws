@@ -5114,7 +5114,7 @@ service "kinesisanalyticsv2" {
 
   sdk {
     id             = "Kinesis Analytics V2"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
