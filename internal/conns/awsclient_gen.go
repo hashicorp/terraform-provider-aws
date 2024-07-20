@@ -126,6 +126,7 @@ import (
 	kendra_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kendra"
 	keyspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	kinesis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kinesis"
+	kinesisanalytics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kinesisanalytics"
 	kms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kms"
 	lakeformation_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -221,7 +222,6 @@ import (
 	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	inspector_sdkv1 "github.com/aws/aws-sdk-go/service/inspector"
-	kinesisanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	kinesisanalyticsv2_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
 	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
@@ -785,8 +785,8 @@ func (c *AWSClient) KinesisClient(ctx context.Context) *kinesis_sdkv2.Client {
 	return errs.Must(client[*kinesis_sdkv2.Client](ctx, c, names.Kinesis, make(map[string]any)))
 }
 
-func (c *AWSClient) KinesisAnalyticsConn(ctx context.Context) *kinesisanalytics_sdkv1.KinesisAnalytics {
-	return errs.Must(conn[*kinesisanalytics_sdkv1.KinesisAnalytics](ctx, c, names.KinesisAnalytics, make(map[string]any)))
+func (c *AWSClient) KinesisAnalyticsClient(ctx context.Context) *kinesisanalytics_sdkv2.Client {
+	return errs.Must(client[*kinesisanalytics_sdkv2.Client](ctx, c, names.KinesisAnalytics, make(map[string]any)))
 }
 
 func (c *AWSClient) KinesisAnalyticsV2Conn(ctx context.Context) *kinesisanalyticsv2_sdkv1.KinesisAnalyticsV2 {
