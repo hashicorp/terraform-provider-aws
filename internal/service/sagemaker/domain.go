@@ -906,6 +906,29 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"docker_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enable_docker_access": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
+									},
+									"vpc_only_trusted_accounts": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: verify.ValidAccountID,
+										},
+										MaxItems: 20,
+									},
+								},
+							},
+						},
 						"execution_role_identity_config": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -1206,6 +1229,10 @@ func expandDomainSettings(l []interface{}) *sagemaker.DomainSettings {
 
 	config := &sagemaker.DomainSettings{}
 
+	if v, ok := m["docker_settings"].([]interface{}); ok && len(v) > 0 {
+		config.DockerSettings = expandDockerSettings(v)
+	}
+
 	if v, ok := m["execution_role_identity_config"].(string); ok && v != "" {
 		config.ExecutionRoleIdentityConfig = aws.String(v)
 	}
@@ -1216,6 +1243,26 @@ func expandDomainSettings(l []interface{}) *sagemaker.DomainSettings {
 
 	if v, ok := m["r_studio_server_pro_domain_settings"].([]interface{}); ok && len(v) > 0 {
 		config.RStudioServerProDomainSettings = expandRStudioServerProDomainSettings(v)
+	}
+
+	return config
+}
+
+func expandDockerSettings(l []interface{}) *sagemaker.DockerSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.DockerSettings{}
+
+	if v, ok := m["enable_docker_access"].(string); ok && v != "" {
+		config.EnableDockerAccess = aws.String(v)
+	}
+
+	if v, ok := m["vpc_only_trusted_accounts"].(*schema.Set); ok && v.Len() > 0 {
+		config.VpcOnlyTrustedAccounts = flex.ExpandStringSet(v)
 	}
 
 	return config
@@ -1258,8 +1305,48 @@ func expandDomainSettingsUpdate(l []interface{}) *sagemaker.DomainSettingsForUpd
 
 	config := &sagemaker.DomainSettingsForUpdate{}
 
+	if v, ok := m["docker_settings"].([]interface{}); ok && len(v) > 0 {
+		config.DockerSettings = expandDockerSettings(v)
+	}
+
 	if v, ok := m["execution_role_identity_config"].(string); ok && v != "" {
 		config.ExecutionRoleIdentityConfig = aws.String(v)
+	}
+
+	if v, ok := m[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
+		config.SecurityGroupIds = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := m["r_studio_server_pro_domain_settings"].([]interface{}); ok && len(v) > 0 {
+		config.RStudioServerProDomainSettingsForUpdate = expandRStudioServerProDomainSettingsUpdate(v)
+	}
+
+	return config
+}
+
+func expandRStudioServerProDomainSettingsUpdate(l []interface{}) *sagemaker.RStudioServerProDomainSettingsForUpdate {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.RStudioServerProDomainSettingsForUpdate{}
+
+	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+		config.DefaultResourceSpec = expandResourceSpec(v)
+	}
+
+	if v, ok := m["domain_execution_role_arn"].(string); ok && v != "" {
+		config.DomainExecutionRoleArn = aws.String(v)
+	}
+
+	if v, ok := m["r_studio_connect_url"].(string); ok && v != "" {
+		config.RStudioConnectUrl = aws.String(v)
+	}
+
+	if v, ok := m["r_studio_package_manager_url"].(string); ok && v != "" {
+		config.RStudioPackageManagerUrl = aws.String(v)
 	}
 
 	return config
@@ -2253,9 +2340,23 @@ func flattenDomainSettings(config *sagemaker.DomainSettings) []map[string]interf
 	}
 
 	m := map[string]interface{}{
+		"docker_settings":                     flattenDockerSettings(config.DockerSettings),
 		"execution_role_identity_config":      aws.StringValue(config.ExecutionRoleIdentityConfig),
 		"r_studio_server_pro_domain_settings": flattenRStudioServerProDomainSettings(config.RStudioServerProDomainSettings),
 		names.AttrSecurityGroupIDs:            flex.FlattenStringSet(config.SecurityGroupIds),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenDockerSettings(config *sagemaker.DockerSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"enable_docker_access":      aws.StringValue(config.EnableDockerAccess),
+		"vpc_only_trusted_accounts": flex.FlattenStringSet(config.VpcOnlyTrustedAccounts),
 	}
 
 	return []map[string]interface{}{m}
