@@ -8,9 +8,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kinesisanalytics"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalytics/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -31,7 +32,7 @@ func sweepApplications(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.KinesisAnalyticsConn(ctx)
+	conn := client.KinesisAnalyticsClient(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -43,12 +44,12 @@ func sweepApplications(region string) error {
 		}
 
 		for _, applicationSummary := range page.ApplicationSummaries {
-			arn := aws.StringValue(applicationSummary.ApplicationARN)
-			name := aws.StringValue(applicationSummary.ApplicationName)
+			arn := aws.ToString(applicationSummary.ApplicationARN)
+			name := aws.ToString(applicationSummary.ApplicationName)
 
 			application, err := FindApplicationDetailByName(ctx, conn, name)
 
-			if tfawserr.ErrMessageContains(err, kinesisanalytics.ErrCodeUnsupportedOperationException, "was created/updated by kinesisanalyticsv2 SDK") {
+			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeUnsupportedOperationException, "was created/updated by kinesisanalyticsv2 SDK") {
 				continue
 			}
 

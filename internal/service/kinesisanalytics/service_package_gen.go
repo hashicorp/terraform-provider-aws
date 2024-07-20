@@ -5,9 +5,9 @@ package kinesisanalytics
 import (
 	"context"
 
+	kinesisanalytics_sdkv1 "github.com/aws/aws-sdk-go-v2/service/kinesisanalytics"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	kinesisanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

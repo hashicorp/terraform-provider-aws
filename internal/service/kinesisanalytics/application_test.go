@@ -9,7 +9,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
+	"github.com/aws/aws-sdk-go-v2/service/kinesisanalytics"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalytics/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +23,7 @@ import (
 
 func TestAccKinesisAnalyticsApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -63,7 +64,7 @@ func TestAccKinesisAnalyticsApplication_basic(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -87,7 +88,7 @@ func TestAccKinesisAnalyticsApplication_disappears(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -136,7 +137,7 @@ func TestAccKinesisAnalyticsApplication_tags(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_Code_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -197,7 +198,7 @@ func TestAccKinesisAnalyticsApplication_Code_update(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test.0"
@@ -262,7 +263,7 @@ func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_add(t *testing.
 
 func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_delete(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test.0"
@@ -327,7 +328,7 @@ func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_delete(t *testi
 
 func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
@@ -396,7 +397,7 @@ func TestAccKinesisAnalyticsApplication_CloudWatchLoggingOptions_update(t *testi
 
 func TestAccKinesisAnalyticsApplication_Input_add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -483,7 +484,7 @@ func TestAccKinesisAnalyticsApplication_Input_add(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_Input_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
@@ -599,7 +600,7 @@ func TestAccKinesisAnalyticsApplication_Input_update(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_InputProcessing_add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	lambdaResourceName := "aws_lambda_function.test.0"
@@ -714,7 +715,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_add(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_InputProcessing_delete(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	lambdaResourceName := "aws_lambda_function.test.0"
@@ -829,7 +830,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_delete(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_InputProcessing_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
@@ -949,7 +950,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_update(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_Multiple_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
@@ -1122,7 +1123,7 @@ func TestAccKinesisAnalyticsApplication_Multiple_update(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_Output_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
@@ -1238,7 +1239,7 @@ func TestAccKinesisAnalyticsApplication_Output_update(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_ReferenceDataSource_add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
@@ -1319,7 +1320,7 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_add(t *testing.T) {
 
 func TestAccKinesisAnalyticsApplication_ReferenceDataSource_delete(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRoleResourceName := "aws_iam_role.test.0"
 	s3BucketResourceName := "aws_s3_bucket.test"
@@ -1400,7 +1401,7 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_delete(t *testing.T)
 
 func TestAccKinesisAnalyticsApplication_ReferenceDataSource_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
@@ -1503,7 +1504,7 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_update(t *testing.T)
 
 func TestAccKinesisAnalyticsApplication_StartApplication_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -1571,7 +1572,7 @@ func TestAccKinesisAnalyticsApplication_StartApplication_onCreate(t *testing.T) 
 
 func TestAccKinesisAnalyticsApplication_StartApplication_onUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -1727,7 +1728,7 @@ func TestAccKinesisAnalyticsApplication_StartApplication_onUpdate(t *testing.T) 
 
 func TestAccKinesisAnalyticsApplication_StartApplication_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalytics.ApplicationDetail
+	var v awstypes.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
 	iamRole1ResourceName := "aws_iam_role.test.0"
 	iamRole2ResourceName := "aws_iam_role.test.1"
@@ -1903,7 +1904,7 @@ func TestAccKinesisAnalyticsApplication_StartApplication_update(t *testing.T) {
 
 func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kinesis_analytics_application" {
@@ -1926,7 +1927,7 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckApplicationExists(ctx context.Context, n string, v *kinesisanalytics.ApplicationDetail) resource.TestCheckFunc {
+func testAccCheckApplicationExists(ctx context.Context, n string, v *awstypes.ApplicationDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1937,7 +1938,7 @@ func testAccCheckApplicationExists(ctx context.Context, n string, v *kinesisanal
 			return fmt.Errorf("No Kinesis Analytics Application ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsClient(ctx)
 
 		application, err := tfkinesisanalytics.FindApplicationDetailByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
@@ -1952,11 +1953,11 @@ func testAccCheckApplicationExists(ctx context.Context, n string, v *kinesisanal
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsClient(ctx)
 
 	input := &kinesisanalytics.ListApplicationsInput{}
 
-	_, err := conn.ListApplicationsWithContext(ctx, input)
+	_, err := conn.ListApplications(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
