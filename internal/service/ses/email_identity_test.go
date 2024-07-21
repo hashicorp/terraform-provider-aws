@@ -86,8 +86,8 @@ func testAccCheckEmailIdentityDestroy(ctx context.Context) resource.TestCheckFun
 
 			email := rs.Primary.ID
 			params := &ses.GetIdentityVerificationAttributesInput{
-				Identities: []*string{
-					aws.String(email),
+				Identities: []string{
+					email,
 				},
 			}
 
@@ -96,7 +96,8 @@ func testAccCheckEmailIdentityDestroy(ctx context.Context) resource.TestCheckFun
 				return err
 			}
 
-			if response.VerificationAttributes[email] != nil {
+			_, exists := response.VerificationAttributes[email]
+			if exists {
 				return fmt.Errorf("SES Email Identity %s still exists. Failing!", email)
 			}
 		}
@@ -120,8 +121,8 @@ func testAccCheckEmailIdentityExists(ctx context.Context, n string) resource.Tes
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		params := &ses.GetIdentityVerificationAttributesInput{
-			Identities: []*string{
-				aws.String(email),
+			Identities: []string{
+				email,
 			},
 		}
 
@@ -130,7 +131,8 @@ func testAccCheckEmailIdentityExists(ctx context.Context, n string) resource.Tes
 			return err
 		}
 
-		if response.VerificationAttributes[email] == nil {
+		_, exists := response.VerificationAttributes[email]
+		if !exists {
 			return fmt.Errorf("SES Email Identity %s not found in AWS", email)
 		}
 
