@@ -88,6 +88,7 @@ const (
 	KMSEndpointID                        = "kms"
 	KafkaConnectEndpointID               = "kafkaconnect"
 	KendraEndpointID                     = "kendra"
+	KinesisVideoEndpointID               = "kinesisvideo"
 	LambdaEndpointID                     = "lambda"
 	LexV2ModelsEndpointID                = "models-v2-lex"
 	M2EndpointID                         = "m2"
