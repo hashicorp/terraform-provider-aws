@@ -11,12 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -87,7 +87,7 @@ func testAccCheckReceiptRuleSetDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := conn.DescribeReceiptRuleSet(ctx, params)
 
-			if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeRuleSetDoesNotExistException) {
+			if errs.IsA[*awstypes.RuleSetDoesNotExistException](err) {
 				continue
 			}
 
