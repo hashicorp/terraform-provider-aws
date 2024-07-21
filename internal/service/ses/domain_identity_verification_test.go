@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
@@ -103,8 +102,8 @@ func testAccCheckDomainIdentityVerificationPassed(ctx context.Context, n string)
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		params := &ses.GetIdentityVerificationAttributesInput{
-			Identities: []*string{
-				aws.String(domain),
+			Identities: []string{
+				domain,
 			},
 		}
 
@@ -113,11 +112,12 @@ func testAccCheckDomainIdentityVerificationPassed(ctx context.Context, n string)
 			return err
 		}
 
-		if response.VerificationAttributes[domain] == nil {
+		_, exists := response.VerificationAttributes[domain]
+		if !exists {
 			return fmt.Errorf("SES Domain Identity %s not found in AWS", domain)
 		}
 
-		if aws.ToString(response.VerificationAttributes[domain].VerificationStatus) != awstypes.VerificationStatusSuccess {
+		if response.VerificationAttributes[domain].VerificationStatus != awstypes.VerificationStatusSuccess {
 			return fmt.Errorf("SES Domain Identity %s not successfully verified.", domain)
 		}
 
