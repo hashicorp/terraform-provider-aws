@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -74,7 +73,7 @@ func testAccCheckIdentityNotificationTopicDestroy(ctx context.Context) resource.
 
 			identity := rs.Primary.Attributes["identity"]
 			params := &ses.GetIdentityNotificationAttributesInput{
-				Identities: []*string{aws.String(identity)},
+				Identities: []string{identity},
 			}
 
 			log.Printf("[DEBUG] Testing SES Identity Notification Topic Destroy: %#v", params)
@@ -84,7 +83,8 @@ func testAccCheckIdentityNotificationTopicDestroy(ctx context.Context) resource.
 				return err
 			}
 
-			if response.NotificationAttributes[identity] != nil {
+			_, exists := response.NotificationAttributes[identity]
+			if exists {
 				return fmt.Errorf("SES Identity Notification Topic %s still exists. Failing!", identity)
 			}
 		}
@@ -108,7 +108,7 @@ func testAccCheckIdentityNotificationTopicExists(ctx context.Context, n string) 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		params := &ses.GetIdentityNotificationAttributesInput{
-			Identities: []*string{aws.String(identity)},
+			Identities: []string{identity},
 		}
 
 		log.Printf("[DEBUG] Testing SES Identity Notification Topic Exists: %#v", params)
@@ -118,7 +118,8 @@ func testAccCheckIdentityNotificationTopicExists(ctx context.Context, n string) 
 			return err
 		}
 
-		if response.NotificationAttributes[identity] == nil {
+		_, exists := response.NotificationAttributes[identity]
+		if exists {
 			return fmt.Errorf("SES Identity Notification Topic %s not found in AWS", identity)
 		}
 
@@ -127,12 +128,12 @@ func testAccCheckIdentityNotificationTopicExists(ctx context.Context, n string) 
 
 		var headersIncluded bool
 		switch notificationType {
-		case awstypes.NotificationTypeBounce:
-			headersIncluded = aws.ToBool(response.NotificationAttributes[identity].HeadersInBounceNotificationsEnabled)
-		case awstypes.NotificationTypeComplaint:
-			headersIncluded = aws.ToBool(response.NotificationAttributes[identity].HeadersInComplaintNotificationsEnabled)
-		case awstypes.NotificationTypeDelivery:
-			headersIncluded = aws.ToBool(response.NotificationAttributes[identity].HeadersInDeliveryNotificationsEnabled)
+		case string(awstypes.NotificationTypeBounce):
+			headersIncluded = response.NotificationAttributes[identity].HeadersInBounceNotificationsEnabled
+		case string(awstypes.NotificationTypeComplaint):
+			headersIncluded = response.NotificationAttributes[identity].HeadersInComplaintNotificationsEnabled
+		case string(awstypes.NotificationTypeDelivery):
+			headersIncluded = response.NotificationAttributes[identity].HeadersInDeliveryNotificationsEnabled
 		}
 
 		if headersIncluded != headersExpected {
