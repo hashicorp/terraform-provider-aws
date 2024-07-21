@@ -12,13 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -176,7 +176,7 @@ func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 
 				gto, err := conn.GetTemplate(ctx, &input)
 				if err != nil {
-					if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeTemplateDoesNotExistException) {
+					if errs.IsA[*awstypes.TemplateDoesNotExistException](err) {
 						return nil
 					}
 					return retry.NonRetryableError(err)
