@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -95,8 +94,8 @@ func testAccCheckDomainIdentityDestroy(ctx context.Context) resource.TestCheckFu
 
 			domain := rs.Primary.ID
 			params := &ses.GetIdentityVerificationAttributesInput{
-				Identities: []*string{
-					aws.String(domain),
+				Identities: []string{
+					domain,
 				},
 			}
 
@@ -105,7 +104,8 @@ func testAccCheckDomainIdentityDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			if response.VerificationAttributes[domain] != nil {
+			_, exists := response.VerificationAttributes[domain]
+			if exists {
 				return fmt.Errorf("SES Domain Identity %s still exists. Failing!", domain)
 			}
 		}
@@ -129,8 +129,8 @@ func testAccCheckDomainIdentityExists(ctx context.Context, n string) resource.Te
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		params := &ses.GetIdentityVerificationAttributesInput{
-			Identities: []*string{
-				aws.String(domain),
+			Identities: []string{
+				domain,
 			},
 		}
 
@@ -139,7 +139,8 @@ func testAccCheckDomainIdentityExists(ctx context.Context, n string) resource.Te
 			return err
 		}
 
-		if response.VerificationAttributes[domain] == nil {
+		_, exists := response.VerificationAttributes[domain]
+		if !exists {
 			return fmt.Errorf("SES Domain Identity %s not found in AWS", domain)
 		}
 
