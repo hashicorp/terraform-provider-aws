@@ -306,6 +306,8 @@ github.com/aws/aws-sdk-go-v2/service/lambda v1.56.3 h1:r/y4nQOln25cbjrD8Wmzhhvnv
 github.com/aws/aws-sdk-go-v2/service/lambda v1.56.3/go.mod h1:/4Vaddp+wJc1AA8ViAqwWKAcYykPV+ZplhmLQuq3RbQ=
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.6.3 h1:HlZn+zJoCEFuUvKLGbGXVIwXp3XA1xvLf/udp7ABDvk=
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.6.3/go.mod h1:IJIHGsE1X4tRCw3s+SMG0NlIQM4yM7rlj5CfUDqT/+M=
+github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.26.3 h1:cAKcXE3h0gfO9kn++jY+Zfgrx7ebH9grwwMTEzJaMa8=
+github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.26.3/go.mod h1:CmB4htZwQoJ7wR5sw8Kf7HY9mIaAuaZSKavBSHEqDTU=
 github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.45.3 h1:sZwjTNfuXXk3Fyor/bEpjcznTD1+f6OEYxONrAU2sAc=
 github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.45.3/go.mod h1:GE1lDQwM3Dm7Fysaet+yeNanYwwTvfLIUlK3P/owUw8=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.40.3 h1:dy4sbyGy7BS4c0KaPZwg1P5ZP+lW+auTVcPiwrmbn8M=

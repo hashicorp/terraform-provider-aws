@@ -89,6 +89,7 @@ const (
 	KafkaConnectEndpointID               = "kafkaconnect"
 	KendraEndpointID                     = "kendra"
 	LambdaEndpointID                     = "lambda"
+	LexModelBuildingServiceEndpointID    = "models.lex"
 	LexV2ModelsEndpointID                = "models-v2-lex"
 	M2EndpointID                         = "m2"
 	MQEndpointID                         = "mq"
