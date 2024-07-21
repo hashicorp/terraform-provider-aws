@@ -154,7 +154,7 @@ func testAccCheckEventDestinationExists(ctx context.Context, n string, v *awstyp
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		response, err := conn.DescribeConfigurationSet(ctx, &ses.DescribeConfigurationSetInput{
-			ConfigurationSetAttributeNames: []string{awstypes.ConfigurationSetAttributeEventDestinations},
+			ConfigurationSetAttributeNames: []awstypes.ConfigurationSetAttribute{awstypes.ConfigurationSetAttributeEventDestinations},
 			ConfigurationSetName:           aws.String(rs.Primary.Attributes["configuration_set_name"]),
 		})
 		if err != nil {
@@ -163,7 +163,7 @@ func testAccCheckEventDestinationExists(ctx context.Context, n string, v *awstyp
 
 		for _, eventDestination := range response.EventDestinations {
 			if aws.ToString(eventDestination.Name) == rs.Primary.ID {
-				*v = *eventDestination
+				*v = eventDestination
 				return nil
 			}
 		}
