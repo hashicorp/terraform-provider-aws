@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -156,7 +155,7 @@ func testAccCheckIdentityPolicyDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			if output != nil && len(output.Policies) > 0 && aws.ToString(output.Policies[policyName]) != "" {
+			if output != nil && len(output.Policies) > 0 && output.Policies[policyName] != "" {
 				return fmt.Errorf("SES Identity (%s) Policy (%s) still exists", identityARN, policyName)
 			}
 		}
