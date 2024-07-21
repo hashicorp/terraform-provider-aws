@@ -9,14 +9,16 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kinesisvideo"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kinesisvideo"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisvideo/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -101,11 +103,11 @@ func ResourceStream() *schema.Resource {
 
 func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisVideoConn(ctx)
+	conn := meta.(*conns.AWSClient).KinesisVideoClient(ctx)
 
 	input := &kinesisvideo.CreateStreamInput{
 		StreamName:           aws.String(d.Get(names.AttrName).(string)),
-		DataRetentionInHours: aws.Int64(int64(d.Get("data_retention_in_hours").(int))),
+		DataRetentionInHours: aws.Int32(int32(d.Get("data_retention_in_hours").(int))),
 		Tags:                 getTagsIn(ctx),
 	}
 
@@ -121,17 +123,17 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.MediaType = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateStreamWithContext(ctx, input)
+	resp, err := conn.CreateStream(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Kinesis Video Stream: %s", err)
 	}
 
-	arn := aws.StringValue(resp.StreamARN)
+	arn := aws.ToString(resp.StreamARN)
 	d.SetId(arn)
 
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{kinesisvideo.StatusCreating},
-		Target:     []string{kinesisvideo.StatusActive},
+		Pending:    enum.Slice(awstypes.StatusCreating),
+		Target:     enum.Slice(awstypes.StatusActive),
 		Refresh:    StreamStateRefresh(ctx, conn, arn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      10 * time.Second,
@@ -147,14 +149,14 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisVideoConn(ctx)
+	conn := meta.(*conns.AWSClient).KinesisVideoClient(ctx)
 
 	descOpts := &kinesisvideo.DescribeStreamInput{
 		StreamARN: aws.String(d.Id()),
 	}
 
-	resp, err := conn.DescribeStreamWithContext(ctx, descOpts)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, kinesisvideo.ErrCodeResourceNotFoundException) {
+	resp, err := conn.DescribeStream(ctx, descOpts)
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Kinesis Video Stream (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -179,7 +181,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisVideoConn(ctx)
+	conn := meta.(*conns.AWSClient).KinesisVideoClient(ctx)
 
 	updateOpts := &kinesisvideo.UpdateStreamInput{
 		StreamARN:      aws.String(d.Id()),
@@ -194,13 +196,13 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		updateOpts.MediaType = aws.String(v.(string))
 	}
 
-	if _, err := conn.UpdateStreamWithContext(ctx, updateOpts); err != nil {
+	if _, err := conn.UpdateStream(ctx, updateOpts); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Kinesis Video Stream (%s): %s", d.Id(), err)
 	}
 
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{kinesisvideo.StatusUpdating},
-		Target:     []string{kinesisvideo.StatusActive},
+		Pending:    enum.Slice(awstypes.StatusUpdating),
+		Target:     enum.Slice(awstypes.StatusActive),
 		Refresh:    StreamStateRefresh(ctx, conn, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      10 * time.Second,
@@ -216,21 +218,21 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisVideoConn(ctx)
+	conn := meta.(*conns.AWSClient).KinesisVideoClient(ctx)
 
-	if _, err := conn.DeleteStreamWithContext(ctx, &kinesisvideo.DeleteStreamInput{
+	if _, err := conn.DeleteStream(ctx, &kinesisvideo.DeleteStreamInput{
 		StreamARN:      aws.String(d.Id()),
 		CurrentVersion: aws.String(d.Get(names.AttrVersion).(string)),
 	}); err != nil {
-		if tfawserr.ErrCodeEquals(err, kinesisvideo.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting Kinesis Video Stream (%s): %s", d.Id(), err)
 	}
 
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{kinesisvideo.StatusDeleting},
-		Target:     []string{"DELETED"},
+		Pending:    enum.Slice(awstypes.StatusDeleting),
+		Target:     enum.Slice("DELETED"),
 		Refresh:    StreamStateRefresh(ctx, conn, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      10 * time.Second,
@@ -244,20 +246,20 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func StreamStateRefresh(ctx context.Context, conn *kinesisvideo.KinesisVideo, arn string) retry.StateRefreshFunc {
+func StreamStateRefresh(ctx context.Context, conn *kinesisvideo.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		emptyResp := &kinesisvideo.DescribeStreamInput{}
 
-		resp, err := conn.DescribeStreamWithContext(ctx, &kinesisvideo.DescribeStreamInput{
+		resp, err := conn.DescribeStream(ctx, &kinesisvideo.DescribeStreamInput{
 			StreamARN: aws.String(arn),
 		})
-		if tfawserr.ErrCodeEquals(err, kinesisvideo.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return emptyResp, "DELETED", nil
 		}
 		if err != nil {
 			return nil, "", err
 		}
 
-		return resp, aws.StringValue(resp.StreamInfo.Status), nil
+		return resp, string(resp.StreamInfo.Status), nil
 	}
 }
