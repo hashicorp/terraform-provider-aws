@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -49,7 +51,7 @@ func sweepBotAliases(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.LexModelsConn(ctx)
+	conn := client.LexModelsClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -74,7 +76,7 @@ func sweepBotAliases(region string) error {
 					r := ResourceBotAlias()
 					d := r.Data(nil)
 
-					d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(bot.Name), aws.StringValue(botAlias.Name)))
+					d.SetId(fmt.Sprintf("%s:%s", aws.ToString(bot.Name), aws.ToString(botAlias.Name)))
 					d.Set("bot_name", bot.Name)
 					d.Set(names.AttrName, botAlias.Name)
 
@@ -91,7 +93,7 @@ func sweepBotAliases(region string) error {
 			r := ResourceBotAlias()
 			d := r.Data(nil)
 
-			d.SetId(aws.StringValue(bot.Name))
+			d.SetId(aws.ToString(bot.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -123,7 +125,7 @@ func sweepBots(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.LexModelsConn(ctx)
+	conn := client.LexModelsClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -138,7 +140,7 @@ func sweepBots(region string) error {
 			r := ResourceBot()
 			d := r.Data(nil)
 
-			d.SetId(aws.StringValue(bot.Name))
+			d.SetId(aws.ToString(bot.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -170,7 +172,7 @@ func sweepIntents(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.LexModelsConn(ctx)
+	conn := client.LexModelsClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -185,7 +187,7 @@ func sweepIntents(region string) error {
 			r := ResourceIntent()
 			d := r.Data(nil)
 
-			d.SetId(aws.StringValue(intent.Name))
+			d.SetId(aws.ToString(intent.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -217,7 +219,7 @@ func sweepSlotTypes(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.LexModelsConn(ctx)
+	conn := client.LexModelsClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -232,7 +234,7 @@ func sweepSlotTypes(region string) error {
 			r := ResourceSlotType()
 			d := r.Data(nil)
 
-			d.SetId(aws.StringValue(slotType.Name))
+			d.SetId(aws.ToString(slotType.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

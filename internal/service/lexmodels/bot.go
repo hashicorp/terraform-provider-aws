@@ -10,14 +10,17 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -143,8 +146,8 @@ func ResourceBot() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      lexmodelbuildingservice.LocaleEnUs,
-				ValidateFunc: validation.StringInSlice(lexmodelbuildingservice.Locale_Values(), false),
+				Default:      awstypes.LocaleEnUs,
+				ValidateFunc: enum.Validate[awstypes.Locale](),
 			},
 			names.AttrName: {
 				Type:         schema.TypeString,
@@ -161,8 +164,8 @@ func ResourceBot() *schema.Resource {
 			"process_behavior": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      lexmodelbuildingservice.ProcessBehaviorSave,
-				ValidateFunc: validation.StringInSlice(lexmodelbuildingservice.ProcessBehavior_Values(), false),
+				Default:      awstypes.ProcessBehaviorSave,
+				ValidateFunc: enum.Validate[awstypes.ProcessBehavior](),
 			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
@@ -225,7 +228,7 @@ var validBotVersion = validation.All(
 
 func resourceBotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
+	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &lexmodelbuildingservice.PutBotInput{
@@ -244,11 +247,11 @@ func resourceBotCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("locale"); ok {
-		input.Locale = aws.String(v.(string))
+		input.Locale = awstypes.Locale(v.(string))
 	}
 
 	if v, ok := d.GetOk("process_behavior"); ok {
-		input.ProcessBehavior = aws.String(v.(string))
+		input.ProcessBehavior = awstypes.ProcessBehavior(v.(string))
 	}
 
 	if v, ok := d.GetOk("voice_id"); ok {
@@ -262,16 +265,16 @@ func resourceBotCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		if output != nil {
 			input.Checksum = output.Checksum
 		}
-		output, err = conn.PutBotWithContext(ctx, input)
+		output, err = conn.PutBot(ctx, input)
 
 		return output, err
-	}, lexmodelbuildingservice.ErrCodeConflictException)
+	}, awstypes.ErrCodeConflictException)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Lex Bot (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Name))
+	d.SetId(aws.ToString(output.Name))
 
 	if _, err := waitBotVersionCreated(ctx, conn, name, BotVersionLatest, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Lex Bot (%s) create: %s", d.Id(), err)
@@ -282,7 +285,7 @@ func resourceBotCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceBotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
+	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
 	output, err := FindBotVersionByName(ctx, conn, d.Id(), BotVersionLatest)
 
@@ -307,7 +310,7 @@ func resourceBotRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	// Process behavior is not returned from the API but is used for create and update.
 	// Manually write to state file to avoid un-expected diffs.
-	processBehavior := lexmodelbuildingservice.ProcessBehaviorSave
+	processBehavior := awstypes.ProcessBehaviorSave
 	if v, ok := d.GetOk("process_behavior"); ok {
 		processBehavior = v.(string)
 	}
@@ -350,7 +353,7 @@ func resourceBotRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 func resourceBotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
+	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
 	input := &lexmodelbuildingservice.PutBotInput{
 		Checksum:                     aws.String(d.Get("checksum").(string)),
@@ -380,8 +383,8 @@ func resourceBotUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
-		return conn.PutBotWithContext(ctx, input)
-	}, lexmodelbuildingservice.ErrCodeConflictException)
+		return conn.PutBot(ctx, input)
+	}, awstypes.ErrCodeConflictException)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Lex Bot (%s): %s", d.Id(), err)
@@ -396,7 +399,7 @@ func resourceBotUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceBotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
+	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
 	input := &lexmodelbuildingservice.DeleteBotInput{
 		Name: aws.String(d.Id()),
@@ -404,10 +407,10 @@ func resourceBotDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	log.Printf("[DEBUG] Deleting Lex Bot: (%s)", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
-		return conn.DeleteBotWithContext(ctx, input)
-	}, lexmodelbuildingservice.ErrCodeConflictException)
+		return conn.DeleteBot(ctx, input)
+	}, awstypes.ErrCodeConflictException)
 
-	if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
@@ -422,11 +425,11 @@ func resourceBotDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func flattenIntents(intents []*lexmodelbuildingservice.Intent) (flattenedIntents []map[string]interface{}) {
+func flattenIntents(intents []*awstypes.Intent) (flattenedIntents []map[string]interface{}) {
 	for _, intent := range intents {
 		flattenedIntents = append(flattenedIntents, map[string]interface{}{
-			"intent_name":    aws.StringValue(intent.IntentName),
-			"intent_version": aws.StringValue(intent.IntentVersion),
+			"intent_name":    aws.ToString(intent.IntentName),
+			"intent_version": aws.ToString(intent.IntentVersion),
 		})
 	}
 
@@ -436,8 +439,8 @@ func flattenIntents(intents []*lexmodelbuildingservice.Intent) (flattenedIntents
 // Expects a slice of maps representing the Lex objects.
 // The value passed into this function should have been run through the expandLexSet function.
 // Example: []map[intent_name: OrderFlowers intent_version: $LATEST]
-func expandIntents(rawValues []interface{}) []*lexmodelbuildingservice.Intent {
-	intents := make([]*lexmodelbuildingservice.Intent, 0, len(rawValues))
+func expandIntents(rawValues []interface{}) []*awstypes.Intent {
+	intents := make([]*awstypes.Intent, 0, len(rawValues))
 
 	for _, rawValue := range rawValues {
 		value, ok := rawValue.(map[string]interface{})
@@ -445,7 +448,7 @@ func expandIntents(rawValues []interface{}) []*lexmodelbuildingservice.Intent {
 			continue
 		}
 
-		intents = append(intents, &lexmodelbuildingservice.Intent{
+		intents = append(intents, &awstypes.Intent{
 			IntentName:    aws.String(value["intent_name"].(string)),
 			IntentVersion: aws.String(value["intent_version"].(string)),
 		})

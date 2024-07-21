@@ -23,7 +23,7 @@ func testAccBotAliasDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

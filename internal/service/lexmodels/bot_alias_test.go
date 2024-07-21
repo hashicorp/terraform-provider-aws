@@ -10,14 +10,16 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tflexmodels "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,7 +33,7 @@ func TestAccLexModelsBotAlias_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -76,7 +78,7 @@ func testAccBotAlias_botVersion(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -133,7 +135,7 @@ func TestAccLexModelsBotAlias_conversationLogsText(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -184,7 +186,7 @@ func TestAccLexModelsBotAlias_conversationLogsAudio(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -236,7 +238,7 @@ func TestAccLexModelsBotAlias_conversationLogsBoth(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -287,7 +289,7 @@ func TestAccLexModelsBotAlias_description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -337,7 +339,7 @@ func TestAccLexModelsBotAlias_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -374,13 +376,13 @@ func testAccCheckBotAliasExists(ctx context.Context, rName string, output *lexmo
 		botAliasName := rs.Primary.Attributes[names.AttrName]
 
 		var err error
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsClient(ctx)
 
-		output, err = conn.GetBotAliasWithContext(ctx, &lexmodelbuildingservice.GetBotAliasInput{
+		output, err = conn.GetBotAlias(ctx, &lexmodelbuildingservice.GetBotAliasInput{
 			BotName: aws.String(botName),
 			Name:    aws.String(botAliasName),
 		})
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
+		if errs.IsA[*awstypes.NotFoundException](err) {
 			return fmt.Errorf("error bot alias '%q' not found", rs.Primary.ID)
 		}
 		if err != nil {
@@ -393,15 +395,15 @@ func testAccCheckBotAliasExists(ctx context.Context, rName string, output *lexmo
 
 func testAccCheckBotAliasDestroy(ctx context.Context, botName, botAliasName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsClient(ctx)
 
-		_, err := conn.GetBotAliasWithContext(ctx, &lexmodelbuildingservice.GetBotAliasInput{
+		_, err := conn.GetBotAlias(ctx, &lexmodelbuildingservice.GetBotAliasInput{
 			BotName: aws.String(botName),
 			Name:    aws.String(botAliasName),
 		})
 
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
+			if errs.IsA[*awstypes.NotFoundException](err) {
 				return nil
 			}
 

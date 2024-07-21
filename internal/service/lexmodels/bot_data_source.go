@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -95,7 +95,7 @@ func DataSourceBot() *schema.Resource {
 
 func dataSourceBotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
+	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	version := d.Get(names.AttrVersion).(string)
