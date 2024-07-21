@@ -54,7 +54,7 @@ func TestAccDocDBElasticCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "admin_user_password", "testpassword"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "tue:04:00-tue:04:30"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "Tue:04:00-Tue:04:30"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 				),
 			},
@@ -183,7 +183,7 @@ func TestAccDocDBElasticCluster_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "tue:04:00-tue:04:30"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "Tue:04:00-Tue:04:30"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 				),
 			},
@@ -217,7 +217,7 @@ func TestAccDocDBElasticCluster_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "tue:04:00-tue:04:30"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "Tue:04:00-Tue:04:30"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 				),
 			},
@@ -317,7 +317,7 @@ resource "aws_docdbelastic_cluster" "test" {
 
   backup_retention_period = 1
 
-  preferred_maintenance_window = "tue:04:00-tue:04:30"
+  preferred_maintenance_window = "Tue:04:00-Tue:04:30"
 
   vpc_security_group_ids = [
     aws_security_group.test.id
@@ -373,7 +373,7 @@ resource "aws_docdbelastic_cluster" "test" {
 
   backup_retention_period = %[2]d
 
-  preferred_maintenance_window = "tue:04:00-tue:04:30"
+  preferred_maintenance_window = "Tue:04:00-Tue:04:30"
 
   vpc_security_group_ids = [
     aws_security_group.test.id
@@ -400,7 +400,7 @@ resource "aws_docdbelastic_cluster" "test" {
   admin_user_password = "testpassword"
   auth_type           = "PLAIN_TEXT"
 
-  preferred_maintenance_window = "tue:04:00-tue:04:30"
+  preferred_maintenance_window = "Tue:04:00-Tue:04:30"
 
   vpc_security_group_ids = [
     aws_security_group.test.id
@@ -431,7 +431,7 @@ resource "aws_docdbelastic_cluster" "test" {
   admin_user_password = "testpassword"
   auth_type           = "PLAIN_TEXT"
 
-  preferred_maintenance_window = "tue:04:00-tue:04:30"
+  preferred_maintenance_window = "Tue:04:00-Tue:04:30"
 
   vpc_security_group_ids = [
     aws_security_group.test.id
