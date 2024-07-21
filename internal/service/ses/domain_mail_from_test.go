@@ -36,7 +36,7 @@ func TestAccSESDomainMailFrom_basic(t *testing.T) {
 				Config: testAccDomainMailFromConfig_basic(domain, mailFromDomain1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainMailFromExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", awstypes.BehaviorOnMXFailureUseDefaultValue),
+					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", string(awstypes.BehaviorOnMXFailureUseDefaultValue)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, domain),
 					resource.TestCheckResourceAttr(resourceName, "mail_from_domain", mailFromDomain1),
 				),
@@ -45,7 +45,7 @@ func TestAccSESDomainMailFrom_basic(t *testing.T) {
 				Config: testAccDomainMailFromConfig_basic(domain, mailFromDomain2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainMailFromExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", awstypes.BehaviorOnMXFailureUseDefaultValue),
+					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", string(awstypes.BehaviorOnMXFailureUseDefaultValue)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, domain),
 					resource.TestCheckResourceAttr(resourceName, "mail_from_domain", mailFromDomain2),
 				),
@@ -121,17 +121,17 @@ func TestAccSESDomainMailFrom_behaviorOnMxFailure(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainMailFromDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainMailFromConfig_behaviorOnMxFailure(domain, awstypes.BehaviorOnMXFailureUseDefaultValue),
+				Config: testAccDomainMailFromConfig_behaviorOnMxFailure(domain, string(awstypes.BehaviorOnMXFailureUseDefaultValue)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainMailFromExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", awstypes.BehaviorOnMXFailureUseDefaultValue),
+					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", string(awstypes.BehaviorOnMXFailureUseDefaultValue)),
 				),
 			},
 			{
-				Config: testAccDomainMailFromConfig_behaviorOnMxFailure(domain, awstypes.BehaviorOnMXFailureRejectMessage),
+				Config: testAccDomainMailFromConfig_behaviorOnMxFailure(domain, string(awstypes.BehaviorOnMXFailureRejectMessage)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainMailFromExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", awstypes.BehaviorOnMXFailureRejectMessage),
+					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", string(awstypes.BehaviorOnMXFailureRejectMessage)),
 				),
 			},
 			{
@@ -158,8 +158,8 @@ func testAccCheckDomainMailFromExists(ctx context.Context, n string) resource.Te
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
 		params := &ses.GetIdentityMailFromDomainAttributesInput{
-			Identities: []*string{
-				aws.String(domain),
+			Identities: []string{
+				domain,
 			},
 		}
 
@@ -168,7 +168,8 @@ func testAccCheckDomainMailFromExists(ctx context.Context, n string) resource.Te
 			return err
 		}
 
-		if response.MailFromDomainAttributes[domain] == nil {
+		_, exists := response.MailFromDomainAttributes[domain]
+		if !exists {
 			return fmt.Errorf("SES Domain MAIL FROM %s not found in AWS", domain)
 		}
 
@@ -186,7 +187,7 @@ func testAccCheckDomainMailFromDestroy(ctx context.Context) resource.TestCheckFu
 			}
 
 			input := &ses.GetIdentityMailFromDomainAttributesInput{
-				Identities: []*string{aws.String(rs.Primary.ID)},
+				Identities: []string{string(rs.Primary.ID)},
 			}
 
 			out, err := conn.GetIdentityMailFromDomainAttributes(ctx, input)
