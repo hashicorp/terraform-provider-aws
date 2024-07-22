@@ -13,8 +13,8 @@ import (
 
 func waitDBClusterRoleAssociationCreated(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string, timeout time.Duration) (*rds.DBClusterRole, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{ClusterRoleStatusPending},
-		Target:     []string{ClusterRoleStatusActive},
+		Pending:    []string{clusterRoleStatusPending},
+		Target:     []string{clusterRoleStatusActive},
 		Refresh:    statusDBClusterRole(ctx, conn, dbClusterID, roleARN),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -32,7 +32,7 @@ func waitDBClusterRoleAssociationCreated(ctx context.Context, conn *rds.RDS, dbC
 
 func waitDBClusterRoleAssociationDeleted(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string, timeout time.Duration) (*rds.DBClusterRole, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{ClusterRoleStatusActive, ClusterRoleStatusPending},
+		Pending:    []string{clusterRoleStatusActive, clusterRoleStatusPending},
 		Target:     []string{},
 		Refresh:    statusDBClusterRole(ctx, conn, dbClusterID, roleARN),
 		Timeout:    timeout,
