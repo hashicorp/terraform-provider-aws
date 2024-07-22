@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -224,10 +225,16 @@ func resourceMLTransformCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[DEBUG] Creating Glue ML Transform: %+v", input)
-	output, err := conn.CreateMLTransform(ctx, input)
+
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidInputException](ctx, iamPropagationTimeout, func() (any, error) {
+		return conn.CreateMLTransform(ctx, input)
+	}, "Unable to assume role")
+	
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue ML Transform: %s", err)
 	}
+
+	output := outputRaw.(*glue.CreateMLTransformOutput)
 
 	d.SetId(aws.ToString(output.TransformId))
 
