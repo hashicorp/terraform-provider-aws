@@ -1442,14 +1442,6 @@ func TestFlattenFlattener(t *testing.T) {
 				Field1: types.StringValue("value1"),
 			},
 		},
-		// {
-		// 	// Source does not implement attr.Value
-		// 	TestName: "top level string Source",
-		// 	Source:   "value1",
-		// 	Target:   &testFlexTFExpanderToString{},
-		// 	WantErr:  true,
-		// },
-
 		{
 			TestName: "top level incompatible struct Target",
 			Source: testFlexAWSExpanderIncompatible{
@@ -1460,7 +1452,6 @@ func TestFlattenFlattener(t *testing.T) {
 				Field1: types.StringNull(),
 			},
 		},
-
 		{
 			TestName: "single struct Source and single list Target",
 			Source: testFlexAWSExpanderSingleStruct{
