@@ -32,6 +32,10 @@ func expandScalingConfiguration(tfMap map[string]interface{}) *rds.ScalingConfig
 		apiObject.MinCapacity = aws.Int64(int64(v))
 	}
 
+	if v, ok := tfMap["seconds_before_timeout"].(int); ok {
+		apiObject.SecondsBeforeTimeout = aws.Int64(int64(v))
+	}
+
 	if v, ok := tfMap["seconds_until_auto_pause"].(int); ok {
 		apiObject.SecondsUntilAutoPause = aws.Int64(int64(v))
 	}
@@ -83,6 +87,10 @@ func flattenScalingConfigurationInfo(apiObject *rds.ScalingConfigurationInfo) ma
 
 	if v := apiObject.MinCapacity; v != nil {
 		tfMap["min_capacity"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.SecondsBeforeTimeout; v != nil {
+		tfMap["seconds_before_timeout"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.SecondsUntilAutoPause; v != nil {

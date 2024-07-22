@@ -1841,25 +1841,27 @@ func TestAccRDSCluster_scaling(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_scalingConfiguration(rName, false, 128, 4, 301, "RollbackCapacityChange"),
+				Config: testAccClusterConfig_scalingConfiguration(rName, false, 128, 4, 301, 301, "RollbackCapacityChange"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "128"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_before_timeout", "301"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_until_auto_pause", "301"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "RollbackCapacityChange"),
 				),
 			},
 			{
-				Config: testAccClusterConfig_scalingConfiguration(rName, true, 256, 8, 86400, "ForceApplyCapacityChange"),
+				Config: testAccClusterConfig_scalingConfiguration(rName, true, 256, 8, 600, 86400, "ForceApplyCapacityChange"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "256"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", "8"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_before_timeout", "600"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_until_auto_pause", "86400"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "ForceApplyCapacityChange"),
 				),
@@ -4582,7 +4584,7 @@ resource "aws_rds_cluster_instance" "secondary" {
 `, tfrds.ClusterEngineAuroraPostgreSQL, mainInstanceClasses, rName))
 }
 
-func testAccClusterConfig_scalingConfiguration(rName string, autoPause bool, maxCapacity, minCapacity, secondsUntilAutoPause int, timeoutAction string) string {
+func testAccClusterConfig_scalingConfiguration(rName string, autoPause bool, maxCapacity, minCapacity, secondsBeforeTimeout, secondsUntilAutoPause int, timeoutAction string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
@@ -4596,11 +4598,12 @@ resource "aws_rds_cluster" "test" {
     auto_pause               = %[3]t
     max_capacity             = %[4]d
     min_capacity             = %[5]d
-    seconds_until_auto_pause = %[6]d
-    timeout_action           = %[7]q
+    seconds_before_timeout   = %[6]d
+    seconds_until_auto_pause = %[7]d
+    timeout_action           = %[8]q
   }
 }
-`, rName, tfrds.ClusterEngineAuroraMySQL, autoPause, maxCapacity, minCapacity, secondsUntilAutoPause, timeoutAction)
+`, rName, tfrds.ClusterEngineAuroraMySQL, autoPause, maxCapacity, minCapacity, secondsBeforeTimeout, secondsUntilAutoPause, timeoutAction)
 }
 
 func testAccClusterConfig_serverlessV2ScalingConfiguration(rName string, maxCapacity, minCapacity float64) string {
