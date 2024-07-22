@@ -1076,8 +1076,6 @@ func testAccCheckRoleExists(ctx context.Context, n string, v *awstypes.Role) res
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		fmt.Printf("are we even checking this?\n")
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No IAM Role ID is set")
 		}
