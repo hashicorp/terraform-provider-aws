@@ -10,7 +10,7 @@ import (
 )
 
 // NormalizeJsonStringSchemaStateFunc normalizes a JSON string value before storing it in state.
-func NormalizeJsonStringSchemaStateFunc(v interface{}) string {
+func NormalizeJsonStringSchemaStateFunc(v interface{}) string { // nosemgrep:ci.caps2-in-func-name
 	json, _ := structure.NormalizeJsonString(v)
 	return json
 }

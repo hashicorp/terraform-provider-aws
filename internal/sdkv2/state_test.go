@@ -9,7 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestNormalizeJsonStringSchemaStateFunc(t *testing.T) {
+func TestNormalizeJsonStringSchemaStateFunc(t *testing.T) { // nosemgrep:ci.caps2-in-func-name
 	t.Parallel()
 
 	var input interface{} = `{ "key1": "value1", "key2": 42}`
