@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -27,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -79,28 +79,18 @@ func resourceTaskDefinition() *schema.Resource {
 				Computed: true,
 			},
 			"container_definitions": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				StateFunc: func(v interface{}) string {
-					// Sort the lists of environment variables as they are serialized to state, so we won't get
-					// spurious reorderings in plans (diff is suppressed if the environment variables haven't changed,
-					// but they still show in the plan if some other property changes).
-					orderedCDs, _ := expandContainerDefinitions(v.(string))
-					containerDefinitions(orderedCDs).orderContainers()
-					containerDefinitions(orderedCDs).orderEnvironmentVariables()
-					containerDefinitions(orderedCDs).orderSecrets()
-					unnormalizedJson, _ := flattenContainerDefinitions(orderedCDs)
-					json, _ := structure.NormalizeJsonString(unnormalizedJson)
-					return json
-				},
+				Type:      schema.TypeString,
+				Required:  true,
+				ForceNew:  true,
+				StateFunc: sdkv2.NormalizeJsonStringSchemaStateFunc,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					networkMode, ok := d.GetOk("network_mode")
-					isAWSVPC := ok && networkMode.(string) == string(awstypes.NetworkModeAwsvpc)
+					isAWSVPC := ok && awstypes.NetworkMode(networkMode.(string)) == awstypes.NetworkModeAwsvpc
 					equal, _ := containerDefinitionsAreEquivalent(old, new, isAWSVPC)
 					return equal
 				},
-				ValidateFunc: validTaskDefinitionContainerDefinitions,
+				DiffSuppressOnRefresh: true,
+				ValidateFunc:          validTaskDefinitionContainerDefinitions,
 			},
 			"cpu": {
 				Type:     schema.TypeString,
@@ -631,7 +621,11 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-	d.Set("container_definitions", defs)
+	if v := d.Get("container_definitions").(string); tfjson.EqualStrings(v, defs) {
+		d.Set("container_definitions", v)
+	} else {
+		d.Set("container_definitions", defs)
+	}
 
 	setTagsOut(ctx, tags)
 
