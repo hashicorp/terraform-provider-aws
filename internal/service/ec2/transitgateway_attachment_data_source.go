@@ -80,7 +80,7 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -126,7 +126,7 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 	d.Set(names.AttrTransitGatewayID, transitGatewayAttachment.TransitGatewayId)
 	d.Set("transit_gateway_owner_id", transitGatewayAttachment.TransitGatewayOwnerId)
 
-	setTagsOutV2(ctx, transitGatewayAttachment.Tags)
+	setTagsOut(ctx, transitGatewayAttachment.Tags)
 
 	return diags
 }

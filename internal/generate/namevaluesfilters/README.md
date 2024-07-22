@@ -8,7 +8,7 @@ Full documentation for this package can be found on [GoDoc](https://godoc.org/gi
 
 Many AWS Go SDK services that support resource filtering have their service-specific Go type conversion functions to and from `NameValuesFilters` code generated. Converting from `NameValuesFilters` to AWS Go SDK types is done via `{SERVICE}Filters()` functions on the type. For more information about this code generation, see the [`generators/servicefilters` README](generators/servicefilters/README.md).
 
-Any filtering functions that cannot be generated should be hand implemented in a service-specific source file (e.g. `ec2_filters.go`) and follow the format of similar generated code wherever possible. The first line of the source file should be `// +build !generate`. This prevents the file's inclusion during the code generation phase.
+Any filtering functions that cannot be generated should be hand implemented in a service-specific source file and follow the format of similar generated code wherever possible. The first line of the source file should be `// +build !generate`. This prevents the file's inclusion during the code generation phase.
 
 ## Code Structure
 

@@ -28,7 +28,7 @@ import (
 // @SDKResource("aws_verifiedaccess_endpoint", name="Verified Access Endpoint")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceVerifiedAccessEndpoint() *schema.Resource {
+func resourceVerifiedAccessEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessEndpointCreate,
 		ReadWithoutTimeout:   resourceVerifiedAccessEndpointRead,
@@ -197,7 +197,7 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 		DomainCertificateArn:  aws.String(d.Get("domain_certificate_arn").(string)),
 		EndpointDomainPrefix:  aws.String(d.Get("endpoint_domain_prefix").(string)),
 		EndpointType:          types.VerifiedAccessEndpointType(d.Get(names.AttrEndpointType).(string)),
-		TagSpecifications:     getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessEndpoint),
+		TagSpecifications:     getTagSpecificationsIn(ctx, types.ResourceTypeVerifiedAccessEndpoint),
 		VerifiedAccessGroupId: aws.String(d.Get("verified_access_group_id").(string)),
 	}
 

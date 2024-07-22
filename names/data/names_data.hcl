@@ -1115,7 +1115,7 @@ service "chime" {
 
   sdk {
     id             = "Chime"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -3253,16 +3253,12 @@ service "ecs" {
 
   sdk {
     id             = "ECS"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {
     provider_name_upper = "ECS"
     human_friendly      = "ECS (Elastic Container)"
-  }
-
-  client {
-    go_v1_client_typename = "ECS"
   }
 
   endpoint_info {
@@ -3390,16 +3386,12 @@ service "elastictranscoder" {
 
   sdk {
     id             = "Elastic Transcoder"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
     provider_name_upper = "ElasticTranscoder"
     human_friendly      = "Elastic Transcoder"
-  }
-
-  client {
-    go_v1_client_typename = "ElasticTranscoder"
   }
 
   endpoint_info {
@@ -3804,7 +3796,7 @@ service "emrcontainers" {
 
   sdk {
     id             = "EMR containers"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4125,7 +4117,7 @@ service "fsx" {
 
   sdk {
     id             = "FSx"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4432,7 +4424,7 @@ service "inspector" {
 
   sdk {
     id             = "Inspector"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4954,7 +4946,7 @@ service "ivs" {
 
   sdk {
     id             = "ivs"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -9831,7 +9823,7 @@ service "ec2" {
 
   sdk {
     id             = "EC2"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {

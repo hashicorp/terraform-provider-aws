@@ -110,7 +110,7 @@ func resourceTransitGatewayVPCAttachmentCreate(ctx context.Context, d *schema.Re
 		},
 		SubnetIds:         flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		TransitGatewayId:  aws.String(transitGatewayID),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeTransitGatewayAttachment),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeTransitGatewayAttachment),
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
@@ -221,7 +221,7 @@ func resourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Reso
 	d.Set(names.AttrVPCID, transitGatewayVPCAttachment.VpcId)
 	d.Set("vpc_owner_id", transitGatewayVPCAttachment.VpcOwnerId)
 
-	setTagsOutV2(ctx, transitGatewayVPCAttachment.Tags)
+	setTagsOut(ctx, transitGatewayVPCAttachment.Tags)
 
 	return diags
 }

@@ -229,7 +229,7 @@ func resourceMLTransformCreate(ctx context.Context, d *schema.ResourceData, meta
 	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidInputException](ctx, iamPropagationTimeout, func() (any, error) {
 		return conn.CreateMLTransform(ctx, input)
 	}, "Unable to assume role")
-	
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue ML Transform: %s", err)
 	}

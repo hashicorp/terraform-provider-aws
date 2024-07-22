@@ -152,7 +152,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.AllocateAddressInput{
-		TagSpecifications: getTagSpecificationsInV2(ctx, types.ResourceTypeElasticIp),
+		TagSpecifications: getTagSpecificationsIn(ctx, types.ResourceTypeElasticIp),
 	}
 
 	if v, ok := d.GetOk(names.AttrAddress); ok {
@@ -271,7 +271,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "reading EC2 EIP (%s) domain name attribute: %s", d.Id(), err)
 	}
 
-	setTagsOutV2(ctx, address.Tags)
+	setTagsOut(ctx, address.Tags)
 
 	return diags
 }
