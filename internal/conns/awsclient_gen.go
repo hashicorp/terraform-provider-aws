@@ -107,6 +107,7 @@ import (
 	fsx_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fsx"
 	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
 	globalaccelerator_sdkv2 "github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
+	glue_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glue"
 	grafana_sdkv2 "github.com/aws/aws-sdk-go-v2/service/grafana"
 	greengrass_sdkv2 "github.com/aws/aws-sdk-go-v2/service/greengrass"
 	groundstation_sdkv2 "github.com/aws/aws-sdk-go-v2/service/groundstation"
@@ -218,7 +219,6 @@ import (
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
-	glue_sdkv1 "github.com/aws/aws-sdk-go/service/glue"
 	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	kinesisanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalytics"
@@ -689,8 +689,8 @@ func (c *AWSClient) GlobalAcceleratorClient(ctx context.Context) *globalaccelera
 	return errs.Must(client[*globalaccelerator_sdkv2.Client](ctx, c, names.GlobalAccelerator, make(map[string]any)))
 }
 
-func (c *AWSClient) GlueConn(ctx context.Context) *glue_sdkv1.Glue {
-	return errs.Must(conn[*glue_sdkv1.Glue](ctx, c, names.Glue, make(map[string]any)))
+func (c *AWSClient) GlueClient(ctx context.Context) *glue_sdkv2.Client {
+	return errs.Must(client[*glue_sdkv2.Client](ctx, c, names.Glue, make(map[string]any)))
 }
 
 func (c *AWSClient) GrafanaClient(ctx context.Context) *grafana_sdkv2.Client {

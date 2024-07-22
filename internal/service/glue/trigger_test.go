@@ -8,21 +8,21 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGlueTrigger_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var trigger glue.Trigger
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
@@ -64,7 +64,7 @@ func TestAccGlueTrigger_basic(t *testing.T) {
 
 func TestAccGlueTrigger_crawler(t *testing.T) {
 	ctx := acctest.Context(t)
-	var trigger glue.Trigger
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test_trigger"
@@ -113,7 +113,7 @@ func TestAccGlueTrigger_crawler(t *testing.T) {
 
 func TestAccGlueTrigger_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var trigger glue.Trigger
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
@@ -150,7 +150,7 @@ func TestAccGlueTrigger_description(t *testing.T) {
 
 func TestAccGlueTrigger_enabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var trigger glue.Trigger
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
@@ -194,7 +194,7 @@ func TestAccGlueTrigger_enabled(t *testing.T) {
 
 func TestAccGlueTrigger_predicate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var trigger glue.Trigger
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
@@ -239,7 +239,7 @@ func TestAccGlueTrigger_predicate(t *testing.T) {
 
 func TestAccGlueTrigger_schedule(t *testing.T) {
 	ctx := acctest.Context(t)
-	var trigger glue.Trigger
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
@@ -276,7 +276,7 @@ func TestAccGlueTrigger_schedule(t *testing.T) {
 
 func TestAccGlueTrigger_startOnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var trigger glue.Trigger
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
@@ -306,7 +306,7 @@ func TestAccGlueTrigger_startOnCreate(t *testing.T) {
 
 func TestAccGlueTrigger_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var trigger1, trigger2, trigger3 glue.Trigger
+	var trigger1, trigger2, trigger3 awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
@@ -354,7 +354,7 @@ func TestAccGlueTrigger_tags(t *testing.T) {
 
 func TestAccGlueTrigger_workflowName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var trigger glue.Trigger
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
@@ -384,7 +384,7 @@ func TestAccGlueTrigger_workflowName(t *testing.T) {
 
 func TestAccGlueTrigger_Actions_notify(t *testing.T) {
 	ctx := acctest.Context(t)
-	var trigger glue.Trigger
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
@@ -437,7 +437,7 @@ func TestAccGlueTrigger_Actions_notify(t *testing.T) {
 
 func TestAccGlueTrigger_Actions_security(t *testing.T) {
 	ctx := acctest.Context(t)
-	var trigger glue.Trigger
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
@@ -469,7 +469,7 @@ func TestAccGlueTrigger_Actions_security(t *testing.T) {
 
 func TestAccGlueTrigger_onDemandDisable(t *testing.T) {
 	ctx := acctest.Context(t)
-	var trigger glue.Trigger
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
@@ -516,7 +516,7 @@ func TestAccGlueTrigger_onDemandDisable(t *testing.T) {
 
 func TestAccGlueTrigger_eventBatchingCondition(t *testing.T) {
 	ctx := acctest.Context(t)
-	var trigger glue.Trigger
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
@@ -559,7 +559,7 @@ func TestAccGlueTrigger_eventBatchingCondition(t *testing.T) {
 
 func TestAccGlueTrigger_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var trigger glue.Trigger
+	var trigger awstypes.Trigger
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_trigger.test"
@@ -582,7 +582,7 @@ func TestAccGlueTrigger_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTriggerExists(ctx context.Context, resourceName string, trigger *glue.Trigger) resource.TestCheckFunc {
+func testAccCheckTriggerExists(ctx context.Context, resourceName string, trigger *awstypes.Trigger) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -593,7 +593,7 @@ func testAccCheckTriggerExists(ctx context.Context, resourceName string, trigger
 			return fmt.Errorf("No Glue Trigger ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
 		output, err := tfglue.FindTriggerByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -604,7 +604,7 @@ func testAccCheckTriggerExists(ctx context.Context, resourceName string, trigger
 			return fmt.Errorf("Glue Trigger (%s) not found", rs.Primary.ID)
 		}
 
-		if aws.StringValue(output.Trigger.Name) == rs.Primary.ID {
+		if aws.ToString(output.Trigger.Name) == rs.Primary.ID {
 			*trigger = *output.Trigger
 			return nil
 		}
@@ -620,18 +620,18 @@ func testAccCheckTriggerDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
 			output, err := tfglue.FindTriggerByName(ctx, conn, rs.Primary.ID)
 
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+				if errs.IsA[*awstypes.EntityNotFoundException](err) {
 					return nil
 				}
 			}
 
 			trigger := output.Trigger
-			if trigger != nil && aws.StringValue(trigger.Name) == rs.Primary.ID {
+			if trigger != nil && aws.ToString(trigger.Name) == rs.Primary.ID {
 				return fmt.Errorf("Glue Trigger %s still exists", rs.Primary.ID)
 			}
 
@@ -730,8 +730,8 @@ resource "aws_glue_trigger" "test" {
 }
 
 func testAccTriggerConfig_crawler(rName, state string) string {
-	return acctest.ConfigCompose(testAccCrawlerConfig_s3Target(rName, "s3://${aws_s3_bucket.test.bucket}"), fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
+	return acctest.ConfigCompose(testAccCrawlerConfig_s3Target(rName, "bucket1"), fmt.Sprintf(`
+resource "aws_s3_bucket" "test2" {
   bucket = %[1]q
 }
 
@@ -743,7 +743,7 @@ resource "aws_glue_crawler" "test2" {
   role          = aws_iam_role.test.name
 
   s3_target {
-    path = "s3://${aws_s3_bucket.test.bucket}"
+    path = "s3://${aws_s3_bucket.test2.bucket}"
   }
 }
 
