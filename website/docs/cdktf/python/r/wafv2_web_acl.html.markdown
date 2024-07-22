@@ -797,6 +797,7 @@ The `managed_rule_group_configs` block support the following arguments:
 
 ### `aws_managed_rules_bot_control_rule_set` Block
 
+* `enable_machine_learning` - (Optional) Applies only to the targeted inspection level. Determines whether to use machine learning (ML) to analyze your web traffic for bot-related activity. Defaults to `true`.
 * `inspection_level` - (Optional) The inspection level to use for the Bot Control rule group.
 
 ### `aws_managed_rules_acfp_rule_set` Block
@@ -1173,4 +1174,4 @@ Using `terraform import`, import WAFv2 Web ACLs using `ID/Name/Scope`. For examp
 % terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c702f22122e320bf55b9f4c49ee2086ac97153d87dafa76313fce05d741646d7 -->
+<!-- cache-key: cdktf-0.20.1 input-4d5cc2755c11ee17ed48162c5f3f9e5bc71cb1c30afe0cae4bcadc19cff9f553 -->
