@@ -699,6 +699,24 @@ func TestAccIAMRole_InlinePolicy_empty(t *testing.T) {
 	})
 }
 
+func TestAccIAMRole_InlinePolicy_malformed(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRoleConfig_policyInlineMalformed(rName, rName),
+				ExpectError: regexache.MustCompile(`MalformedPolicyDocument`),
+			},
+		},
+	})
+}
+
 func TestAccIAMRole_ManagedPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var role awstypes.Role
@@ -1057,6 +1075,8 @@ func testAccCheckRoleExists(ctx context.Context, n string, v *awstypes.Role) res
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
+
+		fmt.Printf("are we even checking this?\n")
 
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No IAM Role ID is set")
@@ -1950,6 +1970,41 @@ resource "aws_iam_role" "test" {
   }
 }
 `, roleName)
+}
+
+func testAccRoleConfig_policyInlineMalformed(roleName, policyName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+
+  inline_policy {
+    name = %[2]q
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [{
+        Action = ["ec2:Describe*"]
+        Effect = "Allow"
+        Resource = ""
+      }]
+    })
+  }
+}
+`, roleName, policyName)
 }
 
 func testAccRoleConfig_policyManaged(roleName, policyName string) string {
