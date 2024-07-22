@@ -47,7 +47,7 @@ func TestAccGlueCrawler_dynamoDBTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", "table1"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", fmt.Sprintf("%s-%s", rName, "table1")),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_all", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -71,7 +71,7 @@ func TestAccGlueCrawler_dynamoDBTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", "table2"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", fmt.Sprintf("%s-%s", rName, "table2")),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_all", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -110,7 +110,7 @@ func TestAccGlueCrawler_DynamoDBTarget_scanAll(t *testing.T) {
 				Config: testAccCrawlerConfig_dynamoDBTargetScanAll(rName, "table1", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", "table1"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", fmt.Sprintf("%s-%s", rName, "table1")),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_all", acctest.CtFalse),
 				),
 			},
@@ -123,7 +123,7 @@ func TestAccGlueCrawler_DynamoDBTarget_scanAll(t *testing.T) {
 				Config: testAccCrawlerConfig_dynamoDBTargetScanAll(rName, "table1", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", "table1"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", fmt.Sprintf("%s-%s", rName, "table1")),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_all", acctest.CtTrue),
 				),
 			},
@@ -131,7 +131,7 @@ func TestAccGlueCrawler_DynamoDBTarget_scanAll(t *testing.T) {
 				Config: testAccCrawlerConfig_dynamoDBTargetScanAll(rName, "table1", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", "table1"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", fmt.Sprintf("%s-%s", rName, "table1")),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_all", acctest.CtFalse),
 				),
 			},
@@ -155,7 +155,7 @@ func TestAccGlueCrawler_DynamoDBTarget_scanRate(t *testing.T) {
 				Config: testAccCrawlerConfig_dynamoDBTargetScanRate(rName, "table1", 0.5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", "table1"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", fmt.Sprintf("%s-%s", rName, "table1")),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_rate", "0.5"),
 				),
 			},
@@ -168,7 +168,7 @@ func TestAccGlueCrawler_DynamoDBTarget_scanRate(t *testing.T) {
 				Config: testAccCrawlerConfig_dynamoDBTargetScanRate(rName, "table1", 1.5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", "table1"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", fmt.Sprintf("%s-%s", rName, "table1")),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_rate", "1.5"),
 				),
 			},
@@ -176,7 +176,7 @@ func TestAccGlueCrawler_DynamoDBTarget_scanRate(t *testing.T) {
 				Config: testAccCrawlerConfig_dynamoDBTargetScanRate(rName, "table1", 0.5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", "table1"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", fmt.Sprintf("%s-%s", rName, "table1")),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_rate", "0.5"),
 				),
 			},
@@ -689,7 +689,7 @@ func TestAccGlueCrawler_s3Target(t *testing.T) {
 		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCrawlerConfig_s3Target(rName, "s3://bucket1"),
+				Config: testAccCrawlerConfig_s3Target(rName, "bucket1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("crawler/%s", rName)),
@@ -703,7 +703,7 @@ func TestAccGlueCrawler_s3Target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrRole, rName),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.exclusions.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "s3_target.0.path", "s3://bucket1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_target.0.path", fmt.Sprintf("s3://%s-bucket1", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, ""),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "DEPRECATE_IN_DATABASE"),
@@ -713,7 +713,7 @@ func TestAccGlueCrawler_s3Target(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCrawlerConfig_s3Target(rName, "s3://bucket2"),
+				Config: testAccCrawlerConfig_s3Target(rName, "bucket2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("crawler/%s", rName)),
@@ -727,7 +727,7 @@ func TestAccGlueCrawler_s3Target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrRole, rName),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.exclusions.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "s3_target.0.path", "s3://bucket2"),
+					resource.TestCheckResourceAttr(resourceName, "s3_target.0.path", fmt.Sprintf("s3://%s-bucket2", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, ""),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "DEPRECATE_IN_DATABASE"),
@@ -962,37 +962,37 @@ func TestAccGlueCrawler_S3Target_multiple(t *testing.T) {
 		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCrawlerConfig_s3TargetMultiple(rName, "s3://bucket1", "s3://bucket2"),
+				Config: testAccCrawlerConfig_s3TargetMultiple(rName, "bucket1", "bucket2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.exclusions.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "s3_target.0.path", "s3://bucket1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_target.0.path", fmt.Sprintf("s3://%s-bucket1", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.1.exclusions.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "s3_target.1.path", "s3://bucket2"),
+					resource.TestCheckResourceAttr(resourceName, "s3_target.1.path", fmt.Sprintf("s3://%s-bucket2", rName)),
 				),
 			},
 			{
-				Config: testAccCrawlerConfig_s3Target(rName, "s3://bucket1"),
+				Config: testAccCrawlerConfig_s3Target(rName, "bucket1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.exclusions.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "s3_target.0.path", "s3://bucket1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_target.0.path", fmt.Sprintf("s3://%s-bucket1", rName)),
 				),
 			},
 			{
-				Config: testAccCrawlerConfig_s3TargetMultiple(rName, "s3://bucket1", "s3://bucket2"),
+				Config: testAccCrawlerConfig_s3TargetMultiple(rName, "bucket1", "bucket2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.exclusions.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "s3_target.0.path", "s3://bucket1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_target.0.path", fmt.Sprintf("s3://%s-bucket1", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.1.exclusions.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "s3_target.1.path", "s3://bucket2"),
+					resource.TestCheckResourceAttr(resourceName, "s3_target.1.path", fmt.Sprintf("s3://%s-bucket2", rName)),
 				),
 			},
 			{
@@ -1148,7 +1148,7 @@ func TestAccGlueCrawler_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCrawlerConfig_s3Target(rName, "s3://bucket1"),
+				Config: testAccCrawlerConfig_s3Target(rName, "bucket1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCrawler(), resourceName),
@@ -1401,7 +1401,7 @@ func TestAccGlueCrawler_schedule(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCrawlerConfig_s3Target(rName, "s3://bucket-name"),
+				Config: testAccCrawlerConfig_s3Target(rName, "bucket1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, ""),
@@ -1974,28 +1974,20 @@ resource "aws_glue_crawler" "test" {
 `, rName, description, rName))
 }
 
-func testAccCrawlerConfig_dynamoDBTarget(rName, path string) string {
+func testAccCrawlerConfig_dynamoDBTarget(rName, suffix string) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
-resource "aws_glue_catalog_database" "test" {
-  name = %[1]q
-}
+resource "aws_dynamodb_table" "test" {
+  name           = "%[1]s-%[2]s"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = %[1]q
 
-resource "aws_glue_crawler" "test" {
-  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
-
-  database_name = aws_glue_catalog_database.test.name
-  name          = %[1]q
-  role          = aws_iam_role.test.name
-
-  dynamodb_target {
-    path = %[2]q
+  attribute {
+    name = %[1]q
+    type = "S"
   }
 }
-`, rName, path))
-}
 
-func testAccCrawlerConfig_dynamoDBTargetScanAll(rName, path string, scanAll bool) string {
-	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2008,15 +2000,59 @@ resource "aws_glue_crawler" "test" {
   role          = aws_iam_role.test.name
 
   dynamodb_target {
-    path     = %[2]q
+    path = aws_dynamodb_table.test.name
+  }
+}
+`, rName, suffix))
+}
+
+func testAccCrawlerConfig_dynamoDBTargetScanAll(rName, suffix string, scanAll bool) string {
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = "%[1]s-%[2]s"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = %[1]q
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+
+  dynamodb_target {
+    path     = aws_dynamodb_table.test.name
     scan_all = %[3]t
   }
 }
-`, rName, path, scanAll))
+`, rName, suffix, scanAll))
 }
 
-func testAccCrawlerConfig_dynamoDBTargetScanRate(rName, path string, scanRate float64) string {
+func testAccCrawlerConfig_dynamoDBTargetScanRate(rName, suffix string, scanRate float64) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = "%[1]s-%[2]s"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = %[1]q
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+}
+
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2029,11 +2065,11 @@ resource "aws_glue_crawler" "test" {
   role          = aws_iam_role.test.name
 
   dynamodb_target {
-    path      = %[2]q
+    path      = aws_dynamodb_table.test.name
     scan_rate = %[3]g
   }
 }
-`, rName, path, scanRate))
+`, rName, suffix, scanRate))
 }
 
 func testAccCrawlerConfig_jdbcTarget(rName, jdbcConnectionUrl, path string) string {
@@ -2046,7 +2082,7 @@ resource "aws_glue_connection" "test" {
   name = %[1]q
 
   connection_properties = {
-    JDBC_CONNECTION_URL = %[1]q
+    JDBC_CONNECTION_URL = %[2]q
     PASSWORD            = "testpassword"
     USERNAME            = "testusername"
   }
@@ -2301,6 +2337,11 @@ resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
 
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  force_destroy = true
+}
+
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
@@ -2309,7 +2350,7 @@ resource "aws_glue_crawler" "test" {
   role          = "${replace(aws_iam_role.test.path, "/^\\//", "")}${aws_iam_role.test.name}"
 
   s3_target {
-    path = "s3://bucket-name"
+    path = "s3://${aws_s3_bucket.test.bucket}"
   }
 }
 `, rName)
@@ -2317,6 +2358,11 @@ resource "aws_glue_crawler" "test" {
 
 func testAccCrawlerConfig_s3Target(rName, path string) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = "%[1]s-%[2]s"
+  force_destroy = true
+}
+
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2329,7 +2375,7 @@ resource "aws_glue_crawler" "test" {
   role          = aws_iam_role.test.name
 
   s3_target {
-    path = %[2]q
+    path = "s3://${aws_s3_bucket.test.bucket}"
   }
 }
 `, rName, path))
@@ -2337,6 +2383,11 @@ resource "aws_glue_crawler" "test" {
 
 func testAccCrawlerConfig_s3TargetExclusions1(rName, exclusion1 string) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  force_destroy = true
+}
+
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2350,7 +2401,7 @@ resource "aws_glue_crawler" "test" {
 
   s3_target {
     exclusions = [%[2]q]
-    path       = "s3://bucket1"
+    path       = "s3://${aws_s3_bucket.test.bucket}"
   }
 }
 `, rName, exclusion1))
@@ -2394,6 +2445,11 @@ resource "aws_glue_connection" "test" {
   }
 }
 
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  force_destroy = true
+}
+
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
@@ -2403,7 +2459,7 @@ resource "aws_glue_crawler" "test" {
 
   s3_target {
     connection_name = aws_glue_connection.test.name
-    path            = "s3://bucket1"
+    path            = "s3://${aws_s3_bucket.test.bucket}"
   }
 }
 `, rName))
@@ -2411,6 +2467,11 @@ resource "aws_glue_crawler" "test" {
 
 func testAccCrawlerConfig_s3TargetExclusions2(rName, exclusion1, exclusion2 string) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  force_destroy = true
+}
+
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2424,7 +2485,7 @@ resource "aws_glue_crawler" "test" {
 
   s3_target {
     exclusions = [%[2]q, %[3]q]
-    path       = "s3://bucket1"
+    path       = "s3://${aws_s3_bucket.test.bucket}"
   }
 }
 `, rName, exclusion1, exclusion2))
@@ -2678,6 +2739,16 @@ resource "aws_glue_crawler" "test" {
 
 func testAccCrawlerConfig_s3TargetMultiple(rName, path1, path2 string) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = "%[1]s-%[2]s"
+  force_destroy = true
+}
+
+resource "aws_s3_bucket" "test2" {
+  bucket = "%[1]s-%[3]s"
+  force_destroy = true
+}
+
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2690,11 +2761,11 @@ resource "aws_glue_crawler" "test" {
   role          = aws_iam_role.test.name
 
   s3_target {
-    path = %[2]q
+    path = "s3://${aws_s3_bucket.test.bucket}"
   }
 
   s3_target {
-    path = %[3]q
+    path = "s3://${aws_s3_bucket.test2.bucket}"
   }
 }
 `, rName, path1, path2))
@@ -3273,6 +3344,38 @@ resource "aws_glue_crawler" "test" {
 
 func testAccCrawlerConfig_lakeformation(rName string, use bool) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
+resource "aws_lakeformation_resource" "test" {
+  arn      = aws_s3_bucket.test.arn
+  role_arn = aws_iam_role.test.arn
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  principal   = aws_iam_role.test.arn
+  permissions = ["DATA_LOCATION_ACCESS"]
+
+  data_location {
+    arn = aws_s3_bucket.test.arn
+  }
+
+  # for consistency, ensure that admins are setup before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  force_destroy = true
+}
+
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -3289,7 +3392,7 @@ resource "aws_glue_crawler" "test" {
   }
 
   s3_target {
-    path = "s3://bucket-name"
+    path = "s3://${aws_s3_bucket.test.bucket}"
   }
 }
 `, rName, use))
@@ -3321,6 +3424,11 @@ resource "aws_glue_crawler" "test" {
 
 func testAccCrawlerConfig_recrawlPolicy(rName, policy string) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  force_destroy = true
+}
+
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -3342,7 +3450,7 @@ resource "aws_glue_crawler" "test" {
   }
 
   s3_target {
-    path = "s3://bucket-name"
+    path = "s3://${aws_s3_bucket.test.bucket}"
   }
 }
 `, rName, policy))
@@ -3350,6 +3458,11 @@ resource "aws_glue_crawler" "test" {
 
 func testAccCrawlerConfig_s3TargetSampleSize(rName string, size int) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  force_destroy = true
+}
+
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -3363,7 +3476,7 @@ resource "aws_glue_crawler" "test" {
 
   s3_target {
     sample_size = %[2]d
-    path        = "s3://bucket1"
+    path        = "s3://${aws_s3_bucket.test.bucket}"
   }
 }
 `, rName, size))

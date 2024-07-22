@@ -52,11 +52,12 @@ func ResourceConnection() *schema.Resource {
 				Computed: true,
 			},
 			"connection_properties": {
-				Type:             schema.TypeMap,
-				Optional:         true,
-				Sensitive:        true,
-				ValidateDiagFunc: enum.Validate[awstypes.ConnectionPropertyKey](),
-				Elem:             &schema.Schema{Type: schema.TypeString},
+				Type:      schema.TypeMap,
+				Optional:  true,
+				Sensitive: true,
+				// ValidateDiagFunc: enum.Validate[awstypes.ConnectionPropertyKey](),
+				ValidateFunc: mapKeyInSlice(enum.Slice(awstypes.ConnectionPropertyKey("").Values()...), false),
+				Elem:         &schema.Schema{Type: schema.TypeString},
 			},
 			"connection_type": {
 				Type:             schema.TypeString,
