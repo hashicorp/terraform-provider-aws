@@ -1823,6 +1823,15 @@ resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
   role       = aws_iam_role.test.name
 }
 
+data "aws_iam_policy" "AmazonDynamoDBReadOnlyAccess" {
+  arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonDynamoDBReadOnlyAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "test-AmazonDynamoDBReadOnlyAccess" {
+  policy_arn = data.aws_iam_policy.AmazonDynamoDBReadOnlyAccess.arn
+  role       = aws_iam_role.test.name
+}
+
 resource "aws_iam_role_policy" "LakeFormationDataAccess" {
   role = aws_iam_role.test.name
 
@@ -3083,18 +3092,57 @@ resource "aws_glue_crawler" "test" {
 
 func testAccCrawlerConfig_deltaTarget(rName, connectionUrl, tableName, createNativeDeltaTable string) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    protocol  = "tcp"
+    self      = true
+    from_port = 1
+    to_port   = 65535
+  }
+}
+
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
 
 resource "aws_glue_connection" "test" {
-  name            = %[1]q
-  connection_type = "MONGODB"
+  connection_type = "NETWORK"
+  name            = "%[1]s"
 
-  connection_properties = {
-    CONNECTION_URL = %[2]q
-    PASSWORD       = "testpassword"
-    USERNAME       = "testusername"
+  physical_connection_requirements {
+    availability_zone      = aws_subnet.test.availability_zone
+    security_group_id_list = [aws_security_group.test.id]
+    subnet_id              = aws_subnet.test.id
   }
 }
 
