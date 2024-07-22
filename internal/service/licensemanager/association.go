@@ -59,13 +59,13 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 	resourceARN := d.Get(names.AttrResourceARN).(string)
 
 	input := &licensemanager.UpdateLicenseSpecificationsForResourceInput{
-		AddLicenseSpecifications: []*awstypes.LicenseSpecification{{
+		AddLicenseSpecifications: []awstypes.LicenseSpecification{{
 			LicenseConfigurationArn: aws.String(licenseConfigurationARN),
 		}},
 		ResourceArn: aws.String(resourceARN),
 	}
 
-	log.Printf("[DEBUG] Creating License Manager Association: %s", input)
+	log.Printf("[DEBUG] Creating License Manager Association: %+v", input)
 	_, err := conn.UpdateLicenseSpecificationsForResource(ctx, input)
 
 	if err != nil {
@@ -118,7 +118,7 @@ func resourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	input := &licensemanager.UpdateLicenseSpecificationsForResourceInput{
-		RemoveLicenseSpecifications: []*awstypes.LicenseSpecification{{
+		RemoveLicenseSpecifications: []awstypes.LicenseSpecification{{
 			LicenseConfigurationArn: aws.String(licenseConfigurationARN),
 		}},
 		ResourceArn: aws.String(resourceARN),
@@ -137,18 +137,14 @@ func FindAssociation(ctx context.Context, conn *licensemanager.Client, resourceA
 	input := &licensemanager.ListLicenseSpecificationsForResourceInput{
 		ResourceArn: aws.String(resourceARN),
 	}
-	var output []*awstypes.LicenseSpecification
+	var output []awstypes.LicenseSpecification
 
 	err := listLicenseSpecificationsForResourcePages(ctx, conn, input, func(page *licensemanager.ListLicenseSpecificationsForResourceOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, v := range page.LicenseSpecifications {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
+		output = append(output, page.LicenseSpecifications...)
 
 		return !lastPage
 	})
