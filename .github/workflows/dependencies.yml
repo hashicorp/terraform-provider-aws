@@ -77,7 +77,9 @@ jobs:
           body-includes: "Please note that typically Go dependency changes"
 
       - name: Leave a New Comment if One Does Not Exist
-        if: steps.prc.outputs.comment-id == ''
+        if: |
+          steps.prc.outcome == 'success'
+          && steps.prc.outputs.comment-id == ''
         uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
