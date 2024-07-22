@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -107,10 +106,10 @@ func ResourceSlotType() *schema.Resource {
 				),
 			},
 			"value_selection_strategy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      awstypes.SlotValueSelectionStrategyOriginalValue,
-				ValidateFunc: enum.Validate[awstypes.SlotValueSelectionStrategy](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.SlotValueSelectionStrategyOriginalValue,
+				ValidateDiagFunc: enum.Validate[awstypes.SlotValueSelectionStrategy](),
 			},
 			names.AttrVersion: {
 				Type:     schema.TypeString,
@@ -151,7 +150,7 @@ func resourceSlotTypeCreate(ctx context.Context, d *schema.ResourceData, meta in
 		CreateVersion:          aws.Bool(d.Get("create_version").(bool)),
 		Description:            aws.String(d.Get(names.AttrDescription).(string)),
 		Name:                   aws.String(name),
-		ValueSelectionStrategy: aws.String(d.Get("value_selection_strategy").(string)),
+		ValueSelectionStrategy: awstypes.SlotValueSelectionStrategy(d.Get("value_selection_strategy").(string)),
 	}
 
 	if v, ok := d.GetOk("enumeration_value"); ok {
@@ -159,7 +158,7 @@ func resourceSlotTypeCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	var output *lexmodelbuildingservice.PutSlotTypeOutput
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		var err error
 
 		if output != nil {
@@ -168,7 +167,7 @@ func resourceSlotTypeCreate(ctx context.Context, d *schema.ResourceData, meta in
 		output, err = conn.PutSlotType(ctx, input)
 
 		return output, err
-	}, awstypes.ErrCodeConflictException)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Lex Slot Type (%s): %s", name, err)
@@ -226,16 +225,16 @@ func resourceSlotTypeUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		CreateVersion:          aws.Bool(d.Get("create_version").(bool)),
 		Description:            aws.String(d.Get(names.AttrDescription).(string)),
 		Name:                   aws.String(d.Id()),
-		ValueSelectionStrategy: aws.String(d.Get("value_selection_strategy").(string)),
+		ValueSelectionStrategy: awstypes.SlotValueSelectionStrategy(d.Get("value_selection_strategy").(string)),
 	}
 
 	if v, ok := d.GetOk("enumeration_value"); ok {
 		input.EnumerationValues = expandEnumerationValues(v.(*schema.Set).List())
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutSlotType(ctx, input)
-	}, awstypes.ErrCodeConflictException)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Lex Slot Type (%s): %s", d.Id(), err)
@@ -253,9 +252,9 @@ func resourceSlotTypeDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	log.Printf("[DEBUG] Deleting Lex Slot Type: (%s)", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteSlotType(ctx, input)
-	}, awstypes.ErrCodeConflictException)
+	})
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -272,10 +271,10 @@ func resourceSlotTypeDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func flattenEnumerationValues(values []*awstypes.EnumerationValue) (flattened []map[string]interface{}) {
+func flattenEnumerationValues(values []awstypes.EnumerationValue) (flattened []map[string]interface{}) {
 	for _, value := range values {
 		flattened = append(flattened, map[string]interface{}{
-			"synonyms":      flex.FlattenStringList(value.Synonyms),
+			"synonyms":      flex.FlattenStringValueList(value.Synonyms),
 			names.AttrValue: aws.ToString(value.Value),
 		})
 	}
@@ -283,16 +282,16 @@ func flattenEnumerationValues(values []*awstypes.EnumerationValue) (flattened []
 	return
 }
 
-func expandEnumerationValues(rawValues []interface{}) []*awstypes.EnumerationValue {
-	enums := make([]*awstypes.EnumerationValue, 0, len(rawValues))
+func expandEnumerationValues(rawValues []interface{}) []awstypes.EnumerationValue {
+	enums := make([]awstypes.EnumerationValue, 0, len(rawValues))
 	for _, rawValue := range rawValues {
 		value, ok := rawValue.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
-		enums = append(enums, &awstypes.EnumerationValue{
-			Synonyms: flex.ExpandStringSet(value["synonyms"].(*schema.Set)),
+		enums = append(enums, awstypes.EnumerationValue{
+			Synonyms: flex.ExpandStringValueSet(value["synonyms"].(*schema.Set)),
 			Value:    aws.String(value[names.AttrValue].(string)),
 		})
 	}

@@ -50,7 +50,7 @@ func TestAccLexModelsSlotType_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(rName, "enumeration_value.*.synonyms.*", "Lirium"),
 					resource.TestCheckTypeSetElemAttr(rName, "enumeration_value.*.synonyms.*", "Martagon"),
 					resource.TestCheckResourceAttr(rName, names.AttrName, testSlotTypeID),
-					resource.TestCheckResourceAttr(rName, "value_selection_strategy", awstypes.SlotValueSelectionStrategyOriginalValue),
+					resource.TestCheckResourceAttr(rName, "value_selection_strategy", string(awstypes.SlotValueSelectionStrategyOriginalValue)),
 					resource.TestCheckResourceAttrSet(rName, "checksum"),
 					resource.TestCheckResourceAttr(rName, names.AttrVersion, tflexmodels.SlotTypeVersionLatest),
 					acctest.CheckResourceAttrRFC3339(rName, names.AttrCreatedDate),
@@ -274,7 +274,7 @@ func TestAccLexModelsSlotType_valueSelectionStrategy(t *testing.T) {
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "value_selection_strategy", awstypes.SlotValueSelectionStrategyOriginalValue),
+					resource.TestCheckResourceAttr(rName, "value_selection_strategy", string(awstypes.SlotValueSelectionStrategyOriginalValue)),
 				),
 			},
 			{
@@ -287,7 +287,7 @@ func TestAccLexModelsSlotType_valueSelectionStrategy(t *testing.T) {
 				Config: testAccSlotTypeConfig_valueSelectionStrategy(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "value_selection_strategy", awstypes.SlotValueSelectionStrategyTopResolution),
+					resource.TestCheckResourceAttr(rName, "value_selection_strategy", string(awstypes.SlotValueSelectionStrategyTopResolution)),
 				),
 			},
 			{
