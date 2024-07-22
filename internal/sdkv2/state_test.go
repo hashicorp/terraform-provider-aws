@@ -9,6 +9,19 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+func TestNormalizeJsonStringSchemaStateFunc(t *testing.T) {
+	t.Parallel()
+
+	var input interface{} = `{ "key1": "value1", "key2": 42}`
+	want := `{"key1":"value1","key2":42}`
+
+	got := NormalizeJsonStringSchemaStateFunc(input)
+
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf("unexpected diff (+want, -got): %s", diff)
+	}
+}
+
 func TestToUpperSchemaStateFunc(t *testing.T) {
 	t.Parallel()
 

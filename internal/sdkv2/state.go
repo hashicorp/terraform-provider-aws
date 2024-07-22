@@ -5,7 +5,15 @@ package sdkv2
 
 import (
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 )
+
+// NormalizeJsonStringSchemaStateFunc normalizes a JSON string value before storing it in state.
+func NormalizeJsonStringSchemaStateFunc(v interface{}) string {
+	json, _ := structure.NormalizeJsonString(v)
+	return json
+}
 
 // ToUpperSchemaStateFunc converts a string value to uppercase before storing it in state.
 func ToUpperSchemaStateFunc(v interface{}) string {
