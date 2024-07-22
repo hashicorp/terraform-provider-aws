@@ -668,32 +668,54 @@ func expandScalarFunctions(data []string) []types.ScalarFunctions {
 	var scalarFunction []types.ScalarFunctions
 	for _, v := range data {
 		switch v {
-		case "TRUNC":
-			scalarFunction = append(scalarFunction, types.ScalarFunctionsTrunc)
 		case "ABS":
 			scalarFunction = append(scalarFunction, types.ScalarFunctionsAbs)
+		case "CAST":
+			scalarFunction = append(scalarFunction, types.ScalarFunctionsCast)
 		case "CEILING":
 			scalarFunction = append(scalarFunction, types.ScalarFunctionsCeiling)
+		case "COALESCE":
+			scalarFunction = append(scalarFunction, types.ScalarFunctionsCoalesce)
+		case "CONVERT":
+			scalarFunction = append(scalarFunction, types.ScalarFunctionsConvert)
+		case "CURRENT_DATE":
+			scalarFunction = append(scalarFunction, types.ScalarFunctionsCurrentDate)
+		case "DATE_ADD":
+			scalarFunction = append(scalarFunction, types.ScalarFunctionsDateadd)
+		case "EXTRACT":
+			scalarFunction = append(scalarFunction, types.ScalarFunctionsExtract)
 		case "FLOOR":
 			scalarFunction = append(scalarFunction, types.ScalarFunctionsFloor)
+		case "GETDATE":
+			scalarFunction = append(scalarFunction, types.ScalarFunctionsGetdate)
 		case "LN":
 			scalarFunction = append(scalarFunction, types.ScalarFunctionsLn)
 		case "LOG":
 			scalarFunction = append(scalarFunction, types.ScalarFunctionsLog)
-		case "ROUND":
-			scalarFunction = append(scalarFunction, types.ScalarFunctionsRound)
-		case "SQRT":
-			scalarFunction = append(scalarFunction, types.ScalarFunctionsSqrt)
-		case "CAST":
-			scalarFunction = append(scalarFunction, types.ScalarFunctionsCast)
 		case "LOWER":
 			scalarFunction = append(scalarFunction, types.ScalarFunctionsLower)
+		case "ROUND":
+			scalarFunction = append(scalarFunction, types.ScalarFunctionsRound)
 		case "RTRIM":
 			scalarFunction = append(scalarFunction, types.ScalarFunctionsRtrim)
+		case "SQRT":
+			scalarFunction = append(scalarFunction, types.ScalarFunctionsSqrt)
+		case "SUBSTRING":
+			scalarFunction = append(scalarFunction, types.ScalarFunctionsSubstring)
+		case "TO_CHAR":
+			scalarFunction = append(scalarFunction, types.ScalarFunctionsToChar)
+		case "TO_DATE":
+			scalarFunction = append(scalarFunction, types.ScalarFunctionsToDate)
+		case "TO_NUMBER":
+			scalarFunction = append(scalarFunction, types.ScalarFunctionsToNumber)
+		case "TO_TIMESTAMP":
+			scalarFunction = append(scalarFunction, types.ScalarFunctionsToTimestamp)
+		case "TRIM":
+			scalarFunction = append(scalarFunction, types.ScalarFunctionsTrim)
+		case "TRUNC":
+			scalarFunction = append(scalarFunction, types.ScalarFunctionsTrunc)
 		case "UPPER":
 			scalarFunction = append(scalarFunction, types.ScalarFunctionsUpper)
-		case "COALESCE":
-			scalarFunction = append(scalarFunction, types.ScalarFunctionsCoalesce)
 		}
 	}
 	return scalarFunction
