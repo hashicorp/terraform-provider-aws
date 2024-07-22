@@ -1139,7 +1139,7 @@ func flattenPrePopulate(ctx context.Context, toVal reflect.Value) diag.Diagnosti
 		fieldVal := toVal.Field(i)
 		if !fieldVal.CanSet() {
 			diags.AddError(
-				"Not Sure",
+				"Incompatible Types",
 				"An unexpected error occurred while flattening configuration. "+
 					"This is always an error in the provider. "+
 					"Please report the following to the provider developer:\n\n"+
