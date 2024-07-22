@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -592,7 +591,7 @@ func TestAccLexModelsIntent_updateWithExternalChange(t *testing.T) {
 				Description: aws.String("Updated externally without Terraform"),
 				Name:        aws.String(resourceState.Primary.ID),
 				FulfillmentActivity: &awstypes.FulfillmentActivity{
-					Type: aws.String("ReturnIntent"),
+					Type: awstypes.FulfillmentActivityType("ReturnIntent"),
 				},
 			}
 			err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {

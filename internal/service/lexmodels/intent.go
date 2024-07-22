@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -140,9 +139,9 @@ func ResourceIntent() *schema.Resource {
 							Elem:     codeHookResource,
 						},
 						names.AttrType: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: enum.Validate[awstypes.FulfillmentActivityType](),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.FulfillmentActivityType](),
 						},
 					},
 				},
@@ -225,9 +224,9 @@ func ResourceIntent() *schema.Resource {
 							},
 						},
 						"slot_constraint": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: enum.Validate[awstypes.SlotConstraint](),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SlotConstraint](),
 						},
 						"slot_type": {
 							Type:     schema.TypeString,
@@ -332,7 +331,7 @@ func resourceIntentCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("sample_utterances"); ok {
-		input.SampleUtterances = flex.ExpandStringSet(v.(*schema.Set))
+		input.SampleUtterances = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("slot"); ok {
@@ -481,7 +480,7 @@ func resourceIntentUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("sample_utterances"); ok {
-		input.SampleUtterances = flex.ExpandStringSet(v.(*schema.Set))
+		input.SampleUtterances = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("slot"); ok {
@@ -571,9 +570,9 @@ var messageResource = &schema.Resource{
 			ValidateFunc: validation.StringLenBetween(1, 1000),
 		},
 		names.AttrContentType: {
-			Type:         schema.TypeString,
-			Required:     true,
-			ValidateFunc: enum.Validate[awstypes.ContentType](),
+			Type:             schema.TypeString,
+			Required:         true,
+			ValidateDiagFunc: enum.Validate[awstypes.ContentType](),
 		},
 		"group_number": {
 			Type:         schema.TypeInt,
@@ -661,7 +660,7 @@ func expandFollowUpPrompt(rawObject interface{}) (followUp *awstypes.FollowUpPro
 func flattenFulfilmentActivity(activity *awstypes.FulfillmentActivity) (flattened []map[string]interface{}) {
 	flattened = []map[string]interface{}{
 		{
-			names.AttrType: aws.ToString(activity.Type),
+			names.AttrType: string(activity.Type),
 		},
 	}
 
@@ -676,7 +675,7 @@ func expandFulfilmentActivity(rawObject interface{}) (activity *awstypes.Fulfill
 	m := rawObject.([]interface{})[0].(map[string]interface{})
 
 	activity = &awstypes.FulfillmentActivity{}
-	activity.Type = aws.String(m[names.AttrType].(string))
+	activity.Type = awstypes.FulfillmentActivityType(m[names.AttrType].(string))
 
 	if v, ok := m["code_hook"]; ok && len(v.([]interface{})) != 0 {
 		activity.CodeHook = expandCodeHook(v)
@@ -685,12 +684,12 @@ func expandFulfilmentActivity(rawObject interface{}) (activity *awstypes.Fulfill
 	return
 }
 
-func flattenMessages(messages []*awstypes.Message) (flattenedMessages []map[string]interface{}) {
+func flattenMessages(messages []awstypes.Message) (flattenedMessages []map[string]interface{}) {
 	for _, message := range messages {
 		flattenedMessages = append(flattenedMessages, map[string]interface{}{
 			names.AttrContent:     aws.ToString(message.Content),
 			names.AttrContentType: string(message.ContentType),
-			"group_number":        aws.ToInt64(message.GroupNumber),
+			"group_number":        aws.ToInt32(message.GroupNumber),
 		})
 	}
 
@@ -700,8 +699,8 @@ func flattenMessages(messages []*awstypes.Message) (flattenedMessages []map[stri
 // Expects a slice of maps representing the Lex objects.
 // The value passed into this function should have been run through the expandLexSet function.
 // Example: []map[content: test content_type: PlainText group_number: 1]
-func expandMessages(rawValues []interface{}) []*awstypes.Message {
-	messages := make([]*awstypes.Message, 0, len(rawValues))
+func expandMessages(rawValues []interface{}) []awstypes.Message {
+	messages := make([]awstypes.Message, 0, len(rawValues))
 
 	for _, rawValue := range rawValues {
 		value, ok := rawValue.(map[string]interface{})
@@ -709,13 +708,13 @@ func expandMessages(rawValues []interface{}) []*awstypes.Message {
 			continue
 		}
 
-		message := &awstypes.Message{
+		message := awstypes.Message{
 			Content:     aws.String(value[names.AttrContent].(string)),
-			ContentType: aws.String(value[names.AttrContentType].(string)),
+			ContentType: awstypes.ContentType(value[names.AttrContentType].(string)),
 		}
 
 		if v, ok := value["group_number"]; ok && v != 0 {
-			message.GroupNumber = aws.Int64(int64(v.(int)))
+			message.GroupNumber = aws.Int32(int32(v.(int)))
 		}
 
 		messages = append(messages, message)
@@ -727,7 +726,7 @@ func expandMessages(rawValues []interface{}) []*awstypes.Message {
 func flattenPrompt(prompt *awstypes.Prompt) (flattened []map[string]interface{}) {
 	flattened = []map[string]interface{}{
 		{
-			"max_attempts":    aws.ToInt64(prompt.MaxAttempts),
+			"max_attempts":    aws.ToInt32(prompt.MaxAttempts),
 			names.AttrMessage: flattenMessages(prompt.Messages),
 		},
 	}
@@ -743,7 +742,7 @@ func expandPrompt(rawObject interface{}) (prompt *awstypes.Prompt) {
 	m := rawObject.([]interface{})[0].(map[string]interface{})
 
 	prompt = &awstypes.Prompt{}
-	prompt.MaxAttempts = aws.Int64(int64(m["max_attempts"].(int)))
+	prompt.MaxAttempts = aws.Int32(int32(m["max_attempts"].(int)))
 	prompt.Messages = expandMessages(m[names.AttrMessage].(*schema.Set).List())
 
 	if v, ok := m["response_card"]; ok && v != "" {
@@ -753,11 +752,11 @@ func expandPrompt(rawObject interface{}) (prompt *awstypes.Prompt) {
 	return
 }
 
-func flattenSlots(slots []*awstypes.Slot) (flattenedSlots []map[string]interface{}) {
+func flattenSlots(slots []awstypes.Slot) (flattenedSlots []map[string]interface{}) {
 	for _, slot := range slots {
 		flattenedSlot := map[string]interface{}{
 			names.AttrName:     aws.ToString(slot.Name),
-			names.AttrPriority: aws.ToInt64(slot.Priority),
+			names.AttrPriority: aws.ToInt32(slot.Priority),
 			"slot_constraint":  string(slot.SlotConstraint),
 			"slot_type":        aws.ToString(slot.SlotType),
 		}
@@ -771,7 +770,7 @@ func flattenSlots(slots []*awstypes.Slot) (flattenedSlots []map[string]interface
 		}
 
 		if slot.SampleUtterances != nil {
-			flattenedSlot["sample_utterances"] = flex.FlattenStringList(slot.SampleUtterances)
+			flattenedSlot["sample_utterances"] = flex.FlattenStringValueList(slot.SampleUtterances)
 		}
 
 		if slot.SlotTypeVersion != nil {
@@ -791,8 +790,8 @@ func flattenSlots(slots []*awstypes.Slot) (flattenedSlots []map[string]interface
 // Expects a slice of maps representing the Lex objects.
 // The value passed into this function should have been run through the expandLexSet function.
 // Example: []map[name: test priority: 0 ...]
-func expandSlots(rawValues []interface{}) []*awstypes.Slot {
-	slots := make([]*awstypes.Slot, 0, len(rawValues))
+func expandSlots(rawValues []interface{}) []awstypes.Slot {
+	slots := make([]awstypes.Slot, 0, len(rawValues))
 
 	for _, rawValue := range rawValues {
 		value, ok := rawValue.(map[string]interface{})
@@ -800,10 +799,10 @@ func expandSlots(rawValues []interface{}) []*awstypes.Slot {
 			continue
 		}
 
-		slot := &awstypes.Slot{
+		slot := awstypes.Slot{
 			Name:           aws.String(value[names.AttrName].(string)),
-			Priority:       aws.Int64(int64(value[names.AttrPriority].(int))),
-			SlotConstraint: aws.String(value["slot_constraint"].(string)),
+			Priority:       aws.Int32(int32(value[names.AttrPriority].(int))),
+			SlotConstraint: awstypes.SlotConstraint(value["slot_constraint"].(string)),
 			SlotType:       aws.String(value["slot_type"].(string)),
 		}
 
@@ -820,7 +819,7 @@ func expandSlots(rawValues []interface{}) []*awstypes.Slot {
 		}
 
 		if v, ok := value["sample_utterances"]; ok && len(v.([]interface{})) != 0 {
-			slot.SampleUtterances = flex.ExpandStringList(v.([]interface{}))
+			slot.SampleUtterances = flex.ExpandStringValueList(v.([]interface{}))
 		}
 
 		if v, ok := value["slot_type_version"]; ok && v != "" {
