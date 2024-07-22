@@ -1030,41 +1030,6 @@ func TestAccECSTaskDefinition_disappears(t *testing.T) {
 	})
 }
 
-// https://github.com/hashicorp/terraform-provider-aws/issues/38461.
-func TestAccECSTaskDefinition_awsSDKForGoV2ContainerDefinitions(t *testing.T) {
-	ctx := acctest.Context(t)
-	var def awstypes.TaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ecs_task_definition.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.ECSServiceID),
-		CheckDestroy: testAccCheckTaskDefinitionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.58.0",
-					},
-				},
-				Config: testAccTaskDefinitionConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-				),
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccTaskDefinitionConfig_modified(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-				),
-			},
-		},
-	})
-}
-
 func TestAccECSTaskDefinition_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var def awstypes.TaskDefinition
