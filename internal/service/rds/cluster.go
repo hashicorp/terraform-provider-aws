@@ -117,6 +117,7 @@ func resourceCluster() *schema.Resource {
 			"ca_certificate_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"ca_certificate_valid_till": {
 				Type:     schema.TypeString,
