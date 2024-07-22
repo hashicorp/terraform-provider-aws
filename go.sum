@@ -310,6 +310,8 @@ github.com/aws/aws-sdk-go-v2/service/launchwizard v1.6.3 h1:HlZn+zJoCEFuUvKLGbGX
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.6.3/go.mod h1:IJIHGsE1X4tRCw3s+SMG0NlIQM4yM7rlj5CfUDqT/+M=
 github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.45.3 h1:sZwjTNfuXXk3Fyor/bEpjcznTD1+f6OEYxONrAU2sAc=
 github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.45.3/go.mod h1:GE1lDQwM3Dm7Fysaet+yeNanYwwTvfLIUlK3P/owUw8=
+github.com/aws/aws-sdk-go-v2/service/licensemanager v1.27.3 h1:oUTGt/MXO80UlPnEL6vfZjsdaK+M5/kiBQueB5r3/WI=
+github.com/aws/aws-sdk-go-v2/service/licensemanager v1.27.3/go.mod h1:tIZEgscb0JE5oYdt3zbdMTiB/zZlsPW2XFCkiZnDtco=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.40.3 h1:dy4sbyGy7BS4c0KaPZwg1P5ZP+lW+auTVcPiwrmbn8M=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.40.3/go.mod h1:EMgqMhof+RuaYvQavxKC0ZWvP7yB4B4NJhP+dbm13u0=
 github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.29.3 h1:UJEd/gP0jzWDfr4f/3TPKSls8MuomApfPap1CS/PxMY=

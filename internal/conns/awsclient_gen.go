@@ -132,6 +132,7 @@ import (
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
 	launchwizard_sdkv2 "github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	lexmodelsv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
+	licensemanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/licensemanager"
 	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
 	lookoutmetrics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lookoutmetrics"
 	m2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/m2"
@@ -225,7 +226,6 @@ import (
 	kinesisanalyticsv2_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
 	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	licensemanager_sdkv1 "github.com/aws/aws-sdk-go/service/licensemanager"
 	locationservice_sdkv1 "github.com/aws/aws-sdk-go/service/locationservice"
 	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
 	memorydb_sdkv1 "github.com/aws/aws-sdk-go/service/memorydb"
@@ -817,8 +817,8 @@ func (c *AWSClient) LexV2ModelsClient(ctx context.Context) *lexmodelsv2_sdkv2.Cl
 	return errs.Must(client[*lexmodelsv2_sdkv2.Client](ctx, c, names.LexV2Models, make(map[string]any)))
 }
 
-func (c *AWSClient) LicenseManagerConn(ctx context.Context) *licensemanager_sdkv1.LicenseManager {
-	return errs.Must(conn[*licensemanager_sdkv1.LicenseManager](ctx, c, names.LicenseManager, make(map[string]any)))
+func (c *AWSClient) LicenseManagerClient(ctx context.Context) *licensemanager_sdkv2.Client {
+	return errs.Must(client[*licensemanager_sdkv2.Client](ctx, c, names.LicenseManager, make(map[string]any)))
 }
 
 func (c *AWSClient) LightsailClient(ctx context.Context) *lightsail_sdkv2.Client {
