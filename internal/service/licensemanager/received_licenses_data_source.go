@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/licensemanager/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -66,19 +65,15 @@ func dataSourceReceivedLicensesRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func FindReceivedLicenses(ctx context.Context, conn *licensemanager.Client, in *licensemanager.ListReceivedLicensesInput) ([]*awstypes.GrantedLicense, error) {
-	var out []*awstypes.GrantedLicense
+func FindReceivedLicenses(ctx context.Context, conn *licensemanager.Client, in *licensemanager.ListReceivedLicensesInput) ([]awstypes.GrantedLicense, error) {
+	var out []awstypes.GrantedLicense
 
 	err := listReceivedLicensesPages(ctx, conn, in, func(page *licensemanager.ListReceivedLicensesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, v := range page.Licenses {
-			if v != nil {
-				out = append(out, v)
-			}
-		}
+		out = append(out, page.Licenses...)
 
 		return !lastPage
 	})
