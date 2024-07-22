@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -143,11 +142,11 @@ func ResourceBot() *schema.Resource {
 				Computed: true,
 			},
 			"locale": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      awstypes.LocaleEnUs,
-				ValidateFunc: enum.Validate[awstypes.Locale](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.LocaleEnUs,
+				ValidateDiagFunc: enum.Validate[awstypes.Locale](),
 			},
 			names.AttrName: {
 				Type:         schema.TypeString,
@@ -162,10 +161,10 @@ func ResourceBot() *schema.Resource {
 				ValidateFunc: validation.FloatBetween(0, 1),
 			},
 			"process_behavior": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      awstypes.ProcessBehaviorSave,
-				ValidateFunc: enum.Validate[awstypes.ProcessBehavior](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.ProcessBehaviorSave,
+				ValidateDiagFunc: enum.Validate[awstypes.ProcessBehavior](),
 			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
@@ -237,7 +236,7 @@ func resourceBotCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		CreateVersion:           aws.Bool(d.Get("create_version").(bool)),
 		Description:             aws.String(d.Get(names.AttrDescription).(string)),
 		EnableModelImprovements: aws.Bool(d.Get("enable_model_improvements").(bool)),
-		IdleSessionTTLInSeconds: aws.Int64(int64(d.Get("idle_session_ttl_in_seconds").(int))),
+		IdleSessionTTLInSeconds: aws.Int32(int32(d.Get("idle_session_ttl_in_seconds").(int))),
 		Intents:                 expandIntents(d.Get("intent").(*schema.Set).List()),
 		Name:                    aws.String(name),
 	}
@@ -259,7 +258,7 @@ func resourceBotCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	var output *lexmodelbuildingservice.PutBotOutput
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		var err error
 
 		if output != nil {
@@ -268,7 +267,7 @@ func resourceBotCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		output, err = conn.PutBot(ctx, input)
 
 		return output, err
-	}, awstypes.ErrCodeConflictException)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Lex Bot (%s): %s", name, err)
@@ -312,7 +311,7 @@ func resourceBotRead(ctx context.Context, d *schema.ResourceData, meta interface
 	// Manually write to state file to avoid un-expected diffs.
 	processBehavior := awstypes.ProcessBehaviorSave
 	if v, ok := d.GetOk("process_behavior"); ok {
-		processBehavior = v.(string)
+		processBehavior = awstypes.ProcessBehavior(v.(string))
 	}
 
 	d.Set("checksum", output.Checksum)
@@ -362,12 +361,12 @@ func resourceBotUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		Description:                  aws.String(d.Get(names.AttrDescription).(string)),
 		DetectSentiment:              aws.Bool(d.Get("detect_sentiment").(bool)),
 		EnableModelImprovements:      aws.Bool(d.Get("enable_model_improvements").(bool)),
-		IdleSessionTTLInSeconds:      aws.Int64(int64(d.Get("idle_session_ttl_in_seconds").(int))),
+		IdleSessionTTLInSeconds:      aws.Int32(int32(d.Get("idle_session_ttl_in_seconds").(int))),
 		Intents:                      expandIntents(d.Get("intent").(*schema.Set).List()),
-		Locale:                       aws.String(d.Get("locale").(string)),
+		Locale:                       awstypes.Locale(d.Get("locale").(string)),
 		Name:                         aws.String(d.Id()),
 		NluIntentConfidenceThreshold: aws.Float64(d.Get("nlu_intent_confidence_threshold").(float64)),
-		ProcessBehavior:              aws.String(d.Get("process_behavior").(string)),
+		ProcessBehavior:              awstypes.ProcessBehavior(d.Get("process_behavior").(string)),
 	}
 
 	if v, ok := d.GetOk("abort_statement"); ok {
@@ -382,9 +381,9 @@ func resourceBotUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.VoiceId = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutBot(ctx, input)
-	}, awstypes.ErrCodeConflictException)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Lex Bot (%s): %s", d.Id(), err)
@@ -406,9 +405,9 @@ func resourceBotDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[DEBUG] Deleting Lex Bot: (%s)", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteBot(ctx, input)
-	}, awstypes.ErrCodeConflictException)
+	})
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -425,7 +424,7 @@ func resourceBotDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func flattenIntents(intents []*awstypes.Intent) (flattenedIntents []map[string]interface{}) {
+func flattenIntents(intents []awstypes.Intent) (flattenedIntents []map[string]interface{}) {
 	for _, intent := range intents {
 		flattenedIntents = append(flattenedIntents, map[string]interface{}{
 			"intent_name":    aws.ToString(intent.IntentName),
@@ -439,8 +438,8 @@ func flattenIntents(intents []*awstypes.Intent) (flattenedIntents []map[string]i
 // Expects a slice of maps representing the Lex objects.
 // The value passed into this function should have been run through the expandLexSet function.
 // Example: []map[intent_name: OrderFlowers intent_version: $LATEST]
-func expandIntents(rawValues []interface{}) []*awstypes.Intent {
-	intents := make([]*awstypes.Intent, 0, len(rawValues))
+func expandIntents(rawValues []interface{}) []awstypes.Intent {
+	intents := make([]awstypes.Intent, 0, len(rawValues))
 
 	for _, rawValue := range rawValues {
 		value, ok := rawValue.(map[string]interface{})
@@ -448,7 +447,7 @@ func expandIntents(rawValues []interface{}) []*awstypes.Intent {
 			continue
 		}
 
-		intents = append(intents, &awstypes.Intent{
+		intents = append(intents, awstypes.Intent{
 			IntentName:    aws.String(value["intent_name"].(string)),
 			IntentVersion: aws.String(value["intent_version"].(string)),
 		})
