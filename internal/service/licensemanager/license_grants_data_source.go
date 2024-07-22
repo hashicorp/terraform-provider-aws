@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/licensemanager/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -66,19 +65,15 @@ func dataSourceDistributedGrantsRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func FindDistributedDistributedGrants(ctx context.Context, conn *licensemanager.Client, in *licensemanager.ListDistributedGrantsInput) ([]*awstypes.Grant, error) {
-	var out []*awstypes.Grant
+func FindDistributedDistributedGrants(ctx context.Context, conn *licensemanager.Client, in *licensemanager.ListDistributedGrantsInput) ([]awstypes.Grant, error) {
+	var out []awstypes.Grant
 
 	err := listDistributedGrantsPages(ctx, conn, in, func(page *licensemanager.ListDistributedGrantsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, v := range page.Grants {
-			if v != nil {
-				out = append(out, v)
-			}
-		}
+		out = append(out, page.Grants...)
 
 		return !lastPage
 	})
