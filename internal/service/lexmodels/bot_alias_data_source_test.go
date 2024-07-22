@@ -6,7 +6,6 @@ package lexmodels_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"

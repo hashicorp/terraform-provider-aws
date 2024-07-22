@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -154,7 +153,7 @@ func resourceBotAliasCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		input.Checksum = output.Checksum
 		// IAM eventual consistency
-		if tfawserr.ErrMessageContains(err, awstypes.ErrCodeBadRequestException, "Lex can't access your IAM role") {
+		if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "Lex can't access your IAM role") {
 			return retry.RetryableError(err)
 		}
 		if errs.IsA[*awstypes.ConflictException](err) {
@@ -247,7 +246,7 @@ func resourceBotAliasUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err := conn.PutBotAlias(ctx, input)
 
 		// IAM eventual consistency
-		if tfawserr.ErrMessageContains(err, awstypes.ErrCodeBadRequestException, "Lex can't access your IAM role") {
+		if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "Lex can't access your IAM role") {
 			return retry.RetryableError(err)
 		}
 		if errs.IsA[*awstypes.ConflictException](err) {
@@ -325,9 +324,9 @@ func resourceBotAliasImport(ctx context.Context, d *schema.ResourceData, _ inter
 var logSettings = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		names.AttrDestination: {
-			Type:         schema.TypeString,
-			Required:     true,
-			ValidateFunc: enum.Validate[awstypes.Destination](),
+			Type:             schema.TypeString,
+			Required:         true,
+			ValidateDiagFunc: enum.Validate[awstypes.Destination](),
 		},
 		names.AttrKMSKeyARN: {
 			Type:     schema.TypeString,
@@ -338,9 +337,9 @@ var logSettings = &schema.Resource{
 			),
 		},
 		"log_type": {
-			Type:         schema.TypeString,
-			Required:     true,
-			ValidateFunc: enum.Validate[awstypes.LogType](),
+			Type:             schema.TypeString,
+			Required:         true,
+			ValidateDiagFunc: enum.Validate[awstypes.LogType](),
 		},
 		names.AttrResourceARN: {
 			Type:     schema.TypeString,
@@ -379,7 +378,7 @@ func expandConversationLogs(rawObject interface{}) (*awstypes.ConversationLogsRe
 	}, nil
 }
 
-func flattenLogSettings(responses []*awstypes.LogSettingsResponse) (flattened []map[string]interface{}) {
+func flattenLogSettings(responses []awstypes.LogSettingsResponse) (flattened []map[string]interface{}) {
 	for _, response := range responses {
 		flattened = append(flattened, map[string]interface{}{
 			names.AttrDestination: response.Destination,
@@ -392,8 +391,8 @@ func flattenLogSettings(responses []*awstypes.LogSettingsResponse) (flattened []
 	return
 }
 
-func expandLogSettings(rawValues []interface{}) ([]*awstypes.LogSettingsRequest, error) {
-	requests := make([]*awstypes.LogSettingsRequest, 0, len(rawValues))
+func expandLogSettings(rawValues []interface{}) ([]awstypes.LogSettingsRequest, error) {
+	requests := make([]awstypes.LogSettingsRequest, 0, len(rawValues))
 
 	for _, rawValue := range rawValues {
 		value, ok := rawValue.(map[string]interface{})
@@ -401,14 +400,14 @@ func expandLogSettings(rawValues []interface{}) ([]*awstypes.LogSettingsRequest,
 			continue
 		}
 		destination := value[names.AttrDestination].(string)
-		request := &awstypes.LogSettingsRequest{
-			Destination: aws.String(destination),
-			LogType:     aws.String(value["log_type"].(string)),
+		request := awstypes.LogSettingsRequest{
+			Destination: awstypes.Destination(destination),
+			LogType:     awstypes.LogType(value["log_type"].(string)),
 			ResourceArn: aws.String(value[names.AttrResourceARN].(string)),
 		}
 
 		if v, ok := value[names.AttrKMSKeyARN]; ok && v != "" {
-			if destination != awstypes.DestinationS3 {
+			if destination != string(awstypes.DestinationS3) {
 				return nil, fmt.Errorf("`kms_key_arn` cannot be specified when `destination` is %q", destination)
 			}
 			request.KmsKeyArn = aws.String(value[names.AttrKMSKeyARN].(string))
