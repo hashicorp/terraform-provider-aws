@@ -211,6 +211,11 @@ func resourceUserDefinedFunctionDelete(ctx context.Context, d *schema.ResourceDa
 		DatabaseName: aws.String(dbName),
 		FunctionName: aws.String(funcName),
 	})
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Glue User Defined Function (%s): %s", d.Id(), err)
 	}

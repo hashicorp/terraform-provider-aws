@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -209,6 +210,11 @@ func resourceDataQualityRulesetDelete(ctx context.Context, d *schema.ResourceDat
 	_, err := conn.DeleteDataQualityRuleset(ctx, &glue.DeleteDataQualityRulesetInput{
 		Name: aws.String(d.Get(names.AttrName).(string)),
 	})
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Glue Data Quality Ruleset (%s): %s", d.Id(), err)
 	}

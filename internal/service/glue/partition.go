@@ -315,6 +315,11 @@ func resourcePartitionDelete(ctx context.Context, d *schema.ResourceData, meta i
 		DatabaseName:    aws.String(dbName),
 		PartitionValues: values,
 	})
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Glue Partition: %s", err)
 	}
