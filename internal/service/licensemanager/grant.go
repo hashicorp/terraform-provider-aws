@@ -9,15 +9,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/licensemanager/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -44,10 +44,10 @@ func ResourceGrant() *schema.Resource {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
-				MaxItems: len(awstypes.AllowedOperation_Values()),
+				MaxItems: len(enum.Values[awstypes.AllowedOperation]()),
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(awstypes.AllowedOperation_Values(), true),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[awstypes.AllowedOperation](),
 				},
 				Description: "Allowed operations for the grant. This is a subset of the allowed operations on the license.",
 			},
@@ -105,7 +105,7 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
 	in := &licensemanager.CreateGrantInput{
-		AllowedOperations: aws.StringSlice(expandAllowedOperations(d.Get("allowed_operations").(*schema.Set).List())),
+		AllowedOperations: expandAllowedOperations(d.Get("allowed_operations").(*schema.Set).List()),
 		ClientToken:       aws.String(id.UniqueId()),
 		GrantName:         aws.String(d.Get(names.AttrName).(string)),
 		HomeRegion:        aws.String(meta.(*conns.AWSClient).Region),
@@ -165,7 +165,9 @@ func resourceGrantUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("allowed_operations") {
-		in.AllowedOperations = aws.StringSlice(d.Get("allowed_operations").([]string))
+		in.AllowedOperations = tfslices.ApplyToAll(d.Get("allowed_operations").([]string), func(v string) awstypes.AllowedOperation {
+			return awstypes.AllowedOperation(v)
+		})
 	}
 
 	if d.HasChange(names.AttrName) {
@@ -229,22 +231,22 @@ func FindGrantByARN(ctx context.Context, conn *licensemanager.Client, arn string
 		return nil, err
 	}
 
-	if out == nil || out.Grant == nil || aws.ToString(out.Grant.GrantStatus) == awstypes.GrantStatusDeleted || aws.ToString(out.Grant.GrantStatus) == awstypes.GrantStatusRejected {
+	if out == nil || out.Grant == nil || out.Grant.GrantStatus == awstypes.GrantStatusDeleted || out.Grant.GrantStatus == awstypes.GrantStatusRejected {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
 	return out.Grant, nil
 }
 
-func expandAllowedOperations(rawOperations []interface{}) []string {
+func expandAllowedOperations(rawOperations []interface{}) []awstypes.AllowedOperation {
 	if rawOperations == nil {
 		return nil
 	}
 
-	operations := make([]string, 0, 8)
+	operations := make([]awstypes.AllowedOperation, 0, 8)
 
 	for _, item := range rawOperations {
-		operations = append(operations, item.(string))
+		operations = append(operations, awstypes.AllowedOperation(item.(string)))
 	}
 
 	return operations
