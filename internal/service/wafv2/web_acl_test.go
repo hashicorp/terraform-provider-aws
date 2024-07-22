@@ -3018,6 +3018,36 @@ func TestAccWAFV2WebACL_CloudFrontScope(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACL_ruleJSON(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_JSONrule(webACLName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "rule_json"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
@@ -6050,6 +6080,52 @@ resource "aws_wafv2_web_acl" "test" {
     metric_name                = "friendly-metric-name"
     sampled_requests_enabled   = false
   }
+}
+`, rName)
+}
+
+func testAccWebACLConfig_JSONrule(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+
+  rule_json = jsonencode([{
+    Name     = "rule-1",
+    Priority = 1,
+    Action = {
+      Count = {}
+    },
+    Statement = {
+      RateBasedStatement = {
+        Limit                 = 10000,
+        AggregateKeyType    = "IP",
+        EvaluationWindowSec = 600,
+        ScopeDownStatement = {
+          GeoMatchStatement = {
+            CountryCodes = ["US", "NL"]
+          },
+        },
+      },
+    },
+
+    VisibilityConfig = {
+      CloudwatchMetricsEnabled = false,
+      MetricName                = "friendly-rule-metric-name",
+      SampledRequestsEnabled   = false,
+    },
+  }])
 }
 `, rName)
 }
