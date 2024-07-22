@@ -9,14 +9,16 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/licensemanager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/licensemanager/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -218,12 +220,12 @@ func DataSourceReceivedLicense() *schema.Resource {
 
 func dataSourceReceivedLicenseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
 	arn := d.Get("license_arn").(string)
 
 	in := &licensemanager.ListReceivedLicensesInput{
-		LicenseArns: aws.StringSlice([]string{arn}),
+		LicenseArns: []string{arn},
 	}
 
 	out, err := FindReceivedLicenseByARN(ctx, conn, in)
@@ -232,7 +234,7 @@ func dataSourceReceivedLicenseRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading License Manager Received License (%s): %s", arn, err)
 	}
 
-	d.SetId(aws.StringValue(out.LicenseArn))
+	d.SetId(aws.ToString(out.LicenseArn))
 	d.Set("beneficiary", out.Beneficiary)
 	d.Set("consumption_configuration", []interface{}{flattenConsumptionConfiguration(out.ConsumptionConfiguration)})
 	d.Set("entitlements", flattenEntitlements(out.Entitlements))
@@ -248,7 +250,7 @@ func dataSourceReceivedLicenseRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("validity", []interface{}{flattenDateTimeRange(out.Validity)})
 	d.Set(names.AttrVersion, out.Version)
 
-	if v := aws.StringValue(out.CreateTime); v != "" {
+	if v := aws.ToString(out.CreateTime); v != "" {
 		seconds, err := strconv.ParseInt(v, 10, 64)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading License Manager Received License (%s): %s", arn, err)
@@ -259,10 +261,10 @@ func dataSourceReceivedLicenseRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func FindReceivedLicenseByARN(ctx context.Context, conn *licensemanager.LicenseManager, in *licensemanager.ListReceivedLicensesInput) (*licensemanager.GrantedLicense, error) {
-	out, err := conn.ListReceivedLicensesWithContext(ctx, in)
+func FindReceivedLicenseByARN(ctx context.Context, conn *licensemanager.Client, in *licensemanager.ListReceivedLicensesInput) (*awstypes.GrantedLicense, error) {
+	out, err := conn.ListReceivedLicenses(ctx, in)
 
-	if tfawserr.ErrCodeEquals(err, licensemanager.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
@@ -284,7 +286,7 @@ func FindReceivedLicenseByARN(ctx context.Context, conn *licensemanager.LicenseM
 	return out.Licenses[0], nil
 }
 
-func flattenConsumptionConfiguration(apiObject *licensemanager.ConsumptionConfiguration) map[string]interface{} {
+func flattenConsumptionConfiguration(apiObject *awstypes.ConsumptionConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -300,7 +302,7 @@ func flattenConsumptionConfiguration(apiObject *licensemanager.ConsumptionConfig
 
 	if v := apiObject.ProvisionalConfiguration.MaxTimeToLiveInMinutes; v != nil {
 		tfMap["provisional_configuration"] = []interface{}{map[string]interface{}{
-			"max_time_to_live_in_minutes": int(aws.Int64Value(v)),
+			"max_time_to_live_in_minutes": int(aws.ToInt64(v)),
 		}}
 	}
 
@@ -311,7 +313,7 @@ func flattenConsumptionConfiguration(apiObject *licensemanager.ConsumptionConfig
 	return tfMap
 }
 
-func flattenEntitlements(apiObjects []*licensemanager.Entitlement) []interface{} {
+func flattenEntitlements(apiObjects []*awstypes.Entitlement) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -333,7 +335,7 @@ func flattenEntitlements(apiObjects []*licensemanager.Entitlement) []interface{}
 	return tfList
 }
 
-func flattenEntitlement(apiObject *licensemanager.Entitlement) map[string]interface{} {
+func flattenEntitlement(apiObject *awstypes.Entitlement) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -367,7 +369,7 @@ func flattenEntitlement(apiObject *licensemanager.Entitlement) map[string]interf
 	return tfMap
 }
 
-func flattenIssuer(apiObject *licensemanager.IssuerDetails) map[string]interface{} {
+func flattenIssuer(apiObject *awstypes.IssuerDetails) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -389,7 +391,7 @@ func flattenIssuer(apiObject *licensemanager.IssuerDetails) map[string]interface
 	return tfMap
 }
 
-func flattenMetadatas(apiObjects []*licensemanager.Metadata) []interface{} {
+func flattenMetadatas(apiObjects []*awstypes.Metadata) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -411,7 +413,7 @@ func flattenMetadatas(apiObjects []*licensemanager.Metadata) []interface{} {
 	return tfList
 }
 
-func flattenLicenseMetadata(apiObject *licensemanager.Metadata) map[string]interface{} {
+func flattenLicenseMetadata(apiObject *awstypes.Metadata) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -429,7 +431,7 @@ func flattenLicenseMetadata(apiObject *licensemanager.Metadata) map[string]inter
 	return tfMap
 }
 
-func flattenReceivedMetadata(apiObject *licensemanager.ReceivedMetadata) map[string]interface{} {
+func flattenReceivedMetadata(apiObject *awstypes.ReceivedMetadata) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -451,7 +453,7 @@ func flattenReceivedMetadata(apiObject *licensemanager.ReceivedMetadata) map[str
 	return tfMap
 }
 
-func flattenDateTimeRange(apiObject *licensemanager.DatetimeRange) map[string]interface{} {
+func flattenDateTimeRange(apiObject *awstypes.DatetimeRange) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
