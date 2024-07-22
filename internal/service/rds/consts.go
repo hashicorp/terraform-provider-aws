@@ -10,31 +10,34 @@ import (
 )
 
 const (
-	ClusterRoleStatusActive  = "ACTIVE"
-	ClusterRoleStatusDeleted = "DELETED"
-	ClusterRoleStatusPending = "PENDING"
+	clusterRoleStatusActive  = "ACTIVE"
+	clusterRoleStatusDeleted = "DELETED"
+	clusterRoleStatusPending = "PENDING"
 )
 
 const (
-	ClusterStatusAvailable                  = "available"
-	ClusterStatusBackingUp                  = "backing-up"
-	ClusterStatusConfiguringIAMDatabaseAuth = "configuring-iam-database-auth"
-	ClusterStatusCreating                   = "creating"
-	ClusterStatusDeleting                   = "deleting"
-	ClusterStatusMigrating                  = "migrating"
-	ClusterStatusModifying                  = "modifying"
-	ClusterStatusPreparingDataMigration     = "preparing-data-migration"
-	ClusterStatusPromoting                  = "promoting"
-	ClusterStatusRebooting                  = "rebooting"
-	ClusterStatusRenaming                   = "renaming"
-	ClusterStatusResettingMasterCredentials = "resetting-master-credentials"
-	ClusterStatusScalingCompute             = "scaling-compute"
-	ClusterStatusUpgrading                  = "upgrading"
+	clusterStatusAvailable                  = "available"
+	clusterStatusBackingUp                  = "backing-up"
+	clusterStatusConfiguringIAMDatabaseAuth = "configuring-iam-database-auth"
+	clusterStatusCreating                   = "creating"
+	clusterStatusDeleting                   = "deleting"
+	clusterStatusMigrating                  = "migrating"
+	clusterStatusModifying                  = "modifying"
+	clusterStatusPreparingDataMigration     = "preparing-data-migration"
+	clusterStatusPromoting                  = "promoting"
+	clusterStatusRebooting                  = "rebooting"
+	clusterStatusRenaming                   = "renaming"
+	clusterStatusResettingMasterCredentials = "resetting-master-credentials"
+	clusterStatusScalingCompute             = "scaling-compute"
+	clusterStatusUpgrading                  = "upgrading"
+
+	// Non-standard status values.
+	clusterStatusAvailableWithPendingModifiedValues = "tf-available-with-pending-modified-values"
 )
 
 const (
-	ClusterSnapshotStatusAvailable = "available"
-	ClusterSnapshotStatusCreating  = "creating"
+	clusterSnapshotStatusAvailable = "available"
+	clusterSnapshotStatusCreating  = "creating"
 )
 
 const (

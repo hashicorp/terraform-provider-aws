@@ -28,6 +28,8 @@ func init() {
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"Amazon FSx does not currently support OpenZFS file system creation in the following Availability Zones",
+		// "ServiceLimitExceeded: Account 123456789012 can have at most 10240 MB/s of throughput capacity total across file systems"
+		"throughput capacity total across file systems",
 	)
 }
 

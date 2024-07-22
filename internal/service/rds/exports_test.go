@@ -6,6 +6,7 @@ package rds
 // Exports for use in tests only.
 var (
 	ResourceCertificate             = resourceCertificate
+	ResourceCluster                 = resourceCluster
 	ResourceEventSubscription       = resourceEventSubscription
 	ResourceProxy                   = resourceProxy
 	ResourceProxyDefaultTargetGroup = resourceProxyDefaultTargetGroup
