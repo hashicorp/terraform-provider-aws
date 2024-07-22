@@ -2338,7 +2338,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -2359,7 +2359,7 @@ resource "aws_glue_crawler" "test" {
 func testAccCrawlerConfig_s3Target(rName, path string) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = "%[1]s-%[2]s"
+  bucket        = "%[1]s-%[2]s"
   force_destroy = true
 }
 
@@ -2384,7 +2384,7 @@ resource "aws_glue_crawler" "test" {
 func testAccCrawlerConfig_s3TargetExclusions1(rName, exclusion1 string) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -2446,7 +2446,7 @@ resource "aws_glue_connection" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -2468,7 +2468,7 @@ resource "aws_glue_crawler" "test" {
 func testAccCrawlerConfig_s3TargetExclusions2(rName, exclusion1, exclusion2 string) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -2740,12 +2740,12 @@ resource "aws_glue_crawler" "test" {
 func testAccCrawlerConfig_s3TargetMultiple(rName, path1, path2 string) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = "%[1]s-%[2]s"
+  bucket        = "%[1]s-%[2]s"
   force_destroy = true
 }
 
 resource "aws_s3_bucket" "test2" {
-  bucket = "%[1]s-%[3]s"
+  bucket        = "%[1]s-%[3]s"
   force_destroy = true
 }
 
@@ -2971,6 +2971,11 @@ resource "aws_glue_crawler" "test" {
 
 func testAccCrawlerConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -2984,7 +2989,7 @@ resource "aws_glue_crawler" "test" {
   table_prefix  = %[1]q
 
   s3_target {
-    path = "s3://bucket-name"
+    path = "s3://${aws_s3_bucket.test.bucket}"
   }
 
   tags = {
@@ -2996,6 +3001,11 @@ resource "aws_glue_crawler" "test" {
 
 func testAccCrawlerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -3009,7 +3019,7 @@ resource "aws_glue_crawler" "test" {
   table_prefix  = %[1]q
 
   s3_target {
-    path = "s3://bucket-name"
+    path = "s3://${aws_s3_bucket.test.bucket}"
   }
 
   tags = {
@@ -3372,7 +3382,7 @@ resource "aws_lakeformation_permissions" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -3425,7 +3435,7 @@ resource "aws_glue_crawler" "test" {
 func testAccCrawlerConfig_recrawlPolicy(rName, policy string) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -3459,7 +3469,7 @@ resource "aws_glue_crawler" "test" {
 func testAccCrawlerConfig_s3TargetSampleSize(rName string, size int) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
   force_destroy = true
 }
 

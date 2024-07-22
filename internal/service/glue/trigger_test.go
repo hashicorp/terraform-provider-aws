@@ -730,8 +730,8 @@ resource "aws_glue_trigger" "test" {
 }
 
 func testAccTriggerConfig_crawler(rName, state string) string {
-	return acctest.ConfigCompose(testAccCrawlerConfig_s3Target(rName, "s3://${aws_s3_bucket.test.bucket}"), fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
+	return acctest.ConfigCompose(testAccCrawlerConfig_s3Target(rName, "bucket1"), fmt.Sprintf(`
+resource "aws_s3_bucket" "test2" {
   bucket = %[1]q
 }
 
@@ -743,7 +743,7 @@ resource "aws_glue_crawler" "test2" {
   role          = aws_iam_role.test.name
 
   s3_target {
-    path = "s3://${aws_s3_bucket.test.bucket}"
+    path = "s3://${aws_s3_bucket.test2.bucket}"
   }
 }
 
