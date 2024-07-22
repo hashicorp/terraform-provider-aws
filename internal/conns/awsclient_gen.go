@@ -114,6 +114,7 @@ import (
 	healthlake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/healthlake"
 	iam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iam"
 	identitystore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/identitystore"
+	inspector_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector"
 	inspector2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector2"
 	internetmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/internetmonitor"
 	iot_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iot"
@@ -220,7 +221,6 @@ import (
 	glue_sdkv1 "github.com/aws/aws-sdk-go/service/glue"
 	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
-	inspector_sdkv1 "github.com/aws/aws-sdk-go/service/inspector"
 	kinesisanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	kinesisanalyticsv2_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
@@ -737,8 +737,8 @@ func (c *AWSClient) ImageBuilderConn(ctx context.Context) *imagebuilder_sdkv1.Im
 	return errs.Must(conn[*imagebuilder_sdkv1.Imagebuilder](ctx, c, names.ImageBuilder, make(map[string]any)))
 }
 
-func (c *AWSClient) InspectorConn(ctx context.Context) *inspector_sdkv1.Inspector {
-	return errs.Must(conn[*inspector_sdkv1.Inspector](ctx, c, names.Inspector, make(map[string]any)))
+func (c *AWSClient) InspectorClient(ctx context.Context) *inspector_sdkv2.Client {
+	return errs.Must(client[*inspector_sdkv2.Client](ctx, c, names.Inspector, make(map[string]any)))
 }
 
 func (c *AWSClient) Inspector2Client(ctx context.Context) *inspector2_sdkv2.Client {
