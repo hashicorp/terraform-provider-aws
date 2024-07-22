@@ -11,13 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/licensemanager/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -58,10 +58,10 @@ func ResourceLicenseConfiguration() *schema.Resource {
 				Default:  false,
 			},
 			"license_counting_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: enum.Validate[awstypes.LicenseCountingType](),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.LicenseCountingType](),
 			},
 			"license_rules": {
 				Type:     schema.TypeList,
@@ -95,7 +95,7 @@ func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceD
 
 	name := d.Get(names.AttrName).(string)
 	input := &licensemanager.CreateLicenseConfigurationInput{
-		LicenseCountingType: aws.String(d.Get("license_counting_type").(string)),
+		LicenseCountingType: awstypes.LicenseCountingType(d.Get("license_counting_type").(string)),
 		Name:                aws.String(name),
 		Tags:                getTagsIn(ctx),
 	}
@@ -113,7 +113,7 @@ func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if v, ok := d.GetOk("license_rules"); ok && len(v.([]interface{})) > 0 {
-		input.LicenseRules = flex.ExpandStringList(v.([]interface{}))
+		input.LicenseRules = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	output, err := conn.CreateLicenseConfiguration(ctx, input)
@@ -195,7 +195,7 @@ func resourceLicenseConfigurationDelete(ctx context.Context, d *schema.ResourceD
 		LicenseConfigurationArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidParameterValueException, "Invalid license configuration ARN") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Invalid license configuration ARN") {
 		return diags
 	}
 
@@ -213,7 +213,7 @@ func FindLicenseConfigurationByARN(ctx context.Context, conn *licensemanager.Cli
 
 	output, err := conn.GetLicenseConfiguration(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidParameterValueException, "Invalid license configuration ARN") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Invalid license configuration ARN") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
