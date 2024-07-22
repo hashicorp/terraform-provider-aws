@@ -71,6 +71,16 @@ func (expander autoExpander) getOptions() AutoFlexOptions {
 func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	if valFrom.Kind() == reflect.Invalid {
+		diags.AddError("AutoFlEx", "Cannot expand nil source")
+		return diags
+	}
+
+	if vTo.Kind() == reflect.Invalid {
+		diags.AddError("AutoFlEx", "Cannot expand into nil target")
+		return diags
+	}
+
 	if fromExpander, ok := valFrom.Interface().(Expander); ok {
 		diags.Append(expandExpander(ctx, fromExpander, vTo)...)
 		return diags
