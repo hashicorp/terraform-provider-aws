@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -76,9 +75,13 @@ func FindLatestBotVersionByName(ctx context.Context, conn *lexmodelbuildingservi
 	}
 	var latestVersion int
 
-	err := conn.GetBotVersionsPagesWithContext(ctx, input, func(page *lexmodelbuildingservice.GetBotVersionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := lexmodelbuildingservice.NewGetBotVersionsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return "", err
 		}
 
 		for _, bot := range page.Bots {
@@ -94,12 +97,6 @@ func FindLatestBotVersionByName(ctx context.Context, conn *lexmodelbuildingservi
 				latestVersion = version
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return "", err
 	}
 
 	if latestVersion == 0 {
@@ -117,9 +114,13 @@ func FindLatestIntentVersionByName(ctx context.Context, conn *lexmodelbuildingse
 	}
 	var latestVersion int
 
-	err := conn.GetIntentVersionsPagesWithContext(ctx, input, func(page *lexmodelbuildingservice.GetIntentVersionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := lexmodelbuildingservice.NewGetIntentVersionsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return "", err
 		}
 
 		for _, intent := range page.Intents {
@@ -135,12 +136,6 @@ func FindLatestIntentVersionByName(ctx context.Context, conn *lexmodelbuildingse
 				latestVersion = version
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return "", err
 	}
 
 	if latestVersion == 0 {
@@ -158,9 +153,13 @@ func FindLatestSlotTypeVersionByName(ctx context.Context, conn *lexmodelbuilding
 	}
 	var latestVersion int
 
-	err := conn.GetSlotTypeVersionsPagesWithContext(ctx, input, func(page *lexmodelbuildingservice.GetSlotTypeVersionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := lexmodelbuildingservice.NewGetSlotTypeVersionsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return "", err
 		}
 
 		for _, slot := range page.SlotTypes {
@@ -176,12 +175,6 @@ func FindLatestSlotTypeVersionByName(ctx context.Context, conn *lexmodelbuilding
 				latestVersion = version
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return "", err
 	}
 
 	if latestVersion == 0 {
