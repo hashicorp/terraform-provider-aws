@@ -398,6 +398,7 @@ func resourceFlow() *schema.Resource {
 																		"prefix_hierarchy": {
 																			Type:     schema.TypeList,
 																			Optional: true,
+																			Computed: true,
 																			Elem: &schema.Schema{
 																				Type:             schema.TypeString,
 																				ValidateDiagFunc: enum.Validate[types.PathPrefix](),
@@ -1278,10 +1279,11 @@ func resourceFlow() *schema.Resource {
 			"metadata_catalog_config": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"glue": {
+						"glue_data_catalog": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -1292,9 +1294,9 @@ func resourceFlow() *schema.Resource {
 										Required: true,
 									},
 									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile(`arn:.*:[0-9]+:role/.*`), "must be a valid ARN of an IAM Role"),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 									},
 									"table_prefix": {
 										Type:     schema.TypeString,
@@ -1328,8 +1330,7 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("metadata_catalog_config"); ok {
-		m := v.([]interface{})[0].(map[string]interface{})
-		input.MetadataCatalogConfig = expandMetadataCatalogConfig(m)
+		input.MetadataCatalogConfig = expandMetadataCatalogConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -1400,6 +1401,14 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		d.Set("trigger_config", nil)
 	}
 
+	if output.MetadataCatalogConfig != nil {
+		if err := d.Set("metadata_catalog_config", flattenMetadataCatalogConfig(output.MetadataCatalogConfig)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting metadata_catalog_config: %s", err)
+		}
+	} else {
+		d.Set("metadata_catalog_config", nil)
+	}
+
 	setTagsOut(ctx, output.Tags)
 
 	return diags
@@ -1420,8 +1429,7 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		if v, ok := d.GetOk("metadata_catalog_config"); ok {
-			m := v.([]interface{})[0].(map[string]interface{})
-			input.MetadataCatalogConfig = expandMetadataCatalogConfig(m)
+			input.MetadataCatalogConfig = expandMetadataCatalogConfig(v.([]any))
 		}
 
 		// always send description when updating a task
@@ -1587,19 +1595,10 @@ func expandPrefixConfig(tfMap map[string]interface{}) *types.PrefixConfig {
 	}
 
 	if v, ok := tfMap["prefix_hierarchy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.PathPrefixHierarchy = expandPrefixHierarchies(v)
+		a.PathPrefixHierarchy = flex.ExpandStringyValueList[types.PathPrefix](v)
 	}
 
 	return a
-}
-
-func expandPrefixHierarchies(l []interface{}) []types.PathPrefix {
-	var prefixes []types.PathPrefix
-
-	for _, item := range l {
-		prefixes = append(prefixes, types.PathPrefix(item.(string)))
-	}
-	return prefixes
 }
 
 func expandDestinationFlowConfigs(tfList []interface{}) []types.DestinationFlowConfig {
@@ -2672,22 +2671,23 @@ func expandScheduledTriggerProperties(tfMap map[string]interface{}) *types.Sched
 	return a
 }
 
-func expandMetadataCatalogConfig(tfMap map[string]interface{}) *types.MetadataCatalogConfig {
-	if tfMap == nil {
+func expandMetadataCatalogConfig(tfList []any) *types.MetadataCatalogConfig {
+	if len(tfList) == 0 {
 		return nil
 	}
 
+	m := tfList[0].(map[string]any)
+
 	a := &types.MetadataCatalogConfig{}
 
-	if v, ok := tfMap["glue"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.GlueDataCatalog = expandGlueCatalogConfig(v[0].(map[string]interface{}))
-		return a
+	if v, ok := m["glue_data_catalog"].([]any); ok && len(v) > 0 && v[0] != nil {
+		a.GlueDataCatalog = expandGlueDataCatalog(v[0].(map[string]any))
 	}
 
-	return nil
+	return a
 }
 
-func expandGlueCatalogConfig(tfMap map[string]interface{}) *types.GlueDataCatalogConfig {
+func expandGlueDataCatalog(tfMap map[string]interface{}) *types.GlueDataCatalogConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -2707,6 +2707,32 @@ func expandGlueCatalogConfig(tfMap map[string]interface{}) *types.GlueDataCatalo
 	}
 
 	return a
+}
+
+func flattenMetadataCatalogConfig(in *types.MetadataCatalogConfig) []any {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]any{
+		"glue_data_catalog": flattenGlueDataCatalog(in.GlueDataCatalog),
+	}
+
+	return []any{m}
+}
+
+func flattenGlueDataCatalog(in *types.GlueDataCatalogConfig) []any {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]any{
+		"database_name": in.DatabaseName,
+		"role_arn":      in.RoleArn,
+		"table_prefix":  in.TablePrefix,
+	}
+
+	return []any{m}
 }
 
 func flattenErrorHandlingConfig(errorHandlingConfig *types.ErrorHandlingConfig) map[string]interface{} {
@@ -2738,7 +2764,7 @@ func flattenPrefixConfig(prefixConfig *types.PrefixConfig) map[string]interface{
 
 	m["prefix_format"] = prefixConfig.PrefixFormat
 	m["prefix_type"] = prefixConfig.PrefixType
-	m["prefix_hierarchy"] = prefixConfig.PathPrefixHierarchy
+	m["prefix_hierarchy"] = flex.FlattenStringyValueList(prefixConfig.PathPrefixHierarchy)
 
 	return m
 }
@@ -3604,7 +3630,7 @@ func flattenTask(task types.Task) map[string]interface{} {
 	}
 
 	if v := task.TaskProperties; v != nil {
-		m["task_properties"] = v
+		m["task_properties"] = flex.FlattenStringValueMap(v)
 	}
 
 	m["task_type"] = task.TaskType

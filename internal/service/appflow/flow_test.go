@@ -11,7 +11,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/appflow"
-	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -309,12 +308,10 @@ func TestAccAppFlowFlow_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAppFlowFlow_metadata_catalog(t *testing.T) {
+func TestAccAppFlowFlow_metadataCatalog(t *testing.T) {
 	ctx := acctest.Context(t)
-	var flowOutput types.FlowDefinition
-	rSourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rDestinationName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rFlowName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var flowOutput appflow.DescribeFlowOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_flow.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -324,7 +321,7 @@ func TestAccAppFlowFlow_metadata_catalog(t *testing.T) {
 		CheckDestroy:             testAccCheckFlowDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowConfig_metadata_catalog(rSourceName, rDestinationName, rFlowName),
+				Config: testAccFlowConfig_metadata_catalog(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
 					resource.TestCheckResourceAttr(resourceName, "metadata_catalog_config.#", acctest.Ct1),
@@ -334,7 +331,7 @@ func TestAccAppFlowFlow_metadata_catalog(t *testing.T) {
 				),
 			},
 			{
-				Config:   testAccFlowConfig_metadata_catalog(rSourceName, rDestinationName, rFlowName),
+				Config:   testAccFlowConfig_metadata_catalog(rName),
 				PlanOnly: true,
 			},
 		},
@@ -794,9 +791,9 @@ resource "aws_appflow_flow" "test" {
 	)
 }
 
-func testAccFlowConfig_metadata_catalog(rSourceName, rDestinationName, rFlowName string) string {
+func testAccFlowConfig_metadata_catalog(rName string) string {
 	return acctest.ConfigCompose(
-		testAccFlowConfig_base(rSourceName, rDestinationName),
+		testAccFlowConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_iam_role" "test" {
 	name = %[1]q
@@ -863,7 +860,7 @@ resource "aws_appflow_flow" "test" {
   }
 
   metadata_catalog_config {
-    glue {
+    glue_data_catalog {
       database_name = "testdb_name"
       table_prefix  = "test_prefix"
       role_arn      = aws_iam_role.test.arn
@@ -874,7 +871,7 @@ resource "aws_appflow_flow" "test" {
     trigger_type = "OnDemand"
   }
 }
-`, rFlowName),
+`, rName),
 	)
 }
 
