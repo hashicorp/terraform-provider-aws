@@ -317,6 +317,7 @@ func TestAccCloudFormationStackSetInstance_operationPreferences(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.concurrency_mode", "SOFT_FAILURE_TOLERANCE"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
 				),
 			},
@@ -853,6 +854,7 @@ resource "aws_cloudformation_stack_set_instance" "test" {
   operation_preferences {
     failure_tolerance_count = 1
     max_concurrent_count    = 10
+    concurrency_mode        = "SOFT_FAILURE_TOLERANCE"
   }
 
   deployment_targets {
