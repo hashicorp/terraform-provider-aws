@@ -125,7 +125,7 @@ This resource supports the following arguments:
 
 * `stack_set_name` - (Required) Name of the StackSet.
 * `account_id` - (Optional) Target AWS Account ID to create a Stack based on the StackSet. Defaults to current account.
-* `deployment_targets` - (Optional) The AWS Organizations accounts to which StackSets deploys. StackSets doesn't deploy stack instances to the organization management account, even if the organization management account is in your organization or in an OU in your organization. Drift detection is not possible for this argument. See [deployment_targets](#deployment_targets-argument-reference) below.
+* `deployment_targets` - (Optional) AWS Organizations accounts to which StackSets deploys. StackSets doesn't deploy stack instances to the organization management account, even if the organization management account is in your organization or in an OU in your organization. Drift detection is not possible for this argument. See [deployment_targets](#deployment_targets-argument-reference) below.
 * `parameter_overrides` - (Optional) Key-value map of input parameters to override from the StackSet for this Instance.
 * `region` - (Optional) Target AWS Region to create a Stack based on the StackSet. Defaults to current region.
 * `retain_stack` - (Optional) During Terraform resource destroy, remove Instance from StackSet while keeping the Stack and its associated resources. Must be enabled in Terraform state _before_ destroy operation to take effect. You cannot reassociate a retained Stack or add an existing, saved Stack to a new StackSet. Defaults to `false`.
@@ -136,25 +136,28 @@ This resource supports the following arguments:
 
 The `deployment_targets` configuration block supports the following arguments:
 
-* `organizational_unit_ids` - (Optional) The organization root ID or organizational unit (OU) IDs to which StackSets deploys.
+* `organizational_unit_ids` - (Optional) Organization root ID or organizational unit (OU) IDs to which StackSets deploys.
+* `account_filter_type` - (Optional) Limit deployment targets to individual accounts or include additional accounts with provided OUs. Valid values: `INTERSECTION`, `DIFFERENCE`, `UNION`, `NONE`.
+* `accounts` - (Optional) List of accounts to deploy stack set updates.
+* `accounts_url` - (Optional) S3 URL of the file containing the list of accounts.
 
 ### `operation_preferences` Argument Reference
 
 The `operation_preferences` configuration block supports the following arguments:
 
-* `failure_tolerance_count` - (Optional) The number of accounts, per Region, for which this operation can fail before AWS CloudFormation stops the operation in that Region.
-* `failure_tolerance_percentage` - (Optional) The percentage of accounts, per Region, for which this stack operation can fail before AWS CloudFormation stops the operation in that Region.
-* `max_concurrent_count` - (Optional) The maximum number of accounts in which to perform this operation at one time.
-* `max_concurrent_percentage` - (Optional) The maximum percentage of accounts in which to perform this operation at one time.
-* `region_concurrency_type` - (Optional) The concurrency type of deploying StackSets operations in Regions, could be in parallel or one Region at a time. Valid values are `SEQUENTIAL` and `PARALLEL`.
-* `region_order` - (Optional) The order of the Regions in where you want to perform the stack operation.
+* `failure_tolerance_count` - (Optional) Number of accounts, per Region, for which this operation can fail before AWS CloudFormation stops the operation in that Region.
+* `failure_tolerance_percentage` - (Optional) Percentage of accounts, per Region, for which this stack operation can fail before AWS CloudFormation stops the operation in that Region.
+* `max_concurrent_count` - (Optional) Maximum number of accounts in which to perform this operation at one time.
+* `max_concurrent_percentage` - (Optional) Maximum percentage of accounts in which to perform this operation at one time.
+* `region_concurrency_type` - (Optional) Concurrency type of deploying StackSets operations in Regions, could be in parallel or one Region at a time. Valid values are `SEQUENTIAL` and `PARALLEL`.
+* `region_order` - (Optional) Order of the Regions in where you want to perform the stack operation.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique identifier for the resource. If `deployment_targets` is set, this is a comma-delimited string combining stack set name, organizational unit IDs (`/`-delimited), and region (ie. `mystack,ou-123/ou-456,us-east-1`). Otherwise, this is a comma-delimited string combining stack set name, AWS account ID, and region (ie. `mystack,123456789012,us-east-1`).
-* `organizational_unit_id` - The organization root ID or organizational unit (OU) ID in which the stack is deployed.
+* `organizational_unit_id` - Organization root ID or organizational unit (OU) ID in which the stack is deployed.
 * `stack_id` - Stack identifier.
 * `stack_instance_summaries` - List of stack instances created from an organizational unit deployment target. This will only be populated when `deployment_targets` is set. See [`stack_instance_summaries`](#stack_instance_summaries-attribute-reference).
 
@@ -180,9 +183,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 from constructs import Construct
 from cdktf import TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.cloudformation_stack_set_instance import CloudformationStackSetInstance
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        CloudformationStackSetInstance.generate_config_for_import(self, "example", "example,123456789012,us-east-1")
 ```
 
 Import CloudFormation StackSet Instances that target AWS Organizational Units using the StackSet name, a slash (`/`) separated list of organizational unit IDs, and target AWS Region separated by commas (`,`). For example:
@@ -191,9 +200,15 @@ Import CloudFormation StackSet Instances that target AWS Organizational Units us
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 from constructs import Construct
 from cdktf import TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.cloudformation_stack_set_instance import CloudformationStackSetInstance
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        CloudformationStackSetInstance.generate_config_for_import(self, "example", "example,ou-sdas-123123123/ou-sdas-789789789,us-east-1")
 ```
 
 Import CloudFormation StackSet Instances when acting a delegated administrator in a member account using the StackSet name, target AWS account ID or slash (`/`) separated list of organizational unit IDs, target AWS Region and `call_as` value separated by commas (`,`). For example:
@@ -202,9 +217,15 @@ Import CloudFormation StackSet Instances when acting a delegated administrator i
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 from constructs import Construct
 from cdktf import TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.cloudformation_stack_set_instance import CloudformationStackSetInstance
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        CloudformationStackSetInstance.generate_config_for_import(self, "example", "example,ou-sdas-123123123/ou-sdas-789789789,us-east-1,DELEGATED_ADMIN")
 ```
 
 Using `terraform import`, import CloudFormation StackSet Instances that target an AWS Account ID using the StackSet name, target AWS account ID, and target AWS Region separated by commas (`,`). For example:
@@ -225,4 +246,4 @@ Using `terraform import`, import CloudFormation StackSet Instances when acting a
 % terraform import aws_cloudformation_stack_set_instance.example example,ou-sdas-123123123/ou-sdas-789789789,us-east-1,DELEGATED_ADMIN
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-1e1b74c9b69f000ae028bff21e6d418d876fa6006347b01a1cc908f1b3a20e44 -->
+<!-- cache-key: cdktf-0.20.1 input-7fb05e14791cf7993878a65fbf8c5219cd03182722c0d64aa18f1e90ccb4ef85 -->

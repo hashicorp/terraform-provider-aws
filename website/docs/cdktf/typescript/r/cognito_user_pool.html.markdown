@@ -115,25 +115,25 @@ The following arguments are optional:
 
 * `accountRecoverySetting` - (Optional) Configuration block to define which verified available method a user can use to recover their forgotten password. [Detailed below](#account_recovery_setting).
 * `adminCreateUserConfig` - (Optional) Configuration block for creating a new user profile. [Detailed below](#admin_create_user_config).
-* `aliasAttributes` - (Optional) Attributes supported as an alias for this user pool. Valid values: `phone_number`, `email`, or `preferred_username`. Conflicts with `username_attributes`.
-* `autoVerifiedAttributes` - (Optional) Attributes to be auto-verified. Valid values: `email`, `phone_number`.
+* `aliasAttributes` - (Optional) Attributes supported as an alias for this user pool. Valid values: `phoneNumber`, `email`, or `preferred_username`. Conflicts with `usernameAttributes`.
+* `autoVerifiedAttributes` - (Optional) Attributes to be auto-verified. Valid values: `email`, `phoneNumber`.
 * `deletionProtection` - (Optional) When active, DeletionProtection prevents accidental deletion of your user pool. Before you can delete a user pool that you have protected against deletion, you must deactivate this feature. Valid values are `ACTIVE` and `INACTIVE`, Default value is `INACTIVE`.
 * `deviceConfiguration` - (Optional) Configuration block for the user pool's device tracking. [Detailed below](#device_configuration).
 * `emailConfiguration` - (Optional) Configuration block for configuring email. [Detailed below](#email_configuration).
-* `emailVerificationMessage` - (Optional) String representing the email verification message. Conflicts with `verification_message_template` configuration block `email_message` argument.
-* `emailVerificationSubject` - (Optional) String representing the email verification subject. Conflicts with `verification_message_template` configuration block `email_subject` argument.
+* `emailVerificationMessage` - (Optional) String representing the email verification message. Conflicts with `verificationMessageTemplate` configuration block `emailMessage` argument.
+* `emailVerificationSubject` - (Optional) String representing the email verification subject. Conflicts with `verificationMessageTemplate` configuration block `emailSubject` argument.
 * `lambdaConfig` - (Optional) Configuration block for the AWS Lambda triggers associated with the user pool. [Detailed below](#lambda_config).
-* `mfaConfiguration` - (Optional) Multi-Factor Authentication (MFA) configuration for the User Pool. Defaults of `OFF`. Valid values are `OFF` (MFA Tokens are not required), `ON` (MFA is required for all users to sign in; requires at least one of `sms_configuration` or `software_token_mfa_configuration` to be configured), or `OPTIONAL` (MFA Will be required only for individual users who have MFA Enabled; requires at least one of `sms_configuration` or `software_token_mfa_configuration` to be configured).
+* `mfaConfiguration` - (Optional) Multi-Factor Authentication (MFA) configuration for the User Pool. Defaults of `OFF`. Valid values are `OFF` (MFA Tokens are not required), `ON` (MFA is required for all users to sign in; requires at least one of `smsConfiguration` or `softwareTokenMfaConfiguration` to be configured), or `OPTIONAL` (MFA Will be required only for individual users who have MFA Enabled; requires at least one of `smsConfiguration` or `softwareTokenMfaConfiguration` to be configured).
 * `passwordPolicy` - (Optional) Configuration block for information about the user pool password policy. [Detailed below](#password_policy).
 * `schema` - (Optional) Configuration block for the schema attributes of a user pool. [Detailed below](#schema). Schema attributes from the [standard attribute set](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes) only need to be specified if they are different from the default configuration. Attributes can be added, but not modified or removed. Maximum of 50 attributes.
 * `smsAuthenticationMessage` - (Optional) String representing the SMS authentication message. The Message must contain the `{####}` placeholder, which will be replaced with the code.
 * `smsConfiguration` - (Optional) Configuration block for Short Message Service (SMS) settings. [Detailed below](#sms_configuration). These settings apply to SMS user verification and SMS Multi-Factor Authentication (MFA). Due to Cognito API restrictions, the SMS configuration cannot be removed without recreating the Cognito User Pool. For user data safety, this resource will ignore the removal of this configuration by disabling drift detection. To force resource recreation after this configuration has been applied, see the [`taint` command](https://www.terraform.io/docs/commands/taint.html).
-* `smsVerificationMessage` - (Optional) String representing the SMS verification message. Conflicts with `verification_message_template` configuration block `sms_message` argument.
+* `smsVerificationMessage` - (Optional) String representing the SMS verification message. Conflicts with `verificationMessageTemplate` configuration block `smsMessage` argument.
 * `softwareTokenMfaConfiguration` - (Optional) Configuration block for software token Mult-Factor Authentication (MFA) settings. [Detailed below](#software_token_mfa_configuration).
-* `tags` - (Optional) Map of tags to assign to the User Pool. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the User Pool. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `userAttributeUpdateSettings` - (Optional) Configuration block for user attribute update settings. [Detailed below](#user_attribute_update_settings).
 * `userPoolAddOns` - (Optional) Configuration block for user pool add-ons to enable user pool advanced security mode features. [Detailed below](#user_pool_add_ons).
-* `usernameAttributes` - (Optional) Whether email addresses or phone numbers can be specified as usernames when a user signs up. Conflicts with `alias_attributes`.
+* `usernameAttributes` - (Optional) Whether email addresses or phone numbers can be specified as usernames when a user signs up. Conflicts with `aliasAttributes`.
 * `usernameConfiguration` - (Optional) Configuration block for username configuration. [Detailed below](#username_configuration).
 * `verificationMessageTemplate` - (Optional) Configuration block for verification message templates. [Detailed below](#verification_message_template).
 
@@ -157,15 +157,15 @@ The following arguments are optional:
 ### device_configuration
 
 * `challengeRequiredOnNewDevice` - (Optional) Whether a challenge is required on a new device. Only applicable to a new device.
-* `deviceOnlyRememberedOnUserPrompt` - (Optional) Whether a device is only remembered on user prompt. `false` equates to "Always" remember, `true` is "User Opt In," and not using a `device_configuration` block is "No."
+* `deviceOnlyRememberedOnUserPrompt` - (Optional) Whether a device is only remembered on user prompt. `false` equates to "Always" remember, `true` is "User Opt In," and not using a `deviceConfiguration` block is "No."
 
 ### email_configuration
 
 * `configurationSet` - (Optional) Email configuration set name from SES.
-* `emailSendingAccount` - (Optional) Email delivery method to use. `COGNITO_DEFAULT` for the default email functionality built into Cognito or `DEVELOPER` to use your Amazon SES configuration. Required to be `DEVELOPER` if `from_email_address` is set.
+* `emailSendingAccount` - (Optional) Email delivery method to use. `COGNITO_DEFAULT` for the default email functionality built into Cognito or `DEVELOPER` to use your Amazon SES configuration. Required to be `DEVELOPER` if `fromEmailAddress` is set.
 * `fromEmailAddress` - (Optional) Sender’s email address or sender’s display name with their email address (e.g., `john@example.com`, `John Smith <john@example.com>` or `\"John Smith Ph.D.\" <john@example.com>`). Escaped double quotes are required around display names that contain certain characters as specified in [RFC 5322](https://tools.ietf.org/html/rfc5322).
 * `replyToEmailAddress` - (Optional) REPLY-TO email address.
-* `sourceArn` - (Optional) ARN of the SES verified email identity to use. Required if `email_sending_account` is set to `DEVELOPER`.
+* `sourceArn` - (Optional) ARN of the SES verified email identity to use. Required if `emailSendingAccount` is set to `DEVELOPER`.
 
 ### lambda_config
 
@@ -176,7 +176,8 @@ The following arguments are optional:
 * `postConfirmation` - (Optional) Post-confirmation AWS Lambda trigger.
 * `preAuthentication` - (Optional) Pre-authentication AWS Lambda trigger.
 * `preSignUp` - (Optional) Pre-registration AWS Lambda trigger.
-* `preTokenGeneration` - (Optional) Allow to customize identity token claims before token generation.
+* `preTokenGeneration` - (Optional) Allow to customize identity token claims before token generation. Set this parameter for legacy purposes; for new instances of pre token generation triggers, set the lambda_arn of `preTokenGenerationConfig`.
+* `preTokenGenerationConfig` - (Optional) Allow to customize access tokens. See [pre_token_configuration_type](#pre_token_configuration_type)
 * `userMigration` - (Optional) User migration Lambda config type.
 * `verifyAuthChallengeResponse` - (Optional) Verifies the authentication challenge response.
 * `kmsKeyId` - (Optional) The Amazon Resource Name of Key Management Service Customer master keys. Amazon Cognito uses the key to encrypt codes and temporary passwords sent to CustomEmailSender and CustomSMSSender.
@@ -193,6 +194,11 @@ The following arguments are optional:
 * `lambdaArn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to send SMS notifications to users.
 * `lambdaVersion` - (Required) The Lambda version represents the signature of the "request" attribute in the "event" information Amazon Cognito passes to your custom SMS Lambda function. The only supported value is `V1_0`.
 
+#### pre_token_configuration_type
+
+* `lambdaArn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to customize access tokens. If you also set an ARN in `preTokenGeneration`, its value must be identical to this one.
+* `lambdaVersion` - (Required) The Lambda version represents the signature of the "version" attribute in the "event" information Amazon Cognito passes to your pre Token Generation Lambda function. The supported values are `V1_0`, `V2_0`.
+
 ### password_policy
 
 * `minimumLength` - (Optional) Minimum length of the password policy that you have set.
@@ -204,15 +210,15 @@ The following arguments are optional:
 
 ### schema
 
-~> **NOTE:** When defining an `attributeDataType` of `string` or `number`, the respective attribute constraints configuration block (e.g `stringAttributeConstraints` or `numberAttributeConstraints`) is **required** to prevent recreation of the Terraform resource. This requirement is true for both standard (e.g., name, email) and custom schema attributes.
+~> **NOTE:** When defining an `attributeDataType` of `String` or `Number`, the respective attribute constraints configuration block (e.g `stringAttributeConstraints` or `numberAttributeConstraints`) is **required** to prevent recreation of the Terraform resource. This requirement is true for both standard (e.g., name, email) and custom schema attributes.
 
 * `attributeDataType` - (Required) Attribute data type. Must be one of `Boolean`, `Number`, `String`, `DateTime`.
 * `developerOnlyAttribute` - (Optional) Whether the attribute type is developer only.
 * `mutable` - (Optional) Whether the attribute can be changed once it has been created.
 * `name` - (Required) Name of the attribute.
-* `numberAttributeConstraints` - (Required when `attribute_data_type` is `Number`) Configuration block for the constraints for an attribute of the number type. [Detailed below](#number_attribute_constraints).
+* `numberAttributeConstraints` - (Required when `attributeDataType` is `Number`) Configuration block for the constraints for an attribute of the number type. [Detailed below](#number_attribute_constraints).
 * `required` - (Optional) Whether a user pool attribute is required. If the attribute is required and the user does not provide a value, registration or sign-in will fail.
-* `stringAttributeConstraints` - (Required when `attribute_data_type` is `String`) Constraints for an attribute of the string type. [Detailed below](#string_attribute_constraints).
+* `stringAttributeConstraints` - (Required when `attributeDataType` is `String`) Constraints for an attribute of the string type. [Detailed below](#string_attribute_constraints).
 
 #### schema: Defaults for Standard Attributes
 
@@ -274,11 +280,11 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required in the `softwareTokenMfaConfiguration` configuration block:
 
-* `enabled` - (Required) Boolean whether to enable software token Multi-Factor (MFA) tokens, such as Time-based One-Time Password (TOTP). To disable software token MFA When `sms_configuration` is not present, the `mfa_configuration` argument must be set to `OFF` and the `software_token_mfa_configuration` configuration block must be fully removed.
+* `enabled` - (Required) Boolean whether to enable software token Multi-Factor (MFA) tokens, such as Time-based One-Time Password (TOTP). To disable software token MFA When `smsConfiguration` is not present, the `mfaConfiguration` argument must be set to `OFF` and the `softwareTokenMfaConfiguration` configuration block must be fully removed.
 
 ### user_attribute_update_settings
 
-* `attributesRequireVerificationBeforeUpdate` - (Required) A list of attributes requiring verification before update. If set, the provided value(s) must also be set in `auto_verified_attributes`. Valid values: `email`, `phone_number`.
+* `attributesRequireVerificationBeforeUpdate` - (Required) A list of attributes requiring verification before update. If set, the provided value(s) must also be set in `autoVerifiedAttributes`. Valid values: `email`, `phoneNumber`.
 
 ### user_pool_add_ons
 
@@ -291,11 +297,11 @@ The following arguments are required in the `softwareTokenMfaConfiguration` conf
 ### verification_message_template
 
 * `defaultEmailOption` - (Optional) Default email option. Must be either `CONFIRM_WITH_CODE` or `CONFIRM_WITH_LINK`. Defaults to `CONFIRM_WITH_CODE`.
-* `emailMessage` - (Optional) Email message template. Must contain the `{####}` placeholder. Conflicts with `email_verification_message` argument.
+* `emailMessage` - (Optional) Email message template. Must contain the `{####}` placeholder. Conflicts with `emailVerificationMessage` argument.
 * `emailMessageByLink` - (Optional) Email message template for sending a confirmation link to the user, it must contain the `{##Click Here##}` placeholder.
-* `emailSubject` - (Optional) Subject line for the email message template. Conflicts with `email_verification_subject` argument.
+* `emailSubject` - (Optional) Subject line for the email message template. Conflicts with `emailVerificationSubject` argument.
 * `emailSubjectByLink` - (Optional) Subject line for the email message template for sending a confirmation link to the user.
-* `smsMessage` - (Optional) SMS message template. Must contain the `{####}` placeholder. Conflicts with `sms_verification_message` argument.
+* `smsMessage` - (Optional) SMS message template. Must contain the `{####}` placeholder. Conflicts with `smsVerificationMessage` argument.
   
 ## Attribute Reference
 
@@ -309,7 +315,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `estimatedNumberOfUsers` - A number estimating the size of the user pool.
 * `id` - ID of the user pool.
 * `lastModifiedDate` - Date the user pool was last modified.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -319,9 +325,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { CognitoUserPool } from "./.gen/providers/aws/cognito-user-pool";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    CognitoUserPool.generateConfigForImport(this, "pool", "us-west-2_abc123");
   }
 }
 
@@ -333,4 +345,4 @@ Using `terraform import`, import Cognito User Pools using the `id`. For example:
 % terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-956f61f5814a7a2fe0cddeef5fa9d4a645f79dd8c9a568695d52c319ef5ea5d4 -->
+<!-- cache-key: cdktf-0.20.1 input-d2add4de169176a18d535e64e6b4e2b8a61a2e7ab8a1120b63e928572a07990e -->

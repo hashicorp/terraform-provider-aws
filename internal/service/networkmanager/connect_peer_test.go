@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccNetworkManagerConnectPeer_basic(t *testing.T) {
@@ -31,7 +32,7 @@ func TestAccNetworkManagerConnectPeer_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -39,20 +40,20 @@ func TestAccNetworkManagerConnectPeer_basic(t *testing.T) {
 				Config: testAccConnectPeerConfig_basic(rName, insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexache.MustCompile(`connect-peer/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`connect-peer/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.core_network_address"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.inside_cidr_blocks.0", insideCidrBlocksv4),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.peer_address", peerAddress),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.protocol", "GRE"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.bgp_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.bgp_configurations.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "connect_attachment_id"),
 					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.0", insideCidrBlocksv4),
 					resource.TestCheckResourceAttr(resourceName, "peer_address", peerAddress),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					resource.TestCheckResourceAttrSet(resourceName, "connect_attachment_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 				),
 			},
 			{
@@ -76,7 +77,7 @@ func TestAccNetworkManagerConnectPeer_noDependsOn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -84,20 +85,20 @@ func TestAccNetworkManagerConnectPeer_noDependsOn(t *testing.T) {
 				Config: testAccConnectPeerConfig_noDependsOn(rName, insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexache.MustCompile(`connect-peer/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`connect-peer/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.core_network_address"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.inside_cidr_blocks.0", insideCidrBlocksv4),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.peer_address", peerAddress),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.protocol", "GRE"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.bgp_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.bgp_configurations.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "connect_attachment_id"),
 					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.0", insideCidrBlocksv4),
 					resource.TestCheckResourceAttr(resourceName, "peer_address", peerAddress),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					resource.TestCheckResourceAttrSet(resourceName, "connect_attachment_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 				),
 			},
 			{
@@ -121,7 +122,7 @@ func TestAccNetworkManagerConnectPeer_subnetARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -129,18 +130,18 @@ func TestAccNetworkManagerConnectPeer_subnetARN(t *testing.T) {
 				Config: testAccConnectPeerConfig_subnetARN(rName, peerAddress, asn, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexache.MustCompile(`connect-peer/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`connect-peer/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.peer_address", peerAddress),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.protocol", "NO_ENCAP"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.bgp_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.bgp_configurations.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "connect_attachment_id"),
 					resource.TestCheckResourceAttr(resourceName, "peer_address", peerAddress),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					resource.TestCheckResourceAttrSet(resourceName, "connect_attachment_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_arn", subnetResourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_arn", subnetResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 				),
 			},
 			{
@@ -164,7 +165,7 @@ func TestAccNetworkManagerConnectPeer_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -172,7 +173,7 @@ func TestAccNetworkManagerConnectPeer_tags(t *testing.T) {
 				Config: testAccConnectPeerConfig_tags1(rName, "Name", "test", insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
 				),
 			},
@@ -180,7 +181,7 @@ func TestAccNetworkManagerConnectPeer_tags(t *testing.T) {
 				Config: testAccConnectPeerConfig_tags2(rName, "Name", "test", "env", "test", insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
 				),
@@ -189,7 +190,7 @@ func TestAccNetworkManagerConnectPeer_tags(t *testing.T) {
 				Config: testAccConnectPeerConfig_tags1(rName, "Name", "test", insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
 				),
 			},

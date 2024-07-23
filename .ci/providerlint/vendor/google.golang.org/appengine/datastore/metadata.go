@@ -4,7 +4,7 @@
 
 package datastore
 
-import "golang.org/x/net/context"
+import "context"
 
 // Datastore kinds for the metadata entities.
 const (
@@ -50,13 +50,14 @@ func keyNames(keys []*Key) []string {
 // The properties are returned as a map of property names to a slice of the
 // representation types. The representation types for the supported Go property
 // types are:
-//   "INT64":     signed integers and time.Time
-//   "DOUBLE":    float32 and float64
-//   "BOOLEAN":   bool
-//   "STRING":    string, []byte and ByteString
-//   "POINT":     appengine.GeoPoint
-//   "REFERENCE": *Key
-//   "USER":      (not used in the Go runtime)
+//
+//	"INT64":     signed integers and time.Time
+//	"DOUBLE":    float32 and float64
+//	"BOOLEAN":   bool
+//	"STRING":    string, []byte and ByteString
+//	"POINT":     appengine.GeoPoint
+//	"REFERENCE": *Key
+//	"USER":      (not used in the Go runtime)
 func KindProperties(ctx context.Context, kind string) (map[string][]string, error) {
 	// TODO(djd): Support range queries.
 	kindKey := NewKey(ctx, kindKind, kind, 0, nil)

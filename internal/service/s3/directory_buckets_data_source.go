@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource
+// @FrameworkDataSource("aws_s3_directory_buckets", name="Directory Buckets")
 func newDirectoryBucketsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &directoryBucketsDataSource{}
 
@@ -36,7 +36,7 @@ func (d *directoryBucketsDataSource) Metadata(_ context.Context, request datasou
 func (d *directoryBucketsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arns": schema.ListAttribute{
+			names.AttrARNs: schema.ListAttribute{
 				ElementType: types.StringType,
 				Computed:    true,
 			},
@@ -58,7 +58,7 @@ func (d *directoryBucketsDataSource) Read(ctx context.Context, request datasourc
 		return
 	}
 
-	conn := d.Meta().S3Client(ctx)
+	conn := d.Meta().S3ExpressClient(ctx)
 
 	input := &s3.ListDirectoryBucketsInput{}
 	var buckets []string

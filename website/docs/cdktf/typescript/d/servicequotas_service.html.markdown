@@ -12,7 +12,7 @@ description: |-
 
 Retrieve information about a Service Quotas Service.
 
-~> **NOTE:** Global quotas apply to all AWS regions, but can only be accessed in `usEast1` in the Commercial partition or `usGovWest1` in the GovCloud partition. In other regions, the AWS API will return the error `The request failed because the specified service does not exist.`
+~> **NOTE:** Global quotas apply to all AWS regions, but can only be accessed in `us-east-1` in the Commercial partition or `us-gov-west-1` in the GovCloud partition. In other regions, the AWS API will return the error `The request failed because the specified service does not exist.`
 
 ## Example Usage
 
@@ -47,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Code of the service.
 * `serviceCode` - Code of the service.
 
-<!-- cache-key: cdktf-0.19.0 input-4d133c6d1401c018a17d5ac93ddafa2d0e17605d51df1be8cf1b26789b0bd62e -->
+<!-- cache-key: cdktf-0.20.1 input-4d133c6d1401c018a17d5ac93ddafa2d0e17605d51df1be8cf1b26789b0bd62e -->

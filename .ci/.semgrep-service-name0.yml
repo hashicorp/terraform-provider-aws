@@ -7,13 +7,16 @@ rules:
     paths:
       include:
         - internal/service/accessanalyzer
+      exclude:
+        - internal/service/accessanalyzer/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)AccessAnalyzer"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: accessanalyzer-in-test-name
     languages:
@@ -23,7 +26,7 @@ rules:
       include:
         - internal/service/accessanalyzer/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -65,13 +68,16 @@ rules:
     paths:
       include:
         - internal/service/account
+      exclude:
+        - internal/service/account/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Account"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: account-in-test-name
     languages:
@@ -81,7 +87,7 @@ rules:
       include:
         - internal/service/account/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -123,13 +129,16 @@ rules:
     paths:
       include:
         - internal/service/acm
+      exclude:
+        - internal/service/acm/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ACM"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: acm-in-test-name
     languages:
@@ -139,7 +148,7 @@ rules:
       include:
         - internal/service/acm/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -181,13 +190,16 @@ rules:
     paths:
       include:
         - internal/service/acmpca
+      exclude:
+        - internal/service/acmpca/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ACMPCA"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: acmpca-in-test-name
     languages:
@@ -197,7 +209,7 @@ rules:
       include:
         - internal/service/acmpca/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -239,13 +251,16 @@ rules:
     paths:
       include:
         - internal/service/grafana
+      exclude:
+        - internal/service/grafana/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)amg"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: amg-in-const-name
     languages:
@@ -282,13 +297,16 @@ rules:
     paths:
       include:
         - internal/service/amp
+      exclude:
+        - internal/service/amp/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)AMP"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: amp-in-test-name
     languages:
@@ -298,7 +316,7 @@ rules:
       include:
         - internal/service/amp/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -340,13 +358,16 @@ rules:
     paths:
       include:
         - internal/service/amplify
+      exclude:
+        - internal/service/amplify/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Amplify"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: amplify-in-test-name
     languages:
@@ -356,7 +377,7 @@ rules:
       include:
         - internal/service/amplify/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -398,13 +419,16 @@ rules:
     paths:
       include:
         - internal/service/apigateway
+      exclude:
+        - internal/service/apigateway/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)APIGateway"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: apigateway-in-test-name
     languages:
@@ -414,7 +438,7 @@ rules:
       include:
         - internal/service/apigateway/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -456,13 +480,16 @@ rules:
     paths:
       include:
         - internal/service/apigatewayv2
+      exclude:
+        - internal/service/apigatewayv2/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)APIGatewayV2"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: apigatewayv2-in-test-name
     languages:
@@ -472,7 +499,7 @@ rules:
       include:
         - internal/service/apigatewayv2/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -514,13 +541,16 @@ rules:
     paths:
       include:
         - internal/service/appautoscaling
+      exclude:
+        - internal/service/appautoscaling/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)AppAutoScaling"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: appautoscaling-in-test-name
     languages:
@@ -530,7 +560,7 @@ rules:
       include:
         - internal/service/appautoscaling/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -572,13 +602,16 @@ rules:
     paths:
       include:
         - internal/service/appconfig
+      exclude:
+        - internal/service/appconfig/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)AppConfig"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: appconfig-in-test-name
     languages:
@@ -588,7 +621,7 @@ rules:
       include:
         - internal/service/appconfig/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -630,13 +663,16 @@ rules:
     paths:
       include:
         - internal/service/appfabric
+      exclude:
+        - internal/service/appfabric/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)AppFabric"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: appfabric-in-test-name
     languages:
@@ -646,7 +682,7 @@ rules:
       include:
         - internal/service/appfabric/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -688,13 +724,16 @@ rules:
     paths:
       include:
         - internal/service/appflow
+      exclude:
+        - internal/service/appflow/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)AppFlow"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: appflow-in-test-name
     languages:
@@ -704,7 +743,7 @@ rules:
       include:
         - internal/service/appflow/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -746,13 +785,16 @@ rules:
     paths:
       include:
         - internal/service/appintegrations
+      exclude:
+        - internal/service/appintegrations/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)AppIntegrations"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: appintegrations-in-test-name
     languages:
@@ -762,7 +804,7 @@ rules:
       include:
         - internal/service/appintegrations/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -804,13 +846,16 @@ rules:
     paths:
       include:
         - internal/service/appintegrations
+      exclude:
+        - internal/service/appintegrations/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)appintegrationsservice"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: appintegrationsservice-in-const-name
     languages:
@@ -847,13 +892,16 @@ rules:
     paths:
       include:
         - internal/service/appautoscaling
+      exclude:
+        - internal/service/appautoscaling/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)applicationautoscaling"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: applicationautoscaling-in-const-name
     languages:
@@ -890,13 +938,16 @@ rules:
     paths:
       include:
         - internal/service/applicationinsights
+      exclude:
+        - internal/service/applicationinsights/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ApplicationInsights"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: applicationinsights-in-test-name
     languages:
@@ -906,7 +957,7 @@ rules:
       include:
         - internal/service/applicationinsights/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -941,6 +992,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)ApplicationInsights"
     severity: WARNING
+  - id: applicationsignals-in-func-name
+    languages:
+      - go
+    message: Do not use "ApplicationSignals" in func name inside applicationsignals package
+    paths:
+      include:
+        - internal/service/applicationsignals
+      exclude:
+        - internal/service/applicationsignals/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ApplicationSignals"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: applicationsignals-in-test-name
+    languages:
+      - go
+    message: Include "ApplicationSignals" in test name
+    paths:
+      include:
+        - internal/service/applicationsignals/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccApplicationSignals"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: applicationsignals-in-const-name
+    languages:
+      - go
+    message: Do not use "ApplicationSignals" in const name inside applicationsignals package
+    paths:
+      include:
+        - internal/service/applicationsignals
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ApplicationSignals"
+    severity: WARNING
+  - id: applicationsignals-in-var-name
+    languages:
+      - go
+    message: Do not use "ApplicationSignals" in var name inside applicationsignals package
+    paths:
+      include:
+        - internal/service/applicationsignals
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ApplicationSignals"
+    severity: WARNING
   - id: appmesh-in-func-name
     languages:
       - go
@@ -948,13 +1060,16 @@ rules:
     paths:
       include:
         - internal/service/appmesh
+      exclude:
+        - internal/service/appmesh/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)AppMesh"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: appmesh-in-test-name
     languages:
@@ -964,7 +1079,7 @@ rules:
       include:
         - internal/service/appmesh/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -999,6 +1114,52 @@ rules:
           patterns:
             - pattern-regex: "(?i)AppMesh"
     severity: WARNING
+  - id: appregistry-in-func-name
+    languages:
+      - go
+    message: Do not use "appregistry" in func name inside servicecatalogappregistry package
+    paths:
+      include:
+        - internal/service/servicecatalogappregistry
+      exclude:
+        - internal/service/servicecatalogappregistry/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)appregistry"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: appregistry-in-const-name
+    languages:
+      - go
+    message: Do not use "appregistry" in const name inside servicecatalogappregistry package
+    paths:
+      include:
+        - internal/service/servicecatalogappregistry
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)appregistry"
+    severity: WARNING
+  - id: appregistry-in-var-name
+    languages:
+      - go
+    message: Do not use "appregistry" in var name inside servicecatalogappregistry package
+    paths:
+      include:
+        - internal/service/servicecatalogappregistry
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)appregistry"
+    severity: WARNING
   - id: apprunner-in-func-name
     languages:
       - go
@@ -1006,13 +1167,16 @@ rules:
     paths:
       include:
         - internal/service/apprunner
+      exclude:
+        - internal/service/apprunner/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)AppRunner"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: apprunner-in-test-name
     languages:
@@ -1022,7 +1186,7 @@ rules:
       include:
         - internal/service/apprunner/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -1064,13 +1228,16 @@ rules:
     paths:
       include:
         - internal/service/appstream
+      exclude:
+        - internal/service/appstream/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)AppStream"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: appstream-in-test-name
     languages:
@@ -1080,7 +1247,7 @@ rules:
       include:
         - internal/service/appstream/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -1122,13 +1289,16 @@ rules:
     paths:
       include:
         - internal/service/appsync
+      exclude:
+        - internal/service/appsync/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)AppSync"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: appsync-in-test-name
     languages:
@@ -1138,7 +1308,7 @@ rules:
       include:
         - internal/service/appsync/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -1180,13 +1350,16 @@ rules:
     paths:
       include:
         - internal/service/athena
+      exclude:
+        - internal/service/athena/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Athena"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: athena-in-test-name
     languages:
@@ -1196,7 +1369,7 @@ rules:
       include:
         - internal/service/athena/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -1238,13 +1411,16 @@ rules:
     paths:
       include:
         - internal/service/auditmanager
+      exclude:
+        - internal/service/auditmanager/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)AuditManager"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: auditmanager-in-test-name
     languages:
@@ -1254,7 +1430,7 @@ rules:
       include:
         - internal/service/auditmanager/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -1296,13 +1472,16 @@ rules:
     paths:
       include:
         - internal/service/autoscaling
+      exclude:
+        - internal/service/autoscaling/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)AutoScaling"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: autoscaling-in-test-name
     languages:
@@ -1312,7 +1491,7 @@ rules:
       include:
         - internal/service/autoscaling/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -1354,13 +1533,16 @@ rules:
     paths:
       include:
         - internal/service/autoscalingplans
+      exclude:
+        - internal/service/autoscalingplans/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)AutoScalingPlans"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: autoscalingplans-in-test-name
     languages:
@@ -1370,7 +1552,7 @@ rules:
       include:
         - internal/service/autoscalingplans/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -1412,13 +1594,16 @@ rules:
     paths:
       include:
         - internal/service/backup
+      exclude:
+        - internal/service/backup/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Backup"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: backup-in-test-name
     languages:
@@ -1428,7 +1613,7 @@ rules:
       include:
         - internal/service/backup/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -1470,13 +1655,16 @@ rules:
     paths:
       include:
         - internal/service/batch
+      exclude:
+        - internal/service/batch/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Batch"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: batch-in-test-name
     languages:
@@ -1486,7 +1674,7 @@ rules:
       include:
         - internal/service/batch/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -1521,6 +1709,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)Batch"
     severity: WARNING
+  - id: bcmdataexports-in-func-name
+    languages:
+      - go
+    message: Do not use "BCMDataExports" in func name inside bcmdataexports package
+    paths:
+      include:
+        - internal/service/bcmdataexports
+      exclude:
+        - internal/service/bcmdataexports/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BCMDataExports"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: bcmdataexports-in-test-name
+    languages:
+      - go
+    message: Include "BCMDataExports" in test name
+    paths:
+      include:
+        - internal/service/bcmdataexports/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccBCMDataExports"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: bcmdataexports-in-const-name
+    languages:
+      - go
+    message: Do not use "BCMDataExports" in const name inside bcmdataexports package
+    paths:
+      include:
+        - internal/service/bcmdataexports
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BCMDataExports"
+    severity: WARNING
+  - id: bcmdataexports-in-var-name
+    languages:
+      - go
+    message: Do not use "BCMDataExports" in var name inside bcmdataexports package
+    paths:
+      include:
+        - internal/service/bcmdataexports
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BCMDataExports"
+    severity: WARNING
   - id: beanstalk-in-func-name
     languages:
       - go
@@ -1528,13 +1777,16 @@ rules:
     paths:
       include:
         - internal/service/elasticbeanstalk
+      exclude:
+        - internal/service/elasticbeanstalk/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)beanstalk"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: beanstalk-in-const-name
     languages:
@@ -1571,13 +1823,16 @@ rules:
     paths:
       include:
         - internal/service/bedrock
+      exclude:
+        - internal/service/bedrock/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Bedrock"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: bedrock-in-test-name
     languages:
@@ -1587,7 +1842,7 @@ rules:
       include:
         - internal/service/bedrock/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -1622,6 +1877,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)Bedrock"
     severity: WARNING
+  - id: bedrockagent-in-func-name
+    languages:
+      - go
+    message: Do not use "BedrockAgent" in func name inside bedrockagent package
+    paths:
+      include:
+        - internal/service/bedrockagent
+      exclude:
+        - internal/service/bedrockagent/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BedrockAgent"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: bedrockagent-in-test-name
+    languages:
+      - go
+    message: Include "BedrockAgent" in test name
+    paths:
+      include:
+        - internal/service/bedrockagent/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccBedrockAgent"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: bedrockagent-in-const-name
+    languages:
+      - go
+    message: Do not use "BedrockAgent" in const name inside bedrockagent package
+    paths:
+      include:
+        - internal/service/bedrockagent
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BedrockAgent"
+    severity: WARNING
+  - id: bedrockagent-in-var-name
+    languages:
+      - go
+    message: Do not use "BedrockAgent" in var name inside bedrockagent package
+    paths:
+      include:
+        - internal/service/bedrockagent
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BedrockAgent"
+    severity: WARNING
   - id: budgets-in-func-name
     languages:
       - go
@@ -1629,13 +1945,16 @@ rules:
     paths:
       include:
         - internal/service/budgets
+      exclude:
+        - internal/service/budgets/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Budgets"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: budgets-in-test-name
     languages:
@@ -1645,7 +1964,7 @@ rules:
       include:
         - internal/service/budgets/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -1687,15 +2006,19 @@ rules:
     paths:
       include:
         - internal/service/ce
+      exclude:
+        - internal/service/ce/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CE"
             - pattern-not-regex: ource
-            - pattern-not-regex: ServicePackage
-            - pattern-not-regex: ^TestAcc.*
+            - pattern-not-regex: "[Ss]ervice"
+            - pattern-not-regex: "[Cc]ancel"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: ce-in-test-name
     languages:
@@ -1705,7 +2028,7 @@ rules:
       include:
         - internal/service/ce/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -1725,6 +2048,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CE"
+            - pattern-not-regex: "[Ss]ervice"
     severity: WARNING
   - id: ce-in-var-name
     languages:
@@ -1739,7 +2063,69 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CE"
-            - pattern-not-regex: ServicePackage
+            - pattern-not-regex: "[Ss]ervice"
+            - pattern-not-regex: "[Cc]ancel"
+    severity: WARNING
+  - id: chatbot-in-func-name
+    languages:
+      - go
+    message: Do not use "Chatbot" in func name inside chatbot package
+    paths:
+      include:
+        - internal/service/chatbot
+      exclude:
+        - internal/service/chatbot/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Chatbot"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: chatbot-in-test-name
+    languages:
+      - go
+    message: Include "Chatbot" in test name
+    paths:
+      include:
+        - internal/service/chatbot/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccChatbot"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: chatbot-in-const-name
+    languages:
+      - go
+    message: Do not use "Chatbot" in const name inside chatbot package
+    paths:
+      include:
+        - internal/service/chatbot
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Chatbot"
+    severity: WARNING
+  - id: chatbot-in-var-name
+    languages:
+      - go
+    message: Do not use "Chatbot" in var name inside chatbot package
+    paths:
+      include:
+        - internal/service/chatbot
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Chatbot"
     severity: WARNING
   - id: chime-in-func-name
     languages:
@@ -1748,13 +2134,16 @@ rules:
     paths:
       include:
         - internal/service/chime
+      exclude:
+        - internal/service/chime/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Chime"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: chime-in-test-name
     languages:
@@ -1764,7 +2153,7 @@ rules:
       include:
         - internal/service/chime/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -1806,13 +2195,16 @@ rules:
     paths:
       include:
         - internal/service/chimesdkmediapipelines
+      exclude:
+        - internal/service/chimesdkmediapipelines/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ChimeSDKMediaPipelines"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: chimesdkmediapipelines-in-test-name
     languages:
@@ -1822,7 +2214,7 @@ rules:
       include:
         - internal/service/chimesdkmediapipelines/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -1864,13 +2256,16 @@ rules:
     paths:
       include:
         - internal/service/chimesdkvoice
+      exclude:
+        - internal/service/chimesdkvoice/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ChimeSDKVoice"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: chimesdkvoice-in-test-name
     languages:
@@ -1880,7 +2275,7 @@ rules:
       include:
         - internal/service/chimesdkvoice/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -1922,13 +2317,16 @@ rules:
     paths:
       include:
         - internal/service/cleanrooms
+      exclude:
+        - internal/service/cleanrooms/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CleanRooms"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cleanrooms-in-test-name
     languages:
@@ -1938,7 +2336,7 @@ rules:
       include:
         - internal/service/cleanrooms/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -1980,13 +2378,16 @@ rules:
     paths:
       include:
         - internal/service/cloud9
+      exclude:
+        - internal/service/cloud9/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Cloud9"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cloud9-in-test-name
     languages:
@@ -1996,7 +2397,7 @@ rules:
       include:
         - internal/service/cloud9/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -2038,13 +2439,16 @@ rules:
     paths:
       include:
         - internal/service/cloudcontrol
+      exclude:
+        - internal/service/cloudcontrol/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CloudControl"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cloudcontrol-in-test-name
     languages:
@@ -2054,7 +2458,7 @@ rules:
       include:
         - internal/service/cloudcontrol/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -2096,13 +2500,16 @@ rules:
     paths:
       include:
         - internal/service/cloudcontrol
+      exclude:
+        - internal/service/cloudcontrol/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)cloudcontrolapi"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cloudcontrolapi-in-const-name
     languages:
@@ -2139,13 +2546,16 @@ rules:
     paths:
       include:
         - internal/service/cloudformation
+      exclude:
+        - internal/service/cloudformation/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CloudFormation"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cloudformation-in-test-name
     languages:
@@ -2155,7 +2565,7 @@ rules:
       include:
         - internal/service/cloudformation/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -2197,13 +2607,16 @@ rules:
     paths:
       include:
         - internal/service/cloudfront
+      exclude:
+        - internal/service/cloudfront/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CloudFront"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cloudfront-in-test-name
     languages:
@@ -2213,7 +2626,7 @@ rules:
       include:
         - internal/service/cloudfront/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -2248,6 +2661,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)CloudFront"
     severity: WARNING
+  - id: cloudfrontkeyvaluestore-in-func-name
+    languages:
+      - go
+    message: Do not use "CloudFrontKeyValueStore" in func name inside cloudfrontkeyvaluestore package
+    paths:
+      include:
+        - internal/service/cloudfrontkeyvaluestore
+      exclude:
+        - internal/service/cloudfrontkeyvaluestore/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CloudFrontKeyValueStore"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: cloudfrontkeyvaluestore-in-test-name
+    languages:
+      - go
+    message: Include "CloudFrontKeyValueStore" in test name
+    paths:
+      include:
+        - internal/service/cloudfrontkeyvaluestore/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccCloudFrontKeyValueStore"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: cloudfrontkeyvaluestore-in-const-name
+    languages:
+      - go
+    message: Do not use "CloudFrontKeyValueStore" in const name inside cloudfrontkeyvaluestore package
+    paths:
+      include:
+        - internal/service/cloudfrontkeyvaluestore
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CloudFrontKeyValueStore"
+    severity: WARNING
+  - id: cloudfrontkeyvaluestore-in-var-name
+    languages:
+      - go
+    message: Do not use "CloudFrontKeyValueStore" in var name inside cloudfrontkeyvaluestore package
+    paths:
+      include:
+        - internal/service/cloudfrontkeyvaluestore
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CloudFrontKeyValueStore"
+    severity: WARNING
   - id: cloudhsm-in-func-name
     languages:
       - go
@@ -2255,13 +2729,16 @@ rules:
     paths:
       include:
         - internal/service/cloudhsmv2
+      exclude:
+        - internal/service/cloudhsmv2/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)cloudhsm"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cloudhsm-in-const-name
     languages:
@@ -2298,13 +2775,16 @@ rules:
     paths:
       include:
         - internal/service/cloudhsmv2
+      exclude:
+        - internal/service/cloudhsmv2/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CloudHSMV2"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cloudhsmv2-in-test-name
     languages:
@@ -2314,7 +2794,7 @@ rules:
       include:
         - internal/service/cloudhsmv2/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -2356,13 +2836,16 @@ rules:
     paths:
       include:
         - internal/service/cloudsearch
+      exclude:
+        - internal/service/cloudsearch/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CloudSearch"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cloudsearch-in-test-name
     languages:
@@ -2372,7 +2855,7 @@ rules:
       include:
         - internal/service/cloudsearch/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -2414,14 +2897,17 @@ rules:
     paths:
       include:
         - internal/service/cloudtrail
+      exclude:
+        - internal/service/cloudtrail/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CloudTrail"
             - pattern-not-regex: ^testAccCloudTrailConfig_.*
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cloudtrail-in-test-name
     languages:
@@ -2431,7 +2917,7 @@ rules:
       include:
         - internal/service/cloudtrail/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -2473,13 +2959,16 @@ rules:
     paths:
       include:
         - internal/service/cloudwatch
+      exclude:
+        - internal/service/cloudwatch/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CloudWatch"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cloudwatch-in-test-name
     languages:
@@ -2489,7 +2978,7 @@ rules:
       include:
         - internal/service/cloudwatch/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -2531,13 +3020,16 @@ rules:
     paths:
       include:
         - internal/service/events
+      exclude:
+        - internal/service/events/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)cloudwatchevents"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cloudwatchevents-in-const-name
     languages:
@@ -2574,13 +3066,16 @@ rules:
     paths:
       include:
         - internal/service/evidently
+      exclude:
+        - internal/service/evidently/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)cloudwatchevidently"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cloudwatchevidently-in-const-name
     languages:
@@ -2617,13 +3112,16 @@ rules:
     paths:
       include:
         - internal/service/logs
+      exclude:
+        - internal/service/logs/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)cloudwatchlog"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cloudwatchlog-in-const-name
     languages:
@@ -2660,13 +3158,16 @@ rules:
     paths:
       include:
         - internal/service/logs
+      exclude:
+        - internal/service/logs/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)cloudwatchlogs"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cloudwatchlogs-in-const-name
     languages:
@@ -2703,13 +3204,16 @@ rules:
     paths:
       include:
         - internal/service/oam
+      exclude:
+        - internal/service/oam/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)cloudwatchobservabilityaccessmanager"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cloudwatchobservabilityaccessmanager-in-const-name
     languages:
@@ -2746,13 +3250,16 @@ rules:
     paths:
       include:
         - internal/service/rum
+      exclude:
+        - internal/service/rum/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)cloudwatchrum"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cloudwatchrum-in-const-name
     languages:
@@ -2789,13 +3296,16 @@ rules:
     paths:
       include:
         - internal/service/codeartifact
+      exclude:
+        - internal/service/codeartifact/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CodeArtifact"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: codeartifact-in-test-name
     languages:
@@ -2805,7 +3315,7 @@ rules:
       include:
         - internal/service/codeartifact/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -2847,13 +3357,16 @@ rules:
     paths:
       include:
         - internal/service/codebuild
+      exclude:
+        - internal/service/codebuild/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CodeBuild"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: codebuild-in-test-name
     languages:
@@ -2863,7 +3376,7 @@ rules:
       include:
         - internal/service/codebuild/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -2905,13 +3418,16 @@ rules:
     paths:
       include:
         - internal/service/codecatalyst
+      exclude:
+        - internal/service/codecatalyst/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CodeCatalyst"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: codecatalyst-in-test-name
     languages:
@@ -2921,7 +3437,7 @@ rules:
       include:
         - internal/service/codecatalyst/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -2963,13 +3479,16 @@ rules:
     paths:
       include:
         - internal/service/codecommit
+      exclude:
+        - internal/service/codecommit/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CodeCommit"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: codecommit-in-test-name
     languages:
@@ -2979,7 +3498,7 @@ rules:
       include:
         - internal/service/codecommit/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -3021,13 +3540,16 @@ rules:
     paths:
       include:
         - internal/service/deploy
+      exclude:
+        - internal/service/deploy/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)codedeploy"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: codedeploy-in-const-name
     languages:
@@ -3064,13 +3586,16 @@ rules:
     paths:
       include:
         - internal/service/codeguruprofiler
+      exclude:
+        - internal/service/codeguruprofiler/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CodeGuruProfiler"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: codeguruprofiler-in-test-name
     languages:
@@ -3080,7 +3605,7 @@ rules:
       include:
         - internal/service/codeguruprofiler/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -3122,13 +3647,16 @@ rules:
     paths:
       include:
         - internal/service/codegurureviewer
+      exclude:
+        - internal/service/codegurureviewer/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CodeGuruReviewer"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: codegurureviewer-in-test-name
     languages:
@@ -3138,7 +3666,7 @@ rules:
       include:
         - internal/service/codegurureviewer/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -3180,13 +3708,16 @@ rules:
     paths:
       include:
         - internal/service/codepipeline
+      exclude:
+        - internal/service/codepipeline/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CodePipeline"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: codepipeline-in-test-name
     languages:
@@ -3196,7 +3727,7 @@ rules:
       include:
         - internal/service/codepipeline/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -3238,13 +3769,16 @@ rules:
     paths:
       include:
         - internal/service/codestarconnections
+      exclude:
+        - internal/service/codestarconnections/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CodeStarConnections"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: codestarconnections-in-test-name
     languages:
@@ -3254,7 +3788,7 @@ rules:
       include:
         - internal/service/codestarconnections/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -3296,13 +3830,16 @@ rules:
     paths:
       include:
         - internal/service/codestarnotifications
+      exclude:
+        - internal/service/codestarnotifications/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CodeStarNotifications"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: codestarnotifications-in-test-name
     languages:
@@ -3312,7 +3849,7 @@ rules:
       include:
         - internal/service/codestarnotifications/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -3354,13 +3891,16 @@ rules:
     paths:
       include:
         - internal/service/cognitoidentity
+      exclude:
+        - internal/service/cognitoidentity/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CognitoIdentity"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cognitoidentity-in-test-name
     languages:
@@ -3370,7 +3910,7 @@ rules:
       include:
         - internal/service/cognitoidentity/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -3412,13 +3952,16 @@ rules:
     paths:
       include:
         - internal/service/cognitoidp
+      exclude:
+        - internal/service/cognitoidp/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)cognitoidentityprovider"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cognitoidentityprovider-in-const-name
     languages:
@@ -3455,13 +3998,16 @@ rules:
     paths:
       include:
         - internal/service/cognitoidp
+      exclude:
+        - internal/service/cognitoidp/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CognitoIDP"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: cognitoidp-in-test-name
     languages:
@@ -3471,7 +4017,7 @@ rules:
       include:
         - internal/service/cognitoidp/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -3513,13 +4059,16 @@ rules:
     paths:
       include:
         - internal/service/comprehend
+      exclude:
+        - internal/service/comprehend/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Comprehend"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: comprehend-in-test-name
     languages:
@@ -3529,7 +4078,7 @@ rules:
       include:
         - internal/service/comprehend/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -3571,13 +4120,16 @@ rules:
     paths:
       include:
         - internal/service/computeoptimizer
+      exclude:
+        - internal/service/computeoptimizer/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ComputeOptimizer"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: computeoptimizer-in-test-name
     languages:
@@ -3587,7 +4139,7 @@ rules:
       include:
         - internal/service/computeoptimizer/*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -3607,4 +4159,65 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ComputeOptimizer"
+    severity: WARNING
+  - id: computeoptimizer-in-var-name
+    languages:
+      - go
+    message: Do not use "ComputeOptimizer" in var name inside computeoptimizer package
+    paths:
+      include:
+        - internal/service/computeoptimizer
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ComputeOptimizer"
+    severity: WARNING
+  - id: configservice-in-func-name
+    languages:
+      - go
+    message: Do not use "ConfigService" in func name inside configservice package
+    paths:
+      include:
+        - internal/service/configservice
+      exclude:
+        - internal/service/configservice/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConfigService"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: configservice-in-test-name
+    languages:
+      - go
+    message: Include "ConfigService" in test name
+    paths:
+      include:
+        - internal/service/configservice/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccConfigService"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: configservice-in-const-name
+    languages:
+      - go
+    message: Do not use "ConfigService" in const name inside configservice package
+    paths:
+      include:
+        - internal/service/configservice
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConfigService"
     severity: WARNING

@@ -78,9 +78,17 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `tags` - (Optional) Key-value mapping of tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `experimentOptions` - (Optional) The experiment options for the experiment template. See [experiment_options](#experiment_options) below for more details!
+* `tags` - (Optional) Key-value mapping of tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target` - (Optional) Target of an action. See below.
 * `logConfiguration` - (Optional) The configuration for experiment logging. See below.
+
+### experiment_options
+
+The `experimentOptions` block supports the following:
+
+* `accountTargeting` - (Optional) Specifies the account targeting setting for experiment options. Supports `single-account` and `multi-account`.
+* `emptyTargetResolutionMode` - (Optional) Specifies the empty target resolution mode for experiment options. Supports `fail` and `skip`.
 
 ### `action`
 
@@ -98,9 +106,9 @@ The following arguments are optional:
 
 For a list of parameters supported by each action, see [AWS FIS actions reference](https://docs.aws.amazon.com/fis/latest/userguide/fis-actions-reference.html).
 
-#### `target` (`action.*Target`)
+#### `target` (`action.*.target`)
 
-* `key` - (Required) Target type. Valid values are `Cluster` (EKS Cluster), `Clusters` (ECS Clusters), `DBInstances` (RDS DB Instances), `Instances` (EC2 Instances), `Nodegroups` (EKS Node groups), `Roles` (IAM Roles), `SpotInstances` (EC2 Spot Instances), `Subnets` (VPC Subnets), `Volumes` (EBS Volumes) , `Pods` (EKS Pods), `Tasks` (ECS Tasks). See the [documentation](https://docs.aws.amazon.com/fis/latest/userguide/actions.html#action-targets) for more details.
+* `key` - (Required) Target type. Valid values are `AutoScalingGroups` (EC2 Auto Scaling groups), `Buckets` (S3 Buckets), `Cluster` (EKS Cluster), `Clusters` (ECS Clusters), `DBInstances` (RDS DB Instances), `Instances` (EC2 Instances), `Nodegroups` (EKS Node groups), `Pods` (EKS Pods), `ReplicationGroups`(ElastiCache Redis Replication Groups), `Roles` (IAM Roles), `SpotInstances` (EC2 Spot Instances), `Subnets` (VPC Subnets), `Tables` (DynamoDB encrypted global tables), `Tasks` (ECS Tasks), `TransitGateways` (Transit gateways), `Volumes` (EBS Volumes). See the [documentation](https://docs.aws.amazon.com/fis/latest/userguide/actions.html#action-targets) for more details.
 * `value` - (Required) Target name, referencing a corresponding target.
 
 ### `stopCondition`
@@ -114,8 +122,8 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 * `resourceType` - (Required) AWS resource type. The resource type must be supported for the specified action. To find out what resource types are supported, see [Targets for AWS FIS](https://docs.aws.amazon.com/fis/latest/userguide/targets.html#resource-types).
 * `selectionMode` - (Required) Scopes the identified resources. Valid values are `ALL` (all identified resources), `COUNT(n)` (randomly select `n` of the identified resources), `PERCENT(n)` (randomly select `n` percent of the identified resources).
 * `filter` - (Optional) Filter(s) for the target. Filters can be used to select resources based on specific attributes returned by the respective describe action of the resource type. For more information, see [Targets for AWS FIS](https://docs.aws.amazon.com/fis/latest/userguide/targets.html#target-filters). See below.
-* `resourceArns` - (Optional) Set of ARNs of the resources to target with an action. Conflicts with `resource_tag`.
-* `resourceTag` - (Optional) Tag(s) the resources need to have to be considered a valid target for an action. Conflicts with `resource_arns`. See below.
+* `resourceArns` - (Optional) Set of ARNs of the resources to target with an action. Conflicts with `resourceTag`.
+* `resourceTag` - (Optional) Tag(s) the resources need to have to be considered a valid target for an action. Conflicts with `resourceArns`. See below.
 * `parameters` - (Optional) The resource type parameters.
 
 ~> **NOTE:** The `target` configuration block requires either `resourceArns` or `resourceTag`.
@@ -125,7 +133,7 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 * `path` - (Required) Attribute path for the filter.
 * `values` - (Required) Set of attribute values for the filter.
 
-~> **NOTE:** Values specified in a `filter` are joined with an `or` clause, while values across multiple `filter` blocks are joined with an `and` clause. For more information, see [Targets for AWS FIS](https://docs.aws.amazon.com/fis/latest/userguide/targets.html#target-filters).
+~> **NOTE:** Values specified in a `filter` are joined with an `OR` clause, while values across multiple `filter` blocks are joined with an `AND` clause. For more information, see [Targets for AWS FIS](https://docs.aws.amazon.com/fis/latest/userguide/targets.html#target-filters).
 
 #### `resourceTag`
 
@@ -161,9 +169,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { FisExperimentTemplate } from "./.gen/providers/aws/fis-experiment-template";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    FisExperimentTemplate.generateConfigForImport(
+      this,
+      "template",
+      "EXT123AbCdEfGhIjK"
+    );
   }
 }
 
@@ -175,4 +193,4 @@ Using `terraform import`, import FIS Experiment Templates using the `id`. For ex
 % terraform import aws_fis_experiment_template.template EXT123AbCdEfGhIjK
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-6f86f6051a01d559c0189ce9cb6d94bc035f6fe628c05e2f0aba1d5a3f86e00b -->
+<!-- cache-key: cdktf-0.20.1 input-3b2c1302322bcf775a8a5629d06178ffe45700ee275181f9d2d5b482e9c22cf2 -->

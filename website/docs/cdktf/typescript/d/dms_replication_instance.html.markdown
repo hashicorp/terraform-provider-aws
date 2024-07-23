@@ -62,4 +62,4 @@ This data source exports the following attributes in addition to the arguments a
 * `replicationSubnetGroupId` - A subnet group to associate with the replication instance.
 * `vpcSecurityGroupIds` - A set of VPC security group IDs that are used with the replication instance.
 
-<!-- cache-key: cdktf-0.19.0 input-5aba05f196697c06b58151a68778040ed73677e99368add1ba52d699e7516fbc -->
+<!-- cache-key: cdktf-0.20.1 input-5aba05f196697c06b58151a68778040ed73677e99368add1ba52d699e7516fbc -->

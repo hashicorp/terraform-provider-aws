@@ -53,7 +53,7 @@ func sweepNamespaces(region string) error {
 		}
 
 		for _, namespace := range page.Namespaces {
-			r := ResourceNamespace()
+			r := resourceNamespace()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(namespace.NamespaceName))
 
@@ -97,7 +97,7 @@ func sweepWorkgroups(region string) error {
 		}
 
 		for _, workgroup := range page.Workgroups {
-			r := ResourceWorkgroup()
+			r := resourceWorkgroup()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(workgroup.WorkgroupName))
 
@@ -141,7 +141,7 @@ func sweepSnapshots(region string) error {
 		}
 
 		for _, workgroup := range page.Snapshots {
-			r := ResourceSnapshot()
+			r := resourceSnapshot()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(workgroup.SnapshotName))
 

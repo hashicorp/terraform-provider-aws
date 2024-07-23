@@ -17,7 +17,7 @@ import (
 //
 // Deprecated: Use Go standard library [runtime/debug] package build information
 // instead.
-var SDKVersion = "2.30.0"
+var SDKVersion = "2.34.0"
 
 // A pre-release marker for the version. If this is "" (empty string)
 // then it means that it is a final release. Otherwise, this is a pre-release

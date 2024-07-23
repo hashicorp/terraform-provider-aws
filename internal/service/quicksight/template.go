@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -47,46 +48,46 @@ func ResourceTemplate() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"aws_account_id": {
+				names.AttrAWSAccountID: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
 					ForceNew:     true,
 					ValidateFunc: verify.ValidAccountID,
 				},
-				"created_time": {
+				names.AttrCreatedTime: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
 				"definition": quicksightschema.TemplateDefinitionSchema(),
-				"last_updated_time": {
+				names.AttrLastUpdatedTime: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 2048),
 				},
-				"permissions": {
+				names.AttrPermissions: {
 					Type:     schema.TypeSet,
 					Optional: true,
 					MinItems: 1,
 					MaxItems: 64,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"actions": {
+							names.AttrActions: {
 								Type:     schema.TypeSet,
 								Required: true,
 								MinItems: 1,
 								MaxItems: 16,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"principal": {
+							names.AttrPrincipal: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 256),
@@ -99,7 +100,7 @@ func ResourceTemplate() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"status": {
+				names.AttrStatus: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -131,10 +132,11 @@ const (
 )
 
 func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("aws_account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountId = v.(string)
 	}
 	templateId := d.Get("template_id").(string)
@@ -144,7 +146,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &quicksight.CreateTemplateInput{
 		AwsAccountId: aws.String(awsAccountId),
 		TemplateId:   aws.String(templateId),
-		Name:         aws.String(d.Get("name").(string)),
+		Name:         aws.String(d.Get(names.AttrName).(string)),
 		Tags:         getTagsIn(ctx),
 	}
 
@@ -160,28 +162,29 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Definition = quicksightschema.ExpandTemplateDefinition(d.Get("definition").([]interface{}))
 	}
 
-	if v, ok := d.Get("permissions").(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := d.Get(names.AttrPermissions).(*schema.Set); ok && v.Len() > 0 {
 		input.Permissions = expandResourcePermissions(v.List())
 	}
 
 	_, err := conn.CreateTemplateWithContext(ctx, input)
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameTemplate, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionCreating, ResNameTemplate, d.Get(names.AttrName).(string), err)
 	}
 
 	if _, err := waitTemplateCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionWaitingForCreation, ResNameTemplate, d.Id(), err)
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionWaitingForCreation, ResNameTemplate, d.Id(), err)
 	}
 
-	return resourceTemplateRead(ctx, d, meta)
+	return append(diags, resourceTemplateRead(ctx, d, meta)...)
 }
 
 func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, templateId, err := ParseTemplateId(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	out, err := FindTemplateByID(ctx, conn, d.Id())
@@ -189,19 +192,19 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] QuickSight Template (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionReading, ResNameTemplate, d.Id(), err)
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionReading, ResNameTemplate, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
-	d.Set("aws_account_id", awsAccountId)
-	d.Set("created_time", out.CreatedTime.Format(time.RFC3339))
-	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
-	d.Set("name", out.Name)
-	d.Set("status", out.Version.Status)
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrAWSAccountID, awsAccountId)
+	d.Set(names.AttrCreatedTime, out.CreatedTime.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedTime, out.LastUpdatedTime.Format(time.RFC3339))
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrStatus, out.Version.Status)
 	d.Set("source_entity_arn", out.Version.SourceEntityArn)
 	d.Set("template_id", out.TemplateId)
 	d.Set("version_description", out.Version.Description)
@@ -214,11 +217,11 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if err != nil {
-		return diag.Errorf("describing QuickSight Template (%s) Definition: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing QuickSight Template (%s) Definition: %s", d.Id(), err)
 	}
 
 	if err := d.Set("definition", quicksightschema.FlattenTemplateDefinition(descResp.Definition)); err != nil {
-		return diag.Errorf("setting definition: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting definition: %s", err)
 	}
 
 	permsResp, err := conn.DescribeTemplatePermissionsWithContext(ctx, &quicksight.DescribeTemplatePermissionsInput{
@@ -227,29 +230,30 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if err != nil {
-		return diag.Errorf("describing QuickSight Template (%s) Permissions: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing QuickSight Template (%s) Permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
-		return diag.Errorf("setting permissions: %s", err)
+	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting permissions: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, templateId, err := ParseTemplateId(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChangesExcept("permissions", "tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrPermissions, names.AttrTags, names.AttrTagsAll) {
 		in := &quicksight.UpdateTemplateInput{
 			AwsAccountId:       aws.String(awsAccountId),
 			TemplateId:         aws.String(templateId),
-			Name:               aws.String(d.Get("name").(string)),
+			Name:               aws.String(d.Get(names.AttrName).(string)),
 			VersionDescription: aws.String(d.Get("version_description").(string)),
 		}
 
@@ -263,16 +267,16 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		log.Printf("[DEBUG] Updating QuickSight Template (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateTemplateWithContext(ctx, in)
 		if err != nil {
-			return create.DiagError(names.QuickSight, create.ErrActionUpdating, ResNameTemplate, d.Id(), err)
+			return create.AppendDiagError(diags, names.QuickSight, create.ErrActionUpdating, ResNameTemplate, d.Id(), err)
 		}
 
 		if _, err := waitTemplateUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.QuickSight, create.ErrActionWaitingForUpdate, ResNameTemplate, d.Id(), err)
+			return create.AppendDiagError(diags, names.QuickSight, create.ErrActionWaitingForUpdate, ResNameTemplate, d.Id(), err)
 		}
 	}
 
-	if d.HasChange("permissions") {
-		oraw, nraw := d.GetChange("permissions")
+	if d.HasChange(names.AttrPermissions) {
+		oraw, nraw := d.GetChange(names.AttrPermissions)
 		o := oraw.(*schema.Set)
 		n := nraw.(*schema.Set)
 
@@ -294,19 +298,20 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err = conn.UpdateTemplatePermissionsWithContext(ctx, params)
 
 		if err != nil {
-			return diag.Errorf("updating QuickSight Template (%s) permissions: %s", templateId, err)
+			return sdkdiag.AppendErrorf(diags, "updating QuickSight Template (%s) permissions: %s", templateId, err)
 		}
 	}
 
-	return resourceTemplateRead(ctx, d, meta)
+	return append(diags, resourceTemplateRead(ctx, d, meta)...)
 }
 
 func resourceTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, templateId, err := ParseTemplateId(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[INFO] Deleting QuickSight Template %s", d.Id())
@@ -316,14 +321,14 @@ func resourceTemplateDelete(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionDeleting, ResNameTemplate, d.Id(), err)
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionDeleting, ResNameTemplate, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindTemplateByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.Template, error) {

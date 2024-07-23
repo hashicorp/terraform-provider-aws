@@ -89,7 +89,7 @@ any fields that are not included in the configuration with the data for
 the selected Nat Gateway.
 
 * `allocationId` - ID of the EIP allocated to the selected NAT Gateway.
-* `associationId` - The association ID of the Elastic IP address that's associated with the NAT Gateway. Only available when `connectivity_type` is `public`.
+* `associationId` - The association ID of the Elastic IP address that's associated with the NAT Gateway. Only available when `connectivityType` is `public`.
 * `connectivityType` - Connectivity type of the NAT Gateway.
 * `networkInterfaceId` - The ID of the ENI allocated to the selected NAT Gateway.
 * `privateIp` - Private IP address of the selected NAT Gateway.
@@ -104,4 +104,4 @@ the selected Nat Gateway.
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.19.0 input-4030116e2abe81b3824dc015b0bf174d688531f1ad8692b89eca913c4b816418 -->
+<!-- cache-key: cdktf-0.20.1 input-4030116e2abe81b3824dc015b0bf174d688531f1ad8692b89eca913c4b816418 -->

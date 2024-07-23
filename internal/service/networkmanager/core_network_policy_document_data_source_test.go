@@ -6,27 +6,39 @@ package networkmanager_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_basic(t *testing.T) {
-	// This really ought to be able to be a unit test rather than an
-	// acceptance test, but just instantiating the AWS provider requires
-	// some AWS API calls, and so this needs valid AWS credentials to work.
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_networkmanager_core_network_policy_document.test", "json",
-						testAccPolicyDocumentExpectedJSON(),
-					),
+					acctest.CheckResourceAttrEquivalentJSON("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentBasicExpectedJSON),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_serviceInsertion(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_serviceInsertion,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrEquivalentJSON("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentServiceInsertionExpectedJSON),
 				),
 			},
 		},
@@ -34,7 +46,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_basic(t *testing.T
 }
 
 // lintignore:AWSAT003
-var testAccCoreNetworkPolicyDocumentDataSourceConfig_basic = `
+const testAccCoreNetworkPolicyDocumentDataSourceConfig_basic = `
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
     vpn_ecmp_support = false
@@ -144,7 +156,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     action  = "share"
     mode    = "attachment-route"
     segment = "GoodSegmentSpecification"
-    share_with_except = [
+    share_with = [
       "a",
       "b",
       "c"
@@ -276,8 +288,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 `
 
 // lintignore:AWSAT003
-func testAccPolicyDocumentExpectedJSON() string {
-	return `{
+const testAccPolicyDocumentBasicExpectedJSON = `{
   "version": "2021.12",
   "core-network-configuration": {
     "asn-ranges": [
@@ -494,11 +505,13 @@ func testAccPolicyDocumentExpectedJSON() string {
       "action": "share",
       "mode": "attachment-route",
       "segment": "AnotherGoodSegmentSpecification",
-      "share-with": [
-        "c",
-        "b",
-        "a"
-      ]
+      "share-with": {
+        "except": [
+          "c",
+          "b",
+          "a"
+        ]
+      }
     },
     {
       "action": "share",
@@ -510,6 +523,160 @@ func testAccPolicyDocumentExpectedJSON() string {
         "a"
       ]
     }
+  ],
+  "network-function-groups": []
+}`
+
+// lintignore:AWSAT003
+const testAccCoreNetworkPolicyDocumentDataSourceConfig_serviceInsertion = `
+data "aws_networkmanager_core_network_policy_document" "test" {
+  core_network_configuration {
+    vpn_ecmp_support = true
+    asn_ranges = [
+      "64512-65534"
+    ]
+    inside_cidr_blocks = [
+      "10.0.0.0/16"
+    ]
+    edge_locations {
+      location = "us-east-2"
+    }
+    edge_locations {
+      location = "us-west-2"
+    }
+  }
+
+  segments {
+    name                          = "development"
+    require_attachment_acceptance = true
+    isolate_attachments           = true
+    edge_locations = [
+      "us-east-2"
+    ]
+  }
+
+  segments {
+    name                          = "production"
+    require_attachment_acceptance = true
+    isolate_attachments           = true
+    edge_locations = [
+      "us-east-2"
+    ]
+  }
+
+  segment_actions {
+    action  = "send-via"
+    segment = "development"
+    mode    = "single-hop"
+
+    when_sent_to {
+      segments = [
+        "production",
+      ]
+    }
+
+    via {
+      network_function_groups = ["InspectionVPC"]
+    }
+  }
+
+  attachment_policies {
+    rule_number     = 125
+    condition_logic = "and"
+
+    conditions {
+      type = "tag-exists"
+      key  = "InspectionVpcs"
+    }
+
+    action {
+      add_to_network_function_group = "InspectionVPC"
+    }
+  }
+
+  network_function_groups {
+    name                          = "InspectionVPC"
+    description                   = "Route segment traffic to the inspection VPC"
+    require_attachment_acceptance = true
+  }
+}
+`
+
+// lintignore:AWSAT003
+const testAccPolicyDocumentServiceInsertionExpectedJSON = `{
+  "version": "2021.12",
+  "core-network-configuration": {
+    "vpn-ecmp-support": true,
+    "inside-cidr-blocks": [
+      "10.0.0.0/16"
+    ],
+    "asn-ranges": [
+      "64512-65534"
+    ],
+    "edge-locations": [
+      {
+        "location": "us-east-2"
+      },
+      {
+        "location": "us-west-2"
+      }
+    ]
+  },
+  "segments": [
+    {
+      "name": "development",
+      "edge-locations": [
+        "us-east-2"
+      ],
+      "require-attachment-acceptance": true,
+      "isolate-attachments": true
+    },
+    {
+      "name": "production",
+      "edge-locations": [
+        "us-east-2"
+      ],
+      "require-attachment-acceptance": true,
+      "isolate-attachments": true
+    }
+  ],
+  "network-function-groups": [
+    {
+      "name": "InspectionVPC",
+      "description": "Route segment traffic to the inspection VPC",
+      "require-attachment-acceptance": true
+    }
+  ],
+  "segment-actions": [
+    {
+      "action": "send-via",
+      "segment": "development",
+      "mode": "single-hop",
+      "when-sent-to": {
+        "segments": [
+          "production"
+        ]
+      },
+      "via": {
+        "network-function-groups": [
+          "InspectionVPC"
+        ]
+      }
+    }
+  ],
+  "attachment-policies": [
+    {
+      "rule-number": 125,
+      "condition-logic": "and",
+      "conditions": [
+        {
+          "type": "tag-exists",
+          "key": "InspectionVpcs"
+        }
+      ],
+      "action": {
+        "add-to-network-function-group": "InspectionVPC"
+      }
+    }
   ]
 }`
-}

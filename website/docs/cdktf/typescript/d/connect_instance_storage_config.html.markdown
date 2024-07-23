@@ -49,7 +49,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - The identifier of the hosting Amazon Connect Instance, `association_id`, and `resource_type` separated by a colon (`:`).
+* `id` - The identifier of the hosting Amazon Connect Instance, `associationId`, and `resourceType` separated by a colon (`:`).
 * `storageConfig` - Specifies the storage configuration options for the Connect Instance. [Documented below](#storage_config).
 
 ### `storageConfig`
@@ -97,4 +97,4 @@ The `encryptionConfig` configuration block supports the following arguments:
 * `encryptionType` - The type of encryption. Valid Values: `KMS`.
 * `keyId` - The full ARN of the encryption key. Be sure to provide the full ARN of the encryption key, not just the ID.
 
-<!-- cache-key: cdktf-0.19.0 input-0a371661b1d38e2710e935ff6991b75943c6ddc01dc786ffa90e9554a47badeb -->
+<!-- cache-key: cdktf-0.20.1 input-0a371661b1d38e2710e935ff6991b75943c6ddc01dc786ffa90e9554a47badeb -->

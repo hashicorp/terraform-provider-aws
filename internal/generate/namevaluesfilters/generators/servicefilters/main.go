@@ -17,12 +17,11 @@ import (
 
 const filename = `service_filters_gen.go`
 
-// Representing types such as []*ec2.Filter, []*rds.Filter, ...
+// Representing types such as []*fsx.Filter, []*rds.Filter, ...
 var sliceServiceNames = []string{
 	"autoscaling",
 	"databasemigrationservice",
 	"docdb",
-	"ec2",
 	"elasticinference",
 	"elasticsearchservice",
 	"fsx",
@@ -32,7 +31,6 @@ var sliceServiceNames = []string{
 	"rds",
 	"resourcegroupstaggingapi",
 	"route53resolver",
-	"secretsmanager",
 }
 
 type TemplateData struct {

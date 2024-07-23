@@ -40,4 +40,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - AWS Region.
 * `ids` - Set of Outposts Site identifiers.
 
-<!-- cache-key: cdktf-0.19.0 input-33f8249a08c1a9e061aad127e234ad70eb79b16ee48652025b3daa5b7b81e2c1 -->
+<!-- cache-key: cdktf-0.20.1 input-33f8249a08c1a9e061aad127e234ad70eb79b16ee48652025b3daa5b7b81e2c1 -->

@@ -47,4 +47,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `period` - The data aggregation time for the subscription.
 
-<!-- cache-key: cdktf-0.19.0 input-9d68b5453f7e730fab6a7906222b20f270436a0a63a8e8c8fed51dab43b1b2e7 -->
+<!-- cache-key: cdktf-0.20.1 input-9d68b5453f7e730fab6a7906222b20f270436a0a63a8e8c8fed51dab43b1b2e7 -->

@@ -7,23 +7,29 @@ import (
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
 	"log"
+	"reflect"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_iam_access_key")
-func ResourceAccessKey() *schema.Resource {
+// @SDKResource("aws_iam_access_key", name="Access Key")
+func resourceAccessKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessKeyCreate,
 		ReadWithoutTimeout:   resourceAccessKeyRead,
@@ -35,13 +41,13 @@ func ResourceAccessKey() *schema.Resource {
 			//   ValidationError: Must specify userName when calling with non-User credentials
 			// To prevent import from requiring this extra information, use GetAccessKeyLastUsed.
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				conn := meta.(*conns.AWSClient).IAMConn(ctx)
+				conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 				input := &iam.GetAccessKeyLastUsedInput{
 					AccessKeyId: aws.String(d.Id()),
 				}
 
-				output, err := conn.GetAccessKeyLastUsedWithContext(ctx, input)
+				output, err := conn.GetAccessKeyLastUsed(ctx, input)
 
 				if err != nil {
 					return nil, fmt.Errorf("fetching IAM Access Key (%s) username via GetAccessKeyLastUsed: %w", d.Id(), err)
@@ -89,11 +95,11 @@ func ResourceAccessKey() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
-			"status": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      iam.StatusTypeActive,
-				ValidateFunc: validation.StringInSlice(iam.StatusType_Values(), false),
+			names.AttrStatus: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.StatusTypeActive,
+				ValidateDiagFunc: enum.Validate[awstypes.StatusType](),
 			},
 			"user": {
 				Type:     schema.TypeString,
@@ -106,7 +112,7 @@ func ResourceAccessKey() *schema.Resource {
 
 func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	username := d.Get("user").(string)
 
@@ -114,18 +120,18 @@ func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 		UserName: aws.String(username),
 	}
 
-	createResp, err := conn.CreateAccessKeyWithContext(ctx, request)
+	createResp, err := conn.CreateAccessKey(ctx, request)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IAM Access Key (%s): %s", username, err)
 	}
 
-	d.SetId(aws.StringValue(createResp.AccessKey.AccessKeyId))
+	d.SetId(aws.ToString(createResp.AccessKey.AccessKeyId))
 
 	if createResp.AccessKey == nil || createResp.AccessKey.SecretAccessKey == nil {
 		return sdkdiag.AppendErrorf(diags, "CreateAccessKey response did not contain a Secret Access Key as expected")
 	}
 
-	sesSMTPPasswordV4, err := SessmTPPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, meta.(*conns.AWSClient).Region)
+	sesSMTPPasswordV4, err := sesSMTPPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, meta.(*conns.AWSClient).Region)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting SES SigV4 SMTP Password from Secret Access Key: %s", err)
 	}
@@ -156,23 +162,23 @@ func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("ses_smtp_password_v4", sesSMTPPasswordV4)
 	}
 
-	if v, ok := d.GetOk("status"); ok && v.(string) == iam.StatusTypeInactive {
+	if v, ok := d.GetOk(names.AttrStatus); ok && v.(string) == string(awstypes.StatusTypeInactive) {
 		input := &iam.UpdateAccessKeyInput{
 			AccessKeyId: aws.String(d.Id()),
-			Status:      aws.String(iam.StatusTypeInactive),
+			Status:      awstypes.StatusTypeInactive,
 			UserName:    aws.String(d.Get("user").(string)),
 		}
 
-		_, err := conn.UpdateAccessKeyWithContext(ctx, input)
+		_, err := conn.UpdateAccessKey(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "deactivating IAM Access Key (%s): %s", d.Id(), err)
 		}
 
-		createResp.AccessKey.Status = aws.String(iam.StatusTypeInactive)
+		createResp.AccessKey.Status = awstypes.StatusTypeInactive
 	}
 
-	resourceAccessKeyReadResult(d, &iam.AccessKeyMetadata{
+	resourceAccessKeyReadResult(d, &awstypes.AccessKeyMetadata{
 		AccessKeyId: createResp.AccessKey.AccessKeyId,
 		CreateDate:  createResp.AccessKey.CreateDate,
 		Status:      createResp.AccessKey.Status,
@@ -184,11 +190,11 @@ func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceAccessKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	username := d.Get("user").(string)
+	key, err := findAccessKeyByTwoPartKey(ctx, conn, username, d.Id())
 
-	key, err := FindAccessKey(ctx, conn, username, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Access Key (%s) for User (%s) not found, removing from state", d.Id(), username)
 		d.SetId("")
@@ -198,38 +204,38 @@ func resourceAccessKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading IAM Access Key (%s): %s", d.Id(), err)
 	}
 
-	d.SetId(aws.StringValue(key.AccessKeyId))
+	d.SetId(aws.ToString(key.AccessKeyId))
 
 	if key.CreateDate != nil {
-		d.Set("create_date", aws.TimeValue(key.CreateDate).Format(time.RFC3339))
+		d.Set("create_date", aws.ToTime(key.CreateDate).Format(time.RFC3339))
 	} else {
 		d.Set("create_date", nil)
 	}
 
-	d.Set("status", key.Status)
+	d.Set(names.AttrStatus, key.Status)
 	d.Set("user", key.UserName)
 
 	return diags
 }
 
-func resourceAccessKeyReadResult(d *schema.ResourceData, key *iam.AccessKeyMetadata) {
-	d.SetId(aws.StringValue(key.AccessKeyId))
+func resourceAccessKeyReadResult(d *schema.ResourceData, key *awstypes.AccessKeyMetadata) {
+	d.SetId(aws.ToString(key.AccessKeyId))
 
 	if key.CreateDate != nil {
-		d.Set("create_date", aws.TimeValue(key.CreateDate).Format(time.RFC3339))
+		d.Set("create_date", aws.ToTime(key.CreateDate).Format(time.RFC3339))
 	} else {
 		d.Set("create_date", nil)
 	}
 
-	d.Set("status", key.Status)
+	d.Set(names.AttrStatus, key.Status)
 	d.Set("user", key.UserName)
 }
 
 func resourceAccessKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if d.HasChange("status") {
+	if d.HasChange(names.AttrStatus) {
 		if err := resourceAccessKeyStatusUpdate(ctx, conn, d); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IAM Access Key (%s): %s", d.Id(), err)
 		}
@@ -240,28 +246,90 @@ func resourceAccessKeyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceAccessKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	request := &iam.DeleteAccessKeyInput{
+	log.Printf("[DEBUG] Deleting IAM Access Key: %s", d.Id())
+	_, err := conn.DeleteAccessKey(ctx, &iam.DeleteAccessKeyInput{
 		AccessKeyId: aws.String(d.Id()),
 		UserName:    aws.String(d.Get("user").(string)),
+	})
+
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
+		return diags
 	}
 
-	if _, err := conn.DeleteAccessKeyWithContext(ctx, request); err != nil {
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting IAM Access Key (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
 
-func resourceAccessKeyStatusUpdate(ctx context.Context, conn *iam.IAM, d *schema.ResourceData) error {
+func resourceAccessKeyStatusUpdate(ctx context.Context, conn *iam.Client, d *schema.ResourceData) error {
 	request := &iam.UpdateAccessKeyInput{
 		AccessKeyId: aws.String(d.Id()),
-		Status:      aws.String(d.Get("status").(string)),
+		Status:      awstypes.StatusType(d.Get(names.AttrStatus).(string)),
 		UserName:    aws.String(d.Get("user").(string)),
 	}
 
-	_, err := conn.UpdateAccessKeyWithContext(ctx, request)
+	_, err := conn.UpdateAccessKey(ctx, request)
 	return err
+}
+
+func findAccessKeyByTwoPartKey(ctx context.Context, conn *iam.Client, username, id string) (*awstypes.AccessKeyMetadata, error) {
+	input := &iam.ListAccessKeysInput{
+		UserName: aws.String(username),
+	}
+
+	return findAccessKey(ctx, conn, input, func(v awstypes.AccessKeyMetadata) bool {
+		return aws.ToString(v.AccessKeyId) == id
+	})
+}
+
+func findAccessKeysByUser(ctx context.Context, conn *iam.Client, username string) ([]awstypes.AccessKeyMetadata, error) {
+	input := &iam.ListAccessKeysInput{
+		UserName: aws.String(username),
+	}
+
+	return findAccessKeys(ctx, conn, input, tfslices.PredicateTrue[awstypes.AccessKeyMetadata]())
+}
+
+func findAccessKey(ctx context.Context, conn *iam.Client, input *iam.ListAccessKeysInput, filter tfslices.Predicate[awstypes.AccessKeyMetadata]) (*awstypes.AccessKeyMetadata, error) {
+	output, err := findAccessKeys(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findAccessKeys(ctx context.Context, conn *iam.Client, input *iam.ListAccessKeysInput, filter tfslices.Predicate[awstypes.AccessKeyMetadata]) ([]awstypes.AccessKeyMetadata, error) {
+	var output []awstypes.AccessKeyMetadata
+
+	pages := iam.NewListAccessKeysPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.NoSuchEntityException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.AccessKeyMetadata {
+			if !reflect.ValueOf(v).IsZero() && filter(v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }
 
 func hmacSignature(key []byte, value []byte) ([]byte, error) {
@@ -272,7 +340,7 @@ func hmacSignature(key []byte, value []byte) ([]byte, error) {
 	return h.Sum(nil), nil
 }
 
-func SessmTPPasswordFromSecretKeySigV4(key *string, region string) (string, error) {
+func sesSMTPPasswordFromSecretKeySigV4(key *string, region string) (string, error) {
 	if key == nil {
 		return "", nil
 	}
@@ -282,7 +350,7 @@ func SessmTPPasswordFromSecretKeySigV4(key *string, region string) (string, erro
 	terminal := []byte("aws4_request")
 	message := []byte("SendRawEmail")
 
-	rawSig, err := hmacSignature([]byte("AWS4"+*key), date)
+	rawSig, err := hmacSignature([]byte("AWS4"+aws.ToString(key)), date)
 	if err != nil {
 		return "", err
 	}
@@ -303,5 +371,5 @@ func SessmTPPasswordFromSecretKeySigV4(key *string, region string) (string, erro
 	versionedSig := make([]byte, 0, len(rawSig)+1)
 	versionedSig = append(versionedSig, version)
 	versionedSig = append(versionedSig, rawSig...)
-	return base64.StdEncoding.EncodeToString(versionedSig), nil
+	return itypes.Base64Encode(versionedSig), nil
 }

@@ -64,7 +64,7 @@ class MyConvertedCode extends TerraformStack {
 
 ~> **NOTE:** `instanceId` and one of either `name` or `userId` is required.
 
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific User by name
@@ -102,4 +102,4 @@ A `phoneConfig` block supports the following attributes:
 * `deskPhoneNumber` - The phone number for the user's desk phone.
 * `phoneType` - The phone type. Valid values are `DESK_PHONE` and `SOFT_PHONE`.
 
-<!-- cache-key: cdktf-0.19.0 input-6533a2d44318a8db1711f9e310a73d30328d1503d85cb50973ba8962241bc227 -->
+<!-- cache-key: cdktf-0.20.1 input-c25bf43664c73166a832756c06c50d944796dfadba58e27c218ef474c427f5f9 -->

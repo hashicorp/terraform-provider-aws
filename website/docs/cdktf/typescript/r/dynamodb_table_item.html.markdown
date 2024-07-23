@@ -60,9 +60,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **Note:** Names included in `item` are represented internally with everything but letters removed. There is the possibility of collisions if two names, once filtered, are the same. For example, the names `yourNameHere` and `yournamehere` will overlap and cause an error.
+~> **Note:** Names included in `item` are represented internally with everything but letters removed. There is the possibility of collisions if two names, once filtered, are the same. For example, the names `your-name-here` and `yournamehere` will overlap and cause an error.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `hashKey` - (Required) Hash key to use for lookups and identification of the item
 * `item` - (Required) JSON representation of a map of attribute name/value pairs, one for each attribute. Only the primary key attributes are required; you can optionally provide other attribute name-value pairs for the item.
@@ -77,4 +77,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 You cannot import DynamoDB table items.
 
-<!-- cache-key: cdktf-0.19.0 input-6a024662e07162f55823fe5a6848f74b793eff6585ccc516e75fcbdfe573f734 -->
+<!-- cache-key: cdktf-0.20.1 input-d542382d320c97649c1e65e06ffb8ef76bb8858328ffecbe3941d467fba5def0 -->

@@ -14,17 +14,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
+var (
+	_ basetypes.SetTypable        = (*setNestedObjectTypeOf[struct{}])(nil)
+	_ NestedObjectCollectionType  = (*setNestedObjectTypeOf[struct{}])(nil)
+	_ basetypes.SetValuable       = (*SetNestedObjectValueOf[struct{}])(nil)
+	_ NestedObjectCollectionValue = (*SetNestedObjectValueOf[struct{}])(nil)
+)
+
 // setNestedObjectTypeOf is the attribute type of a SetNestedObjectValueOf.
 type setNestedObjectTypeOf[T any] struct {
 	basetypes.SetType
 }
-
-var (
-	_ basetypes.SetTypable  = (*setNestedObjectTypeOf[struct{}])(nil)
-	_ NestedObjectType      = (*setNestedObjectTypeOf[struct{}])(nil)
-	_ basetypes.SetValuable = (*SetNestedObjectValueOf[struct{}])(nil)
-	_ NestedObjectValue     = (*SetNestedObjectValueOf[struct{}])(nil)
-)
 
 func NewSetNestedObjectTypeOf[T any](ctx context.Context) setNestedObjectTypeOf[T] {
 	return setNestedObjectTypeOf[T]{basetypes.SetType{ElemType: NewObjectTypeOf[T](ctx)}}
@@ -55,17 +55,19 @@ func (t setNestedObjectTypeOf[T]) ValueFromSet(ctx context.Context, in basetypes
 		return NewSetNestedObjectValueOfUnknown[T](ctx), diags
 	}
 
-	setValue, d := basetypes.NewSetValue(NewObjectTypeOf[T](ctx), in.Elements())
+	typ, d := newObjectTypeOf[T](ctx)
 	diags.Append(d...)
 	if diags.HasError() {
 		return NewSetNestedObjectValueOfUnknown[T](ctx), diags
 	}
 
-	value := SetNestedObjectValueOf[T]{
-		SetValue: setValue,
+	v, d := basetypes.NewSetValue(typ, in.Elements())
+	diags.Append(d...)
+	if diags.HasError() {
+		return NewSetNestedObjectValueOfUnknown[T](ctx), diags
 	}
 
-	return value, diags
+	return SetNestedObjectValueOf[T]{SetValue: v}, diags
 }
 
 func (t setNestedObjectTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
@@ -95,7 +97,7 @@ func (t setNestedObjectTypeOf[T]) ValueType(ctx context.Context) attr.Value {
 }
 
 func (t setNestedObjectTypeOf[T]) NewObjectPtr(ctx context.Context) (any, diag.Diagnostics) {
-	return nestedObjectTypeNewObjectPtr[T](ctx)
+	return objectTypeNewObjectPtr[T](ctx)
 }
 
 func (t setNestedObjectTypeOf[T]) NewObjectSlice(ctx context.Context, len, cap int) (any, diag.Diagnostics) {
@@ -112,7 +114,9 @@ func (t setNestedObjectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr an
 	var diags diag.Diagnostics
 
 	if v, ok := ptr.(*T); ok {
-		return NewSetNestedObjectValueOfPtr(ctx, v), diags
+		v, d := NewSetNestedObjectValueOfPtr(ctx, v)
+		diags.Append(d...)
+		return v, d
 	}
 
 	diags.Append(diag.NewErrorDiagnostic("Invalid pointer value", fmt.Sprintf("incorrect type: want %T, got %T", (*T)(nil), ptr)))
@@ -123,7 +127,9 @@ func (t setNestedObjectTypeOf[T]) ValueFromObjectSlice(ctx context.Context, slic
 	var diags diag.Diagnostics
 
 	if v, ok := slice.([]*T); ok {
-		return NewSetNestedObjectValueOfSlice(ctx, v), diags
+		v, d := NewSetNestedObjectValueOfSlice(ctx, v)
+		diags.Append(d...)
+		return v, d
 	}
 
 	diags.Append(diag.NewErrorDiagnostic("Invalid slice value", fmt.Sprintf("incorrect type: want %T, got %T", (*[]T)(nil), slice)))
@@ -175,18 +181,44 @@ func NewSetNestedObjectValueOfUnknown[T any](ctx context.Context) SetNestedObjec
 	return SetNestedObjectValueOf[T]{SetValue: basetypes.NewSetUnknown(NewObjectTypeOf[T](ctx))}
 }
 
-func NewSetNestedObjectValueOfPtr[T any](ctx context.Context, t *T) SetNestedObjectValueOf[T] {
+func NewSetNestedObjectValueOfPtr[T any](ctx context.Context, t *T) (SetNestedObjectValueOf[T], diag.Diagnostics) {
 	return NewSetNestedObjectValueOfSlice(ctx, []*T{t})
 }
 
-func NewSetNestedObjectValueOfSlice[T any](ctx context.Context, ts []*T) SetNestedObjectValueOf[T] {
+func NewSetNestedObjectValueOfPtrMust[T any](ctx context.Context, t *T) SetNestedObjectValueOf[T] {
+	return fwdiag.Must(NewSetNestedObjectValueOfPtr(ctx, t))
+}
+
+func NewSetNestedObjectValueOfSlice[T any](ctx context.Context, ts []*T) (SetNestedObjectValueOf[T], diag.Diagnostics) {
 	return newSetNestedObjectValueOf[T](ctx, ts)
 }
 
-func NewSetNestedObjectValueOfValueSlice[T any](ctx context.Context, ts []T) SetNestedObjectValueOf[T] {
+func NewSetNestedObjectValueOfSliceMust[T any](ctx context.Context, ts []*T) SetNestedObjectValueOf[T] {
+	return fwdiag.Must(NewSetNestedObjectValueOfSlice(ctx, ts))
+}
+
+func NewSetNestedObjectValueOfValueSlice[T any](ctx context.Context, ts []T) (SetNestedObjectValueOf[T], diag.Diagnostics) {
 	return newSetNestedObjectValueOf[T](ctx, ts)
 }
 
-func newSetNestedObjectValueOf[T any](ctx context.Context, elements any) SetNestedObjectValueOf[T] {
-	return SetNestedObjectValueOf[T]{SetValue: fwdiag.Must(basetypes.NewSetValueFrom(ctx, NewObjectTypeOf[T](ctx), elements))}
+func NewSetNestedObjectValueOfValueSliceMust[T any](ctx context.Context, ts []T) SetNestedObjectValueOf[T] {
+	return fwdiag.Must(NewSetNestedObjectValueOfValueSlice(ctx, ts))
+}
+
+func newSetNestedObjectValueOf[T any](ctx context.Context, elements any) (SetNestedObjectValueOf[T], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	typ, d := newObjectTypeOf[T](ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return NewSetNestedObjectValueOfUnknown[T](ctx), diags
+	}
+
+	v, d := basetypes.NewSetValueFrom(ctx, typ, elements)
+	diags.Append(d...)
+	if diags.HasError() {
+		return NewSetNestedObjectValueOfUnknown[T](ctx), diags
+	}
+
+	return SetNestedObjectValueOf[T]{SetValue: v}, diags
 }

@@ -45,7 +45,8 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 - `id` - The repository name prefix.
-- `upstreamRegistryUrl` - The registry URL of the upstream public registry to use as the source.
+- `credentialArn` - ARN of the Secret which will be used to authenticate against the registry.
 - `registryId` - The registry ID where the repository was created.
+- `upstreamRegistryUrl` - The registry URL of the upstream public registry to use as the source.
 
-<!-- cache-key: cdktf-0.19.0 input-3ee2ad3b6b1782465fd57fc7a664c3cb24f3d2959a61a327dc70b472c5eb08e8 -->
+<!-- cache-key: cdktf-0.20.1 input-51f9ce17c5f6437a6a7033bcc7164586c2d49132414e45c72255adc80ed3befc -->

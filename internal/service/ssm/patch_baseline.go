@@ -5,30 +5,35 @@ package ssm
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"log"
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssm_patch_baseline", name="Patch Baseline")
 // @Tags(identifierAttribute="id", resourceType="PatchBaseline")
-func ResourcePatchBaseline() *schema.Resource {
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm;ssm.GetPatchBaselineOutput")
+func resourcePatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePatchBaselineCreate,
 		ReadWithoutTimeout:   resourcePatchBaselineRead,
@@ -40,50 +45,6 @@ func ResourcePatchBaseline() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(3, 128),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
-				),
-			},
-
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-
-			"global_filter": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 4,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(ssm.PatchFilterKey_Values(), false),
-						},
-						"values": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 20,
-							MinItems: 1,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(1, 64),
-							},
-						},
-					},
-				},
-			},
-
 			"approval_rule": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -94,38 +55,34 @@ func ResourcePatchBaseline() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 100),
 						},
-
 						"approve_until_date": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringMatch(regexache.MustCompile(`([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))`), "must be formatted YYYY-MM-DD"),
 						},
-
 						"compliance_level": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      ssm.PatchComplianceLevelUnspecified,
-							ValidateFunc: validation.StringInSlice(ssm.PatchComplianceLevel_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.PatchComplianceLevelUnspecified,
+							ValidateDiagFunc: enum.Validate[awstypes.PatchComplianceLevel](),
 						},
-
 						"enable_non_security": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
 						},
-
 						"patch_filter": {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 10,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(ssm.PatchFilterKey_Values(), false),
+									names.AttrKey: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.PatchFilterKey](),
 									},
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 20,
@@ -141,7 +98,6 @@ func ResourcePatchBaseline() *schema.Resource {
 					},
 				},
 			},
-
 			"approved_patches": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -151,7 +107,68 @@ func ResourcePatchBaseline() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 100),
 				},
 			},
-
+			"approved_patches_compliance_level": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.PatchComplianceLevelUnspecified,
+				ValidateDiagFunc: enum.Validate[awstypes.PatchComplianceLevel](),
+			},
+			"approved_patches_enable_non_security": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrDescription: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 1024),
+			},
+			"global_filter": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 4,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrKey: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.PatchFilterKey](),
+						},
+						names.AttrValues: {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 20,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 64),
+							},
+						},
+					},
+				},
+			},
+			names.AttrJSON: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(3, 128),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+				),
+			},
+			"operating_system": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.OperatingSystemWindows,
+				ValidateDiagFunc: enum.Validate[awstypes.OperatingSystem](),
+			},
 			"rejected_patches": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -161,39 +178,24 @@ func ResourcePatchBaseline() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 100),
 				},
 			},
-
-			"operating_system": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      ssm.OperatingSystemWindows,
-				ValidateFunc: validation.StringInSlice(ssm.OperatingSystem_Values(), false),
-			},
-
-			"approved_patches_compliance_level": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      ssm.PatchComplianceLevelUnspecified,
-				ValidateFunc: validation.StringInSlice(ssm.PatchComplianceLevel_Values(), false),
-			},
 			"rejected_patches_action": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(ssm.PatchAction_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.PatchAction](),
 			},
-			"approved_patches_enable_non_security": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 20,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrConfiguration: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 1024),
+						},
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -201,13 +203,6 @@ func ResourcePatchBaseline() *schema.Resource {
 								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,50}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
 							),
 						},
-
-						"configuration": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1024),
-						},
-
 						"products": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -220,119 +215,136 @@ func ResourcePatchBaseline() *schema.Resource {
 					},
 				},
 			},
-
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				if d.HasChanges(
+					names.AttrDescription,
+					"global_filter",
+					"approval_rule",
+					"approved_patches",
+					"rejected_patches",
+					"operating_system",
+					"approved_patches_compliance_level",
+					"rejected_patches_action",
+					"approved_patches_enable_non_security",
+					names.AttrSource,
+				) {
+					return d.SetNewComputed(names.AttrJSON)
+				}
+
+				return nil
+			},
+			verify.SetTagsDiff,
+		),
 	}
 }
 
-const (
-	resNamePatchBaseline = "Patch Baseline"
-)
-
 func resourcePatchBaselineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn(ctx)
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &ssm.CreatePatchBaselineInput{
-		ApprovedPatchesComplianceLevel: aws.String(d.Get("approved_patches_compliance_level").(string)),
+		ApprovedPatchesComplianceLevel: awstypes.PatchComplianceLevel(d.Get("approved_patches_compliance_level").(string)),
 		Name:                           aws.String(name),
-		OperatingSystem:                aws.String(d.Get("operating_system").(string)),
+		OperatingSystem:                awstypes.OperatingSystem(d.Get("operating_system").(string)),
 		Tags:                           getTagsIn(ctx),
-	}
-
-	if v, ok := d.GetOk("description"); ok {
-		input.Description = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("approved_patches"); ok && v.(*schema.Set).Len() > 0 {
-		input.ApprovedPatches = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("rejected_patches"); ok && v.(*schema.Set).Len() > 0 {
-		input.RejectedPatches = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if _, ok := d.GetOk("global_filter"); ok {
-		input.GlobalFilters = expandPatchFilterGroup(d)
 	}
 
 	if _, ok := d.GetOk("approval_rule"); ok {
 		input.ApprovalRules = expandPatchRuleGroup(d)
 	}
 
-	if _, ok := d.GetOk("source"); ok {
-		input.Sources = expandPatchSource(d)
+	if v, ok := d.GetOk("approved_patches"); ok && v.(*schema.Set).Len() > 0 {
+		input.ApprovedPatches = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("approved_patches_enable_non_security"); ok {
 		input.ApprovedPatchesEnableNonSecurity = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("rejected_patches_action"); ok {
-		input.RejectedPatchesAction = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreatePatchBaselineWithContext(ctx, input)
+	if _, ok := d.GetOk("global_filter"); ok {
+		input.GlobalFilters = expandPatchFilterGroup(d)
+	}
+
+	if v, ok := d.GetOk("rejected_patches"); ok && v.(*schema.Set).Len() > 0 {
+		input.RejectedPatches = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("rejected_patches_action"); ok {
+		input.RejectedPatchesAction = awstypes.PatchAction(v.(string))
+	}
+
+	if _, ok := d.GetOk(names.AttrSource); ok {
+		input.Sources = expandPatchSource(d)
+	}
+
+	output, err := conn.CreatePatchBaseline(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SSM Patch Baseline (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.BaselineId))
+	d.SetId(aws.ToString(output.BaselineId))
 
 	return append(diags, resourcePatchBaselineRead(ctx, d, meta)...)
 }
 
 func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn(ctx)
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	params := &ssm.GetPatchBaselineInput{
-		BaselineId: aws.String(d.Id()),
+	output, err := findPatchBaselineByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SSM Patch Baseline (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	resp, err := conn.GetPatchBaselineWithContext(ctx, params)
 	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
-			log.Printf("[WARN] SSM Patch Baseline (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "reading SSM Patch Baseline (%s): %s", d.Id(), err)
 	}
 
+	jsonDoc, err := json.MarshalIndent(output, "", "  ")
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	jsonString := string(jsonDoc)
+
+	if err := d.Set("approval_rule", flattenPatchRuleGroup(output.ApprovalRules)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting approval_rule: %s", err)
+	}
+	d.Set("approved_patches", output.ApprovedPatches)
+	d.Set("approved_patches_compliance_level", output.ApprovedPatchesComplianceLevel)
+	d.Set("approved_patches_enable_non_security", output.ApprovedPatchesEnableNonSecurity)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "ssm",
 		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("patchbaseline/%s", strings.TrimPrefix(d.Id(), "/")),
+		Resource:  "patchbaseline/" + strings.TrimPrefix(d.Id(), "/"),
+	}.String()
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, output.Description)
+	if err := d.Set("global_filter", flattenPatchFilterGroup(output.GlobalFilters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting global_filter: %s", err)
 	}
-	d.Set("arn", arn.String())
-	d.Set("name", resp.Name)
-	d.Set("description", resp.Description)
-	d.Set("operating_system", resp.OperatingSystem)
-	d.Set("approved_patches_compliance_level", resp.ApprovedPatchesComplianceLevel)
-	d.Set("approved_patches", flex.FlattenStringList(resp.ApprovedPatches))
-	d.Set("rejected_patches", flex.FlattenStringList(resp.RejectedPatches))
-	d.Set("rejected_patches_action", resp.RejectedPatchesAction)
-	d.Set("approved_patches_enable_non_security", resp.ApprovedPatchesEnableNonSecurity)
-
-	if err := d.Set("global_filter", flattenPatchFilterGroup(resp.GlobalFilters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting global filters: %s", err)
-	}
-
-	if err := d.Set("approval_rule", flattenPatchRuleGroup(resp.ApprovalRules)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting approval rules: %s", err)
-	}
-
-	if err := d.Set("source", flattenPatchSource(resp.Sources)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting patch sources: %s", err)
+	d.Set(names.AttrJSON, jsonString)
+	d.Set(names.AttrName, output.Name)
+	d.Set("operating_system", output.OperatingSystem)
+	d.Set("rejected_patches", output.RejectedPatches)
+	d.Set("rejected_patches_action", output.RejectedPatchesAction)
+	if err := d.Set(names.AttrSource, flattenPatchSource(output.Sources)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting source: %s", err)
 	}
 
 	return diags
@@ -340,54 +352,54 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourcePatchBaselineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn(ctx)
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ssm.UpdatePatchBaselineInput{
 			BaselineId: aws.String(d.Id()),
-		}
-
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
-		}
-
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
-		}
-
-		if d.HasChange("approved_patches") {
-			input.ApprovedPatches = flex.ExpandStringSet(d.Get("approved_patches").(*schema.Set))
-		}
-
-		if d.HasChange("rejected_patches") {
-			input.RejectedPatches = flex.ExpandStringSet(d.Get("rejected_patches").(*schema.Set))
-		}
-
-		if d.HasChange("approved_patches_compliance_level") {
-			input.ApprovedPatchesComplianceLevel = aws.String(d.Get("approved_patches_compliance_level").(string))
 		}
 
 		if d.HasChange("approval_rule") {
 			input.ApprovalRules = expandPatchRuleGroup(d)
 		}
 
-		if d.HasChange("global_filter") {
-			input.GlobalFilters = expandPatchFilterGroup(d)
+		if d.HasChange("approved_patches") {
+			input.ApprovedPatches = flex.ExpandStringValueSet(d.Get("approved_patches").(*schema.Set))
 		}
 
-		if d.HasChange("source") {
-			input.Sources = expandPatchSource(d)
+		if d.HasChange("approved_patches_compliance_level") {
+			input.ApprovedPatchesComplianceLevel = awstypes.PatchComplianceLevel(d.Get("approved_patches_compliance_level").(string))
 		}
 
 		if d.HasChange("approved_patches_enable_non_security") {
 			input.ApprovedPatchesEnableNonSecurity = aws.Bool(d.Get("approved_patches_enable_non_security").(bool))
 		}
 
-		if d.HasChange("rejected_patches_action") {
-			input.RejectedPatchesAction = aws.String(d.Get("rejected_patches_action").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		_, err := conn.UpdatePatchBaselineWithContext(ctx, input)
+		if d.HasChange("global_filter") {
+			input.GlobalFilters = expandPatchFilterGroup(d)
+		}
+
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
+		}
+
+		if d.HasChange("rejected_patches") {
+			input.RejectedPatches = flex.ExpandStringValueSet(d.Get("rejected_patches").(*schema.Set))
+		}
+
+		if d.HasChange("rejected_patches_action") {
+			input.RejectedPatchesAction = awstypes.PatchAction(d.Get("rejected_patches_action").(string))
+		}
+
+		if d.HasChange(names.AttrSource) {
+			input.Sources = expandPatchSource(d)
+		}
+
+		_, err := conn.UpdatePatchBaseline(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating SSM Patch Baseline (%s): %s", d.Id(), err)
@@ -397,177 +409,207 @@ func resourcePatchBaselineUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourcePatchBaselineRead(ctx, d, meta)...)
 }
 
-func resourcePatchBaselineDelete(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).SSMConn(ctx)
+func resourcePatchBaselineDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	log.Printf("[INFO] Deleting SSM Patch Baseline: %s", d.Id())
-
-	params := &ssm.DeletePatchBaselineInput{
+	input := &ssm.DeletePatchBaselineInput{
 		BaselineId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeletePatchBaselineWithContext(ctx, params)
-	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeResourceInUseException) {
-		// Reset the default patch baseline before retrying
-		diags = append(diags, defaultPatchBaselineRestoreOSDefault(ctx, meta.(*conns.AWSClient).SSMClient(ctx), types.OperatingSystem(d.Get("operating_system").(string)))...)
+	_, err := conn.DeletePatchBaseline(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceInUseException](err) {
+		// Reset the default patch baseline before retrying.
+		diags = append(diags, defaultPatchBaselineRestoreOSDefault(ctx, meta.(*conns.AWSClient).SSMClient(ctx), awstypes.OperatingSystem(d.Get("operating_system").(string)))...)
 		if diags.HasError() {
-			return
+			return diags
 		}
-		_, err = conn.DeletePatchBaselineWithContext(ctx, params)
+
+		_, err = conn.DeletePatchBaseline(ctx, input)
 	}
+
 	if err != nil {
 		diags = sdkdiag.AppendErrorf(diags, "deleting SSM Patch Baseline (%s): %s", d.Id(), err)
 	}
 
-	return
+	return diags
 }
 
-func expandPatchFilterGroup(d *schema.ResourceData) *ssm.PatchFilterGroup {
-	var filters []*ssm.PatchFilter
+func findPatchBaselineByID(ctx context.Context, conn *ssm.Client, id string) (*ssm.GetPatchBaselineOutput, error) {
+	input := &ssm.GetPatchBaselineInput{
+		BaselineId: aws.String(id),
+	}
 
-	filterConfig := d.Get("global_filter").([]interface{})
+	output, err := conn.GetPatchBaseline(ctx, input)
 
-	for _, fConfig := range filterConfig {
-		config := fConfig.(map[string]interface{})
+	if errs.IsA[*awstypes.DoesNotExistException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
-		filter := &ssm.PatchFilter{
-			Key:    aws.String(config["key"].(string)),
-			Values: flex.ExpandStringList(config["values"].([]interface{})),
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func expandPatchFilterGroup(d *schema.ResourceData) *awstypes.PatchFilterGroup {
+	var filters []awstypes.PatchFilter
+
+	tfList := d.Get("global_filter").([]interface{})
+
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]interface{})
+
+		filter := awstypes.PatchFilter{
+			Key:    awstypes.PatchFilterKey(tfMap[names.AttrKey].(string)),
+			Values: flex.ExpandStringValueList(tfMap[names.AttrValues].([]interface{})),
 		}
 
 		filters = append(filters, filter)
 	}
 
-	return &ssm.PatchFilterGroup{
+	return &awstypes.PatchFilterGroup{
 		PatchFilters: filters,
 	}
 }
 
-func flattenPatchFilterGroup(group *ssm.PatchFilterGroup) []map[string]interface{} {
-	if len(group.PatchFilters) == 0 {
+func flattenPatchFilterGroup(apiObject *awstypes.PatchFilterGroup) []interface{} {
+	if len(apiObject.PatchFilters) == 0 {
 		return nil
 	}
 
-	result := make([]map[string]interface{}, 0, len(group.PatchFilters))
+	tfList := make([]interface{}, 0, len(apiObject.PatchFilters))
 
-	for _, filter := range group.PatchFilters {
-		f := make(map[string]interface{})
-		f["key"] = aws.StringValue(filter.Key)
-		f["values"] = flex.FlattenStringList(filter.Values)
+	for _, apiObject := range apiObject.PatchFilters {
+		tfMap := make(map[string]interface{})
+		tfMap[names.AttrKey] = apiObject.Key
+		tfMap[names.AttrValues] = apiObject.Values
 
-		result = append(result, f)
+		tfList = append(tfList, tfMap)
 	}
 
-	return result
+	return tfList
 }
 
-func expandPatchRuleGroup(d *schema.ResourceData) *ssm.PatchRuleGroup {
-	var rules []*ssm.PatchRule
+func expandPatchRuleGroup(d *schema.ResourceData) *awstypes.PatchRuleGroup {
+	var rules []awstypes.PatchRule
 
-	ruleConfig := d.Get("approval_rule").([]interface{})
+	tfList := d.Get("approval_rule").([]interface{})
 
-	for _, rConfig := range ruleConfig {
-		rCfg := rConfig.(map[string]interface{})
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]interface{})
 
-		var filters []*ssm.PatchFilter
-		filterConfig := rCfg["patch_filter"].([]interface{})
+		var filters []awstypes.PatchFilter
+		tfList := tfMap["patch_filter"].([]interface{})
 
-		for _, fConfig := range filterConfig {
-			fCfg := fConfig.(map[string]interface{})
+		for _, tfMapRaw := range tfList {
+			tfMap := tfMapRaw.(map[string]interface{})
 
-			filter := &ssm.PatchFilter{
-				Key:    aws.String(fCfg["key"].(string)),
-				Values: flex.ExpandStringList(fCfg["values"].([]interface{})),
+			filter := awstypes.PatchFilter{
+				Key:    awstypes.PatchFilterKey(tfMap[names.AttrKey].(string)),
+				Values: flex.ExpandStringValueList(tfMap[names.AttrValues].([]interface{})),
 			}
 
 			filters = append(filters, filter)
 		}
 
-		filterGroup := &ssm.PatchFilterGroup{
+		filterGroup := &awstypes.PatchFilterGroup{
 			PatchFilters: filters,
 		}
 
-		rule := &ssm.PatchRule{
+		rule := awstypes.PatchRule{
+			ComplianceLevel:   awstypes.PatchComplianceLevel(tfMap["compliance_level"].(string)),
+			EnableNonSecurity: aws.Bool(tfMap["enable_non_security"].(bool)),
 			PatchFilterGroup:  filterGroup,
-			ComplianceLevel:   aws.String(rCfg["compliance_level"].(string)),
-			EnableNonSecurity: aws.Bool(rCfg["enable_non_security"].(bool)),
 		}
 
-		if v, ok := rCfg["approve_until_date"].(string); ok && v != "" {
+		if v, ok := tfMap["approve_until_date"].(string); ok && v != "" {
 			rule.ApproveUntilDate = aws.String(v)
-		} else if v, ok := rCfg["approve_after_days"].(int); ok {
-			rule.ApproveAfterDays = aws.Int64(int64(v))
+		} else if v, ok := tfMap["approve_after_days"].(int); ok {
+			rule.ApproveAfterDays = aws.Int32(int32(v))
 		}
 
 		rules = append(rules, rule)
 	}
 
-	return &ssm.PatchRuleGroup{
+	return &awstypes.PatchRuleGroup{
 		PatchRules: rules,
 	}
 }
 
-func flattenPatchRuleGroup(group *ssm.PatchRuleGroup) []map[string]interface{} {
-	if len(group.PatchRules) == 0 {
+func flattenPatchRuleGroup(apiObject *awstypes.PatchRuleGroup) []interface{} {
+	if len(apiObject.PatchRules) == 0 {
 		return nil
 	}
 
-	result := make([]map[string]interface{}, 0, len(group.PatchRules))
+	tfList := make([]interface{}, 0, len(apiObject.PatchRules))
 
-	for _, rule := range group.PatchRules {
-		r := make(map[string]interface{})
-		r["compliance_level"] = aws.StringValue(rule.ComplianceLevel)
-		r["enable_non_security"] = aws.BoolValue(rule.EnableNonSecurity)
-		r["patch_filter"] = flattenPatchFilterGroup(rule.PatchFilterGroup)
+	for _, apiObject := range apiObject.PatchRules {
+		tfMap := make(map[string]interface{})
+		tfMap["compliance_level"] = apiObject.ComplianceLevel
+		tfMap["enable_non_security"] = aws.ToBool(apiObject.EnableNonSecurity)
+		tfMap["patch_filter"] = flattenPatchFilterGroup(apiObject.PatchFilterGroup)
 
-		if rule.ApproveAfterDays != nil {
-			r["approve_after_days"] = aws.Int64Value(rule.ApproveAfterDays)
+		if apiObject.ApproveAfterDays != nil {
+			tfMap["approve_after_days"] = aws.ToInt32(apiObject.ApproveAfterDays)
 		}
 
-		if rule.ApproveUntilDate != nil {
-			r["approve_until_date"] = aws.StringValue(rule.ApproveUntilDate)
+		if apiObject.ApproveUntilDate != nil {
+			tfMap["approve_until_date"] = aws.ToString(apiObject.ApproveUntilDate)
 		}
 
-		result = append(result, r)
+		tfList = append(tfList, tfMap)
 	}
 
-	return result
+	return tfList
 }
 
-func expandPatchSource(d *schema.ResourceData) []*ssm.PatchSource {
-	var sources []*ssm.PatchSource
+func expandPatchSource(d *schema.ResourceData) []awstypes.PatchSource {
+	var apiObjects []awstypes.PatchSource
 
-	sourceConfigs := d.Get("source").([]interface{})
+	tfList := d.Get(names.AttrSource).([]interface{})
 
-	for _, sConfig := range sourceConfigs {
-		config := sConfig.(map[string]interface{})
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]interface{})
 
-		source := &ssm.PatchSource{
-			Name:          aws.String(config["name"].(string)),
-			Configuration: aws.String(config["configuration"].(string)),
-			Products:      flex.ExpandStringList(config["products"].([]interface{})),
+		apiObject := awstypes.PatchSource{
+			Configuration: aws.String(tfMap[names.AttrConfiguration].(string)),
+			Name:          aws.String(tfMap[names.AttrName].(string)),
+			Products:      flex.ExpandStringValueList(tfMap["products"].([]interface{})),
 		}
 
-		sources = append(sources, source)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return sources
+	return apiObjects
 }
 
-func flattenPatchSource(sources []*ssm.PatchSource) []map[string]interface{} {
-	if len(sources) == 0 {
+func flattenPatchSource(apiObjects []awstypes.PatchSource) []interface{} {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	result := make([]map[string]interface{}, 0, len(sources))
+	tfList := make([]interface{}, 0, len(apiObjects))
 
-	for _, source := range sources {
-		s := make(map[string]interface{})
-		s["name"] = aws.StringValue(source.Name)
-		s["configuration"] = aws.StringValue(source.Configuration)
-		s["products"] = flex.FlattenStringList(source.Products)
-		result = append(result, s)
+	for _, apiObject := range apiObjects {
+		tfMap := make(map[string]interface{})
+
+		tfMap[names.AttrConfiguration] = aws.ToString(apiObject.Configuration)
+		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
+		tfMap["products"] = apiObject.Products
+
+		tfList = append(tfList, tfMap)
 	}
 
-	return result
+	return tfList
 }

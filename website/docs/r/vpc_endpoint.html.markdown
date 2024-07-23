@@ -58,6 +58,27 @@ resource "aws_vpc_endpoint" "ec2" {
 }
 ```
 
+### Interface Endpoint Type with User-Defined IP Address
+
+```terraform
+resource "aws_vpc_endpoint" "ec2" {
+  vpc_id            = aws_vpc.example.id
+  service_name      = "com.amazonaws.us-west-2.ec2"
+  vpc_endpoint_type = "Interface"
+  subnet_configuration {
+    ipv4      = "10.0.1.10"
+    subnet_id = aws_subnet.example1.id
+  }
+  subnet_configuration {
+    ipv4      = "10.0.2.10"
+    subnet_id = aws_subnet.example2.id
+  }
+  subnet_ids = [
+    aws_subnet.example1.id, aws_subnet.example2.id
+  ]
+}
+```
+
 ### Gateway Load Balancer Endpoint Type
 
 ```terraform
@@ -123,6 +144,7 @@ Defaults to `false`.
 * `dns_options` - (Optional) The DNS options for the endpoint. See dns_options below.
 * `ip_address_type` - (Optional) The IP address type for the endpoint. Valid values are `ipv4`, `dualstack`, and `ipv6`.
 * `route_table_ids` - (Optional) One or more route table IDs. Applicable for endpoints of type `Gateway`.
+* `subnet_configuration` - (Optional) Subnet configuration for the endpoint, used to select specific IPv4 and/or IPv6 addresses to the endpoint. See subnet_configuration below.
 * `subnet_ids` - (Optional) The ID of one or more subnets in which to create a network interface for the endpoint. Applicable for endpoints of type `GatewayLoadBalancer` and `Interface`. Interface type endpoints cannot function without being assigned to a subnet.
 * `security_group_ids` - (Optional) The ID of one or more security groups to associate with the network interface. Applicable for endpoints of type `Interface`.
 If no security groups are specified, the VPC's [default security group](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html#DefaultSecurityGroup) is associated with the endpoint.
@@ -133,6 +155,12 @@ If no security groups are specified, the VPC's [default security group](https://
 
 * `dns_record_ip_type` - (Optional) The DNS records created for the endpoint. Valid values are `ipv4`, `dualstack`, `service-defined`, and `ipv6`.
 * `private_dns_only_for_inbound_resolver_endpoint` - (Optional) Indicates whether to enable private DNS only for inbound endpoints. This option is available only for services that support both gateway and interface endpoints. It routes traffic that originates from the VPC to the gateway endpoint and traffic that originates from on-premises to the interface endpoint. Default is `false`. Can only be specified if private_dns_enabled is `true`.
+
+### subnet_configuration
+
+* `ipv4` - (Optional) The IPv4 address to assign to the endpoint network interface in the subnet. You must provide an IPv4 address if the VPC endpoint supports IPv4.
+* `ipv6` - (Optional) The IPv6 address to assign to the endpoint network interface in the subnet. You must provide an IPv6 address if the VPC endpoint supports IPv6.
+* `subnet` - (Optional) The ID of the subnet. Must have a corresponding subnet in the `subnet_ids` argument.
 
 ## Timeouts
 

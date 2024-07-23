@@ -43,7 +43,7 @@ resource "aws_lb_listener" "example" {
 This resource supports the following arguments:
 
 * `ca_certificates_bundle_s3_bucket` - (Required) S3 Bucket name holding the client certificate CA bundle.
-* `ca_certificates_bundle_s3_key` - (Required) S3 Bucket name holding the client certificate CA bundle.
+* `ca_certificates_bundle_s3_key` - (Required) S3 object key holding the client certificate CA bundle.
 * `ca_certificates_bundle_s3_object_version` - (Optional) Version Id of CA bundle S3 bucket object, if versioned, defaults to latest if omitted.
 
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`. Cannot be longer than 6 characters.

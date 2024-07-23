@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/appconfig"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppConfigConfigurationProfilesDataSource_basic(t *testing.T) {
@@ -23,16 +23,16 @@ func TestAccAppConfigConfigurationProfilesDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, appconfig.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.AppConfigEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationProfilesDataSourceConfig_basic(appName, rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "configuration_profile_ids.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "configuration_profile_ids.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "configuration_profile_ids.*", "aws_appconfig_configuration_profile.test_1", "configuration_profile_id"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "configuration_profile_ids.*", "aws_appconfig_configuration_profile.test_2", "configuration_profile_id"),
 				),

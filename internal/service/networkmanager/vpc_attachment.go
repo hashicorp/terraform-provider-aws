@@ -50,7 +50,7 @@ func ResourceVPCAttachment() *schema.Resource {
 					return nil
 				}
 
-				if state := d.Get("state").(string); state == networkmanager.AttachmentStatePendingAttachmentAcceptance {
+				if state := d.Get(names.AttrState).(string); state == networkmanager.AttachmentStatePendingAttachmentAcceptance {
 					return d.ForceNew("options.0.appliance_mode_support")
 				}
 				return nil
@@ -64,7 +64,7 @@ func ResourceVPCAttachment() *schema.Resource {
 					return nil
 				}
 
-				if state := d.Get("state").(string); state == networkmanager.AttachmentStatePendingAttachmentAcceptance {
+				if state := d.Get(names.AttrState).(string); state == networkmanager.AttachmentStatePendingAttachmentAcceptance {
 					return d.ForceNew("options.0.ipv6_support")
 				}
 				return nil
@@ -78,7 +78,7 @@ func ResourceVPCAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -121,11 +121,11 @@ func ResourceVPCAttachment() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -133,7 +133,7 @@ func ResourceVPCAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -179,13 +179,13 @@ func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 	output, err := conn.CreateVpcAttachmentWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Network Manager VPC (%s) Attachment (%s): %s", vpcARN, coreNetworkID, err)
+		return sdkdiag.AppendErrorf(diags, "creating Network Manager VPC (%s) Attachment (%s): %s", vpcARN, coreNetworkID, err)
 	}
 
 	d.SetId(aws.StringValue(output.VpcAttachment.Attachment.AttachmentId))
 
 	if _, err := waitVPCAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager VPC Attachment (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager VPC Attachment (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceVPCAttachmentRead(ctx, d, meta)...)
@@ -205,7 +205,7 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager VPC Attachment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager VPC Attachment (%s): %s", d.Id(), err)
 	}
 
 	a := vpcAttachment.Attachment
@@ -215,7 +215,7 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("attachment/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("attachment_policy_rule_number", a.AttachmentPolicyRuleNumber)
 	d.Set("attachment_type", a.AttachmentType)
 	d.Set("core_network_arn", a.CoreNetworkArn)
@@ -223,15 +223,15 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("edge_location", a.EdgeLocation)
 	if vpcAttachment.Options != nil {
 		if err := d.Set("options", []interface{}{flattenVpcOptions(vpcAttachment.Options)}); err != nil {
-			return diag.Errorf("setting options: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting options: %s", err)
 		}
 	} else {
 		d.Set("options", nil)
 	}
-	d.Set("owner_account_id", a.OwnerAccountId)
-	d.Set("resource_arn", a.ResourceArn)
+	d.Set(names.AttrOwnerAccountID, a.OwnerAccountId)
+	d.Set(names.AttrResourceARN, a.ResourceArn)
 	d.Set("segment_name", a.SegmentName)
-	d.Set("state", a.State)
+	d.Set(names.AttrState, a.State)
 	d.Set("subnet_arns", aws.StringValueSlice(vpcAttachment.SubnetArns))
 	d.Set("vpc_arn", a.ResourceArn)
 
@@ -245,7 +245,7 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &networkmanager.UpdateVpcAttachmentInput{
 			AttachmentId: aws.String(d.Id()),
 		}
@@ -279,11 +279,11 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 		_, err := conn.UpdateVpcAttachmentWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Network Manager VPC Attachment (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Network Manager VPC Attachment (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitVPCAttachmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Network Manager VPC Attachment (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Network Manager VPC Attachment (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -304,12 +304,12 @@ func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if sErr != nil {
-		return diag.Errorf("reading Network Manager VPC Attachment (%s): %s", d.Id(), sErr)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager VPC Attachment (%s): %s", d.Id(), sErr)
 	}
 
-	d.Set("state", output.Attachment.State)
+	d.Set(names.AttrState, output.Attachment.State)
 
-	if state := d.Get("state").(string); state == networkmanager.AttachmentStatePendingAttachmentAcceptance || state == networkmanager.AttachmentStatePendingTagAcceptance {
+	if state := d.Get(names.AttrState).(string); state == networkmanager.AttachmentStatePendingAttachmentAcceptance || state == networkmanager.AttachmentStatePendingTagAcceptance {
 		_, err := conn.RejectAttachmentWithContext(ctx, &networkmanager.RejectAttachmentInput{
 			AttachmentId: aws.String(d.Id()),
 		})

@@ -33,12 +33,12 @@ func ResourceIPGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -48,12 +48,12 @@ func ResourceIPGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"source": {
+						names.AttrSource: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.IsCIDR,
 						},
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -74,8 +74,8 @@ func resourceIPGroupCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	rules := d.Get("rules").(*schema.Set).List()
 	resp, err := conn.CreateIpGroup(ctx, &workspaces.CreateIpGroupInput{
-		GroupName: aws.String(d.Get("name").(string)),
-		GroupDesc: aws.String(d.Get("description").(string)),
+		GroupName: aws.String(d.Get(names.AttrName).(string)),
+		GroupDesc: aws.String(d.Get(names.AttrDescription).(string)),
 		UserRules: expandIPGroupRules(rules),
 		Tags:      getTagsIn(ctx),
 	})
@@ -116,8 +116,8 @@ func resourceIPGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	ipGroup := ipGroups[0]
 
-	d.Set("name", ipGroup.GroupName)
-	d.Set("description", ipGroup.GroupDesc)
+	d.Set(names.AttrName, ipGroup.GroupName)
+	d.Set(names.AttrDescription, ipGroup.GroupDesc)
 	d.Set("rules", flattenIPGroupRules(ipGroup.UserRules))
 
 	return diags
@@ -202,8 +202,8 @@ func expandIPGroupRules(rules []interface{}) []types.IpRuleItem {
 		r := rule.(map[string]interface{})
 
 		result = append(result, types.IpRuleItem{
-			IpRule:   aws.String(r["source"].(string)),
-			RuleDesc: aws.String(r["description"].(string)),
+			IpRule:   aws.String(r[names.AttrSource].(string)),
+			RuleDesc: aws.String(r[names.AttrDescription].(string)),
 		})
 	}
 	return result
@@ -215,11 +215,11 @@ func flattenIPGroupRules(rules []types.IpRuleItem) []map[string]interface{} {
 		r := map[string]interface{}{}
 
 		if v := rule.IpRule; v != nil {
-			r["source"] = aws.ToString(v)
+			r[names.AttrSource] = aws.ToString(v)
 		}
 
 		if v := rule.RuleDesc; v != nil {
-			r["description"] = aws.ToString(rule.RuleDesc)
+			r[names.AttrDescription] = aws.ToString(rule.RuleDesc)
 		}
 
 		result = append(result, r)

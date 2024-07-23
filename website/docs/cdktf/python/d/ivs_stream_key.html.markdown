@@ -47,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Map of tags assigned to the resource.
 * `value` - Stream Key value.
 
-<!-- cache-key: cdktf-0.19.0 input-07ea21d8ae54ff1a061e2ce5f7053d91f4807ee4e6b32e670b8c70e8582e5c98 -->
+<!-- cache-key: cdktf-0.20.1 input-07ea21d8ae54ff1a061e2ce5f7053d91f4807ee4e6b32e670b8c70e8582e5c98 -->

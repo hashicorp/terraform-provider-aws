@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfredshiftserverless "github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRedshiftServerlessSnapshot_basic(t *testing.T) {
@@ -25,7 +25,7 @@ func TestAccRedshiftServerlessSnapshot_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshiftserverless.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,13 +33,13 @@ func TestAccRedshiftServerlessSnapshot_basic(t *testing.T) {
 				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "namespace_name", "aws_redshiftserverless_namespace.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "namespace_name", "aws_redshiftserverless_namespace.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "-1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "-1"),
 					resource.TestCheckResourceAttr(resourceName, "admin_username", "admin"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account"),
-					resource.TestCheckResourceAttr(resourceName, "accounts_with_provisioned_restore_access.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "accounts_with_restore_access.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "accounts_with_provisioned_restore_access.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "accounts_with_restore_access.#", acctest.Ct0),
 				),
 			},
 			{
@@ -51,9 +51,9 @@ func TestAccRedshiftServerlessSnapshot_basic(t *testing.T) {
 				Config: testAccSnapshotConfig_retention(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "namespace_name", "aws_redshiftserverless_namespace.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "namespace_name", "aws_redshiftserverless_namespace.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, acctest.Ct10),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account"),
 				),
 			},
@@ -68,7 +68,7 @@ func TestAccRedshiftServerlessSnapshot_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshiftserverless.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{

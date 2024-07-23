@@ -15,11 +15,11 @@ Note that currently only one policy may be applied to a repository.
 ## Example Usage
 
 ```terraform
-resource "aws_ecr_repository" "foo" {
-  name = "bar"
+resource "aws_ecr_repository" "example" {
+  name = "example-repo"
 }
 
-data "aws_iam_policy_document" "foopolicy" {
+data "aws_iam_policy_document" "example" {
   statement {
     sid    = "new policy"
     effect = "Allow"
@@ -48,9 +48,9 @@ data "aws_iam_policy_document" "foopolicy" {
   }
 }
 
-resource "aws_ecr_repository_policy" "foopolicy" {
-  repository = aws_ecr_repository.foo.name
-  policy     = data.aws_iam_policy_document.foopolicy.json
+resource "aws_ecr_repository_policy" "example" {
+  repository = aws_ecr_repository.example.name
+  policy     = data.aws_iam_policy_document.example.json
 }
 ```
 

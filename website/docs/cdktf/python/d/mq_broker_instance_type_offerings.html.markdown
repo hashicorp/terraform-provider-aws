@@ -70,4 +70,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `name` - Name of the Availability Zone.
 
-<!-- cache-key: cdktf-0.19.0 input-af7521896e903be08788f223edcfd27a267b313cdf4f21d6ea836a2e3f3e7984 -->
+<!-- cache-key: cdktf-0.20.1 input-af7521896e903be08788f223edcfd27a267b313cdf4f21d6ea836a2e3f3e7984 -->

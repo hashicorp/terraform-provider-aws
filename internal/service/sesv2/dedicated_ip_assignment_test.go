@@ -25,8 +25,8 @@ func TestAccSESV2DedicatedIPAssignment_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccSESV2DedicatedIPAssignment_basic,
-		"disappears": testAccSESV2DedicatedIPAssignment_disappears,
+		acctest.CtBasic:      testAccSESV2DedicatedIPAssignment_basic,
+		acctest.CtDisappears: testAccSESV2DedicatedIPAssignment_disappears,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -44,7 +44,7 @@ func testAccSESV2DedicatedIPAssignment_basic(t *testing.T) { // nosemgrep:ci.ses
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDedicatedIPAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -77,7 +77,7 @@ func testAccSESV2DedicatedIPAssignment_disappears(t *testing.T) { // nosemgrep:c
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDedicatedIPAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{

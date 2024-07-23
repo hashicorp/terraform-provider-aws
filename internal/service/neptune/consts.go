@@ -22,6 +22,18 @@ func engine_Values() []string {
 }
 
 const (
+	storageTypeStandard = "standard"
+	storageTypeIopt1    = "iopt1"
+)
+
+func storageType_Values() []string {
+	return []string{
+		storageTypeStandard,
+		storageTypeIopt1,
+	}
+}
+
+const (
 	clusterEndpointStatusAvailable = "available"
 	clusterEndpointStatusCreating  = "creating"
 	clusterEndpointStatusDeleting  = "deleting"

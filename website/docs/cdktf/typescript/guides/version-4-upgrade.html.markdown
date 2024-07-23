@@ -14,8 +14,8 @@ Version 4.0.0 of the AWS provider for Terraform is a major release and includes 
 
 We previously marked most of the changes we outline in this guide as deprecated in the Terraform plan/apply output throughout previous provider releases. You can find these changes, including deprecation notices, in the [Terraform AWS Provider CHANGELOG](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md).
 
-~> **NOTE:** Versions 4.0.0 through v4.8.0 of the AWS Provider introduce significant breaking changes to the `awsS3Bucket` resource. See [S3 Bucket Refactor](#s3-bucket-refactor) for more details.
-We recommend upgrading to v4.9.0 or later of the AWS Provider instead, where only non-breaking changes and deprecation notices are introduced to the `awsS3Bucket`. See  [Changes to S3 Bucket Drift Detection](#changes-to-s3-bucket-drift-detection) for additional considerations when upgrading to v4.9.0 or later.
+~> **NOTE:** Versions 4.0.0 through v4.8.0 of the AWS Provider introduce significant breaking changes to the `aws_s3_bucket` resource. See [S3 Bucket Refactor](#s3-bucket-refactor) for more details.
+We recommend upgrading to v4.9.0 or later of the AWS Provider instead, where only non-breaking changes and deprecation notices are introduced to the `aws_s3_bucket`. See  [Changes to S3 Bucket Drift Detection](#changes-to-s3-bucket-drift-detection) for additional considerations when upgrading to v4.9.0 or later.
 
 ~> **NOTE:** Version 4.0.0 of the AWS Provider introduces changes to the precedence of some authentication and configuration parameters.
 These changes bring the provider in line with the AWS CLI and SDKs.
@@ -34,19 +34,19 @@ Upgrade topics:
 - [New Provider Arguments](#new-provider-arguments)
 - [Changes to S3 Bucket Drift Detection](#changes-to-s3-bucket-drift-detection) (**Applicable to v4.9.0 and later of the AWS Provider**)
 - [S3 Bucket Refactor](#s3-bucket-refactor) (**Only applicable to v4.0.0 through v4.8.0 of the AWS Provider**)
-    - [`acceleration_status` Argument](#acceleration_status-argument)
+    - [`accelerationStatus` Argument](#acceleration_status-argument)
     - [`acl` Argument](#acl-argument)
-    - [`cors_rule` Argument](#cors_rule-argument)
+    - [`corsRule` Argument](#cors_rule-argument)
     - [`grant` Argument](#grant-argument)
-    - [`lifecycle_rule` Argument](#lifecycle_rule-argument)
+    - [`lifecycleRule` Argument](#lifecycle_rule-argument)
     - [`logging` Argument](#logging-argument)
-    - [`object_lock_configuration` `rule` Argument](#object_lock_configuration-rule-argument)
+    - [`objectLockConfiguration` `rule` Argument](#object_lock_configuration-rule-argument)
     - [`policy` Argument](#policy-argument)
-    - [`replication_configuration` Argument](#replication_configuration-argument)
-    - [`request_payer` Argument](#request_payer-argument)
-    - [`server_side_encryption_configuration` Argument](#server_side_encryption_configuration-argument)
+    - [`replicationConfiguration` Argument](#replication_configuration-argument)
+    - [`requestPayer` Argument](#request_payer-argument)
+    - [`serverSideEncryptionConfiguration` Argument](#server_side_encryption_configuration-argument)
     - [`versioning` Argument](#versioning-argument)
-    - [`website`, `website_domain`, and `website_endpoint` Arguments](#website-website_domain-and-website_endpoint-arguments)
+    - [`website`, `websiteDomain`, and `websiteEndpoint` Arguments](#website-website_domain-and-website_endpoint-arguments)
 - [Full Resource Lifecycle of Default Resources](#full-resource-lifecycle-of-default-resources)
     - [Resource: aws_default_subnet](#resource-aws_default_subnet)
     - [Resource: aws_default_vpc](#resource-aws_default_vpc)
@@ -142,7 +142,7 @@ Precedence for authentication settings is as follows:
 
 * `provider` configuration
 * Environment variables
-* Shared credentials and configuration files (_e.g._, `~/Aws/credentials` and `~/.aws/config`)
+* Shared credentials and configuration files (_e.g._, `~/.aws/credentials` and `~/.aws/config`)
 
 In previous versions of the provider, you could explicitly set `profile` in the `provider`, and if the profile did not correspond to valid credentials, the provider would use credentials from environment variables. Starting in v4.0, the Terraform AWS provider enforces the precedence shown above, similarly to how the AWS SDK and AWS CLI behave.
 
@@ -180,7 +180,7 @@ class MyConvertedCode extends TerraformStack {
 
 Version 4.x adds these new `provider` arguments:
 
-* `assumeRoleDuration` - Assume role duration as a string, _e.g._, `"1h"` or `"1h30s"`. Terraform AWS Provider v4.0.0 deprecates `assume_role.duration_seconds` and a future version will remove it.
+* `assume_role.duration` - Assume role duration as a string, _e.g._, `"1h"` or `"1h30s"`. Terraform AWS Provider v4.0.0 deprecates `assume_role.duration_seconds` and a future version will remove it.
 * `customCaBundle` - File containing custom root and intermediate certificates. Can also be configured using the `AWS_CA_BUNDLE` environment variable. (Setting `ca_bundle` in the shared config file is not supported.)
 * `ec2MetadataServiceEndpoint` - Address of the EC2 metadata service (IMDS) endpoint to use. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable.
 * `ec2MetadataServiceEndpointMode` - Mode to use in communicating with the metadata service. Valid values are `IPv4` and `IPv6`. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE` environment variable.
@@ -188,10 +188,10 @@ Version 4.x adds these new `provider` arguments:
 * `sharedConfigFiles` - List of paths to AWS shared config files. If not set, the default is `[~/.aws/config]`. A single value can also be set with the `AWS_CONFIG_FILE` environment variable.
 * `sharedCredentialsFiles` - List of paths to the shared credentials file. If not set, the default  is `[~/.aws/credentials]`. A single value can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable. Replaces `shared_credentials_file`, which has been deprecated in Terraform AWS Provider v4.0.0 and support will be removed in a future version.
 * `stsRegion` - Region where AWS STS operations will take place. For example, `us-east-1` and `us-west-2`.
-* `useDualstackEndpoint` - Force the provider to resolve endpoints with DualStack capability. Can also be set with the `AWS_USE_DUALSTACK_ENDPOINT` environment variable or in a shared config file (`use_dualstack_endpoint`).
-* `useFipsEndpoint` - Force the provider to resolve endpoints with FIPS capability. Can also be set with the `AWS_USE_FIPS_ENDPOINT` environment variable or in a shared config file (`use_fips_endpoint`).
+* `useDualstackEndpoint` - Force the provider to resolve endpoints with DualStack capability. Can also be set with the `AWS_USE_DUALSTACK_ENDPOINT` environment variable or in a shared config file (`useDualstackEndpoint`).
+* `useFipsEndpoint` - Force the provider to resolve endpoints with FIPS capability. Can also be set with the `AWS_USE_FIPS_ENDPOINT` environment variable or in a shared config file (`useFipsEndpoint`).
 
-~> **NOTE:** Using the `awsMetadataUrl` environment variable has been deprecated in Terraform AWS Provider v4.0.0 and support will be removed in a future version. Change any scripts or environments using `awsMetadataUrl` to instead use `awsEc2MetadataServiceEndpoint`.
+~> **NOTE:** Using the `AWS_METADATA_URL` environment variable has been deprecated in Terraform AWS Provider v4.0.0 and support will be removed in a future version. Change any scripts or environments using `AWS_METADATA_URL` to instead use `AWS_EC2_METADATA_SERVICE_ENDPOINT`.
 
 For example, in previous versions, to use FIPS endpoints, you would need to provide all the FIPS endpoints that you wanted to use in the `endpoints` configuration block:
 
@@ -243,20 +243,20 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-Note that the provider can only resolve FIPS endpoints where AWS provides FIPS support. Support depends on the service and may include `usEast1`, `usEast2`, `usWest1`, `usWest2`, `usGovEast1`, `usGovWest1`, and `caCentral1`. For more information, see [Federal Information Processing Standard (FIPS) 140-2](https://aws.amazon.com/compliance/fips/).
+Note that the provider can only resolve FIPS endpoints where AWS provides FIPS support. Support depends on the service and may include `us-east-1`, `us-east-2`, `us-west-1`, `us-west-2`, `us-gov-east-1`, `us-gov-west-1`, and `ca-central-1`. For more information, see [Federal Information Processing Standard (FIPS) 140-2](https://aws.amazon.com/compliance/fips/).
 
 ## Changes to S3 Bucket Drift Detection
 
 ~> **NOTE:** This only applies to v4.9.0 and later of the AWS Provider.
 
-~> **NOTE:** If you are migrating from v3.75.x of the AWS Provider and you have already adopted the standalone S3 bucket resources (e.g. `awsS3BucketLifecycleConfiguration`),
-a [`lifecycle` configuration block to ignore changes](https://www.terraform.io/language/meta-arguments/lifecycle#ignore_changes) to the internal parameters of the source `awsS3Bucket` resources will no longer be necessary and can be removed upon upgrade.
+~> **NOTE:** If you are migrating from v3.75.x of the AWS Provider and you have already adopted the standalone S3 bucket resources (e.g. `aws_s3_bucket_lifecycle_configuration`),
+a [`lifecycle` configuration block to ignore changes](https://www.terraform.io/language/meta-arguments/lifecycle#ignore_changes) to the internal parameters of the source `aws_s3_bucket` resources will no longer be necessary and can be removed upon upgrade.
 
-~> **NOTE:** In the next major version, v5.0, the parameters listed below will be removed entirely from the `awsS3Bucket` resource.
+~> **NOTE:** In the next major version, v5.0, the parameters listed below will be removed entirely from the `aws_s3_bucket` resource.
 For this reason, a deprecation notice is printed in the Terraform CLI for each of the parameters when used in a configuration.
 
-To remediate the breaking changes introduced to the `awsS3Bucket` resource in v4.0.0 of the AWS Provider,
-v4.9.0 and later retain the same configuration parameters of the `awsS3Bucket` resource as in v3.x and functionality of the `awsS3Bucket` resource only differs from v3.x
+To remediate the breaking changes introduced to the `aws_s3_bucket` resource in v4.0.0 of the AWS Provider,
+v4.9.0 and later retain the same configuration parameters of the `aws_s3_bucket` resource as in v3.x and functionality of the `aws_s3_bucket` resource only differs from v3.x
 in that Terraform will only perform drift detection for each of the following parameters if a configuration value is provided:
 
 * `accelerationStatus`
@@ -273,7 +273,7 @@ in that Terraform will only perform drift detection for each of the following pa
 * `versioning`
 * `website`
 
-Thus, if one of these parameters was once configured and then is entirely removed from an `awsS3Bucket` resource configuration,
+Thus, if one of these parameters was once configured and then is entirely removed from an `aws_s3_bucket` resource configuration,
 Terraform will not pick up on these changes on a subsequent `terraform plan` or `terraform apply`.
 
 For example, given the following configuration with a single `corsRule`:
@@ -337,24 +337,24 @@ aws_s3_bucket.example: Refreshing state... [id=yournamehere]
 No changes. Your infrastructure matches the configuration.
 ```
 
-With that said, to manage changes to these parameters in the `awsS3Bucket` resource, practitioners should configure each parameter's respective standalone resource
+With that said, to manage changes to these parameters in the `aws_s3_bucket` resource, practitioners should configure each parameter's respective standalone resource
 and perform updates directly on those new configurations. The parameters are mapped to the standalone resources as follows:
 
-| `awsS3Bucket` Parameter              | Standalone Resource                                  |
+| `aws_s3_bucket` Parameter              | Standalone Resource                                  |
 |----------------------------------------|------------------------------------------------------|
-| `accelerationStatus`                  | `awsS3BucketAccelerateConfiguration`             |
-| `acl`                                  | `awsS3BucketAcl`                                  |
-| `corsRule`                            | `awsS3BucketCorsConfiguration`                   |
-| `grant`                                | `awsS3BucketAcl`                                  |
-| `lifecycleRule`                       | `awsS3BucketLifecycleConfiguration`              |
-| `logging`                              | `awsS3BucketLogging`                              |
-| `objectLockConfiguration`            | `awsS3BucketObjectLockConfiguration`            |
-| `policy`                               | `awsS3BucketPolicy`                               |
-| `replicationConfiguration`            | `awsS3BucketReplicationConfiguration`            |
-| `requestPayer`                        | `awsS3BucketRequestPaymentConfiguration`        |
-| `serverSideEncryptionConfiguration` | `awsS3BucketServerSideEncryptionConfiguration` |
-| `versioning`                           | `awsS3BucketVersioning`                           |
-| `website`                              | `awsS3BucketWebsiteConfiguration`                |
+| `accelerationStatus`                  | `aws_s3_bucket_accelerate_configuration`             |
+| `acl`                                  | `aws_s3_bucket_acl`                                  |
+| `corsRule`                            | `aws_s3_bucket_cors_configuration`                   |
+| `grant`                                | `aws_s3_bucket_acl`                                  |
+| `lifecycleRule`                       | `aws_s3_bucket_lifecycle_configuration`              |
+| `logging`                              | `aws_s3_bucket_logging`                              |
+| `objectLockConfiguration`            | `aws_s3_bucket_object_lock_configuration`            |
+| `policy`                               | `aws_s3_bucket_policy`                               |
+| `replicationConfiguration`            | `aws_s3_bucket_replication_configuration`            |
+| `requestPayer`                        | `aws_s3_bucket_request_payment_configuration`        |
+| `serverSideEncryptionConfiguration` | `aws_s3_bucket_server_side_encryption_configuration` |
+| `versioning`                           | `aws_s3_bucket_versioning`                           |
+| `website`                              | `aws_s3_bucket_website_configuration`                |
 
 Going back to the earlier example, given the following configuration:
 
@@ -387,7 +387,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-Practitioners can upgrade to v4.9.0 and then introduce the standalone `awsS3BucketCorsConfiguration` resource, e.g.
+Practitioners can upgrade to v4.9.0 and then introduce the standalone `aws_s3_bucket_cors_configuration` resource, e.g.
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -434,9 +434,9 @@ can be imported into Terraform state. Please refer to each standalone resource's
 Once the standalone resources are managed by Terraform, updates and removal can be performed as needed.
 
 The following sections depict standalone resource adoption per individual parameter. Standalone resource adoption is not required to upgrade but is recommended to ensure drift is detected by Terraform.
-The examples below are by no means exhaustive. The aim is to provide important concepts when migrating to a standalone resource whose parameters may not entirely align with the corresponding parameter in the `awsS3Bucket` resource.
+The examples below are by no means exhaustive. The aim is to provide important concepts when migrating to a standalone resource whose parameters may not entirely align with the corresponding parameter in the `aws_s3_bucket` resource.
 
-### Migrating to `awsS3BucketAccelerateConfiguration`
+### Migrating to `aws_s3_bucket_accelerate_configuration`
 
 Given this previous configuration:
 
@@ -491,7 +491,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-### Migrating to `awsS3BucketAcl`
+### Migrating to `aws_s3_bucket_acl`
 
 #### With `acl`
 
@@ -639,7 +639,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-### Migrating to `awsS3BucketCorsConfiguration`
+### Migrating to `aws_s3_bucket_cors_configuration`
 
 Given this previous configuration:
 
@@ -713,15 +713,15 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-### Migrating to `awsS3BucketLifecycleConfiguration`
+### Migrating to `aws_s3_bucket_lifecycle_configuration`
 
-~> **Note:** In version `3X` of the provider, the `lifecycleRuleId` argument was optional, while in version `4X`, the `awsS3BucketLifecycleConfigurationRuleId` argument required. Use the AWS CLI s3api [get-bucket-lifecycle-configuration](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/s3api/get-bucket-lifecycle-configuration.html) to get the source bucket's lifecycle configuration to determine the ID.
+~> **Note:** In version `3.x` of the provider, the `lifecycle_rule.id` argument was optional, while in version `4.x`, the `aws_s3_bucket_lifecycle_configuration.rule.id` argument required. Use the AWS CLI s3api [get-bucket-lifecycle-configuration](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/s3api/get-bucket-lifecycle-configuration.html) to get the source bucket's lifecycle configuration to determine the ID.
 
 #### For Lifecycle Rules with no `prefix` previously configured
 
-~> **Note:** When configuring the `ruleFilter` configuration block in the new `awsS3BucketLifecycleConfiguration` resource, use the AWS CLI s3api [get-bucket-lifecycle-configuration](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/s3api/get-bucket-lifecycle-configuration.html)
-to get the source bucket's lifecycle configuration and determine if the `filter` is configured as `"Filter" : {}` or `"Filter" : { "Prefix": "" }`.
-If AWS returns the former, configure `ruleFilter` as `filter {}`. Otherwise, neither a `ruleFilter` nor `rulePrefix` parameter should be configured as shown here:
+~> **Note:** When configuring the `rule.filter` configuration block in the new `aws_s3_bucket_lifecycle_configuration` resource, use the AWS CLI s3api [get-bucket-lifecycle-configuration](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/s3api/get-bucket-lifecycle-configuration.html)
+to get the source bucket's lifecycle configuration and determine if the `Filter` is configured as `"Filter" : {}` or `"Filter" : { "Prefix": "" }`.
+If AWS returns the former, configure `rule.filter` as `filter {}`. Otherwise, neither a `rule.filter` nor `rule.prefix` parameter should be configured as shown here:
 
 Given this previous configuration:
 
@@ -1114,7 +1114,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-### Migrating to `awsS3BucketLogging`
+### Migrating to `aws_s3_bucket_logging`
 
 Given this previous configuration:
 
@@ -1178,7 +1178,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-### Migrating to `awsS3BucketObjectLockConfiguration`
+### Migrating to `aws_s3_bucket_object_lock_configuration`
 
 Given this previous configuration:
 
@@ -1247,7 +1247,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-### Migrating to `awsS3BucketPolicy`
+### Migrating to `aws_s3_bucket_policy`
 
 Given this previous configuration:
 
@@ -1311,7 +1311,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-### Migrating to `awsS3BucketReplicationConfiguration`
+### Migrating to `aws_s3_bucket_replication_configuration`
 
 Given this previous configuration:
 
@@ -1417,7 +1417,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-### Migrating to `awsS3BucketRequestPaymentConfiguration`
+### Migrating to `aws_s3_bucket_request_payment_configuration`
 
 Given this previous configuration:
 
@@ -1472,7 +1472,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-### Migrating to `awsS3BucketServerSideEncryptionConfiguration`
+### Migrating to `aws_s3_bucket_server_side_encryption_configuration`
 
 Given this previous configuration:
 
@@ -1543,9 +1543,9 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-### Migrating to `awsS3BucketVersioning`
+### Migrating to `aws_s3_bucket_versioning`
 
-~> **NOTE:** As `awsS3BucketVersioning` is a separate resource, any S3 objects for which versioning is important (_e.g._, a truststore for mutual TLS authentication) must implicitly or explicitly depend on the `awsS3BucketVersioning` resource. Otherwise, the S3 objects may be created before versioning has been set. [See below](#ensure-objects-depend-on-versioning) for an example. Also note that AWS recommends waiting 15 minutes after enabling versioning on a bucket before putting or deleting objects in/from the bucket.
+~> **NOTE:** As `aws_s3_bucket_versioning` is a separate resource, any S3 objects for which versioning is important (_e.g._, a truststore for mutual TLS authentication) must implicitly or explicitly depend on the `aws_s3_bucket_versioning` resource. Otherwise, the S3 objects may be created before versioning has been set. [See below](#ensure-objects-depend-on-versioning) for an example. Also note that AWS recommends waiting 15 minutes after enabling versioning on a bucket before putting or deleting objects in/from the bucket.
 
 #### Buckets With Versioning Enabled
 
@@ -1612,9 +1612,9 @@ class MyConvertedCode extends TerraformStack {
 #### Buckets With Versioning Disabled or Suspended
 
 Depending on the version of the Terraform AWS Provider you are migrating from, the interpretation of `versioning.enabled = false`
-in your `awsS3Bucket` resource will differ and thus the migration to the `awsS3BucketVersioning` resource will also differ as follows.
+in your `aws_s3_bucket` resource will differ and thus the migration to the `aws_s3_bucket_versioning` resource will also differ as follows.
 
-If you are migrating from the Terraform AWS Provider `v3700` or later:
+If you are migrating from the Terraform AWS Provider `v3.70.0` or later:
 
 * For new S3 buckets, `enabled = false` is synonymous to `Disabled`.
 * For existing S3 buckets, `enabled = false` is synonymous to `Suspended`.
@@ -1650,7 +1650,7 @@ class MyConvertedCode extends TerraformStack {
 
 Update the configuration to one of the following:
 
-* If migrating from Terraform AWS Provider `v3700` or later and bucket versioning was never enabled:
+* If migrating from Terraform AWS Provider `v3.70.0` or later and bucket versioning was never enabled:
 
   ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -1685,7 +1685,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-* If migrating from Terraform AWS Provider `v3700` or later and bucket versioning was enabled at one point:
+* If migrating from Terraform AWS Provider `v3.70.0` or later and bucket versioning was enabled at one point:
 
   ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -1757,11 +1757,11 @@ class MyConvertedCode extends TerraformStack {
 
 #### Ensure Objects Depend on Versioning
 
-When you create an object whose `versionId` you need and an `awsS3BucketVersioning` resource in the same configuration, you are more likely to have success by ensuring the `s3Object` depends either implicitly (see below) or explicitly (i.e., using `depends_on = [aws_s3_bucket_versioning.example]`) on the `awsS3BucketVersioning` resource.
+When you create an object whose `versionId` you need and an `aws_s3_bucket_versioning` resource in the same configuration, you are more likely to have success by ensuring the `s3_object` depends either implicitly (see below) or explicitly (i.e., using `depends_on = [aws_s3_bucket_versioning.example]`) on the `aws_s3_bucket_versioning` resource.
 
 ~> **NOTE:** For critical and/or production S3 objects, do not create a bucket, enable versioning, and create an object in the bucket within the same configuration. Doing so will not allow the AWS-recommended 15 minutes between enabling versioning and writing to the bucket.
 
-This example shows the `awsS3ObjectExample` depending implicitly on the versioning resource through the reference to `awsS3BucketVersioningExampleId` to define `bucket`:
+This example shows the `aws_s3_object.example` depending implicitly on the versioning resource through the reference to `aws_s3_bucket_versioning.example.id` to define `bucket`:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -1804,7 +1804,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-### Migrating to `awsS3BucketWebsiteConfiguration`
+### Migrating to `aws_s3_bucket_website_configuration`
 
 Given this previous configuration:
 
@@ -1867,7 +1867,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-Given this previous configuration that uses the `awsS3Bucket` parameter `websiteDomain` with `awsRoute53Record`:
+Given this previous configuration that uses the `aws_s3_bucket` parameter `websiteDomain` with `aws_route53_record`:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -1907,7 +1907,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-Update the configuration to use the `awsS3BucketWebsiteConfiguration` resource and its `websiteDomain` parameter:
+Update the configuration to use the `aws_s3_bucket_website_configuration` resource and its `websiteDomain` parameter:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -1952,19 +1952,19 @@ class MyConvertedCode extends TerraformStack {
 ## S3 Bucket Refactor
 
 ~> **NOTE:** This only applies to v4.0.0 through v4.8.0 of the AWS Provider, which introduce significant breaking
-changes to the `awsS3Bucket` resource. We recommend upgrading to v4.9.0 of the AWS Provider instead. See the section above, [Changes to S3 Bucket Drift Detection](#changes-to-s3-bucket-drift-detection), for additional upgrade considerations.
+changes to the `aws_s3_bucket` resource. We recommend upgrading to v4.9.0 of the AWS Provider instead. See the section above, [Changes to S3 Bucket Drift Detection](#changes-to-s3-bucket-drift-detection), for additional upgrade considerations.
 
-To help distribute the management of S3 bucket settings via independent resources, various arguments and attributes in the `awsS3Bucket` resource have become **read-only**.
+To help distribute the management of S3 bucket settings via independent resources, various arguments and attributes in the `aws_s3_bucket` resource have become **read-only**.
 
-Configurations dependent on these arguments should be updated to use the corresponding `awsS3Bucket_*` resource in order to prevent Terraform from reporting “unconfigurable attribute” errors for read-only arguments. Once updated, it is recommended to import new `awsS3Bucket_*` resources into Terraform state.
+Configurations dependent on these arguments should be updated to use the corresponding `aws_s3_bucket_*` resource in order to prevent Terraform from reporting “unconfigurable attribute” errors for read-only arguments. Once updated, it is recommended to import new `aws_s3_bucket_*` resources into Terraform state.
 
-In the event practitioners do not anticipate future modifications to the S3 bucket settings associated with these read-only arguments or drift detection is not needed, these read-only arguments should be removed from `awsS3Bucket` resource configurations in order to prevent Terraform from reporting “unconfigurable attribute” errors; the states of these arguments will be preserved but are subject to change with modifications made outside Terraform.
+In the event practitioners do not anticipate future modifications to the S3 bucket settings associated with these read-only arguments or drift detection is not needed, these read-only arguments should be removed from `aws_s3_bucket` resource configurations in order to prevent Terraform from reporting “unconfigurable attribute” errors; the states of these arguments will be preserved but are subject to change with modifications made outside Terraform.
 
-~> **NOTE:** Each of the new `awsS3Bucket_*` resources relies on S3 API calls that utilize a `put` action in order to modify the target S3 bucket. These calls follow standard HTTP methods for REST APIs, and therefore **should** handle situations where the target configuration already exists. While it is not strictly necessary to import new `awsS3Bucket_*` resources where the updated configuration matches the configuration used in previous versions of the AWS provider, skipping this step will lead to a diff in the first plan after a configuration change indicating that any new `awsS3Bucket_*` resources will be created, making it more difficult to determine whether the appropriate actions will be taken.
+~> **NOTE:** Each of the new `aws_s3_bucket_*` resources relies on S3 API calls that utilize a `PUT` action in order to modify the target S3 bucket. These calls follow standard HTTP methods for REST APIs, and therefore **should** handle situations where the target configuration already exists. While it is not strictly necessary to import new `aws_s3_bucket_*` resources where the updated configuration matches the configuration used in previous versions of the AWS provider, skipping this step will lead to a diff in the first plan after a configuration change indicating that any new `aws_s3_bucket_*` resources will be created, making it more difficult to determine whether the appropriate actions will be taken.
 
 ### `accelerationStatus` Argument
 
-Switch your Terraform configuration to the [`awsS3BucketAccelerateConfiguration` resource](/docs/providers/aws/r/s3_bucket_accelerate_configuration.html) instead.
+Switch your Terraform configuration to the [`aws_s3_bucket_accelerate_configuration` resource](/docs/providers/aws/r/s3_bucket_accelerate_configuration.html) instead.
 
 For example, given this previous configuration:
 
@@ -2001,8 +2001,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "acceleration_status": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since `accelerationStatus` is now read only, update your configuration to use the `awsS3BucketAccelerateConfiguration`
-resource and remove `accelerationStatus` in the `awsS3Bucket` resource:
+Since `accelerationStatus` is now read only, update your configuration to use the `aws_s3_bucket_accelerate_configuration`
+resource and remove `accelerationStatus` in the `aws_s3_bucket` resource:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -2049,7 +2049,7 @@ your Terraform state and will henceforth be managed by Terraform.
 
 ### `acl` Argument
 
-Switch your Terraform configuration to the [`awsS3BucketAcl` resource](/docs/providers/aws/r/s3_bucket_acl.html) instead.
+Switch your Terraform configuration to the [`aws_s3_bucket_acl` resource](/docs/providers/aws/r/s3_bucket_acl.html) instead.
 
 For example, given this previous configuration:
 
@@ -2086,8 +2086,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "acl": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since `acl` is now read only, update your configuration to use the `awsS3BucketAcl`
-resource and remove the `acl` argument in the `awsS3Bucket` resource:
+Since `acl` is now read only, update your configuration to use the `aws_s3_bucket_acl`
+resource and remove the `acl` argument in the `aws_s3_bucket` resource:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -2116,7 +2116,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-~> **NOTE:** When importing into `awsS3BucketAcl`, make sure you use the S3 bucket name (_e.g._, `yournamehere` in the example above) as part of the ID, and _not_ the Terraform bucket configuration name (_e.g._, `example` in the example above).
+~> **NOTE:** When importing into `aws_s3_bucket_acl`, make sure you use the S3 bucket name (_e.g._, `yournamehere` in the example above) as part of the ID, and _not_ the Terraform bucket configuration name (_e.g._, `example` in the example above).
 
 Run `terraform import` on each new resource, _e.g._,
 
@@ -2135,7 +2135,7 @@ your Terraform state and will henceforth be managed by Terraform.
 
 ### `corsRule` Argument
 
-Switch your Terraform configuration to the [`awsS3BucketCorsConfiguration` resource](/docs/providers/aws/r/s3_bucket_cors_configuration.html) instead.
+Switch your Terraform configuration to the [`aws_s3_bucket_cors_configuration` resource](/docs/providers/aws/r/s3_bucket_cors_configuration.html) instead.
 
 For example, given this previous configuration:
 
@@ -2180,8 +2180,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "cors_rule": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since `corsRule` is now read only, update your configuration to use the `awsS3BucketCorsConfiguration`
-resource and remove `corsRule` and its nested arguments in the `awsS3Bucket` resource:
+Since `corsRule` is now read only, update your configuration to use the `aws_s3_bucket_cors_configuration`
+resource and remove `corsRule` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -2239,7 +2239,7 @@ your Terraform state and will henceforth be managed by Terraform.
 
 ### `grant` Argument
 
-Switch your Terraform configuration to the [`awsS3BucketAcl` resource](/docs/providers/aws/r/s3_bucket_acl.html) instead.
+Switch your Terraform configuration to the [`aws_s3_bucket_acl` resource](/docs/providers/aws/r/s3_bucket_acl.html) instead.
 
 For example, given this previous configuration:
 
@@ -2287,8 +2287,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "grant": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since `grant` is now read only, update your configuration to use the `awsS3BucketAcl`
-resource and remove `grant` in the `awsS3Bucket` resource:
+Since `grant` is now read only, update your configuration to use the `aws_s3_bucket_acl`
+resource and remove `grant` in the `aws_s3_bucket` resource:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -2361,7 +2361,7 @@ your Terraform state and will henceforth be managed by Terraform.
 
 ### `lifecycleRule` Argument
 
-Switch your Terraform configuration to the [`awsS3BucketLifecycleConfiguration` resource](/docs/providers/aws/r/s3_bucket_lifecycle_configuration.html) instead.
+Switch your Terraform configuration to the [`aws_s3_bucket_lifecycle_configuration` resource](/docs/providers/aws/r/s3_bucket_lifecycle_configuration.html) instead.
 
 #### For Lifecycle Rules with no `prefix` previously configured
 
@@ -2419,12 +2419,12 @@ You will receive the following error after upgrading:
 │ Can't configure a value for "lifecycle_rule": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `lifecycleRule` argument changed to read-only, update the configuration to use the `awsS3BucketLifecycleConfiguration`
-resource and remove `lifecycleRule` and its nested arguments in the `awsS3Bucket` resource.
+Since the `lifecycleRule` argument changed to read-only, update the configuration to use the `aws_s3_bucket_lifecycle_configuration`
+resource and remove `lifecycleRule` and its nested arguments in the `aws_s3_bucket` resource.
 
-~> **Note:** When configuring the `ruleFilter` configuration block in the new `awsS3BucketLifecycleConfiguration` resource, use the AWS CLI s3api [get-bucket-lifecycle-configuration](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/s3api/get-bucket-lifecycle-configuration.html)
-to get the source bucket's lifecycle configuration and determine if the `filter` is configured as `"Filter" : {}` or `"Filter" : { "Prefix": "" }`.
-If AWS returns the former, configure `ruleFilter` as `filter {}`. Otherwise, neither a `ruleFilter` nor `rulePrefix` parameter should be configured as shown here:
+~> **Note:** When configuring the `rule.filter` configuration block in the new `aws_s3_bucket_lifecycle_configuration` resource, use the AWS CLI s3api [get-bucket-lifecycle-configuration](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/s3api/get-bucket-lifecycle-configuration.html)
+to get the source bucket's lifecycle configuration and determine if the `Filter` is configured as `"Filter" : {}` or `"Filter" : { "Prefix": "" }`.
+If AWS returns the former, configure `rule.filter` as `filter {}`. Otherwise, neither a `rule.filter` nor `rule.prefix` parameter should be configured as shown here:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -2543,8 +2543,8 @@ You will receive the following error after upgrading:
 │ Can't configure a value for "lifecycle_rule": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `lifecycleRule` argument changed to read-only, update the configuration to use the `awsS3BucketLifecycleConfiguration`
-resource and remove `lifecycleRule` and its nested arguments in the `awsS3Bucket` resource:
+Since the `lifecycleRule` argument changed to read-only, update the configuration to use the `aws_s3_bucket_lifecycle_configuration`
+resource and remove `lifecycleRule` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -2657,8 +2657,8 @@ You will receive the following error after upgrading:
 │ Can't configure a value for "lifecycle_rule": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `lifecycleRule` argument changed to read-only, update the configuration to use the `awsS3BucketLifecycleConfiguration`
-resource and remove `lifecycleRule` and its nested arguments in the `awsS3Bucket` resource:
+Since the `lifecycleRule` argument changed to read-only, update the configuration to use the `aws_s3_bucket_lifecycle_configuration`
+resource and remove `lifecycleRule` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -2789,8 +2789,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "lifecycle_rule": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since `lifecycleRule` is now read only, update your configuration to use the `awsS3BucketLifecycleConfiguration`
-resource and remove `lifecycleRule` and its nested arguments in the `awsS3Bucket` resource:
+Since `lifecycleRule` is now read only, update your configuration to use the `aws_s3_bucket_lifecycle_configuration`
+resource and remove `lifecycleRule` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -2874,7 +2874,7 @@ your Terraform state and will henceforth be managed by Terraform.
 
 ### `logging` Argument
 
-Switch your Terraform configuration to the [`awsS3BucketLogging` resource](/docs/providers/aws/r/s3_bucket_logging.html) instead.
+Switch your Terraform configuration to the [`aws_s3_bucket_logging` resource](/docs/providers/aws/r/s3_bucket_logging.html) instead.
 
 For example, given this previous configuration:
 
@@ -2917,8 +2917,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "logging": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since `logging` is now read only, update your configuration to use the `awsS3BucketLogging`
-resource and remove `logging` and its nested arguments in the `awsS3Bucket` resource:
+Since `logging` is now read only, update your configuration to use the `aws_s3_bucket_logging`
+resource and remove `logging` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -2968,7 +2968,7 @@ your Terraform state and will henceforth be managed by Terraform.
 
 ### `objectLockConfiguration` `rule` Argument
 
-Switch your Terraform configuration to the [`awsS3BucketObjectLockConfiguration` resource](/docs/providers/aws/r/s3_bucket_object_lock_configuration.html) instead.
+Switch your Terraform configuration to the [`aws_s3_bucket_object_lock_configuration` resource](/docs/providers/aws/r/s3_bucket_object_lock_configuration.html) instead.
 
 For example, given this previous configuration:
 
@@ -3013,8 +3013,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "object_lock_configuration.0.rule": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `rule` argument of the `objectLockConfiguration` configuration block changed to read-only, update your configuration to use the `awsS3BucketObjectLockConfiguration`
-resource and remove `rule` and its nested arguments in the `awsS3Bucket` resource:
+Since the `rule` argument of the `objectLockConfiguration` configuration block changed to read-only, update your configuration to use the `aws_s3_bucket_object_lock_configuration`
+resource and remove `rule` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -3067,7 +3067,7 @@ your Terraform state and will henceforth be managed by Terraform.
 
 ### `policy` Argument
 
-Switch your Terraform configuration to the [`awsS3BucketPolicy` resource](/docs/providers/aws/r/s3_bucket_policy.html) instead.
+Switch your Terraform configuration to the [`aws_s3_bucket_policy` resource](/docs/providers/aws/r/s3_bucket_policy.html) instead.
 
 For example, given this previous configuration:
 
@@ -3109,8 +3109,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "policy": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since `policy` is now read only, update your configuration to use the `awsS3BucketPolicy`
-resource and remove `policy` in the `awsS3Bucket` resource:
+Since `policy` is now read only, update your configuration to use the `aws_s3_bucket_policy`
+resource and remove `policy` in the `aws_s3_bucket` resource:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -3161,7 +3161,7 @@ your Terraform state and will henceforth be managed by Terraform.
 
 ### `replicationConfiguration` Argument
 
-Switch your Terraform configuration to the [`awsS3BucketReplicationConfiguration` resource](/docs/providers/aws/r/s3_bucket_replication_configuration.html) instead.
+Switch your Terraform configuration to the [`aws_s3_bucket_replication_configuration` resource](/docs/providers/aws/r/s3_bucket_replication_configuration.html) instead.
 
 For example, given this previous configuration:
 
@@ -3222,8 +3222,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "replication_configuration": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since `replicationConfiguration` is now read only, update your configuration to use the `awsS3BucketReplicationConfiguration`
-resource and remove `replicationConfiguration` and its nested arguments in the `awsS3Bucket` resource:
+Since `replicationConfiguration` is now read only, update your configuration to use the `aws_s3_bucket_replication_configuration`
+resource and remove `replicationConfiguration` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -3297,7 +3297,7 @@ your Terraform state and will henceforth be managed by Terraform.
 
 ### `requestPayer` Argument
 
-Switch your Terraform configuration to the [`awsS3BucketRequestPaymentConfiguration` resource](/docs/providers/aws/r/s3_bucket_request_payment_configuration.html) instead.
+Switch your Terraform configuration to the [`aws_s3_bucket_request_payment_configuration` resource](/docs/providers/aws/r/s3_bucket_request_payment_configuration.html) instead.
 
 For example, given this previous configuration:
 
@@ -3334,8 +3334,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "request_payer": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since `requestPayer` is now read only, update your configuration to use the `awsS3BucketRequestPaymentConfiguration`
-resource and remove `requestPayer` in the `awsS3Bucket` resource:
+Since `requestPayer` is now read only, update your configuration to use the `aws_s3_bucket_request_payment_configuration`
+resource and remove `requestPayer` in the `aws_s3_bucket` resource:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -3382,7 +3382,7 @@ your Terraform state and will henceforth be managed by Terraform.
 
 ### `serverSideEncryptionConfiguration` Argument
 
-Switch your Terraform configuration to the [`awsS3BucketServerSideEncryptionConfiguration` resource](/docs/providers/aws/r/s3_bucket_server_side_encryption_configuration.html) instead.
+Switch your Terraform configuration to the [`aws_s3_bucket_server_side_encryption_configuration` resource](/docs/providers/aws/r/s3_bucket_server_side_encryption_configuration.html) instead.
 
 For example, given this previous configuration:
 
@@ -3426,8 +3426,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "server_side_encryption_configuration": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since `serverSideEncryptionConfiguration` is now read only, update your configuration to use the `awsS3BucketServerSideEncryptionConfiguration`
-resource and remove `serverSideEncryptionConfiguration` and its nested arguments in the `awsS3Bucket` resource:
+Since `serverSideEncryptionConfiguration` is now read only, update your configuration to use the `aws_s3_bucket_server_side_encryption_configuration`
+resource and remove `serverSideEncryptionConfiguration` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -3483,9 +3483,9 @@ your Terraform state and will henceforth be managed by Terraform.
 
 ### `versioning` Argument
 
-Switch your Terraform configuration to the [`awsS3BucketVersioning` resource](/docs/providers/aws/r/s3_bucket_versioning.html) instead.
+Switch your Terraform configuration to the [`aws_s3_bucket_versioning` resource](/docs/providers/aws/r/s3_bucket_versioning.html) instead.
 
-~> **NOTE:** As `awsS3BucketVersioning` is a separate resource, any S3 objects for which versioning is important (_e.g._, a truststore for mutual TLS authentication) must implicitly or explicitly depend on the `awsS3BucketVersioning` resource. Otherwise, the S3 objects may be created before versioning has been set. [See below](#ensure-objects-depend-on-versioning) for an example. Also note that AWS recommends waiting 15 minutes after enabling versioning on a bucket before putting or deleting objects in/from the bucket.
+~> **NOTE:** As `aws_s3_bucket_versioning` is a separate resource, any S3 objects for which versioning is important (_e.g._, a truststore for mutual TLS authentication) must implicitly or explicitly depend on the `aws_s3_bucket_versioning` resource. Otherwise, the S3 objects may be created before versioning has been set. [See below](#ensure-objects-depend-on-versioning) for an example. Also note that AWS recommends waiting 15 minutes after enabling versioning on a bucket before putting or deleting objects in/from the bucket.
 
 #### Buckets With Versioning Enabled
 
@@ -3526,8 +3526,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "versioning": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since `versioning` is now read only, update your configuration to use the `awsS3BucketVersioning`
-resource and remove `versioning` and its nested arguments in the `awsS3Bucket` resource:
+Since `versioning` is now read only, update your configuration to use the `aws_s3_bucket_versioning`
+resource and remove `versioning` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -3580,9 +3580,9 @@ your Terraform state and will henceforth be managed by Terraform.
 #### Buckets With Versioning Disabled or Suspended
 
 Depending on the version of the Terraform AWS Provider you are migrating from, the interpretation of `versioning.enabled = false`
-in your `awsS3Bucket` resource will differ and thus the migration to the `awsS3BucketVersioning` resource will also differ as follows.
+in your `aws_s3_bucket` resource will differ and thus the migration to the `aws_s3_bucket_versioning` resource will also differ as follows.
 
-If you are migrating from the Terraform AWS Provider `v3700` or later:
+If you are migrating from the Terraform AWS Provider `v3.70.0` or later:
 
 * For new S3 buckets, `enabled = false` is synonymous to `Disabled`.
 * For existing S3 buckets, `enabled = false` is synonymous to `Suspended`.
@@ -3628,10 +3628,10 @@ You will get the following error after upgrading:
 │ Can't configure a value for "versioning": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since `versioning` is now read only, update your configuration to use the `awsS3BucketVersioning`
-resource and remove `versioning` and its nested arguments in the `awsS3Bucket` resource.
+Since `versioning` is now read only, update your configuration to use the `aws_s3_bucket_versioning`
+resource and remove `versioning` and its nested arguments in the `aws_s3_bucket` resource.
 
-* If migrating from Terraform AWS Provider `v3700` or later and bucket versioning was never enabled:
+* If migrating from Terraform AWS Provider `v3.70.0` or later and bucket versioning was never enabled:
 
   ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -3666,7 +3666,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-* If migrating from Terraform AWS Provider `v3700` or later and bucket versioning was enabled at one point:
+* If migrating from Terraform AWS Provider `v3.70.0` or later and bucket versioning was enabled at one point:
 
   ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -3753,11 +3753,11 @@ your Terraform state and will henceforth be managed by Terraform.
 
 #### Ensure Objects Depend on Versioning
 
-When you create an object whose `versionId` you need and an `awsS3BucketVersioning` resource in the same configuration, you are more likely to have success by ensuring the `s3Object` depends either implicitly (see below) or explicitly (i.e., using `depends_on = [aws_s3_bucket_versioning.example]`) on the `awsS3BucketVersioning` resource.
+When you create an object whose `versionId` you need and an `aws_s3_bucket_versioning` resource in the same configuration, you are more likely to have success by ensuring the `s3_object` depends either implicitly (see below) or explicitly (i.e., using `depends_on = [aws_s3_bucket_versioning.example]`) on the `aws_s3_bucket_versioning` resource.
 
 ~> **NOTE:** For critical and/or production S3 objects, do not create a bucket, enable versioning, and create an object in the bucket within the same configuration. Doing so will not allow the AWS-recommended 15 minutes between enabling versioning and writing to the bucket.
 
-This example shows the `awsS3ObjectExample` depending implicitly on the versioning resource through the reference to `awsS3BucketVersioningExampleBucket` to define `bucket`:
+This example shows the `aws_s3_object.example` depending implicitly on the versioning resource through the reference to `aws_s3_bucket_versioning.example.bucket` to define `bucket`:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -3802,7 +3802,7 @@ class MyConvertedCode extends TerraformStack {
 
 ### `website`, `websiteDomain`, and `websiteEndpoint` Arguments
 
-Switch your Terraform configuration to the [`awsS3BucketWebsiteConfiguration` resource](/docs/providers/aws/r/s3_bucket_website_configuration.html) instead.
+Switch your Terraform configuration to the [`aws_s3_bucket_website_configuration` resource](/docs/providers/aws/r/s3_bucket_website_configuration.html) instead.
 
 For example, given this previous configuration:
 
@@ -3842,8 +3842,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "website": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since `website` is now read only, update your configuration to use the `awsS3BucketWebsiteConfiguration`
-resource and remove `website` and its nested arguments in the `awsS3Bucket` resource:
+Since `website` is now read only, update your configuration to use the `aws_s3_bucket_website_configuration`
+resource and remove `website` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -3893,7 +3893,7 @@ The resources that were imported are shown above. These resources are now in
 your Terraform state and will henceforth be managed by Terraform.
 ```
 
-For example, if you use the `awsS3Bucket` attribute `websiteDomain` with `awsRoute53Record`, as shown below, you will need to update your configuration:
+For example, if you use the `aws_s3_bucket` attribute `websiteDomain` with `aws_route53_record`, as shown below, you will need to update your configuration:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -3933,7 +3933,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-Instead, you will now use the `awsS3BucketWebsiteConfiguration` resource and its `websiteDomain` attribute:
+Instead, you will now use the `aws_s3_bucket_website_configuration` resource and its `websiteDomain` attribute:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -3982,7 +3982,7 @@ creation and deletion are now supported.
 
 ### Resource: aws_default_subnet
 
-The `awsDefaultSubnet` resource behaves differently from normal resources in that if a default subnet exists in the specified Availability Zone, Terraform does not _create_ this resource, but instead "adopts" it into management.
+The `aws_default_subnet` resource behaves differently from normal resources in that if a default subnet exists in the specified Availability Zone, Terraform does not _create_ this resource, but instead "adopts" it into management.
 If no default subnet exists, Terraform creates a new default subnet.
 By default, `terraform destroy` does not delete the default subnet but does remove the resource from Terraform state.
 Set the `forceDestroy` argument to `true` to delete the default subnet.
@@ -4056,7 +4056,7 @@ class MyConvertedCode extends TerraformStack {
 
 ### Resource: aws_default_vpc
 
-The `awsDefaultVpc` resource behaves differently from normal resources in that if a default VPC exists, Terraform does not _create_ this resource, but instead "adopts" it into management.
+The `aws_default_vpc` resource behaves differently from normal resources in that if a default VPC exists, Terraform does not _create_ this resource, but instead "adopts" it into management.
 If no default VPC exists, Terraform creates a new default VPC, which leads to the implicit creation of [other resources](https://docs.aws.amazon.com/vpc/latest/userguide/default-vpc.html#default-vpc-components).
 By default, `terraform destroy` does not delete the default VPC but does remove the resource from Terraform state.
 Set the `forceDestroy` argument to `true` to delete the default VPC.
@@ -4147,7 +4147,7 @@ Second, the motivation behind this change is that previously, you might set an a
 
 ### Resource: aws_cloudwatch_event_target (Empty String)
 
-Previously, you could set `ecsTarget0LaunchType` to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `launch_type = null`) or remove the empty-string configuration.
+Previously, you could set `ecs_target.0.launch_type` to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `launch_type = null`) or remove the empty-string configuration.
 
 For example, this type of configuration is now not valid:
 
@@ -4219,7 +4219,7 @@ Previously, you could set `ipAddress` to `""`, which would result in an AWS erro
 
 ### Resource: aws_default_network_acl
 
-Previously, you could set `egress.*CidrBlock`, `egress.*Ipv6CidrBlock`, `ingress.*CidrBlock`, or `ingress.*Ipv6CidrBlock` to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
+Previously, you could set `egress.*.cidr_block`, `egress.*.ipv6_cidr_block`, `ingress.*.cidr_block`, or `ingress.*.ipv6_cidr_block` to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
 
 For example, this type of configuration is now not valid:
 
@@ -4304,7 +4304,7 @@ class MyConvertedCode extends TerraformStack {
 
 ### Resource: aws_default_route_table
 
-Previously, you could set `route.*CidrBlock` or `route.*Ipv6CidrBlock` to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
+Previously, you could set `route.*.cidr_block` or `route.*.ipv6_cidr_block` to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
 
 For example, this type of configuration is now not valid:
 
@@ -4431,7 +4431,7 @@ For example, this type of configuration is now not valid: `ip_address = ""`.
 
 ### Resource: aws_elasticsearch_domain
 
-Previously, you could set `ebsOptions0VolumeType` to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `volume_type = null`) or remove the empty-string configuration.
+Previously, you could set `ebs_options.0.volume_type` to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `volume_type = null`) or remove the empty-string configuration.
 
 For example, this type of configuration is now not valid:
 
@@ -4499,7 +4499,7 @@ class MyConvertedCode extends TerraformStack {
 
 ### Resource: aws_network_acl
 
-Previously, `egress.*CidrBlock`, `egress.*Ipv6CidrBlock`, `ingress.*CidrBlock`, and `ingress.*Ipv6CidrBlock` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
+Previously, `egress.*.cidr_block`, `egress.*.ipv6_cidr_block`, `ingress.*.cidr_block`, and `ingress.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
 
 For example, this type of configuration is now not valid:
 
@@ -4568,7 +4568,7 @@ Previously, `destinationCidrBlock` and `destinationIpv6CidrBlock` could be set t
 
 In addition, now exactly one of `destinationCidrBlock`, `destinationIpv6CidrBlock`, and `destinationPrefixListId` can be set.
 
-For example, this type of configuration for `awsRoute` is now not valid:
+For example, this type of configuration for `aws_route` is now not valid:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -4626,7 +4626,7 @@ class MyConvertedCode extends TerraformStack {
 
 ### Resource: aws_route_table
 
-Previously, `route.*CidrBlock` and `route.*Ipv6CidrBlock` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
+Previously, `route.*.cidr_block` and `route.*.ipv6_cidr_block` could be set to `""`. However, the value `""` is no longer valid. Now, set the argument to `null` (_e.g._, `ipv6_cidr_block = null`) or remove the empty-string configuration.
 
 For example, this type of configuration is now not valid:
 
@@ -4749,7 +4749,7 @@ Previously, `ipv6CidrBlock` could be set to `""`. However, the value `""` is no 
 
 ### Removal of arn Wildcard Suffix
 
-Previously, the data source returned the ARN directly from the API, which included a `:*` suffix to denote all CloudWatch Log Streams under the CloudWatch Log Group. Most other AWS resources that return ARNs and many other AWS services do not use the `:*` suffix. The suffix is now automatically removed. For example, the data source previously returned an ARN such as `arn:aws:logs:usEast1:123456789012:logGroup:/example:*` but will now return `arn:aws:logs:usEast1:123456789012:logGroup:/example`.
+Previously, the data source returned the ARN directly from the API, which included a `:*` suffix to denote all CloudWatch Log Streams under the CloudWatch Log Group. Most other AWS resources that return ARNs and many other AWS services do not use the `:*` suffix. The suffix is now automatically removed. For example, the data source previously returned an ARN such as `arn:aws:logs:us-east-1:123456789012:log-group:/example:*` but will now return `arn:aws:logs:us-east-1:123456789012:log-group:/example`.
 
 Workarounds, such as using `replace()` as shown below, should be removed:
 
@@ -4857,7 +4857,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Data Source: aws_subnet_ids
 
-The `awsSubnetIds` data source has been deprecated and will be removed in a future version. Use the `awsSubnets` data source instead.
+The `aws_subnet_ids` data source has been deprecated and will be removed in a future version. Use the `aws_subnets` data source instead.
 
 For example, change a configuration such as
 
@@ -4956,15 +4956,15 @@ class MyConvertedCode extends TerraformStack {
 
 ## Data Source: aws_s3_bucket_object
 
-Version 4.x deprecates the `awsS3BucketObject` data source. Maintainers will remove it in a future version. Use `awsS3Object` instead, where new features and fixes will be added.
+Version 4.x deprecates the `aws_s3_bucket_object` data source. Maintainers will remove it in a future version. Use `aws_s3_object` instead, where new features and fixes will be added.
 
 ## Data Source: aws_s3_bucket_objects
 
-Version 4.x deprecates the `awsS3BucketObjects` data source. Maintainers will remove it in a future version. Use `awsS3Objects` instead, where new features and fixes will be added.
+Version 4.x deprecates the `aws_s3_bucket_objects` data source. Maintainers will remove it in a future version. Use `aws_s3_objects` instead, where new features and fixes will be added.
 
 ## Resource: aws_batch_compute_environment
 
-You can no longer specify `computeResources` when `type` is `unmanaged`.
+You can no longer specify `computeResources` when `type` is `UNMANAGED`.
 
 Previously, you could apply this configuration and the provider would ignore any compute resources:
 
@@ -5029,7 +5029,7 @@ class MyConvertedCode extends TerraformStack {
 
 ### Removal of `ecsTarget` `launchType` default value
 
-Previously, the provider assigned `ecsTarget` `launchType` the default value of `ec2` if you did not configure a value. However, the provider no longer assigns a default value.
+Previously, the provider assigned `ecsTarget` `launchType` the default value of `EC2` if you did not configure a value. However, the provider no longer assigns a default value.
 
 For example, previously you could workaround the default value by using an empty string (`""`), as shown:
 
@@ -5126,7 +5126,7 @@ Update your configuration to supply one of `engine` or `replicationGroupId`.
 
 ### actual_engine_version Attribute removal
 
-Switch your Terraform configuration from using `actualEngineVersion` to use the `engineVersionActual` attribute instead.
+Switch your Terraform configuration from using `actual_engine_version` to use the `engineVersionActual` attribute instead.
 
 For example, given this previous configuration:
 
@@ -5172,11 +5172,11 @@ class MyConvertedCode extends TerraformStack {
 
 ## Resource: aws_fsx_ontap_storage_virtual_machine
 
-We removed the misspelled argument `activeDirectoryConfiguration0SelfManagedActiveDirectoryConfiguration0OrganizationalUnitDistinguidshedName` that we previously deprecated. Use `activeDirectoryConfiguration0SelfManagedActiveDirectoryConfiguration0OrganizationalUnitDistinguishedName` now instead. Terraform will automatically migrate the state to `activeDirectoryConfiguration0SelfManagedActiveDirectoryConfiguration0OrganizationalUnitDistinguishedName` during planning.
+We removed the misspelled argument `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name` that we previously deprecated. Use `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` now instead. Terraform will automatically migrate the state to `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` during planning.
 
 ## Resource: aws_lb_target_group
 
-For `protocol = "TCP"`, you can no longer set `stickinessType` to `lbCookie` even when `enabled = false`. Instead, either change the `protocol` to `"http"` or `"https"`, or change `stickinessType` to `"sourceIp"`.
+For `protocol = "TCP"`, you can no longer set `stickiness.type` to `lb_cookie` even when `enabled = false`. Instead, either change the `protocol` to `"HTTP"` or `"HTTPS"`, or change `stickiness.type` to `"source_ip"`.
 
 For example, this configuration is no longer valid:
 
@@ -5206,7 +5206,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-To fix this, we change the `stickinessType` to `"sourceIp"`.
+To fix this, we change the `stickiness.type` to `"source_ip"`.
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -5236,11 +5236,11 @@ class MyConvertedCode extends TerraformStack {
 
 ## Resource: aws_s3_bucket_object
 
-Version 4.x deprecates the `awsS3BucketObject` and maintainers will remove it in a future version. Use `awsS3Object` instead, where new features and fixes will be added.
+Version 4.x deprecates the `aws_s3_bucket_object` and maintainers will remove it in a future version. Use `aws_s3_object` instead, where new features and fixes will be added.
 
-When replacing `awsS3BucketObject` with `awsS3Object` in your configuration, on the next apply, Terraform will recreate the object. If you prefer to not have Terraform recreate the object, import the object using `awsS3Object`.
+When replacing `aws_s3_bucket_object` with `aws_s3_object` in your configuration, on the next apply, Terraform will recreate the object. If you prefer to not have Terraform recreate the object, import the object using `aws_s3_object`.
 
-For example, the following will import an S3 object into state, assuming the configuration exists, as `awsS3ObjectExample`:
+For example, the following will import an S3 object into state, assuming the configuration exists, as `aws_s3_object.example`:
 
 ```console
 % terraform import aws_s3_object.example s3://some-bucket-name/some/key.txt
@@ -5273,4 +5273,4 @@ These resources should be considered deprecated and will be removed in version 5
 * Macie Member Account Association
 * Macie S3 Bucket Association
 
-<!-- cache-key: cdktf-0.19.0 input-3ef88020b37e35d78babc46d26306cbef9b0d542745d0afa1cec66e81ef43304 -->
+<!-- cache-key: cdktf-0.20.1 input-3ef88020b37e35d78babc46d26306cbef9b0d542745d0afa1cec66e81ef43304 -->

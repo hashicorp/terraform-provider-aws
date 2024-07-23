@@ -7,14 +7,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMetaService_basic(t *testing.T) {
@@ -29,13 +27,13 @@ func TestAccMetaService_basic(t *testing.T) {
 			{
 				Config: testAccServiceDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "dns_name", fmt.Sprintf("%s.%s.%s", ec2.EndpointsID, acctest.Region(), "amazonaws.com")),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDNSName, fmt.Sprintf("%s.%s.%s", names.EC2, acctest.Region(), "amazonaws.com")),
 					resource.TestCheckResourceAttr(dataSourceName, "partition", acctest.Partition()),
 					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_prefix", "com.amazonaws"),
-					resource.TestCheckResourceAttr(dataSourceName, "region", acctest.Region()),
-					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", acctest.Region(), ec2.EndpointsID)),
-					resource.TestCheckResourceAttr(dataSourceName, "service_id", ec2.EndpointsID),
-					resource.TestCheckResourceAttr(dataSourceName, "supported", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, acctest.Region()),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", acctest.Region(), names.EC2)),
+					resource.TestCheckResourceAttr(dataSourceName, "service_id", names.EC2),
+					resource.TestCheckResourceAttr(dataSourceName, "supported", acctest.CtTrue),
 				),
 			},
 		},
@@ -54,11 +52,11 @@ func TestAccMetaService_byReverseDNSName(t *testing.T) {
 			{
 				Config: testAccServiceDataSourceConfig_byReverseDNSName(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "region", endpoints.CnNorth1RegionID),
-					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "cn.com.amazonaws", endpoints.CnNorth1RegionID, s3.EndpointsID)),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, names.CNNorth1RegionID),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "cn.com.amazonaws", names.CNNorth1RegionID, s3.EndpointsID)),
 					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_prefix", "cn.com.amazonaws"),
 					resource.TestCheckResourceAttr(dataSourceName, "service_id", s3.EndpointsID),
-					resource.TestCheckResourceAttr(dataSourceName, "supported", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "supported", acctest.CtTrue),
 				),
 			},
 		},
@@ -77,11 +75,11 @@ func TestAccMetaService_byDNSName(t *testing.T) {
 			{
 				Config: testAccServiceDataSourceConfig_byDNSName(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "region", endpoints.UsEast1RegionID),
-					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", endpoints.UsEast1RegionID, rds.EndpointsID)),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, names.USEast1RegionID),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", names.USEast1RegionID, rds.EndpointsID)),
 					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_prefix", "com.amazonaws"),
 					resource.TestCheckResourceAttr(dataSourceName, "service_id", rds.EndpointsID),
-					resource.TestCheckResourceAttr(dataSourceName, "supported", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "supported", acctest.CtTrue),
 				),
 			},
 		},
@@ -100,9 +98,9 @@ func TestAccMetaService_byParts(t *testing.T) {
 			{
 				Config: testAccServiceDataSourceConfig_byPart(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "dns_name", fmt.Sprintf("%s.%s.%s", s3.EndpointsID, acctest.Region(), "amazonaws.com")),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDNSName, fmt.Sprintf("%s.%s.%s", s3.EndpointsID, acctest.Region(), "amazonaws.com")),
 					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", acctest.Region(), s3.EndpointsID)),
-					resource.TestCheckResourceAttr(dataSourceName, "supported", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "supported", acctest.CtTrue),
 				),
 			},
 		},
@@ -121,13 +119,13 @@ func TestAccMetaService_unsupported(t *testing.T) {
 			{
 				Config: testAccServiceDataSourceConfig_unsupported(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "dns_name", fmt.Sprintf("%s.%s.%s", waf.EndpointsID, endpoints.UsGovWest1RegionID, "amazonaws.com")),
-					resource.TestCheckResourceAttr(dataSourceName, "partition", endpoints.AwsUsGovPartitionID),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDNSName, fmt.Sprintf("%s.%s.%s", names.WAFEndpointID, names.USGovWest1RegionID, "amazonaws.com")),
+					resource.TestCheckResourceAttr(dataSourceName, "partition", names.USGovCloudPartitionID),
 					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_prefix", "com.amazonaws"),
-					resource.TestCheckResourceAttr(dataSourceName, "region", endpoints.UsGovWest1RegionID),
-					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", endpoints.UsGovWest1RegionID, waf.EndpointsID)),
-					resource.TestCheckResourceAttr(dataSourceName, "service_id", waf.EndpointsID),
-					resource.TestCheckResourceAttr(dataSourceName, "supported", "false"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, names.USGovWest1RegionID),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", names.USGovWest1RegionID, names.WAFEndpointID)),
+					resource.TestCheckResourceAttr(dataSourceName, "service_id", names.WAFEndpointID),
+					resource.TestCheckResourceAttr(dataSourceName, "supported", acctest.CtFalse),
 				),
 			},
 		},
@@ -139,7 +137,7 @@ func testAccServiceDataSourceConfig_basic() string {
 data "aws_service" "test" {
   service_id = %[1]q
 }
-`, ec2.EndpointsID)
+`, names.EC2)
 }
 
 func testAccServiceDataSourceConfig_byReverseDNSName() string {

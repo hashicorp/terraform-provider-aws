@@ -91,8 +91,8 @@ This resource supports the following arguments:
 
 ## instance_type_configs Configuration Block
 
-* `bidPrice` - (Optional) The bid price for each EC2 Spot instance type as defined by `instance_type`. Expressed in USD. If neither `bid_price` nor `bid_price_as_percentage_of_on_demand_price` is provided, `bid_price_as_percentage_of_on_demand_price` defaults to 100%.
-* `bidPriceAsPercentageOfOnDemandPrice` - (Optional) The bid price, as a percentage of On-Demand price, for each EC2 Spot instance as defined by `instance_type`. Expressed as a number (for example, 20 specifies 20%). If neither `bid_price` nor `bid_price_as_percentage_of_on_demand_price` is provided, `bid_price_as_percentage_of_on_demand_price` defaults to 100%.
+* `bidPrice` - (Optional) The bid price for each EC2 Spot instance type as defined by `instanceType`. Expressed in USD. If neither `bidPrice` nor `bidPriceAsPercentageOfOnDemandPrice` is provided, `bidPriceAsPercentageOfOnDemandPrice` defaults to 100%.
+* `bidPriceAsPercentageOfOnDemandPrice` - (Optional) The bid price, as a percentage of On-Demand price, for each EC2 Spot instance as defined by `instanceType`. Expressed as a number (for example, 20 specifies 20%). If neither `bidPrice` nor `bidPriceAsPercentageOfOnDemandPrice` is provided, `bidPriceAsPercentageOfOnDemandPrice` defaults to 100%.
 * `configurations` - (Optional) A configuration classification that applies when provisioning cluster instances, which can include configurations for applications and software that run on the cluster. List of `configuration` blocks.
 * `ebsConfig` - (Optional) Configuration block(s) for EBS volumes attached to each instance in the instance group. Detailed below.
 * `instanceType` - (Required) An EC2 instance type, such as m4.xlarge.
@@ -119,18 +119,18 @@ Attributes for the EBS volumes attached to each EC2 instance in the `masterInsta
 * `onDemandSpecification` - (Optional) Configuration block for on demand instances launch specifications
 * `spotSpecification` - (Optional) Configuration block for spot instances launch specifications
 
-## on_demand_specification  Configuration Block
+## on_demand_specification Configuration Block
 
 The launch specification for On-Demand instances in the instance fleet, which determines the allocation strategy.
 The instance fleet configuration is available only in Amazon EMR versions 4.8.0 and later, excluding 5.0.x versions. On-Demand instances allocation strategy is available in Amazon EMR version 5.12.1 and later.
 
 * `allocationStrategy` - (Required) Specifies the strategy to use in launching On-Demand instance fleets. Currently, the only option is `lowest-price` (the default), which launches the lowest price first.
 
-## spot_specification  Configuration Block
+## spot_specification Configuration Block
 
 The launch specification for Spot instances in the fleet, which determines the defined duration, provisioning timeout behavior, and allocation strategy.
 
-* `allocationStrategy` - (Required) Specifies the strategy to use in launching Spot instance fleets. Currently, the only option is `capacity-optimized` (the default), which launches instances from Spot instance pools with optimal capacity for the number of instances that are launching.
+* `allocationStrategy` - (Required) Specifies one of the following strategies to launch Spot Instance fleets: `price-capacity-optimized`, `capacity-optimized`, `lowest-price`, or `diversified`. For more information on the provisioning strategies, see [Allocation strategies for Spot Instances](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet-allocation-strategy.html).
 * `blockDurationMinutes` - (Optional) The defined duration for Spot instances (also known as Spot blocks) in minutes. When specified, the Spot instance does not terminate before the defined duration expires, and defined duration pricing for Spot instances applies. Valid values are 60, 120, 180, 240, 300, or 360. The duration period starts as soon as a Spot instance receives its instance ID. At the end of the duration, Amazon EC2 marks the Spot instance for termination and provides a Spot instance termination notice, which gives the instance a two-minute warning before it terminates.
 * `timeoutAction` - (Required) The action to take when TargetSpotCapacity has not been fulfilled when the TimeoutDurationMinutes has expired; that is, when all Spot instances could not be provisioned within the Spot provisioning timeout. Valid values are `TERMINATE_CLUSTER` and `SWITCH_TO_ON_DEMAND`. SWITCH_TO_ON_DEMAND specifies that if no Spot instances are available, On-Demand Instances should be provisioned to fulfill any remaining Spot capacity.
 * `timeoutDurationMinutes` - (Required) The spot provisioning timeout period in minutes. If Spot instances are not provisioned within this time period, the TimeOutAction is taken. Minimum value is 5 and maximum value is 1440. The timeout applies only during initial provisioning, when the cluster is first created.
@@ -157,9 +157,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { EmrInstanceFleet } from "./.gen/providers/aws/emr-instance-fleet";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    EmrInstanceFleet.generateConfigForImport(
+      this,
+      "example",
+      "j-123456ABCDEF/if-15EK4O09RZLNR"
+    );
   }
 }
 
@@ -171,4 +181,4 @@ Using `terraform import`, import EMR Instance Fleet using the EMR Cluster identi
 % terraform import aws_emr_instance_fleet.example j-123456ABCDEF/if-15EK4O09RZLNR
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-47af6409cc7439e921a67c3063fdd66af4d873f6cbbb0f2ce7c746cff87b4eb8 -->
+<!-- cache-key: cdktf-0.20.1 input-484ebd4db579a713d776c01bd54e9d3f8d6d98496da04bf00e6a7d5e3d2c471f -->

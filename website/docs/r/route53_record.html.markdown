@@ -58,6 +58,25 @@ resource "aws_route53_record" "www-live" {
 }
 ```
 
+### Geoproximity routing policy
+
+```terraform
+resource "aws_route53_record" "www" {
+  zone_id = aws_route53_zone.primary.zone_id
+  name    = "www.example.com"
+  type    = "CNAME"
+  ttl     = 300
+  geoproximity_routing_policy {
+    coordinates {
+      latitude  = "49.22"
+      longitude = "-74.01"
+    }
+  }
+  set_identifier = "dev"
+  records        = ["dev.example.com"]
+}
+```
+
 ### Alias record
 
 See [related part of Amazon Route 53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-choosing-alias-non-alias.html)
@@ -126,13 +145,14 @@ This resource supports the following arguments:
 * `type` - (Required) The record type. Valid values are `A`, `AAAA`, `CAA`, `CNAME`, `DS`, `MX`, `NAPTR`, `NS`, `PTR`, `SOA`, `SPF`, `SRV` and `TXT`.
 * `ttl` - (Required for non-alias records) The TTL of the record.
 * `records` - (Required for non-alias records) A string list of records. To specify a single record value longer than 255 characters such as a TXT record for DKIM, add `\"\"` inside the Terraform configuration string (e.g., `"first255characters\"\"morecharacters"`).
-* `set_identifier` - (Optional) Unique identifier to differentiate records with routing policies from one another. Required if using `cidr_routing_policy`, `failover_routing_policy`, `geolocation_routing_policy`, `latency_routing_policy`, `multivalue_answer_routing_policy`, or `weighted_routing_policy`.
+* `set_identifier` - (Optional) Unique identifier to differentiate records with routing policies from one another. Required if using `cidr_routing_policy`, `failover_routing_policy`, `geolocation_routing_policy`,`geoproximity_routing_policy`, `latency_routing_policy`, `multivalue_answer_routing_policy`, or `weighted_routing_policy`.
 * `health_check_id` - (Optional) The health check the record should be associated with.
 * `alias` - (Optional) An alias block. Conflicts with `ttl` & `records`.
   [Documented below](#alias).
 * `cidr_routing_policy` - (Optional) A block indicating a routing policy based on the IP network ranges of requestors. Conflicts with any other routing policy. [Documented below](#cidr-routing-policy).
 * `failover_routing_policy` - (Optional) A block indicating the routing behavior when associated health check fails. Conflicts with any other routing policy. [Documented below](#failover-routing-policy).
 * `geolocation_routing_policy` - (Optional) A block indicating a routing policy based on the geolocation of the requestor. Conflicts with any other routing policy. [Documented below](#geolocation-routing-policy).
+* `geoproximity_routing_policy` - (Optional) A block indicating a routing policy based on the geoproximity of the requestor. Conflicts with any other routing policy. [Documented below](#geoproximity-routing-policy).
 * `latency_routing_policy` - (Optional) A block indicating a routing policy based on the latency between the requestor and an AWS region. Conflicts with any other routing policy. [Documented below](#latency-routing-policy).
 * `multivalue_answer_routing_policy` - (Optional) Set to `true` to indicate a multivalue answer routing policy. Conflicts with any other routing policy.
 * `weighted_routing_policy` - (Optional) A block indicating a weighted routing policy. Conflicts with any other routing policy. [Documented below](#weighted-routing-policy).
@@ -168,6 +188,15 @@ Geolocation routing policies support the following:
 * `continent` - A two-letter continent code. See http://docs.aws.amazon.com/Route53/latest/APIReference/API_GetGeoLocation.html for code details. Either `continent` or `country` must be specified.
 * `country` - A two-character country code or `*` to indicate a default resource record set.
 * `subdivision` - (Optional) A subdivision code for a country.
+
+### GeoproximityRouting Policy
+
+Geoproximity routing policies support the following:
+
+* `aws_region` - A AWS region where the resource is present.
+* `bias` - Route more traffic or less traffic to the resource by specifying a value ranges between -90 to 90. See https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy-geoproximity.html for bias details.
+* `coordinates` - Specify `latitude` and `longitude` for routing traffic to non-AWS resources.
+* `local_zone_group` - A AWS local zone group where the resource is present. See https://docs.aws.amazon.com/local-zones/latest/ug/available-local-zones.html for local zone group list.
 
 ### Latency Routing Policy
 

@@ -47,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `required_tenancy` – Specifies whether the image is running on dedicated hardware. When Bring Your Own License (BYOL) is enabled, this value is set to DEDICATED. For more information, see [Bring Your Own Windows Desktop Images](https://docs.aws.amazon.com/workspaces/latest/adminguide/byol-windows-images.html).
 * `state` – The status of the image.
 
-<!-- cache-key: cdktf-0.19.0 input-e175478c435ceea20dd9a0b224e5ca9b6f41172a6466e59421b4cd7412f5f83d -->
+<!-- cache-key: cdktf-0.20.1 input-e175478c435ceea20dd9a0b224e5ca9b6f41172a6466e59421b4cd7412f5f83d -->

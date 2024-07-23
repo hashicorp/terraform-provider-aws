@@ -16,8 +16,8 @@ Provides a top level resource to manage IAM Group membership for IAM Users. For
 more information on managing IAM Groups or IAM Users, see [IAM Groups][1] or
 [IAM Users][2]
 
-~> **Note:** `awsIamGroupMembership` will conflict with itself if used more than once with the same group. To non-exclusively manage the users in a group, see the
-[`awsIamUserGroupMembership` resource][3].
+~> **Note:** `aws_iam_group_membership` will conflict with itself if used more than once with the same group. To non-exclusively manage the users in a group, see the
+[`aws_iam_user_group_membership` resource][3].
 
 ## Example Usage
 
@@ -74,4 +74,4 @@ This resource exports the following attributes in addition to the arguments abov
 [2]: /docs/providers/aws/r/iam_user.html
 [3]: /docs/providers/aws/r/iam_user_group_membership.html
 
-<!-- cache-key: cdktf-0.19.0 input-a689283d8ede46a18e142c30b3c6d291ef7cbbe1e20ccd369bd2df00bb2f1499 -->
+<!-- cache-key: cdktf-0.20.1 input-a689283d8ede46a18e142c30b3c6d291ef7cbbe1e20ccd369bd2df00bb2f1499 -->

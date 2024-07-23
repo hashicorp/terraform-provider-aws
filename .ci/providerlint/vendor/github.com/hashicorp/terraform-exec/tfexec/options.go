@@ -7,6 +7,18 @@ import (
 	"encoding/json"
 )
 
+// AllowDeferralOption represents the -allow-deferral flag. This flag is only enabled in
+// experimental builds of Terraform. (alpha or built via source with experiments enabled)
+type AllowDeferralOption struct {
+	allowDeferral bool
+}
+
+// AllowDeferral represents the -allow-deferral flag. This flag is only enabled in
+// experimental builds of Terraform. (alpha or built via source with experiments enabled)
+func AllowDeferral(allowDeferral bool) *AllowDeferralOption {
+	return &AllowDeferralOption{allowDeferral}
+}
+
 // AllowMissingConfigOption represents the -allow-missing-config flag.
 type AllowMissingConfigOption struct {
 	allowMissingConfig bool
@@ -241,6 +253,15 @@ type GraphPlanOption struct {
 // GraphPlan represents the -plan flag which is a specified plan file string
 func GraphPlan(file string) *GraphPlanOption {
 	return &GraphPlanOption{file}
+}
+
+type UseJSONNumberOption struct {
+	useJSONNumber bool
+}
+
+// JSONNumber determines how numerical values are handled during JSON decoding.
+func JSONNumber(useJSONNumber bool) *UseJSONNumberOption {
+	return &UseJSONNumberOption{useJSONNumber}
 }
 
 type PlatformOption struct {

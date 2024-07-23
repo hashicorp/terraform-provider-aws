@@ -21,7 +21,7 @@ the requested price.
 On destruction, Terraform will make an attempt to terminate the associated Spot
 Instance if there is one present.
 
-Spot Instances requests with a `oneTime` type will close the spot request
+Spot Instances requests with a `one-time` type will close the spot request
 when the instance is terminated either by the request being below the current spot
 price availability or by a user.
 
@@ -66,7 +66,7 @@ class MyConvertedCode extends TerraformStack {
 ## Argument Reference
 
 Spot Instance Requests support all the same arguments as
-[`awsInstance`](instance.html), with the addition of:
+[`aws_instance`](instance.html), with the addition of:
 
 * `spotPrice` - (Optional; Default: On-demand price) The maximum price to request on the spot market.
 * `waitForFulfillment` - (Optional; Default: false) If set, Terraform will
@@ -82,7 +82,7 @@ Spot Instance Requests support all the same arguments as
 * `instanceInterruptionBehavior` - (Optional) Indicates Spot instance behavior when it is interrupted. Valid values are `terminate`, `stop`, or `hibernate`. Default value is `terminate`.
 * `validUntil` - (Optional) The end date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). At this point, no new Spot instance requests are placed or enabled to fulfill the request. The default end date is 7 days from the current date.
 * `validFrom` - (Optional) The start date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). The default is to start fulfilling the request immediately.
-* `tags` - (Optional) A map of tags to assign to the Spot Instance Request. These tags are not automatically applied to the launched Instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the Spot Instance Request. These tags are not automatically applied to the launched Instance. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -108,13 +108,14 @@ should only be used for informational purposes, not for resource dependencies:
   used inside the Amazon EC2, and only available if you've enabled DNS hostnames
   for your VPC
 * `privateIp` - The private IP address assigned to the instance
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
+* `read` - (Default `15m`)
 * `delete` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.19.0 input-c3c3583217fff10aa06f5c451738196ae8dc39997f2223d31cdbbf7593fbebc2 -->
+<!-- cache-key: cdktf-0.20.1 input-41ed2e086fde1e9ac47e3151ca332ac4c789a2f389301862b42d62217ca9d626 -->

@@ -33,7 +33,11 @@ var (
 	directoryBucketNameRegex = regexache.MustCompile(`^([0-9a-z.-]+)--([a-z]+\d+-az\d+)--x-s3$`)
 )
 
-// @FrameworkResource(name="Directory Bucket")
+func isDirectoryBucket(bucket string) bool {
+	return bucketNameTypeFor(bucket) == bucketNameTypeDirectoryBucket
+}
+
+// @FrameworkResource("aws_s3_directory_bucket", name="Directory Bucket")
 func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directoryBucketResource{}
 
@@ -57,7 +61,7 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"bucket": schema.StringAttribute{
+			names.AttrBucket: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -75,13 +79,13 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"force_destroy": schema.BoolAttribute{
+			names.AttrForceDestroy: schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
 			names.AttrID: framework.IDAttribute(),
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				CustomType: bucketTypeType,
 				Optional:   true,
 				Computed:   true,
@@ -92,17 +96,17 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"location": schema.ListNestedBlock{
+			names.AttrLocation: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[locationInfoModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							CustomType: locationTypeType,
 							Optional:   true,
 							Computed:   true,
@@ -139,7 +143,7 @@ func (r *directoryBucketResource) Create(ctx context.Context, request resource.C
 		return
 	}
 
-	conn := r.Meta().S3Client(ctx)
+	conn := r.Meta().S3ExpressClient(ctx)
 
 	input := &s3.CreateBucketInput{
 		Bucket: flex.StringFromFramework(ctx, data.Bucket),
@@ -155,7 +159,7 @@ func (r *directoryBucketResource) Create(ctx context.Context, request resource.C
 		},
 	}
 
-	_, err := conn.CreateBucket(ctx, input, useRegionalEndpointInUSEast1)
+	_, err := conn.CreateBucket(ctx, input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Directory Bucket (%s)", data.Bucket.ValueString()), err.Error())
@@ -185,9 +189,9 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 		return
 	}
 
-	conn := r.Meta().S3Client(ctx)
+	conn := r.Meta().S3ExpressClient(ctx)
 
-	err := findBucket(ctx, conn, data.Bucket.ValueString(), useRegionalEndpointInUSEast1)
+	err := findBucket(ctx, conn, data.Bucket.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -208,7 +212,7 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 	// No API to return bucket type, location etc.
 	data.DataRedundancy = fwtypes.StringEnumValue(awstypes.DataRedundancySingleAvailabilityZone)
 	if matches := directoryBucketNameRegex.FindStringSubmatch(data.ID.ValueString()); len(matches) == 3 {
-		data.Location = fwtypes.NewListNestedObjectValueOfPtr(ctx, &locationInfoModel{
+		data.Location = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &locationInfoModel{
 			Name: flex.StringValueToFramework(ctx, matches[2]),
 			Type: fwtypes.StringEnumValue(awstypes.LocationTypeAvailabilityZone),
 		})
@@ -245,11 +249,11 @@ func (r *directoryBucketResource) Delete(ctx context.Context, request resource.D
 		return
 	}
 
-	conn := r.Meta().S3Client(ctx)
+	conn := r.Meta().S3ExpressClient(ctx)
 
 	_, err := conn.DeleteBucket(ctx, &s3.DeleteBucketInput{
 		Bucket: flex.StringFromFramework(ctx, data.ID),
-	}, useRegionalEndpointInUSEast1)
+	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeBucketNotEmpty) {
 		if data.ForceDestroy.ValueBool() {
