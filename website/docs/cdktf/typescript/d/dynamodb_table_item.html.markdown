@@ -52,7 +52,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `expressionAttributeName` - (Optional) - One or more substitution tokens for attribute names in an expression. Use the `#` character in an expression to dereference an attribute name.
+* `expression_attribute_name` - (Optional) - One or more substitution tokens for attribute names in an expression. Use the `#` character in an expression to dereference an attribute name.
 * `projectionExpression` - (Optional) A string that identifies one or more attributes to retrieve from the table. These attributes can include scalars, sets, or elements of a JSON document. The attributes in the expression must be separated by commas.
 If no attribute names are specified, then all attributes are returned. If any of the requested attributes are not found, they do not appear in the result.
 
@@ -62,4 +62,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `item` - JSON representation of a map of attribute names to [AttributeValue](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_AttributeValue.html) objects, as specified by ProjectionExpression.
 
-<!-- cache-key: cdktf-0.19.0 input-15763bbf01ce37024fe77596ac5996501c9715c0941ce02a4eab1115436c2219 -->
+<!-- cache-key: cdktf-0.20.1 input-15763bbf01ce37024fe77596ac5996501c9715c0941ce02a4eab1115436c2219 -->

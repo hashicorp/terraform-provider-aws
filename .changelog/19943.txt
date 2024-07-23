@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_secretsmanager_secret_version: Fix `InvalidParameterException: The parameter RemoveFromVersionId can't be empty. Staging label AWSCURRENT is currently attached to version ..., so you must explicitly reference that version in RemoveFromVersionId` errors when a secret is updated outside Terraform
+```

@@ -52,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `partition` - Identifier of the current partition (e.g., `aws` in AWS Commercial, `aws-cn` in AWS China).
 * `reverse_dns_prefix` - Prefix of service names (e.g., `com.amazonaws` in AWS Commercial, `cn.com.amazonaws` in AWS China).
 
-<!-- cache-key: cdktf-0.19.0 input-c447a01a61c27aee6e9e0f866a2c423555ed2688482ef36f154476b5b7d14505 -->
+<!-- cache-key: cdktf-0.20.1 input-c447a01a61c27aee6e9e0f866a2c423555ed2688482ef36f154476b5b7d14505 -->

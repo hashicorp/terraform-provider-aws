@@ -31,7 +31,7 @@ func testAccVoiceConnectorTermination_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorTerminationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -39,10 +39,10 @@ func testAccVoiceConnectorTermination_basic(t *testing.T) {
 				Config: testAccVoiceConnectorTerminationConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorTerminationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cps_limit", "1"),
-					resource.TestCheckResourceAttr(resourceName, "calling_regions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_allow_list.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "disabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cps_limit", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "calling_regions.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "cidr_allow_list.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "disabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -64,7 +64,7 @@ func testAccVoiceConnectorTermination_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorTerminationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -90,7 +90,7 @@ func testAccVoiceConnectorTermination_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorTerminationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -104,10 +104,10 @@ func testAccVoiceConnectorTermination_update(t *testing.T) {
 				Config: testAccVoiceConnectorTerminationConfig_updated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorTerminationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cps_limit", "1"),
-					resource.TestCheckResourceAttr(resourceName, "calling_regions.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "cps_limit", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "calling_regions.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_allow_list.*", "100.35.78.97/32"),
-					resource.TestCheckResourceAttr(resourceName, "disabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "disabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_phone_number", ""),
 				),
 			},

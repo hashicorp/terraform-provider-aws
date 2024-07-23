@@ -26,7 +26,7 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -54,7 +54,7 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -77,7 +77,7 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_disappears_emailIdentity(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -101,7 +101,7 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_emailForwardingEnabled(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -109,7 +109,7 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_emailForwardingEnabled(t *testi
 				Config: testAccEmailIdentityFeedbackAttributesConfig_emailForwardingEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityFeedbackAttributesExist(ctx, emailIdentityName, true),
-					resource.TestCheckResourceAttr(resourceName, "email_forwarding_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "email_forwarding_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -121,7 +121,7 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_emailForwardingEnabled(t *testi
 				Config: testAccEmailIdentityFeedbackAttributesConfig_emailForwardingEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityFeedbackAttributesExist(ctx, emailIdentityName, false),
-					resource.TestCheckResourceAttr(resourceName, "email_forwarding_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "email_forwarding_enabled", acctest.CtFalse),
 				),
 			},
 		},

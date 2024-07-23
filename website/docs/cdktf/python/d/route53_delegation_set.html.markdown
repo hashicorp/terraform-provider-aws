@@ -45,4 +45,4 @@ The following attribute is additionally exported:
 * `caller_reference` - Caller Reference of the delegation set.
 * `name_servers` - List of DNS name servers for the delegation set.
 
-<!-- cache-key: cdktf-0.19.0 input-40fcc3d8081992110595bf5da825dc8f40806338d89694588a485216d94caf0d -->
+<!-- cache-key: cdktf-0.20.1 input-40fcc3d8081992110595bf5da825dc8f40806338d89694588a485216d94caf0d -->

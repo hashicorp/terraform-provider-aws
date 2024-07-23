@@ -9,191 +9,201 @@ on:
       - labeled
       - opened
       - ready_for_review
+env:
+  ISSUE_URL: ${{ github.event.pull_request.html_url }}
 
 jobs:
-  community_check:
-    name: 'Community Check'
-    uses: ./.github/workflows/community-check.yml
-    secrets: inherit
-    with:
-      # This is a ternary that sets the variable to the assigned user's login on assigned events,
-      # and otherwise sets it to the username of the pull request's author. For more information:
-      # https://docs.github.com/en/actions/learn-github-actions/expressions#example
-      username: ${{ github.event.action == 'assigned' && github.event.assignee.login || github.event.pull_request.user.login }}
-
-  labeler:
-    name: 'Automation Labeler'
-    needs: community_check
+  labels:
+    name: Labelers
     runs-on: ubuntu-latest
-    env:
-      PR_URL: ${{ github.event.pull_request.html_url }}
     steps:
-      - name: 'Generate Token'
+      - name: Generate GitHub App Token
         id: token
-        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
+        uses: actions/create-github-app-token@31c86eb3b33c9b601a1f60f98dcbfd1d70f379b4 # v1.10.3
         with:
-          app_id: ${{ secrets.APP_ID }}
-          installation_retrieval_mode: id
-          installation_retrieval_payload: ${{ secrets.INSTALLATION_ID }}
-          private_key: ${{ secrets.APP_PEM }}
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PEM }}
 
-      - name: 'Add needs-triage for non-maintainers'
-        if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'false'
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: gh pr edit ${{ env.PR_URL }} --add-label needs-triage
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          sparse-checkout: .github
 
-      - name: 'Add prioritized to pull requests authored by or assigned to maintainers'
-        # This conditional is basically an exact copy of an example provided by GitHub:
-        # https://docs.github.com/en/actions/learn-github-actions/expressions#example-matching-an-array-of-strings
-        if: contains(fromJSON('["opened", "assigned"]'), github.event.action) && needs.community_check.outputs.maintainer == 'true'
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: gh pr edit ${{ env.PR_URL }} --add-label prioritized
-
-      - name: 'Add partner to partner pull requests'
-        if: github.event.action == 'opened' && needs.community_check.outputs.partner == 'true'
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: gh pr edit ${{ env.PR_URL }} --add-label partner
-
-      - name: 'Add external-maintainer to external maintainer pull requests'
-        if: github.event.action == 'opened' && needs.community_check.outputs.core_contributor == 'true'
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: gh pr edit ${{ env.PR_URL }} --add-label external-maintainer
-
-      - name: 'Add prioritized to regressions'
-        if: github.event.label.name == 'regression'
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: gh pr edit ${{ env.PR_URL }} --add-label prioritized
-
-      - name: 'Remove unnecessary labels on closure'
-        if: github.event.action == 'closed'
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: gh pr edit ${{ env.PR_URL }} --remove-label needs-triage,waiting-response
-
-  service_labeler:
-    name: 'Service Labeler'
-    if: contains(fromJSON('["opened", "edited"]'), github.event.action)
-    runs-on: ubuntu-latest
-    steps:
-      - name: 'Checkout Repo'
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-
-      - name: 'Apply Labels'
-        uses: actions/labeler@ac9175f8a1f3625fd0d4fb234536d26811351594 # v4.3.0
+      - name: Apply Service Labels
+        if: contains(fromJSON('["opened", "edited"]'), github.event.action)
+        uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9 # v5.0.0
         with:
           configuration-path: .github/labeler-pr-triage.yml
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token: ${{ steps.token.outputs.token }}
 
-  size_labeler:
-    name: 'Size Labeler'
-    if: contains(fromJSON('["opened", "edited"]'), github.event.action)
-    runs-on: ubuntu-latest
-    steps:
-      - name: 'Apply Size Labels'
-        uses: codelytv/pr-size-labeler@54ef36785e9f4cb5ecf1949cfc9b00dbb621d761 # v1.8.1
+      - name: Apply Size Labels
+        if: contains(fromJSON('["opened", "edited"]'), github.event.action)
+        uses: codelytv/pr-size-labeler@56f6f0fc35c7cc0f72963b8467729e1120cb4bed # v1.10.0
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          xs_label: 'size/XS'
-          xs_max_size: '30'
-          s_label: 'size/S'
-          s_max_size: '60'
-          m_label: 'size/M'
-          m_max_size: '150'
-          l_label: 'size/L'
-          l_max_size: '300'
-          xl_label: 'size/XL'
-          message_if_xl: ''
+          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
+          xs_label: "size/XS"
+          xs_max_size: "30"
+          s_label: "size/S"
+          s_max_size: "60"
+          m_label: "size/M"
+          m_max_size: "150"
+          l_label: "size/L"
+          l_max_size: "300"
+          xl_label: "size/XL"
+          message_if_xl: ""
 
-  add_to_project:
-    name: 'Add to Project'
+      - name: "Community Check: Author"
+        id: author
+        if: github.event.action == 'opened'
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ github.event.pull_request.user.login }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+          core_contributors: ${{ secrets.CORE_CONTRIBUTORS }}
+          partners: ${{ secrets.PARTNERS }}
+
+      - name: Indicate That Triage is Required
+        if: |
+          github.event.action == 'opened'
+          && steps.author.outputs.maintainer == 'false'
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: gh pr edit "$ISSUE_URL" --add-label needs-triage
+
+      - name: Add prioritized to Maintainer Contributions
+        if: |
+          github.event.action == 'opened'
+          && steps.author.outputs.maintainer == 'true'
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: gh pr edit "$ISSUE_URL" --add-label prioritized
+
+      - name: Credit Core Contributor Contributions
+        if: |
+          github.event.action == 'opened'
+          && steps.author.outputs.core_contributor == 'true'
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          gh pr edit "$ISSUE_URL" --add-label external-maintainer
+
+      - name: Credit Partner Contributions
+        if: |
+          github.event.action == 'opened'
+          && steps.author.outputs.partner == 'true'
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          gh pr edit "$ISSUE_URL" --add-label partner
+
+      - name: "Community Check: Assignee"
+        id: assignee
+        if: github.event.action == 'assigned'
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ github.event.assignee.login }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+
+      - name: Add prioritized to Maintainer Assignments
+        if: |
+          github.event.action == 'assigned'
+          && steps.assignee.outputs.maintainer == 'true'
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          gh pr edit "$ISSUE_URL" --add-label prioritized
+
+      - name: Remove Triage Labels on Closure
+        if: |
+          github.event.action == 'closed'
+          && (contains(github.event.pull_request.labels.*.name, 'needs-triage') || contains(github.event.pull_request.labels.*.name, 'waiting-response'))
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: gh pr edit "$ISSUE_URL" --remove-label needs-triage,waiting-response
+
+  project:
+    name: Maintainer Work Board
     runs-on: ubuntu-latest
-    needs: community_check
     env:
       # Some gh project calls take the project's ID, some take the project's number
       PROJECT_ID: "PVT_kwDOAAuecM4AF-7h"
       PROJECT_NUMBER: "196"
       STATUS_FIELD_ID: "PVTSSF_lADOAAuecM4AF-7hzgDcsQA"
       VIEW_FIELD_ID: "PVTSSF_lADOAAuecM4AF-7hzgMRB34"
-      ITEM_URL: ${{ github.event.pull_request.html_url }}
-    steps:
-      - name: 'Generate Token'
-        id: token
-        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
-        with:
-          app_id: ${{ secrets.APP_ID }}
-          installation_retrieval_mode: id
-          installation_retrieval_payload: ${{ secrets.INSTALLATION_ID }}
-          private_key: ${{ secrets.APP_PEM }}
 
-      - name: 'Maintainer Pull Requests'
-        if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'true'
+    steps:
+      - name: Generate GitHub App Token
+        id: token
+        uses: actions/create-github-app-token@31c86eb3b33c9b601a1f60f98dcbfd1d70f379b4 # v1.10.3
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PEM }}
+
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          sparse-checkout: .github/actions/community_check
+
+      - name: Community Check
+        id: community_check
+        if: github.event.action == 'opened'
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ github.event.action == 'assigned' && github.event.assignee.login || github.event.pull_request.user.login }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+
+      - name: Maintainer Pull Requests
+        if: |
+          github.event.action == 'opened'
+          && steps.community_check.outputs.maintainer == 'true'
         env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
         run: |
           # In order to update the item's Status field, we need to capture the project item id from the output
-          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
-          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.STATUS_FIELD_ID }} --single-select-option-id ${{ vars.team_project_status_maintainer_pr }}
-          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
+          PROJECT_ITEM_ID=$(gh project item-add "$PROJECT_NUMBER" --owner "hashicorp" --url "$ISSUE_URL" --format json | jq '.id')
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id "$PROJECT_ID" --field-id "$STATUS_FIELD_ID" --single-select-option-id ${{ vars.team_project_status_maintainer_pr }}
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id "$PROJECT_ID" --field-id "$VIEW_FIELD_ID "--single-select-option-id ${{ vars.team_project_view_working_board }}
 
-      - name: 'Assigned to Maintainers'
-        if: github.event.action == 'assigned' && needs.community_check.outputs.maintainer == 'true'
+      - name: Assigned to Maintainers
+        if: |
+          github.event.action == 'assigned'
+          && steps.community_check.outputs.maintainer == 'true'
         env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
         run: |
-          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
-          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.STATUS_FIELD_ID }} --single-select-option-id ${{ vars.team_project_status_in_progress }}
-          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
+          PROJECT_ITEM_ID=$(gh project item-add "$PROJECT_NUMBER" --owner "hashicorp" --url "$ISSUE_URL" --format json | jq '.id')
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id "$PROJECT_ID" --field-id "$STATUS_FIELD_ID" --single-select-option-id ${{ vars.team_project_status_in_progress }}
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id "$PROJECT_ID" --field-id "$VIEW_FIELD_ID" --single-select-option-id ${{ vars.team_project_view_working_board }}
 
-      - name: 'Partner Pull Requests'
-        if: github.event.label.name == 'partner'
+      - name: Labeled Prioritized
+        if: github.event.label.name == 'prioritized'
         env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
         run: |
-          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
-          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_partner_contribution }}
+          PROJECT_ITEM_ID=$(gh project item-add "$PROJECT_NUMBER" --owner "hashicorp" --url "$ISSUE_URL" --format json | jq '.id')
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id "$PROJECT_ID" --field-id "$VIEW_FIELD_ID" --single-select-option-id ${{ vars.team_project_view_working_board }}
 
-      - name: 'External Maintainer Pull Requests'
-        if: github.event.label.name == 'external-maintainer'
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: |
-          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
-          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_external_maintainer }}
-
-      - name: 'Labeled Prioritized or Regression'
-        if: contains(fromJSON('["prioritized", "regression"]'), github.event.label.name)
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: |
-          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
-          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
-
-      - name: 'Labeled Engineering Initiative'
+      - name: Labeled Engineering Initiative
         if: github.event.label.name == 'engineering-initiative'
         env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
         run: |
-          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
-          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_engineering_initiative }}
+          PROJECT_ITEM_ID=$(gh project item-add "$PROJECT_NUMBER" --owner "hashicorp" --url "$ISSUE_URL" --format json | jq '.id')
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id "$PROJECT_ID" --field-id "$VIEW_FIELD_ID" --single-select-option-id ${{ vars.team_project_view_engineering_initiative }}
 
   add_to_milestone:
-    name: 'Add Merged Pull Requests and Related Issues to Milestone'
+    name: Add Merged Pull Requests and Related Issues to Milestone
     if: github.event.action == 'closed' && github.event.pull_request.merged
     runs-on: ubuntu-latest
     steps:
-      - name: 'Checkout'
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
-      - name: 'Get Current Milestone Name'
+      - name: Get Current Milestone Name
         id: get-current-milestone
         run: echo "current_milestone=v$(head -1 CHANGELOG.md | cut -d " " -f 2)" >> "$GITHUB_OUTPUT"
 
-      - name: 'Add Items to Milestone'
+      - name: Add Items to Milestone
         env:
           GH_TOKEN: ${{ github.token }}
           MILESTONE: ${{ steps.get-current-milestone.outputs.current_milestone }}
@@ -202,12 +212,12 @@ jobs:
         run: ./.ci/scripts/add-to-milestone.sh
 
   community_note:
-    name: 'Community Note'
+    name: Community Note
     if: github.event.action == 'opened'
     runs-on: ubuntu-latest
     steps:
-      - name: 'Add community note to new Pull Requests'
-        uses: peter-evans/create-or-update-comment@23ff15729ef2fc348714a3bb66d2f655ca9066f2 # v3.1.0
+      - name: Add community note to new Pull Requests
+        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
@@ -226,11 +236,11 @@ jobs:
             * Whether or not the branch has been rebased will **not** impact prioritization, but doing so is always a welcome surprise.
 
   first_contribution_note:
-    name: 'New Contributor Note'
+    name: New Contributor Note
     if: github.event.action == 'opened'
     runs-on: ubuntu-latest
     steps:
-      - name: 'Add comment to add helpful context for new contributors'
+      - name: Add comment to add helpful context for new contributors
         uses: actions/first-interaction@34f15e814fe48ac9312ccf29db4e74fa767cbab7 # v1.3.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -244,13 +254,27 @@ jobs:
             Thanks again, and welcome to the community! :smiley:
 
   permissions_check:
-    name: 'Verify Maintainers Editable'
-    needs: community_check
-    if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'false' && !github.event.pull_request.maintainer_can_modify
+    name: Verify Maintainers Can Edit
     runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
     steps:
-      - name: 'Comment if maintainers cannot edit'
-        uses: peter-evans/create-or-update-comment@23ff15729ef2fc348714a3bb66d2f655ca9066f2 # v3.1.0
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          sparse-checkout: .github/actions/community_check
+
+      - name: Community Check
+        id: community_check
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ github.event.action == 'assigned' && github.event.assignee.login || github.event.pull_request.user.login }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+
+      - name: Comment if Not
+        if: |
+          steps.community_check.outputs.maintainer == 'false'
+          && !github.event.pull_request.maintainer_can_modify
+        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |

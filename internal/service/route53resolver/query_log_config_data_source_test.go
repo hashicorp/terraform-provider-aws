@@ -10,6 +10,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRoute53ResolverQueryLogConfigDataSource_basic(t *testing.T) {
@@ -25,21 +26,21 @@ func TestAccRoute53ResolverQueryLogConfigDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, route53resolver.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueryLogConfigDataSourceConfig_basic(rName, "key1", "value1"),
+				Config: testAccQueryLogConfigDataSourceConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "destination_arn", resourceName, "destination_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "owner_id", resourceName, "owner_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "resolver_query_log_config_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDestinationARN, resourceName, names.AttrDestinationARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "resolver_query_log_config_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "share_status", resourceName, "share_status"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.key1", resourceName, "tags.key1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsKey1, resourceName, acctest.CtTagsKey1),
 				),
 			},
 		},
@@ -58,21 +59,21 @@ func TestAccRoute53ResolverQueryLogConfigDataSource_filter(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, route53resolver.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueryLogConfigDataSourceConfig_filter(rName, "key1", "value1"),
+				Config: testAccQueryLogConfigDataSourceConfig_filter(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "destination_arn", resourceName, "destination_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "owner_id", resourceName, "owner_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "resolver_query_log_config_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDestinationARN, resourceName, names.AttrDestinationARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "resolver_query_log_config_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "share_status", resourceName, "share_status"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.key1", resourceName, "tags.key1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsKey1, resourceName, acctest.CtTagsKey1),
 				),
 			},
 		},

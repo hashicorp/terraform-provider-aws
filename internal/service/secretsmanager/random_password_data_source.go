@@ -6,16 +6,16 @@ package secretsmanager
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_secretsmanager_random_password")
-func DataSourceRandomPassword() *schema.Resource {
+// @SDKDataSource("aws_secretsmanager_random_password", name="Random Password")
+func dataSourceRandomPassword() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRandomPasswordRead,
 
@@ -55,7 +55,6 @@ func DataSourceRandomPassword() *schema.Resource {
 			},
 			"random_password": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 		},
@@ -64,59 +63,31 @@ func DataSourceRandomPassword() *schema.Resource {
 
 func dataSourceRandomPasswordRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
-
-	var excludeCharacters string
-	if v, ok := d.GetOk("exclude_characters"); ok {
-		excludeCharacters = v.(string)
-	}
-	var excludeLowercase bool
-	if v, ok := d.GetOk("exclude_lowercase"); ok {
-		excludeLowercase = v.(bool)
-	}
-	var excludeNumbers bool
-	if v, ok := d.GetOk("exclude_numbers"); ok {
-		excludeNumbers = v.(bool)
-	}
-	var excludePunctuation bool
-	if v, ok := d.GetOk("exclude_punctuation"); ok {
-		excludePunctuation = v.(bool)
-	}
-	var excludeUppercase bool
-	if v, ok := d.GetOk("exclude_uppercase"); ok {
-		excludeUppercase = v.(bool)
-	}
-	var includeSpace bool
-	if v, ok := d.GetOk("exclude_space"); ok {
-		includeSpace = v.(bool)
-	}
-	var passwordLength int64
-	if v, ok := d.GetOk("password_length"); ok {
-		passwordLength = int64(v.(int))
-	}
-	var requireEachIncludedType bool
-	if v, ok := d.GetOk("require_each_included_type"); ok {
-		requireEachIncludedType = v.(bool)
-	}
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	input := &secretsmanager.GetRandomPasswordInput{
-		ExcludeCharacters:       aws.String(excludeCharacters),
-		ExcludeLowercase:        aws.Bool(excludeLowercase),
-		ExcludeNumbers:          aws.Bool(excludeNumbers),
-		ExcludePunctuation:      aws.Bool(excludePunctuation),
-		ExcludeUppercase:        aws.Bool(excludeUppercase),
-		IncludeSpace:            aws.Bool(includeSpace),
-		PasswordLength:          aws.Int64(passwordLength),
-		RequireEachIncludedType: aws.Bool(requireEachIncludedType),
+		ExcludeLowercase:        aws.Bool(d.Get("exclude_lowercase").(bool)),
+		ExcludeNumbers:          aws.Bool(d.Get("exclude_numbers").(bool)),
+		ExcludePunctuation:      aws.Bool(d.Get("exclude_punctuation").(bool)),
+		ExcludeUppercase:        aws.Bool(d.Get("exclude_uppercase").(bool)),
+		IncludeSpace:            aws.Bool(d.Get("include_space").(bool)),
+		PasswordLength:          aws.Int64(int64(d.Get("password_length").(int))),
+		RequireEachIncludedType: aws.Bool(d.Get("require_each_included_type").(bool)),
 	}
 
-	output, err := conn.GetRandomPasswordWithContext(ctx, input)
+	if v, ok := d.GetOk("exclude_characters"); ok {
+		input.ExcludeCharacters = aws.String(v.(string))
+	}
+
+	output, err := conn.GetRandomPassword(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Get Random Password: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Random Password: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.RandomPassword))
-	d.Set("random_password", output.RandomPassword)
+	password := aws.ToString(output.RandomPassword)
+	d.SetId(password)
+	d.Set("random_password", password)
 
 	return diags
 }

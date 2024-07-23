@@ -7,8 +7,10 @@
     paths:
       include:
         - internal/service/{{ .ProviderPackage }}
+      exclude:
+        - internal/service/{{ .ProviderPackage }}/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -18,7 +20,8 @@
             {{- end }}
             {{- if eq .ServiceAlias "CE" }}
             - pattern-not-regex: ource
-            - pattern-not-regex: ServicePackage
+            - pattern-not-regex: "[Ss]ervice"
+            - pattern-not-regex: "[Cc]ancel"
             {{- end }}
             {{- if eq .ServiceAlias "Connect" }}
             - pattern-not-regex: .*uickConnect.*
@@ -32,14 +35,8 @@
             {{- if eq .ServiceAlias "RAM" }}
             - pattern-not-regex: Framework
             {{- end }}
-            {{- if eq .ServiceAlias "SSM" }}
-            - pattern-not-regex: ^testAccSSMDefaultPatchBaseline_.+
-            - pattern-not-regex: ^testAccSSMPatchBaseline_.+
-            {{- end }}
-            {{- if eq .ServiceAlias "WAF" }}
-            - pattern-not-regex: ^testAccWAFRateBasedRule.+
-            {{- end }}
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
 {{- end }}
 {{- if .MainAlias }}
@@ -51,7 +48,7 @@
       include:
         - internal/service/{{ .ProviderPackage }}/{{ .FilePrefix }}*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -73,11 +70,17 @@
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i){{ .ServiceAlias }}"
+            {{- if eq .ServiceAlias "CE" }}
+            - pattern-not-regex: "[Ss]ervice"
+            {{- end }}
             {{- if eq .ServiceAlias "Connect" }}
             - pattern-not-regex: .*uickConnect.*
             {{- end }}
             {{- if eq .ServiceAlias "Pipes" }}
             - pattern-not-regex: ^pipeS.*
+            {{- end }}
+            {{- if eq .ServiceAlias "RAM" }}
+            - pattern-not-regex: "(?i)Param"
             {{- end }}
     severity: WARNING
   - id: {{ .LowerAlias }}-in-var-name
@@ -94,13 +97,17 @@
           patterns:
             - pattern-regex: "(?i){{ .ServiceAlias }}"
             {{- if eq .ServiceAlias "CE" }}
-            - pattern-not-regex: ServicePackage
+            - pattern-not-regex: "[Ss]ervice"
+            - pattern-not-regex: "[Cc]ancel"
             {{- end }}
             {{- if eq .ServiceAlias "Connect" }}
             - pattern-not-regex: .*uickConnect.*
             {{- end }}
             {{- if eq .ServiceAlias "Pipes" }}
             - pattern-not-regex: ^pipeS.*
+            {{- end }}
+            {{- if eq .ServiceAlias "RAM" }}
+            - pattern-not-regex: "(?i)Param"
             {{- end }}
     severity: WARNING
 {{- end }}

@@ -5,7 +5,7 @@ AMP (Managed Prometheus)
 API Gateway
 API Gateway V2
 Account Management
-Amazon Bedrock
+Amazon Q Business
 Amplify
 App Mesh
 App Runner
@@ -16,13 +16,18 @@ AppIntegrations
 AppStream 2.0
 AppSync
 Application Auto Scaling
+Application Signals
 Athena
 Audit Manager
 Auto Scaling
 Auto Scaling Plans
+BCM Data Exports
 Backup
 Batch
+Bedrock
+Bedrock Agents
 CE (Cost Explorer)
+Chatbot
 Chime
 Chime SDK Media Pipelines
 Chime SDK Voice
@@ -32,6 +37,7 @@ Cloud Map
 Cloud9
 CloudFormation
 CloudFront
+CloudFront KeyValueStore
 CloudHSM
 CloudSearch
 CloudTrail
@@ -40,6 +46,7 @@ CloudWatch Application Insights
 CloudWatch Evidently
 CloudWatch Internet Monitor
 CloudWatch Logs
+CloudWatch Network Monitor
 CloudWatch Observability Access Manager
 CloudWatch RUM
 CloudWatch Synthetics
@@ -62,13 +69,17 @@ Connect
 Connect Cases
 Connect Customer Profiles
 Control Tower
+Cost Optimization Hub
 Cost and Usage Report
 DLM (Data Lifecycle Manager)
 DMS (Database Migration)
+DRS (Elastic Disaster Recovery)
 Data Exchange
 Data Pipeline
 DataSync
+DataZone
 Detective
+DevOps Guru
 Device Farm
 Direct Connect
 Directory Service
@@ -110,6 +121,8 @@ FinSpace
 GameLift
 Global Accelerator
 Glue
+Glue DataBrew
+Ground Station
 GuardDuty
 HealthLake
 IAM (Identity & Access Management)
@@ -132,6 +145,7 @@ Kinesis Firehose
 Kinesis Video
 Lake Formation
 Lambda
+Launch Wizard
 Lex Model Building
 Lex V2 Models
 License Manager
@@ -141,12 +155,14 @@ Lookout for Metrics
 MQ
 MWAA (Managed Workflows for Apache Airflow)
 Macie
+Mainframe Modernization
 Managed Grafana
 Managed Streaming for Kafka
 Managed Streaming for Kafka Connect
 MemoryDB for Redis
 Meta Data Sources
 Neptune
+Neptune Analytics
 Network Firewall
 Network Manager
 OpenSearch
@@ -156,9 +172,11 @@ OpsWorks
 Organizations
 Outposts
 Outposts (EC2)
+Payment Cryptography Control Plane
 Pinpoint
 Polly
 Pricing Calculator
+Private CA Connector for Active Directory
 QLDB (Quantum Ledger Database)
 QuickSight
 RAM (Resource Access Manager)
@@ -167,12 +185,14 @@ Recycle Bin (RBin)
 Redshift
 Redshift Data
 Redshift Serverless
+Rekognition
 Resource Explorer
 Resource Groups
 Resource Groups Tagging
 Roles Anywhere
 Route 53
 Route 53 Domains
+Route 53 Profiles
 Route 53 Recovery Control Config
 Route 53 Recovery Readiness
 Route 53 Resolver
@@ -199,11 +219,14 @@ Security Hub
 Security Lake
 Serverless Application Repository
 Service Catalog
+Service Catalog AppRegistry
 Service Quotas
 Shield
 Signer
 Storage Gateway
+Systems Manager for SAP
 Timestream Write
+Timestream for InfluxDB
 Transcribe
 Transfer Family
 Transit Gateway
@@ -219,6 +242,8 @@ WAF Classic
 WAF Classic Regional
 Wavelength
 Web Services Budgets
+Well-Architected Tool
 WorkLink
 WorkSpaces
+WorkSpaces Web
 X-Ray

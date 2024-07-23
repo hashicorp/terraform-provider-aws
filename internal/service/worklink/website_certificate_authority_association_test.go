@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfworklink "github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *testing.T) {
@@ -29,7 +30,7 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, worklink.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkLinkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebsiteCertificateAuthorityAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -39,8 +40,8 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *testing.T) {
 					testAccCheckWebsiteCertificateAuthorityAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(
 						resourceName, "fleet_arn",
-						"aws_worklink_fleet.test", "arn"),
-					resource.TestMatchResourceAttr(resourceName, "certificate", regexache.MustCompile("^-----BEGIN CERTIFICATE-----")),
+						"aws_worklink_fleet.test", names.AttrARN),
+					resource.TestMatchResourceAttr(resourceName, names.AttrCertificate, regexache.MustCompile("^-----BEGIN CERTIFICATE-----")),
 				),
 			},
 			{
@@ -60,7 +61,7 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_displayName(t *testin
 	displayName2 := fmt.Sprintf("tf-website-certificate-%s", sdkacctest.RandStringFromCharSet(5, sdkacctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, worklink.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkLinkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebsiteCertificateAuthorityAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,14 +69,14 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_displayName(t *testin
 				Config: testAccWebsiteCertificateAuthorityAssociationConfig_displayName(suffix, displayName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebsiteCertificateAuthorityAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "display_name", displayName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, displayName1),
 				),
 			},
 			{
 				Config: testAccWebsiteCertificateAuthorityAssociationConfig_displayName(suffix, displayName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebsiteCertificateAuthorityAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "display_name", displayName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, displayName2),
 				),
 			},
 			{
@@ -94,7 +95,7 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_disappears(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, worklink.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkLinkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebsiteCertificateAuthorityAssociationDestroy(ctx),
 		Steps: []resource.TestStep{

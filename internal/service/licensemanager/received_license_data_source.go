@@ -76,7 +76,7 @@ func DataSourceReceivedLicense() *schema.Resource {
 					},
 				},
 			},
-			"create_time": {
+			names.AttrCreateTime: {
 				Computed: true,
 				Type:     schema.TypeString,
 			},
@@ -93,15 +93,15 @@ func DataSourceReceivedLicense() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"unit": {
+						names.AttrUnit: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -112,7 +112,7 @@ func DataSourceReceivedLicense() *schema.Resource {
 				Computed: true,
 				Type:     schema.TypeString,
 			},
-			"issuer": {
+			names.AttrIssuer: {
 				Computed: true,
 				Type:     schema.TypeList,
 				Elem: &schema.Resource{
@@ -121,7 +121,7 @@ func DataSourceReceivedLicense() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -142,11 +142,11 @@ func DataSourceReceivedLicense() *schema.Resource {
 				Type:     schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -188,7 +188,7 @@ func DataSourceReceivedLicense() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Computed: true,
 				Type:     schema.TypeString,
 			},
@@ -208,7 +208,7 @@ func DataSourceReceivedLicense() *schema.Resource {
 					},
 				},
 			},
-			"version": {
+			names.AttrVersion: {
 				Computed: true,
 				Type:     schema.TypeString,
 			},
@@ -237,23 +237,23 @@ func dataSourceReceivedLicenseRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("consumption_configuration", []interface{}{flattenConsumptionConfiguration(out.ConsumptionConfiguration)})
 	d.Set("entitlements", flattenEntitlements(out.Entitlements))
 	d.Set("home_region", out.HomeRegion)
-	d.Set("issuer", []interface{}{flattenIssuer(out.Issuer)})
+	d.Set(names.AttrIssuer, []interface{}{flattenIssuer(out.Issuer)})
 	d.Set("license_arn", out.LicenseArn)
 	d.Set("license_metadata", flattenMetadatas(out.LicenseMetadata))
 	d.Set("license_name", out.LicenseName)
 	d.Set("product_name", out.ProductName)
 	d.Set("product_sku", out.ProductSKU)
 	d.Set("received_metadata", []interface{}{flattenReceivedMetadata(out.ReceivedMetadata)})
-	d.Set("status", out.Status)
+	d.Set(names.AttrStatus, out.Status)
 	d.Set("validity", []interface{}{flattenDateTimeRange(out.Validity)})
-	d.Set("version", out.Version)
+	d.Set(names.AttrVersion, out.Version)
 
 	if v := aws.StringValue(out.CreateTime); v != "" {
 		seconds, err := strconv.ParseInt(v, 10, 64)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading License Manager Received License (%s): %s", arn, err)
 		}
-		d.Set("create_time", time.Unix(seconds, 0).UTC().Format(time.RFC3339))
+		d.Set(names.AttrCreateTime, time.Unix(seconds, 0).UTC().Format(time.RFC3339))
 	}
 
 	return diags
@@ -349,7 +349,7 @@ func flattenEntitlement(apiObject *licensemanager.Entitlement) map[string]interf
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = v
+		tfMap[names.AttrName] = v
 	}
 
 	if v := apiObject.Overage; v != nil {
@@ -357,11 +357,11 @@ func flattenEntitlement(apiObject *licensemanager.Entitlement) map[string]interf
 	}
 
 	if v := apiObject.Unit; v != nil {
-		tfMap["unit"] = v
+		tfMap[names.AttrUnit] = v
 	}
 
 	if v := apiObject.Value; v != nil {
-		tfMap["value"] = v
+		tfMap[names.AttrValue] = v
 	}
 
 	return tfMap
@@ -379,7 +379,7 @@ func flattenIssuer(apiObject *licensemanager.IssuerDetails) map[string]interface
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = v
+		tfMap[names.AttrName] = v
 	}
 
 	if v := apiObject.SignKey; v != nil {
@@ -419,11 +419,11 @@ func flattenLicenseMetadata(apiObject *licensemanager.Metadata) map[string]inter
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = v
+		tfMap[names.AttrName] = v
 	}
 
 	if v := apiObject.Value; v != nil {
-		tfMap["value"] = v
+		tfMap[names.AttrValue] = v
 	}
 
 	return tfMap

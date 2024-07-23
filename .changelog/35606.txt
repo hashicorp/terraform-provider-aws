@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ssm_patch_baseline: Mark `json` as Computed if there are content changes
+```

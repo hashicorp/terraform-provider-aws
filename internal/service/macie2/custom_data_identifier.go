@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -63,23 +64,23 @@ func ResourceCustomDataIdentifier() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(4, 90),
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validation.StringLenBetween(0, 128),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validation.StringLenBetween(0, 128-id.UniqueIDSuffixLength),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -94,11 +95,11 @@ func ResourceCustomDataIdentifier() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchemaForceNew(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -107,6 +108,8 @@ func ResourceCustomDataIdentifier() *schema.Resource {
 }
 
 func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.CreateCustomDataIdentifierInput{
@@ -123,8 +126,8 @@ func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceD
 	if v, ok := d.GetOk("ignore_words"); ok {
 		input.IgnoreWords = flex.ExpandStringSet(v.(*schema.Set))
 	}
-	input.Name = aws.String(create.Name(d.Get("name").(string), d.Get("name_prefix").(string)))
-	if v, ok := d.GetOk("description"); ok {
+	input.Name = aws.String(create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string)))
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("maximum_match_distance"); ok {
@@ -151,15 +154,17 @@ func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err != nil {
-		return diag.Errorf("creating Macie CustomDataIdentifier: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Macie CustomDataIdentifier: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.CustomDataIdentifierId))
 
-	return resourceCustomDataIdentifierRead(ctx, d, meta)
+	return append(diags, resourceCustomDataIdentifierRead(ctx, d, meta)...)
 }
 
 func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.GetCustomDataIdentifierInput{
@@ -172,23 +177,23 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled")) {
 		log.Printf("[WARN] Macie CustomDataIdentifier (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Macie CustomDataIdentifier (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Macie CustomDataIdentifier (%s): %s", d.Id(), err)
 	}
 
 	d.Set("regex", resp.Regex)
 	if err = d.Set("keywords", flex.FlattenStringList(resp.Keywords)); err != nil {
-		return diag.Errorf("setting `%s` for Macie CustomDataIdentifier (%s): %s", "keywords", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie CustomDataIdentifier (%s): %s", "keywords", d.Id(), err)
 	}
 	if err = d.Set("ignore_words", flex.FlattenStringList(resp.IgnoreWords)); err != nil {
-		return diag.Errorf("setting `%s` for Macie CustomDataIdentifier (%s): %s", "ignore_words", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie CustomDataIdentifier (%s): %s", "ignore_words", d.Id(), err)
 	}
-	d.Set("name", resp.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(resp.Name)))
-	d.Set("description", resp.Description)
+	d.Set(names.AttrName, resp.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(resp.Name)))
+	d.Set(names.AttrDescription, resp.Description)
 	d.Set("maximum_match_distance", resp.MaximumMatchDistance)
 
 	setTagsOut(ctx, resp.Tags)
@@ -198,13 +203,15 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 		d.SetId("")
 	}
 
-	d.Set("created_at", aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
-	d.Set("arn", resp.Arn)
+	d.Set(names.AttrCreatedAt, aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrARN, resp.Arn)
 
-	return nil
+	return diags
 }
 
 func resourceCustomDataIdentifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DeleteCustomDataIdentifierInput{
@@ -215,9 +222,9 @@ func resourceCustomDataIdentifierDelete(ctx context.Context, d *schema.ResourceD
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
-			return nil
+			return diags
 		}
-		return diag.Errorf("deleting Macie CustomDataIdentifier (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Macie CustomDataIdentifier (%s): %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }

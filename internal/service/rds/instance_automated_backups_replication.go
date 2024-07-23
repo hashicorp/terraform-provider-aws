@@ -22,6 +22,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // AWS flip-flop on the capitalization of status codes. Use uppercase.
@@ -48,7 +49,7 @@ func ResourceInstanceAutomatedBackupsReplication() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -60,7 +61,7 @@ func ResourceInstanceAutomatedBackupsReplication() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"retention_period": {
+			names.AttrRetentionPeriod: {
 				Type:     schema.TypeInt,
 				ForceNew: true,
 				Optional: true,
@@ -81,11 +82,11 @@ func resourceInstanceAutomatedBackupsReplicationCreate(ctx context.Context, d *s
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.StartDBInstanceAutomatedBackupsReplicationInput{
-		BackupRetentionPeriod: aws.Int64(int64(d.Get("retention_period").(int))),
+		BackupRetentionPeriod: aws.Int64(int64(d.Get(names.AttrRetentionPeriod).(int))),
 		SourceDBInstanceArn:   aws.String(d.Get("source_db_instance_arn").(string)),
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -123,8 +124,8 @@ func resourceInstanceAutomatedBackupsReplicationRead(ctx context.Context, d *sch
 		return sdkdiag.AppendErrorf(diags, "reading RDS instance automated backup (%s): %s", d.Id(), err)
 	}
 
-	d.Set("kms_key_id", backup.KmsKeyId)
-	d.Set("retention_period", backup.BackupRetentionPeriod)
+	d.Set(names.AttrKMSKeyID, backup.KmsKeyId)
+	d.Set(names.AttrRetentionPeriod, backup.BackupRetentionPeriod)
 	d.Set("source_db_instance_arn", backup.DBInstanceArn)
 
 	return diags
@@ -169,10 +170,7 @@ func resourceInstanceAutomatedBackupsReplicationDelete(ctx context.Context, d *s
 	}
 
 	// Create a new client to the source region.
-	sourceDatabaseConn := conn
-	if sourceDatabaseARN.Region != meta.(*conns.AWSClient).Region {
-		sourceDatabaseConn = rds.New(meta.(*conns.AWSClient).Session, aws.NewConfig().WithRegion(sourceDatabaseARN.Region))
-	}
+	sourceDatabaseConn := meta.(*conns.AWSClient).RDSConnForRegion(ctx, sourceDatabaseARN.Region)
 
 	if _, err := waitDBInstanceAutomatedBackupDeleted(ctx, sourceDatabaseConn, dbInstanceID, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for DB instance automated backup (%s) delete: %s", d.Id(), err)

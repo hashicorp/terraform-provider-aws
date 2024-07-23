@@ -62,6 +62,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the customer gateway.
 * `bgp_asn` - Gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN).
+* `bgp_asn_extended` - Gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN).
 * `certificate_arn` - ARN for the customer gateway certificate.
 * `device_name` - Name for the customer gateway device.
 * `ip_address` - IP address of the gateway's Internet-routable external interface.
@@ -74,4 +75,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.19.0 input-e72280e509c2817731cdebdb6406a3889d39f235f042905746f02db00e556305 -->
+<!-- cache-key: cdktf-0.20.1 input-323e8a0aaa7a35d5108570e2a9e6c0bf67943d1d1bebc7ad0e2935acaed0f304 -->

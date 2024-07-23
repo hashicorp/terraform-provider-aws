@@ -172,4 +172,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `result` - String result of the lambda function invocation.
 
-<!-- cache-key: cdktf-0.19.0 input-7112258209b5478d3ef1a608e7acf55c35e00752fc231e672e536ec0d294422f -->
+<!-- cache-key: cdktf-0.20.1 input-7112258209b5478d3ef1a608e7acf55c35e00752fc231e672e536ec0d294422f -->

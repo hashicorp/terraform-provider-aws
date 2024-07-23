@@ -13,22 +13,25 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_security_group_rule")
-func ResourceSecurityGroupRule() *schema.Resource {
+// @SDKResource("aws_security_group_rule", name="Security Group Rule")
+func resourceSecurityGroupRule() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityGroupRuleCreate,
@@ -45,7 +48,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 		},
 
 		SchemaVersion: 2,
-		MigrateState:  SecurityGroupRuleMigrateState,
+		MigrateState:  securityGroupRuleMigrateState,
 
 		Schema: map[string]*schema.Schema{
 			"cidr_blocks": {
@@ -59,7 +62,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				ConflictsWith: []string{"source_security_group_id", "self"},
 				AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validSecurityGroupRuleDescription,
@@ -70,7 +73,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				ForceNew: true,
 				// Support existing configurations that have non-zero from_port and to_port defined with all protocols
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					protocol := ProtocolForValue(d.Get("protocol").(string))
+					protocol := protocolForValue(d.Get(names.AttrProtocol).(string))
 					if protocol == "-1" && old == "0" {
 						return true
 					}
@@ -98,11 +101,11 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				},
 				AtLeastOneOf: []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:      schema.TypeString,
 				Required:  true,
 				ForceNew:  true,
-				StateFunc: ProtocolStateFunc,
+				StateFunc: protocolStateFunc,
 			},
 			"security_group_id": {
 				Type:     schema.TypeString,
@@ -135,18 +138,18 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				ForceNew: true,
 				// Support existing configurations that have non-zero from_port and to_port defined with all protocols
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					protocol := ProtocolForValue(d.Get("protocol").(string))
+					protocol := protocolForValue(d.Get(names.AttrProtocol).(string))
 					if protocol == "-1" && old == "0" {
 						return true
 					}
 					return false
 				},
 			},
-			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(securityGroupRuleType_Values(), false),
+			names.AttrType: {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[securityGroupRuleType](),
 			},
 		},
 	}
@@ -155,31 +158,31 @@ func ResourceSecurityGroupRule() *schema.Resource {
 func resourceSecurityGroupRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	securityGroupID := d.Get("security_group_id").(string)
 
 	conns.GlobalMutexKV.Lock(securityGroupID)
 	defer conns.GlobalMutexKV.Unlock(securityGroupID)
 
-	sg, err := FindSecurityGroupByID(ctx, conn, securityGroupID)
+	sg, err := findSecurityGroupByID(ctx, conn, securityGroupID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", securityGroupID, err)
 	}
 
 	ipPermission := expandIPPermission(d, sg)
-	ruleType := d.Get("type").(string)
-	id := SecurityGroupRuleCreateID(securityGroupID, ruleType, ipPermission)
+	ruleType := securityGroupRuleType(d.Get(names.AttrType).(string))
+	id := securityGroupRuleCreateID(securityGroupID, string(ruleType), &ipPermission)
 
 	switch ruleType {
 	case securityGroupRuleTypeIngress:
 		input := &ec2.AuthorizeSecurityGroupIngressInput{
 			GroupId:       sg.GroupId,
-			IpPermissions: []*ec2.IpPermission{ipPermission},
+			IpPermissions: []awstypes.IpPermission{ipPermission},
 		}
 		var output *ec2.AuthorizeSecurityGroupIngressOutput
 
-		output, err = conn.AuthorizeSecurityGroupIngressWithContext(ctx, input)
+		output, err = conn.AuthorizeSecurityGroupIngress(ctx, input)
 
 		if err == nil {
 			if len(output.SecurityGroupRules) == 1 {
@@ -192,11 +195,11 @@ func resourceSecurityGroupRuleCreate(ctx context.Context, d *schema.ResourceData
 	case securityGroupRuleTypeEgress:
 		input := &ec2.AuthorizeSecurityGroupEgressInput{
 			GroupId:       sg.GroupId,
-			IpPermissions: []*ec2.IpPermission{ipPermission},
+			IpPermissions: []awstypes.IpPermission{ipPermission},
 		}
 		var output *ec2.AuthorizeSecurityGroupEgressOutput
 
-		output, err = conn.AuthorizeSecurityGroupEgressWithContext(ctx, input)
+		output, err = conn.AuthorizeSecurityGroupEgress(ctx, input)
 
 		if err == nil {
 			if len(output.SecurityGroupRules) == 1 {
@@ -220,13 +223,13 @@ information and instructions for recovery. Error: %s`, securityGroupID, err)
 	}
 
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		sg, err := FindSecurityGroupByID(ctx, conn, securityGroupID)
+		sg, err := findSecurityGroupByID(ctx, conn, securityGroupID)
 
 		if err != nil {
 			return nil, err
 		}
 
-		var rules []*ec2.IpPermission
+		var rules []awstypes.IpPermission
 
 		if ruleType == securityGroupRuleTypeIngress {
 			rules = sg.IpPermissions
@@ -255,11 +258,11 @@ information and instructions for recovery. Error: %s`, securityGroupID, err)
 func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	securityGroupID := d.Get("security_group_id").(string)
-	ruleType := d.Get("type").(string)
+	ruleType := securityGroupRuleType(d.Get(names.AttrType).(string))
 
-	sg, err := FindSecurityGroupByID(ctx, conn, securityGroupID)
+	sg, err := findSecurityGroupByID(ctx, conn, securityGroupID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Group (%s) not found, removing from state", securityGroupID)
@@ -273,7 +276,7 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 
 	ipPermission := expandIPPermission(d, sg)
 
-	var rules []*ec2.IpPermission
+	var rules []awstypes.IpPermission
 
 	if ruleType == securityGroupRuleTypeIngress {
 		rules = sg.IpPermissions
@@ -294,18 +297,26 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s) Rule (%s): %s", securityGroupID, d.Id(), &retry.NotFoundError{})
 	}
 
-	flattenIpPermission(d, ipPermission)
-	d.Set("description", description)
-	d.Set("type", ruleType)
+	flattenIpPermission(d, &ipPermission)
+
+	if description != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
+		d.Set(names.AttrDescription, description)
+	}
+	d.Set(names.AttrType, ruleType)
 
 	if strings.Contains(d.Id(), securityGroupRuleIDSeparator) {
 		// import so fix the id
-		id := SecurityGroupRuleCreateID(securityGroupID, ruleType, ipPermission)
+		id := securityGroupRuleCreateID(securityGroupID, string(ruleType), &ipPermission)
 		d.SetId(id)
 	}
 
 	// Attempt to find the single matching AWS Security Group Rule resource ID.
-	securityGroupRules, err := FindSecurityGroupRulesBySecurityGroupID(ctx, conn, securityGroupID)
+	securityGroupRules, err := findSecurityGroupRulesBySecurityGroupID(ctx, conn, securityGroupID)
+
+	// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
+	if tfawserr.ErrCodeEquals(err, errCodeUnsupportedOperation) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s) Rules: %s", securityGroupID, err)
@@ -319,39 +330,39 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 func resourceSecurityGroupRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		securityGroupID := d.Get("security_group_id").(string)
 
 		conns.GlobalMutexKV.Lock(securityGroupID)
 		defer conns.GlobalMutexKV.Unlock(securityGroupID)
 
-		sg, err := FindSecurityGroupByID(ctx, conn, securityGroupID)
+		sg, err := findSecurityGroupByID(ctx, conn, securityGroupID)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", securityGroupID, err)
 		}
 
 		ipPermission := expandIPPermission(d, sg)
-		ruleType := d.Get("type").(string)
+		ruleType := securityGroupRuleType(d.Get(names.AttrType).(string))
 
 		switch ruleType {
 		case securityGroupRuleTypeIngress:
 			input := &ec2.UpdateSecurityGroupRuleDescriptionsIngressInput{
 				GroupId:       sg.GroupId,
-				IpPermissions: []*ec2.IpPermission{ipPermission},
+				IpPermissions: []awstypes.IpPermission{ipPermission},
 			}
 
-			_, err = conn.UpdateSecurityGroupRuleDescriptionsIngressWithContext(ctx, input)
+			_, err = conn.UpdateSecurityGroupRuleDescriptionsIngress(ctx, input)
 
 		case securityGroupRuleTypeEgress:
 			input := &ec2.UpdateSecurityGroupRuleDescriptionsEgressInput{
 				GroupId:       sg.GroupId,
-				IpPermissions: []*ec2.IpPermission{ipPermission},
+				IpPermissions: []awstypes.IpPermission{ipPermission},
 			}
 
-			_, err = conn.UpdateSecurityGroupRuleDescriptionsEgressWithContext(ctx, input)
+			_, err = conn.UpdateSecurityGroupRuleDescriptionsEgress(ctx, input)
 		}
 
 		if err != nil {
@@ -365,37 +376,37 @@ func resourceSecurityGroupRuleUpdate(ctx context.Context, d *schema.ResourceData
 func resourceSecurityGroupRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	securityGroupID := d.Get("security_group_id").(string)
 
 	conns.GlobalMutexKV.Lock(securityGroupID)
 	defer conns.GlobalMutexKV.Unlock(securityGroupID)
 
-	sg, err := FindSecurityGroupByID(ctx, conn, securityGroupID)
+	sg, err := findSecurityGroupByID(ctx, conn, securityGroupID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", securityGroupID, err)
 	}
 
 	ipPermission := expandIPPermission(d, sg)
-	ruleType := d.Get("type").(string)
+	ruleType := securityGroupRuleType(d.Get(names.AttrType).(string))
 
 	switch ruleType {
 	case securityGroupRuleTypeIngress:
 		input := &ec2.RevokeSecurityGroupIngressInput{
 			GroupId:       sg.GroupId,
-			IpPermissions: []*ec2.IpPermission{ipPermission},
+			IpPermissions: []awstypes.IpPermission{ipPermission},
 		}
 
-		_, err = conn.RevokeSecurityGroupIngressWithContext(ctx, input)
+		_, err = conn.RevokeSecurityGroupIngress(ctx, input)
 
 	case securityGroupRuleTypeEgress:
 		input := &ec2.RevokeSecurityGroupEgressInput{
 			GroupId:       sg.GroupId,
-			IpPermissions: []*ec2.IpPermission{ipPermission},
+			IpPermissions: []awstypes.IpPermission{ipPermission},
 		}
 
-		_, err = conn.RevokeSecurityGroupEgressWithContext(ctx, input)
+		_, err = conn.RevokeSecurityGroupEgress(ctx, input)
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidPermissionNotFound) {
@@ -427,7 +438,7 @@ func resourceSecurityGroupRuleImport(_ context.Context, d *schema.ResourceData, 
 	}
 
 	securityGroupID := parts[0]
-	ruleType := parts[1]
+	ruleType := securityGroupRuleType(parts[1])
 	protocol := parts[2]
 	fromPort := parts[3]
 	toPort := parts[4]
@@ -447,7 +458,7 @@ func resourceSecurityGroupRuleImport(_ context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	protocolName := ProtocolForValue(protocol)
+	protocolName := protocolForValue(protocol)
 	if protocolName == "icmp" || protocolName == "icmpv6" {
 		if v, err := strconv.Atoi(fromPort); err != nil || v < -1 || v > 255 {
 			return nil, invalidIDError("invalid icmp type")
@@ -472,8 +483,8 @@ func resourceSecurityGroupRuleImport(_ context.Context, d *schema.ResourceData, 
 	}
 
 	d.Set("security_group_id", securityGroupID)
-	d.Set("type", ruleType)
-	d.Set("protocol", protocolName)
+	d.Set(names.AttrType, ruleType)
+	d.Set(names.AttrProtocol, protocolName)
 	if v, err := strconv.Atoi(fromPort); err == nil {
 		d.Set("from_port", v)
 	}
@@ -506,20 +517,20 @@ func resourceSecurityGroupRuleImport(_ context.Context, d *schema.ResourceData, 
 	return []*schema.ResourceData{d}, nil
 }
 
-func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission) (*ec2.IpPermission, string) {
-	var rule *ec2.IpPermission
-	var description string
+func findRuleMatch(p awstypes.IpPermission, rules []awstypes.IpPermission) (*awstypes.IpPermission, *string) {
+	var rule awstypes.IpPermission
+	var description *string
 
 	for _, r := range rules {
-		if p.ToPort != nil && r.ToPort != nil && aws.Int64Value(p.ToPort) != aws.Int64Value(r.ToPort) {
+		if p.ToPort != nil && r.ToPort != nil && aws.ToInt32(p.ToPort) != aws.ToInt32(r.ToPort) {
 			continue
 		}
 
-		if p.FromPort != nil && r.FromPort != nil && aws.Int64Value(p.FromPort) != aws.Int64Value(r.FromPort) {
+		if p.FromPort != nil && r.FromPort != nil && aws.ToInt32(p.FromPort) != aws.ToInt32(r.FromPort) {
 			continue
 		}
 
-		if p.IpProtocol != nil && r.IpProtocol != nil && aws.StringValue(p.IpProtocol) != aws.StringValue(r.IpProtocol) {
+		if p.IpProtocol != nil && r.IpProtocol != nil && aws.ToString(p.IpProtocol) != aws.ToString(r.IpProtocol) {
 			continue
 		}
 
@@ -529,10 +540,10 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission) (*ec2.IpPermi
 				if v1.CidrIp == nil || v2.CidrIp == nil {
 					continue
 				}
-				if aws.StringValue(v1.CidrIp) == aws.StringValue(v2.CidrIp) {
+				if aws.ToString(v1.CidrIp) == aws.ToString(v2.CidrIp) {
 					remaining--
 
-					if v := aws.StringValue(v2.Description); v != "" && description == "" {
+					if v := v2.Description; v != nil && description == nil {
 						description = v
 					}
 				}
@@ -549,10 +560,10 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission) (*ec2.IpPermi
 				if v1.CidrIpv6 == nil || v2.CidrIpv6 == nil {
 					continue
 				}
-				if aws.StringValue(v1.CidrIpv6) == aws.StringValue(v2.CidrIpv6) {
+				if aws.ToString(v1.CidrIpv6) == aws.ToString(v2.CidrIpv6) {
 					remaining--
 
-					if v := aws.StringValue(v2.Description); v != "" && description == "" {
+					if v := v2.Description; v != nil && description == nil {
 						description = v
 					}
 				}
@@ -569,10 +580,10 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission) (*ec2.IpPermi
 				if v1.PrefixListId == nil || v2.PrefixListId == nil {
 					continue
 				}
-				if aws.StringValue(v1.PrefixListId) == aws.StringValue(v2.PrefixListId) {
+				if aws.ToString(v1.PrefixListId) == aws.ToString(v2.PrefixListId) {
 					remaining--
 
-					if v := aws.StringValue(v2.Description); v != "" && description == "" {
+					if v := v2.Description; v != nil && description == nil {
 						description = v
 					}
 				}
@@ -589,10 +600,10 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission) (*ec2.IpPermi
 				if v1.GroupId == nil || v2.GroupId == nil {
 					continue
 				}
-				if aws.StringValue(v1.GroupId) == aws.StringValue(v2.GroupId) {
+				if aws.ToString(v1.GroupId) == aws.ToString(v2.GroupId) {
 					remaining--
 
-					if v := aws.StringValue(v2.Description); v != "" && description == "" {
+					if v := v2.Description; v != nil && description == nil {
 						description = v
 					}
 				}
@@ -600,7 +611,7 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission) (*ec2.IpPermi
 		}
 
 		if remaining > 0 {
-			description = ""
+			description = nil
 
 			continue
 		}
@@ -608,50 +619,50 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission) (*ec2.IpPermi
 		rule = r
 	}
 
-	return rule, description
+	return &rule, description
 }
 
-func findSecurityGroupRuleMatch(p *ec2.IpPermission, securityGroupRules []*ec2.SecurityGroupRule, ruleType string) string {
+func findSecurityGroupRuleMatch(p awstypes.IpPermission, securityGroupRules []awstypes.SecurityGroupRule, ruleType securityGroupRuleType) string {
 	for _, r := range securityGroupRules {
-		if ruleType == securityGroupRuleTypeIngress && aws.BoolValue(r.IsEgress) {
+		if ruleType == securityGroupRuleTypeIngress && aws.ToBool(r.IsEgress) {
 			continue
 		}
 
-		if p.ToPort != nil && r.ToPort != nil && aws.Int64Value(p.ToPort) != aws.Int64Value(r.ToPort) {
+		if p.ToPort != nil && r.ToPort != nil && aws.ToInt32(p.ToPort) != aws.ToInt32(r.ToPort) {
 			continue
 		}
 
-		if p.FromPort != nil && r.FromPort != nil && aws.Int64Value(p.FromPort) != aws.Int64Value(r.FromPort) {
+		if p.FromPort != nil && r.FromPort != nil && aws.ToInt32(p.FromPort) != aws.ToInt32(r.FromPort) {
 			continue
 		}
 
-		if p.IpProtocol != nil && r.IpProtocol != nil && aws.StringValue(p.IpProtocol) != aws.StringValue(r.IpProtocol) {
+		if p.IpProtocol != nil && r.IpProtocol != nil && aws.ToString(p.IpProtocol) != aws.ToString(r.IpProtocol) {
 			continue
 		}
 
 		// SecurityGroupRule has only a single source or destination set.
 		if r.CidrIpv4 != nil {
-			if len(p.IpRanges) == 1 && aws.StringValue(p.IpRanges[0].CidrIp) == aws.StringValue(r.CidrIpv4) {
+			if len(p.IpRanges) == 1 && aws.ToString(p.IpRanges[0].CidrIp) == aws.ToString(r.CidrIpv4) {
 				if len(p.Ipv6Ranges) == 0 && len(p.PrefixListIds) == 0 && len(p.UserIdGroupPairs) == 0 {
-					return aws.StringValue(r.SecurityGroupRuleId)
+					return aws.ToString(r.SecurityGroupRuleId)
 				}
 			}
 		} else if r.CidrIpv6 != nil {
-			if len(p.Ipv6Ranges) == 1 && aws.StringValue(p.Ipv6Ranges[0].CidrIpv6) == aws.StringValue(r.CidrIpv6) {
+			if len(p.Ipv6Ranges) == 1 && aws.ToString(p.Ipv6Ranges[0].CidrIpv6) == aws.ToString(r.CidrIpv6) {
 				if len(p.IpRanges) == 0 && len(p.PrefixListIds) == 0 && len(p.UserIdGroupPairs) == 0 {
-					return aws.StringValue(r.SecurityGroupRuleId)
+					return aws.ToString(r.SecurityGroupRuleId)
 				}
 			}
 		} else if r.PrefixListId != nil {
-			if len(p.PrefixListIds) == 1 && aws.StringValue(p.PrefixListIds[0].PrefixListId) == aws.StringValue(r.PrefixListId) {
+			if len(p.PrefixListIds) == 1 && aws.ToString(p.PrefixListIds[0].PrefixListId) == aws.ToString(r.PrefixListId) {
 				if len(p.IpRanges) == 0 && len(p.Ipv6Ranges) == 0 && len(p.UserIdGroupPairs) == 0 {
-					return aws.StringValue(r.SecurityGroupRuleId)
+					return aws.ToString(r.SecurityGroupRuleId)
 				}
 			}
 		} else if r.ReferencedGroupInfo != nil {
-			if len(p.UserIdGroupPairs) == 1 && aws.StringValue(p.UserIdGroupPairs[0].GroupId) == aws.StringValue(r.ReferencedGroupInfo.GroupId) {
+			if len(p.UserIdGroupPairs) == 1 && aws.ToString(p.UserIdGroupPairs[0].GroupId) == aws.ToString(r.ReferencedGroupInfo.GroupId) {
 				if len(p.IpRanges) == 0 && len(p.Ipv6Ranges) == 0 && len(p.PrefixListIds) == 0 {
-					return aws.StringValue(r.SecurityGroupRuleId)
+					return aws.ToString(r.SecurityGroupRuleId)
 				}
 			}
 		}
@@ -664,30 +675,30 @@ const securityGroupRuleIDSeparator = "_"
 
 // byGroupPair implements sort.Interface for []*ec2.UserIDGroupPairs based on
 // GroupID or GroupName field (only one should be set).
-type byGroupPair []*ec2.UserIdGroupPair
+type byGroupPair []awstypes.UserIdGroupPair
 
 func (b byGroupPair) Len() int      { return len(b) }
 func (b byGroupPair) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 func (b byGroupPair) Less(i, j int) bool {
 	if b[i].GroupId != nil && b[j].GroupId != nil {
-		return aws.StringValue(b[i].GroupId) < aws.StringValue(b[j].GroupId)
+		return aws.ToString(b[i].GroupId) < aws.ToString(b[j].GroupId)
 	}
 	if b[i].GroupName != nil && b[j].GroupName != nil {
-		return aws.StringValue(b[i].GroupName) < aws.StringValue(b[j].GroupName)
+		return aws.ToString(b[i].GroupName) < aws.ToString(b[j].GroupName)
 	}
 
 	//lintignore:R009
 	panic("mismatched security group rules, may be a terraform bug")
 }
 
-func SecurityGroupRuleCreateID(securityGroupID, ruleType string, ip *ec2.IpPermission) string {
+func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.IpPermission) string {
 	var buf bytes.Buffer
 
 	buf.WriteString(fmt.Sprintf("%s-", securityGroupID))
-	if aws.Int64Value(ip.FromPort) > 0 {
+	if aws.ToInt32(ip.FromPort) > 0 {
 		buf.WriteString(fmt.Sprintf("%d-", *ip.FromPort))
 	}
-	if aws.Int64Value(ip.ToPort) > 0 {
+	if aws.ToInt32(ip.ToPort) > 0 {
 		buf.WriteString(fmt.Sprintf("%d-", *ip.ToPort))
 	}
 	buf.WriteString(fmt.Sprintf("%s-", *ip.IpProtocol))
@@ -698,7 +709,7 @@ func SecurityGroupRuleCreateID(securityGroupID, ruleType string, ip *ec2.IpPermi
 	if len(ip.IpRanges) > 0 {
 		s := make([]string, len(ip.IpRanges))
 		for i, r := range ip.IpRanges {
-			s[i] = aws.StringValue(r.CidrIp)
+			s[i] = aws.ToString(r.CidrIp)
 		}
 		sort.Strings(s)
 
@@ -710,7 +721,7 @@ func SecurityGroupRuleCreateID(securityGroupID, ruleType string, ip *ec2.IpPermi
 	if len(ip.Ipv6Ranges) > 0 {
 		s := make([]string, len(ip.Ipv6Ranges))
 		for i, r := range ip.Ipv6Ranges {
-			s[i] = aws.StringValue(r.CidrIpv6)
+			s[i] = aws.ToString(r.CidrIpv6)
 		}
 		sort.Strings(s)
 
@@ -722,7 +733,7 @@ func SecurityGroupRuleCreateID(securityGroupID, ruleType string, ip *ec2.IpPermi
 	if len(ip.PrefixListIds) > 0 {
 		s := make([]string, len(ip.PrefixListIds))
 		for i, pl := range ip.PrefixListIds {
-			s[i] = aws.StringValue(pl.PrefixListId)
+			s[i] = aws.ToString(pl.PrefixListId)
 		}
 		sort.Strings(s)
 
@@ -750,20 +761,20 @@ func SecurityGroupRuleCreateID(securityGroupID, ruleType string, ip *ec2.IpPermi
 	return fmt.Sprintf("sgrule-%d", create.StringHashcode(buf.String()))
 }
 
-func expandIPPermission(d *schema.ResourceData, sg *ec2.SecurityGroup) *ec2.IpPermission { // nosemgrep:ci.caps5-in-func-name
-	apiObject := &ec2.IpPermission{
-		IpProtocol: aws.String(ProtocolForValue(d.Get("protocol").(string))),
+func expandIPPermission(d *schema.ResourceData, sg *awstypes.SecurityGroup) awstypes.IpPermission { // nosemgrep:ci.caps5-in-func-name
+	apiObject := awstypes.IpPermission{
+		IpProtocol: aws.String(protocolForValue(d.Get(names.AttrProtocol).(string))),
 	}
 
 	// InvalidParameterValue: When protocol is ALL, you cannot specify from-port.
-	if v := aws.StringValue(apiObject.IpProtocol); v != "-1" {
-		apiObject.FromPort = aws.Int64(int64(d.Get("from_port").(int)))
-		apiObject.ToPort = aws.Int64(int64(d.Get("to_port").(int)))
+	if v := aws.ToString(apiObject.IpProtocol); v != "-1" {
+		apiObject.FromPort = aws.Int32(int32(d.Get("from_port").(int)))
+		apiObject.ToPort = aws.Int32(int32(d.Get("to_port").(int)))
 	}
 
 	if v, ok := d.GetOk("cidr_blocks"); ok && len(v.([]interface{})) > 0 {
 		for _, v := range v.([]interface{}) {
-			apiObject.IpRanges = append(apiObject.IpRanges, &ec2.IpRange{
+			apiObject.IpRanges = append(apiObject.IpRanges, awstypes.IpRange{
 				CidrIp: aws.String(v.(string)),
 			})
 		}
@@ -771,7 +782,7 @@ func expandIPPermission(d *schema.ResourceData, sg *ec2.SecurityGroup) *ec2.IpPe
 
 	if v, ok := d.GetOk("ipv6_cidr_blocks"); ok && len(v.([]interface{})) > 0 {
 		for _, v := range v.([]interface{}) {
-			apiObject.Ipv6Ranges = append(apiObject.Ipv6Ranges, &ec2.Ipv6Range{
+			apiObject.Ipv6Ranges = append(apiObject.Ipv6Ranges, awstypes.Ipv6Range{
 				CidrIpv6: aws.String(v.(string)),
 			})
 		}
@@ -779,7 +790,7 @@ func expandIPPermission(d *schema.ResourceData, sg *ec2.SecurityGroup) *ec2.IpPe
 
 	if v, ok := d.GetOk("prefix_list_ids"); ok && len(v.([]interface{})) > 0 {
 		for _, v := range v.([]interface{}) {
-			apiObject.PrefixListIds = append(apiObject.PrefixListIds, &ec2.PrefixListId{
+			apiObject.PrefixListIds = append(apiObject.PrefixListIds, awstypes.PrefixListId{
 				PrefixListId: aws.String(v.(string)),
 			})
 		}
@@ -788,8 +799,8 @@ func expandIPPermission(d *schema.ResourceData, sg *ec2.SecurityGroup) *ec2.IpPe
 	var self string
 
 	if _, ok := d.GetOk("self"); ok {
-		self = aws.StringValue(sg.GroupId)
-		apiObject.UserIdGroupPairs = append(apiObject.UserIdGroupPairs, &ec2.UserIdGroupPair{
+		self = aws.ToString(sg.GroupId)
+		apiObject.UserIdGroupPairs = append(apiObject.UserIdGroupPairs, awstypes.UserIdGroupPair{
 			GroupId: aws.String(self),
 		})
 	}
@@ -798,11 +809,11 @@ func expandIPPermission(d *schema.ResourceData, sg *ec2.SecurityGroup) *ec2.IpPe
 		if v := v.(string); v != self {
 			// [OwnerID/]SecurityGroupID.
 			if parts := strings.Split(v, "/"); len(parts) == 1 {
-				apiObject.UserIdGroupPairs = append(apiObject.UserIdGroupPairs, &ec2.UserIdGroupPair{
+				apiObject.UserIdGroupPairs = append(apiObject.UserIdGroupPairs, awstypes.UserIdGroupPair{
 					GroupId: aws.String(v),
 				})
 			} else {
-				apiObject.UserIdGroupPairs = append(apiObject.UserIdGroupPairs, &ec2.UserIdGroupPair{
+				apiObject.UserIdGroupPairs = append(apiObject.UserIdGroupPairs, awstypes.UserIdGroupPair{
 					GroupId: aws.String(parts[1]),
 					UserId:  aws.String(parts[0]),
 				})
@@ -810,43 +821,42 @@ func expandIPPermission(d *schema.ResourceData, sg *ec2.SecurityGroup) *ec2.IpPe
 		}
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		description := v.(string)
-
-		for _, v := range apiObject.IpRanges {
-			v.Description = aws.String(description)
+		for i := range apiObject.IpRanges {
+			apiObject.IpRanges[i].Description = aws.String(description)
 		}
 
-		for _, v := range apiObject.Ipv6Ranges {
-			v.Description = aws.String(description)
+		for i := range apiObject.Ipv6Ranges {
+			apiObject.Ipv6Ranges[i].Description = aws.String(description)
 		}
 
-		for _, v := range apiObject.PrefixListIds {
-			v.Description = aws.String(description)
+		for i := range apiObject.PrefixListIds {
+			apiObject.PrefixListIds[i].Description = aws.String(description)
 		}
 
-		for _, v := range apiObject.UserIdGroupPairs {
-			v.Description = aws.String(description)
+		for i := range apiObject.UserIdGroupPairs {
+			apiObject.UserIdGroupPairs[i].Description = aws.String(description)
 		}
 	}
 
 	return apiObject
 }
 
-func flattenIpPermission(d *schema.ResourceData, apiObject *ec2.IpPermission) { // nosemgrep:ci.caps5-in-func-name
+func flattenIpPermission(d *schema.ResourceData, apiObject *awstypes.IpPermission) { // nosemgrep:ci.caps5-in-func-name
 	if apiObject == nil {
 		return
 	}
 
 	d.Set("from_port", apiObject.FromPort)
-	d.Set("protocol", apiObject.IpProtocol)
+	d.Set(names.AttrProtocol, apiObject.IpProtocol)
 	d.Set("to_port", apiObject.ToPort)
 
 	if v := apiObject.IpRanges; len(v) > 0 {
 		var ipRanges []string
 
 		for _, v := range v {
-			ipRanges = append(ipRanges, aws.StringValue(v.CidrIp))
+			ipRanges = append(ipRanges, aws.ToString(v.CidrIp))
 		}
 
 		d.Set("cidr_blocks", ipRanges)
@@ -856,7 +866,7 @@ func flattenIpPermission(d *schema.ResourceData, apiObject *ec2.IpPermission) { 
 		var ipv6Ranges []string
 
 		for _, v := range v {
-			ipv6Ranges = append(ipv6Ranges, aws.StringValue(v.CidrIpv6))
+			ipv6Ranges = append(ipv6Ranges, aws.ToString(v.CidrIpv6))
 		}
 
 		d.Set("ipv6_cidr_blocks", ipv6Ranges)
@@ -866,7 +876,7 @@ func flattenIpPermission(d *schema.ResourceData, apiObject *ec2.IpPermission) { 
 		var prefixListIDs []string
 
 		for _, v := range v {
-			prefixListIDs = append(prefixListIDs, aws.StringValue(v.PrefixListId))
+			prefixListIDs = append(prefixListIDs, aws.ToString(v.PrefixListId))
 		}
 
 		d.Set("prefix_list_ids", prefixListIDs)
@@ -877,10 +887,10 @@ func flattenIpPermission(d *schema.ResourceData, apiObject *ec2.IpPermission) { 
 
 		if old, ok := d.GetOk("source_security_group_id"); ok {
 			// [OwnerID/]SecurityGroupID.
-			if parts := strings.Split(old.(string), "/"); len(parts) == 1 || aws.StringValue(v.UserId) == "" {
+			if parts := strings.Split(old.(string), "/"); len(parts) == 1 || aws.ToString(v.UserId) == "" {
 				d.Set("source_security_group_id", v.GroupId)
 			} else {
-				d.Set("source_security_group_id", strings.Join([]string{aws.StringValue(v.UserId), aws.StringValue(v.GroupId)}, "/"))
+				d.Set("source_security_group_id", strings.Join([]string{aws.ToString(v.UserId), aws.ToString(v.GroupId)}, "/"))
 			}
 		}
 	}

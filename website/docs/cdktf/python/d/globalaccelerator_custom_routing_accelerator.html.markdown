@@ -56,4 +56,4 @@ This data source supports the following arguments:
 See the [`aws_globalaccelerator_custom_routing_accelerator` resource](/docs/providers/aws/r/globalaccelerator_custom_routing_accelerator.html) for details on the
 returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.19.0 input-fb49b3a4aad72882bbe051a5e4ad191bf14607b4e514940f142786757b6b692c -->
+<!-- cache-key: cdktf-0.20.1 input-fb49b3a4aad72882bbe051a5e4ad191bf14607b4e514940f142786757b6b692c -->

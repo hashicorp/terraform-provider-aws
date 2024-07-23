@@ -26,9 +26,9 @@ func TestAccChimeSDKVoiceGlobalSettings_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccGlobalSettings_basic,
-		"disappears": testAccGlobalSettings_disappears,
-		"update":     testAccGlobalSettings_update,
+		acctest.CtBasic:      testAccGlobalSettings_basic,
+		acctest.CtDisappears: testAccGlobalSettings_disappears,
+		"update":             testAccGlobalSettings_update,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -42,14 +42,14 @@ func testAccGlobalSettings_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, names.AttrID),
 				),
 			},
 			{
@@ -68,7 +68,7 @@ func testAccGlobalSettings_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -95,14 +95,14 @@ func testAccGlobalSettings_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, names.USEast1RegionID) // run test in us-east-1 only since eventual consistency causes intermittent failures in other regions.
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, names.AttrID),
 				),
 			},
 			// Note: due to eventual consistency, the read after update can occasionally
@@ -111,7 +111,7 @@ func testAccGlobalSettings_update(t *testing.T) {
 			{
 				Config: testAccGlobalSettingsConfig_basic(rNameUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, names.AttrID),
 				),
 			},
 		},

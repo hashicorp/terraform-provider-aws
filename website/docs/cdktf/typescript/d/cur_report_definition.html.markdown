@@ -12,7 +12,7 @@ description: |-
 
 Use this data source to get information on an AWS Cost and Usage Report Definition.
 
-~> *NOTE:* The AWS Cost and Usage Report service is only available in `usEast1` currently.
+~> *NOTE:* The AWS Cost and Usage Report service is only available in `us-east-1` currently.
 
 ~> *NOTE:* If AWS Organizations is enabled, only the master account can use this resource.
 
@@ -59,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `refreshClosedReports` - If true reports are updated after they have been finalized.
 * `reportVersioning` - Overwrite the previous version of each report or to deliver the report in addition to the previous versions.
 
-<!-- cache-key: cdktf-0.19.0 input-7c41a2bcbec1b1838d1888c217040322a9f0e0110b3b20e4772db0809292f796 -->
+<!-- cache-key: cdktf-0.20.1 input-7c41a2bcbec1b1838d1888c217040322a9f0e0110b3b20e4772db0809292f796 -->

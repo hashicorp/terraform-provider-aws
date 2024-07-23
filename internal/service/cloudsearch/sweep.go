@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudsearch"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudsearch"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -27,31 +27,34 @@ func sweepDomains(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.CloudSearchConn(ctx)
+	conn := client.CloudSearchClient(ctx)
 	input := &cloudsearch.DescribeDomainsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	domains, err := conn.DescribeDomainsWithContext(ctx, input)
+	domains, err := conn.DescribeDomains(ctx, input)
 
-	for _, domain := range domains.DomainStatusList {
-		if aws.BoolValue(domain.Deleted) {
-			continue
-		}
-
-		r := ResourceDomain()
-		d := r.Data(nil)
-		d.SetId(aws.StringValue(domain.DomainName))
-
-		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-	}
-
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudSearch Domain sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
 		return fmt.Errorf("error listing CloudSearch Domains (%s): %w", region, err)
+	}
+
+	for _, v := range domains.DomainStatusList {
+		name := aws.ToString(v.DomainName)
+
+		if deleted := aws.ToBool(v.Deleted); deleted {
+			log.Printf("[INFO] Skipping CloudSearch Domain %s: Deleted=%t", name, deleted)
+			continue
+		}
+
+		r := resourceDomain()
+		d := r.Data(nil)
+		d.SetId(name)
+
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)

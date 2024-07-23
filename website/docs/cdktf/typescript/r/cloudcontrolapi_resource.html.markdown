@@ -55,7 +55,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `roleArn` - (Optional) Amazon Resource Name (ARN) of the IAM Role to assume for operations.
-* `schema` - (Optional) JSON string of the CloudFormation resource type schema which is used for plan time validation where possible. Automatically fetched if not provided. In large scale environments with multiple resources using the same `type_name`, it is recommended to fetch the schema once via the [`aws_cloudformation_type` data source](/docs/providers/aws/d/cloudformation_type.html) and use this argument to reduce `DescribeType` API operation throttling. This value is marked sensitive only to prevent large plan differences from showing.
+* `schema` - (Optional) JSON string of the CloudFormation resource type schema which is used for plan time validation where possible. Automatically fetched if not provided. In large scale environments with multiple resources using the same `typeName`, it is recommended to fetch the schema once via the [`aws_cloudformation_type` data source](/docs/providers/aws/d/cloudformation_type.html) and use this argument to reduce `DescribeType` API operation throttling. This value is marked sensitive only to prevent large plan differences from showing.
 * `typeVersionId` - (Optional) Identifier of the CloudFormation resource type version.
 
 ## Attribute Reference
@@ -64,4 +64,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `properties` - JSON string matching the CloudFormation resource type schema with current configuration. Underlying attributes can be referenced via the [`jsondecode()` function](https://www.terraform.io/docs/language/functions/jsondecode.html), for example, `jsondecode(data.aws_cloudcontrolapi_resource.example.properties)["example"]`.
 
-<!-- cache-key: cdktf-0.19.0 input-cf513e77c3363383fd47f2e480126cd6439d06b2a5ae773b5b9401ac9b353ec6 -->
+<!-- cache-key: cdktf-0.20.1 input-cf513e77c3363383fd47f2e480126cd6439d06b2a5ae773b5b9401ac9b353ec6 -->

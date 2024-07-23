@@ -16,6 +16,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/configschema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/hcl2shim"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging"
@@ -27,6 +28,9 @@ import (
 const (
 	newExtraKey = "_new_extra_shim"
 )
+
+// Verify provider server interface implementation.
+var _ tfprotov5.ProviderServer = (*GRPCProviderServer)(nil)
 
 func NewGRPCProviderServer(p *Provider) *GRPCProviderServer {
 	return &GRPCProviderServer{
@@ -80,6 +84,7 @@ func (s *GRPCProviderServer) GetMetadata(ctx context.Context, req *tfprotov5.Get
 
 	resp := &tfprotov5.GetMetadataResponse{
 		DataSources:        make([]tfprotov5.DataSourceMetadata, 0, len(s.provider.DataSourcesMap)),
+		Functions:          make([]tfprotov5.FunctionMetadata, 0),
 		Resources:          make([]tfprotov5.ResourceMetadata, 0, len(s.provider.ResourcesMap)),
 		ServerCapabilities: s.serverCapabilities(),
 	}
@@ -106,6 +111,7 @@ func (s *GRPCProviderServer) GetProviderSchema(ctx context.Context, req *tfproto
 
 	resp := &tfprotov5.GetProviderSchemaResponse{
 		DataSourceSchemas:  make(map[string]*tfprotov5.Schema, len(s.provider.DataSourcesMap)),
+		Functions:          make(map[string]*tfprotov5.Function, 0),
 		ResourceSchemas:    make(map[string]*tfprotov5.Schema, len(s.provider.ResourcesMap)),
 		ServerCapabilities: s.serverCapabilities(),
 	}
@@ -601,11 +607,36 @@ func (s *GRPCProviderServer) ConfigureProvider(ctx context.Context, req *tfproto
 	// request scoped contexts, however this is a large undertaking for very large providers.
 	ctxHack := context.WithValue(ctx, StopContextKey, s.StopContext(context.Background()))
 
+	// NOTE: This is a hack to pass the deferral_allowed field from the Terraform client to the
+	// underlying (provider).Configure function, which cannot be changed because the function
+	// signature is public. (╯°□°)╯︵ ┻━┻
+	s.provider.deferralAllowed = configureDeferralAllowed(req.ClientCapabilities)
+
 	logging.HelperSchemaTrace(ctx, "Calling downstream")
 	diags := s.provider.Configure(ctxHack, config)
 	logging.HelperSchemaTrace(ctx, "Called downstream")
 
 	resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, diags)
+
+	if s.provider.providerDeferred != nil {
+		// Check if a deferred response was incorrectly set on the provider. This would cause an error during later RPCs.
+		if !s.provider.deferralAllowed {
+			resp.Diagnostics = append(resp.Diagnostics, &tfprotov5.Diagnostic{
+				Severity: tfprotov5.DiagnosticSeverityError,
+				Summary:  "Invalid Deferred Provider Response",
+				Detail: "Provider configured a deferred response for all resources and data sources but the Terraform request " +
+					"did not indicate support for deferred actions. This is an issue with the provider and should be reported to the provider developers.",
+			})
+		} else {
+			logging.HelperSchemaDebug(
+				ctx,
+				"Provider has configured a deferred response, all associated resources and data sources will automatically return a deferred response.",
+				map[string]interface{}{
+					logging.KeyDeferredReason: s.provider.providerDeferred.Reason.String(),
+				},
+			)
+		}
+	}
 
 	return resp, nil
 }
@@ -625,6 +656,22 @@ func (s *GRPCProviderServer) ReadResource(ctx context.Context, req *tfprotov5.Re
 		return resp, nil
 	}
 	schemaBlock := s.getResourceSchemaBlock(req.TypeName)
+
+	if s.provider.providerDeferred != nil {
+		logging.HelperSchemaDebug(
+			ctx,
+			"Provider has deferred response configured, automatically returning deferred response.",
+			map[string]interface{}{
+				logging.KeyDeferredReason: s.provider.providerDeferred.Reason.String(),
+			},
+		)
+
+		resp.NewState = req.CurrentState
+		resp.Deferred = &tfprotov5.Deferred{
+			Reason: tfprotov5.DeferredReason(s.provider.providerDeferred.Reason),
+		}
+		return resp, nil
+	}
 
 	stateVal, err := msgpack.Unmarshal(req.CurrentState.MsgPack, schemaBlock.ImpliedType())
 	if err != nil {
@@ -723,6 +770,25 @@ func (s *GRPCProviderServer) PlanResourceChange(ctx context.Context, req *tfprot
 	if !res.EnableLegacyTypeSystemPlanErrors {
 		//nolint:staticcheck // explicitly for this SDK
 		resp.UnsafeToUseLegacyTypeSystem = true
+	}
+
+	// Provider deferred response is present and the resource hasn't opted-in to CustomizeDiff being called, return early
+	// with proposed new state as a best effort for PlannedState.
+	if s.provider.providerDeferred != nil && !res.ResourceBehavior.ProviderDeferred.EnablePlanModification {
+		logging.HelperSchemaDebug(
+			ctx,
+			"Provider has deferred response configured, automatically returning deferred response.",
+			map[string]interface{}{
+				logging.KeyDeferredReason: s.provider.providerDeferred.Reason.String(),
+			},
+		)
+
+		resp.PlannedState = req.ProposedNewState
+		resp.PlannedPrivate = req.PriorPrivate
+		resp.Deferred = &tfprotov5.Deferred{
+			Reason: tfprotov5.DeferredReason(s.provider.providerDeferred.Reason),
+		}
+		return resp, nil
 	}
 
 	priorStateVal, err := msgpack.Unmarshal(req.PriorState.MsgPack, schemaBlock.ImpliedType())
@@ -945,6 +1011,21 @@ func (s *GRPCProviderServer) PlanResourceChange(ctx context.Context, req *tfprot
 		resp.RequiresReplace = append(resp.RequiresReplace, pathToAttributePath(p))
 	}
 
+	// Provider deferred response is present, add the deferred response alongside the provider-modified plan
+	if s.provider.providerDeferred != nil {
+		logging.HelperSchemaDebug(
+			ctx,
+			"Provider has deferred response configured, returning deferred response with modified plan.",
+			map[string]interface{}{
+				logging.KeyDeferredReason: s.provider.providerDeferred.Reason.String(),
+			},
+		)
+
+		resp.Deferred = &tfprotov5.Deferred{
+			Reason: tfprotov5.DeferredReason(s.provider.providerDeferred.Reason),
+		}
+	}
+
 	return resp, nil
 }
 
@@ -1139,6 +1220,48 @@ func (s *GRPCProviderServer) ImportResourceState(ctx context.Context, req *tfpro
 		Type: req.TypeName,
 	}
 
+	if s.provider.providerDeferred != nil {
+		logging.HelperSchemaDebug(
+			ctx,
+			"Provider has deferred response configured, automatically returning deferred response.",
+			map[string]interface{}{
+				logging.KeyDeferredReason: s.provider.providerDeferred.Reason.String(),
+			},
+		)
+
+		// The logic for ensuring the resource type is supported by this provider is inside of (provider).ImportState
+		// We need to check to ensure the resource type is supported before using the schema
+		_, ok := s.provider.ResourcesMap[req.TypeName]
+		if !ok {
+			resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, fmt.Errorf("unknown resource type: %s", req.TypeName))
+			return resp, nil
+		}
+
+		// Since we are automatically deferring, send back an unknown value for the imported object
+		schemaBlock := s.getResourceSchemaBlock(req.TypeName)
+		unknownVal := cty.UnknownVal(schemaBlock.ImpliedType())
+		unknownStateMp, err := msgpack.Marshal(unknownVal, schemaBlock.ImpliedType())
+		if err != nil {
+			resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+			return resp, nil
+		}
+
+		resp.ImportedResources = []*tfprotov5.ImportedResource{
+			{
+				TypeName: req.TypeName,
+				State: &tfprotov5.DynamicValue{
+					MsgPack: unknownStateMp,
+				},
+			},
+		}
+
+		resp.Deferred = &tfprotov5.Deferred{
+			Reason: tfprotov5.DeferredReason(s.provider.providerDeferred.Reason),
+		}
+
+		return resp, nil
+	}
+
 	newInstanceStates, err := s.provider.ImportState(ctx, info, req.ID)
 	if err != nil {
 		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
@@ -1206,11 +1329,73 @@ func (s *GRPCProviderServer) ImportResourceState(ctx context.Context, req *tfpro
 	return resp, nil
 }
 
+func (s *GRPCProviderServer) MoveResourceState(ctx context.Context, req *tfprotov5.MoveResourceStateRequest) (*tfprotov5.MoveResourceStateResponse, error) {
+	if req == nil {
+		return nil, fmt.Errorf("MoveResourceState request is nil")
+	}
+
+	ctx = logging.InitContext(ctx)
+
+	logging.HelperSchemaTrace(ctx, "Returning error for MoveResourceState")
+
+	resp := &tfprotov5.MoveResourceStateResponse{}
+
+	_, ok := s.provider.ResourcesMap[req.TargetTypeName]
+
+	if !ok {
+		resp.Diagnostics = []*tfprotov5.Diagnostic{
+			{
+				Severity: tfprotov5.DiagnosticSeverityError,
+				Summary:  "Unknown Resource Type",
+				Detail:   fmt.Sprintf("The %q resource type is not supported by this provider.", req.TargetTypeName),
+			},
+		}
+
+		return resp, nil
+	}
+
+	resp.Diagnostics = []*tfprotov5.Diagnostic{
+		{
+			Severity: tfprotov5.DiagnosticSeverityError,
+			Summary:  "Move Resource State Not Supported",
+			Detail:   fmt.Sprintf("The %q resource type does not support moving resource state across resource types.", req.TargetTypeName),
+		},
+	}
+
+	return resp, nil
+}
+
 func (s *GRPCProviderServer) ReadDataSource(ctx context.Context, req *tfprotov5.ReadDataSourceRequest) (*tfprotov5.ReadDataSourceResponse, error) {
 	ctx = logging.InitContext(ctx)
 	resp := &tfprotov5.ReadDataSourceResponse{}
 
 	schemaBlock := s.getDatasourceSchemaBlock(req.TypeName)
+
+	if s.provider.providerDeferred != nil {
+		logging.HelperSchemaDebug(
+			ctx,
+			"Provider has deferred response configured, automatically returning deferred response.",
+			map[string]interface{}{
+				logging.KeyDeferredReason: s.provider.providerDeferred.Reason.String(),
+			},
+		)
+
+		// Send an unknown value for the data source
+		unknownVal := cty.UnknownVal(schemaBlock.ImpliedType())
+		unknownStateMp, err := msgpack.Marshal(unknownVal, schemaBlock.ImpliedType())
+		if err != nil {
+			resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+			return resp, nil
+		}
+
+		resp.State = &tfprotov5.DynamicValue{
+			MsgPack: unknownStateMp,
+		}
+		resp.Deferred = &tfprotov5.Deferred{
+			Reason: tfprotov5.DeferredReason(s.provider.providerDeferred.Reason),
+		}
+		return resp, nil
+	}
 
 	configVal, err := msgpack.Unmarshal(req.Config.MsgPack, schemaBlock.ImpliedType())
 	if err != nil {
@@ -1268,6 +1453,32 @@ func (s *GRPCProviderServer) ReadDataSource(ctx context.Context, req *tfprotov5.
 	resp.State = &tfprotov5.DynamicValue{
 		MsgPack: newStateMP,
 	}
+	return resp, nil
+}
+
+func (s *GRPCProviderServer) CallFunction(ctx context.Context, req *tfprotov5.CallFunctionRequest) (*tfprotov5.CallFunctionResponse, error) {
+	ctx = logging.InitContext(ctx)
+
+	logging.HelperSchemaTrace(ctx, "Returning error for provider function call")
+
+	resp := &tfprotov5.CallFunctionResponse{
+		Error: &tfprotov5.FunctionError{
+			Text: fmt.Sprintf("Function Not Found: No function named %q was found in the provider.", req.Name),
+		},
+	}
+
+	return resp, nil
+}
+
+func (s *GRPCProviderServer) GetFunctions(ctx context.Context, req *tfprotov5.GetFunctionsRequest) (*tfprotov5.GetFunctionsResponse, error) {
+	ctx = logging.InitContext(ctx)
+
+	logging.HelperSchemaTrace(ctx, "Getting provider functions")
+
+	resp := &tfprotov5.GetFunctionsResponse{
+		Functions: make(map[string]*tfprotov5.Function, 0),
+	}
+
 	return resp, nil
 }
 
@@ -1605,4 +1816,15 @@ func validateConfigNulls(ctx context.Context, v cty.Value, path cty.Path) []*tfp
 	}
 
 	return diags
+}
+
+// Helper function that check a ConfigureProviderClientCapabilities struct to determine if a deferred response can be
+// returned to the Terraform client. If no ConfigureProviderClientCapabilities have been passed from the client, then false
+// is returned.
+func configureDeferralAllowed(in *tfprotov5.ConfigureProviderClientCapabilities) bool {
+	if in == nil {
+		return false
+	}
+
+	return in.DeferralAllowed
 }

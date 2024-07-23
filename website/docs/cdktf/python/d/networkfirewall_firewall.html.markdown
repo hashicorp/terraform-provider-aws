@@ -84,13 +84,13 @@ One or more of the following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the firewall.
-* `delete_protection` - Boolean flag indicating whether it is possible to delete the firewall.
+* `delete_protection` - A flag indicating whether the firewall is protected against deletion.
 * `description` - Description of the firewall.
 * `encryption_configuration` - AWS Key Management Service (AWS KMS) encryption settings for the firewall.
     * `key_id` - The ID of the AWS Key Management Service (AWS KMS) customer managed key.
     * `type` - The type of the AWS Key Management Service (AWS KMS) key use by the firewall.
 * `firewall_policy_arn` - ARN of the VPC Firewall policy.
-* `firewall_policy_change_protection` - A boolean flag indicating whether it is possible to change the associated firewall policy.
+* `firewall_policy_change_protection` - A flag indicating whether the firewall is protected against a change to the firewall policy association.
 * `firewall_status` - Nested list of information about the current status of the firewall.
     * `sync_states` - Set of subnets configured for use by the firewall.
         * `attachment` - Nested list describing the attachment status of the firewall's association with a single VPC subnet.
@@ -106,11 +106,11 @@ This data source exports the following attributes in addition to the arguments a
     * `configuration_sync_state_summary` - Summary of sync states for all availability zones in which the firewall is configured.
 * `id` - ARN that identifies the firewall.
 * `name` - Descriptive name of the firewall.
-* `subnet_change_protection` - A boolean flag indicating whether it is possible to change the associated subnet(s).
+* `subnet_change_protection` - A flag indicating whether the firewall is protected against changes to the subnet associations.
 * `subnet_mapping` - Set of configuration blocks describing the public subnets. Each subnet must belong to a different Availability Zone in the VPC. AWS Network Firewall creates a firewall endpoint in each subnet.
     * `subnet_id` - The unique identifier for the subnet.
 * `tags` - Map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `update_token` - String token used when updating a firewall.
 * `vpc_id` - Unique identifier of the VPC where AWS Network Firewall should create the firewall.
 
-<!-- cache-key: cdktf-0.19.0 input-24e5c2406618e6513cfbf45303a085d913cb2cabcf2e44e12fc1f263b2a91298 -->
+<!-- cache-key: cdktf-0.20.1 input-a59cacdd1e7c3ecd8aa16a8357c1506414a68612594db4e02ba5c59b5dc47f6f -->

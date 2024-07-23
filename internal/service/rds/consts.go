@@ -5,34 +5,43 @@ package rds
 
 import (
 	"time"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	ClusterRoleStatusActive  = "ACTIVE"
-	ClusterRoleStatusDeleted = "DELETED"
-	ClusterRoleStatusPending = "PENDING"
+	clusterRoleStatusActive  = "ACTIVE"
+	clusterRoleStatusDeleted = "DELETED"
+	clusterRoleStatusPending = "PENDING"
 )
 
 const (
-	ClusterStatusAvailable                  = "available"
-	ClusterStatusBackingUp                  = "backing-up"
-	ClusterStatusConfiguringIAMDatabaseAuth = "configuring-iam-database-auth"
-	ClusterStatusCreating                   = "creating"
-	ClusterStatusDeleting                   = "deleting"
-	ClusterStatusMigrating                  = "migrating"
-	ClusterStatusModifying                  = "modifying"
-	ClusterStatusPreparingDataMigration     = "preparing-data-migration"
-	ClusterStatusPromoting                  = "promoting"
-	ClusterStatusRebooting                  = "rebooting"
-	ClusterStatusRenaming                   = "renaming"
-	ClusterStatusResettingMasterCredentials = "resetting-master-credentials"
-	ClusterStatusScalingCompute             = "scaling-compute"
-	ClusterStatusUpgrading                  = "upgrading"
+	clusterStatusAvailable                  = "available"
+	clusterStatusBackingUp                  = "backing-up"
+	clusterStatusConfiguringIAMDatabaseAuth = "configuring-iam-database-auth"
+	clusterStatusCreating                   = "creating"
+	clusterStatusDeleting                   = "deleting"
+	clusterStatusMigrating                  = "migrating"
+	clusterStatusModifying                  = "modifying"
+	clusterStatusPreparingDataMigration     = "preparing-data-migration"
+	clusterStatusPromoting                  = "promoting"
+	clusterStatusRebooting                  = "rebooting"
+	clusterStatusRenaming                   = "renaming"
+	clusterStatusResettingMasterCredentials = "resetting-master-credentials"
+	clusterStatusScalingCompute             = "scaling-compute"
+	clusterStatusUpgrading                  = "upgrading"
+
+	// Non-standard status values.
+	clusterStatusAvailableWithPendingModifiedValues = "tf-available-with-pending-modified-values"
 )
 
 const (
-	ClusterSnapshotStatusAvailable = "available"
-	ClusterSnapshotStatusCreating  = "creating"
+	clusterSnapshotStatusAvailable = "available"
+	clusterSnapshotStatusCreating  = "creating"
+)
+
+const (
+	clusterSnapshotAttributeNameRestore = "restore"
 )
 
 const (
@@ -40,6 +49,7 @@ const (
 	storageTypeGP2         = "gp2"
 	storageTypeGP3         = "gp3"
 	storageTypeIO1         = "io1"
+	storageTypeIO2         = "io2"
 	storageTypeAuroraIOPT1 = "aurora-iopt1"
 )
 
@@ -49,11 +59,17 @@ func StorageType_Values() []string {
 		storageTypeGP2,
 		storageTypeGP3,
 		storageTypeIO1,
+		storageTypeIO2,
 		storageTypeAuroraIOPT1,
 	}
 }
 
 const (
+	InstanceEngineAuroraMySQL         = "aurora-mysql"
+	InstanceEngineAuroraPostgreSQL    = "aurora-postgresql"
+	InstanceEngineCustomPrefix        = "custom-"
+	InstanceEngineDB2Advanced         = "db2-ae"
+	InstanceEngineDB2Standard         = "db2-se"
 	InstanceEngineMariaDB             = "mariadb"
 	InstanceEngineMySQL               = "mysql"
 	InstanceEngineOracleEnterprise    = "oracle-ee"
@@ -64,8 +80,7 @@ const (
 	InstanceEngineSQLServerEnterprise = "sqlserver-ee"
 	InstanceEngineSQLServerExpress    = "sqlserver-ex"
 	InstanceEngineSQLServerStandard   = "sqlserver-se"
-	InstanceEngineSQLServerWeb        = "sqlserver-ewb"
-	InstanceEngineCustomPrefix        = "custom-"
+	InstanceEngineSQLServerWeb        = "sqlserver-web"
 )
 
 // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/accessing-monitoring.html#Overview.DBInstance.Status.
@@ -112,10 +127,10 @@ const (
 )
 
 const (
-	EventSubscriptionStatusActive    = "active"
-	EventSubscriptionStatusCreating  = "creating"
-	EventSubscriptionStatusDeleting  = "deleting"
-	EventSubscriptionStatusModifying = "modifying"
+	eventSubscriptionStatusActive    = "active"
+	eventSubscriptionStatusCreating  = "creating"
+	eventSubscriptionStatusDeleting  = "deleting"
+	eventSubscriptionStatusModifying = "modifying"
 )
 
 const (
@@ -144,38 +159,52 @@ func ClusterInstanceEngine_Values() []string {
 	return []string{
 		ClusterEngineAuroraMySQL,
 		ClusterEngineAuroraPostgreSQL,
+		ClusterEngineMySQL,
+		ClusterEnginePostgres,
 	}
 }
 
 const (
-	GlobalClusterEngineAurora           = "aurora"
-	GlobalClusterEngineAuroraMySQL      = "aurora-mysql"
-	GlobalClusterEngineAuroraPostgreSQL = "aurora-postgresql"
+	globalClusterEngineAurora           = "aurora"
+	globalClusterEngineAuroraMySQL      = "aurora-mysql"
+	globalClusterEngineAuroraPostgreSQL = "aurora-postgresql"
 )
 
-func GlobalClusterEngine_Values() []string {
+func globalClusterEngine_Values() []string {
 	return []string{
-		GlobalClusterEngineAurora,
-		GlobalClusterEngineAuroraMySQL,
-		GlobalClusterEngineAuroraPostgreSQL,
+		globalClusterEngineAurora,
+		globalClusterEngineAuroraMySQL,
+		globalClusterEngineAuroraPostgreSQL,
 	}
 }
 
 const (
-	EngineModeGlobal        = "global"
-	EngineModeMultiMaster   = "multimaster"
-	EngineModeParallelQuery = "parallelquery"
-	EngineModeProvisioned   = "provisioned"
-	EngineModeServerless    = "serverless"
+	engineModeGlobal        = "global"
+	engineModeMultiMaster   = "multimaster"
+	engineModeParallelQuery = "parallelquery"
+	engineModeProvisioned   = "provisioned"
+	engineModeServerless    = "serverless"
 )
 
-func EngineMode_Values() []string {
+func engineMode_Values() []string {
 	return []string{
-		EngineModeGlobal,
-		EngineModeMultiMaster,
-		EngineModeParallelQuery,
-		EngineModeProvisioned,
-		EngineModeServerless,
+		engineModeGlobal,
+		engineModeMultiMaster,
+		engineModeParallelQuery,
+		engineModeProvisioned,
+		engineModeServerless,
+	}
+}
+
+const (
+	engineLifecycleSupport         = "open-source-rds-extended-support"
+	engineLifecycleSupportDisabled = "open-source-rds-extended-support-disabled"
+)
+
+func engineLifecycleSupport_Values() []string {
+	return []string{
+		engineLifecycleSupport,
+		engineLifecycleSupportDisabled,
 	}
 }
 
@@ -183,9 +212,11 @@ const (
 	ExportableLogTypeAgent      = "agent"
 	ExportableLogTypeAlert      = "alert"
 	ExportableLogTypeAudit      = "audit"
+	ExportableLogTypeDiagLog    = "diag.log"
 	ExportableLogTypeError      = "error"
 	ExportableLogTypeGeneral    = "general"
 	ExportableLogTypeListener   = "listener"
+	ExportableLogTypeNotifyLog  = "notify.log"
 	ExportableLogTypeOEMAgent   = "oemagent"
 	ExportableLogTypePostgreSQL = "postgresql"
 	ExportableLogTypeSlowQuery  = "slowquery"
@@ -209,9 +240,11 @@ func InstanceExportableLogType_Values() []string {
 		ExportableLogTypeAgent,
 		ExportableLogTypeAlert,
 		ExportableLogTypeAudit,
+		ExportableLogTypeDiagLog,
 		ExportableLogTypeError,
 		ExportableLogTypeGeneral,
 		ExportableLogTypeListener,
+		ExportableLogTypeNotifyLog,
 		ExportableLogTypeOEMAgent,
 		ExportableLogTypePostgreSQL,
 		ExportableLogTypeSlowQuery,
@@ -258,13 +291,13 @@ func TimeoutAction_Values() []string {
 
 const (
 	backupTargetOutposts = "outposts"
-	backupTargetRegion   = "region"
+	backupTargetRegion   = names.AttrRegion
 )
 
 func backupTarget_Values() []string {
 	return []string{
 		backupTargetOutposts,
-		backupTargetRegion,
+		names.AttrRegion,
 	}
 }
 

@@ -31,7 +31,7 @@ func TestAccQuickSightIngestion_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIngestionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,7 +42,7 @@ func TestAccQuickSightIngestion_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ingestion_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "ingestion_type", quicksight.IngestionTypeFullRefresh),
 					resource.TestCheckResourceAttrPair(resourceName, "data_set_id", dataSetName, "data_set_id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("dataset/%[1]s/ingestion/%[1]s", rId)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("dataset/%[1]s/ingestion/%[1]s", rId)),
 				),
 			},
 			{
@@ -70,7 +70,7 @@ func TestAccQuickSightIngestion_disappears_dataSet(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIngestionDestroy(ctx),
 		Steps: []resource.TestStep{

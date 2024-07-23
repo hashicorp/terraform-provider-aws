@@ -86,9 +86,11 @@ class MyConvertedCode extends TerraformStack {
     const example = new SagemakerAppImageConfig(this, "example", {
       appImageConfigName: "example",
       kernelGatewayImageConfig: {
-        kernelSpec: {
-          name: "example",
-        },
+        kernelSpec: [
+          {
+            name: "example",
+          },
+        ],
       },
     });
     const awsSagemakerImageExample = new SagemakerImage(this, "example_1", {
@@ -138,8 +140,8 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `authMode` - (Required) The mode of authentication that members use to access the domain. Valid values are `IAM` and `SSO`.
-* `defaultSpaceSettings` - (Required) The default space settings. See [Default Space Settings](#default_space_settings) below.
-* `defaultUserSettings` - (Required) The default user settings. See [Default User Settings](#default_user_settings) below.
+* `defaultSpaceSettings` - (Required) The default space settings. See [`defaultSpaceSettings` Block](#default_space_settings-block) below.
+* `defaultUserSettings` - (Required) The default user settings. See [`defaultUserSettings` Block](#default_user_settings-block) below.
 * `domainName` - (Required) The domain name.
 * `subnetIds` - (Required) The VPC subnets that Studio uses for communication.
 * `vpcId` - (Required) The ID of the Amazon Virtual Private Cloud (VPC) that Studio uses for communication.
@@ -148,132 +150,175 @@ The following arguments are optional:
 
 * `appNetworkAccessType` - (Optional) Specifies the VPC used for non-EFS traffic. The default value is `PublicInternetOnly`. Valid values are `PublicInternetOnly` and `VpcOnly`.
 * `appSecurityGroupManagement` - (Optional) The entity that creates and manages the required security groups for inter-app communication in `VPCOnly` mode. Valid values are `Service` and `Customer`.
-* `domainSettings` - (Optional) The domain settings. See [Domain Settings](#domain_settings) below.
-* `domainSettings` - (Optional) The domain's settings.
+* `domainSettings` - (Optional) The domain settings. See [`domainSettings` Block](#domain_settings-block) below.
 * `kmsKeyId` - (Optional) The AWS KMS customer managed CMK used to encrypt the EFS volume attached to the domain.
-* `retentionPolicy` - (Optional) The retention policy for this domain, which specifies whether resources will be retained after the Domain is deleted. By default, all resources are retained. See [Retention Policy](#retention_policy) below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `retentionPolicy` - (Optional) The retention policy for this domain, which specifies whether resources will be retained after the Domain is deleted. By default, all resources are retained. See [`retentionPolicy` Block](#retention_policy-block) below.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### default_space_settings
+### `defaultSpaceSettings` Block
 
 * `executionRole` - (Required) The execution role for the space.
-* `jupyterServerAppSettings` - (Optional) The Jupyter server's app settings. See [Jupyter Server App Settings](#jupyter_server_app_settings) below.
-* `kernelGatewayAppSettings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernel_gateway_app_settings) below.
+* `jupyterServerAppSettings` - (Optional) The Jupyter server's app settings. See [`jupyterServerAppSettings` Block](#jupyter_server_app_settings-block) below.
+* `kernelGatewayAppSettings` - (Optional) The kernel gateway app settings. See [`kernelGatewayAppSettings` Block](#kernel_gateway_app_settings-block) below.
 * `securityGroups` - (Optional) The security groups for the Amazon Virtual Private Cloud that the space uses for communication.
 
-### default_user_settings
+### `defaultUserSettings` Block
 
+* `canvasAppSettings` - (Optional) The Canvas app settings. See [`canvasAppSettings` Block](#canvas_app_settings-block) below.
+* `codeEditorAppSettings` - (Optional) The Code Editor application settings. See [`codeEditorAppSettings` Block](#code_editor_app_settings-block) below.
+* `customFileSystemConfig` - (Optional) The settings for assigning a custom file system to a user profile. Permitted users can access this file system in Amazon SageMaker Studio. See [`customFileSystemConfig` Block](#custom_file_system_config-block) below.
+* `customPosixUserConfig` - (Optional) Details about the POSIX identity that is used for file system operations. See [`customPosixUserConfig` Block](#custom_posix_user_config-block) below.
+* `defaultLandingUri` - (Optional) The default experience that the user is directed to when accessing the domain. The supported values are: `studio::`: Indicates that Studio is the default experience. This value can only be passed if StudioWebPortal is set to ENABLED. `app:JupyterServer:`: Indicates that Studio Classic is the default experience.
 * `executionRole` - (Required) The execution role ARN for the user.
-* `canvasAppSettings` - (Optional) The Canvas app settings. See [Canvas App Settings](#canvas_app_settings) below.
-* `jupyterServerAppSettings` - (Optional) The Jupyter server's app settings. See [Jupyter Server App Settings](#jupyter_server_app_settings) below.
-* `kernelGatewayAppSettings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernel_gateway_app_settings) below.
-* `rSessionAppSettings` - (Optional) The RSession app settings. See [RSession App Settings](#r_session_app_settings) below.
-* `rStudioServerProAppSettings` - (Optional) A collection of settings that configure user interaction with the RStudioServerPro app. See [RStudioServerProAppSettings](#r_studio_server_pro_app_settings) below.
+* `jupyterLabAppSettings` - (Optional) The settings for the JupyterLab application. See [`jupyterLabAppSettings` Block](#jupyter_lab_app_settings-block) below.
+* `jupyterServerAppSettings` - (Optional) The Jupyter server's app settings. See [`jupyterServerAppSettings` Block](#jupyter_server_app_settings-block) below.
+* `kernelGatewayAppSettings` - (Optional) The kernel gateway app settings. See [`kernelGatewayAppSettings` Block](#kernel_gateway_app_settings-block) below.
+* `rSessionAppSettings` - (Optional) The RSession app settings. See [`rSessionAppSettings` Block](#r_session_app_settings-block) below.
+* `rStudioServerProAppSettings` - (Optional) A collection of settings that configure user interaction with the RStudioServerPro app. See [`rStudioServerProAppSettings` Block](#r_studio_server_pro_app_settings-block) below.
 * `securityGroups` - (Optional) A list of security group IDs that will be attached to the user.
-* `sharingSettings` - (Optional) The sharing settings. See [Sharing Settings](#sharing_settings) below.
-* `tensorBoardAppSettings` - (Optional) The TensorBoard app settings. See [TensorBoard App Settings](#tensor_board_app_settings) below.
+* `sharingSettings` - (Optional) The sharing settings. See [`sharingSettings` Block](#sharing_settings-block) below.
+* `spaceStorageSettings` - (Optional) The storage settings for a private space. See [`spaceStorageSettings` Block](#space_storage_settings-block) below.
+* `studioWebPortal` - (Optional) Whether the user can access Studio. If this value is set to `DISABLED`, the user cannot access Studio, even if that is the default experience for the domain. Valid values are `ENABLED` and `DISABLED`.
+* `tensorBoardAppSettings` - (Optional) The TensorBoard app settings. See [`tensorBoardAppSettings` Block](#tensor_board_app_settings-block) below.
 
-#### r_studio_server_pro_app_settings
+#### `spaceStorageSettings` Block
+
+* `defaultEbsStorageSettings` - (Optional) The default EBS storage settings for a private space. See [`defaultEbsStorageSettings` Block](#default_ebs_storage_settings-block) below.
+
+#### `customFileSystemConfig` Block
+
+* `efsFileSystemConfig` - (Optional) The default EBS storage settings for a private space. See [`efsFileSystemConfig` Block](#efs_file_system_config-block) below.
+
+#### `customPosixUserConfig` Block
+
+* `gid` - (Optional) The POSIX group ID.
+* `uid` - (Optional) The POSIX user ID.
+
+#### `rStudioServerProAppSettings` Block
 
 * `accessStatus` - (Optional) Indicates whether the current user has access to the RStudioServerPro app. Valid values are `ENABLED` and `DISABLED`.
 * `userGroup` - (Optional) The level of permissions that the user has within the RStudioServerPro app. This value defaults to `R_STUDIO_USER`. The `R_STUDIO_ADMIN` value allows the user access to the RStudio Administrative Dashboard. Valid values are `R_STUDIO_USER` and `R_STUDIO_ADMIN`.
 
-#### canvas_app_settings
+#### `canvasAppSettings` Block
 
-* `directDeploySettings` - (Optional)The model deployment settings for the SageMaker Canvas application. See [Direct Deploy Settings](#direct_deploy_settings) below.
-* `kendraSettings` - (Optional) The settings for document querying. See [Kendra Settings](#kendra_settings) below.
-* `identityProviderOauthSettings` - (Optional) The settings for connecting to an external data source with OAuth. See [Identity Provider OAuth Settings](#identity_provider_oauth_settings) below.
-* `modelRegisterSettings` - (Optional) The model registry settings for the SageMaker Canvas application. See [Model Register Settings](#model_register_settings) below.
-* `timeSeriesForecastingSettings` - (Optional) Time series forecast settings for the Canvas app. See [Time Series Forecasting Settings](#time_series_forecasting_settings) below.
-* `workspaceSettings` - (Optional) The workspace settings for the SageMaker Canvas application. See [Workspace Settings](#workspace_settings) below.
+* `directDeploySettings` - (Optional) The model deployment settings for the SageMaker Canvas application. See [`directDeploySettings` Block](#direct_deploy_settings-block) below.
+* `identityProviderOauthSettings` - (Optional) The settings for connecting to an external data source with OAuth. See [`identityProviderOauthSettings` Block](#identity_provider_oauth_settings-block) below.
+* `kendraSettings` - (Optional) The settings for document querying. See [`kendraSettings` Block](#kendra_settings-block) below.
+* `modelRegisterSettings` - (Optional) The model registry settings for the SageMaker Canvas application. See [`modelRegisterSettings` Block](#model_register_settings-block) below.
+* `timeSeriesForecastingSettings` - (Optional) Time series forecast settings for the Canvas app. See [`timeSeriesForecastingSettings` Block](#time_series_forecasting_settings-block) below.
+* `workspaceSettings` - (Optional) The workspace settings for the SageMaker Canvas application. See [`workspaceSettings` Block](#workspace_settings-block) below.
 
-##### identity_provider_oauth_settings
+##### `identityProviderOauthSettings` Block
 
-* `dataSourceName` - (Optional)The name of the data source that you're connecting to. Canvas currently supports OAuth for Snowflake and Salesforce Data Cloud. Valid values are `SalesforceGenie` and `Snowflake`.
+* `dataSourceName` - (Optional) The name of the data source that you're connecting to. Canvas currently supports OAuth for Snowflake and Salesforce Data Cloud. Valid values are `SalesforceGenie` and `Snowflake`.
 * `secretArn` - (Optional) The ARN of an Amazon Web Services Secrets Manager secret that stores the credentials from your identity provider, such as the client ID and secret, authorization URL, and token URL.
 * `status` - (Optional) Describes whether OAuth for a data source is enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
 
-##### direct_deploy_settings
+##### `directDeploySettings` Block
 
 * `status` - (Optional)Describes whether model deployment permissions are enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
 
-##### kendra_settings
+##### `kendraSettings` Block
 
 * `status` - (Optional) Describes whether the document querying feature is enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
 
-##### model_register_settings
+##### `modelRegisterSettings` Block
 
 * `crossAccountModelRegisterRoleArn` - (Optional) The Amazon Resource Name (ARN) of the SageMaker model registry account. Required only to register model versions created by a different SageMaker Canvas AWS account than the AWS account in which SageMaker model registry is set up.
 * `status` - (Optional) Describes whether the integration to the model registry is enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
 
-##### time_series_forecasting_settings
+##### `timeSeriesForecastingSettings` Block
 
 * `amazonForecastRoleArn` - (Optional) The IAM role that Canvas passes to Amazon Forecast for time series forecasting. By default, Canvas uses the execution role specified in the UserProfile that launches the Canvas app. If an execution role is not specified in the UserProfile, Canvas uses the execution role specified in the Domain that owns the UserProfile. To allow time series forecasting, this IAM role should have the [AmazonSageMakerCanvasForecastAccess](https://docs.aws.amazon.com/sagemaker/latest/dg/security-iam-awsmanpol-canvas.html#security-iam-awsmanpol-AmazonSageMakerCanvasForecastAccess) policy attached and forecast.amazonaws.com added in the trust relationship as a service principal.
 * `status` - (Optional) Describes whether time series forecasting is enabled or disabled in the Canvas app. Valid values are `ENABLED` and `DISABLED`.
 
-##### workspace_settings
+##### `workspaceSettings` Block
 
 * `s3ArtifactPath` - (Optional) The Amazon S3 bucket used to store artifacts generated by Canvas. Updating the Amazon S3 location impacts existing configuration settings, and Canvas users no longer have access to their artifacts. Canvas users must log out and log back in to apply the new location.
 * `s3KmsKeyId` - (Optional) The Amazon Web Services Key Management Service (KMS) encryption key ID that is used to encrypt artifacts generated by Canvas in the Amazon S3 bucket.
 
-#### sharing_settings
+#### `sharingSettings` Block
 
 * `notebookOutputOption` - (Optional) Whether to include the notebook cell output when sharing the notebook. The default is `Disabled`. Valid values are `Allowed` and `Disabled`.
-* `s3KmsKeyId` - (Optional) When `notebook_output_option` is Allowed, the AWS Key Management Service (KMS) encryption key ID used to encrypt the notebook cell output in the Amazon S3 bucket.
-* `s3OutputPath` - (Optional) When `notebook_output_option` is Allowed, the Amazon S3 bucket used to save the notebook cell output.
+* `s3KmsKeyId` - (Optional) When `notebookOutputOption` is Allowed, the AWS Key Management Service (KMS) encryption key ID used to encrypt the notebook cell output in the Amazon S3 bucket.
+* `s3OutputPath` - (Optional) When `notebookOutputOption` is Allowed, the Amazon S3 bucket used to save the notebook cell output.
 
-#### tensor_board_app_settings
+#### `tensorBoardAppSettings` Block
 
-* `defaultResourceSpec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
+* `defaultResourceSpec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [`defaultResourceSpec` Block](#default_resource_spec-block) below.
 
-#### kernel_gateway_app_settings
+#### `kernelGatewayAppSettings` Block
 
-* `customImage` - (Optional) A list of custom SageMaker images that are configured to run as a KernelGateway app. see [Custom Image](#custom_image) below.
-* `defaultResourceSpec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
+* `customImage` - (Optional) A list of custom SageMaker images that are configured to run as a KernelGateway app. see [`customImage` Block](#custom_image-block) below.
+* `defaultResourceSpec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [`defaultResourceSpec` Block](#default_resource_spec-block) below.
 * `lifecycleConfigArns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
-#### jupyter_server_app_settings
+#### `jupyterServerAppSettings` Block
 
-* `codeRepository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. see [Code Repository](#code_repository) below.
-* `defaultResourceSpec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
+* `codeRepository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. see [`codeRepository` Block](#code_repository-block) below.
+* `defaultResourceSpec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [`defaultResourceSpec` Block](#default_resource_spec-block) below.
 * `lifecycleConfigArns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
-##### code_repository
+#### `jupyterLabAppSettings` Block
+
+* `codeRepository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. see [`codeRepository` Block](#code_repository-block) below.
+* `customImage` - (Optional) A list of custom SageMaker images that are configured to run as a JupyterLab app. see [`customImage` Block](#custom_image-block) below.
+* `defaultResourceSpec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [`defaultResourceSpec` Block](#default_resource_spec-block) below.
+* `lifecycleConfigArns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+
+#### `codeEditorAppSettings` Block
+
+* `defaultResourceSpec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [`defaultResourceSpec` Block](#default_resource_spec-block) below.
+* `lifecycleConfigArns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+* `customImage` - (Optional) A list of custom SageMaker images that are configured to run as a CodeEditor app. see [`customImage` Block](#custom_image-block) below.
+
+##### `codeRepository` Block
 
 * `repositoryUrl` - (Optional) The URL of the Git repository.
 
-##### default_resource_spec
+##### `defaultResourceSpec` Block
 
 * `instanceType` - (Optional) The instance type that the image version runs on.. For valid values see [SageMaker Instance Types](https://docs.aws.amazon.com/sagemaker/latest/dg/notebooks-available-instance-types.html).
 * `lifecycleConfigArn` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configuration attached to the Resource.
 * `sagemakerImageArn` - (Optional) The ARN of the SageMaker image that the image version belongs to.
+* `sagemakerImageVersionAlias` - (Optional) The SageMaker Image Version Alias.
 * `sagemakerImageVersionArn` - (Optional) The ARN of the image version created on the instance.
 
-#### r_session_app_settings
+#### `rSessionAppSettings` Block
 
-* `customImage` - (Optional) A list of custom SageMaker images that are configured to run as a KernelGateway app. see [Custom Image](#custom_image) below.
-* `defaultResourceSpec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
+* `customImage` - (Optional) A list of custom SageMaker images that are configured to run as a RSession app. see [`customImage` Block](#custom_image-block) below.
+* `defaultResourceSpec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [`defaultResourceSpec` Block](#default_resource_spec-block) above.
 
-##### custom_image
+##### `customImage` Block
 
 * `appImageConfigName` - (Required) The name of the App Image Config.
 * `imageName` - (Required) The name of the Custom Image.
 * `imageVersionNumber` - (Optional) The version number of the Custom Image.
 
-### domain_settings
+##### `defaultEbsStorageSettings` Block
+
+* `defaultEbsVolumeSizeInGb` - (Required) The default size of the EBS storage volume for a private space.
+* `maximumEbsVolumeSizeInGb` - (Required) The maximum size of the EBS storage volume for a private space.
+
+##### `efsFileSystemConfig` Block
+
+* `fileSystemId` - (Required) The ID of your Amazon EFS file system.
+* `fileSystemPath` - (Required) The path to the file system directory that is accessible in Amazon SageMaker Studio. Permitted users can access only this directory and below.
+
+### `domainSettings` Block
 
 * `executionRoleIdentityConfig` - (Optional) The configuration for attaching a SageMaker user profile name to the execution role as a sts:SourceIdentity key [AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_monitor.html). Valid values are `USER_PROFILE_NAME` and `DISABLED`.
-* `rStudioServerProDomainSettings` - (Optional) A collection of settings that configure the RStudioServerPro Domain-level app. see [RStudioServerProDomainSettings](#r_studio_server_pro_domain_settings) below.
+* `rStudioServerProDomainSettings` - (Optional) A collection of settings that configure the RStudioServerPro Domain-level app. see [`rStudioServerProDomainSettings` Block](#r_studio_server_pro_domain_settings-block) below.
 * `securityGroupIds` - (Optional) The security groups for the Amazon Virtual Private Cloud that the Domain uses for communication between Domain-level apps and user apps.
 
-#### r_studio_server_pro_domain_settings
+#### `rStudioServerProDomainSettings` Block
 
-* `defaultResourceSpec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
+* `defaultResourceSpec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [`defaultResourceSpec` Block](#default_resource_spec-block) above.
 * `domainExecutionRoleArn` - (Required) The ARN of the execution role for the RStudioServerPro Domain-level app.
 * `rStudioConnectUrl` - (Optional) A URL pointing to an RStudio Connect server.
 * `rStudioPackageManagerUrl` - (Optional) A URL pointing to an RStudio Package Manager server.
 
-### retention_policy
+### `retentionPolicy` Block
 
 * `homeEfsFileSystem` - (Optional) The retention policy for data stored on an Amazon Elastic File System (EFS) volume. Valid values are `Retain` or `Delete`.  Default value is `Retain`.
 
@@ -281,13 +326,14 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the Domain.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Domain.
-* `url` - The domain's URL.
-* `singleSignOnManagedApplicationInstanceId` - The SSO managed application instance ID.
-* `securityGroupIdForDomainBoundary` - The ID of the security group that authorizes traffic between the RSessionGateway apps and the RStudioServerPro app.
 * `homeEfsFileSystemId` - The ID of the Amazon Elastic File System (EFS) managed by this Domain.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - The ID of the Domain.
+* `securityGroupIdForDomainBoundary` - The ID of the security group that authorizes traffic between the RSessionGateway apps and the RStudioServerPro app.
+* `singleSignOnApplicationArn` - The ARN of the application managed by SageMaker in IAM Identity Center. This value is only returned for domains created after September 19, 2023.
+* `singleSignOnManagedApplicationInstanceId` - The SSO managed application instance ID.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `url` - The domain's URL.
 
 ## Import
 
@@ -297,9 +343,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { SagemakerDomain } from "./.gen/providers/aws/sagemaker-domain";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    SagemakerDomain.generateConfigForImport(
+      this,
+      "testDomain",
+      "d-8jgsjtilstu8"
+    );
   }
 }
 
@@ -311,4 +367,4 @@ Using `terraform import`, import SageMaker Domains using the `id`. For example:
 % terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-5ae7f9d4fb95bedbc773dd1a2a1eaaa5660af3ec9975d1fb36ff06e6dd9d7bfc -->
+<!-- cache-key: cdktf-0.20.1 input-888b29765c78136a5dfabf8748cce1605dbe6705ed2be06764d7f9fb568fcfae -->

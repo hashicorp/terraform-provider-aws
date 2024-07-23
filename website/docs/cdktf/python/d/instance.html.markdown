@@ -99,6 +99,7 @@ interpolation.
 * `instance_type` - Type of the Instance.
 * `ipv6_addresses` - IPv6 addresses associated to the Instance, if applicable. **NOTE**: Unlike the IPv4 address, this doesn't change if you attach an EIP to the instance.
 * `key_name` - Key name of the Instance.
+* `launch_time` - Time the instance was launched.
 * `maintenance_options` - Maintenance and recovery options for the instance.
     * `auto_recovery` - Automatic recovery behavior of the instance.
 * `metadata_options` - Metadata options of the Instance.
@@ -148,4 +149,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html
 
-<!-- cache-key: cdktf-0.19.0 input-58a6dcf6b973aceef047b6a5f4da20044aa0391cf4a6935de6e8bdc7dc78ba4c -->
+<!-- cache-key: cdktf-0.20.1 input-0360e36bcd653291899c63abe79b8fb1fd576446cfbc317105b63e631c4e981b -->

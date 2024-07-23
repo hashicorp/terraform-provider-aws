@@ -32,7 +32,7 @@ func TestAccIdentityStoreGroup_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -40,7 +40,7 @@ func TestAccIdentityStoreGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(displayName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "display_name", displayName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, displayName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_store_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "group_id"),
 				),
@@ -66,7 +66,7 @@ func TestAccIdentityStoreGroup_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -95,7 +95,7 @@ func TestAccIdentityStoreGroup_descriptionChange(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,14 +103,14 @@ func TestAccIdentityStoreGroup_descriptionChange(t *testing.T) {
 				Config: testAccGroupConfig_description(description1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "description", description1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description1),
 				),
 			},
 			{
 				Config: testAccGroupConfig_description(description2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "description", description2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description2),
 				),
 			},
 		},

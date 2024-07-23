@@ -25,7 +25,7 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObjectLambdaAccessPointPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,10 +33,10 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_basic(t *testing.T) {
 				Config: testAccObjectLambdaAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
@@ -55,7 +55,7 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObjectLambdaAccessPointPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,7 +79,7 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_Disappears_accessPoint(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObjectLambdaAccessPointPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -102,7 +102,7 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObjectLambdaAccessPointPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -110,10 +110,10 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_update(t *testing.T) {
 				Config: testAccObjectLambdaAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
@@ -125,10 +125,10 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_update(t *testing.T) {
 				Config: testAccObjectLambdaAccessPointPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 		},

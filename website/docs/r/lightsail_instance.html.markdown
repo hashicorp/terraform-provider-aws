@@ -24,7 +24,7 @@ resource "aws_lightsail_instance" "gitlab_test" {
   name              = "custom_gitlab"
   availability_zone = "us-east-1b"
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_1_0"
+  bundle_id         = "nano_3_0"
   key_pair_name     = "some_key_name"
   tags = {
     foo = "bar"
@@ -41,7 +41,7 @@ resource "aws_lightsail_instance" "custom" {
   name              = "custom"
   availability_zone = "us-east-1b"
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_1_0"
+  bundle_id         = "nano_3_0"
   user_data         = "sudo yum install -y httpd && sudo systemctl start httpd && sudo systemctl enable httpd && echo '<h1>Deployed via Terraform</h1>' | sudo tee /var/www/html/index.html"
 }
 ```
@@ -53,7 +53,7 @@ resource "aws_lightsail_instance" "test" {
   name              = "custom_instance"
   availability_zone = "us-east-1b"
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_1_0"
+  bundle_id         = "nano_3_0"
   add_on {
     type          = "AutoSnapshot"
     snapshot_time = "06:00"
@@ -69,11 +69,16 @@ resource "aws_lightsail_instance" "test" {
 
 This resource supports the following arguments:
 
-* `name` - (Required) The name of the Lightsail Instance. Names be unique within each AWS Region in your Lightsail account.
-* `availability_zone` - (Required) The Availability Zone in which to create your
-instance (see list below)
-* `blueprint_id` - (Required) The ID for a virtual private server image. A list of available blueprint IDs can be obtained using the AWS CLI command: `aws lightsail get-blueprints`
-* `bundle_id` - (Required) The bundle of specification information (see list below)
+* `name` - (Required) The name of the Lightsail Instance. Names must be unique within each AWS Region in your Lightsail account.
+* `availability_zone` - (Required) The Availability Zone in which to create your instance. A
+  list of available zones can be obtained using the AWS CLI command:
+  [`aws lightsail get-regions --include-availability-zones`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/get-regions.html).
+* `blueprint_id` - (Required) The ID for a virtual private server image. A list of available
+  blueprint IDs can be obtained using the AWS CLI command:
+  [`aws lightsail get-blueprints`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/get-blueprints.html).
+* `bundle_id` - (Required) The bundle of specification information. A list of available
+  bundle IDs can be obtained using the AWS CLI command:
+  [`aws lightsail get-bundles`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/get-bundles.html).
 * `key_pair_name` - (Optional) The name of your key pair. Created in the
 Lightsail console (cannot use `aws_key_pair` at this time)
 * `user_data` - (Optional) Single lined launch script as a string to configure server with additional user data
@@ -88,58 +93,6 @@ Defines the add on configuration for the instance. The `add_on` configuration bl
 * `type` - (Required) The add-on type. There is currently only one valid type `AutoSnapshot`.
 * `snapshot_time` - (Required) The daily time when an automatic snapshot will be created. Must be in HH:00 format, and in an hourly increment and specified in Coordinated Universal Time (UTC). The snapshot will be automatically created between the time specified and up to 45 minutes after.
 * `status` - (Required) The status of the add on. Valid Values: `Enabled`, `Disabled`.
-
-## Availability Zones
-
-Lightsail currently supports the following Availability Zones (e.g., `us-east-1a`):
-
-- `ap-northeast-1{a,c,d}`
-- `ap-northeast-2{a,c}`
-- `ap-south-1{a,b}`
-- `ap-southeast-1{a,b,c}`
-- `ap-southeast-2{a,b,c}`
-- `ca-central-1{a,b}`
-- `eu-central-1{a,b,c}`
-- `eu-west-1{a,b,c}`
-- `eu-west-2{a,b,c}`
-- `eu-west-3{a,b,c}`
-- `us-east-1{a,b,c,d,e,f}`
-- `us-east-2{a,b,c}`
-- `us-west-2{a,b,c}`
-
-## Bundles
-
-Lightsail currently supports the following Bundle IDs (e.g., an instance in `ap-northeast-1` would use `small_2_0`):
-
-### Prefix
-
-A Bundle ID starts with one of the below size prefixes:
-
-- `nano_`
-- `micro_`
-- `small_`
-- `medium_`
-- `large_`
-- `xlarge_`
-- `2xlarge_`
-
-### Suffix
-
-A Bundle ID ends with one of the following suffixes depending on Availability Zone:
-
-- ap-northeast-1: `2_0`
-- ap-northeast-2: `2_0`
-- ap-south-1: `2_1`
-- ap-southeast-1: `2_0`
-- ap-southeast-2: `2_2`
-- ca-central-1: `2_0`
-- eu-central-1: `2_0`
-- eu-west-1: `2_0`
-- eu-west-2: `2_0`
-- eu-west-3: `2_0`
-- us-east-1: `2_0`
-- us-east-2: `2_0`
-- us-west-2: `2_0`
 
 ## Attribute Reference
 

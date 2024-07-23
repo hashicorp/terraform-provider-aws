@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -142,9 +143,9 @@ func sweepClusters(region string) error {
 			r := ResourceCluster()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set("apply_immediately", true)
-			d.Set("arn", arn)
-			d.Set("deletion_protection", false)
+			d.Set(names.AttrApplyImmediately, true)
+			d.Set(names.AttrARN, arn)
+			d.Set(names.AttrDeletionProtection, false)
 			d.Set("skip_final_snapshot", true)
 
 			globalCluster, err := findGlobalClusterByClusterARN(ctx, conn, arn)
@@ -303,7 +304,8 @@ func sweepClusterInstances(region string) error {
 			r := ResourceClusterInstance()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set("apply_immediately", true)
+			d.Set(names.AttrApplyImmediately, true)
+			d.Set("skip_final_snapshot", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

@@ -135,6 +135,7 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 
 ### storage_descriptor
 
+* `additional_locations` - (Optional) List of locations that point to the path where a Delta table is located.
 * `bucket_columns` - (Optional) List of reducer grouping columns, clustering columns, and bucketing columns in the table.
 * `columns` - (Optional) Configuration block for columns in the table. See [`columns`](#columns) below.
 * `compressed` - (Optional) Whether the data in the table is compressed.
@@ -190,6 +191,7 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 * `catalog_id` - (Required) ID of the Data Catalog in which the table resides.
 * `database_name` - (Required) Name of the catalog database that contains the target table.
 * `name` - (Required) Name of the target table.
+* `region` - (Optional) Region of the target table.
 
 ## Attribute Reference
 

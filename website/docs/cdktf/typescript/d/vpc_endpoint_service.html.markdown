@@ -107,7 +107,7 @@ The given filters must match exactly one VPC endpoint service whose data will be
 * `serviceType` - (Optional) Service type, `Gateway` or `Interface`.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired VPC Endpoint Service.
 
-~> **NOTE:** Specifying `service` will not work for non-AWS services or AWS services that don't follow the standard `serviceName` pattern of `comAmazonaws.<region>.<service>`.
+~> **NOTE:** Specifying `service` will not work for non-AWS services or AWS services that don't follow the standard `serviceName` pattern of `com.amazonaws.<region>.<service>`.
 
 ### filter Configuration Block
 
@@ -138,4 +138,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.19.0 input-07124556ae240c2c16fc954fbeb348321b8ac1e928a8e3cc7a640d672a6dfb99 -->
+<!-- cache-key: cdktf-0.20.1 input-07124556ae240c2c16fc954fbeb348321b8ac1e928a8e3cc7a640d672a6dfb99 -->

@@ -12,13 +12,13 @@ description: |-
 
 Manages an AWS Storage Gateway cached iSCSI volume.
 
-~> **NOTE:** The gateway must have cache added (e.g., via the [`awsStoragegatewayCache`](/docs/providers/aws/r/storagegateway_cache.html) resource) before creating volumes otherwise the Storage Gateway API will return an error.
+~> **NOTE:** The gateway must have cache added (e.g., via the [`aws_storagegateway_cache`](/docs/providers/aws/r/storagegateway_cache.html) resource) before creating volumes otherwise the Storage Gateway API will return an error.
 
-~> **NOTE:** The gateway must have an upload buffer added (e.g., via the [`awsStoragegatewayUploadBuffer`](/docs/providers/aws/r/storagegateway_upload_buffer.html) resource) before the volume is operational to clients, however the Storage Gateway API will allow volume creation without error in that case and return volume status as `UPLOAD BUFFER NOT CONFIGURED`.
+~> **NOTE:** The gateway must have an upload buffer added (e.g., via the [`aws_storagegateway_upload_buffer`](/docs/providers/aws/r/storagegateway_upload_buffer.html) resource) before the volume is operational to clients, however the Storage Gateway API will allow volume creation without error in that case and return volume status as `UPLOAD BUFFER NOT CONFIGURED`.
 
 ## Example Usage
 
-~> **NOTE:** These examples are referencing the [`awsStoragegatewayCache`](/docs/providers/aws/r/storagegateway_cache.html) resource `gatewayArn` attribute to ensure Terraform properly adds cache before creating the volume. If you are not using this method, you may need to declare an expicit dependency (e.g., via `depends_on = [aws_storagegateway_cache.example]`) to ensure proper ordering.
+~> **NOTE:** These examples are referencing the [`aws_storagegateway_cache`](/docs/providers/aws/r/storagegateway_cache.html) resource `gatewayArn` attribute to ensure Terraform properly adds cache before creating the volume. If you are not using this method, you may need to declare an expicit dependency (e.g., via `depends_on = [aws_storagegateway_cache.example]`) to ensure proper ordering.
 
 ### Create Empty Cached iSCSI Volume
 
@@ -111,10 +111,10 @@ This resource supports the following arguments:
 * `targetName` - (Required) The name of the iSCSI target used by initiators to connect to the target and as a suffix for the target ARN. The target name must be unique across all volumes of a gateway.
 * `volumeSizeInBytes` - (Required) The size of the volume in bytes.
 * `snapshotId` - (Optional) The snapshot ID of the snapshot to restore as the new cached volumeE.g., `snap-1122aabb`.
-* `sourceVolumeArn` - (Optional) The ARN for an existing volume. Specifying this ARN makes the new volume into an exact copy of the specified existing volume's latest recovery point. The `volume_size_in_bytes` value for this new volume must be equal to or larger than the size of the existing volume, in bytes.
+* `sourceVolumeArn` - (Optional) The ARN for an existing volume. Specifying this ARN makes the new volume into an exact copy of the specified existing volume's latest recovery point. The `volumeSizeInBytes` value for this new volume must be equal to or larger than the size of the existing volume, in bytes.
 * `kmsEncrypted` - (Optional) Set to `true` to use Amazon S3 server side encryption with your own AWS KMS key, or `false` to use a key managed by Amazon S3.
-* `kmsKey` - (Optional) The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server side encryption. Is required when `kms_encrypted` is set.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `kmsKey` - (Optional) The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server side encryption. Is required when `kmsEncrypted` is set.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -125,31 +125,41 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Volume Amazon Resource Name (ARN), e.g., `arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678/volume/vol-12345678`.
 * `lunNumber` - Logical disk number.
 * `networkInterfacePort` - The port used to communicate with iSCSI targets.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `targetArn` - Target Amazon Resource Name (ARN), e.g., `arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678/target/iqn.1997-05.com.amazon:TargetName`.
 * `volumeArn` - Volume Amazon Resource Name (ARN), e.g., `arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678/volume/vol-12345678`.
 * `volumeId` - Volume ID, e.g., `vol-12345678`.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `awsStoragegatewayCachedIscsiVolume` using the volume Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_storagegateway_cached_iscsi_volume` using the volume Amazon Resource Name (ARN). For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { StoragegatewayCachedIscsiVolume } from "./.gen/providers/aws/storagegateway-cached-iscsi-volume";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    StoragegatewayCachedIscsiVolume.generateConfigForImport(
+      this,
+      "example",
+      "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678/volume/vol-12345678"
+    );
   }
 }
 
 ```
 
-Using `terraform import`, import `awsStoragegatewayCachedIscsiVolume` using the volume Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_storagegateway_cached_iscsi_volume` using the volume Amazon Resource Name (ARN). For example:
 
 ```console
 % terraform import aws_storagegateway_cached_iscsi_volume.example arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678/volume/vol-12345678
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-fbd53663d449fd1b382a8d59bc64c857ce61a3216c6189065bd24cb002807e26 -->
+<!-- cache-key: cdktf-0.20.1 input-fbd53663d449fd1b382a8d59bc64c857ce61a3216c6189065bd24cb002807e26 -->

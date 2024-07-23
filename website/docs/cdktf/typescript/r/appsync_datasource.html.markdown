@@ -119,88 +119,90 @@ This resource supports the following arguments:
 * `name` - (Required) User-supplied name for the data source.
 * `type` - (Required) Type of the Data Source. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`, `AMAZON_EVENTBRIDGE`, `AMAZON_OPENSEARCH_SERVICE`.
 * `description` - (Optional) Description of the data source.
-* `dynamodbConfig` - (Optional) DynamoDB settings. See [DynamoDB Config](#dynamodb-config)
-* `elasticsearchConfig` - (Optional) Amazon Elasticsearch settings. See [ElasticSearch Config](#elasticsearch-config)
-* `eventBridgeConfig` - (Optional) AWS EventBridge settings. See [Event Bridge Config](#event-bridge-config)
-* `httpConfig` - (Optional) HTTP settings. See [HTTP Config](#http-config)
-* `lambdaConfig` - (Optional) AWS Lambda settings. See [Lambda Config](#lambda-config)
-* `opensearchserviceConfig` - (Optional) Amazon OpenSearch Service settings. See [OpenSearch Service Config](#opensearch-service-config)
-* `relationalDatabaseConfig` (Optional) AWS RDS settings. See [Relational Database Config](#relational-database-config)
+* `dynamodbConfig` - (Optional) DynamoDB settings. See [`dynamodbConfig` Block](#dynamodb_config-block) for details.
+* `elasticsearchConfig` - (Optional) Amazon Elasticsearch settings. See [`elasticsearchConfig` Block](#elasticsearch_config-block) for details.
+* `eventBridgeConfig` - (Optional) AWS EventBridge settings. See [`eventBridgeConfig` Block](#event_bridge_config-block) for details.
+* `httpConfig` - (Optional) HTTP settings. See [`httpConfig` Block](#http_config-block) for details.
+* `lambdaConfig` - (Optional) AWS Lambda settings. See [`lambdaConfig` Block](#lambda_config-block) for details.
+* `opensearchserviceConfig` - (Optional) Amazon OpenSearch Service settings. See [`opensearchserviceConfig` Block](#opensearchservice_config-block) for details.
+* `relationalDatabaseConfig` (Optional) AWS RDS settings. See [`relationalDatabaseConfig` Block](#relational_database_config-block) for details.
 * `serviceRoleArn` - (Optional) IAM service role ARN for the data source. Required if `type` is specified as `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `AMAZON_EVENTBRIDGE`, or `AMAZON_OPENSEARCH_SERVICE`.
 
-### DynamoDB Config
+### `dynamodbConfig` Block
 
-This argument supports the following arguments:
+The `dynamodbConfig` configuration block supports the following arguments:
 
 * `tableName` - (Required) Name of the DynamoDB table.
 * `region` - (Optional) AWS region of the DynamoDB table. Defaults to current region.
 * `useCallerCredentials` - (Optional) Set to `true` to use Amazon Cognito credentials with this data source.
-* `deltaSyncConfig` - (Optional) The DeltaSyncConfig for a versioned data source. See [Delta Sync Config](#delta-sync-config)
+* `deltaSyncConfig` - (Optional) The DeltaSyncConfig for a versioned data source. See [`deltaSyncConfig` Block](#delta_sync_config-block) for details.
 * `versioned` - (Optional) Detects Conflict Detection and Resolution with this data source.
 
-### Delta Sync Config
+### `deltaSyncConfig` Block
+
+The `deltaSyncConfig` configuration block supports the following arguments:
 
 * `baseTableTtl` - (Optional) The number of minutes that an Item is stored in the data source.
 * `deltaSyncTableName` - (Required) The table name.
 * `deltaSyncTableTtl` - (Optional) The number of minutes that a Delta Sync log entry is stored in the Delta Sync table.
 
-### ElasticSearch Config
+### `elasticsearchConfig` Block
 
-This argument supports the following arguments:
+The `elasticsearchConfig` configuration block supports the following arguments:
 
 * `endpoint` - (Required) HTTP endpoint of the Elasticsearch domain.
 * `region` - (Optional) AWS region of Elasticsearch domain. Defaults to current region.
 
-### Event Bridge Config
+### `eventBridgeConfig` Block
 
-This argument supports the following arguments:
+The `eventBridgeConfig` configuration block supports the following arguments:
 
 * `eventBusArn` - (Required) ARN for the EventBridge bus.
 
-### HTTP Config
+### `httpConfig` Block
 
-This argument supports the following arguments:
+The `httpConfig` configuration block supports the following arguments:
 
 * `endpoint` - (Required) HTTP URL.
-* `authorizationConfig` - (Optional) Authorization configuration in case the HTTP endpoint requires authorization. See [Authorization Config](#authorization-config).
+* `authorizationConfig` - (Optional) Authorization configuration in case the HTTP endpoint requires authorization. See [`authorizationConfig` Block](#authorization_config-block) for details.
 
-#### Authorization Config
+### `authorizationConfig` Block
 
-This argument supports the following arguments:
+The `authorizationConfig` configuration block supports the following arguments:
 
 * `authorizationType` - (Optional) Authorization type that the HTTP endpoint requires. Default values is `AWS_IAM`.
-* `awsIamConfig` - (Optional) Identity and Access Management (IAM) settings. See [AWS IAM Config](#aws-iam-config).
+* `awsIamConfig` - (Optional) Identity and Access Management (IAM) settings. See [`awsIamConfig` Block](#aws_iam_config-block) for details.
 
-##### AWS IAM Config
+### `awsIamConfig` Block
 
-This argument supports the following arguments:
+The `awsIamConfig` configuration block supports the following arguments:
 
 * `signingRegion` - (Optional) Signing Amazon Web Services Region for IAM authorization.
 * `signingServiceName`- (Optional) Signing service name for IAM authorization.
 
-### Lambda Config
+### `lambdaConfig` Block
 
-This argument supports the following arguments:
+The `lambdaConfig` configuration block supports the following arguments:
 
 * `functionArn` - (Required) ARN for the Lambda function.
 
-### OpenSearch Service Config
+### `opensearchserviceConfig` Block
 
-This argument supports the following arguments:
+The `opensearchserviceConfig` configuration block supports the following arguments:
 
 * `endpoint` - (Required) HTTP endpoint of the OpenSearch domain.
 * `region` - (Optional) AWS region of the OpenSearch domain. Defaults to current region.
 
-### Relational Database Config
+### `relationalDatabaseConfig` Block
 
-This argument supports the following arguments:
+The `relationalDatabaseConfig` configuration block supports the following arguments:
 
-* `httpEndpointConfig` - (Required) Amazon RDS HTTP endpoint configuration. See [HTTP Endpoint Config](#http-endpoint-config).
+* `httpEndpointConfig` - (Required) Amazon RDS HTTP endpoint configuration. See [`httpEndpointConfig` Block](#http_endpoint_config-block) for details.
 * `sourceType` - (Optional) Source type for the relational database. Valid values: `RDS_HTTP_ENDPOINT`.
 
-#### HTTP Endpoint Config
+### `httpEndpointConfig` Block
 
-This argument supports the following arguments:
+The `httpEndpointConfig` configuration block supports the following arguments:
 
 * `dbClusterIdentifier` - (Required) Amazon RDS cluster identifier.
 * `awsSecretStoreArn` - (Required) AWS secret store ARN for database credentials.
@@ -216,24 +218,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `awsAppsyncDatasource` using the `apiId`, a hyphen, and `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appsync_datasource` using the `apiId`, a hyphen, and `name`. For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { AppsyncDatasource } from "./.gen/providers/aws/appsync-datasource";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    AppsyncDatasource.generateConfigForImport(
+      this,
+      "example",
+      "abcdef123456-example"
+    );
   }
 }
 
 ```
 
-Using `terraform import`, import `awsAppsyncDatasource` using the `apiId`, a hyphen, and `name`. For example:
+Using `terraform import`, import `aws_appsync_datasource` using the `apiId`, a hyphen, and `name`. For example:
 
 ```console
 % terraform import aws_appsync_datasource.example abcdef123456-example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-a9f04a5458c9f7419be950e393980c31263681e22e413dc9419e676476b092d0 -->
+<!-- cache-key: cdktf-0.20.1 input-148e64bd85002461ebb63b75834e59a0c9076b93aa1d2d2acbafd3ac1e5e1da1 -->

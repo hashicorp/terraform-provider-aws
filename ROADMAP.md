@@ -1,4 +1,4 @@
-# Roadmap:  May 2023 - July 2023
+# Roadmap:  Feb 2024 - Apr 2024
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
@@ -8,85 +8,79 @@ Each weekly release will include necessary tasks that lead to the completion of 
 
 This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur.
 
-In the period spanning January to April 2023 the AWS Provider added support for the following (among many others):
+In the period spanning Nov to Jan 2024 the AWS Provider added support for the following (among many others):
 
-- AWS VPC Lattice
-- AWS Quicksight
-- AWS Directory Service “Trust”
-- AWS Observability Access Manager
+- Amazon S3 Express
+- Amazon S3 Access Controls
+- Amazon DocDB Elastic Cluster
+- Amazon EBS Fast Snapshot Restore
+- Amazon Bedrock
 
-From May - July 2023, we will be prioritizing the following areas of work:
+From Feb - April 2024, we will be prioritizing the following areas of work:
 
-## New Services  
+## New Services
 
-### Amazon OpenSearch Serverless
+### AWS Resource Explorer Search
 
-Issue: [#28313](https://github.com/hashicorp/terraform-provider-aws/issues/28313)
+Issue: [#36033](https://github.com/hashicorp/terraform-provider-aws/issues/36033)
 
-[Amazon OpenSearch Serverless](https://aws.amazon.com/opensearch-service/features/serverless/) makes it easy for customers to run large-scale search and analytics workloads without managing clusters. It automatically provisions and scales the underlying resources to deliver fast data ingestion and query responses for even the most demanding and unpredictable workloads, eliminating the need to configure and optimize clusters.
+[Resource Explorer](https://aws.amazon.com/resourceexplorer/) Use AWS Resource Explorer to more easily search for and discover your resources across AWS Regions and accounts, such as Amazon Elastic Compute Cloud (Amazon EC2) instances, Amazon Kinesis streams, and Amazon DynamoDB tables..
 
-Support for Amazon OpenSearch Serverless may include:
-
-New Resource(s):
-
-- `aws_opensearchserverless_collection`
-- `aws_opensearchserverless_access_policy`
-- `aws_opensearchserverless_security_config`
-- `aws_opensearchserverless_security_policy`
-- `aws_opensearchserverless_vpc_endpoint`
-
-### AWS Clean Rooms
-
-Issue: [#30024](https://github.com/hashicorp/terraform-provider-aws/issues/30024)
-
-[AWS Clean Rooms](https://aws.amazon.com/clean-rooms/) helps companies and their partners more easily and securely analyze and collaborate on their collective datasets–without sharing or copying one another's underlying data. With AWS Clean Rooms, customers can create a secure data clean room in minutes, and collaborate with any other company on the AWS Cloud to generate unique insights about advertising campaigns, investment decisions, and research and development.
-
-Support for AWS Clean Rooms may include:
+Support for additional Resource explorer resources may include:
 
 New Resource(s):
 
-- `aws_cleanrooms_collaboration`
-- `aws_cleanrooms_configured_table`
-- `aws_cleanrooms_configured_table_analysis_rule`
-- `aws_cleanrooms_configured_table_association`
-- `aws_cleanrooms_membership`
+- `aws_resourceexplorer2_search`
+
+### Amazon Verified Permissions
+
+Issue: [#32158](https://github.com/hashicorp/terraform-provider-aws/issues/32158)
+
+[Amazon Verified Permissions](https://aws.amazon.com/verified-permissions/) helps developers build more secure applications faster by externalizing authorization and centralizing policy management. They can also align application access with Zero Trust principles.
+
+Support for Amazon Verified Permissions may include:
+
+New Resource(s):
+
+- `aws_verifiedpermissions_policy`
+- `aws_verifiedpermissions_identity_source`
+
+### Amazon Security Lake
+
+Issue: [#29376](https://github.com/hashicorp/terraform-provider-aws/issues/29376)
+
+[Amazon Security Lake](https://aws.amazon.com/security-lake/) automatically centralizes security data from AWS environments, SaaS providers, on premises, and cloud sources into a purpose-built data lake stored in your account. With Security Lake, you can get a more complete understanding of your security data across your entire organization. You can also improve the protection of your workloads, applications, and data.
+
+Support for Amazon Security Lake may include:
+
+New Resource(s):
+
+- `aws_security_lake_aws_log_source`
+- `aws_security_lake_custom_log_source`
+- `aws_security_lake_subscriber`
+
+### Amazon DevOps Guru
+
+Issue: [#17919](https://github.com/hashicorp/terraform-provider-aws/issues/17919)
+
+[Amazon DevOps Guru](https://aws.amazon.com/security-lake/) uses ML to detect abnormal operating patterns so you can identify operational issues before they impact your customers.
+
+Support for Amazon DevOps Guru may include:
+
+New Resource(s):
+
+- `aws_devopsguru_notification_channel`
+- `aws_devopsguru_resource_collection`
 
 ## Enhancements to Existing Services
 
 This quarter most of our efforts will be focused on enhancements and stability improvements of our core services, rather than adding brand new services to the provider. The following list comprises the items most important to the community.
 
-- [Lack of support for sso-session in .aws/config](https://github.com/hashicorp/terraform-provider-aws/issues/28263)
-- [Cognito User Pool: cannot modify or remove schema items](https://github.com/hashicorp/terraform-provider-aws/issues/21654)
-- [aws_wafv2_web_acl - Error: Provider produced inconsistent final plan](https://github.com/hashicorp/terraform-provider-aws/issues/23992)
-- [aws_lb_target_group_attachment: target_id should be a list](https://github.com/hashicorp/terraform-provider-aws/issues/9901)
-- [Extend Secrets Manager Rotation Configuration](https://github.com/hashicorp/terraform-provider-aws/issues/22969)
-
-## Major Release v5
-
-The release of version 5.0 of the Terraform AWS provider will bring highly anticipated updates to default tags, and make changes and deprecations.
-
-### Default Tags
-
-Default tags in the Terraform AWS provider allow practitioners to define common metadata tags at the provider level. These tags are then applied to all supported resources in the Terraform configuration. Previously, assumptions and restrictions were made to allow this feature to function across as many resources as possible. However, it could be difficult to retrofit existing code, causing frustrating manual intervention.
-Thanks to new features available in the [Terraform plugin SDK](https://developer.hashicorp.com/terraform/plugin/sdkv2) and the [Terraform plugin framework](https://developer.hashicorp.com/terraform/plugin/framework), we have removed several limitations which made default tags difficult to integrate with existing resources and modules.
-
-The updates in version 5.0 solve for:
-
-- Inconsistent final plans that cause failures when tags are computed.
-- Identical tags in both default tags and resource tags.
-- Perpetual diffs within tag configurations.
-
-### Remove EC2 Classic Functionality
-
-In 2021 AWS [announced](https://aws.amazon.com/blogs/aws/ec2-classic-is-retiring-heres-how-to-prepare/) the retirement of EC2 Classic Networking functionality. This was scheduled to occur on August 15th, 2022. Support for the functionality was extended until late September when any AWS customers who had qualified for extension finished their migration. At that time those features were marked as deprecated and it is now time to remove them as the functionality is no longer available through AWS. While this is a standard deprecation, this is a major feature removal.
-
-### Updating RDS Identifiers In–Place
-
-Allow DB names to be updated in place. This is now supported by AWS, so we should allow its use. Practitioners will now be able to change names without a recreation. Details for this issue can be tracked in issue [#507](https://github.com/hashicorp/terraform-provider-aws/issues/507).
-
-### Remove Default Value from Engine Parameters
-
-Removes a default value that does not have a parallel with AWS and causes unexpected behavior for end users. Practitioners will now have to specify a value. Details for this issue can be tracked in issue [#27960](https://github.com/hashicorp/terraform-provider-aws/issues/27960).
+- [Add in Security Hub Automation Rules](https://github.com/hashicorp/terraform-provider-aws/issues/32210)
+- [aws rds modify-certificates](https://github.com/hashicorp/terraform-provider-aws/issues/33196)
+- [Add EKS cluster IAM access management API resources](https://github.com/hashicorp/terraform-provider-aws/issues/34982)
+- [Support for AWS Shield Advance Subscriptions](https://github.com/hashicorp/terraform-provider-aws/issues/21430)
+- [Add resources for ComputeOptimizer Recommendation Preferences](https://github.com/hashicorp/terraform-provider-aws/issues/23945)
 
 ## Disclosures
 

@@ -25,6 +25,38 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrCodeEquals(err, "AccessGrantsInstanceNotExistsError") {
 		return true
 	}
+	// Example (GovCloud): AccessDeniedException: Unable to determine service/operation name to be authorized
+	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "Unable to determine service/operation name to be authorized") {
+		return true
+	}
+	// Example (ssmcontacts): ValidationException: Invalid value provided - Account not found for the request
+	if tfawserr.ErrMessageContains(err, "ValidationException", "Account not found for the request") {
+		return true
+	}
+	// Example (shield): ResourceNotFoundException: The subscription does not exist
+	if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "The subscription does not exist") {
+		return true
+	}
+	// Example (GovCloud): InvalidParameterValueException: Access Denied to API Version: CORNERSTONE_V1
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version") {
+		return true
+	}
+	// Example (GovCloud): UnknownOperationException: Operation is disabled in this region
+	if tfawserr.ErrMessageContains(err, "UnknownOperationException", "Operation is disabled in this region") {
+		return true
+	}
+	// Example (lightsail): InvalidInputException: Distribution-related APIs are only available in the us-east-1 Region
+	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Distribution-related APIs are only available in the us-east-1 Region") {
+		return true
+	}
+	// Example (lightsail): InvalidInputException: Domain-related APIs are only available in the us-east-1 Region
+	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Domain-related APIs are only available in the us-east-1 Region") {
+		return true
+	}
+	//  Example (ec2): UnsupportedOperation: The functionality you requested is not available in this region
+	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "The functionality you requested is not available in this region") {
+		return true
+	}
 
 	return false
 }

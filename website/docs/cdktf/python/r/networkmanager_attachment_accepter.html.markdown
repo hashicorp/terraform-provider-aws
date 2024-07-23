@@ -74,4 +74,4 @@ This resource exports the following attributes in addition to the arguments abov
 - `segment_name` - The name of the segment attachment.
 - `state` - The state of the attachment.
 
-<!-- cache-key: cdktf-0.19.0 input-c1fd000ad23ab3bc2ca659776b5869bbc286d0197dd4d6b077a2c7d3ade9242b -->
+<!-- cache-key: cdktf-0.20.1 input-c1fd000ad23ab3bc2ca659776b5869bbc286d0197dd4d6b077a2c7d3ade9242b -->

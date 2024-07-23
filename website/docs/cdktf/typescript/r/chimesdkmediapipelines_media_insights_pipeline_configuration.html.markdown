@@ -89,7 +89,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-- The required policies on `callAnalyticsRole` will vary based on the selected processors. See [Call analytics resource access role](https://docs.aws.amazon.com/chime-sdk/latest/dg/ca-resource-access-role.html) for directions on choosing appropriate policies.
+- The required policies on `call_analytics_role` will vary based on the selected processors. See [Call analytics resource access role](https://docs.aws.amazon.com/chime-sdk/latest/dg/ca-resource-access-role.html) for directions on choosing appropriate policies.
 
 ### Transcribe Call Analytics processor usage
 
@@ -401,64 +401,64 @@ This resource supports the following arguments:
 
 * `type` - (Required) Element type.
 * `amazonTranscribeCallAnalyticsProcessorConfiguration` - (Optional) Configuration for Amazon Transcribe Call Analytics processor.
-    * `call_analytics_stream_categories` - (Optional) Filter for category events to be delivered to insights target.
-    * `content_identification_type` - (Optional) Labels all personally identifiable information (PII) identified in Utterance events.
-    * `content_redaction_type` - (Optional) Redacts all personally identifiable information (PII) identified in Utterance events.
-    * `enable_partial_results_stabilization` - (Optional) Enables partial result stabilization in Utterance events.
-    * `filter_partial_results` - (Optional) Filters partial Utterance events from delivery to the insights target.
-    * `language_code` - (Required) Language code for the transcription model.
-    * `language_model_name` - (Optional) Name of custom language model for transcription.
-    * `partial_results_stability` - (Optional) Level of stability to use when partial results stabilization is enabled.
-    * `pii_entity_types` - (Optional) Types of personally identifiable information (PII) to redact from an Utterance event.
-    * `post_call_analytics_settings` - (Optional) Settings for post call analytics.
-        * `content_redaction_output` - (Optional) Should output be redacted.
-        * `data_access_role_arn` - (Required) ARN of the role used by AWS Transcribe to upload your post call analysis.
-        * `output_encryption_kms_key_id` - (Optional) ID of the KMS key used to encrypt the output.
-        * `output_location` - (Required) The Amazon S3 location where you want your Call Analytics post-call transcription output stored.
-    * `vocabulary_filter_method` - (Optional) Method for applying a vocabulary filter to Utterance events.
-    * `vocabulary_filter_name` - (Optional) Name of the custom vocabulary filter to use when processing Utterance events.
-    * `vocabulary_name` - (Optional) Name of the custom vocabulary to use when processing Utterance events.
+    * `callAnalyticsStreamCategories` - (Optional) Filter for category events to be delivered to insights target.
+    * `contentIdentificationType` - (Optional) Labels all personally identifiable information (PII) identified in Utterance events.
+    * `contentRedactionType` - (Optional) Redacts all personally identifiable information (PII) identified in Utterance events.
+    * `enablePartialResultsStabilization` - (Optional) Enables partial result stabilization in Utterance events.
+    * `filterPartialResults` - (Optional) Filters partial Utterance events from delivery to the insights target.
+    * `languageCode` - (Required) Language code for the transcription model.
+    * `languageModelName` - (Optional) Name of custom language model for transcription.
+    * `partialResultsStability` - (Optional) Level of stability to use when partial results stabilization is enabled.
+    * `piiEntityTypes` - (Optional) Types of personally identifiable information (PII) to redact from an Utterance event.
+    * `postCallAnalyticsSettings` - (Optional) Settings for post call analytics.
+        * `contentRedactionOutput` - (Optional) Should output be redacted.
+        * `dataAccessRoleArn` - (Required) ARN of the role used by AWS Transcribe to upload your post call analysis.
+        * `outputEncryptionKmsKeyId` - (Optional) ID of the KMS key used to encrypt the output.
+        * `outputLocation` - (Required) The Amazon S3 location where you want your Call Analytics post-call transcription output stored.
+    * `vocabularyFilterMethod` - (Optional) Method for applying a vocabulary filter to Utterance events.
+    * `vocabularyFilterName` - (Optional) Name of the custom vocabulary filter to use when processing Utterance events.
+    * `vocabularyName` - (Optional) Name of the custom vocabulary to use when processing Utterance events.
 * `amazonTranscribeProcessorConfiguration` - (Optional) Configuration for Amazon Transcribe processor.
-    * `content_identification_type` - (Optional) Labels all personally identifiable information (PII) identified in Transcript events.
-    * `content_redaction_type` - (Optional) Redacts all personally identifiable information (PII) identified in Transcript events.
-    * `enable_partial_results_stabilization` - (Optional) Enables partial result stabilization in Transcript events.
-    * `filter_partial_results` - (Optional) Filters partial Utterance events from delivery to the insights target.
-    * `language_code` - (Required) Language code for the transcription model.
-    * `language_model_name` - (Optional) Name of custom language model for transcription.
-    * `partial_results_stability` - (Optional) Level of stability to use when partial results stabilization is enabled.
-    * `pii_entity_types` - (Optional) Types of personally identifiable information (PII) to redact from a Transcript event.
-    * `show_speaker_label` - (Optional) Enables speaker partitioning (diarization) in your Transcript events.
-    * `vocabulary_filter_method` - (Optional) Method for applying a vocabulary filter to Transcript events.
-    * `vocabulary_filter_name` - (Optional) Name of the custom vocabulary filter to use when processing Transcript events.
-    * `vocabulary_name` - (Optional) Name of the custom vocabulary to use when processing Transcript events.
+    * `contentIdentificationType` - (Optional) Labels all personally identifiable information (PII) identified in Transcript events.
+    * `contentRedactionType` - (Optional) Redacts all personally identifiable information (PII) identified in Transcript events.
+    * `enablePartialResultsStabilization` - (Optional) Enables partial result stabilization in Transcript events.
+    * `filterPartialResults` - (Optional) Filters partial Utterance events from delivery to the insights target.
+    * `languageCode` - (Required) Language code for the transcription model.
+    * `languageModelName` - (Optional) Name of custom language model for transcription.
+    * `partialResultsStability` - (Optional) Level of stability to use when partial results stabilization is enabled.
+    * `piiEntityTypes` - (Optional) Types of personally identifiable information (PII) to redact from a Transcript event.
+    * `showSpeakerLabel` - (Optional) Enables speaker partitioning (diarization) in your Transcript events.
+    * `vocabularyFilterMethod` - (Optional) Method for applying a vocabulary filter to Transcript events.
+    * `vocabularyFilterName` - (Optional) Name of the custom vocabulary filter to use when processing Transcript events.
+    * `vocabularyName` - (Optional) Name of the custom vocabulary to use when processing Transcript events.
 * `kinesisDataStreamSinkConfiguration` - (Optional) Configuration for Kinesis Data Stream sink.
-    * `insights_target` - (Required) Kinesis Data Stream to deliver results.
+    * `insightsTarget` - (Required) Kinesis Data Stream to deliver results.
 * `lambdaFunctionSinkConfiguration` - (Optional) Configuration for Lambda Function sink.
-    * `insights_target` - (Required) Lambda Function to deliver results.
+    * `insightsTarget` - (Required) Lambda Function to deliver results.
 * `snsTopicSinkConfiguration` - (Optional) Configuration for SNS Topic sink.
-    * `insights_target` - (Required) SNS topic to deliver results.
+    * `insightsTarget` - (Required) SNS topic to deliver results.
 * `sqsQueueSinkConfiguration` - (Optional) Configuration for SQS Queue sink.
-    * `insights_target` - (Required) SQS queue to deliver results.
+    * `insightsTarget` - (Required) SQS queue to deliver results.
 * `s3RecordingSinkConfiguration` - (Optional) Configuration for S3 recording sink.
     * `destination` - (Required) S3 URI to deliver recordings.
 * `voiceAnalyticsProcessorConfiguration` - (Optional) Configuration for Voice analytics processor.
-    * `speaker_search_status` - (Required) Enable speaker search.
-    * `voice_tone_analysis_status` - (Required) Enable voice tone analysis.
+    * `speakerSearchStatus` - (Required) Enable speaker search.
+    * `voiceToneAnalysisStatus` - (Required) Enable voice tone analysis.
 
 ### Real time alert configuration
 
 * `rules` - (Required) Collection of real time alert rules
     * `type` - (Required) Rule type.
-    * `issue_detection_configuration` - (Optional) Configuration for an issue detection rule.
-        * `rule_name` - (Required) Rule name.
-    * `keyword_match_configuration` - (Optional) Configuration for a keyword match rule.
-        * `rule_name` - (Required) Rule name.
+    * `issueDetectionConfiguration` - (Optional) Configuration for an issue detection rule.
+        * `ruleName` - (Required) Rule name.
+    * `keywordMatchConfiguration` - (Optional) Configuration for a keyword match rule.
+        * `ruleName` - (Required) Rule name.
         * `keywords` - (Required) Collection of keywords to match.
         * `negate` - (Optional) Negate the rule.
-    * `sentiment_configuration` - (Optional) Configuration for a sentiment rule.
-        * `rule_name` - (Required) Rule name.
-        * `sentiment_type` - (Required) Sentiment type to match.
-        * `time_period` - (Optional) Analysis interval.
+    * `sentimentConfiguration` - (Optional) Configuration for a sentiment rule.
+        * `ruleName` - (Required) Rule name.
+        * `sentimentType` - (Required) Sentiment type to match.
+        * `timePeriod` - (Optional) Analysis interval.
 * `disabled` - (Optional) Disables real time alert rules.
 
 ## Attribute Reference
@@ -484,9 +484,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { ChimesdkmediapipelinesMediaInsightsPipelineConfiguration } from "./.gen/providers/aws/chimesdkmediapipelines-media-insights-pipeline-configuration";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    ChimesdkmediapipelinesMediaInsightsPipelineConfiguration.generateConfigForImport(
+      this,
+      "example",
+      "abcdef123456"
+    );
   }
 }
 
@@ -498,4 +508,4 @@ Using `terraform import`, import Chime SDK Media Pipelines Media Insights Pipeli
 % terraform import aws_chimesdkmediapipelines_media_insights_pipeline_configuration.example abcdef123456
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-e27c8cae132bb59224264ffd318670201dbde0c3fb71b0400db863d44cf5ecde -->
+<!-- cache-key: cdktf-0.20.1 input-e27c8cae132bb59224264ffd318670201dbde0c3fb71b0400db863d44cf5ecde -->

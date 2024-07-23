@@ -41,6 +41,8 @@ const (
 )
 
 func dataSourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	consumerArn := d.Get("consumer_arn").(string)
@@ -49,10 +51,10 @@ func dataSourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceDat
 
 	err := FindTrackerAssociationByTrackerNameAndConsumerARN(ctx, conn, trackerName, consumerArn)
 	if err != nil {
-		return create.DiagError(names.Location, create.ErrActionReading, DSNameTrackerAssociation, id, err)
+		return create.AppendDiagError(diags, names.Location, create.ErrActionReading, DSNameTrackerAssociation, id, err)
 	}
 
 	d.SetId(id)
 
-	return nil
+	return diags
 }

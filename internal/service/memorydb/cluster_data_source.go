@@ -11,9 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_memorydb_cluster")
@@ -26,11 +28,11 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -39,7 +41,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,7 +49,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +57,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +65,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -79,15 +81,15 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"parameter_group_name": {
+			names.AttrParameterGroupName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -100,7 +102,7 @@ func DataSourceCluster() *schema.Resource {
 				Set:      shardHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -110,16 +112,16 @@ func DataSourceCluster() *schema.Resource {
 							Set:      nodeHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"availability_zone": {
+									names.AttrAvailabilityZone: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"create_time": {
+									names.AttrCreateTime: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"endpoint": endpointSchema(),
-									"name": {
+									names.AttrEndpoint: endpointSchema(),
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -145,7 +147,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"sns_topic_arn": {
+			names.AttrSNSTopicARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -153,7 +155,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"tls_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -163,85 +165,87 @@ func DataSourceCluster() *schema.Resource {
 }
 
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	cluster, err := FindClusterByName(ctx, conn, name)
 
 	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("MemoryDB Cluster", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MemoryDB Cluster", err))
 	}
 
 	d.SetId(aws.StringValue(cluster.Name))
 
 	d.Set("acl_name", cluster.ACLName)
-	d.Set("arn", cluster.ARN)
-	d.Set("auto_minor_version_upgrade", cluster.AutoMinorVersionUpgrade)
+	d.Set(names.AttrARN, cluster.ARN)
+	d.Set(names.AttrAutoMinorVersionUpgrade, cluster.AutoMinorVersionUpgrade)
 
 	if v := cluster.ClusterEndpoint; v != nil {
 		d.Set("cluster_endpoint", flattenEndpoint(v))
-		d.Set("port", v.Port)
+		d.Set(names.AttrPort, v.Port)
 	}
 
 	if v := aws.StringValue(cluster.DataTiering); v != "" {
 		b, err := strconv.ParseBool(v)
 		if err != nil {
-			return diag.Errorf("reading data_tiering for MemoryDB Cluster (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading data_tiering for MemoryDB Cluster (%s): %s", d.Id(), err)
 		}
 
 		d.Set("data_tiering", b)
 	}
 
-	d.Set("description", cluster.Description)
+	d.Set(names.AttrDescription, cluster.Description)
 	d.Set("engine_patch_version", cluster.EnginePatchVersion)
-	d.Set("engine_version", cluster.EngineVersion)
-	d.Set("kms_key_arn", cluster.KmsKeyId) // KmsKeyId is actually an ARN here.
+	d.Set(names.AttrEngineVersion, cluster.EngineVersion)
+	d.Set(names.AttrKMSKeyARN, cluster.KmsKeyId) // KmsKeyId is actually an ARN here.
 	d.Set("maintenance_window", cluster.MaintenanceWindow)
-	d.Set("name", cluster.Name)
+	d.Set(names.AttrName, cluster.Name)
 	d.Set("node_type", cluster.NodeType)
 
 	numReplicasPerShard, err := deriveClusterNumReplicasPerShard(cluster)
 	if err != nil {
-		return diag.Errorf("reading num_replicas_per_shard for MemoryDB Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading num_replicas_per_shard for MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
 	d.Set("num_replicas_per_shard", numReplicasPerShard)
 
 	d.Set("num_shards", cluster.NumberOfShards)
-	d.Set("parameter_group_name", cluster.ParameterGroupName)
+	d.Set(names.AttrParameterGroupName, cluster.ParameterGroupName)
 
 	var securityGroupIds []*string
 	for _, v := range cluster.SecurityGroups {
 		securityGroupIds = append(securityGroupIds, v.SecurityGroupId)
 	}
-	d.Set("security_group_ids", flex.FlattenStringSet(securityGroupIds))
+	d.Set(names.AttrSecurityGroupIDs, flex.FlattenStringSet(securityGroupIds))
 
 	if err := d.Set("shards", flattenShards(cluster.Shards)); err != nil {
-		return diag.Errorf("failed to set shards for MemoryDB Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "failed to set shards for MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
 
 	d.Set("snapshot_retention_limit", cluster.SnapshotRetentionLimit)
 	d.Set("snapshot_window", cluster.SnapshotWindow)
 
 	if aws.StringValue(cluster.SnsTopicStatus) == ClusterSNSTopicStatusActive {
-		d.Set("sns_topic_arn", cluster.SnsTopicArn)
+		d.Set(names.AttrSNSTopicARN, cluster.SnsTopicArn)
 	} else {
-		d.Set("sns_topic_arn", "")
+		d.Set(names.AttrSNSTopicARN, "")
 	}
 
 	d.Set("subnet_group_name", cluster.SubnetGroupName)
 	d.Set("tls_enabled", cluster.TLSEnabled)
 
-	tags, err := listTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 
 	if err != nil {
-		return diag.Errorf("listing tags for MemoryDB Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

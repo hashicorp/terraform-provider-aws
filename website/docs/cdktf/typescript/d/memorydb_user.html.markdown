@@ -48,9 +48,9 @@ This data source exports the following attributes in addition to the arguments a
 * `accessString` - Access permissions string used for this user.
 * `arn` - ARN of the user.
 * `authenticationMode` - Denotes the user's authentication properties.
-    * `password_count` - The number of passwords belonging to the user.
-    * `type` - Whether the user requires a password to authenticate.
-* `minimumEngineVersion` - The minimum engine version supported for the user.
-* `tags` - Map of tags assigned to the subnet group.
+    * `passwordCount` - Number of passwords belonging to the user if `type` is set to `password`.
+    * `type` - Type of authentication configured.
+* `minimumEngineVersion` - Minimum engine version supported for the user.
+* `tags` - Map of tags assigned to the user.
 
-<!-- cache-key: cdktf-0.19.0 input-c6f19bc84dfa577edf03fcc5ca3f615821c417f424a780c64de232dacc41af5a -->
+<!-- cache-key: cdktf-0.20.1 input-96e6cd20001d150cf9f5453c135efe793e4ab19f94eca86175544e28a5078f19 -->

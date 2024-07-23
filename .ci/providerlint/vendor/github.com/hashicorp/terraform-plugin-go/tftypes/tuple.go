@@ -4,7 +4,7 @@
 package tftypes
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
 	"strings"
 )
@@ -148,9 +148,22 @@ func valueFromTuple(types []Type, in interface{}) (Value, error) {
 //
 // Deprecated: this is not meant to be called by third-party code.
 func (tu Tuple) MarshalJSON() ([]byte, error) {
-	elements, err := json.Marshal(tu.ElementTypes)
-	if err != nil {
-		return nil, err
+	var buf bytes.Buffer
+
+	buf.WriteString(`["tuple",[`)
+
+	for index, elementType := range tu.ElementTypes {
+		if index > 0 {
+			buf.WriteString(",")
+		}
+
+		// MarshalJSON is always error safe
+		elementTypeBytes, _ := elementType.MarshalJSON()
+
+		buf.Write(elementTypeBytes)
 	}
-	return []byte(`["tuple",` + string(elements) + `]`), nil
+
+	buf.WriteString(`]]`)
+
+	return buf.Bytes(), nil
 }

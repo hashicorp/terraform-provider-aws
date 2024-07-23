@@ -27,7 +27,10 @@ import (
 
 // @SDKResource("aws_appmesh_virtual_router", name="Virtual Router")
 // @Tags(identifierAttribute="arn")
-func ResourceVirtualRouter() *schema.Resource {
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/appmesh;appmesh.VirtualRouterData")
+// @Testing(serialize=true)
+// @Testing(importStateIdFunc=testAccVirtualRouterImportStateIdFunc)
+func resourceVirtualRouter() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualRouterCreate,
@@ -42,45 +45,47 @@ func ResourceVirtualRouter() *schema.Resource {
 		SchemaVersion: 1,
 		MigrateState:  resourceVirtualRouterMigrateState,
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"mesh_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"mesh_owner": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"resource_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"spec":            resourceVirtualRouterSpecSchema(),
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrLastUpdatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"mesh_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"mesh_owner": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				names.AttrResourceOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"spec":            resourceVirtualRouterSpecSchema(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -108,12 +113,12 @@ func resourceVirtualRouterSpecSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"port": {
+										names.AttrPort: {
 											Type:         schema.TypeInt,
 											Required:     true,
 											ValidateFunc: validation.IsPortNumber,
 										},
-										"protocol": {
+										names.AttrProtocol: {
 											Type:         schema.TypeString,
 											Required:     true,
 											ValidateFunc: validation.StringInSlice(appmesh.PortProtocol_Values(), false),
@@ -133,7 +138,7 @@ func resourceVirtualRouterCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appmesh.CreateVirtualRouterInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		Spec:              expandVirtualRouterSpec(d.Get("spec").([]interface{})),
@@ -161,7 +166,7 @@ func resourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindVirtualRouterByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("name").(string))
+		return findVirtualRouterByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get(names.AttrName).(string))
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -177,13 +182,13 @@ func resourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, meta
 	vr := outputRaw.(*appmesh.VirtualRouterData)
 
 	arn := aws.StringValue(vr.Metadata.Arn)
-	d.Set("arn", arn)
-	d.Set("created_date", vr.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", vr.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedDate, vr.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, vr.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vr.MeshName)
 	d.Set("mesh_owner", vr.Metadata.MeshOwner)
-	d.Set("name", vr.VirtualRouterName)
-	d.Set("resource_owner", vr.Metadata.ResourceOwner)
+	d.Set(names.AttrName, vr.VirtualRouterName)
+	d.Set(names.AttrResourceOwner, vr.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenVirtualRouterSpec(vr.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
@@ -199,7 +204,7 @@ func resourceVirtualRouterUpdate(ctx context.Context, d *schema.ResourceData, me
 		input := &appmesh.UpdateVirtualRouterInput{
 			MeshName:          aws.String(d.Get("mesh_name").(string)),
 			Spec:              expandVirtualRouterSpec(d.Get("spec").([]interface{})),
-			VirtualRouterName: aws.String(d.Get("name").(string)),
+			VirtualRouterName: aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		if v, ok := d.GetOk("mesh_owner"); ok {
@@ -223,7 +228,7 @@ func resourceVirtualRouterDelete(ctx context.Context, d *schema.ResourceData, me
 	log.Printf("[DEBUG] Deleting App Mesh Virtual Router: %s", d.Id())
 	input := &appmesh.DeleteVirtualRouterInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
-		VirtualRouterName: aws.String(d.Get("name").(string)),
+		VirtualRouterName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("mesh_owner"); ok {
@@ -253,7 +258,7 @@ func resourceVirtualRouterImport(ctx context.Context, d *schema.ResourceData, me
 	meshName := parts[0]
 	name := parts[1]
 
-	vr, err := FindVirtualRouterByThreePartKey(ctx, conn, meshName, "", name)
+	vr, err := findVirtualRouterByThreePartKey(ctx, conn, meshName, "", name)
 
 	if err != nil {
 		return nil, err
@@ -261,12 +266,12 @@ func resourceVirtualRouterImport(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(aws.StringValue(vr.Metadata.Uid))
 	d.Set("mesh_name", vr.MeshName)
-	d.Set("name", vr.VirtualRouterName)
+	d.Set(names.AttrName, vr.VirtualRouterName)
 
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindVirtualRouterByThreePartKey(ctx context.Context, conn *appmesh.AppMesh, meshName, meshOwner, name string) (*appmesh.VirtualRouterData, error) {
+func findVirtualRouterByThreePartKey(ctx context.Context, conn *appmesh.AppMesh, meshName, meshOwner, name string) (*appmesh.VirtualRouterData, error) {
 	input := &appmesh.DescribeVirtualRouterInput{
 		MeshName:          aws.String(meshName),
 		VirtualRouterName: aws.String(name),

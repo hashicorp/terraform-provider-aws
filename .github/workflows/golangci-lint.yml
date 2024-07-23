@@ -16,13 +16,19 @@ on:
       - names/**
       - tools/**
 
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
 jobs:
   golangci-linta:
     name: 1 of 2
-    runs-on: [custom, linux, large]
+    runs-on: custom-linux-large
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
           go-version-file: go.mod
           cache: false
@@ -35,17 +41,17 @@ jobs:
             awk '{print $2}'
           )" >> $GITHUB_OUTPUT
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@3a919529898de77ec3da873e3063ca4b10e7f5cc # v3.7.0
+        uses: golangci/golangci-lint-action@a4f60bb28d35aeee14e6880718e0c85ff1882e64 # v3.7.1
         with:
           version: "${{ steps.golangci-lint-version.outputs.version }}"
           args: --config .ci/.golangci.yml
   golangci-lintb:
     name: 2 of 2
     needs: [golangci-linta]
-    runs-on: [custom, linux, xl]
+    runs-on: custom-linux-xl
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
           go-version-file: go.mod
           cache: false
@@ -58,7 +64,7 @@ jobs:
             awk '{print $2}'
           )" >> $GITHUB_OUTPUT
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@3a919529898de77ec3da873e3063ca4b10e7f5cc # v3.7.0
+        uses: golangci/golangci-lint-action@a4f60bb28d35aeee14e6880718e0c85ff1882e64 # v3.7.1
         with:
           version: "${{ steps.golangci-lint-version.outputs.version }}"
           args: --config .ci/.golangci2.yml

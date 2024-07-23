@@ -42,7 +42,7 @@ This data source supports the following arguments:
 * `name` - (Required) Name of the table.
 * `databaseName` - (Required) Name of the metadata database where the table metadata resides.
 * `catalogId` - (Optional) ID of the Glue Catalog and database where the table metadata resides. If omitted, this defaults to the current AWS Account ID.
-* `queryAsOfTime`- (Optional) The time as of when to read the table contents. If not set, the most recent transaction commit time will be used. Cannot be specified along with `transaction_id`. Specified in RFC 3339 format, e.g. `2006-01-02T15:04:05Z07:00`.
+* `queryAsOfTime`- (Optional) The time as of when to read the table contents. If not set, the most recent transaction commit time will be used. Cannot be specified along with `transactionId`. Specified in RFC 3339 format, e.g. `2006-01-02T15:04:05Z07:00`.
 * `transactionId` - (Optional) The transaction ID at which to read the table contents.
 
 ## Attribute Reference
@@ -54,12 +54,12 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Description of the table.
 * `owner` - Owner of the table.
 * `parameters` - Properties associated with this table, as a list of key-value pairs.
-* `partitionIndex` - Configuration block for a maximum of 3 partition indexes. See [`partition_index`](#partition_index) below.
-* `partitionKeys` - Configuration block of columns by which the table is partitioned. Only primitive types are supported as partition keys. See [`partition_keys`](#partition_keys) below.
+* `partitionIndex` - Configuration block for a maximum of 3 partition indexes. See [`partitionIndex`](#partition_index) below.
+* `partitionKeys` - Configuration block of columns by which the table is partitioned. Only primitive types are supported as partition keys. See [`partitionKeys`](#partition_keys) below.
 * `retention` - Retention time for this table.
-* `storageDescriptor` - Configuration block for information about the physical storage of this table. For more information, refer to the [Glue Developer Guide](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-catalog-tables.html#aws-glue-api-catalog-tables-StorageDescriptor). See [`storage_descriptor`](#storage_descriptor) below.
+* `storageDescriptor` - Configuration block for information about the physical storage of this table. For more information, refer to the [Glue Developer Guide](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-catalog-tables.html#aws-glue-api-catalog-tables-StorageDescriptor). See [`storageDescriptor`](#storage_descriptor) below.
 * `tableType` - Type of this table (EXTERNAL_TABLE, VIRTUAL_VIEW, etc.). While optional, some Athena DDL queries such as `ALTER TABLE` and `SHOW CREATE TABLE` will fail if this argument is empty.
-* `targetTable` - Configuration block of a target table for resource linking. See [`target_table`](#target_table) below.
+* `targetTable` - Configuration block of a target table for resource linking. See [`targetTable`](#target_table) below.
 * `viewExpandedText` - If the table is a view, the expanded text of the view; otherwise null.
 * `viewOriginalText` - If the table is a view, the original text of the view; otherwise null.
 
@@ -76,6 +76,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### storage_descriptor
 
+* `additional_locations` - List of locations that point to the path where a Delta table is located
 * `bucketColumns` - List of reducer grouping columns, clustering columns, and bucketing columns in the table.
 * `columns` - Configuration block for columns in the table. See [`columns`](#columns) below.
 * `compressed` - Whether the data in the table is compressed.
@@ -84,10 +85,10 @@ This data source exports the following attributes in addition to the arguments a
 * `numberOfBuckets` - Is if the table contains any dimension columns.
 * `outputFormat` - Output format: SequenceFileOutputFormat (binary), or IgnoreKeyTextOutputFormat, or a custom format.
 * `parameters` - User-supplied properties in key-value form.
-* `schemaReference` - Object that references a schema stored in the AWS Glue Schema Registry. See [`schema_reference`](#schema_reference) below.
-* `serDeInfo` - Configuration block for serialization and deserialization ("SerDe") information. See [`ser_de_info`](#ser_de_info) below.
-* `skewedInfo` - Configuration block with information about values that appear very frequently in a column (skewed values). See [`skewed_info`](#skewed_info) below.
-* `sortColumns` - Configuration block for the sort order of each bucket in the table. See [`sort_columns`](#sort_columns) below.
+* `schemaReference` - Object that references a schema stored in the AWS Glue Schema Registry. See [`schemaReference`](#schema_reference) below.
+* `serDeInfo` - Configuration block for serialization and deserialization ("SerDe") information. See [`serDeInfo`](#ser_de_info) below.
+* `skewedInfo` - Configuration block with information about values that appear very frequently in a column (skewed values). See [`skewedInfo`](#skewed_info) below.
+* `sortColumns` - Configuration block for the sort order of each bucket in the table. See [`sortColumns`](#sort_columns) below.
 * `storedAsSubDirectories` - Whether the table data is stored in subdirectories.
 
 #### columns
@@ -99,7 +100,7 @@ This data source exports the following attributes in addition to the arguments a
 
 #### schema_reference
 
-* `schemaId` - Configuration block that contains schema identity fields. See [`schema_id`](#schema_id) below.
+* `schemaId` - Configuration block that contains schema identity fields. See [`schemaId`](#schema_id) below.
 * `schemaVersionId` - Unique ID assigned to a version of the schema.
 * `schemaVersionNumber` - Version number of the schema.
 
@@ -131,5 +132,6 @@ This data source exports the following attributes in addition to the arguments a
 * `catalogId` - ID of the Data Catalog in which the table resides.
 * `databaseName` - Name of the catalog database that contains the target table.
 * `name` - Name of the target table.
+* `region` - Region of the target table.
 
-<!-- cache-key: cdktf-0.19.0 input-e15edcd6d033b5edb19b2c2cba94f792949b55bd9f5265620f634af7b6c959a4 -->
+<!-- cache-key: cdktf-0.20.1 input-6aa148fa876b8e857555bdad7d827e6584f2528c3ddc31f0e55e804050c5f778 -->
