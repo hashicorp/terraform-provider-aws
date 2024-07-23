@@ -52,6 +52,9 @@ func (r *resourceSubscription) Schema(ctx context.Context, req resource.SchemaRe
 				Default:     stringdefault.StaticString(string(awstypes.AutoRenewEnabled)),
 			},
 			names.AttrID: framework.IDAttribute(),
+			names.AttrSkipDestroy: schema.BoolAttribute{
+				Optional: true,
+			},
 		},
 	}
 }
@@ -150,9 +153,11 @@ func (r *resourceSubscription) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	in := &shield.DeleteSubscriptionInput{}
+	if state.SkipDestroy.ValueBool() {
+		return
+	}
 
-	_, err := conn.DeleteSubscription(ctx, in)
+	_, err := conn.DeleteSubscription(ctx, &shield.DeleteSubscriptionInput{})
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
@@ -191,6 +196,7 @@ func findSubscriptionByID(ctx context.Context, conn *shield.Client) (*awstypes.S
 }
 
 type resourceSubscriptionData struct {
-	AutoRenew fwtypes.StringEnum[awstypes.AutoRenew] `tfsdk:"auto_renew"`
-	ID        types.String                           `tfsdk:"id"`
+	AutoRenew   fwtypes.StringEnum[awstypes.AutoRenew] `tfsdk:"auto_renew"`
+	ID          types.String                           `tfsdk:"id"`
+	SkipDestroy types.Bool                             `tfsdk:"skip_destroy"`
 }

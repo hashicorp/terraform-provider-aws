@@ -24,27 +24,28 @@ resource "aws_shield_subscription" "example" {
 
 The following arguments are optional:
 
-* `auto_renew` - (Optional) automated renewal for the subscription. Valid values are `ENABLED` or `DISABLED`. Default is `ENABLED`.
+* `auto_renew` - (Optional) Toggle for automated renewal of the subscription. Valid values are `ENABLED` or `DISABLED`. Default is `ENABLED`.
+* `skip_destroy` - (Optional) Skip attempting to disable automated renewal upon destruction. If set to `true`, the `auto_renew` value will be left as-is and the resource will simply be removed from state.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Account ID is used.
+* `id` - AWS Account ID.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Shield Subscription using the `AWS Account ID`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Shield Subscription using the `id`. For example:
 
 ```terraform
 import {
   to = aws_shield_subscription.example
-  id = "1234567890"
+  id = "012345678901"
 }
 ```
 
-Using `terraform import`, import Shield Subscription using the `AWS Account ID`. For example:
+Using `terraform import`, import Shield Subscription using the `id`. For example:
 
 ```console
-% terraform import aws_shield_subscription.example 1234567890
+% terraform import aws_shield_subscription.example 012345678901
 ```
