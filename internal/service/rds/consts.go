@@ -41,6 +41,10 @@ const (
 )
 
 const (
+	clusterSnapshotAttributeNameRestore = "restore"
+)
+
+const (
 	storageTypeStandard    = "standard"
 	storageTypeGP2         = "gp2"
 	storageTypeGP3         = "gp3"

@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -1946,7 +1948,7 @@ func TestAccRDSCluster_snapshotIdentifier(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -1978,7 +1980,7 @@ func TestAccRDSCluster_SnapshotIdentifier_deletionProtection(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2021,7 +2023,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_provisioned(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2055,7 +2057,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_serverless(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2089,7 +2091,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineVersion_different(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2124,7 +2126,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineVersion_equal(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2158,7 +2160,7 @@ func TestAccRDSCluster_SnapshotIdentifier_kmsKeyID(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -2192,7 +2194,7 @@ func TestAccRDSCluster_SnapshotIdentifier_masterPassword(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2225,7 +2227,7 @@ func TestAccRDSCluster_SnapshotIdentifier_masterUsername(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2260,7 +2262,7 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredBackupWindow(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2293,7 +2295,7 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredMaintenanceWindow(t *testing.
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	// This config is version agnostic. Use it as a model for fixing version errors
 	// in other tests.
@@ -2329,7 +2331,7 @@ func TestAccRDSCluster_SnapshotIdentifier_tags(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2363,7 +2365,7 @@ func TestAccRDSCluster_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2399,7 +2401,7 @@ func TestAccRDSCluster_SnapshotIdentifierVPCSecurityGroupIDs_tags(t *testing.T) 
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2433,7 +2435,7 @@ func TestAccRDSCluster_SnapshotIdentifier_encryptedRestore(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -2706,7 +2708,8 @@ func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestChe
 
 func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn1 := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn2 := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster" {
@@ -2714,12 +2717,12 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 			}
 
 			finalSnapshotID := rs.Primary.Attributes[names.AttrFinalSnapshotIdentifier]
-			_, err := tfrds.FindDBClusterSnapshotByID(ctx, conn, finalSnapshotID)
+			_, err := tfrds.FindDBClusterSnapshotByID(ctx, conn2, finalSnapshotID)
 			if err != nil {
 				return err
 			}
 
-			_, err = conn.DeleteDBClusterSnapshotWithContext(ctx, &rds.DeleteDBClusterSnapshotInput{
+			_, err = conn2.DeleteDBClusterSnapshot(ctx, &rds_sdkv2.DeleteDBClusterSnapshotInput{
 				DBClusterSnapshotIdentifier: aws.String(finalSnapshotID),
 			})
 
@@ -2727,7 +2730,7 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 				return err
 			}
 
-			_, err = tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)
+			_, err = tfrds.FindDBClusterByID(ctx, conn1, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
