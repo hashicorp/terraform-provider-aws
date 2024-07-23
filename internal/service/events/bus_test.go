@@ -74,7 +74,7 @@ func TestAccEventsBus_basic(t *testing.T) {
 	})
 }
 
-func TestAccEventBus_kmsKeyIdentifier(t *testing.T) {
+func TestAccEventsBus_kmsKeyIdentifier(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 eventbridge.DescribeEventBusOutput
 	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
