@@ -4,8 +4,7 @@
 package storagegateway
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/storagegateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
@@ -23,12 +22,12 @@ const (
 //
 // See https://docs.aws.amazon.com/storagegateway/latest/userguide/AWSStorageGatewayAPI.html#APIErrorResponses for details.
 func operationErrorCode(err error) string {
-	if v, ok := errs.As[*storagegateway.InternalServerError](err); ok && v.Error_ != nil {
-		return aws.StringValue(v.Error_.ErrorCode)
+	if v, ok := errs.As[*awstypes.InternalServerError](err); ok && v.Error_ != nil {
+		return string(v.Error_.ErrorCode)
 	}
 
-	if v, ok := errs.As[*storagegateway.InvalidGatewayRequestException](err); ok && v.Error_ != nil {
-		return aws.StringValue(v.Error_.ErrorCode)
+	if v, ok := errs.As[*awstypes.InvalidGatewayRequestException](err); ok && v.Error_ != nil {
+		return string(v.Error_.ErrorCode)
 	}
 
 	return ""
