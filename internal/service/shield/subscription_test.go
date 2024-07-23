@@ -85,7 +85,8 @@ func testAccCheckSubscriptionExists(ctx context.Context, name string, subscripti
 func testAccSubscriptionConfig_basic(autoRenew string) string {
 	return fmt.Sprintf(`
 resource "aws_shield_subscription" "test" {
-  auto_renew = %[1]q
+  auto_renew   = %[1]q
+  skip_destroy = true
 }
 `, autoRenew)
 }
