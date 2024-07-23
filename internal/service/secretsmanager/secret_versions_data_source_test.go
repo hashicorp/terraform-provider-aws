@@ -33,6 +33,12 @@ func TestAccSecretsManagerSecretVersionsDataSource_basic(t *testing.T) {
 				ExpectError: regexache.MustCompile(`couldn't find resource`),
 			},
 			{
+				Config: testAccSecretVersionsDataSourceConfig_noVersion(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccSecretVersionsCheckDataSource(datasourceName, "", "", 0),
+				),
+			},
+			{
 				Config: testAccSecretVersionsDataSourceConfig_oneVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccSecretVersionsCheckDataSource(datasourceName, resource1Name, "", 1),
@@ -77,7 +83,7 @@ func testAccSecretVersionsCheckDataSource(datasourceName, resource1Name, resourc
 		}
 
 		resource1, ok := s.RootModule().Resources[resource1Name]
-		if !ok {
+		if resource1Name != "" && !ok {
 			return fmt.Errorf("root module has no resource called %s", resource1Name)
 		}
 
@@ -108,17 +114,18 @@ func testAccSecretVersionsCheckDataSource(datasourceName, resource1Name, resourc
 			return nil
 		}
 
-		attrNamesResource1 := []string{
-			"arn",
-			"secret_id",
-			"versions.0,created_date",
-			"versions.0,version_id",
-			"versions.0,version_stages.#",
-			"versions.0,last_accessed_date",
-		}
-		err := checkAttributes(attrNamesResource1, resource1.Primary.Attributes)
-		if err != nil {
-			return err
+		if resource1Name != "" {
+			attrNamesResource1 := []string{
+				"arn",
+				"secret_id",
+				"versions.0,created_date",
+				"versions.0,version_id",
+				"versions.0,version_stages.#",
+				"versions.0,last_accessed_date",
+			}
+			if err := checkAttributes(attrNamesResource1, resource1.Primary.Attributes); err != nil {
+				return err
+			}
 		}
 
 		if resource2Name != "" {
@@ -130,8 +137,7 @@ func testAccSecretVersionsCheckDataSource(datasourceName, resource1Name, resourc
 				"versions.1,version_stages.#",
 				"versions.1,last_accessed_date",
 			}
-			err = checkAttributes(attrNamesResource2, resource2.Primary.Attributes)
-			if err != nil {
+			if err := checkAttributes(attrNamesResource2, resource2.Primary.Attributes); err != nil {
 				return err
 			}
 		}
@@ -145,6 +151,18 @@ data "aws_secretsmanager_secret_versions" "test" {
   secret_id = "tf-acc-test-does-not-exist"
 }
 `
+
+func testAccSecretVersionsDataSourceConfig_noVersion(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = "%[1]s"
+}
+
+data "aws_secretsmanager_secret_versions" "test" {
+  secret_id = aws_secretsmanager_secret.test.id
+}
+`, rName)
+}
 
 func testAccSecretVersionsDataSourceConfig_oneVersion(rName string) string {
 	return fmt.Sprintf(`
