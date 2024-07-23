@@ -13,6 +13,8 @@ var (
 	ResourceProxyDefaultTargetGroup = resourceProxyDefaultTargetGroup
 	ResourceProxyEndpoint           = resourceProxyEndpoint
 	ResourceProxyTarget             = resourceProxyTarget
+	ResourceSnapshot                = resourceSnapshot
+	ResourceSnapshotCopy            = resourceSnapshotCopy
 	ResourceSubnetGroup             = resourceSubnetGroup
 
 	FindDBClusterSnapshotByID                  = findDBClusterSnapshotByID
@@ -20,6 +22,7 @@ var (
 	FindDBProxyByName                          = findDBProxyByName
 	FindDBProxyEndpointByTwoPartKey            = findDBProxyEndpointByTwoPartKey
 	FindDBProxyTargetByFourPartKey             = findDBProxyTargetByFourPartKey
+	FindDBSnapshotByID                         = findDBSnapshotByID
 	FindDBSubnetGroupByName                    = findDBSubnetGroupByName
 	FindDefaultCertificate                     = findDefaultCertificate
 	FindDefaultDBProxyTargetGroupByDBProxyName = findDefaultDBProxyTargetGroupByDBProxyName

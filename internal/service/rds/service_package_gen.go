@@ -176,7 +176,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "DB Proxy Target",
 		},
 		{
-			Factory:  ResourceSnapshot,
+			Factory:  resourceSnapshot,
 			TypeName: "aws_db_snapshot",
 			Name:     "DB Snapshot",
 			Tags: &types.ServicePackageResourceTags{
@@ -184,7 +184,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSnapshotCopy,
+			Factory:  resourceSnapshotCopy,
 			TypeName: "aws_db_snapshot_copy",
 			Name:     "DB Snapshot",
 			Tags: &types.ServicePackageResourceTags{

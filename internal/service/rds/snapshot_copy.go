@@ -27,7 +27,7 @@ import (
 // @SDKResource("aws_db_snapshot_copy", name="DB Snapshot")
 // @Tags(identifierAttribute="db_snapshot_arn")
 // @Testing(tagsTest=false)
-func ResourceSnapshotCopy() *schema.Resource {
+func resourceSnapshotCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCopyCreate,
 		ReadWithoutTimeout:   resourceSnapshotCopyRead,
@@ -185,13 +185,14 @@ func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	output, err := conn.CopyDBSnapshotWithContext(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS DB Snapshot Copy (%s): %s", targetDBSnapshotID, err)
 	}
 
 	d.SetId(aws.StringValue(output.DBSnapshot.DBSnapshotIdentifier))
 
-	if err := waitDBSnapshotCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitDBSnapshotCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Snapshot Copy (%s) create: %s", d.Id(), err)
 	}
 
@@ -216,7 +217,7 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	snapshot, err := FindDBSnapshotByID(ctx, conn, d.Id())
+	snapshot, err := findDBSnapshotByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS DB Snapshot (%s) not found, removing from state", d.Id())
@@ -247,17 +248,14 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("target_db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
 	d.Set(names.AttrVPCID, snapshot.VpcId)
 
-	input := &rds.DescribeDBSnapshotAttributesInput{
-		DBSnapshotIdentifier: aws.String(d.Id()),
+	attribute, err := findDBSnapshotAttributeByTwoPartKey(ctx, conn, d.Id(), dbSnapshotAttributeNameRestore)
+	switch {
+	case err == nil:
+		d.Set("shared_accounts", flex.FlattenStringSet(attribute.AttributeValues))
+	case tfresource.NotFound(err):
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshot (%s) attribute: %s", d.Id(), err)
 	}
-
-	output, err := conn.DescribeDBSnapshotAttributesWithContext(ctx, input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshot (%s) attributes: %s", d.Id(), err)
-	}
-
-	d.Set("shared_accounts", flex.FlattenStringSet(output.DBSnapshotAttributesResult.DBSnapshotAttributes[0].AttributeValues))
 
 	return diags
 }
@@ -268,23 +266,19 @@ func resourceSnapshotCopyUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChange("shared_accounts") {
 		o, n := d.GetChange("shared_accounts")
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-
-		additionList := ns.Difference(os)
-		removalList := os.Difference(ns)
-
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := ns.Difference(os), os.Difference(ns)
 		input := &rds.ModifyDBSnapshotAttributeInput{
 			AttributeName:        aws.String("restore"),
 			DBSnapshotIdentifier: aws.String(d.Id()),
-			ValuesToAdd:          flex.ExpandStringSet(additionList),
-			ValuesToRemove:       flex.ExpandStringSet(removalList),
+			ValuesToAdd:          flex.ExpandStringSet(add),
+			ValuesToRemove:       flex.ExpandStringSet(del),
 		}
 
 		_, err := conn.ModifyDBSnapshotAttributeWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Snapshot (%s) attributes: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Snapshot (%s) attribute: %s", d.Id(), err)
 		}
 	}
 

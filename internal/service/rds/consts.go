@@ -134,8 +134,12 @@ const (
 )
 
 const (
-	DBSnapshotAvailable = "available"
-	DBSnapshotCreating  = "creating"
+	dbSnapshotAvailable = "available"
+	dbSnapshotCreating  = "creating"
+)
+
+const (
+	dbSnapshotAttributeNameRestore = "restore"
 )
 
 const (

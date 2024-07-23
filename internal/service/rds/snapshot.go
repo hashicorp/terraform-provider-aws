@@ -27,7 +27,7 @@ import (
 // @SDKResource("aws_db_snapshot", name="DB Snapshot")
 // @Tags(identifierAttribute="db_snapshot_arn")
 // @Testing(tagsTest=false)
-func ResourceSnapshot() *schema.Resource {
+func resourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCreate,
 		ReadWithoutTimeout:   resourceSnapshotRead,
@@ -146,13 +146,14 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	output, err := conn.CreateDBSnapshotWithContext(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS DB Snapshot (%s): %s", dbSnapshotID, err)
 	}
 
 	d.SetId(aws.StringValue(output.DBSnapshot.DBSnapshotIdentifier))
 
-	if err := waitDBSnapshotCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitDBSnapshotCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Snapshot (%s) create: %s", d.Id(), err)
 	}
 
@@ -164,6 +165,7 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		_, err := conn.ModifyDBSnapshotAttributeWithContext(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Snapshot (%s) attribute: %s", d.Id(), err)
 		}
@@ -176,7 +178,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	snapshot, err := FindDBSnapshotByID(ctx, conn, d.Id())
+	snapshot, err := findDBSnapshotByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS DB Snapshot (%s) not found, removing from state", d.Id())
@@ -208,17 +210,14 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrStatus, snapshot.Status)
 	d.Set(names.AttrVPCID, snapshot.VpcId)
 
-	input := &rds.DescribeDBSnapshotAttributesInput{
-		DBSnapshotIdentifier: aws.String(d.Id()),
+	attribute, err := findDBSnapshotAttributeByTwoPartKey(ctx, conn, d.Id(), dbSnapshotAttributeNameRestore)
+	switch {
+	case err == nil:
+		d.Set("shared_accounts", flex.FlattenStringSet(attribute.AttributeValues))
+	case tfresource.NotFound(err):
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshot (%s) attribute: %s", d.Id(), err)
 	}
-
-	output, err := conn.DescribeDBSnapshotAttributesWithContext(ctx, input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshot (%s) attributes: %s", d.Id(), err)
-	}
-
-	d.Set("shared_accounts", flex.FlattenStringSet(output.DBSnapshotAttributesResult.DBSnapshotAttributes[0].AttributeValues))
 
 	setTagsOut(ctx, snapshot.TagList)
 
@@ -231,23 +230,19 @@ func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if d.HasChange("shared_accounts") {
 		o, n := d.GetChange("shared_accounts")
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-
-		additionList := ns.Difference(os)
-		removalList := os.Difference(ns)
-
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := ns.Difference(os), os.Difference(ns)
 		input := &rds.ModifyDBSnapshotAttributeInput{
 			AttributeName:        aws.String("restore"),
 			DBSnapshotIdentifier: aws.String(d.Id()),
-			ValuesToAdd:          flex.ExpandStringSet(additionList),
-			ValuesToRemove:       flex.ExpandStringSet(removalList),
+			ValuesToAdd:          flex.ExpandStringSet(add),
+			ValuesToRemove:       flex.ExpandStringSet(del),
 		}
 
 		_, err := conn.ModifyDBSnapshotAttributeWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Snapshot (%s) attributes: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Snapshot (%s) attribute: %s", d.Id(), err)
 		}
 	}
 
@@ -274,7 +269,7 @@ func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func FindDBSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBSnapshot, error) {
+func findDBSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBSnapshot, error) {
 	input := &rds.DescribeDBSnapshotsInput{
 		DBSnapshotIdentifier: aws.String(id),
 	}
@@ -333,4 +328,80 @@ func findDBSnapshots(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBSn
 	}
 
 	return output, nil
+}
+
+func statusDBSnapshot(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findDBSnapshotByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitDBSnapshotCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBSnapshot, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{dbSnapshotCreating},
+		Target:     []string{dbSnapshotAvailable},
+		Refresh:    statusDBSnapshot(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*rds.DBSnapshot); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func findDBSnapshotAttributeByTwoPartKey(ctx context.Context, conn *rds.RDS, id, attributeName string) (*rds.DBSnapshotAttribute, error) {
+	input := &rds.DescribeDBSnapshotAttributesInput{
+		DBSnapshotIdentifier: aws.String(id),
+	}
+
+	return findDBSnapshotAttribute(ctx, conn, input, func(v *rds.DBSnapshotAttribute) bool {
+		return aws.StringValue(v.AttributeName) == attributeName
+	})
+}
+
+func findDBSnapshotAttribute(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBSnapshotAttributesInput, filter tfslices.Predicate[*rds.DBSnapshotAttribute]) (*rds.DBSnapshotAttribute, error) {
+	output, err := findDBSnapshotAttributes(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findDBSnapshotAttributes(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBSnapshotAttributesInput, filter tfslices.Predicate[*rds.DBSnapshotAttribute]) ([]*rds.DBSnapshotAttribute, error) {
+	output, err := conn.DescribeDBSnapshotAttributesWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DBSnapshotAttributesResult == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return tfslices.Filter(output.DBSnapshotAttributesResult.DBSnapshotAttributes, filter), nil
 }

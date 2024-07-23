@@ -578,7 +578,7 @@ func sweepSnapshots(region string) error {
 				continue
 			}
 
-			r := ResourceSnapshot()
+			r := resourceSnapshot()
 			d := r.Data(nil)
 			d.SetId(id)
 
