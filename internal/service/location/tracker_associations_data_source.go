@@ -62,9 +62,7 @@ func dataSourceTrackerAssociationsRead(ctx context.Context, d *schema.ResourceDa
 			return create.AppendDiagError(diags, names.Location, create.ErrActionReading, DSNameTrackerAssociations, name, err)
 		}
 
-		for _, arn := range page.ConsumerArns {
-			arns = append(arns, arn)
-		}
+		arns = append(arns, page.ConsumerArns...)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
