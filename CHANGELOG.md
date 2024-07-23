@@ -5,6 +5,7 @@ ENHANCEMENTS:
 * data-source/aws_cur_report_definition: Add `tags` attribute ([#38483](https://github.com/hashicorp/terraform-provider-aws/issues/38483))
 * resource/aws_cur_report_definition: Add `tags` argument and `tags_all` attribute ([#38483](https://github.com/hashicorp/terraform-provider-aws/issues/38483))
 * resource/aws_glue_connection: Add `AZURECOSMOS`, `AZURESQL`, `BIGQUERY`, `OPENSEARCH`, and `SNOWFLAKE` as valid values for the `connection_type` argument and `SparkProperties` as a valid value for the `connection_properties` argument ([#37731](https://github.com/hashicorp/terraform-provider-aws/issues/37731))
+* resource/aws_iam_role: Change from partial resource creation to resource creation failed if an `inline_policy` fails to create ([#38477](https://github.com/hashicorp/terraform-provider-aws/issues/38477))
 * resource/aws_rds_cluster: Add `scaling_configuration.seconds_before_timeout` argument ([#38451](https://github.com/hashicorp/terraform-provider-aws/issues/38451))
 * resource/aws_sesv2_configuration_set_event_destination: Add `event_destination.event_bridge_destination` configuration block ([#38458](https://github.com/hashicorp/terraform-provider-aws/issues/38458))
 
