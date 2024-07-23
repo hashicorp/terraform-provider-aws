@@ -58,6 +58,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newResourceEvaluationJob,
 			Name:    "Evaluation Job",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "evaluation_job_arn",
+			},
 		},
 	}
 }

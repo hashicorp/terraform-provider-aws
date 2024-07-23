@@ -63,6 +63,9 @@ func TestAccBedrockEvaluationJob_basic(t *testing.T) {
 	//bucketName := "aws_s3_bucket.test"
 	modelName := "aws_bedrock_foundation_model.test"
 	iamName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketAccessName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	modelAccessName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	transferRoleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -74,29 +77,27 @@ func TestAccBedrockEvaluationJob_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEvaluationJobConfig_basic(rName, iamName, bName),
+				Config: testAccEvaluationJobConfig_basic(iamName, rName, bName, bucketAccessName, modelAccessName, transferRoleName),
 				Check: resource.ComposeTestCheckFunc(
 					//testAccCheckEvaluationJobExists(ctx, resourceName, &evaluationjob),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					//resource.TestCheckResourceAttrPair(resourceName, "customer_cencryption_key_id", ""),
 					// eval config
-					resource.TestCheckResourceAttr(resourceName, "evaluation_job.automated.evaluation_config.metric_names.0", "Builtin.Accuracy"),
-					resource.TestCheckResourceAttr(resourceName, "evaluation_job.automated.evaluation_config.task_type.0", "Summarization"),
-					resource.TestCheckResourceAttr(resourceName, "evaluation_job.automated.evaluation_config.data_set.data_set.name", "Builtin.Bold"),
-					resource.TestCheckResourceAttr(resourceName, "evaluation_job.automated.evaluation_config.data_set.name", "Builtin.Bold"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_config.automated.dataset_metric_configs.metric_names.0", "Builtin.Accuracy"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_config.automated.dataset_metric_configs.task_type", "Question and Answer"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_config.automated.dataset_metric_configs.dataset.name", "Builtin.BoolQ"),
+					resource.TestCheckResourceAttrSet(resourceName, "evaluation_config.automated.dataset_metric_configs.dataset.dataset_location.s3_uri"),
 					// eval config end
 					// inf config
-					resource.TestCheckResourceAttrPair(resourceName, "evaluation_job_inference_config.models.bedrock_model.inference_params", modelName, "inference_types_supported.0"),
-					resource.TestCheckResourceAttrPair(resourceName, "evaluation_job_inference_config.models.bedrock_model.id", modelName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "inference_config.models.bedrock_model.inference_params", modelName, "inference_types_supported.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "inference_config.models.bedrock_model.model_identifier", modelName, names.AttrID),
 					// inf config end
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "Summarization"),
-					resource.TestCheckResourceAttrSet(resourceName, "output_data_config[0].s3_uri"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"), // not sure what to do here
-					//resource.TestCheckResourceAttrSet(resourceName, "failure_messages"), // not sure if this should be set
+					resource.TestCheckResourceAttrSet(resourceName, "output_data_config.0.s3_uri"),
+					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
-					// resource.TestCheckResourceAttrPairSet(resourceName, "last_modified_time") don't think I need this
 				),
 			},
 			{
@@ -208,12 +209,15 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccEvaluationJobConfig_base(iamName, bucketName string) string {
+func testAccEvaluationJobConfig_base(iamName, bucketName, bucketAccessName, modelAccessName, transferRoleName string) string {
 	return fmt.Sprintf(`
-data "aws_bedrock_foundation_models" "test" {}
 
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+data "aws_bedrock_foundation_models" "test" {}
 data "aws_bedrock_foundation_model" "test" {
-  model_id = "amazon.titan-text-express-v1"
+  model_id = "anthropic.claude-v2"
 }
 
 resource "aws_s3_bucket" "test" {
@@ -226,34 +230,21 @@ resource "aws_s3_bucket" "test" {
   }
 }
 
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = <<EOF
-  {
-      "Version": "2012-10-17",
-    "Statement": [{
-        "Sid": "AllowBedrockToAssumeRole",
-        "Effect": "Allow",
-        "Principal": {
-            "Service": "bedrock.amazonaws.com"
-        },
-        "Action": "sts:AssumeRole",
-        "Condition": {
-            "StringEquals": {
-                "aws:SourceArn": "111122223333"
-            },
-            "ArnEquals": {
-                "aws:SourceArn": "arn:aws:bedrock:AWS Region:111122223333:evaluation-job/*"
-            }
-        }
-    }]
-  }
-EOF
+resource "aws_s3_object" "output" {
+	bucket = aws_s3_bucket.test.id
+	key = "data/dataset.jsonl"
+	source = "dataset.jsonl"	
 }
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
 
+resource "aws_s3_object" "dataset" {
+	bucket = aws_s3_bucket.test.id
+	key = "data/dataset.jsonl"
+	source = "dataset.jsonl"	
+}
+
+
+resource "aws_iam_policy" "test" {
+  name = %[1]q
 
   policy = jsonencode({
     "Version" : "2012-10-17",
@@ -293,11 +284,115 @@ resource "aws_iam_role_policy" "test" {
     ]
   })
 }
-	`, iamName, bucketName)
+  resource "aws_iam_policy" "bucket_access" {
+  name = %[3]q
+
+  policy = jsonencode({
+"Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowAccessToCustomDatasets",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:ListBucket"
+            ],
+            "Resource": [
+            "arn:aws:s3:::${aws_s3_bucket.test.bucket}",
+            "arn:aws:s3:::${aws_s3_bucket.test.bucket}/${aws_s3_object.dataset.key}"
+			]
+        },
+        {
+            "Sid": "AllowAccessToOutputBucket",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:ListBucket",
+                "s3:PutObject",
+                "s3:GetBucketLocation",
+                "s3:AbortMultipartUpload",
+                "s3:ListBucketMultipartUploads"
+            ],
+            "Resource": [
+            "arn:aws:s3:::${aws_s3_bucket.test.bucket}",
+			"arn:aws:s3:::${aws_s3_bucket.test.bucket}/${aws_s3_object.output.key}"            
+			]
+        }
+    ]
+  })
 }
 
-func testAccEvaluationJobConfig_basic(iamName, jobName, bucketName string) string {
-	return acctest.ConfigCompose(testAccEvaluationJobConfig_base(iamName, bucketName), fmt.Sprintf(`
+  resource "aws_iam_policy" "model_access" {
+  name = %[4]q
+
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Sid" : "AllowSpecificModels",
+        "Effect" : "Allow",
+        "Action" : [
+	            "bedrock:InvokeModel",
+	            "bedrock:InvokeModelWithResponseStream",
+				"bedrock:CreateModelInvocationJob",
+				"bedrock:StopModelInvocationJob"
+        ],
+        "Resource" : [
+			"arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-v2"
+		]
+      },
+    ]
+  })
+}
+
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  # See https://docs.aws.amazon.com/bedrock/latest/userguide/model-customization-iam-role.html#model-customization-iam-role-trust.
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "bedrock.amazonaws.com"
+    },
+    "Action": "sts:AssumeRole",
+    "Condition": {
+      "StringEquals": {
+        "aws:SourceArn": "${data.aws_caller_identity.current.arn}"
+      },
+      "ArnEquals": {
+        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:model-customization-job/*"
+      }
+    }
+  }]
+}
+EOF
+}
+
+
+
+
+
+resource "aws_iam_role_policy_attachment" "test" {
+	role = aws_iam_role.test.name
+	policy_arn = aws_iam_policy.test.arn
+}
+resource "aws_iam_role_policy_attachment" "bucket_access" {
+	role = aws_iam_role.test.name
+	policy_arn = aws_iam_policy.bucket_access.arn
+}
+resource "aws_iam_role_policy_attachment" "model_access" {
+	role = aws_iam_role.test.name
+	policy_arn = aws_iam_policy.model_access.arn
+}
+	`, iamName, bucketName, bucketAccessName, modelAccessName, transferRoleName)
+}
+
+func testAccEvaluationJobConfig_basic(iamName, jobName, bucketName, bucketAccessName, modelAccessName, transferRoleName string) string {
+	return acctest.ConfigCompose(testAccEvaluationJobConfig_base(iamName, bucketName, bucketAccessName, modelAccessName, transferRoleName), fmt.Sprintf(`
 
 
 resource "aws_bedrock_evaluation_job" "test" {
@@ -305,11 +400,14 @@ resource "aws_bedrock_evaluation_job" "test" {
   evaluation_config {
     automated {
         dataset_metric_configs {
-          data_set {
-            name = "Builtin.Bold"
+          dataset {
+		    name = "BoolQ"
+			dataset_location {
+				s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.dataset.key}"
+			}
           }
           metric_names = ["Builtin.Accuracy"]
-          task_type    = "Summarization"
+          task_type    = "QuestionAndAnswer"
         }
     }
   }
@@ -327,7 +425,11 @@ resource "aws_bedrock_evaluation_job" "test" {
   name        = %[1]q
 
   output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/bedrock/evaluation_jobs}"
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/bedrock/evaluation_jobs"
+  }
+
+  tags = {
+	test = "test"
   }
 
   role_arn = aws_iam_role.test.arn

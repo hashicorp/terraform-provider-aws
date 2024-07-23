@@ -25,12 +25,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -51,6 +52,7 @@ import (
 )
 
 // @FrameworkResource("aws_bedrock_evaluation_job", name="Evaluation Job")
+// @Tags(identifierAttribute="evaluation_job_arn")
 func newResourceEvaluationJob(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEvaluationJob{}
 	r.SetDefaultReadTimeout(30 * time.Minute)
@@ -75,6 +77,9 @@ func (r *resourceEvaluationJob) Metadata(_ context.Context, req resource.Metadat
 func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+
 			"client_request_token": schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
@@ -130,12 +135,14 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 				CustomType: fwtypes.StringEnumType[awstypes.EvaluationJobStatus](),
 				Computed:   true,
 			},
-
-			names.AttrTags: tftags.TagsAttribute(),
+			"failure_messages": schema.ListAttribute{
+				CustomType: fwtypes.ListOfStringType,
+				Computed:   true,
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"evaluation_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[EvaluationConfig](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[evaluationConfig](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
 				},
@@ -145,7 +152,7 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"automated": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[Automated](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[automated](ctx),
 							PlanModifiers: []planmodifier.List{
 								listplanmodifier.RequiresReplace(),
 							},
@@ -186,29 +193,22 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 												},
 											},
 											Blocks: map[string]schema.Block{
-												"data_set": schema.ListNestedBlock{
+												"dataset": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[EvaluationDataset](ctx),
-													PlanModifiers: []planmodifier.List{
-														listplanmodifier.RequiresReplace(),
-													},
-
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
 															"name": schema.StringAttribute{
-																Required: true,
+																Optional:   true,
 																Validators: []validator.String{
 																	//stringvalidator.LengthBetween(0, 63),
 																	//stringvalidator.RegexMatches(regexache.MustCompile("^[0-9a-zA-Z-_.]+$"), " must conform to ^[0-9a-zA-Z-_.]+$"),
-																	stringvalidator.OneOf("Builtin.Bold", "Builtin.BoolQ", "Builtin.NaturalQuestions", "Builtin.Gigaword", "Builtin.RealToxicityPrompts", "Builtin.TriviaQa", "Builtin.WomensEcommerceClothingReviews", "Builtin.Wikitext2"),
+																	//stringvalidator.OneOf("Builtin.Bold", "Builtin.BoolQ", "Builtin.NaturalQuestions", "Builtin.Gigaword", "Builtin.RealToxicityPrompts", "Builtin.TriviaQa", "Builtin.WomensEcommerceClothingReviews", "Builtin.Wikitext2"),
 																},
 															},
 														},
 														Blocks: map[string]schema.Block{
 															"dataset_location": schema.ListNestedBlock{
 																CustomType: fwtypes.NewListNestedObjectTypeOf[DatasetLocation](ctx),
-																PlanModifiers: []planmodifier.List{
-																	listplanmodifier.RequiresReplace(),
-																},
 																NestedObject: schema.NestedBlockObject{
 																	Attributes: map[string]schema.Attribute{
 																		"s3_uri": schema.StringAttribute{
@@ -231,23 +231,88 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 							},
 						},
 						"human": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[Human](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[human](ctx),
 							Validators: []validator.List{
 								listvalidator.ExactlyOneOf(
 									path.MatchRelative().AtParent().AtName("automated"),
 									path.MatchRelative().AtParent().AtName("human"),
 								),
 							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"dataset_metric_configs": schema.SetNestedBlock{
+										CustomType: fwtypes.NewSetNestedObjectTypeOf[DatasetMetricConfigs](ctx),
+										Validators: []validator.Set{
+											setvalidator.SizeBetween(1, 5),
+											setvalidator.IsRequired(),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"metric_names": schema.ListAttribute{
+													CustomType: fwtypes.ListOfStringType,
+													Required:   true,
+													Validators: []validator.List{
+														listvalidator.SizeAtLeast(1),
+														listvalidator.ValueStringsAre(stringvalidator.OneOf("Builtin.Accuracy", "Builtin.Robustness", "Builtin.Toxicity")),
+													},
+												},
+												"task_type": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.OneOf("Summarization", "Classification", "QuestionAndAnswer", "Generation", "Custom"),
+													},
+												},
+											},
+											Blocks: map[string]schema.Block{
+												"dataset": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[EvaluationDataset](ctx),
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+													},
+
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"name": schema.StringAttribute{
+																Required:   true,
+																Validators: []validator.String{
+																	//stringvalidator.LengthBetween(0, 63),
+																	//stringvalidator.RegexMatches(regexache.MustCompile("^[0-9a-zA-Z-_.]+$"), " must conform to ^[0-9a-zA-Z-_.]+$"),
+																	//stringvalidator.OneOf("Builtin.Bold", "Builtin.BoolQ", "Builtin.NaturalQuestions", "Builtin.Gigaword", "Builtin.RealToxicityPrompts", "Builtin.TriviaQa", "Builtin.WomensEcommerceClothingReviews", "Builtin.Wikitext2"),
+																},
+															},
+														},
+														Blocks: map[string]schema.Block{
+															"dataset_location": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[DatasetLocation](ctx),
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		"s3_uri": schema.StringAttribute{
+																			Optional: true,
+																			Validators: []validator.String{
+																				stringvalidator.LengthBetween(1, 1024),
+																				stringvalidator.RegexMatches(regexache.MustCompile("^s3://[a-z0-9][\\.\\-a-z0-9]{1,61}[a-z0-9](/.*)?$"), " must conform to ^^s3://[a-z0-9][\\.\\-a-z0-9]{1,61}[a-z0-9](/.*)?$"),
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
 						},
 					},
 				},
 			},
 			"inference_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[EvaluationInferenceConfig](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[evaluationInferenceConfig](ctx),
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
 				},
-
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"models": schema.SetNestedBlock{
@@ -301,7 +366,7 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 1024),
-								stringvalidator.RegexMatches(regexache.MustCompile("^s3://[a-z0-9][\\.\\-a-z0-9]{1,61}[a-z0-9](/.*)?$"), "role_arn must conform to ^arn:aws(-[^:]+)?:iam::([0-9]{12})?:role/.+$"),
+								stringvalidator.RegexMatches(regexache.MustCompile("^s3://[a-z0-9][-.a-z0-9]{1,61}(?:/[-!_*'().a-z0-9A-Z]+(?:/[-!_*'().a-z0-9A-Z]+)*)?/?$"), "must conform to ^s3://[a-z0-9][-.a-z0-9]{1,61}(?:/[-!_*'().a-z0-9A-Z]+(?:/[-!_*'().a-z0-9A-Z]+)*)?/?$"),
 							},
 						},
 					},
@@ -311,28 +376,27 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 	}
 }
 func (r *resourceEvaluationJob) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	fmt.Println("real first")
 	conn := r.Meta().BedrockClient(ctx)
 	var plan dataEvaluationJob
-	fmt.Println("first")
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	fmt.Println("hello")
-	fmt.Println(plan.Description)
-	fmt.Println(plan.InferenceConfig.Elements())
-	fmt.Println(plan.EvaluationConfig.Elements())
-	fmt.Println(plan.Name)
-
 	in := &bedrock.CreateEvaluationJobInput{}
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	in.JobName = plan.Name.ValueStringPointer()
-
+	fmt.Println(in.JobTags)
+	if !plan.Tags.IsNull() {
+		fmt.Println("tag expand")
+		//resp.Diagnostics.Append(flex.Expand(ctx, in.JobTags, &plan.Tags)...)
+	}
+	in.JobTags = getTagsIn(ctx)
+	fmt.Println(in.JobTags)
 	out, err := conn.CreateEvaluationJob(ctx, in)
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Bedrock, create.ErrActionCreating, ResNameEvaluationJob, plan.Name.String(), err),
@@ -352,6 +416,7 @@ func (r *resourceEvaluationJob) Create(ctx context.Context, req resource.CreateR
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 func (r *resourceEvaluationJob) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	fmt.Println("read")
 	var state dataEvaluationJob
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -360,10 +425,6 @@ func (r *resourceEvaluationJob) Read(ctx context.Context, req resource.ReadReque
 
 	conn := r.Meta().BedrockClient(ctx)
 	out, err := waitEvaluationJobRead(ctx, conn, state.Arn.ValueString(), r.ReadTimeout(ctx, state.Timeouts))
-
-	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -376,6 +437,7 @@ func (r *resourceEvaluationJob) Read(ctx context.Context, req resource.ReadReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 func (r *resourceEvaluationJob) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -385,6 +447,10 @@ func (r *resourceEvaluationJob) Update(ctx context.Context, req resource.UpdateR
 
 func (r *resourceEvaluationJob) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *resourceEvaluationJob) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
 }
 
 func waitEvaluationJobRead(ctx context.Context, conn *bedrock.Client, id string, timeout time.Duration) (*bedrock.GetEvaluationJobOutput, error) {
@@ -451,29 +517,30 @@ type dataEvaluationJob struct {
 
 	ClientRequestToken      types.String                                               `tfsdk:"client_request_token"`
 	CustomerEncryptionKeyId types.String                                               `tfsdk:"customer_encryption_key_id"`
-	EvaluationConfig        fwtypes.ListNestedObjectValueOf[EvaluationConfig]          `tfsdk:"evaluation_config"`
-	InferenceConfig         fwtypes.ListNestedObjectValueOf[EvaluationInferenceConfig] `tfsdk:"inference_config"`
+	EvaluationConfig        fwtypes.ListNestedObjectValueOf[evaluationConfig]          `tfsdk:"evaluation_config"`
+	InferenceConfig         fwtypes.ListNestedObjectValueOf[evaluationInferenceConfig] `tfsdk:"inference_config"`
 	Description             types.String                                               `tfsdk:"description"`
 	Name                    types.String                                               `tfsdk:"name"`
-	Tags                    types.Map                                                  `tfsdk:"tags"` // check these
+	Tags                    types.Map                                                  `tfsdk:"tags"`
+	TagsAll                 types.Map                                                  `tfsdk:"tags_all"`
 	OutputDataConfig        fwtypes.ListNestedObjectValueOf[OutputDataConfig]          `tfsdk:"output_data_config"`
 	RoleArn                 types.String                                               `tfsdk:"role_arn"`
 	Arn                     types.String                                               `tfsdk:"arn"`
 	Timeouts                timeouts.Value                                             `tfsdk:"timeouts"`
+	FailureMessages         fwtypes.ListValueOf[types.String]                          `tfsdk:"failure_messages"`
 }
 
 // start of evaluation_config
-type EvaluationConfig struct {
-	Automated fwtypes.ListNestedObjectValueOf[Automated] `tfsdk:"automated"`
-	Human     fwtypes.ListNestedObjectValueOf[Human]     `tfsdk:"human"`
+type evaluationConfig struct {
+	Automated fwtypes.ListNestedObjectValueOf[automated] `tfsdk:"automated"`
+	Human     fwtypes.ListNestedObjectValueOf[human]     `tfsdk:"human"`
 }
-type Human struct {
-}
-type Automated struct {
+
+type automated struct {
 	DatasetMetricConfigs fwtypes.SetNestedObjectValueOf[DatasetMetricConfigs] `tfsdk:"dataset_metric_configs"`
 }
 type DatasetMetricConfigs struct {
-	Dataset     fwtypes.ListNestedObjectValueOf[EvaluationDataset] `tfsdk:"data_set"`
+	Dataset     fwtypes.ListNestedObjectValueOf[EvaluationDataset] `tfsdk:"dataset"`
 	MetricNames fwtypes.ListValueOf[types.String]                  `tfsdk:"metric_names"`
 	TaskType    types.String                                       `tfsdk:"task_type"`
 }
@@ -485,10 +552,10 @@ type DatasetLocation struct {
 	S3Uri types.String `tfsdk:"s3_uri"`
 }
 
-// end of evaluation_config
+// end of evaluation_config automated
 
 // start of inference_config
-type EvaluationInferenceConfig struct {
+type evaluationInferenceConfig struct {
 	Models fwtypes.SetNestedObjectValueOf[Models] `tfsdk:"models"`
 	/*
 		Array Members: Minimum number of 1 item. Maximum number of 2 items.
@@ -510,4 +577,161 @@ type BedrockModel struct {
 
 type OutputDataConfig struct {
 	S3Uri types.String `tfsdk:"s3_uri"`
+}
+
+// human
+
+type human struct {
+	DatasetMetricConfigs fwtypes.SetNestedObjectValueOf[DatasetMetricConfigs] `tfsdk:"dataset_metric_configs"`
+	CustomMetrics        fwtypes.SetNestedObjectValueOf[CustomMetrics]        `tfsdk:"custom_metrics"`
+	HumanWorkflowConfig  fwtypes.ListNestedObjectValueOf[HumanWorkflowConfig] `tfsdk:"human_workflow_config"`
+}
+
+type CustomMetrics struct {
+	Name         types.String `tfsdk:"name"`
+	RatingMethod types.String `tfsdk:"rating_method"`
+	Description  types.String `tfsdk:"description"`
+}
+
+type HumanWorkflowConfig struct {
+	FlowDefinitionArn types.String `tfsdk:"flow_definition_arn"`
+	Instructions      types.String `tfsdk:"instructions"`
+}
+
+func (e evaluationConfig) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !e.Automated.IsNull():
+		automatedData, d := e.Automated.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.EvaluationConfigMemberAutomated
+		diags.Append(flex.Expand(ctx, automatedData, &r.Value)...)
+		return &r, diags
+
+	case !e.Human.IsNull():
+		humanData, d := e.Human.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.EvaluationConfigMemberHuman
+
+		diags.Append(flex.Expand(ctx, humanData, &r.Value)...)
+		return &r, diags
+	}
+	return nil, diags
+}
+
+func (i evaluationInferenceConfig) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !i.Models.IsNull():
+		_, d := i.Models.ToSlice(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.EvaluationInferenceConfigMemberModels
+
+		diags.Append(flex.Expand(ctx, i.Models, &r.Value)...)
+		return &r, diags
+	}
+	return nil, diags
+
+}
+
+func (m Models) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.BedrockModel.IsNull():
+		bedrockData, d := m.BedrockModel.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.EvaluationModelConfigMemberBedrockModel
+
+		diags.Append(flex.Expand(ctx, bedrockData, &r.Value)...)
+		return &r, diags
+
+	}
+
+	return nil, diags
+
+}
+
+func (l DatasetLocation) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !l.S3Uri.IsNull():
+		locationData, d := l.S3Uri.ToStringValue(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.EvaluationDatasetLocationMemberS3Uri
+
+		r.Value = locationData.ValueString()
+		return &r, diags
+	}
+	return nil, diags
+}
+
+func flattenAutomated(ctx context.Context, cfg awstypes.EvaluationConfig) (*evaluationConfig, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var evalCfg evaluationConfig
+	if cfg != nil {
+		switch v := cfg.(type) {
+		case *awstypes.EvaluationConfigMemberAutomated:
+			var autoData automated
+			d := flex.Flatten(ctx, v.Value, &autoData)
+			diags.Append(d...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			evalCfg = evaluationConfig{
+				Automated: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &autoData),
+				Human:     fwtypes.NewListNestedObjectValueOfNull[human](ctx),
+			}
+
+		case *awstypes.EvaluationConfigMemberHuman:
+			var humanData human
+			d := flex.Flatten(ctx, v.Value, &humanData)
+			diags.Append(d...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			evalCfg = evaluationConfig{
+				Automated: fwtypes.NewListNestedObjectValueOfNull[automated](ctx),
+				Human:     fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &humanData),
+			}
+
+		}
+		return &evalCfg, diags
+	}
+	return nil, diags
+
+}
+func flattenInference(ctx context.Context, cfg awstypes.EvaluationInferenceConfig) (*evaluationInferenceConfig, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var infCfg evaluationInferenceConfig
+	if cfg != nil {
+		switch v := cfg.(type) {
+		case *awstypes.EvaluationInferenceConfigMemberModels:
+			var infData Models
+			d := flex.Flatten(ctx, v.Value, &infData)
+
+			diags.Append(d...)
+			if diags.HasError() {
+				return nil, diags
+			}
+
+			infCfg = evaluationInferenceConfig{
+				Models: fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &infData),
+			}
+		}
+	}
+	return &infCfg, diags
 }
