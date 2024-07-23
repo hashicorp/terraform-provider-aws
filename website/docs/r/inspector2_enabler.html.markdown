@@ -23,15 +23,6 @@ resource "aws_inspector2_enabler" "example" {
 }
 ```
 
-#### Organization's Administrator Account
-
-```terraform
-resource "aws_inspector2_enabler" "example_for_organization_accounts" {
-  account_ids    = ["123456789012", "111122223333"]
-  resource_types = ["EC2"]
-}
-```
-
 ### For the Calling Account
 
 ```terraform
