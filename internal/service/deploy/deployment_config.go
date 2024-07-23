@@ -128,8 +128,48 @@ func resourceDeploymentConfig() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ForceNew:         true,
-							Default:          types.TrafficRoutingTypeAllAtOnce,
 							ValidateDiagFunc: enum.Validate[types.TrafficRoutingType](),
+						},
+					},
+				},
+			},
+			"zonal_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"first_zone_monitor_duration_in_seconds": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+						},
+						"minimum_healthy_hosts_per_zone": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"type": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[types.MinimumHealthyHostsPerZoneType](),
+									},
+									"value": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"monitor_duration_in_seconds": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -148,6 +188,7 @@ func resourceDeploymentConfigCreate(ctx context.Context, d *schema.ResourceData,
 		DeploymentConfigName: aws.String(name),
 		MinimumHealthyHosts:  expandMinimumHealthyHosts(d),
 		TrafficRoutingConfig: expandTrafficRoutingConfig(d),
+		ZonalConfig:          expandZonalConfig(d),
 	}
 
 	_, err := conn.CreateDeploymentConfig(ctx, input)
@@ -194,6 +235,9 @@ func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	if err := d.Set("traffic_routing_config", flattenTrafficRoutingConfig(deploymentConfig.TrafficRoutingConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting traffic_routing_config: %s", err)
+	}
+	if err := d.Set("zonal_config", flattenZonalConfig(deploymentConfig.ZonalConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting zonal_config: %s", err)
 	}
 
 	return diags
@@ -300,6 +344,36 @@ func expandTimeBasedLinear(config map[string]interface{}) *types.TimeBasedLinear
 	return &linear
 }
 
+func expandZonalConfig(d *schema.ResourceData) *types.ZonalConfig {
+	block, ok := d.GetOk("zonal_config")
+	if !ok {
+		return nil
+	}
+	config := block.([]interface{})[0].(map[string]interface{})
+	zonalConfig := types.ZonalConfig{}
+	if firstZoneMonitorDurationInSeconds, ok := config["first_zone_monitor_duration_in_seconds"].(int); ok {
+		zonalConfig.FirstZoneMonitorDurationInSeconds = aws.Int64(int64(firstZoneMonitorDurationInSeconds))
+	}
+	if minimumHealthyHostsPerZoneType, ok := config["minimum_healthy_hosts_per_zone"]; ok && len(minimumHealthyHostsPerZoneType.([]interface{})) > 0 {
+		minimumHealthyHostsPerZoneConfig := minimumHealthyHostsPerZoneType.([]interface{})[0].(map[string]interface{})
+		zonalConfig.MinimumHealthyHostsPerZone = expandMinimumHealthyHostsPerZone(minimumHealthyHostsPerZoneConfig)
+	}
+	if monitorDurationInSeconds, ok := config["monitor_duration_in_seconds"].(int); ok {
+		zonalConfig.MonitorDurationInSeconds = aws.Int64(int64(monitorDurationInSeconds))
+	}
+
+	return &zonalConfig
+}
+
+func expandMinimumHealthyHostsPerZone(config map[string]interface{}) *types.MinimumHealthyHostsPerZone {
+	minimumHealthyHostsPerZone := types.MinimumHealthyHostsPerZone{
+		Type:  types.MinimumHealthyHostsPerZoneType(config["type"].(string)),
+		Value: int32(config["value"].(int)),
+	}
+
+	return &minimumHealthyHostsPerZone
+}
+
 func flattenMinimumHealthHosts(hosts *types.MinimumHealthyHosts) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0)
 	if hosts == nil {
@@ -351,6 +425,35 @@ func flattenTimeBasedLinear(linear *types.TimeBasedLinear) []map[string]interfac
 	item := make(map[string]interface{})
 	item[names.AttrInterval] = linear.LinearInterval
 	item["percentage"] = linear.LinearPercentage
+
+	return append(result, item)
+}
+
+func flattenZonalConfig(config *types.ZonalConfig) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+
+	if config == nil {
+		return nil
+	}
+
+	item := make(map[string]interface{})
+	item["first_zone_monitor_duration_in_seconds"] = aws.Int64(*config.FirstZoneMonitorDurationInSeconds)
+	item["minimum_healthy_hosts_per_zone"] = flattenMinimumHealthHostsPerZone(config.MinimumHealthyHostsPerZone)
+	item["monitor_duration_in_seconds"] = aws.Int64(*config.MonitorDurationInSeconds)
+
+	return append(result, item)
+}
+
+func flattenMinimumHealthHostsPerZone(config *types.MinimumHealthyHostsPerZone) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+
+	if config == nil {
+		return nil
+	}
+
+	item := make(map[string]interface{})
+	item["type"] = string(config.Type)
+	item["value"] = config.Value
 
 	return append(result, item)
 }
