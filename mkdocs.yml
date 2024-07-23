@@ -14,6 +14,7 @@ nav:
           - Resource: add-a-new-resource.md
           - Service: add-a-new-service.md
           - Data source: add-a-new-datasource.md
+          - Function: add-a-new-function.md
           - AWS Region: add-a-new-region.md
           - Import Support: add-import-support.md
           - Resource Filtering: resource-filtering.md
@@ -23,25 +24,29 @@ nav:
           - Bugs and Enhancements: bugs-and-enhancements.md
           - Documentation Changes: documentation-changes.md
       - Acceptance Tests: running-and-writing-acceptance-tests.md
+      - Continuous Integration: continuous-integration.md
       - Changelog Process: changelog-process.md
       - Raising a Pull Request: raising-a-pull-request.md
       - How We Prioritize: prioritization.md
-      - Migrating from SDKv2 to Framework: migrate-from-sdk-to-framework.md
   - Developer Reference:
       - Acceptance Test Environment Variables: acc-test-environment-variables.md
+      - AWS SDK for Go Versions: aws-go-sdk-versions.md
+      - AWS SDK for Go Migrations: aws-go-sdk-migrations.md
+      - AWS SDK Go Base: aws-sdk-go-base.md
+      - Core Services: core-services.md
       - Data Handling and Conversion: data-handling-and-conversion.md
       - Debugging: debugging.md
-      - Design Decision Log: design-decision-log.md
       - Dependency Updates: dependency-updates.md
-      - AWS SDK for Go Versions: aws-go-sdk-versions.md
-      - Terraform Plugin Development Packages: terraform-plugin-development-packages.md
-      - AWS Go SDK Base: aws-go-sdk-base.md
+      - Design Decision Log: design-decision-log.md
       - Error Handling: error-handling.md
+      - Makefile Cheat Sheet: makefile-cheat-sheet.md
+      - Naming Standards: naming.md
       - Provider Design: provider-design.md
       - Provider Scaffolding (skaff): skaff.md
-      - Naming Standards: naming.md
-      - Retries and Waiters: retries-and-waiters.md
       - Regular Expressions: regular-expressions.md
+      - Retries and Waiters: retries-and-waiters.md
+      - Terraform Plugin Development Packages: terraform-plugin-development-packages.md
+      - Terraform Plugin Migrations: terraform-plugin-migrations.md
   - Submit an Issue: issue-reporting-and-lifecycle.md
   - FAQ: faq.md
 

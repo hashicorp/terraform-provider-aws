@@ -134,6 +134,8 @@ resource "aws_s3_object" "examplebucket_object" {
 S3 objects support a [maximum of 10 tags](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-tagging.html).
 If the resource's own `tags` and the provider-level `default_tags` would together lead to more than 10 tags on an S3 object, use the `override_provider` configuration block to suppress any provider-level `default_tags`.
 
+-> S3 objects stored in Amazon S3 Express directory buckets do not support tags, so any provider-level `default_tags` must be suppressed.
+
 ```terraform
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
@@ -206,12 +208,12 @@ The `override_provider` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the object.
 * `checksum_crc32` - The base64-encoded, 32-bit CRC32 checksum of the object.
 * `checksum_crc32c` - The base64-encoded, 32-bit CRC32C checksum of the object.
 * `checksum_sha1` - The base64-encoded, 160-bit SHA-1 digest of the object.
 * `checksum_sha256` - The base64-encoded, 256-bit SHA-256 digest of the object.
 * `etag` - ETag generated for the object (an MD5 sum of the object content). For plaintext objects or objects encrypted with an AWS-managed key, the hash is an MD5 digest of the object data. For objects encrypted with a KMS key or objects created by either the Multipart Upload or Part Copy operation, the hash is not an MD5 digest, regardless of the method of encryption. More information on possible values can be found on [Common Response Headers](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html).
-* `id` - `key` of the resource supplied above
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version_id` - Unique version ID value for the object, if bucket versioning is enabled.
 

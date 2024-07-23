@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ram"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ram"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -27,39 +28,36 @@ func sweepResourceShares(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.RAMConn(ctx)
+	conn := client.RAMClient(ctx)
 	input := &ram.GetResourceSharesInput{
-		ResourceOwner: aws.String(ram.ResourceOwnerSelf),
+		ResourceOwner: awstypes.ResourceOwnerSelf,
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.GetResourceSharesPagesWithContext(ctx, input, func(page *ram.GetResourceSharesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ram.NewGetResourceSharesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping RAM Resource Share sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing RAM Resource Shares (%s): %w", region, err)
 		}
 
 		for _, v := range page.ResourceShares {
-			if aws.StringValue(v.Status) == ram.ResourceShareStatusDeleted {
+			if v.Status == awstypes.ResourceShareStatusDeleted {
 				continue
 			}
 
-			r := ResourceResourceShare()
+			r := resourceResourceShare()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ResourceShareArn))
+			d.SetId(aws.ToString(v.ResourceShareArn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping RAM Resource Share sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing RAM Resource Shares (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)

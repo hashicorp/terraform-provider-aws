@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_vpc_endpoint: Add `subnet_configuration` argument to support user defined IP addresses
+```

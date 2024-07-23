@@ -3,12 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_connect_peer"
 description: |-
-  Terraform resource for managing an AWS NetworkManager Connect Peer.
+  Terraform resource for managing an AWS Network Manager Connect Peer.
 ---
 
 # Resource: aws_networkmanager_connect_peer
 
-Terraform resource for managing an AWS NetworkManager Connect Peer.
+Terraform resource for managing an AWS Network Manager Connect Peer.
 
 ## Example Usage
 

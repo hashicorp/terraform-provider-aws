@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsimpledb "github.com/hashicorp/terraform-provider-aws/internal/service/simpledb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSimpleDBDomain_basic(t *testing.T) {
@@ -25,7 +26,7 @@ func TestAccSimpleDBDomain_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, simpledb.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, simpledb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SimpleDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,7 +34,7 @@ func TestAccSimpleDBDomain_basic(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -52,7 +53,7 @@ func TestAccSimpleDBDomain_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, simpledb.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, simpledb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SimpleDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -75,7 +76,7 @@ func TestAccSimpleDBDomain_MigrateFromPluginSDK(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, simpledb.EndpointsID) },
-		ErrorCheck:   acctest.ErrorCheck(t, simpledb.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.SimpleDBServiceID),
 		CheckDestroy: testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -88,7 +89,7 @@ func TestAccSimpleDBDomain_MigrateFromPluginSDK(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{

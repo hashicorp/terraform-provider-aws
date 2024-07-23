@@ -6,22 +6,23 @@ package evidently
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/evidently"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/evidently/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindFeatureWithProjectNameorARN(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, featureName, projectNameOrARN string) (*cloudwatchevidently.Feature, error) {
-	input := &cloudwatchevidently.GetFeatureInput{
+func FindFeatureWithProjectNameorARN(ctx context.Context, conn *evidently.Client, featureName, projectNameOrARN string) (*awstypes.Feature, error) {
+	input := &evidently.GetFeatureInput{
 		Feature: aws.String(featureName),
 		Project: aws.String(projectNameOrARN),
 	}
 
-	output, err := conn.GetFeatureWithContext(ctx, input)
+	output, err := conn.GetFeature(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudwatchevidently.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -39,15 +40,15 @@ func FindFeatureWithProjectNameorARN(ctx context.Context, conn *cloudwatcheviden
 	return output.Feature, nil
 }
 
-func FindLaunchWithProjectNameorARN(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, launchName, projectNameOrARN string) (*cloudwatchevidently.Launch, error) {
-	input := &cloudwatchevidently.GetLaunchInput{
+func FindLaunchWithProjectNameorARN(ctx context.Context, conn *evidently.Client, launchName, projectNameOrARN string) (*awstypes.Launch, error) {
+	input := &evidently.GetLaunchInput{
 		Launch:  aws.String(launchName),
 		Project: aws.String(projectNameOrARN),
 	}
 
-	output, err := conn.GetLaunchWithContext(ctx, input)
+	output, err := conn.GetLaunch(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudwatchevidently.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -65,14 +66,14 @@ func FindLaunchWithProjectNameorARN(ctx context.Context, conn *cloudwatchevident
 	return output.Launch, nil
 }
 
-func FindProjectByNameOrARN(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string) (*cloudwatchevidently.Project, error) {
-	input := &cloudwatchevidently.GetProjectInput{
+func FindProjectByNameOrARN(ctx context.Context, conn *evidently.Client, nameOrARN string) (*awstypes.Project, error) {
+	input := &evidently.GetProjectInput{
 		Project: aws.String(nameOrARN),
 	}
 
-	output, err := conn.GetProjectWithContext(ctx, input)
+	output, err := conn.GetProject(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudwatchevidently.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -90,14 +91,14 @@ func FindProjectByNameOrARN(ctx context.Context, conn *cloudwatchevidently.Cloud
 	return output.Project, nil
 }
 
-func FindSegmentByNameOrARN(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string) (*cloudwatchevidently.Segment, error) {
-	input := &cloudwatchevidently.GetSegmentInput{
+func FindSegmentByNameOrARN(ctx context.Context, conn *evidently.Client, nameOrARN string) (*awstypes.Segment, error) {
+	input := &evidently.GetSegmentInput{
 		Segment: aws.String(nameOrARN),
 	}
 
-	output, err := conn.GetSegmentWithContext(ctx, input)
+	output, err := conn.GetSegment(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudwatchevidently.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

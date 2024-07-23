@@ -16,7 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_resolver_query_log_config_association")
@@ -36,7 +38,7 @@ func ResourceQueryLogConfigAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -46,29 +48,31 @@ func ResourceQueryLogConfigAssociation() *schema.Resource {
 }
 
 func resourceQueryLogConfigAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	input := &route53resolver.AssociateResolverQueryLogConfigInput{
 		ResolverQueryLogConfigId: aws.String(d.Get("resolver_query_log_config_id").(string)),
-		ResourceId:               aws.String(d.Get("resource_id").(string)),
+		ResourceId:               aws.String(d.Get(names.AttrResourceID).(string)),
 	}
 
 	output, err := conn.AssociateResolverQueryLogConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Route53 Resolver Query Log Config Association: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Resolver Query Log Config Association: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.ResolverQueryLogConfigAssociation.Id))
 
 	if _, err := waitQueryLogConfigAssociationCreated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Route53 Resolver Query Log Config Association (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Query Log Config Association (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceQueryLogConfigAssociationRead(ctx, d, meta)
+	return append(diags, resourceQueryLogConfigAssociationRead(ctx, d, meta)...)
 }
 
 func resourceQueryLogConfigAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	queryLogConfigAssociation, err := FindResolverQueryLogConfigAssociationByID(ctx, conn, d.Id())
@@ -76,41 +80,42 @@ func resourceQueryLogConfigAssociationRead(ctx context.Context, d *schema.Resour
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Query Log Config Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Query Log Config Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Query Log Config Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set("resolver_query_log_config_id", queryLogConfigAssociation.ResolverQueryLogConfigId)
-	d.Set("resource_id", queryLogConfigAssociation.ResourceId)
+	d.Set(names.AttrResourceID, queryLogConfigAssociation.ResourceId)
 
-	return nil
+	return diags
 }
 
 func resourceQueryLogConfigAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Query Log Config Association: %s", d.Id())
 	_, err := conn.DisassociateResolverQueryLogConfigWithContext(ctx, &route53resolver.DisassociateResolverQueryLogConfigInput{
 		ResolverQueryLogConfigId: aws.String(d.Get("resolver_query_log_config_id").(string)),
-		ResourceId:               aws.String(d.Get("resource_id").(string)),
+		ResourceId:               aws.String(d.Get(names.AttrResourceID).(string)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Route53 Resolver Query Log Config Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 Resolver Query Log Config Association (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitQueryLogConfigAssociationDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Route53 Resolver Query Log Config Association (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Query Log Config Association (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindResolverQueryLogConfigAssociationByID(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverQueryLogConfigAssociation, error) {

@@ -12,28 +12,32 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lambda_event_source_mapping")
-func ResourceEventSourceMapping() *schema.Resource {
+// @SDKResource("aws_lambda_event_source_mapping", name="Event Source Mapping")
+func resourceEventSourceMapping() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventSourceMappingCreate,
 		ReadWithoutTimeout:   resourceEventSourceMappingRead,
 		UpdateWithoutTimeout: resourceEventSourceMappingUpdate,
 		DeleteWithoutTimeout: resourceEventSourceMappingDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -109,7 +113,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"destination_arn": {
+									names.AttrDestinationARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -131,20 +135,20 @@ func ResourceEventSourceMapping() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 						"full_document": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      lambda.FullDocumentDefault,
-							ValidateFunc: validation.StringInSlice(lambda.FullDocument_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.FullDocumentDefault,
+							ValidateDiagFunc: enum.Validate[awstypes.FullDocument](),
 						},
 					},
 				},
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -161,7 +165,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 10,
@@ -178,27 +182,21 @@ func ResourceEventSourceMapping() *schema.Resource {
 					},
 				},
 			},
-			"function_arn": {
+			names.AttrFunctionARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"function_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Using function name or ARN should not be shown as a diff.
-					// Try to convert the old and new values from ARN to function name
-					oldFunctionName, oldFunctionNameErr := GetFunctionNameFromARN(old)
-					newFunctionName, newFunctionNameErr := GetFunctionNameFromARN(new)
-					return (oldFunctionName == new && oldFunctionNameErr == nil) || (newFunctionName == old && newFunctionNameErr == nil)
-				},
+				Type:             schema.TypeString,
+				Required:         true,
+				DiffSuppressFunc: suppressEquivalentFunctionNameOrARN,
 			},
 			"function_response_types": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(lambda.FunctionResponseType_Values(), false),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[awstypes.FunctionResponseType](),
 				},
 			},
 			"last_modified": {
@@ -253,7 +251,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 						"maximum_concurrency": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(2, 1000),
+							ValidateFunc: validation.IntAtLeast(2),
 						},
 					},
 				},
@@ -265,7 +263,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoints": {
+						names.AttrEndpoints: {
 							Type:     schema.TypeMap,
 							Required: true,
 							ForceNew: true,
@@ -313,12 +311,12 @@ func ResourceEventSourceMapping() *schema.Resource {
 				MaxItems: 22,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(lambda.SourceAccessType_Values(), false),
+						names.AttrType: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SourceAccessType](),
 						},
-						"uri": {
+						names.AttrURI: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -326,10 +324,10 @@ func ResourceEventSourceMapping() *schema.Resource {
 				},
 			},
 			"starting_position": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(lambda.EventSourcePosition_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.EventSourcePosition](),
 			},
 			"starting_position_timestamp": {
 				Type:         schema.TypeString,
@@ -337,7 +335,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -369,11 +367,11 @@ func ResourceEventSourceMapping() *schema.Resource {
 
 func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	functionName := d.Get("function_name").(string)
 	input := &lambda.CreateEventSourceMappingInput{
-		Enabled:      aws.Bool(d.Get("enabled").(bool)),
+		Enabled:      aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		FunctionName: aws.String(functionName),
 	}
 
@@ -384,7 +382,7 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if v, ok := d.GetOk("batch_size"); ok {
-		input.BatchSize = aws.Int64(int64(v.(int)))
+		input.BatchSize = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("bisect_batch_on_function_error"); ok {
@@ -411,27 +409,27 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if v, ok := d.GetOk("function_response_types"); ok && v.(*schema.Set).Len() > 0 {
-		input.FunctionResponseTypes = flex.ExpandStringSet(v.(*schema.Set))
+		input.FunctionResponseTypes = flex.ExpandStringyValueSet[awstypes.FunctionResponseType](v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("maximum_batching_window_in_seconds"); ok {
-		input.MaximumBatchingWindowInSeconds = aws.Int64(int64(v.(int)))
+		input.MaximumBatchingWindowInSeconds = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("maximum_record_age_in_seconds"); ok {
-		input.MaximumRecordAgeInSeconds = aws.Int64(int64(v.(int)))
+		input.MaximumRecordAgeInSeconds = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOkExists("maximum_retry_attempts"); ok {
-		input.MaximumRetryAttempts = aws.Int64(int64(v.(int)))
+		input.MaximumRetryAttempts = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("parallelization_factor"); ok {
-		input.ParallelizationFactor = aws.Int64(int64(v.(int)))
+		input.ParallelizationFactor = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("queues"); ok && len(v.([]interface{})) > 0 {
-		input.Queues = flex.ExpandStringList(v.([]interface{}))
+		input.Queues = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("scaling_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -453,7 +451,7 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if v, ok := d.GetOk("starting_position"); ok {
-		input.StartingPosition = aws.String(v.(string))
+		input.StartingPosition = awstypes.EventSourcePosition(v.(string))
 	}
 
 	if v, ok := d.GetOk("starting_position_timestamp"); ok {
@@ -463,11 +461,11 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if v, ok := d.GetOk("topics"); ok && v.(*schema.Set).Len() > 0 {
-		input.Topics = flex.ExpandStringSet(v.(*schema.Set))
+		input.Topics = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("tumbling_window_in_seconds"); ok {
-		input.TumblingWindowInSeconds = aws.Int64(int64(v.(int)))
+		input.TumblingWindowInSeconds = aws.Int32(int32(v.(int)))
 	}
 
 	// IAM profiles and roles can take some time to propagate in AWS:
@@ -476,17 +474,17 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 	// function defined for the task cannot be assumed by Lambda.
 	//
 	// The role may exist, but the permissions may not have propagated, so we retry.
-	eventSourceMappingConfiguration, err := retryEventSourceMapping(ctx, func() (*lambda.EventSourceMappingConfiguration, error) {
-		return conn.CreateEventSourceMappingWithContext(ctx, input)
+	output, err := retryEventSourceMapping(ctx, func() (*lambda.CreateEventSourceMappingOutput, error) {
+		return conn.CreateEventSourceMapping(ctx, input)
 	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Lambda Event Source Mapping (%s): %s", target, err)
 	}
 
-	d.SetId(aws.StringValue(eventSourceMappingConfiguration.UUID))
+	d.SetId(aws.ToString(output.UUID))
 
-	if _, err := waitEventSourceMappingCreate(ctx, conn, d.Id()); err != nil {
+	if _, err := waitEventSourceMappingCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) create: %s", d.Id(), err)
 	}
 
@@ -495,12 +493,12 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	eventSourceMappingConfiguration, err := FindEventSourceMappingConfigurationByID(ctx, conn, d.Id())
+	output, err := findEventSourceMappingByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[DEBUG] Lambda Event Source Mapping (%s) not found", d.Id())
+		log.Printf("[WARN] Lambda Event Source Mapping (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -509,95 +507,95 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Event Source Mapping (%s): %s", d.Id(), err)
 	}
 
-	if eventSourceMappingConfiguration.AmazonManagedKafkaEventSourceConfig != nil {
-		if err := d.Set("amazon_managed_kafka_event_source_config", []interface{}{flattenAmazonManagedKafkaEventSourceConfig(eventSourceMappingConfiguration.AmazonManagedKafkaEventSourceConfig)}); err != nil {
+	if output.AmazonManagedKafkaEventSourceConfig != nil {
+		if err := d.Set("amazon_managed_kafka_event_source_config", []interface{}{flattenAmazonManagedKafkaEventSourceConfig(output.AmazonManagedKafkaEventSourceConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting amazon_managed_kafka_event_source_config: %s", err)
 		}
 	} else {
 		d.Set("amazon_managed_kafka_event_source_config", nil)
 	}
-	d.Set("batch_size", eventSourceMappingConfiguration.BatchSize)
-	d.Set("bisect_batch_on_function_error", eventSourceMappingConfiguration.BisectBatchOnFunctionError)
-	if eventSourceMappingConfiguration.DestinationConfig != nil {
-		if err := d.Set("destination_config", []interface{}{flattenDestinationConfig(eventSourceMappingConfiguration.DestinationConfig)}); err != nil {
+	d.Set("batch_size", output.BatchSize)
+	d.Set("bisect_batch_on_function_error", output.BisectBatchOnFunctionError)
+	if output.DestinationConfig != nil {
+		if err := d.Set("destination_config", []interface{}{flattenDestinationConfig(output.DestinationConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting destination_config: %s", err)
 		}
 	} else {
 		d.Set("destination_config", nil)
 	}
-	if eventSourceMappingConfiguration.DocumentDBEventSourceConfig != nil {
-		if err := d.Set("document_db_event_source_config", []interface{}{flattenDocumentDBEventSourceConfig(eventSourceMappingConfiguration.DocumentDBEventSourceConfig)}); err != nil {
+	if output.DocumentDBEventSourceConfig != nil {
+		if err := d.Set("document_db_event_source_config", []interface{}{flattenDocumentDBEventSourceConfig(output.DocumentDBEventSourceConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting document_db_event_source_config: %s", err)
 		}
 	} else {
 		d.Set("document_db_event_source_config", nil)
 	}
-	d.Set("event_source_arn", eventSourceMappingConfiguration.EventSourceArn)
-	if v := eventSourceMappingConfiguration.FilterCriteria; v != nil {
+	d.Set("event_source_arn", output.EventSourceArn)
+	if v := output.FilterCriteria; v != nil {
 		if err := d.Set("filter_criteria", []interface{}{flattenFilterCriteria(v)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting filter criteria: %s", err)
 		}
 	} else {
 		d.Set("filter_criteria", nil)
 	}
-	d.Set("function_arn", eventSourceMappingConfiguration.FunctionArn)
-	d.Set("function_name", eventSourceMappingConfiguration.FunctionArn)
-	d.Set("function_response_types", aws.StringValueSlice(eventSourceMappingConfiguration.FunctionResponseTypes))
-	if eventSourceMappingConfiguration.LastModified != nil {
-		d.Set("last_modified", aws.TimeValue(eventSourceMappingConfiguration.LastModified).Format(time.RFC3339))
+	d.Set(names.AttrFunctionARN, output.FunctionArn)
+	d.Set("function_name", output.FunctionArn)
+	d.Set("function_response_types", output.FunctionResponseTypes)
+	if output.LastModified != nil {
+		d.Set("last_modified", aws.ToTime(output.LastModified).Format(time.RFC3339))
 	} else {
 		d.Set("last_modified", nil)
 	}
-	d.Set("last_processing_result", eventSourceMappingConfiguration.LastProcessingResult)
-	d.Set("maximum_batching_window_in_seconds", eventSourceMappingConfiguration.MaximumBatchingWindowInSeconds)
-	d.Set("maximum_record_age_in_seconds", eventSourceMappingConfiguration.MaximumRecordAgeInSeconds)
-	d.Set("maximum_retry_attempts", eventSourceMappingConfiguration.MaximumRetryAttempts)
-	d.Set("parallelization_factor", eventSourceMappingConfiguration.ParallelizationFactor)
-	d.Set("queues", aws.StringValueSlice(eventSourceMappingConfiguration.Queues))
-	if v := eventSourceMappingConfiguration.ScalingConfig; v != nil {
+	d.Set("last_processing_result", output.LastProcessingResult)
+	d.Set("maximum_batching_window_in_seconds", output.MaximumBatchingWindowInSeconds)
+	d.Set("maximum_record_age_in_seconds", output.MaximumRecordAgeInSeconds)
+	d.Set("maximum_retry_attempts", output.MaximumRetryAttempts)
+	d.Set("parallelization_factor", output.ParallelizationFactor)
+	d.Set("queues", output.Queues)
+	if v := output.ScalingConfig; v != nil {
 		if err := d.Set("scaling_config", []interface{}{flattenScalingConfig(v)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting scaling_config: %s", err)
 		}
 	} else {
 		d.Set("scaling_config", nil)
 	}
-	if eventSourceMappingConfiguration.SelfManagedEventSource != nil {
-		if err := d.Set("self_managed_event_source", []interface{}{flattenSelfManagedEventSource(eventSourceMappingConfiguration.SelfManagedEventSource)}); err != nil {
+	if output.SelfManagedEventSource != nil {
+		if err := d.Set("self_managed_event_source", []interface{}{flattenSelfManagedEventSource(output.SelfManagedEventSource)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting self_managed_event_source: %s", err)
 		}
 	} else {
 		d.Set("self_managed_event_source", nil)
 	}
-	if eventSourceMappingConfiguration.SelfManagedKafkaEventSourceConfig != nil {
-		if err := d.Set("self_managed_kafka_event_source_config", []interface{}{flattenSelfManagedKafkaEventSourceConfig(eventSourceMappingConfiguration.SelfManagedKafkaEventSourceConfig)}); err != nil {
+	if output.SelfManagedKafkaEventSourceConfig != nil {
+		if err := d.Set("self_managed_kafka_event_source_config", []interface{}{flattenSelfManagedKafkaEventSourceConfig(output.SelfManagedKafkaEventSourceConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting self_managed_kafka_event_source_config: %s", err)
 		}
 	} else {
 		d.Set("self_managed_kafka_event_source_config", nil)
 	}
-	if err := d.Set("source_access_configuration", flattenSourceAccessConfigurations(eventSourceMappingConfiguration.SourceAccessConfigurations)); err != nil {
+	if err := d.Set("source_access_configuration", flattenSourceAccessConfigurations(output.SourceAccessConfigurations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting source_access_configuration: %s", err)
 	}
-	d.Set("starting_position", eventSourceMappingConfiguration.StartingPosition)
-	if eventSourceMappingConfiguration.StartingPositionTimestamp != nil {
-		d.Set("starting_position_timestamp", aws.TimeValue(eventSourceMappingConfiguration.StartingPositionTimestamp).Format(time.RFC3339))
+	d.Set("starting_position", output.StartingPosition)
+	if output.StartingPositionTimestamp != nil {
+		d.Set("starting_position_timestamp", aws.ToTime(output.StartingPositionTimestamp).Format(time.RFC3339))
 	} else {
 		d.Set("starting_position_timestamp", nil)
 	}
-	d.Set("state", eventSourceMappingConfiguration.State)
-	d.Set("state_transition_reason", eventSourceMappingConfiguration.StateTransitionReason)
-	d.Set("topics", aws.StringValueSlice(eventSourceMappingConfiguration.Topics))
-	d.Set("tumbling_window_in_seconds", eventSourceMappingConfiguration.TumblingWindowInSeconds)
-	d.Set("uuid", eventSourceMappingConfiguration.UUID)
+	d.Set(names.AttrState, output.State)
+	d.Set("state_transition_reason", output.StateTransitionReason)
+	d.Set("topics", output.Topics)
+	d.Set("tumbling_window_in_seconds", output.TumblingWindowInSeconds)
+	d.Set("uuid", output.UUID)
 
-	switch state := d.Get("state").(string); state {
+	switch state := d.Get(names.AttrState).(string); state {
 	case eventSourceMappingStateEnabled, eventSourceMappingStateEnabling:
-		d.Set("enabled", true)
+		d.Set(names.AttrEnabled, true)
 	case eventSourceMappingStateDisabled, eventSourceMappingStateDisabling:
-		d.Set("enabled", false)
+		d.Set(names.AttrEnabled, false)
 	default:
 		log.Printf("[WARN] Lambda Event Source Mapping (%s) is neither enabled nor disabled, but %s", d.Id(), state)
-		d.Set("enabled", nil)
+		d.Set(names.AttrEnabled, nil)
 	}
 
 	return diags
@@ -605,14 +603,14 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	input := &lambda.UpdateEventSourceMappingInput{
 		UUID: aws.String(d.Id()),
 	}
 
 	if d.HasChange("batch_size") {
-		input.BatchSize = aws.Int64(int64(d.Get("batch_size").(int)))
+		input.BatchSize = aws.Int32(int32(d.Get("batch_size").(int)))
 	}
 
 	if d.HasChange("bisect_batch_on_function_error") {
@@ -631,8 +629,8 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	if d.HasChange("enabled") {
-		input.Enabled = aws.Bool(d.Get("enabled").(bool))
+	if d.HasChange(names.AttrEnabled) {
+		input.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
 	}
 
 	if d.HasChange("filter_criteria") {
@@ -640,7 +638,7 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 			input.FilterCriteria = expandFilterCriteria(v.([]interface{})[0].(map[string]interface{}))
 		} else {
 			// AWS ignores the removal if this is left as nil.
-			input.FilterCriteria = &lambda.FilterCriteria{}
+			input.FilterCriteria = &awstypes.FilterCriteria{}
 		}
 	}
 
@@ -649,23 +647,23 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if d.HasChange("function_response_types") {
-		input.FunctionResponseTypes = flex.ExpandStringSet(d.Get("function_response_types").(*schema.Set))
+		input.FunctionResponseTypes = flex.ExpandStringyValueSet[awstypes.FunctionResponseType](d.Get("function_response_types").(*schema.Set))
 	}
 
 	if d.HasChange("maximum_batching_window_in_seconds") {
-		input.MaximumBatchingWindowInSeconds = aws.Int64(int64(d.Get("maximum_batching_window_in_seconds").(int)))
+		input.MaximumBatchingWindowInSeconds = aws.Int32(int32(d.Get("maximum_batching_window_in_seconds").(int)))
 	}
 
 	if d.HasChange("maximum_record_age_in_seconds") {
-		input.MaximumRecordAgeInSeconds = aws.Int64(int64(d.Get("maximum_record_age_in_seconds").(int)))
+		input.MaximumRecordAgeInSeconds = aws.Int32(int32(d.Get("maximum_record_age_in_seconds").(int)))
 	}
 
 	if d.HasChange("maximum_retry_attempts") {
-		input.MaximumRetryAttempts = aws.Int64(int64(d.Get("maximum_retry_attempts").(int)))
+		input.MaximumRetryAttempts = aws.Int32(int32(d.Get("maximum_retry_attempts").(int)))
 	}
 
 	if d.HasChange("parallelization_factor") {
-		input.ParallelizationFactor = aws.Int64(int64(d.Get("parallelization_factor").(int)))
+		input.ParallelizationFactor = aws.Int32(int32(d.Get("parallelization_factor").(int)))
 	}
 
 	if d.HasChange("scaling_config") {
@@ -673,7 +671,7 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 			input.ScalingConfig = expandScalingConfig(v.([]interface{})[0].(map[string]interface{}))
 		} else {
 			// AWS ignores the removal if this is left as nil.
-			input.ScalingConfig = &lambda.ScalingConfig{}
+			input.ScalingConfig = &awstypes.ScalingConfig{}
 		}
 	}
 
@@ -684,18 +682,18 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if d.HasChange("tumbling_window_in_seconds") {
-		input.TumblingWindowInSeconds = aws.Int64(int64(d.Get("tumbling_window_in_seconds").(int)))
+		input.TumblingWindowInSeconds = aws.Int32(int32(d.Get("tumbling_window_in_seconds").(int)))
 	}
 
-	_, err := retryEventSourceMapping(ctx, func() (*lambda.EventSourceMappingConfiguration, error) {
-		return conn.UpdateEventSourceMappingWithContext(ctx, input)
+	_, err := retryEventSourceMapping(ctx, func() (*lambda.UpdateEventSourceMappingOutput, error) {
+		return conn.UpdateEventSourceMapping(ctx, input)
 	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Lambda Event Source Mapping (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitEventSourceMappingUpdate(ctx, conn, d.Id()); err != nil {
+	if _, err := waitEventSourceMappingUpdated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) update: %s", d.Id(), err)
 	}
 
@@ -704,16 +702,19 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceEventSourceMappingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	log.Printf("[INFO] Deleting Lambda Event Source Mapping: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, eventSourceMappingPropagationTimeout, func() (interface{}, error) {
-		return conn.DeleteEventSourceMappingWithContext(ctx, &lambda.DeleteEventSourceMappingInput{
+	const (
+		timeout = 5 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsA[*awstypes.ResourceInUseException](ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteEventSourceMapping(ctx, &lambda.DeleteEventSourceMappingInput{
 			UUID: aws.String(d.Id()),
 		})
-	}, lambda.ErrCodeResourceInUseException)
+	})
 
-	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -721,422 +722,50 @@ func resourceEventSourceMappingDelete(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "deleting Lambda Event Source Mapping (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitEventSourceMappingDelete(ctx, conn, d.Id()); err != nil {
+	if _, err := waitEventSourceMappingDeleted(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func expandDestinationConfig(tfMap map[string]interface{}) *lambda.DestinationConfig {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &lambda.DestinationConfig{}
-
-	if v, ok := tfMap["on_failure"].([]interface{}); ok && len(v) > 0 {
-		apiObject.OnFailure = expandOnFailure(v[0].(map[string]interface{}))
-	}
-
-	return apiObject
+type eventSourceMappingCU interface {
+	lambda.CreateEventSourceMappingOutput | lambda.UpdateEventSourceMappingOutput
 }
 
-func expandDocumentDBEventSourceConfig(tfMap map[string]interface{}) *lambda.DocumentDBEventSourceConfig {
-	if tfMap == nil {
-		return nil
+func retryEventSourceMapping[T eventSourceMappingCU](ctx context.Context, f func() (*T, error)) (*T, error) {
+	outputRaw, err := tfresource.RetryWhen(ctx, lambdaPropagationTimeout,
+		func() (interface{}, error) {
+			return f()
+		},
+		func(err error) (bool, error) {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "cannot be assumed by Lambda") {
+				return true, err
+			}
+
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "execution role does not have permissions") {
+				return true, err
+			}
+
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "ensure the role can perform") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	if err != nil {
+		return nil, err
 	}
 
-	apiObject := &lambda.DocumentDBEventSourceConfig{}
-
-	if v, ok := tfMap["collection_name"].(string); ok && v != "" {
-		apiObject.CollectionName = aws.String(v)
-	}
-
-	if v, ok := tfMap["database_name"].(string); ok && v != "" {
-		apiObject.DatabaseName = aws.String(v)
-	}
-
-	if v, ok := tfMap["full_document"].(string); ok && v != "" {
-		apiObject.FullDocument = aws.String(v)
-	}
-
-	return apiObject
+	return outputRaw.(*T), err
 }
 
-func expandOnFailure(tfMap map[string]interface{}) *lambda.OnFailure {
-	if tfMap == nil {
-		return nil
-	}
+func findEventSourceMapping(ctx context.Context, conn *lambda.Client, input *lambda.GetEventSourceMappingInput) (*lambda.GetEventSourceMappingOutput, error) {
+	output, err := conn.GetEventSourceMapping(ctx, input)
 
-	apiObject := &lambda.OnFailure{}
-
-	if v, ok := tfMap["destination_arn"].(string); ok {
-		apiObject.Destination = aws.String(v)
-	}
-
-	return apiObject
-}
-
-func flattenDestinationConfig(apiObject *lambda.DestinationConfig) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.OnFailure; v != nil {
-		tfMap["on_failure"] = []interface{}{flattenOnFailure(v)}
-	}
-
-	return tfMap
-}
-
-func flattenDocumentDBEventSourceConfig(apiObject *lambda.DocumentDBEventSourceConfig) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.CollectionName; v != nil {
-		tfMap["collection_name"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.DatabaseName; v != nil {
-		tfMap["database_name"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.FullDocument; v != nil {
-		tfMap["full_document"] = aws.StringValue(v)
-	}
-
-	return tfMap
-}
-
-func flattenOnFailure(apiObject *lambda.OnFailure) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Destination; v != nil {
-		tfMap["destination_arn"] = aws.StringValue(v)
-	}
-
-	return tfMap
-}
-
-func expandSelfManagedEventSource(tfMap map[string]interface{}) *lambda.SelfManagedEventSource {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &lambda.SelfManagedEventSource{}
-
-	if v, ok := tfMap["endpoints"].(map[string]interface{}); ok && len(v) > 0 {
-		m := map[string][]*string{}
-
-		for k, v := range v {
-			m[k] = aws.StringSlice(strings.Split(v.(string), ","))
-		}
-
-		apiObject.Endpoints = m
-	}
-
-	return apiObject
-}
-
-func flattenSelfManagedEventSource(apiObject *lambda.SelfManagedEventSource) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Endpoints; v != nil {
-		m := map[string]string{}
-
-		for k, v := range v {
-			m[k] = strings.Join(aws.StringValueSlice(v), ",")
-		}
-
-		tfMap["endpoints"] = m
-	}
-
-	return tfMap
-}
-
-func expandAmazonManagedKafkaEventSourceConfig(tfMap map[string]interface{}) *lambda.AmazonManagedKafkaEventSourceConfig {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &lambda.AmazonManagedKafkaEventSourceConfig{}
-
-	if v, ok := tfMap["consumer_group_id"].(string); ok && v != "" {
-		apiObject.ConsumerGroupId = aws.String(v)
-	}
-
-	return apiObject
-}
-
-func flattenAmazonManagedKafkaEventSourceConfig(apiObject *lambda.AmazonManagedKafkaEventSourceConfig) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.ConsumerGroupId; v != nil {
-		tfMap["consumer_group_id"] = aws.StringValue(v)
-	}
-
-	return tfMap
-}
-
-func expandSelfManagedKafkaEventSourceConfig(tfMap map[string]interface{}) *lambda.SelfManagedKafkaEventSourceConfig {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &lambda.SelfManagedKafkaEventSourceConfig{}
-
-	if v, ok := tfMap["consumer_group_id"].(string); ok && v != "" {
-		apiObject.ConsumerGroupId = aws.String(v)
-	}
-
-	return apiObject
-}
-
-func flattenSelfManagedKafkaEventSourceConfig(apiObject *lambda.SelfManagedKafkaEventSourceConfig) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.ConsumerGroupId; v != nil {
-		tfMap["consumer_group_id"] = aws.StringValue(v)
-	}
-
-	return tfMap
-}
-
-func expandSourceAccessConfiguration(tfMap map[string]interface{}) *lambda.SourceAccessConfiguration {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &lambda.SourceAccessConfiguration{}
-
-	if v, ok := tfMap["type"].(string); ok && v != "" {
-		apiObject.Type = aws.String(v)
-	}
-
-	if v, ok := tfMap["uri"].(string); ok && v != "" {
-		apiObject.URI = aws.String(v)
-	}
-
-	return apiObject
-}
-
-func expandSourceAccessConfigurations(tfList []interface{}) []*lambda.SourceAccessConfiguration {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []*lambda.SourceAccessConfiguration
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		apiObject := expandSourceAccessConfiguration(tfMap)
-
-		if apiObject == nil {
-			continue
-		}
-
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
-func flattenSourceAccessConfiguration(apiObject *lambda.SourceAccessConfiguration) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.URI; v != nil {
-		tfMap["uri"] = aws.StringValue(v)
-	}
-
-	return tfMap
-}
-
-func flattenSourceAccessConfigurations(apiObjects []*lambda.SourceAccessConfiguration) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []interface{}
-
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		tfList = append(tfList, flattenSourceAccessConfiguration(apiObject))
-	}
-
-	return tfList
-}
-
-func expandFilterCriteria(tfMap map[string]interface{}) *lambda.FilterCriteria {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &lambda.FilterCriteria{}
-
-	if v, ok := tfMap["filter"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Filters = expandFilters(v.List())
-	}
-
-	return apiObject
-}
-
-func flattenFilterCriteria(apiObject *lambda.FilterCriteria) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Filters; len(v) > 0 {
-		tfMap["filter"] = flattenFilters(v)
-	}
-
-	return tfMap
-}
-
-func expandFilters(tfList []interface{}) []*lambda.Filter {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []*lambda.Filter
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		apiObject := expandFilter(tfMap)
-
-		if apiObject == nil {
-			continue
-		}
-
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
-func flattenFilters(apiObjects []*lambda.Filter) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []interface{}
-
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		tfList = append(tfList, flattenFilter(apiObject))
-	}
-
-	return tfList
-}
-
-func expandFilter(tfMap map[string]interface{}) *lambda.Filter {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &lambda.Filter{}
-
-	if v, ok := tfMap["pattern"].(string); ok {
-		// The API permits patterns of length >= 0, so accept the empty string.
-		apiObject.Pattern = aws.String(v)
-	}
-
-	return apiObject
-}
-
-func flattenFilter(apiObject *lambda.Filter) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Pattern; v != nil {
-		tfMap["pattern"] = aws.StringValue(v)
-	}
-
-	return tfMap
-}
-
-func expandScalingConfig(tfMap map[string]interface{}) *lambda.ScalingConfig {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &lambda.ScalingConfig{}
-
-	if v, ok := tfMap["maximum_concurrency"].(int); ok && v != 0 {
-		apiObject.MaximumConcurrency = aws.Int64(int64(v))
-	}
-
-	return apiObject
-}
-
-func flattenScalingConfig(apiObject *lambda.ScalingConfig) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.MaximumConcurrency; v != nil {
-		tfMap["maximum_concurrency"] = int(aws.Int64Value(v))
-	}
-
-	return tfMap
-}
-
-func findEventSourceMappingConfiguration(ctx context.Context, conn *lambda.Lambda, input *lambda.GetEventSourceMappingInput) (*lambda.EventSourceMappingConfiguration, error) {
-	output, err := conn.GetEventSourceMappingWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -1154,17 +783,17 @@ func findEventSourceMappingConfiguration(ctx context.Context, conn *lambda.Lambd
 	return output, nil
 }
 
-func FindEventSourceMappingConfigurationByID(ctx context.Context, conn *lambda.Lambda, uuid string) (*lambda.EventSourceMappingConfiguration, error) {
+func findEventSourceMappingByID(ctx context.Context, conn *lambda.Client, uuid string) (*lambda.GetEventSourceMappingOutput, error) {
 	input := &lambda.GetEventSourceMappingInput{
 		UUID: aws.String(uuid),
 	}
 
-	return findEventSourceMappingConfiguration(ctx, conn, input)
+	return findEventSourceMapping(ctx, conn, input)
 }
 
-func statusEventSourceMappingState(ctx context.Context, conn *lambda.Lambda, id string) retry.StateRefreshFunc {
+func statusEventSourceMappingState(ctx context.Context, conn *lambda.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		eventSourceMappingConfiguration, err := FindEventSourceMappingConfigurationByID(ctx, conn, id)
+		output, err := findEventSourceMappingByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -1174,29 +803,25 @@ func statusEventSourceMappingState(ctx context.Context, conn *lambda.Lambda, id 
 			return nil, "", err
 		}
 
-		return eventSourceMappingConfiguration, aws.StringValue(eventSourceMappingConfiguration.State), nil
+		return output, aws.ToString(output.State), nil
 	}
 }
 
-const (
-	eventSourceMappingCreateTimeout      = 10 * time.Minute
-	eventSourceMappingUpdateTimeout      = 10 * time.Minute
-	eventSourceMappingDeleteTimeout      = 5 * time.Minute
-	eventSourceMappingPropagationTimeout = 5 * time.Minute
-)
-
-func waitEventSourceMappingCreate(ctx context.Context, conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
+func waitEventSourceMappingCreated(ctx context.Context, conn *lambda.Client, id string) (*lambda.GetEventSourceMappingOutput, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateCreating, eventSourceMappingStateDisabling, eventSourceMappingStateEnabling},
 		Target:  []string{eventSourceMappingStateDisabled, eventSourceMappingStateEnabled},
 		Refresh: statusEventSourceMappingState(ctx, conn, id),
-		Timeout: eventSourceMappingCreateTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*lambda.EventSourceMappingConfiguration); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateTransitionReason)))
+	if output, ok := outputRaw.(*lambda.GetEventSourceMappingOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateTransitionReason)))
 
 		return output, err
 	}
@@ -1204,37 +829,21 @@ func waitEventSourceMappingCreate(ctx context.Context, conn *lambda.Lambda, id s
 	return nil, err
 }
 
-func waitEventSourceMappingDelete(ctx context.Context, conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{eventSourceMappingStateDeleting},
-		Target:  []string{},
-		Refresh: statusEventSourceMappingState(ctx, conn, id),
-		Timeout: eventSourceMappingDeleteTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*lambda.EventSourceMappingConfiguration); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateTransitionReason)))
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitEventSourceMappingUpdate(ctx context.Context, conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
+func waitEventSourceMappingUpdated(ctx context.Context, conn *lambda.Client, id string) (*lambda.GetEventSourceMappingOutput, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateDisabling, eventSourceMappingStateEnabling, eventSourceMappingStateUpdating},
 		Target:  []string{eventSourceMappingStateDisabled, eventSourceMappingStateEnabled},
 		Refresh: statusEventSourceMappingState(ctx, conn, id),
-		Timeout: eventSourceMappingUpdateTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*lambda.EventSourceMappingConfiguration); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateTransitionReason)))
+	if output, ok := outputRaw.(*lambda.GetEventSourceMappingOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateTransitionReason)))
 
 		return output, err
 	}
@@ -1242,31 +851,417 @@ func waitEventSourceMappingUpdate(ctx context.Context, conn *lambda.Lambda, id s
 	return nil, err
 }
 
-func retryEventSourceMapping(ctx context.Context, f func() (*lambda.EventSourceMappingConfiguration, error)) (*lambda.EventSourceMappingConfiguration, error) {
-	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
-			return f()
-		},
-		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "cannot be assumed by Lambda") {
-				return true, err
-			}
-
-			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "execution role does not have permissions") {
-				return true, err
-			}
-
-			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "ensure the role can perform") {
-				return true, err
-			}
-
-			return false, err
-		},
+func waitEventSourceMappingDeleted(ctx context.Context, conn *lambda.Client, id string) (*lambda.GetEventSourceMappingOutput, error) {
+	const (
+		timeout = 5 * time.Minute
 	)
-
-	if err != nil {
-		return nil, err
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{eventSourceMappingStateDeleting},
+		Target:  []string{},
+		Refresh: statusEventSourceMappingState(ctx, conn, id),
+		Timeout: timeout,
 	}
 
-	return outputRaw.(*lambda.EventSourceMappingConfiguration), err
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*lambda.GetEventSourceMappingOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateTransitionReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandDestinationConfig(tfMap map[string]interface{}) *awstypes.DestinationConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.DestinationConfig{}
+
+	if v, ok := tfMap["on_failure"].([]interface{}); ok && len(v) > 0 {
+		apiObject.OnFailure = expandOnFailure(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandDocumentDBEventSourceConfig(tfMap map[string]interface{}) *awstypes.DocumentDBEventSourceConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.DocumentDBEventSourceConfig{}
+
+	if v, ok := tfMap["collection_name"].(string); ok && v != "" {
+		apiObject.CollectionName = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
+		apiObject.DatabaseName = aws.String(v)
+	}
+
+	if v, ok := tfMap["full_document"].(string); ok && v != "" {
+		apiObject.FullDocument = awstypes.FullDocument(v)
+	}
+
+	return apiObject
+}
+
+func expandOnFailure(tfMap map[string]interface{}) *awstypes.OnFailure {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.OnFailure{}
+
+	if v, ok := tfMap[names.AttrDestinationARN].(string); ok {
+		apiObject.Destination = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenDestinationConfig(apiObject *awstypes.DestinationConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.OnFailure; v != nil {
+		tfMap["on_failure"] = []interface{}{flattenOnFailure(v)}
+	}
+
+	return tfMap
+}
+
+func flattenDocumentDBEventSourceConfig(apiObject *awstypes.DocumentDBEventSourceConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"full_document": apiObject.FullDocument,
+	}
+
+	if v := apiObject.CollectionName; v != nil {
+		tfMap["collection_name"] = aws.ToString(v)
+	}
+
+	if v := apiObject.DatabaseName; v != nil {
+		tfMap[names.AttrDatabaseName] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenOnFailure(apiObject *awstypes.OnFailure) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Destination; v != nil {
+		tfMap[names.AttrDestinationARN] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func expandSelfManagedEventSource(tfMap map[string]interface{}) *awstypes.SelfManagedEventSource {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.SelfManagedEventSource{}
+
+	if v, ok := tfMap[names.AttrEndpoints].(map[string]interface{}); ok && len(v) > 0 {
+		m := map[string][]string{}
+
+		for k, v := range v {
+			m[k] = strings.Split(v.(string), ",")
+		}
+
+		apiObject.Endpoints = m
+	}
+
+	return apiObject
+}
+
+func flattenSelfManagedEventSource(apiObject *awstypes.SelfManagedEventSource) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Endpoints; v != nil {
+		m := map[string]string{}
+
+		for k, v := range v {
+			m[k] = strings.Join(v, ",")
+		}
+
+		tfMap[names.AttrEndpoints] = m
+	}
+
+	return tfMap
+}
+
+func expandAmazonManagedKafkaEventSourceConfig(tfMap map[string]interface{}) *awstypes.AmazonManagedKafkaEventSourceConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.AmazonManagedKafkaEventSourceConfig{}
+
+	if v, ok := tfMap["consumer_group_id"].(string); ok && v != "" {
+		apiObject.ConsumerGroupId = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenAmazonManagedKafkaEventSourceConfig(apiObject *awstypes.AmazonManagedKafkaEventSourceConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ConsumerGroupId; v != nil {
+		tfMap["consumer_group_id"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func expandSelfManagedKafkaEventSourceConfig(tfMap map[string]interface{}) *awstypes.SelfManagedKafkaEventSourceConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.SelfManagedKafkaEventSourceConfig{}
+
+	if v, ok := tfMap["consumer_group_id"].(string); ok && v != "" {
+		apiObject.ConsumerGroupId = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenSelfManagedKafkaEventSourceConfig(apiObject *awstypes.SelfManagedKafkaEventSourceConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ConsumerGroupId; v != nil {
+		tfMap["consumer_group_id"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func expandSourceAccessConfiguration(tfMap map[string]interface{}) *awstypes.SourceAccessConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.SourceAccessConfiguration{}
+
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+		apiObject.Type = awstypes.SourceAccessType(v)
+	}
+
+	if v, ok := tfMap[names.AttrURI].(string); ok && v != "" {
+		apiObject.URI = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandSourceAccessConfigurations(tfList []interface{}) []awstypes.SourceAccessConfiguration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.SourceAccessConfiguration
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandSourceAccessConfiguration(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenSourceAccessConfiguration(apiObject *awstypes.SourceAccessConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		names.AttrType: apiObject.Type,
+	}
+
+	if v := apiObject.URI; v != nil {
+		tfMap[names.AttrURI] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenSourceAccessConfigurations(apiObjects []awstypes.SourceAccessConfiguration) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenSourceAccessConfiguration(&apiObject))
+	}
+
+	return tfList
+}
+
+func expandFilterCriteria(tfMap map[string]interface{}) *awstypes.FilterCriteria {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.FilterCriteria{}
+
+	if v, ok := tfMap[names.AttrFilter].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Filters = expandFilters(v.List())
+	}
+
+	return apiObject
+}
+
+func flattenFilterCriteria(apiObject *awstypes.FilterCriteria) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Filters; len(v) > 0 {
+		tfMap[names.AttrFilter] = flattenFilters(v)
+	}
+
+	return tfMap
+}
+
+func expandFilters(tfList []interface{}) []awstypes.Filter {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.Filter
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandFilter(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenFilters(apiObjects []awstypes.Filter) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenFilter(&apiObject))
+	}
+
+	return tfList
+}
+
+func expandFilter(tfMap map[string]interface{}) *awstypes.Filter {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.Filter{}
+
+	if v, ok := tfMap["pattern"].(string); ok {
+		// The API permits patterns of length >= 0, so accept the empty string.
+		apiObject.Pattern = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenFilter(apiObject *awstypes.Filter) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Pattern; v != nil {
+		tfMap["pattern"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func expandScalingConfig(tfMap map[string]interface{}) *awstypes.ScalingConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ScalingConfig{}
+
+	if v, ok := tfMap["maximum_concurrency"].(int); ok && v != 0 {
+		apiObject.MaximumConcurrency = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func flattenScalingConfig(apiObject *awstypes.ScalingConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.MaximumConcurrency; v != nil {
+		tfMap["maximum_concurrency"] = aws.ToInt32(v)
+	}
+
+	return tfMap
 }

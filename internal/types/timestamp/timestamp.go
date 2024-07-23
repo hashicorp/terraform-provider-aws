@@ -18,6 +18,10 @@ func New(t string) Timestamp {
 	return Timestamp(t)
 }
 
+func FromTime(t *time.Time) Timestamp {
+	return New(t.Format(time.RFC3339))
+}
+
 func (t Timestamp) String() string {
 	return string(t)
 }
@@ -57,4 +61,10 @@ func (t Timestamp) ValidateUTCFormat() error {
 	}
 
 	return nil
+}
+
+// See https://www.rfc-editor.org/rfc/rfc3339.
+func IsRFC3339(s string) bool {
+	_, err := time.Parse(time.RFC3339, s)
+	return err == nil
 }

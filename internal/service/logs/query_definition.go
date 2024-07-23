@@ -9,17 +9,20 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_query_definition")
@@ -35,7 +38,7 @@ func resourceQueryDefinition() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -64,75 +67,81 @@ func resourceQueryDefinition() *schema.Resource {
 }
 
 func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn(ctx)
+	var diags diag.Diagnostics
 
-	name := d.Get("name").(string)
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
+
+	name := d.Get(names.AttrName).(string)
 	input := &cloudwatchlogs.PutQueryDefinitionInput{
 		Name:        aws.String(name),
 		QueryString: aws.String(d.Get("query_string").(string)),
 	}
 
 	if v, ok := d.GetOk("log_group_names"); ok && len(v.([]interface{})) > 0 {
-		input.LogGroupNames = flex.ExpandStringList(v.([]interface{}))
+		input.LogGroupNames = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if !d.IsNewResource() {
 		input.QueryDefinitionId = aws.String(d.Id())
 	}
 
-	output, err := conn.PutQueryDefinitionWithContext(ctx, input)
+	output, err := conn.PutQueryDefinition(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("putting CloudWatch Logs Query Definition (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "putting CloudWatch Logs Query Definition (%s): %s", name, err)
 	}
 
 	if d.IsNewResource() {
-		d.SetId(aws.StringValue(output.QueryDefinitionId))
+		d.SetId(aws.ToString(output.QueryDefinitionId))
 	}
 
-	return resourceQueryDefinitionRead(ctx, d, meta)
+	return append(diags, resourceQueryDefinitionRead(ctx, d, meta)...)
 }
 
 func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn(ctx)
+	var diags diag.Diagnostics
 
-	result, err := FindQueryDefinitionByTwoPartKey(ctx, conn, d.Get("name").(string), d.Id())
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
+
+	result, err := findQueryDefinitionByTwoPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Query Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch Logs Query Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Query Definition (%s): %s", d.Id(), err)
 	}
 
-	d.Set("log_group_names", aws.StringValueSlice(result.LogGroupNames))
-	d.Set("name", result.Name)
+	d.Set("log_group_names", result.LogGroupNames)
+	d.Set(names.AttrName, result.Name)
 	d.Set("query_definition_id", result.QueryDefinitionId)
 	d.Set("query_string", result.QueryString)
 
-	return nil
+	return diags
 }
 
 func resourceQueryDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Query Definition: %s", d.Id())
-	_, err := conn.DeleteQueryDefinitionWithContext(ctx, &cloudwatchlogs.DeleteQueryDefinitionInput{
+	_, err := conn.DeleteQueryDefinition(ctx, &cloudwatchlogs.DeleteQueryDefinitionInput{
 		QueryDefinitionId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting CloudWatch Logs Query Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Logs Query Definition (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceQueryDefinitionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -141,7 +150,7 @@ func resourceQueryDefinitionImport(ctx context.Context, d *schema.ResourceData, 
 		return nil, fmt.Errorf("unexpected format for ID (%s), expected a CloudWatch query definition ARN", d.Id())
 	}
 
-	if arn.Service != cloudwatchlogs.ServiceName {
+	if arn.Service != "logs" {
 		return nil, fmt.Errorf("unexpected format for ID (%s), expected a CloudWatch query definition ARN", d.Id())
 	}
 
@@ -156,12 +165,12 @@ func resourceQueryDefinitionImport(ctx context.Context, d *schema.ResourceData, 
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindQueryDefinitionByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.CloudWatchLogs, name, queryDefinitionID string) (*cloudwatchlogs.QueryDefinition, error) {
+func findQueryDefinitionByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, name, queryDefinitionID string) (*types.QueryDefinition, error) {
 	input := &cloudwatchlogs.DescribeQueryDefinitionsInput{}
 	if name != "" {
 		input.QueryDefinitionNamePrefix = aws.String(name)
 	}
-	var output *cloudwatchlogs.QueryDefinition
+	var output *types.QueryDefinition
 
 	err := describeQueryDefinitionsPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
 		if page == nil {
@@ -169,8 +178,10 @@ func FindQueryDefinitionByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.C
 		}
 
 		for _, v := range page.QueryDefinitions {
-			if aws.StringValue(v.QueryDefinitionId) == queryDefinitionID {
-				output = v
+			v := v
+
+			if aws.ToString(v.QueryDefinitionId) == queryDefinitionID {
+				output = &v
 
 				return false
 			}

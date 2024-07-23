@@ -38,7 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-* `arn` - (Required) ARN of the image. The suffix can either be specified with wildcards (`xXX`) to fetch the latest build version or a full build version (e.g., `20201126/1`) to fetch an exact version.
+* `arn` - (Required) ARN of the image. The suffix can either be specified with wildcards (`x.x.x`) to fetch the latest build version or a full build version (e.g., `2020.11.26/1`) to fetch an exact version.
 
 ## Attribute Reference
 
@@ -70,9 +70,9 @@ This data source exports the following attributes in addition to the arguments a
         * `name` - Name of the AMI.
         * `region` - Region of the AMI.
     * `containers` - Set of objects with each container image created and stored in the output repository.
-        * `imageUris` - Set of URIs for created containers.
+        * `image_uris` - Set of URIs for created containers.
         * `region` - Region of the container image.
 * `tags` - Key-value map of resource tags for the image.
 * `version` - Version of the image.
 
-<!-- cache-key: cdktf-0.18.0 input-c16581cc1f73d4143d3834e3f16be4e4ace35e8a4c70a0907ae9057adf65efee -->
+<!-- cache-key: cdktf-0.20.1 input-c16581cc1f73d4143d3834e3f16be4e4ace35e8a4c70a0907ae9057adf65efee -->

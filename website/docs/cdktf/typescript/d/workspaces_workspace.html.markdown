@@ -75,9 +75,9 @@ This data source supports the following arguments:
 
 `workspaceProperties` supports the following:
 
-* `computeTypeName` – (Optional) Compute type. For more information, see [Amazon WorkSpaces Bundles](http://aws.amazon.com/workspaces/details/#Amazon_WorkSpaces_Bundles). Valid values are `value`, `standard`, `performance`, `power`, `graphics`, `powerpro` and `graphicspro`.
+* `computeTypeName` – (Optional) Compute type. For more information, see [Amazon WorkSpaces Bundles](http://aws.amazon.com/workspaces/details/#Amazon_WorkSpaces_Bundles). Valid values are `VALUE`, `STANDARD`, `PERFORMANCE`, `POWER`, `GRAPHICS`, `POWERPRO` and `GRAPHICSPRO`.
 * `rootVolumeSizeGib` – (Optional) Size of the root volume.
-* `runningMode` – (Optional) Running mode. For more information, see [Manage the WorkSpace Running Mode](https://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html). Valid values are `autoStop` and `alwaysOn`.
+* `runningMode` – (Optional) Running mode. For more information, see [Manage the WorkSpace Running Mode](https://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html). Valid values are `AUTO_STOP` and `ALWAYS_ON`.
 * `runningModeAutoStopTimeoutInMinutes` – (Optional) Time after a user logs off when WorkSpaces are automatically stopped. Configured in 60-minute intervals.
 * `userVolumeSizeGib` – (Optional) Size of the user storage.
 
@@ -90,4 +90,4 @@ This data source exports the following attributes in addition to the arguments a
 * `computerName` - Name of the WorkSpace, as seen by the operating system.
 * `state` - Operational state of the WorkSpace.
 
-<!-- cache-key: cdktf-0.18.0 input-e3b5b66bcfd6093ee222bffc5ccc77c7abda6688fc2aaac99be169c6d22b80cf -->
+<!-- cache-key: cdktf-0.20.1 input-e3b5b66bcfd6093ee222bffc5ccc77c7abda6688fc2aaac99be169c6d22b80cf -->

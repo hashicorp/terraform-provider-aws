@@ -20,7 +20,7 @@ Environment.
 ~> **NOTE on Application Version Resource:**  When using the Application Version resource with multiple
 [Elastic Beanstalk Environments](elastic_beanstalk_environment.html) it is possible that an error may be returned
 when attempting to delete an Application Version while it is still in use by a different environment.
-To work around this you can either create each environment in a separate AWS account or create your `awsElasticBeanstalkApplicationVersion` resources with a unique names in your Elastic Beanstalk Application. For example &lt;revision&gt;-&lt;environment&gt;.
+To work around this you can either create each environment in a separate AWS account or create your `aws_elastic_beanstalk_application_version` resources with a unique names in your Elastic Beanstalk Application. For example &lt;revision&gt;-&lt;environment&gt;.
 
 ## Example Usage
 
@@ -92,4 +92,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN assigned by AWS for this Elastic Beanstalk Application.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.18.0 input-751fb6889b75c7692aeacfbc770bb96d2cd80c1b9203d93fbf9daa51aef09d4a -->
+<!-- cache-key: cdktf-0.20.1 input-751fb6889b75c7692aeacfbc770bb96d2cd80c1b9203d93fbf9daa51aef09d4a -->

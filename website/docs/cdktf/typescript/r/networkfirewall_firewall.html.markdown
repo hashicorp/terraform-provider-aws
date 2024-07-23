@@ -40,6 +40,13 @@ class MyConvertedCode extends TerraformStack {
         Tag1: "Value1",
         Tag2: "Value2",
       },
+      timeouts: [
+        {
+          create: "40m",
+          delete: "1h",
+          update: "50m",
+        },
+      ],
       vpcId: Token.asString(awsVpcExample.id),
     });
   }
@@ -51,7 +58,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `deleteProtection` - (Optional) A boolean flag indicating whether it is possible to delete the firewall. Defaults to `false`.
+* `deleteProtection` - (Optional) A flag indicating whether the firewall is protected against deletion. Use this setting to protect against accidentally deleting a firewall that is in use. Defaults to `false`.
 
 * `description` - (Optional) A friendly description of the firewall.
 
@@ -59,11 +66,11 @@ This resource supports the following arguments:
 
 * `firewallPolicyArn` - (Required) The Amazon Resource Name (ARN) of the VPC Firewall policy.
 
-* `firewallPolicyChangeProtection` - (Option) A boolean flag indicating whether it is possible to change the associated firewall policy. Defaults to `false`.
+* `firewallPolicyChangeProtection` - (Optional) A flag indicating whether the firewall is protected against a change to the firewall policy association. Use this setting to protect against accidentally modifying the firewall policy for a firewall that is in use. Defaults to `false`.
 
 * `name` - (Required, Forces new resource) A friendly name of the firewall.
 
-* `subnetChangeProtection` - (Optional) A boolean flag indicating whether it is possible to change the associated subnet(s). Defaults to `false`.
+* `subnetChangeProtection` - (Optional) A flag indicating whether the firewall is protected against changes to the subnet associations. Use this setting to protect against accidentally modifying the subnet associations for a firewall that is in use. Defaults to `false`.
 
 * `subnetMapping` - (Required) Set of configuration blocks describing the public subnets. Each subnet must belong to a different Availability Zone in the VPC. AWS Network Firewall creates a firewall endpoint in each subnet. See [Subnet Mapping](#subnet-mapping) below for details.
 
@@ -73,16 +80,16 @@ This resource supports the following arguments:
 
 ### Encryption Configuration
 
-`encryptionConfiguration` settings for customer managed KMS keys. Remove this block to use the default AWS-managed KMS encryption (rather than setting `type` to `awsOwnedKmsKey`).
+`encryptionConfiguration` settings for customer managed KMS keys. Remove this block to use the default AWS-managed KMS encryption (rather than setting `type` to `AWS_OWNED_KMS_KEY`).
 
 * `keyId` - (Optional) The ID of the customer managed key. You can use any of the [key identifiers](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#key-id) that KMS supports, unless you're using a key that's managed by another account. If you're using a key managed by another account, then specify the key ARN.
-* `type` - (Required) The type of AWS KMS key to use for encryption of your Network Firewall resources. Valid values are `customerKms` and `awsOwnedKmsKey`.
+* `type` - (Required) The type of AWS KMS key to use for encryption of your Network Firewall resources. Valid values are `CUSTOMER_KMS` and `AWS_OWNED_KMS_KEY`.
 
 ### Subnet Mapping
 
 The `subnetMapping` block supports the following arguments:
 
-* `ipAddressType` - (Optional) The subnet's IP address type. Valida values: `"dualstack"`, `"ipv4"`.
+* `ipAddressType` - (Optional) The subnet's IP address type. Valida values: `"DUALSTACK"`, `"IPV4"`.
 * `subnetId` - (Required) The unique identifier for the subnet.
 
 ## Attribute Reference
@@ -94,7 +101,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name (ARN) that identifies the firewall.
 
 * `firewallStatus` - Nested list of information about the current status of the firewall.
-    * `syncStates` - Set of subnets configured for use by the firewall.
+    * `sync_states` - Set of subnets configured for use by the firewall.
         * `attachment` - Nested list describing the attachment status of the firewall's association with a single VPC subnet.
             * `endpointId` - The identifier of the firewall endpoint that AWS Network Firewall has instantiated in the subnet. You use this to identify the firewall endpoint in the VPC route tables, when you redirect the VPC traffic through the endpoint.
             * `subnetId` - The unique identifier of the subnet that you've specified to be used for a firewall endpoint.
@@ -104,6 +111,14 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `updateToken` - A string token used when updating a firewall.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Firewall Firewalls using their `arn`. For example:
@@ -112,9 +127,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { NetworkfirewallFirewall } from "./.gen/providers/aws/networkfirewall-firewall";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    NetworkfirewallFirewall.generateConfigForImport(
+      this,
+      "example",
+      "arn:aws:network-firewall:us-west-1:123456789012:firewall/example"
+    );
   }
 }
 
@@ -126,4 +151,4 @@ Using `terraform import`, import Network Firewall Firewalls using their `arn`. F
 % terraform import aws_networkfirewall_firewall.example arn:aws:network-firewall:us-west-1:123456789012:firewall/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2f79b5ba62479f655245def84991cac49da81f4de5c0c95cba76b91f27bb118b -->
+<!-- cache-key: cdktf-0.20.1 input-d895065359f42b9e93c9bc33e9ace68cddf94a70bf435d843a23b560380a98bd -->

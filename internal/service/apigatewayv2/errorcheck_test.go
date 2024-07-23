@@ -6,13 +6,13 @@ package apigatewayv2_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(apigatewayv2.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.APIGatewayV2ServiceID, testAccErrorCheckSkip)
 }
 
 // skips tests that have error messages indicating unsupported features

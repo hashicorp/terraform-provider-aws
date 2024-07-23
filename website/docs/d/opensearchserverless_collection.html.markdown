@@ -38,5 +38,6 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Description of the collection.
 * `kms_key_arn` - The ARN of the Amazon Web Services KMS key used to encrypt the collection.
 * `last_modified_date` - Date the Collection was last modified.
+* `standby_replicas` - Indicates whether standby replicas should be used for a collection.
 * `tags` - A map of tags to assign to the collection.
 * `type` - Type of collection.

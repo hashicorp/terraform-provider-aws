@@ -21,7 +21,7 @@ the requested price.
 On destruction, Terraform will make an attempt to terminate the associated Spot
 Instance if there is one present.
 
-Spot Instances requests with a `oneTime` type will close the spot request
+Spot Instances requests with a `one-time` type will close the spot request
 when the instance is terminated either by the request being below the current spot
 price availability or by a user.
 
@@ -66,13 +66,13 @@ class MyConvertedCode extends TerraformStack {
 ## Argument Reference
 
 Spot Instance Requests support all the same arguments as
-[`awsInstance`](instance.html), with the addition of:
+[`aws_instance`](instance.html), with the addition of:
 
 * `spotPrice` - (Optional; Default: On-demand price) The maximum price to request on the spot market.
 * `waitForFulfillment` - (Optional; Default: false) If set, Terraform will
   wait for the Spot Request to be fulfilled, and will throw an error if the
   timeout of 10m is reached.
-* `spotType` - (Optional; Default: `persistent`) If set to `oneTime`, after
+* `spotType` - (Optional; Default: `persistent`) If set to `one-time`, after
   the instance is terminated, the spot request will be closed.
 * `launchGroup` - (Optional) A launch group is a group of spot instances that launch together and terminate together.
   If left empty instances are launched and terminated individually.
@@ -114,7 +114,8 @@ should only be used for informational purposes, not for resource dependencies:
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10M`)
-* `delete` - (Default `20M`)
+* `create` - (Default `10m`)
+* `read` - (Default `15m`)
+* `delete` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-c3c3583217fff10aa06f5c451738196ae8dc39997f2223d31cdbbf7593fbebc2 -->
+<!-- cache-key: cdktf-0.20.1 input-41ed2e086fde1e9ac47e3151ca332ac4c789a2f389301862b42d62217ca9d626 -->

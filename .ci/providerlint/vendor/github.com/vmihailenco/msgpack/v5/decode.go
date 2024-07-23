@@ -14,14 +14,16 @@ import (
 )
 
 const (
-	looseInterfaceDecodingFlag uint32 = 1 << iota
-	disallowUnknownFieldsFlag
+	bytesAllocLimit = 1 << 20 // 1mb
+	sliceAllocLimit = 1e6     // 1m elements
+	maxMapSize      = 1e6     // 1m elements
 )
 
 const (
-	bytesAllocLimit = 1e6 // 1mb
-	sliceAllocLimit = 1e4
-	maxMapSize      = 1e6
+	looseInterfaceDecodingFlag uint32 = 1 << iota
+	disallowUnknownFieldsFlag
+	usePreallocateValues
+	disableAllocLimitFlag
 )
 
 type bufReader interface {
@@ -53,7 +55,7 @@ func PutDecoder(dec *Decoder) {
 // in the value pointed to by v.
 func Unmarshal(data []byte, v interface{}) error {
 	dec := GetDecoder()
-
+	dec.UsePreallocateValues(true)
 	dec.Reset(bytes.NewReader(data))
 	err := dec.Decode(v)
 
@@ -64,16 +66,14 @@ func Unmarshal(data []byte, v interface{}) error {
 
 // A Decoder reads and decodes MessagePack values from an input stream.
 type Decoder struct {
-	r   io.Reader
-	s   io.ByteScanner
-	buf []byte
-
-	rec []byte // accumulates read data if not nil
-
+	r          io.Reader
+	s          io.ByteScanner
+	mapDecoder func(*Decoder) (interface{}, error)
+	structTag  string
+	buf        []byte
+	rec        []byte
 	dict       []string
 	flags      uint32
-	structTag  string
-	mapDecoder func(*Decoder) (interface{}, error)
 }
 
 // NewDecoder returns a new decoder that reads from r.
@@ -95,10 +95,9 @@ func (d *Decoder) Reset(r io.Reader) {
 
 // ResetDict is like Reset, but also resets the dict.
 func (d *Decoder) ResetDict(r io.Reader, dict []string) {
-	d.resetReader(r)
+	d.ResetReader(r)
 	d.flags = 0
 	d.structTag = ""
-	d.mapDecoder = nil
 	d.dict = dict
 }
 
@@ -110,10 +109,16 @@ func (d *Decoder) WithDict(dict []string, fn func(*Decoder) error) error {
 	return err
 }
 
-func (d *Decoder) resetReader(r io.Reader) {
+func (d *Decoder) ResetReader(r io.Reader) {
+	d.mapDecoder = nil
+	d.dict = nil
+
 	if br, ok := r.(bufReader); ok {
 		d.r = br
 		d.s = br
+	} else if r == nil {
+		d.r = nil
+		d.s = nil
 	} else {
 		br := bufio.NewReader(r)
 		d.r = br
@@ -158,6 +163,24 @@ func (d *Decoder) UseInternedStrings(on bool) {
 		d.flags |= useInternedStringsFlag
 	} else {
 		d.flags &= ^useInternedStringsFlag
+	}
+}
+
+// UsePreallocateValues enables preallocating values in chunks
+func (d *Decoder) UsePreallocateValues(on bool) {
+	if on {
+		d.flags |= usePreallocateValues
+	} else {
+		d.flags &= ^usePreallocateValues
+	}
+}
+
+// DisableAllocLimit enables fully allocating slices/maps when the size is known
+func (d *Decoder) DisableAllocLimit(on bool) {
+	if on {
+		d.flags |= disableAllocLimitFlag
+	} else {
+		d.flags &= ^disableAllocLimitFlag
 	}
 }
 
@@ -603,7 +626,11 @@ func (d *Decoder) readFull(b []byte) error {
 
 func (d *Decoder) readN(n int) ([]byte, error) {
 	var err error
-	d.buf, err = readN(d.r, d.buf, n)
+	if d.flags&disableAllocLimitFlag != 0 {
+		d.buf, err = readN(d.r, d.buf, n)
+	} else {
+		d.buf, err = readNGrow(d.r, d.buf, n)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -615,6 +642,24 @@ func (d *Decoder) readN(n int) ([]byte, error) {
 }
 
 func readN(r io.Reader, b []byte, n int) ([]byte, error) {
+	if b == nil {
+		if n == 0 {
+			return make([]byte, 0), nil
+		}
+		b = make([]byte, 0, n)
+	}
+
+	if n > cap(b) {
+		b = append(b, make([]byte, n-len(b))...)
+	} else if n <= cap(b) {
+		b = b[:n]
+	}
+
+	_, err := io.ReadFull(r, b)
+	return b, err
+}
+
+func readNGrow(r io.Reader, b []byte, n int) ([]byte, error) {
 	if b == nil {
 		if n == 0 {
 			return make([]byte, 0), nil

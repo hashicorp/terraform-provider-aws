@@ -18,12 +18,12 @@ import (
 
 // @SDKDataSource("aws_msk_vpc_connection", name="VPC Connection")
 // @Tags
-func DataSourceVPCConnection() *schema.Resource {
+func dataSourceVPCConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCConnectionRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -36,7 +36,7 @@ func DataSourceVPCConnection() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -46,7 +46,7 @@ func DataSourceVPCConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,22 +58,22 @@ func dataSourceVPCConnectionRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	arn := d.Get("arn").(string)
-	out, err := FindVPCConnectionByARN(ctx, conn, arn)
+	arn := d.Get(names.AttrARN).(string)
+	output, err := findVPCConnectionByARN(ctx, conn, arn)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading MSK VPC Connection (%s): %s", arn, err)
 	}
 
-	d.SetId(aws.ToString(out.VpcConnectionArn))
-	d.Set("arn", out.VpcConnectionArn)
-	d.Set("authentication", out.Authentication)
-	d.Set("client_subnets", flex.FlattenStringValueSet(out.Subnets))
-	d.Set("security_groups", flex.FlattenStringValueSet(out.SecurityGroups))
-	d.Set("target_cluster_arn", out.TargetClusterArn)
-	d.Set("vpc_id", out.VpcId)
+	d.SetId(aws.ToString(output.VpcConnectionArn))
+	d.Set(names.AttrARN, output.VpcConnectionArn)
+	d.Set("authentication", output.Authentication)
+	d.Set("client_subnets", flex.FlattenStringValueSet(output.Subnets))
+	d.Set(names.AttrSecurityGroups, flex.FlattenStringValueSet(output.SecurityGroups))
+	d.Set("target_cluster_arn", output.TargetClusterArn)
+	d.Set(names.AttrVPCID, output.VpcId)
 
-	setTagsOutV2(ctx, out.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }

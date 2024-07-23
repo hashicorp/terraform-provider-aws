@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGluePartition_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccGluePartition_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,12 +35,12 @@ func TestAccGluePartition_basic(t *testing.T) {
 				Config: testAccPartitionConfig_basic(rName, parValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "catalog_id"),
-					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "partition_values.#", "1"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, "partition_values.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "partition_values.0", parValue),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 				),
 			},
 			{
@@ -60,7 +61,7 @@ func TestAccGluePartition_multipleValues(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,7 +69,7 @@ func TestAccGluePartition_multipleValues(t *testing.T) {
 				Config: testAccPartitionConfig_multiplePartValue(rName, parValue, parValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "partition_values.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "partition_values.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "partition_values.0", parValue),
 					resource.TestCheckResourceAttr(resourceName, "partition_values.1", parValue2),
 				),
@@ -90,16 +91,16 @@ func TestAccGluePartition_parameters(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPartitionConfig_parameters1(rName, parValue, "key1", "value1"),
+				Config: testAccPartitionConfig_parameters1(rName, parValue, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -108,20 +109,20 @@ func TestAccGluePartition_parameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPartitionConfig_parameters2(rName, parValue, "key1", "valueUpdated1", "key2", "value2"),
+				Config: testAccPartitionConfig_parameters2(rName, parValue, acctest.CtKey1, "valueUpdated1", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "parameters.key1", "valueUpdated1"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccPartitionConfig_parameters1(rName, parValue, "key2", "value2"),
+				Config: testAccPartitionConfig_parameters1(rName, parValue, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -136,7 +137,7 @@ func TestAccGluePartition_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -160,7 +161,7 @@ func TestAccGluePartition_Disappears_table(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -178,7 +179,7 @@ func TestAccGluePartition_Disappears_table(t *testing.T) {
 
 func testAccCheckPartitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_partition" {
@@ -186,7 +187,7 @@ func testAccCheckPartitionDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			if _, err := tfglue.FindPartitionByValues(ctx, conn, rs.Primary.ID); err != nil {
-				if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+				if errs.IsA[*awstypes.EntityNotFoundException](err) {
 					continue
 				}
 
@@ -209,7 +210,7 @@ func testAccCheckPartitionExists(ctx context.Context, name string) resource.Test
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 		out, err := tfglue.FindPartitionByValues(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

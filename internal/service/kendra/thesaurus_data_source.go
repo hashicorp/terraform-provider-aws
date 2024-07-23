@@ -15,7 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_kendra_thesaurus")
@@ -23,15 +25,15 @@ func DataSourceThesaurus() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceThesaurusRead,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,11 +53,11 @@ func DataSourceThesaurus() *schema.Resource {
 					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 				),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,18 +66,18 @@ func DataSourceThesaurus() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket": {
+						names.AttrBucket: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -83,7 +85,7 @@ func DataSourceThesaurus() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"term_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -108,6 +110,8 @@ func DataSourceThesaurus() *schema.Resource {
 }
 
 func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -117,7 +121,7 @@ func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta i
 	resp, err := FindThesaurusByID(ctx, conn, thesaurusID, indexID)
 
 	if err != nil {
-		return diag.Errorf("reading Kendra Thesaurus (%s): %s", thesaurusID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Kendra Thesaurus (%s): %s", thesaurusID, err)
 	}
 
 	arn := arn.ARN{
@@ -127,37 +131,37 @@ func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta i
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("index/%s/thesaurus/%s", indexID, thesaurusID),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("created_at", aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
-	d.Set("description", resp.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedAt, aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrDescription, resp.Description)
 	d.Set("error_message", resp.ErrorMessage)
 	d.Set("file_size_bytes", resp.FileSizeBytes)
 	d.Set("index_id", resp.IndexId)
-	d.Set("name", resp.Name)
-	d.Set("role_arn", resp.RoleArn)
-	d.Set("status", resp.Status)
+	d.Set(names.AttrName, resp.Name)
+	d.Set(names.AttrRoleARN, resp.RoleArn)
+	d.Set(names.AttrStatus, resp.Status)
 	d.Set("synonym_rule_count", resp.SynonymRuleCount)
 	d.Set("term_count", resp.TermCount)
 	d.Set("thesaurus_id", resp.Id)
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
 	if err := d.Set("source_s3_path", flattenSourceS3Path(resp.SourceS3Path)); err != nil {
-		return diag.Errorf("setting source_s3_path: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting source_s3_path: %s", err)
 	}
 
 	tags, err := listTags(ctx, conn, arn)
 
 	if err != nil {
-		return diag.Errorf("listing tags for Kendra Thesaurus (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Kendra Thesaurus (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", thesaurusID, indexID))
 
-	return nil
+	return diags
 }

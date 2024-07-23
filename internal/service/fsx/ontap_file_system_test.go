@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -18,17 +18,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccFSxONTAPFileSystem_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var filesystem fsx.FileSystem
+	var filesystem awstypes.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,32 +37,34 @@ func TestAccFSxONTAPFileSystem_basic(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`file-system/fs-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.OntapDeploymentTypeMultiAz1),
-					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.OntapDeploymentTypeMultiAz1)),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "3072"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "AUTOMATIC"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_ip_address_range"),
-					resource.TestCheckResourceAttr(resourceName, "endpoints.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoints.0.intercluster.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoints.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoints.0.intercluster.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.intercluster.0.dns_name"),
-					resource.TestCheckResourceAttr(resourceName, "endpoints.0.management.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoints.0.management.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.management.0.dns_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "preferred_subnet_id", "aws_subnet.test.0", "id"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ha_pairs", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyID),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct2),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(resourceName, "preferred_subnet_id", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_vpc.test", "default_route_table_id"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1024"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", "id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, string(awstypes.StorageTypeSsd)),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "128"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", "128"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexache.MustCompile(`^\d:\d\d:\d\d$`)),
 				),
 			},
@@ -69,7 +72,7 @@ func TestAccFSxONTAPFileSystem_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 		},
 	})
@@ -77,13 +80,13 @@ func TestAccFSxONTAPFileSystem_basic(t *testing.T) {
 
 func TestAccFSxONTAPFileSystem_singleAZ(t *testing.T) {
 	ctx := acctest.Context(t)
-	var filesystem fsx.FileSystem
+	var filesystem awstypes.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -91,15 +94,164 @@ func TestAccFSxONTAPFileSystem_singleAZ(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_singleAZ(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`file-system/fs-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.OntapDeploymentTypeSingleAz1),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.OntapDeploymentTypeSingleAz1)),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+			},
+		},
+	})
+}
+
+func TestAccFSxONTAPFileSystem_multiAZ2(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem1, filesystem2 awstypes.FileSystem
+	throughput1 := 384
+	throughput2 := 768
+	throughput3 := 768
+	capacity1 := 1024
+	capacity2 := 1024
+	capacity3 := 2048
+
+	resourceName := "aws_fsx_ontap_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccONTAPFileSystemConfig_multiAZ2(rName, throughput1, capacity1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.OntapDeploymentTypeMultiAz2)),
+					resource.TestCheckResourceAttr(resourceName, "ha_pairs", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", fmt.Sprint(throughput1)),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput1)),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", fmt.Sprint(capacity1)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+			},
+			{
+				Config: testAccONTAPFileSystemConfig_multiAZ2(rName, throughput2, capacity2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckONTAPFileSystemNotRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.OntapDeploymentTypeMultiAz2)),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput2)),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", fmt.Sprint(capacity2)),
+				),
+			},
+			{
+				Config: testAccONTAPFileSystemConfig_multiAZ2(rName, throughput3, capacity3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckONTAPFileSystemNotRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.OntapDeploymentTypeMultiAz2)),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput3)),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", fmt.Sprint(capacity3)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFSxONTAPFileSystem_haPair(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem awstypes.FileSystem
+	throughput1 := 3072
+	throughput2 := 256
+	resourceName := "aws_fsx_ontap_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccONTAPFileSystemConfig_haPair(rName, throughput1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "ha_pairs", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput1)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+			},
+			{
+				Config: testAccONTAPFileSystemConfig_oneHaPair(rName, throughput2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "ha_pairs", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", fmt.Sprint(throughput2)),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput2)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFSxONTAPFileSystem_haPair_increase(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem1, filesystem2 awstypes.FileSystem
+	throughput := 3072
+	capacity1 := 4096
+	capacity2 := 8192
+	haPair1 := 2
+	haPair2 := 4
+	resourceName := "aws_fsx_ontap_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccONTAPFileSystemConfig_singleAZ2(rName, throughput, capacity1, haPair1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "ha_pairs", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput)),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", fmt.Sprint(capacity1)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+			},
+			{
+				Config: testAccONTAPFileSystemConfig_singleAZ2(rName, throughput, capacity2, haPair2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckONTAPFileSystemNotRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "ha_pairs", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput)),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", fmt.Sprint(capacity2)),
+				),
 			},
 		},
 	})
@@ -107,15 +259,15 @@ func TestAccFSxONTAPFileSystem_singleAZ(t *testing.T) {
 
 func TestAccFSxONTAPFileSystem_fsxAdminPassword(t *testing.T) {
 	ctx := acctest.Context(t)
-	var filesystem1, filesystem2 fsx.FileSystem
+	var filesystem1, filesystem2 awstypes.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	pass1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	pass2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -130,7 +282,7 @@ func TestAccFSxONTAPFileSystem_fsxAdminPassword(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids", "fsx_admin_password"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs, "fsx_admin_password"},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_adminPassword(rName, pass2),
@@ -146,13 +298,13 @@ func TestAccFSxONTAPFileSystem_fsxAdminPassword(t *testing.T) {
 
 func TestAccFSxONTAPFileSystem_endpointIPAddressRange(t *testing.T) {
 	ctx := acctest.Context(t)
-	var filesystem fsx.FileSystem
+	var filesystem awstypes.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -167,7 +319,7 @@ func TestAccFSxONTAPFileSystem_endpointIPAddressRange(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 		},
 	})
@@ -175,13 +327,13 @@ func TestAccFSxONTAPFileSystem_endpointIPAddressRange(t *testing.T) {
 
 func TestAccFSxONTAPFileSystem_diskIOPS(t *testing.T) {
 	ctx := acctest.Context(t)
-	var filesystem fsx.FileSystem
+	var filesystem awstypes.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -189,7 +341,7 @@ func TestAccFSxONTAPFileSystem_diskIOPS(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_diskIOPSConfiguration(rName, 3072),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "3072"),
 				),
@@ -198,13 +350,13 @@ func TestAccFSxONTAPFileSystem_diskIOPS(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_diskIOPSConfiguration(rName, 4000),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "4000"),
 				),
@@ -215,13 +367,13 @@ func TestAccFSxONTAPFileSystem_diskIOPS(t *testing.T) {
 
 func TestAccFSxONTAPFileSystem_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var filesystem fsx.FileSystem
+	var filesystem awstypes.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -239,13 +391,13 @@ func TestAccFSxONTAPFileSystem_disappears(t *testing.T) {
 
 func TestAccFSxONTAPFileSystem_securityGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var filesystem1, filesystem2 fsx.FileSystem
+	var filesystem1, filesystem2 awstypes.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -253,21 +405,21 @@ func TestAccFSxONTAPFileSystem_securityGroupIDs(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_securityGroupIDs1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_securityGroupIDs2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckONTAPFileSystemRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct2),
 				),
 			},
 		},
@@ -276,13 +428,13 @@ func TestAccFSxONTAPFileSystem_securityGroupIDs(t *testing.T) {
 
 func TestAccFSxONTAPFileSystem_routeTableIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var filesystem1 fsx.FileSystem
+	var filesystem1 awstypes.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -290,31 +442,31 @@ func TestAccFSxONTAPFileSystem_routeTableIDs(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_routeTable(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", "id"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", names.AttrID),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_routeTable(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.1", "id"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.1", names.AttrID),
 				),
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_routeTable(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", "id"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", names.AttrID),
 				),
 			},
 		},
@@ -323,47 +475,47 @@ func TestAccFSxONTAPFileSystem_routeTableIDs(t *testing.T) {
 
 func TestAccFSxONTAPFileSystem_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var filesystem1, filesystem2, filesystem3 fsx.FileSystem
+	var filesystem1, filesystem2, filesystem3 awstypes.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccONTAPFileSystemConfig_tags1(rName, "key1", "value1"),
+				Config: testAccONTAPFileSystemConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
-				Config: testAccONTAPFileSystemConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccONTAPFileSystemConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckONTAPFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccONTAPFileSystemConfig_tags1(rName, "key2", "value2"),
+				Config: testAccONTAPFileSystemConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem3),
 					testAccCheckONTAPFileSystemNotRecreated(&filesystem2, &filesystem3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -372,13 +524,13 @@ func TestAccFSxONTAPFileSystem_tags(t *testing.T) {
 
 func TestAccFSxONTAPFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 	ctx := acctest.Context(t)
-	var filesystem1, filesystem2 fsx.FileSystem
+	var filesystem1, filesystem2 awstypes.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -393,7 +545,7 @@ func TestAccFSxONTAPFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_weeklyMaintenanceStartTime(rName, "2:02:02"),
@@ -409,13 +561,13 @@ func TestAccFSxONTAPFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 
 func TestAccFSxONTAPFileSystem_automaticBackupRetentionDays(t *testing.T) {
 	ctx := acctest.Context(t)
-	var filesystem1, filesystem2 fsx.FileSystem
+	var filesystem1, filesystem2 awstypes.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -430,21 +582,21 @@ func TestAccFSxONTAPFileSystem_automaticBackupRetentionDays(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_automaticBackupRetentionDays(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckONTAPFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_automaticBackupRetentionDays(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "1"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", acctest.Ct1),
 				),
 			},
 		},
@@ -453,13 +605,13 @@ func TestAccFSxONTAPFileSystem_automaticBackupRetentionDays(t *testing.T) {
 
 func TestAccFSxONTAPFileSystem_kmsKeyID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var filesystem fsx.FileSystem
+	var filesystem awstypes.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -467,14 +619,14 @@ func TestAccFSxONTAPFileSystem_kmsKeyID(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_kmsKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 		},
 	})
@@ -482,13 +634,13 @@ func TestAccFSxONTAPFileSystem_kmsKeyID(t *testing.T) {
 
 func TestAccFSxONTAPFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 	ctx := acctest.Context(t)
-	var filesystem1, filesystem2 fsx.FileSystem
+	var filesystem1, filesystem2 awstypes.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLustreFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -503,7 +655,7 @@ func TestAccFSxONTAPFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_dailyAutomaticBackupStartTime(rName, "02:02"),
@@ -519,13 +671,13 @@ func TestAccFSxONTAPFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 
 func TestAccFSxONTAPFileSystem_throughputCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var filesystem1, filesystem2 fsx.FileSystem
+	var filesystem1, filesystem2 awstypes.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -540,7 +692,7 @@ func TestAccFSxONTAPFileSystem_throughputCapacity(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_throughputCapacity(rName),
@@ -550,19 +702,108 @@ func TestAccFSxONTAPFileSystem_throughputCapacity(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "256"),
 				),
 			},
+			{
+				Config: testAccONTAPFileSystemConfig_multiAZHaThrougput(rName, 256),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckONTAPFileSystemNotRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "256"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", "256"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFSxONTAPFileSystem_throughputCapacity_singleAZ1(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem1, filesystem2 awstypes.FileSystem
+	throughput1 := 128
+	throughput2 := 256
+	capacity := 1024
+	resourceName := "aws_fsx_ontap_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccONTAPFileSystemConfig_singleAZ1(rName, throughput1, capacity),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput1)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+			},
+			{
+				Config: testAccONTAPFileSystemConfig_singleAZ1(rName, throughput2, capacity),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckONTAPFileSystemRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput2)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFSxONTAPFileSystem_throughputCapacity_multiAZ1(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem1, filesystem2 awstypes.FileSystem
+	throughput1 := 128
+	throughput2 := 256
+	capacity := 1024
+	resourceName := "aws_fsx_ontap_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccONTAPFileSystemConfig_multiAZ1(rName, throughput1, capacity),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput1)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
+			},
+			{
+				Config: testAccONTAPFileSystemConfig_multiAZ1(rName, throughput2, capacity),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckONTAPFileSystemRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput2)),
+				),
+			},
 		},
 	})
 }
 
 func TestAccFSxONTAPFileSystem_storageCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var filesystem1, filesystem2 fsx.FileSystem
+	var filesystem1, filesystem2 awstypes.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -577,7 +818,7 @@ func TestAccFSxONTAPFileSystem_storageCapacity(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_storageCapacity(rName),
@@ -591,14 +832,14 @@ func TestAccFSxONTAPFileSystem_storageCapacity(t *testing.T) {
 	})
 }
 
-func testAccCheckONTAPFileSystemExists(ctx context.Context, n string, v *fsx.FileSystem) resource.TestCheckFunc {
+func testAccCheckONTAPFileSystemExists(ctx context.Context, n string, v *awstypes.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxClient(ctx)
 
 		output, err := tffsx.FindONTAPFileSystemByID(ctx, conn, rs.Primary.ID)
 
@@ -614,7 +855,7 @@ func testAccCheckONTAPFileSystemExists(ctx context.Context, n string, v *fsx.Fil
 
 func testAccCheckONTAPFileSystemDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fsx_ontap_file_system" {
@@ -638,20 +879,20 @@ func testAccCheckONTAPFileSystemDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckONTAPFileSystemNotRecreated(i, j *fsx.FileSystem) resource.TestCheckFunc {
+func testAccCheckONTAPFileSystemNotRecreated(i, j *awstypes.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.FileSystemId) != aws.StringValue(j.FileSystemId) {
-			return fmt.Errorf("FSx for NetApp ONTAP File System (%s) recreated", aws.StringValue(i.FileSystemId))
+		if aws.ToString(i.FileSystemId) != aws.ToString(j.FileSystemId) {
+			return fmt.Errorf("FSx for NetApp ONTAP File System (%s) recreated", aws.ToString(i.FileSystemId))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckONTAPFileSystemRecreated(i, j *fsx.FileSystem) resource.TestCheckFunc {
+func testAccCheckONTAPFileSystemRecreated(i, j *awstypes.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.FileSystemId) == aws.StringValue(j.FileSystemId) {
-			return fmt.Errorf("FSx for NetApp ONTAP File System (%s) not recreated", aws.StringValue(i.FileSystemId))
+		if aws.ToString(i.FileSystemId) == aws.ToString(j.FileSystemId) {
+			return fmt.Errorf("FSx for NetApp ONTAP File System (%s) not recreated", aws.ToString(i.FileSystemId))
 		}
 
 		return nil
@@ -688,6 +929,125 @@ resource "aws_fsx_ontap_file_system" "test" {
   }
 }
 `, rName))
+}
+
+func testAccONTAPFileSystemConfig_multiAZ2(rName string, throughput int, capacity int) string {
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_file_system" "test" {
+  storage_capacity                = %[3]d
+  subnet_ids                      = aws_subnet.test[*].id
+  deployment_type                 = "MULTI_AZ_2"
+  ha_pairs                        = 1
+  throughput_capacity_per_ha_pair = %[2]d
+  preferred_subnet_id             = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, throughput, capacity))
+}
+
+func testAccONTAPFileSystemConfig_multiAZ1(rName string, throughput int, capacity int) string {
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_file_system" "test" {
+  storage_capacity                = %[3]d
+  subnet_ids                      = aws_subnet.test[*].id
+  deployment_type                 = "MULTI_AZ_1"
+  ha_pairs                        = 1
+  throughput_capacity_per_ha_pair = %[2]d
+  preferred_subnet_id             = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, throughput, capacity))
+}
+
+func testAccONTAPFileSystemConfig_singleAZ1(rName string, throughput int, capacity int) string {
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_file_system" "test" {
+  storage_capacity                = %[3]d
+  subnet_ids                      = [aws_subnet.test[0].id]
+  deployment_type                 = "SINGLE_AZ_1"
+  ha_pairs                        = 1
+  throughput_capacity_per_ha_pair = %[2]d
+  preferred_subnet_id             = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, throughput, capacity))
+}
+
+func testAccONTAPFileSystemConfig_singleAZ2(rName string, throughput int, capacity int, haPairs int) string {
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_file_system" "test" {
+  storage_capacity                = %[3]d
+  subnet_ids                      = [aws_subnet.test[0].id]
+  deployment_type                 = "SINGLE_AZ_2"
+  ha_pairs                        = %[4]d
+  throughput_capacity_per_ha_pair = %[2]d
+  preferred_subnet_id             = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, throughput, capacity, haPairs))
+}
+
+func testAccONTAPFileSystemConfig_haPair(rName string, capacity int) string {
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_file_system" "test" {
+  storage_capacity                = 2048
+  subnet_ids                      = [aws_subnet.test[0].id]
+  deployment_type                 = "SINGLE_AZ_2"
+  ha_pairs                        = 2
+  throughput_capacity_per_ha_pair = %[2]d
+  preferred_subnet_id             = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, capacity))
+}
+
+func testAccONTAPFileSystemConfig_oneHaPair(rName string, capacity int) string {
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_file_system" "test" {
+  storage_capacity                = 1024
+  subnet_ids                      = [aws_subnet.test[0].id]
+  deployment_type                 = "SINGLE_AZ_1"
+  ha_pairs                        = 1
+  throughput_capacity_per_ha_pair = %[2]d
+  preferred_subnet_id             = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, capacity))
+}
+
+func testAccONTAPFileSystemConfig_multiAZHaThrougput(rName string, capacity int) string {
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_file_system" "test" {
+  storage_capacity                = 2048
+  subnet_ids                      = aws_subnet.test[*].id
+  deployment_type                 = "MULTI_AZ_1"
+  throughput_capacity_per_ha_pair = %[2]d
+  ha_pairs                        = 1
+  preferred_subnet_id             = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, capacity))
 }
 
 func testAccONTAPFileSystemConfig_adminPassword(rName, pass string) string {

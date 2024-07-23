@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccInviteAccepter_basic(t *testing.T) {
@@ -30,7 +31,7 @@ func testAccInviteAccepter_basic(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckInviteAccepterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,8 +39,8 @@ func testAccInviteAccepter_basic(t *testing.T) {
 				Config: testAccInviteAccepterConfig_basic(email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInviteAccepterExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "detector_id", memberDetectorResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "master_account_id", masterDetectorResourceName, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", memberDetectorResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "master_account_id", masterDetectorResourceName, names.AttrAccountID),
 				),
 			},
 			{

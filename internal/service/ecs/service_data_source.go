@@ -5,28 +5,25 @@ package ecs
 
 import (
 	"context"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ecs_service")
-func DataSourceService() *schema.Resource {
+// @SDKDataSource("aws_ecs_service", name="Service")
+// @Tags
+func dataSourceService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceRead,
 
 		Schema: map[string]*schema.Schema{
-			"service_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,57 +43,40 @@ func DataSourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrServiceName: {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"task_definition": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
-	clusterArn := d.Get("cluster_arn").(string)
-	serviceName := d.Get("service_name").(string)
-
-	params := &ecs.DescribeServicesInput{
-		Cluster:  aws.String(clusterArn),
-		Services: []*string{aws.String(serviceName)},
-	}
-
-	log.Printf("[DEBUG] Reading ECS Service: %s", params)
-	desc, err := conn.DescribeServicesWithContext(ctx, params)
+	service, err := findServiceByTwoPartKey(ctx, conn, d.Get(names.AttrServiceName).(string), d.Get("cluster_arn").(string))
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ECS Service (%s): %s", serviceName, err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("ECS Service", err))
 	}
 
-	if desc == nil || len(desc.Services) == 0 {
-		return sdkdiag.AppendErrorf(diags, "service with name %q in cluster %q not found", serviceName, clusterArn)
-	}
-
-	if len(desc.Services) > 1 {
-		return sdkdiag.AppendErrorf(diags, "multiple services with name %q found in cluster %q", serviceName, clusterArn)
-	}
-
-	service := desc.Services[0]
-	d.SetId(aws.StringValue(service.ServiceArn))
-
-	d.Set("service_name", service.ServiceName)
-	d.Set("arn", service.ServiceArn)
+	arn := aws.ToString(service.ServiceArn)
+	d.SetId(arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("cluster_arn", service.ClusterArn)
 	d.Set("desired_count", service.DesiredCount)
 	d.Set("launch_type", service.LaunchType)
 	d.Set("scheduling_strategy", service.SchedulingStrategy)
+	d.Set(names.AttrServiceName, service.ServiceName)
 	d.Set("task_definition", service.TaskDefinition)
 
-	if err := d.Set("tags", KeyValueTags(ctx, service.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, service.Tags)
 
 	return diags
 }

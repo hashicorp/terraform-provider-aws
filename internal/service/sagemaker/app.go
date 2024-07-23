@@ -38,7 +38,7 @@ func ResourceApp() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +70,7 @@ func ResourceApp() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -85,6 +85,10 @@ func ResourceApp() *schema.Resource {
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: verify.ValidARN,
+						},
+						"sagemaker_image_version_alias": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"sagemaker_image_version_arn": {
 							Type:         schema.TypeString,
@@ -134,7 +138,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("resource_spec"); ok {
-		input.ResourceSpec = expandDomainDefaultResourceSpec(v.([]interface{}))
+		input.ResourceSpec = expandResourceSpec(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] SageMaker App create config: %#v", *input)
@@ -180,12 +184,12 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	arn := aws.StringValue(app.AppArn)
 	d.Set("app_name", app.AppName)
 	d.Set("app_type", app.AppType)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("domain_id", app.DomainId)
-	d.Set("user_profile_name", app.UserProfileName)
 	d.Set("space_name", app.SpaceName)
+	d.Set("user_profile_name", app.UserProfileName)
 
-	if err := d.Set("resource_spec", flattenDomainDefaultResourceSpec(app.ResourceSpec)); err != nil {
+	if err := d.Set("resource_spec", flattenResourceSpec(app.ResourceSpec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting resource_spec for SageMaker App (%s): %s", d.Id(), err)
 	}
 

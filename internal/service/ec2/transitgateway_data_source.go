@@ -7,18 +7,21 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_transit_gateway")
-func DataSourceTransitGateway() *schema.Resource {
+// @SDKDataSource("aws_ec2_transit_gateway", name="Transit Gateway")
+// @Tags
+// @Testing(tagsTest=false)
+func dataSourceTransitGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayRead,
 
@@ -31,7 +34,7 @@ func DataSourceTransitGateway() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,7 +54,7 @@ func DataSourceTransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,8 +62,8 @@ func DataSourceTransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": CustomFiltersSchema(),
-			"id": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -69,7 +72,7 @@ func DataSourceTransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -77,7 +80,7 @@ func DataSourceTransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"transit_gateway_cidr_blocks": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -93,13 +96,12 @@ func DataSourceTransitGateway() *schema.Resource {
 
 func dataSourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeTransitGatewaysInput{}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -107,34 +109,32 @@ func dataSourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, m
 		input.Filters = nil
 	}
 
-	if v, ok := d.GetOk("id"); ok {
-		input.TransitGatewayIds = aws.StringSlice([]string{v.(string)})
+	if v, ok := d.GetOk(names.AttrID); ok {
+		input.TransitGatewayIds = []string{v.(string)}
 	}
 
-	transitGateway, err := FindTransitGateway(ctx, conn, input)
+	transitGateway, err := findTransitGateway(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway", err))
 	}
 
-	d.SetId(aws.StringValue(transitGateway.TransitGatewayId))
+	d.SetId(aws.ToString(transitGateway.TransitGatewayId))
 	d.Set("amazon_side_asn", transitGateway.Options.AmazonSideAsn)
-	d.Set("arn", transitGateway.TransitGatewayArn)
+	d.Set(names.AttrARN, transitGateway.TransitGatewayArn)
 	d.Set("association_default_route_table_id", transitGateway.Options.AssociationDefaultRouteTableId)
 	d.Set("auto_accept_shared_attachments", transitGateway.Options.AutoAcceptSharedAttachments)
 	d.Set("default_route_table_association", transitGateway.Options.DefaultRouteTableAssociation)
 	d.Set("default_route_table_propagation", transitGateway.Options.DefaultRouteTablePropagation)
-	d.Set("description", transitGateway.Description)
+	d.Set(names.AttrDescription, transitGateway.Description)
 	d.Set("dns_support", transitGateway.Options.DnsSupport)
 	d.Set("multicast_support", transitGateway.Options.MulticastSupport)
-	d.Set("owner_id", transitGateway.OwnerId)
+	d.Set(names.AttrOwnerID, transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
-	d.Set("transit_gateway_cidr_blocks", aws.StringValueSlice(transitGateway.Options.TransitGatewayCidrBlocks))
+	d.Set("transit_gateway_cidr_blocks", transitGateway.Options.TransitGatewayCidrBlocks)
 	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
 
-	if err := d.Set("tags", KeyValueTags(ctx, transitGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, transitGateway.Tags)
 
 	return diags
 }

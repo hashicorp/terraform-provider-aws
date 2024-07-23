@@ -47,3 +47,12 @@ func validPolicyStatementID() schema.SchemaValidateFunc {
 		validation.StringLenBetween(1, 100),
 	)
 }
+
+func validLogGroupName() schema.SchemaValidateFunc {
+	// http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_CreateLogGroup.html
+	return validation.All(
+		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_./#-]+$`), "must contain alphanumeric characters, underscores,"+
+			" hyphens, slashes, hash signs and dots only"),
+		validation.StringLenBetween(1, 512),
+	)
+}

@@ -9,18 +9,19 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/organizations"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy organizations.ResourcePolicy
+	var policy awstypes.ResourcePolicy
 	resourceName := "aws_organizations_resource_policy.test"
 
 	resource.Test(t, resource.TestCase{
@@ -31,15 +32,15 @@ func testAccResourcePolicy_basic(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourcePolicyConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName, &policy),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexache.MustCompile("resourcepolicy/o-.+/rp-.+$")),
-					resource.TestCheckResourceAttrSet(resourceName, "content"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "organizations", regexache.MustCompile("resourcepolicy/o-.+/rp-.+$")),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrContent),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -53,7 +54,7 @@ func testAccResourcePolicy_basic(t *testing.T) {
 
 func testAccResourcePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy organizations.ResourcePolicy
+	var policy awstypes.ResourcePolicy
 	resourceName := "aws_organizations_resource_policy.test"
 
 	resource.Test(t, resource.TestCase{
@@ -64,7 +65,7 @@ func testAccResourcePolicy_disappears(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourcePolicyConfig_basic(),
@@ -80,7 +81,7 @@ func testAccResourcePolicy_disappears(t *testing.T) {
 
 func testAccResourcePolicy_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy organizations.ResourcePolicy
+	var policy awstypes.ResourcePolicy
 	resourceName := "aws_organizations_resource_policy.test"
 
 	resource.Test(t, resource.TestCase{
@@ -91,14 +92,14 @@ func testAccResourcePolicy_tags(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyConfig_tags1("key1", "value1"),
+				Config: testAccResourcePolicyConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -107,20 +108,20 @@ func testAccResourcePolicy_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccResourcePolicyConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccResourcePolicyConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccResourcePolicyConfig_tags1("key2", "value2"),
+				Config: testAccResourcePolicyConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -129,7 +130,7 @@ func testAccResourcePolicy_tags(t *testing.T) {
 
 func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_organizations_resource_policy" {
@@ -153,14 +154,14 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckResourcePolicyExists(ctx context.Context, n string, v *organizations.ResourcePolicy) resource.TestCheckFunc {
+func testAccCheckResourcePolicyExists(ctx context.Context, n string, v *awstypes.ResourcePolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
 
 		output, err := tforganizations.FindResourcePolicy(ctx, conn)
 

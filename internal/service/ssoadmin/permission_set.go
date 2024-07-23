@@ -12,14 +12,16 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -45,15 +47,15 @@ func ResourcePermissionSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.All(
@@ -67,7 +69,7 @@ func ResourcePermissionSet() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -100,17 +102,17 @@ func ResourcePermissionSet() *schema.Resource {
 
 func resourcePermissionSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
+	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
 	instanceARN := d.Get("instance_arn").(string)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &ssoadmin.CreatePermissionSetInput{
 		InstanceArn: aws.String(instanceARN),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -122,20 +124,20 @@ func resourcePermissionSetCreate(ctx context.Context, d *schema.ResourceData, me
 		input.SessionDuration = aws.String(v.(string))
 	}
 
-	output, err := conn.CreatePermissionSetWithContext(ctx, input)
+	output, err := conn.CreatePermissionSet(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SSO Permission Set (%s): %s", name, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s,%s", aws.StringValue(output.PermissionSet.PermissionSetArn), instanceARN))
+	d.SetId(fmt.Sprintf("%s,%s", aws.ToString(output.PermissionSet.PermissionSetArn), instanceARN))
 
 	return append(diags, resourcePermissionSetRead(ctx, d, meta)...)
 }
 
 func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
+	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
 	permissionSetARN, instanceARN, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -154,11 +156,11 @@ func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading SSO Permission Set (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", permissionSet.PermissionSetArn)
-	d.Set("created_date", permissionSet.CreatedDate.Format(time.RFC3339))
-	d.Set("description", permissionSet.Description)
+	d.Set(names.AttrARN, permissionSet.PermissionSetArn)
+	d.Set(names.AttrCreatedDate, permissionSet.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrDescription, permissionSet.Description)
 	d.Set("instance_arn", instanceARN)
-	d.Set("name", permissionSet.Name)
+	d.Set(names.AttrName, permissionSet.Name)
 	d.Set("relay_state", permissionSet.RelayState)
 	d.Set("session_duration", permissionSet.SessionDuration)
 
@@ -175,14 +177,14 @@ func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
+	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
 	permissionSetARN, instanceARN, err := ParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChanges("description", "relay_state", "session_duration") {
+	if d.HasChanges(names.AttrDescription, "relay_state", "session_duration") {
 		input := &ssoadmin.UpdatePermissionSetInput{
 			InstanceArn:      aws.String(instanceARN),
 			PermissionSetArn: aws.String(permissionSetARN),
@@ -193,7 +195,7 @@ func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, me
 		// for consistency, we'll check for the "presence of" instead of "if changed" for all input fields
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17411
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 
@@ -205,7 +207,7 @@ func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.SessionDuration = aws.String(v.(string))
 		}
 
-		_, err := conn.UpdatePermissionSetWithContext(ctx, input)
+		_, err := conn.UpdatePermissionSet(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating SSO Permission Set (%s): %s", d.Id(), err)
@@ -217,8 +219,8 @@ func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	if d.HasChange(names.AttrTagsAll) {
+		o, n := d.GetChange(names.AttrTagsAll)
 		if err := updateTags(ctx, conn, permissionSetARN, instanceARN, o, n); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
@@ -229,7 +231,7 @@ func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourcePermissionSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
+	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
 	permissionSetARN, instanceARN, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -237,12 +239,12 @@ func resourcePermissionSetDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[INFO] Deleting SSO Permission Set: %s", d.Id())
-	_, err = conn.DeletePermissionSetWithContext(ctx, &ssoadmin.DeletePermissionSetInput{
+	_, err = conn.DeletePermissionSet(ctx, &ssoadmin.DeletePermissionSetInput{
 		InstanceArn:      aws.String(instanceARN),
 		PermissionSetArn: aws.String(permissionSetARN),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -261,15 +263,15 @@ func ParseResourceID(id string) (string, string, error) {
 	return idParts[0], idParts[1], nil
 }
 
-func FindPermissionSet(ctx context.Context, conn *ssoadmin.SSOAdmin, permissionSetARN, instanceARN string) (*ssoadmin.PermissionSet, error) {
+func FindPermissionSet(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string) (*awstypes.PermissionSet, error) {
 	input := &ssoadmin.DescribePermissionSetInput{
 		InstanceArn:      aws.String(instanceARN),
 		PermissionSetArn: aws.String(permissionSetARN),
 	}
 
-	output, err := conn.DescribePermissionSetWithContext(ctx, input)
+	output, err := conn.DescribePermissionSet(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -287,35 +289,35 @@ func FindPermissionSet(ctx context.Context, conn *ssoadmin.SSOAdmin, permissionS
 	return output.PermissionSet, nil
 }
 
-func provisionPermissionSet(ctx context.Context, conn *ssoadmin.SSOAdmin, permissionSetARN, instanceARN string, timeout time.Duration) error {
+func provisionPermissionSet(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string, timeout time.Duration) error {
 	input := &ssoadmin.ProvisionPermissionSetInput{
 		InstanceArn:      aws.String(instanceARN),
 		PermissionSetArn: aws.String(permissionSetARN),
-		TargetType:       aws.String(ssoadmin.ProvisionTargetTypeAllProvisionedAccounts),
+		TargetType:       awstypes.ProvisionTargetTypeAllProvisionedAccounts,
 	}
 
-	output, err := conn.ProvisionPermissionSetWithContext(ctx, input)
+	output, err := conn.ProvisionPermissionSet(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("provisioning SSO Permission Set (%s): %w", permissionSetARN, err)
 	}
 
-	if _, err := waitPermissionSetProvisioned(ctx, conn, instanceARN, aws.StringValue(output.PermissionSetProvisioningStatus.RequestId), timeout); err != nil {
+	if _, err := waitPermissionSetProvisioned(ctx, conn, instanceARN, aws.ToString(output.PermissionSetProvisioningStatus.RequestId), timeout); err != nil {
 		return fmt.Errorf("waiting for SSO Permission Set (%s) provision: %w", permissionSetARN, err)
 	}
 
 	return nil
 }
 
-func findPermissionSetProvisioningStatus(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceARN, requestID string) (*ssoadmin.PermissionSetProvisioningStatus, error) {
+func findPermissionSetProvisioningStatus(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) (*awstypes.PermissionSetProvisioningStatus, error) {
 	input := &ssoadmin.DescribePermissionSetProvisioningStatusInput{
 		InstanceArn:                     aws.String(instanceARN),
 		ProvisionPermissionSetRequestId: aws.String(requestID),
 	}
 
-	output, err := conn.DescribePermissionSetProvisioningStatusWithContext(ctx, input)
+	output, err := conn.DescribePermissionSetProvisioningStatus(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -333,7 +335,7 @@ func findPermissionSetProvisioningStatus(ctx context.Context, conn *ssoadmin.SSO
 	return output.PermissionSetProvisioningStatus, nil
 }
 
-func statusPermissionSetProvisioning(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceARN, requestID string) retry.StateRefreshFunc {
+func statusPermissionSetProvisioning(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findPermissionSetProvisioningStatus(ctx, conn, instanceARN, requestID)
 
@@ -345,14 +347,14 @@ func statusPermissionSetProvisioning(ctx context.Context, conn *ssoadmin.SSOAdmi
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func waitPermissionSetProvisioned(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceARN, requestID string, timeout time.Duration) (*ssoadmin.PermissionSetProvisioningStatus, error) {
+func waitPermissionSetProvisioned(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string, timeout time.Duration) (*awstypes.PermissionSetProvisioningStatus, error) {
 	stateConf := retry.StateChangeConf{
-		Pending: []string{ssoadmin.StatusValuesInProgress},
-		Target:  []string{ssoadmin.StatusValuesSucceeded},
+		Pending: enum.Slice(awstypes.StatusValuesInProgress),
+		Target:  enum.Slice(awstypes.StatusValuesSucceeded),
 		Refresh: statusPermissionSetProvisioning(ctx, conn, instanceARN, requestID),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
@@ -360,8 +362,8 @@ func waitPermissionSetProvisioned(ctx context.Context, conn *ssoadmin.SSOAdmin, 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*ssoadmin.PermissionSetProvisioningStatus); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
+	if output, ok := outputRaw.(*awstypes.PermissionSetProvisioningStatus); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 
 		return output, err
 	}

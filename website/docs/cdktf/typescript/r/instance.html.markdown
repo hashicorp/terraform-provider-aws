@@ -33,7 +33,7 @@ class MyConvertedCode extends TerraformStack {
       filter: [
         {
           name: "name",
-          values: ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"],
+          values: ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"],
         },
         {
           name: "virtualization-type",
@@ -223,7 +223,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-### Host resource group or Licence Manager registered AMI example
+### Host resource group or License Manager registered AMI example
 
 A host resource group is a collection of Dedicated Hosts that you can manage as a single entity. As you launch instances, License Manager allocates the hosts and launches instances on them based on the settings that you configured. You can add existing Dedicated Hosts to a host resource group and take advantage of automated host management through License Manager.
 
@@ -253,6 +253,18 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
+## Tag Guide
+
+These are the five types of tags you might encounter relative to an `aws_instance`:
+
+1. **Instance tags**: Applied to instances but not to `ebsBlockDevice` and `rootBlockDevice` volumes.
+2. **Default tags**: Applied to the instance and to `ebsBlockDevice` and `rootBlockDevice` volumes.
+3. **Volume tags**: Applied during creation to `ebsBlockDevice` and `rootBlockDevice` volumes.
+4. **Root block device tags**: Applied only to the `rootBlockDevice` volume. These conflict with `volumeTags`.
+5. **EBS block device tags**: Applied only to the specific `ebsBlockDevice` volume you configure them for and cannot be updated. These conflict with `volumeTags`.
+
+Do not use `volumeTags` if you plan to manage block device tags outside the `aws_instance` configuration, such as using `tags` in an [`aws_ebs_volume`](/docs/providers/aws/r/ebs_volume.html) resource attached via [`aws_volume_attachment`](/docs/providers/aws/r/volume_attachment.html). Doing so will result in resource cycling and inconsistent behavior.
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -279,20 +291,20 @@ This resource supports the following arguments:
 * `hibernation` - (Optional) If true, the launched EC2 instance will support hibernation.
 * `hostId` - (Optional) ID of a dedicated host that the instance will be assigned to. Use when an instance is to be launched on a specific dedicated host.
 * `hostResourceGroupArn` - (Optional) ARN of the host resource group in which to launch the instances. If you specify an ARN, omit the `tenancy` parameter or set it to `host`.
-* `iamInstanceProfile` - (Optional) IAM Instance Profile to launch the instance with. Specified as the name of the Instance Profile. Ensure your credentials have the correct permission to assign the instance profile according to the [EC2 documentation](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html#roles-usingrole-ec2instance-permissions), notably `iam:passRole`.
+* `iamInstanceProfile` - (Optional) IAM Instance Profile to launch the instance with. Specified as the name of the Instance Profile. Ensure your credentials have the correct permission to assign the instance profile according to the [EC2 documentation](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html#roles-usingrole-ec2instance-permissions), notably `iam:PassRole`.
 * `instanceInitiatedShutdownBehavior` - (Optional) Shutdown behavior for the instance. Amazon defaults this to `stop` for EBS-backed instances and `terminate` for instance-store instances. Cannot be set on instance-store instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingInstanceInitiatedShutdownBehavior) for more information.
 * `instanceMarketOptions` - (Optional) Describes the market (purchasing) option for the instances. See [Market Options](#market-options) below for details on attributes.
 * `instanceType` - (Optional) Instance type to use for the instance. Required unless `launchTemplate` is specified and the Launch Template specifies an instance type. If an instance type is specified in the Launch Template, setting `instanceType` will override the instance type specified in the Launch Template. Updates to this field will trigger a stop/start of the EC2 instance.
 * `ipv6AddressCount`- (Optional) Number of IPv6 addresses to associate with the primary network interface. Amazon EC2 chooses the IPv6 addresses from the range of your subnet.
 * `ipv6Addresses` - (Optional) Specify one or more IPv6 addresses from the range of the subnet to associate with the primary network interface
-* `keyName` - (Optional) Key name of the Key Pair to use for the instance; which can be managed using [the `awsKeyPair` resource](key_pair.html).
+* `keyName` - (Optional) Key name of the Key Pair to use for the instance; which can be managed using [the `aws_key_pair` resource](key_pair.html).
 * `launchTemplate` - (Optional) Specifies a Launch Template to configure the instance. Parameters configured on this resource will override the corresponding parameters in the Launch Template. See [Launch Template Specification](#launch-template-specification) below for more details.
 * `maintenanceOptions` - (Optional) Maintenance and recovery options for the instance. See [Maintenance Options](#maintenance-options) below for more details.
 * `metadataOptions` - (Optional) Customize the metadata options of the instance. See [Metadata Options](#metadata-options) below for more details.
 * `monitoring` - (Optional) If true, the launched EC2 instance will have detailed monitoring enabled. (Available since v0.6.0)
 * `networkInterface` - (Optional) Customize network interfaces to be attached at instance boot time. See [Network Interfaces](#network-interfaces) below for more details.
 * `placementGroup` - (Optional) Placement Group to start the instance in.
-* `placementPartitionNumber` - (Optional) Number of the partition the instance is in. Valid only if [the `awsPlacementGroup` resource's](placement_group.html) `strategy` argument is set to `"partition"`.
+* `placementPartitionNumber` - (Optional) Number of the partition the instance is in. Valid only if [the `aws_placement_group` resource's](placement_group.html) `strategy` argument is set to `"partition"`.
 * `privateDnsNameOptions` - (Optional) Options for the instance hostname. The default values are inherited from the subnet. See [Private DNS Name Options](#private-dns-name-options) below for more details.
 * `privateIp` - (Optional) Private IP address to associate with the instance in a VPC.
 * `rootBlockDevice` - (Optional) Configuration block to customize details about the root block device of the instance. See [Block Devices](#ebs-ephemeral-and-root-block-devices) below for details. When accessing this as an attribute reference, it is a list containing one object.
@@ -310,7 +322,7 @@ This resource supports the following arguments:
 * `userDataReplaceOnChange` - (Optional) When used in combination with `userData` or `userDataBase64` will trigger a destroy and recreate when set to `true`. Defaults to `false` if not set.
 * `volumeTags` - (Optional) Map of tags to assign, at instance-creation time, to root and EBS volumes.
 
-~> **NOTE:** Do not use `volumeTags` if you plan to manage block device tags outside the `awsInstance` configuration, such as using `tags` in an [`awsEbsVolume`](/docs/providers/aws/r/ebs_volume.html) resource attached via [`awsVolumeAttachment`](/docs/providers/aws/r/volume_attachment.html). Doing so will result in resource cycling and inconsistent behavior.
+~> **NOTE:** Do not use `volumeTags` if you plan to manage block device tags outside the `aws_instance` configuration, such as using `tags` in an [`aws_ebs_volume`](/docs/providers/aws/r/ebs_volume.html) resource attached via [`aws_volume_attachment`](/docs/providers/aws/r/volume_attachment.html). Doing so will result in resource cycling and inconsistent behavior.
 
 * `vpcSecurityGroupIds` - (Optional, VPC only) List of security group IDs to associate with.
 
@@ -360,7 +372,7 @@ The `creditSpecification` block supports the following:
 
 ### EBS, Ephemeral, and Root Block Devices
 
-Each of the `*BlockDevice` attributes control a portion of the EC2 Instance's "Block Device Mapping". For more information, see the [AWS Block Device Mapping documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html).
+Each of the `*_block_device` attributes control a portion of the EC2 Instance's "Block Device Mapping". For more information, see the [AWS Block Device Mapping documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html).
 
 The `rootBlockDevice` block supports the following:
 
@@ -388,7 +400,7 @@ Each `ebsBlockDevice` block supports the following:
 * `volumeSize` - (Optional) Size of the volume in gibibytes (GiB).
 * `volumeType` - (Optional) Type of volume. Valid values include `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1`, or `st1`. Defaults to `gp2`.
 
-~> **NOTE:** Currently, changes to the `ebsBlockDevice` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes and attachments of an EBS block to an instance, use the `awsEbsVolume` and `awsVolumeAttachment` resources instead. If you use `ebsBlockDevice` on an `awsInstance`, Terraform will assume management over the full set of non-root EBS block devices for the instance, treating additional block devices as drift. For this reason, `ebsBlockDevice` cannot be mixed with external `awsEbsVolume` and `awsVolumeAttachment` resources for a given instance.
+~> **NOTE:** Currently, changes to the `ebsBlockDevice` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes and attachments of an EBS block to an instance, use the `aws_ebs_volume` and `aws_volume_attachment` resources instead. If you use `ebsBlockDevice` on an `aws_instance`, Terraform will assume management over the full set of non-root EBS block devices for the instance, treating additional block devices as drift. For this reason, `ebsBlockDevice` cannot be mixed with external `aws_ebs_volume` and `aws_volume_attachment` resources for a given instance.
 
 Each `ephemeralBlockDevice` block supports the following:
 
@@ -396,7 +408,7 @@ Each `ephemeralBlockDevice` block supports the following:
 * `noDevice` - (Optional) Suppresses the specified device included in the AMI's block device mapping.
 * `virtualName` - (Optional) [Instance Store Device Name](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#InstanceStoreDeviceNames) (e.g., `ephemeral0`).
 
-Each AWS Instance type has a different set of Instance Store block devices available for attachment. AWS [publishes a list](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#StorageOnInstanceTypes) of which ephemeral devices are available on each type. The devices are always identified by the `virtualName` in the format `ephemeral{0N}`.
+Each AWS Instance type has a different set of Instance Store block devices available for attachment. AWS [publishes a list](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#StorageOnInstanceTypes) of which ephemeral devices are available on each type. The devices are always identified by the `virtualName` in the format `ephemeral{0..N}`.
 
 ### Enclave Options
 
@@ -420,7 +432,7 @@ The `maintenanceOptions` block supports the following:
 
 The `instanceMarketOptions` block supports the following:
 
-* `marketType` - (Optional) Type of market for the instance. Valid value is `spot`. Defaults to `spot`.
+* `marketType` - (Optional) Type of market for the instance. Valid value is `spot`. Defaults to `spot`. Required if `spotOptions` is specified.
 * `spotOptions` - (Optional) Block to configure the options for Spot Instances. See [Spot Options](#spot-options) below for details on attributes.
 
 ### Metadata Options
@@ -439,7 +451,7 @@ For more information, see the documentation on the [Instance Metadata Service](h
 
 ### Network Interfaces
 
-Each of the `networkInterface` blocks attach a network interface to an EC2 Instance during boot time. However, because the network interface is attached at boot-time, replacing/modifying the network interface **WILL** trigger a recreation of the EC2 Instance. If you should need at any point to detach/modify/re-attach a network interface to the instance, use the `awsNetworkInterface` or `awsNetworkInterfaceAttachment` resources instead.
+Each of the `networkInterface` blocks attach a network interface to an EC2 Instance during boot time. However, because the network interface is attached at boot-time, replacing/modifying the network interface **WILL** trigger a recreation of the EC2 Instance. If you should need at any point to detach/modify/re-attach a network interface to the instance, use the `aws_network_interface` or `aws_network_interface_attachment` resources instead.
 
 The `networkInterface` configuration block _does_, however, allow users to supply their own network interface to be used as the default network interface on an EC2 Instance, attached at `eth0`.
 
@@ -456,7 +468,7 @@ The `privateDnsNameOptions` block supports the following:
 
 * `enableResourceNameDnsAaaaRecord` - Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records.
 * `enableResourceNameDnsARecord` - Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
-* `hostnameType` - Type of hostname for Amazon EC2 instances. For IPv4 only subnets, an instance DNS name must be based on the instance IPv4 address. For IPv6 native subnets, an instance DNS name must be based on the instance ID. For dual-stack subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ipName` and `resourceName`.
+* `hostnameType` - Type of hostname for Amazon EC2 instances. For IPv4 only subnets, an instance DNS name must be based on the instance IPv4 address. For IPv6 native subnets, an instance DNS name must be based on the instance ID. For dual-stack subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ip-name` and `resource-name`.
 
 ### Spot Options
 
@@ -464,7 +476,7 @@ The `spotOptions` block supports the following:
 
 * `instanceInterruptionBehavior` - (Optional) The behavior when a Spot Instance is interrupted. Valid values include `hibernate`, `stop`, `terminate` . The default is `terminate`.
 * `maxPrice` - (Optional) The maximum hourly price that you're willing to pay for a Spot Instance.
-* `spotInstanceType` - (Optional) The Spot Instance request type. Valid values include `oneTime`, `persistent`. Persistent Spot Instance requests are only supported when the instance interruption behavior is either hibernate or stop. The default is `oneTime`.
+* `spotInstanceType` - (Optional) The Spot Instance request type. Valid values include `one-time`, `persistent`. Persistent Spot Instance requests are only supported when the instance interruption behavior is either hibernate or stop. The default is `one-time`.
 * `validUntil` - (Optional) The end date of the request, in UTC format (YYYY-MM-DDTHH:MM:SSZ). Supported only for persistent requests.
 
 ### Launch Template Specification
@@ -478,7 +490,7 @@ The `launchTemplate` block supports the following:
 
 * `id` - ID of the launch template. Conflicts with `name`.
 * `name` - Name of the launch template. Conflicts with `id`.
-* `version` - Template version. Can be a specific version number, `$latest` or `$default`. The default value is `$default`.
+* `version` - Template version. Can be a specific version number, `$Latest` or `$Default`. The default value is `$Default`.
 
 ## Attribute Reference
 
@@ -486,23 +498,26 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the instance.
 * `capacityReservationSpecification` - Capacity reservation specification of the instance.
-* `instanceState` - State of the instance. One of: `pending`, `running`, `shuttingDown`, `terminated`, `stopping`, `stopped`. See [Instance Lifecycle](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html) for more information.
+* `id` - ID of the instance.
+* `instanceState` - State of the instance. One of: `pending`, `running`, `shutting-down`, `terminated`, `stopping`, `stopped`. See [Instance Lifecycle](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html) for more information.
 * `outpostArn` - ARN of the Outpost the instance is assigned to.
 * `passwordData` - Base-64 encoded encrypted password data for the instance. Useful for getting the administrator password for instances running Microsoft Windows. This attribute is only exported if `getPasswordData` is true. Note that this encrypted value will be stored in the state file, as with all exported attributes. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `primaryNetworkInterfaceId` - ID of the instance's primary network interface.
 * `privateDns` - Private DNS name assigned to the instance. Can only be used inside the Amazon EC2, and only available if you've enabled DNS hostnames for your VPC.
 * `publicDns` - Public DNS name assigned to the instance. For EC2-VPC, this is only available if you've enabled DNS hostnames for your VPC.
-* `publicIp` - Public IP address assigned to the instance, if applicable. **NOTE**: If you are using an [`awsEip`](/docs/providers/aws/r/eip.html) with your instance, you should refer to the EIP's address directly and not use `publicIp` as this field will change after the EIP is attached.
+* `publicIp` - Public IP address assigned to the instance, if applicable. **NOTE**: If you are using an [`aws_eip`](/docs/providers/aws/r/eip.html) with your instance, you should refer to the EIP's address directly and not use `publicIp` as this field will change after the EIP is attached.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 For `ebsBlockDevice`, in addition to the arguments above, the following attribute is exported:
 
-* `volumeId` - ID of the volume. For example, the ID can be accessed like this, `awsInstanceWebEbsBlockDevice2VolumeId`.
+* `volumeId` - ID of the volume. For example, the ID can be accessed like this, `aws_instance.web.ebs_block_device.2.volume_id`.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 For `rootBlockDevice`, in addition to the arguments above, the following attributes are exported:
 
-* `volumeId` - ID of the volume. For example, the ID can be accessed like this, `awsInstanceWebRootBlockDevice0VolumeId`.
+* `volumeId` - ID of the volume. For example, the ID can be accessed like this, `aws_instance.web.root_block_device.0.volume_id`.
 * `deviceName` - Device name, e.g., `/dev/sdh` or `xvdh`.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 For `instanceMarketOptions`, in addition to the arguments above, the following attributes are exported:
 
@@ -513,9 +528,10 @@ For `instanceMarketOptions`, in addition to the arguments above, the following a
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10M`)
-* `update` - (Default `10M`)
-* `delete` - (Default `20M`)
+* `create` - (Default `10m`)
+* `read` - (Default `15m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `20m`)
 
 ## Import
 
@@ -525,9 +541,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { Instance } from "./.gen/providers/aws/instance";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    Instance.generateConfigForImport(this, "web", "i-12345678");
   }
 }
 
@@ -539,4 +561,4 @@ Using `terraform import`, import instances using the `id`. For example:
 % terraform import aws_instance.web i-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3c65e83e2786a585ff91f7f409ce62e768ad71e9ab841a301904e25fdc0f6666 -->
+<!-- cache-key: cdktf-0.20.1 input-22fa60b78e07a8c405942a5e6347bd94ae3a9cbb548f38ac0744b9f7ef890b1b -->

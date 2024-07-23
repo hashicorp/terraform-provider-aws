@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestDataSourcePermissionsDiff(t *testing.T) {
@@ -34,8 +35,8 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			name: "no changes;same",
 			oldPermissions: []interface{}{
 				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrPrincipal: "principal1",
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action1",
 						"action2",
 					}),
@@ -43,8 +44,8 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			},
 			newPermissions: []interface{}{
 				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrPrincipal: "principal1",
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action1",
 						"action2",
 					}),
@@ -58,8 +59,8 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			oldPermissions: []interface{}{},
 			newPermissions: []interface{}{
 				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrPrincipal: "principal1",
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action1",
 						"action2",
 					}),
@@ -77,8 +78,8 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			name: "revoke only",
 			oldPermissions: []interface{}{
 				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrPrincipal: "principal1",
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action1",
 						"action2",
 					}),
@@ -97,16 +98,16 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			name: "grant new action",
 			oldPermissions: []interface{}{
 				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrPrincipal: "principal1",
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action1",
 					}),
 				},
 			},
 			newPermissions: []interface{}{
 				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrPrincipal: "principal1",
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action1",
 						"action2",
 					}),
@@ -124,8 +125,8 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			name: "revoke old action",
 			oldPermissions: []interface{}{
 				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrPrincipal: "principal1",
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"oldAction",
 						"onlyOldAction",
 					}),
@@ -133,8 +134,8 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			},
 			newPermissions: []interface{}{
 				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrPrincipal: "principal1",
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"oldAction",
 					}),
 				},
@@ -156,38 +157,38 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			name: "multiple permissions",
 			oldPermissions: []interface{}{
 				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrPrincipal: "principal1",
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action1",
 						"action2",
 					}),
 				},
 				map[string]interface{}{
-					"principal": "principal2",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrPrincipal: "principal2",
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action1",
 						"action3",
 						"action4",
 					}),
 				},
 				map[string]interface{}{
-					"principal": "principal3",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrPrincipal: "principal3",
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action5",
 					}),
 				},
 			},
 			newPermissions: []interface{}{
 				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrPrincipal: "principal1",
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action1",
 						"action2",
 					}),
 				},
 				map[string]interface{}{
-					"principal": "principal2",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrPrincipal: "principal2",
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action3",
 						"action5",
 					}),
