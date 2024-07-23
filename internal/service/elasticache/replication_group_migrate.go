@@ -61,7 +61,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Optional:  true,
 				Sensitive: true,
 			},
-			names.AttrAutoMinorVersionUpgrade: {
+			names.AttrAutoMinorVersionUpgrade: { // nosemgrep:ci.semgrep.types.valid-nullable-bool
 				Type:     nullable.TypeNullableBool,
 				Optional: true,
 				Computed: true,
