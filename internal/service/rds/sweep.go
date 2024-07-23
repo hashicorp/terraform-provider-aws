@@ -181,7 +181,7 @@ func sweepClusterSnapshots(region string) error {
 		}
 
 		for _, v := range page.DBClusterSnapshots {
-			r := ResourceClusterSnapshot()
+			r := resourceClusterSnapshot()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.DBClusterSnapshotIdentifier))
 

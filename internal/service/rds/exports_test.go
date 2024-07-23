@@ -7,6 +7,7 @@ package rds
 var (
 	ResourceCertificate             = resourceCertificate
 	ResourceCluster                 = resourceCluster
+	ResourceClusterSnapshot         = resourceClusterSnapshot
 	ResourceEventSubscription       = resourceEventSubscription
 	ResourceProxy                   = resourceProxy
 	ResourceProxyDefaultTargetGroup = resourceProxyDefaultTargetGroup
@@ -14,6 +15,7 @@ var (
 	ResourceProxyTarget             = resourceProxyTarget
 	ResourceSubnetGroup             = resourceSubnetGroup
 
+	FindDBClusterSnapshotByID                  = findDBClusterSnapshotByID
 	FindDBInstanceByID                         = findDBInstanceByIDSDKv1
 	FindDBProxyByName                          = findDBProxyByName
 	FindDBProxyEndpointByTwoPartKey            = findDBProxyEndpointByTwoPartKey

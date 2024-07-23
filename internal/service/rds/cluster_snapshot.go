@@ -31,7 +31,7 @@ const clusterSnapshotCreateTimeout = 2 * time.Minute
 // @SDKResource("aws_db_cluster_snapshot", name="DB Cluster Snapshot")
 // @Tags(identifierAttribute="db_cluster_snapshot_arn")
 // @Testing(tagsTest=false)
-func ResourceClusterSnapshot() *schema.Resource {
+func resourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterSnapshotCreate,
 		ReadWithoutTimeout:   resourceClusterSnapshotRead,
@@ -157,12 +157,13 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 
 	if v, ok := d.GetOk("shared_accounts"); ok && v.(*schema.Set).Len() > 0 {
 		input := &rds.ModifyDBClusterSnapshotAttributeInput{
-			AttributeName:               aws.String("restore"),
+			AttributeName:               aws.String(clusterSnapshotAttributeNameRestore),
 			DBClusterSnapshotIdentifier: aws.String(d.Id()),
 			ValuesToAdd:                 flex.ExpandStringSet(v.(*schema.Set)),
 		}
 
 		_, err := conn.ModifyDBClusterSnapshotAttributeWithContext(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Cluster Snapshot (%s) attribute: %s", d.Id(), err)
 		}
@@ -175,7 +176,7 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	snapshot, err := FindDBClusterSnapshotByID(ctx, conn, d.Id())
+	snapshot, err := findDBClusterSnapshotByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS DB Cluster Snapshot (%s) not found, removing from state", d.Id())
@@ -203,17 +204,14 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrStorageEncrypted, snapshot.StorageEncrypted)
 	d.Set(names.AttrVPCID, snapshot.VpcId)
 
-	input := &rds.DescribeDBClusterSnapshotAttributesInput{
-		DBClusterSnapshotIdentifier: aws.String(d.Id()),
+	attribute, err := findDBClusterSnapshotAttributeByTwoPartKey(ctx, conn, d.Id(), clusterSnapshotAttributeNameRestore)
+	switch {
+	case err == nil:
+		d.Set("shared_accounts", flex.FlattenStringSet(attribute.AttributeValues))
+	case tfresource.NotFound(err):
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Cluster Snapshot (%s) attribute: %s", d.Id(), err)
 	}
-
-	output, err := conn.DescribeDBClusterSnapshotAttributesWithContext(ctx, input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RDS DB Cluster Snapshot (%s) attributes: %s", d.Id(), err)
-	}
-
-	d.Set("shared_accounts", flex.FlattenStringSet(output.DBClusterSnapshotAttributesResult.DBClusterSnapshotAttributes[0].AttributeValues))
 
 	setTagsOut(ctx, snapshot.TagList)
 
@@ -226,23 +224,19 @@ func resourceClusterSnapshotUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	if d.HasChange("shared_accounts") {
 		o, n := d.GetChange("shared_accounts")
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-
-		additionList := ns.Difference(os)
-		removalList := os.Difference(ns)
-
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := ns.Difference(os), os.Difference(ns)
 		input := &rds.ModifyDBClusterSnapshotAttributeInput{
-			AttributeName:               aws.String("restore"),
+			AttributeName:               aws.String(clusterSnapshotAttributeNameRestore),
 			DBClusterSnapshotIdentifier: aws.String(d.Id()),
-			ValuesToAdd:                 flex.ExpandStringSet(additionList),
-			ValuesToRemove:              flex.ExpandStringSet(removalList),
+			ValuesToAdd:                 flex.ExpandStringSet(add),
+			ValuesToRemove:              flex.ExpandStringSet(del),
 		}
 
 		_, err := conn.ModifyDBClusterSnapshotAttributeWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Cluster Snapshot (%s) attributes: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Cluster Snapshot (%s) attribute: %s", d.Id(), err)
 		}
 	}
 
@@ -269,7 +263,7 @@ func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func FindDBClusterSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBClusterSnapshot, error) {
+func findDBClusterSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBClusterSnapshot, error) {
 	input := &rds.DescribeDBClusterSnapshotsInput{
 		DBClusterSnapshotIdentifier: aws.String(id),
 	}
@@ -332,7 +326,7 @@ func findDBClusterSnapshots(ctx context.Context, conn *rds.RDS, input *rds.Descr
 
 func statusDBClusterSnapshot(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDBClusterSnapshotByID(ctx, conn, id)
+		output, err := findDBClusterSnapshotByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -363,4 +357,45 @@ func waitDBClusterSnapshotCreated(ctx context.Context, conn *rds.RDS, id string,
 	}
 
 	return nil, err
+}
+
+func findDBClusterSnapshotAttributeByTwoPartKey(ctx context.Context, conn *rds.RDS, id, attributeName string) (*rds.DBClusterSnapshotAttribute, error) {
+	input := &rds.DescribeDBClusterSnapshotAttributesInput{
+		DBClusterSnapshotIdentifier: aws.String(id),
+	}
+
+	return findDBClusterSnapshotAttribute(ctx, conn, input, func(v *rds.DBClusterSnapshotAttribute) bool {
+		return aws.StringValue(v.AttributeName) == attributeName
+	})
+}
+
+func findDBClusterSnapshotAttribute(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClusterSnapshotAttributesInput, filter tfslices.Predicate[*rds.DBClusterSnapshotAttribute]) (*rds.DBClusterSnapshotAttribute, error) {
+	output, err := findDBClusterSnapshotAttributes(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findDBClusterSnapshotAttributes(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClusterSnapshotAttributesInput, filter tfslices.Predicate[*rds.DBClusterSnapshotAttribute]) ([]*rds.DBClusterSnapshotAttribute, error) {
+	output, err := conn.DescribeDBClusterSnapshotAttributesWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DBClusterSnapshotAttributesResult == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return tfslices.Filter(output.DBClusterSnapshotAttributesResult.DBClusterSnapshotAttributes, filter), nil
 }

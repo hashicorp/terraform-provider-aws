@@ -156,10 +156,6 @@ func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *rds.DBC
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No RDS Cluster Snapshot ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		output, err := tfrds.FindDBClusterSnapshotByID(ctx, conn, rs.Primary.ID)
@@ -244,7 +240,7 @@ func testAccClusterSnapshotConfig_sharedAccounts(rName string) string {
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.test.id
   db_cluster_snapshot_identifier = %[1]q
-  shared_accounts = ["all"]
+  shared_accounts                = ["all"]
 }
 `, rName))
 }
