@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -52,18 +53,17 @@ func ResourceConnection() *schema.Resource {
 				Computed: true,
 			},
 			"connection_properties": {
-				Type:      schema.TypeMap,
-				Optional:  true,
-				Sensitive: true,
-				// ValidateDiagFunc: enum.Validate[awstypes.ConnectionPropertyKey](),
-				ValidateFunc: mapKeyInSlice(enum.Slice(awstypes.ConnectionPropertyKey("").Values()...), false),
-				Elem:         &schema.Schema{Type: schema.TypeString},
+				Type:             schema.TypeMap,
+				Optional:         true,
+				Sensitive:        true,
+				ValidateDiagFunc: verify.MapKeysAre(validation.ToDiagFunc(validation.StringInSlice(connectionPropertyKey_Values(), false))),
+				Elem:             &schema.Schema{Type: schema.TypeString},
 			},
 			"connection_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.ConnectionTypeJdbc,
-				ValidateDiagFunc: enum.Validate[awstypes.ConnectionType](),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      awstypes.ConnectionTypeJdbc,
+				ValidateFunc: validation.StringInSlice(connectionType_Values(), false),
 			},
 			names.AttrDescription: {
 				Type:         schema.TypeString,
@@ -318,4 +318,12 @@ func flattenPhysicalConnectionRequirements(physicalConnectionRequirements *awsty
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func connectionPropertyKey_Values() []string {
+	return tfslices.AppendUnique(enum.Values[awstypes.ConnectionPropertyKey](), "SparkProperties")
+}
+
+func connectionType_Values() []string {
+	return tfslices.AppendUnique(enum.Values[awstypes.ConnectionType](), "AZURECOSMOS", "AZURESQL", "BIGQUERY", "OPENSEARCH", "SNOWFLAKE")
 }
