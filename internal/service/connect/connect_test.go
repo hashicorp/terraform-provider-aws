@@ -77,6 +77,8 @@ func TestAccConnect_serial(t *testing.T) {
 			"targetARN":          testAccPhoneNumber_targetARN,
 		},
 		"Prompt": {
+			"basic":           testAccPrompt_basic,
+			"disappears":      testAccPrompt_disappears,
 			"dataSource_name": testAccPromptDataSource_name,
 		},
 		"Queue": {
