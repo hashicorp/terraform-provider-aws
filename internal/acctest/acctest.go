@@ -839,6 +839,10 @@ func Partition() string {
 	return names.PartitionForRegion(Region())
 }
 
+func PartitionRegions() []string {
+	return names.RegionsInPartition(Partition())
+}
+
 func PartitionDNSSuffix() string {
 	return names.DNSSuffixForPartition(Partition())
 }
