@@ -6,20 +6,20 @@ package shield
 import (
 	"context"
 	"errors"
+
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -35,7 +35,6 @@ const (
 
 type resourceSubscription struct {
 	framework.ResourceWithConfigure
-	framework.WithTimeouts
 }
 
 func (r *resourceSubscription) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -45,16 +44,14 @@ func (r *resourceSubscription) Metadata(_ context.Context, req resource.Metadata
 func (r *resourceSubscription) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
 			"auto_renew": schema.StringAttribute{
 				Description: "Whether to automatically renew the subscription when it expires.",
 				Optional:    true,
 				Computed:    true,
+				CustomType:  fwtypes.StringEnumType[awstypes.AutoRenew](),
 				Default:     stringdefault.StaticString(string(awstypes.AutoRenewEnabled)),
-				Validators: []validator.String{
-					stringvalidator.OneOf(string(awstypes.AutoRenewEnabled), string(awstypes.AutoRenewDisabled)),
-				},
 			},
+			names.AttrID: framework.IDAttribute(),
 		},
 	}
 }
@@ -112,7 +109,7 @@ func (r *resourceSubscription) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	state.AutoRenew = flex.StringValueToFramework(ctx, out.AutoRenew)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -194,6 +191,6 @@ func findSubscriptionByID(ctx context.Context, conn *shield.Client) (*awstypes.S
 }
 
 type resourceSubscriptionData struct {
-	ID        types.String `tfsdk:"id"`
-	AutoRenew types.String `tfsdk:"auto_renew"`
+	AutoRenew fwtypes.StringEnum[awstypes.AutoRenew] `tfsdk:"auto_renew"`
+	ID        types.String                           `tfsdk:"id"`
 }
