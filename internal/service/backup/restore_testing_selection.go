@@ -207,7 +207,7 @@ func (r *resourceRestoreTestingSelection) Read(ctx context.Context, req resource
 		return
 	}
 
-	out, err := findRestoreTestingSelectionByName(ctx, conn, state.RestoreTestingSelectionName.ValueString(), state.RestoreTestingPlanName.ValueString())
+	out, err := FindRestoreTestingSelectionByName(ctx, conn, state.RestoreTestingSelectionName.ValueString(), state.RestoreTestingPlanName.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)

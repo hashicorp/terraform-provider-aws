@@ -300,32 +300,12 @@ func TestAccBackupRestoreTestingPlan_additionalwithupdates(t *testing.T) {
 				ImportStateVerifyIgnore:              []string{"apply_immediately", "user"},
 			},
 			{
-				Config: fmt.Sprintf(`
-				resource "aws_backup_restore_testing_plan" "test" {
-					name = "%s"
-				
-					recovery_point_selection {
-						algorithm = "RANDOM_WITHIN_WINDOW"
-						include_vaults = ["*"]
-						recovery_point_types = ["CONTINUOUS"]
-						selection_window_days = 1
-					  }
-
-					  start_window_hours = 12
-				
-					  schedule_expression = "cron(0 12 ? * * *)" # Daily at 12:00
-					  schedule_expression_timezone = "Europe/London"
-
-					  tags = {
-						"Name" = "RestoreTestingPlan"
-					  }
-				}
-				`, rName),
+				Config: testAccRestoreTestingPlanConfig_additionals("1", "cron(0 12 ? * * *)", rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "RANDOM_WITHIN_WINDOW"),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "LATEST_WITHIN_WINDOW"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.exclude_vaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", "1"),
@@ -393,68 +373,68 @@ func testAccCheckRestoreTestingPlanExists(ctx context.Context, name string, rest
 
 func testAccRestoreTestingPlanConfig_base(rName string) string {
 	return fmt.Sprintf(`
-	resource "aws_kms_key" "test" {
-		enable_key_rotation = true
-	}
+resource "aws_kms_key" "test" {
+  enable_key_rotation = true
+}
 
-	resource "aws_backup_vault" "test" {
-		name        = "%[1]s"
-		kms_key_arn = aws_kms_key.test.arn
-	}
+resource "aws_backup_vault" "test" {
+  name        = "%[1]s"
+  kms_key_arn = aws_kms_key.test.arn
+}
 `, rName)
 }
 
 func testAccRestoreTestingPlanConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-	resource "aws_backup_restore_testing_plan" "test" {
-		name = "%[1]s"
-  
-		recovery_point_selection {
-		  algorithm = "LATEST_WITHIN_WINDOW"
-		  include_vaults = ["*"]
-		  recovery_point_types = ["CONTINUOUS"]
-		}
-  
-		schedule_expression = "cron(0 12 ? * * *)" # Daily at 12:00
-  	}
+resource "aws_backup_restore_testing_plan" "test" {
+  name = "%[1]s"
+
+  recovery_point_selection {
+    algorithm            = "LATEST_WITHIN_WINDOW"
+    include_vaults       = ["*"]
+    recovery_point_types = ["CONTINUOUS"]
+  }
+
+  schedule_expression = "cron(0 12 ? * * *)" # Daily at 12:00
+}
 `, rName)
 }
 
 func testAccRestoreTestingPlanConfig_tags(tagName, tagValue, rName string) string {
 	return fmt.Sprintf(`
-	resource "aws_backup_restore_testing_plan" "test" {
-		name = "%[3]s"
-  
-		recovery_point_selection {
-		  algorithm = "LATEST_WITHIN_WINDOW"
-		  include_vaults = ["*"]
-		  recovery_point_types = ["CONTINUOUS"]
-		}
-  
-		schedule_expression = "cron(0 12 ? * * *)" # Daily at 12:00
+resource "aws_backup_restore_testing_plan" "test" {
+  name = "%[3]s"
 
-		tags = {
-			"%[1]s" = "%[2]s"
-		}
-  	}
+  recovery_point_selection {
+    algorithm            = "LATEST_WITHIN_WINDOW"
+    include_vaults       = ["*"]
+    recovery_point_types = ["CONTINUOUS"]
+  }
+
+  schedule_expression = "cron(0 12 ? * * *)" # Daily at 12:00
+
+  tags = {
+    "%[1]s" = "%[2]s"
+  }
+}
 `, tagName, tagValue, rName)
 }
 
 func testAccRestoreTestingPlanConfig_additionals(selectionWindowDays, scheduleExpression, rName string) string {
 	return fmt.Sprintf(`
-	resource "aws_backup_restore_testing_plan" "test" {
-		name = "%[3]s"
-  
-		recovery_point_selection {
-		  algorithm = "LATEST_WITHIN_WINDOW"
-		  include_vaults = ["*"]
-		  recovery_point_types = ["CONTINUOUS", "SNAPSHOT"]
-		  selection_window_days = %[1]s
-		}
-  
-		schedule_expression = "%[2]s"
-		start_window_hours = 168
-  	}
+resource "aws_backup_restore_testing_plan" "test" {
+  name = "%[3]s"
+
+  recovery_point_selection {
+    algorithm             = "LATEST_WITHIN_WINDOW"
+    include_vaults        = ["*"]
+    recovery_point_types  = ["CONTINUOUS", "SNAPSHOT"]
+    selection_window_days = %[1]s
+  }
+
+  schedule_expression = "%[2]s"
+  start_window_hours  = 168
+}
 `, selectionWindowDays, scheduleExpression, rName)
 }
 
@@ -462,17 +442,17 @@ func testAccRestoreTestingPlanConfig_includeVaults(rName string) string {
 	return acctest.ConfigCompose(
 		testAccRestoreTestingPlanConfig_base(rName),
 		fmt.Sprintf(`
-	resource "aws_backup_restore_testing_plan" "test" {
-		name = "%[1]s"
-  
-		recovery_point_selection {
-		  algorithm = "LATEST_WITHIN_WINDOW"
-		  include_vaults = [resource.aws_backup_vault.test.arn]
-		  recovery_point_types = ["CONTINUOUS"]
-		}
-  
-		schedule_expression = "cron(0 12 ? * * *)" # Daily at 12:00
-  	}
+resource "aws_backup_restore_testing_plan" "test" {
+  name = "%[1]s"
+
+  recovery_point_selection {
+    algorithm            = "LATEST_WITHIN_WINDOW"
+    include_vaults       = [resource.aws_backup_vault.test.arn]
+    recovery_point_types = ["CONTINUOUS"]
+  }
+
+  schedule_expression = "cron(0 12 ? * * *)" # Daily at 12:00
+}
 `, rName),
 	)
 }
@@ -481,18 +461,18 @@ func testAccRestoreTestingPlanConfig_excludeVaults(rName string) string {
 	return acctest.ConfigCompose(
 		testAccRestoreTestingPlanConfig_base(rName),
 		fmt.Sprintf(`
-	resource "aws_backup_restore_testing_plan" "test" {
-		name = "%[1]s"
-  
-		recovery_point_selection {
-		  algorithm = "LATEST_WITHIN_WINDOW"
-		  include_vaults = ["*"]
-		  exclude_vaults = [resource.aws_backup_vault.test.arn]
-		  recovery_point_types = ["CONTINUOUS"]
-		}
-  
-		schedule_expression = "cron(0 12 ? * * *)" # Daily at 12:00
-  	}
+resource "aws_backup_restore_testing_plan" "test" {
+  name = "%[1]s"
+
+  recovery_point_selection {
+    algorithm            = "LATEST_WITHIN_WINDOW"
+    include_vaults       = ["*"]
+    exclude_vaults       = [resource.aws_backup_vault.test.arn]
+    recovery_point_types = ["CONTINUOUS"]
+  }
+
+  schedule_expression = "cron(0 12 ? * * *)" # Daily at 12:00
+}
 `, rName),
 	)
 }

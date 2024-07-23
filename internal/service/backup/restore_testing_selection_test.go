@@ -181,49 +181,49 @@ func testAccCheckRestoreTestingSelectionExists(ctx context.Context, name string,
 
 func testAccRestoreTestingSelectionConfig_base(rName string) string {
 	return fmt.Sprintf(`
-	resource "aws_iam_role" "test" {
-		name = "%[1]s"
-	  
-		assume_role_policy = jsonencode({
-		  Version = "2012-10-17"
-		  Statement = [
-			{
-			  Action = "sts:AssumeRole"
-			  Effect = "Allow"
-			  Sid    = ""
-			  Principal = {
-				Service = "ec2.amazonaws.com"
-			  }
-			},
-		  ]
-		})
-	}
+resource "aws_iam_role" "test" {
+  name = "%[1]s"
 
-	resource "aws_kms_key" "test" {
-		enable_key_rotation = true
-	}
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
 
-	resource "aws_kms_alias" "a" {
-		name          = "alias/%[1]s"
-		target_key_id = aws_kms_key.test.key_id
-	  }
+resource "aws_kms_key" "test" {
+  enable_key_rotation = true
+}
 
-	resource "aws_backup_vault" "test" {
-		name        = "%[1]s"
-		kms_key_arn = aws_kms_key.test.arn
-	}
+resource "aws_kms_alias" "a" {
+  name          = "alias/%[1]s"
+  target_key_id = aws_kms_key.test.key_id
+}
 
-	resource "aws_backup_restore_testing_plan" "test" {
-		name = "%[1]s"
+resource "aws_backup_vault" "test" {
+  name        = "%[1]s"
+  kms_key_arn = aws_kms_key.test.arn
+}
 
-		recovery_point_selection {
-		  algorithm = "LATEST_WITHIN_WINDOW"
-		  include_vaults = ["*"]
-		  recovery_point_types = ["CONTINUOUS"]
-		}
+resource "aws_backup_restore_testing_plan" "test" {
+  name = "%[1]s"
 
-		schedule_expression = "cron(0 12 ? * * *)" # Daily at 12:00
-  	}
+  recovery_point_selection {
+    algorithm            = "LATEST_WITHIN_WINDOW"
+    include_vaults       = ["*"]
+    recovery_point_types = ["CONTINUOUS"]
+  }
+
+  schedule_expression = "cron(0 12 ? * * *)" # Daily at 12:00
+}
 `, rName)
 }
 
@@ -231,16 +231,16 @@ func testAccRestoreTestingSelectionConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccRestoreTestingSelectionConfig_base(rName),
 		fmt.Sprintf(`
-	resource "aws_backup_restore_testing_selection" "test" {
-		name = "%[1]s"
+resource "aws_backup_restore_testing_selection" "test" {
+  name = "%[1]s"
 
-		restore_testing_plan_name = aws_backup_restore_testing_plan.test.name
-		protected_resource_type   = "EC2"
-		iam_role_arn              = aws_iam_role.test.arn
+  restore_testing_plan_name = aws_backup_restore_testing_plan.test.name
+  protected_resource_type   = "EC2"
+  iam_role_arn              = aws_iam_role.test.arn
 
-		protected_resource_conditions {
-		}
-  	}
+  protected_resource_conditions {
+  }
+}
 `, rName),
 	)
 }
@@ -249,28 +249,28 @@ func testAccRestoreTestingSelectionConfig_updates(rName string) string {
 	return acctest.ConfigCompose(
 		testAccRestoreTestingSelectionConfig_base(rName),
 		fmt.Sprintf(`
-	resource "aws_backup_restore_testing_selection" "test" {
-		name = "%[1]s"
+resource "aws_backup_restore_testing_selection" "test" {
+  name = "%[1]s"
 
-		restore_testing_plan_name = aws_backup_restore_testing_plan.test.name
-		protected_resource_type   = "EC2"
-		iam_role_arn              = aws_iam_role.test.arn
+  restore_testing_plan_name = aws_backup_restore_testing_plan.test.name
+  protected_resource_type   = "EC2"
+  iam_role_arn              = aws_iam_role.test.arn
 
-		protected_resource_conditions {
-			string_equals           = [
-				{
-					key = "aws:ResourceTag/backup"
-					value = true
-				}
-			]
-		}
+  protected_resource_conditions {
+    string_equals = [
+      {
+        key   = "aws:ResourceTag/backup"
+        value = true
+      }
+    ]
+  }
 
-		validation_window_hours = 10
+  validation_window_hours = 10
 
-		restore_metadata_overrides = {
-			instanceType = "t2.micro"
-		}
-  	}
+  restore_metadata_overrides = {
+    instanceType = "t2.micro"
+  }
+}
 `, rName),
 	)
 }

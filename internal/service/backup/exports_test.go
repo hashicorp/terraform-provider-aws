@@ -8,7 +8,7 @@ var (
 	FindVaultAccessPolicyByName       = findVaultAccessPolicyByName
 	FindVaultByName                   = findVaultByName
 	FindRestoreTestingPlanByName      = findRestoreTestingPlanByName
-	findRestoreTestingSelectionByName = findRestoreTestingSelectionByName
+	FindRestoreTestingSelectionByName = findRestoreTestingSelectionByName
 	RestoreTestingPlanResource        = newResourceRestoreTestingPlan
 	RestoreTestingSelectionResource   = newResourceRestoreTestingSelection
 )
