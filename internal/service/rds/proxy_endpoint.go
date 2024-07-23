@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_db_proxy_endpoint", name="DB Proxy Endpoint")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceProxyEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProxyEndpointCreate,

@@ -83,12 +83,12 @@ func resourceSharingWithOrganizationDelete(ctx context.Context, d *schema.Resour
 
 	// See https://docs.aws.amazon.com/ram/latest/userguide/security-disable-sharing-with-orgs.html.
 
-	if err := tforganizations.DisableServicePrincipal(ctx, meta.(*conns.AWSClient).OrganizationsConn(ctx), servicePrincipalName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "disabling Organization service principal (%s): %s", servicePrincipalName, err)
+	if err := tforganizations.DisableServicePrincipal(ctx, meta.(*conns.AWSClient).OrganizationsClient(ctx), servicePrincipalName); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := tfiam.DeleteServiceLinkedRole(ctx, meta.(*conns.AWSClient).IAMClient(ctx), sharingWithOrganizationRoleName); err != nil {
-		return sdkdiag.AppendWarningf(diags, "deleting IAM service-linked Role (%s): %s", sharingWithOrganizationRoleName, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
@@ -103,7 +103,7 @@ func findSharingWithOrganization(ctx context.Context, awsClient *conns.AWSClient
 		return fmt.Errorf("reading IAM Role (%s): %w", sharingWithOrganizationRoleName, err)
 	}
 
-	servicePrincipalNames, err := tforganizations.FindEnabledServicePrincipalNames(ctx, awsClient.OrganizationsConn(ctx))
+	servicePrincipalNames, err := tforganizations.FindEnabledServicePrincipalNames(ctx, awsClient.OrganizationsClient(ctx))
 
 	if err != nil {
 		return fmt.Errorf("reading Organization service principals: %w", err)

@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/organizations"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,7 +21,7 @@ import (
 
 func testAccResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy organizations.ResourcePolicy
+	var policy awstypes.ResourcePolicy
 	resourceName := "aws_organizations_resource_policy.test"
 
 	resource.Test(t, resource.TestCase{
@@ -54,7 +54,7 @@ func testAccResourcePolicy_basic(t *testing.T) {
 
 func testAccResourcePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy organizations.ResourcePolicy
+	var policy awstypes.ResourcePolicy
 	resourceName := "aws_organizations_resource_policy.test"
 
 	resource.Test(t, resource.TestCase{
@@ -81,7 +81,7 @@ func testAccResourcePolicy_disappears(t *testing.T) {
 
 func testAccResourcePolicy_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy organizations.ResourcePolicy
+	var policy awstypes.ResourcePolicy
 	resourceName := "aws_organizations_resource_policy.test"
 
 	resource.Test(t, resource.TestCase{
@@ -130,7 +130,7 @@ func testAccResourcePolicy_tags(t *testing.T) {
 
 func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_organizations_resource_policy" {
@@ -154,14 +154,14 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckResourcePolicyExists(ctx context.Context, n string, v *organizations.ResourcePolicy) resource.TestCheckFunc {
+func testAccCheckResourcePolicyExists(ctx context.Context, n string, v *awstypes.ResourcePolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
 
 		output, err := tforganizations.FindResourcePolicy(ctx, conn)
 

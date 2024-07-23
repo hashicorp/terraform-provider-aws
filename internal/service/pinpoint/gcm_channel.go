@@ -29,7 +29,7 @@ func ResourceGCMChannel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -52,7 +52,7 @@ func resourceGCMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	applicationId := d.Get("application_id").(string)
+	applicationId := d.Get(names.AttrApplicationID).(string)
 
 	params := &pinpoint.GCMChannelRequest{}
 
@@ -93,7 +93,7 @@ func resourceGCMChannelRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "getting Pinpoint GCM Channel for application %s: %s", d.Id(), err)
 	}
 
-	d.Set("application_id", output.GCMChannelResponse.ApplicationId)
+	d.Set(names.AttrApplicationID, output.GCMChannelResponse.ApplicationId)
 	d.Set(names.AttrEnabled, output.GCMChannelResponse.Enabled)
 	// api_key is never returned
 

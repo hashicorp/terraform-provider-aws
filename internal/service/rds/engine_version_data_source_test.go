@@ -35,7 +35,7 @@ func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_basic(engine, version, paramGroup),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, engine),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, version),
 					resource.TestCheckResourceAttr(dataSourceName, "version_actual", version),
 					resource.TestCheckResourceAttr(dataSourceName, "parameter_group_family", paramGroup),
@@ -48,6 +48,7 @@ func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(dataSourceName, "supported_modes.#", regexache.MustCompile(`^[0-9]*`)),
 					resource.TestMatchResourceAttr(dataSourceName, "supported_timezones.#", regexache.MustCompile(`^[0-9]*`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_global_databases"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "supports_limitless_database"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_log_exports_to_cloudwatch"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_parallel_query"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_read_replica"),

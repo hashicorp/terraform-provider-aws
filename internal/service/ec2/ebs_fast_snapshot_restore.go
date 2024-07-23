@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="EBS Fast Snapshot Restore")
+// @FrameworkResource("aws_ebs_fast_snapshot_restore", name="EBS Fast Snapshot Restore")
 func newEBSFastSnapshotRestoreResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &ebsFastSnapshotRestoreResource{}
 

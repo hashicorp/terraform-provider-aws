@@ -75,7 +75,7 @@ func dataSourceSubscribedRuleGroupRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrMetricName, output.MetricName)
 	d.Set(names.AttrName, output.Name)
 
-	return nil
+	return diags
 }
 
 func findSubscribedRuleGroup(ctx context.Context, conn *wafregional.Client, input *wafregional.ListSubscribedRuleGroupsInput, filter tfslices.Predicate[*awstypes.SubscribedRuleGroupSummary]) (*awstypes.SubscribedRuleGroupSummary, error) {

@@ -68,6 +68,40 @@ func TestAccRoute53ZoneDataSource_name(t *testing.T) {
 	})
 }
 
+// Verifies the data source works when name is set and zone_id is an empty string.
+//
+// This may be behavior we want to disable in the future with an ExactlyOneOf
+// constraint, but because we've historically allowed it we need to continue
+// doing so until a major version bump.
+//
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/37683
+func TestAccRoute53ZoneDataSource_name_idEmptyString(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_route53_zone.test"
+	dataSourceName := "data.aws_route53_zone.test"
+
+	fqdn := acctest.RandomFQDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccZoneDataSourceConfig_name_idEmptyString(fqdn),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "name_servers.#", dataSourceName, "name_servers.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "primary_name_server", dataSourceName, "primary_name_server"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRoute53ZoneDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
@@ -166,6 +200,19 @@ resource "aws_route53_zone" "test" {
 
 data "aws_route53_zone" "test" {
   name = aws_route53_zone.test.name
+}
+`, fqdn)
+}
+
+func testAccZoneDataSourceConfig_name_idEmptyString(fqdn string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = %[1]q
+}
+
+data "aws_route53_zone" "test" {
+  zone_id = ""
+  name    = aws_route53_zone.test.name
 }
 `, fqdn)
 }

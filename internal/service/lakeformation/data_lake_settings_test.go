@@ -45,11 +45,12 @@ func testAccDataLakeSettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "create_table_default_permissions.0.principal", "IAM_ALLOWED_PRINCIPALS"),
 					resource.TestCheckResourceAttr(resourceName, "create_table_default_permissions.0.permissions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "create_table_default_permissions.0.permissions.0", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "allow_external_data_filtering", "true"),
+					resource.TestCheckResourceAttr(resourceName, "allow_external_data_filtering", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "external_data_filtering_allow_list.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "external_data_filtering_allow_list.0", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "authorized_session_tag_value_list.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "authorized_session_tag_value_list.0", "engine1"),
+					resource.TestCheckResourceAttr(resourceName, "allow_full_table_external_data_access", acctest.CtTrue),
 				),
 			},
 		},
@@ -205,11 +206,12 @@ resource "aws_lakeformation_data_lake_settings" "test" {
     permissions = ["ALL"]
   }
 
-  admins                             = [data.aws_iam_session_context.current.issuer_arn]
-  trusted_resource_owners            = [data.aws_caller_identity.current.account_id]
-  allow_external_data_filtering      = true
-  external_data_filtering_allow_list = [data.aws_caller_identity.current.account_id]
-  authorized_session_tag_value_list  = ["engine1"]
+  admins                                = [data.aws_iam_session_context.current.issuer_arn]
+  trusted_resource_owners               = [data.aws_caller_identity.current.account_id]
+  allow_external_data_filtering         = true
+  allow_full_table_external_data_access = true
+  external_data_filtering_allow_list    = [data.aws_caller_identity.current.account_id]
+  authorized_session_tag_value_list     = ["engine1"]
 }
 `
 

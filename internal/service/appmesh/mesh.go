@@ -25,6 +25,8 @@ import (
 
 // @SDKResource("aws_appmesh_mesh", name="Service Mesh")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/appmesh;appmesh.MeshData")
+// @Testing(serialize=true)
 func resourceMesh() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMeshCreate,
@@ -60,7 +62,7 @@ func resourceMesh() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
-				"resource_owner": {
+				names.AttrResourceOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -166,7 +168,7 @@ func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set(names.AttrLastUpdatedDate, mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_owner", mesh.Metadata.MeshOwner)
 	d.Set(names.AttrName, mesh.MeshName)
-	d.Set("resource_owner", mesh.Metadata.ResourceOwner)
+	d.Set(names.AttrResourceOwner, mesh.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenMeshSpec(mesh.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}

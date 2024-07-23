@@ -41,7 +41,7 @@ For more information please read the AWS RDS documentation about [DB Instance Cl
 By default, RDS applies updates to DB Instances in-place, which can lead to service interruptions.
 Low-downtime updates minimize service interruptions by performing the updates with an [RDS Blue/Green deployment][blue-green] and switching over the instances when complete.
 
-Low-downtime updates are only available for DB Instances using MySQL and MariaDB,
+Low-downtime updates are only available for DB Instances using MySQL, MariaDB and PostgreSQL,
 as other engines are not supported by RDS Blue/Green deployments.
 They cannot be used with DB Instances with replicas.
 
@@ -394,7 +394,7 @@ class MyConvertedCode extends TerraformStack {
 For more detailed documentation about each argument, refer to the [AWS official
 documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `allocatedStorage` - (Required unless a `snapshotIdentifier` or `replicateSourceDb` is provided) The allocated storage in gibibytes. If `maxAllocatedStorage` is configured, this argument represents the initial storage allocation and differences from the configuration will be ignored automatically when Storage Autoscaling occurs. If `replicateSourceDb` is set, the value is ignored during the creation of the instance.
 * `allowMajorVersionUpgrade` - (Optional) Indicates that major version
@@ -447,6 +447,7 @@ for additional read replica constraints.
 * `enabledCloudwatchLogsExports` - (Optional) Set of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. For supported values, see the EnableCloudwatchLogsExports.member.N parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 * `engine` - (Required unless a `snapshotIdentifier` or `replicateSourceDb` is provided) The database engine to use. For supported values, see the Engine parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine'. For information on the difference between the available Aurora MySQL engines see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html) in the Amazon RDS User Guide.
 * `engineVersion` - (Optional) The engine version to use. If `autoMinorVersionUpgrade` is enabled, you can provide a prefix of the version such as `8.0` (for `8.0.36`). The actual engine version used is returned in the attribute `engineVersionActual`, see [Attribute Reference](#attribute-reference) below. For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
+* `engineLifecycleSupport` - (Optional) The life cycle type for this DB instance. This setting applies only to RDS for MySQL and RDS for PostgreSQL. Valid values are `open-source-rds-extended-support`, `open-source-rds-extended-support-disabled`. Default value is `open-source-rds-extended-support`. [Using Amazon RDS Extended Support]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/extended-support.html
 * `finalSnapshotIdentifier` - (Optional) The name of your final DB snapshot
 when this DB instance is deleted. Must be provided if `skipFinalSnapshot` is
 set to `false`. The value must begin with a letter, only contain alphanumeric characters and hyphens, and not end with a hyphen or contain two consecutive hyphens. Must not be provided when deleting a read replica.
@@ -706,4 +707,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b3cc09d8138c80aec20a1609f61064943c765d24c949d975ce7e0ed3c5858a0e -->
+<!-- cache-key: cdktf-0.20.1 input-d391602da0747fa7b95b065f272b4c6ea8470c1a22cc4e2417fc9d96470e19b8 -->

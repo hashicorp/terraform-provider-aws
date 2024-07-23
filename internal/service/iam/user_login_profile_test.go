@@ -314,7 +314,7 @@ func TestAccIAMUserLoginProfile_passwordResetRequired(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "encrypted_password"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_fingerprint"),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "20"),
-					resource.TestCheckResourceAttr(resourceName, "password_reset_required", "true"),
+					resource.TestCheckResourceAttr(resourceName, "password_reset_required", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "pgp_key", testPubKey1+"\n"),
 				),
 			},

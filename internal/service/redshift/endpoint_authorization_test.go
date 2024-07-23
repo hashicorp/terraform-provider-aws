@@ -40,7 +40,7 @@ func TestAccRedshiftEndpointAuthorization_basic(t *testing.T) {
 					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_redshift_cluster.test", names.AttrClusterIdentifier),
 					resource.TestCheckResourceAttrPair(resourceName, "account", "data.aws_caller_identity.test", names.AttrAccountID),
-					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "true"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "grantee", "data.aws_caller_identity.test", names.AttrAccountID),
 					acctest.CheckResourceAttrAccountID(resourceName, "grantor"),
 				),
@@ -75,7 +75,7 @@ func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "false"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", acctest.CtFalse),
 				),
 			},
 			{
@@ -89,7 +89,7 @@ func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "false"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", acctest.CtFalse),
 				),
 			},
 			{
@@ -97,7 +97,7 @@ func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "false"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", acctest.CtFalse),
 				),
 			},
 		},

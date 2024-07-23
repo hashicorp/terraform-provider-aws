@@ -28,8 +28,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_volume_attachment")
-func ResourceVolumeAttachment() *schema.Resource {
+// @SDKResource("aws_volume_attachment", name="EBS Volume Attachment")
+func resourceVolumeAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVolumeAttachmentCreate,
 		ReadWithoutTimeout:   resourceVolumeAttachmentRead,
@@ -106,7 +106,7 @@ func resourceVolumeAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 		// This handles the situation where the instance is created by
 		// a spot request and whilst the request has been fulfilled the
 		// instance is not running yet.
-		if _, err := waitVolumeAttachmentInstanceReady(ctx, conn, instanceID, InstanceReadyTimeout); err != nil {
+		if _, err := waitVolumeAttachmentInstanceReady(ctx, conn, instanceID, instanceReadyTimeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) to be ready: %s", instanceID, err)
 		}
 
@@ -169,7 +169,7 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 	volumeID := d.Get("volume_id").(string)
 
 	if _, ok := d.GetOk("stop_instance_before_detaching"); ok {
-		if err := stopVolumeAttachmentInstance(ctx, conn, instanceID, false, InstanceStopTimeout); err != nil {
+		if err := stopVolumeAttachmentInstance(ctx, conn, instanceID, false, instanceStopTimeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "deleting EBS Volume (%s) Attachment (%s): %s", volumeID, instanceID, err)
 		}
 	}
@@ -210,14 +210,14 @@ func volumeAttachmentID(name, volumeID, instanceID string) string {
 
 func findVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string) (*awstypes.VolumeAttachment, error) {
 	input := &ec2.DescribeVolumesInput{
-		Filters: newAttributeFilterListV2(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"attachment.device":      deviceName,
 			"attachment.instance-id": instanceID,
 		}),
 		VolumeIds: []string{volumeID},
 	}
 
-	output, err := FindEBSVolumeV2(ctx, conn, input)
+	output, err := findEBSVolume(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -299,41 +299,6 @@ func waitVolumeAttachmentInstanceStopped(ctx context.Context, conn *ec2.Client, 
 	return nil, err
 }
 
-func waitVolumeAttachmentCreated(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string, timeout time.Duration) (*awstypes.VolumeAttachment, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.VolumeAttachmentStateAttaching),
-		Target:     enum.Slice(awstypes.VolumeAttachmentStateAttached),
-		Refresh:    statusVolumeAttachmentState(ctx, conn, volumeID, instanceID, deviceName),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.VolumeAttachment); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func statusVolumeAttachmentState(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.State), nil
-	}
-}
-
 func waitVolumeAttachmentInstanceReady(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.InstanceStateNamePending, awstypes.InstanceStateNameStopping),
@@ -361,7 +326,7 @@ func waitVolumeAttachmentDeleted(ctx context.Context, conn *ec2.Client, volumeID
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.VolumeAttachmentStateDetaching),
 		Target:     []string{},
-		Refresh:    statusVolumeAttachmentState(ctx, conn, volumeID, instanceID, deviceName),
+		Refresh:    statusVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -379,7 +344,7 @@ func waitVolumeAttachmentDeleted(ctx context.Context, conn *ec2.Client, volumeID
 func statusVolumeAttachmentInstanceState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Don't call FindInstanceByID as it maps useful status codes to NotFoundError.
-		output, err := FindInstanceV2(ctx, conn, &ec2.DescribeInstancesInput{
+		output, err := findInstance(ctx, conn, &ec2.DescribeInstancesInput{
 			InstanceIds: []string{id},
 		})
 

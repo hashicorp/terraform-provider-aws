@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -28,7 +27,7 @@ func TestAccServiceDiscoveryPublicDNSNamespace_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
@@ -62,7 +61,7 @@ func TestAccServiceDiscoveryPublicDNSNamespace_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
@@ -89,7 +88,7 @@ func TestAccServiceDiscoveryPublicDNSNamespace_description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
@@ -122,7 +121,7 @@ func TestAccServiceDiscoveryPublicDNSNamespace_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
@@ -165,7 +164,7 @@ func TestAccServiceDiscoveryPublicDNSNamespace_tags(t *testing.T) {
 
 func testAccCheckPublicDNSNamespaceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_service_discovery_public_dns_namespace" {
@@ -196,11 +195,7 @@ func testAccCheckPublicDNSNamespaceExists(ctx context.Context, n string) resourc
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Service Discovery Public DNS Namespace ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
 		_, err := tfservicediscovery.FindNamespaceByID(ctx, conn, rs.Primary.ID)
 

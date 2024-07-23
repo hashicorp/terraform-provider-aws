@@ -42,7 +42,7 @@ func TestAccSageMakerDeviceFleet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "output_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "output_config.0.s3_output_location", fmt.Sprintf("s3://%s/prefix/", rName)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "enable_iot_role_alias", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_iot_role_alias", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "iot_role_alias", ""),
 				),
 			},

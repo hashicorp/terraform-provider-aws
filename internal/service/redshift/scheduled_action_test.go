@@ -39,7 +39,7 @@ func TestAccRedshiftScheduledAction_basicPauseCluster(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "cron(00 23 * * ? *)"),
@@ -61,7 +61,7 @@ func TestAccRedshiftScheduledAction_basicPauseCluster(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "at(2060-03-04T17:27:00)"),
@@ -96,7 +96,7 @@ func TestAccRedshiftScheduledAction_pauseClusterWithOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is test action"),
-					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "end_time", endTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "cron(00 * * * ? *)"),
@@ -134,7 +134,7 @@ func TestAccRedshiftScheduledAction_basicResumeCluster(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "cron(00 23 * * ? *)"),
@@ -156,7 +156,7 @@ func TestAccRedshiftScheduledAction_basicResumeCluster(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "at(2060-03-04T17:27:00)"),
@@ -189,7 +189,7 @@ func TestAccRedshiftScheduledAction_basicResizeCluster(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "cron(00 23 * * ? *)"),
@@ -211,7 +211,7 @@ func TestAccRedshiftScheduledAction_basicResizeCluster(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "at(2060-03-04T17:27:00)"),
@@ -244,7 +244,7 @@ func TestAccRedshiftScheduledAction_resizeClusterWithOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "cron(00 23 * * ? *)"),
@@ -253,7 +253,7 @@ func TestAccRedshiftScheduledAction_resizeClusterWithOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_action.0.pause_cluster.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "target_action.0.resume_cluster.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.classic", "true"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.classic", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.cluster_identifier", "tf-test-identifier"),
 					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.cluster_type", "multi-node"),
 					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.node_type", "dc2.large"),

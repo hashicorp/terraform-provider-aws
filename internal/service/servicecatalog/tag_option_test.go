@@ -37,7 +37,7 @@ func TestAccServiceCatalogTagOption_basic(t *testing.T) {
 				Config: testAccTagOptionConfig_basic(rName, "värde", "active = true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagOptionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "värde"),
@@ -93,7 +93,7 @@ func TestAccServiceCatalogTagOption_update(t *testing.T) {
 			{
 				Config: testAccTagOptionConfig_basic(rName, "värde ett", ""),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "värde ett"),
@@ -102,7 +102,7 @@ func TestAccServiceCatalogTagOption_update(t *testing.T) {
 			{
 				Config: testAccTagOptionConfig_basic(rName, "värde två", "active = true"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "värde två"),
@@ -111,7 +111,7 @@ func TestAccServiceCatalogTagOption_update(t *testing.T) {
 			{
 				Config: testAccTagOptionConfig_basic(rName, "värde två", "active = false"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "active", "false"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName), // cannot be updated in place
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "värde två"),
@@ -120,7 +120,7 @@ func TestAccServiceCatalogTagOption_update(t *testing.T) {
 			{
 				Config: testAccTagOptionConfig_basic(rName, "värde två", "active = true"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName), // cannot be updated in place
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "värde två"),
@@ -129,7 +129,7 @@ func TestAccServiceCatalogTagOption_update(t *testing.T) {
 			{
 				Config: testAccTagOptionConfig_basic(rName2, "värde ett", "active = true"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName2),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "värde ett"),
@@ -153,7 +153,7 @@ func TestAccServiceCatalogTagOption_notActive(t *testing.T) {
 			{
 				Config: testAccTagOptionConfig_basic(rName, "värde ett", "active = false"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "active", "false"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "värde ett"),

@@ -31,10 +31,10 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceSettingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceSettingConfig_basic("false"),
+				Config: testAccServiceSettingConfig_basic(acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccServiceSettingExists(ctx, resourceName, &setting),
-					resource.TestCheckResourceAttr(resourceName, "setting_value", "false"),
+					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtFalse),
 				),
 			},
 			{
@@ -43,10 +43,10 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccServiceSettingConfig_basic("true"),
+				Config: testAccServiceSettingConfig_basic(acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccServiceSettingExists(ctx, resourceName, &setting),
-					resource.TestCheckResourceAttr(resourceName, "setting_value", "true"),
+					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtTrue),
 				),
 			},
 		},

@@ -9,14 +9,17 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/devicefarm"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -26,7 +29,7 @@ import (
 
 // @SDKResource("aws_devicefarm_device_pool", name="Device Pool")
 // @Tags(identifierAttribute="arn")
-func ResourceDevicePool() *schema.Resource {
+func resourceDevicePool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDevicePoolCreate,
 		ReadWithoutTimeout:   resourceDevicePoolRead,
@@ -67,14 +70,14 @@ func ResourceDevicePool() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attribute": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(devicefarm.DeviceAttribute_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.DeviceAttribute](),
 						},
 						"operator": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(devicefarm.RuleOperator_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.RuleOperator](),
 						},
 						names.AttrValue: {
 							Type:     schema.TypeString,
@@ -96,7 +99,7 @@ func ResourceDevicePool() *schema.Resource {
 
 func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &devicefarm.CreateDevicePoolInput{
@@ -110,16 +113,16 @@ func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("max_devices"); ok {
-		input.MaxDevices = aws.Int64(int64(v.(int)))
+		input.MaxDevices = aws.Int32(int32(v.(int)))
 	}
 
-	output, err := conn.CreateDevicePoolWithContext(ctx, input)
+	output, err := conn.CreateDevicePool(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DeviceFarm Device Pool (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.DevicePool.Arn))
+	d.SetId(aws.ToString(output.DevicePool.Arn))
 
 	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting DeviceFarm Device Pool (%s) tags: %s", d.Id(), err)
@@ -130,9 +133,9 @@ func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
-	devicePool, err := FindDevicePoolByARN(ctx, conn, d.Id())
+	devicePool, err := findDevicePoolByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Device Pool (%s) not found, removing from state", d.Id())
@@ -144,7 +147,7 @@ func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading DeviceFarm Device Pool (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(devicePool.Arn)
+	arn := aws.ToString(devicePool.Arn)
 	d.Set(names.AttrName, devicePool.Name)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, devicePool.Description)
@@ -166,7 +169,7 @@ func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDevicePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &devicefarm.UpdateDevicePoolInput{
@@ -187,13 +190,13 @@ func resourceDevicePoolUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if d.HasChange("max_devices") {
 			if v, ok := d.GetOk("max_devices"); ok {
-				input.MaxDevices = aws.Int64(int64(v.(int)))
+				input.MaxDevices = aws.Int32(int32(v.(int)))
 			} else {
 				input.ClearMaxDevices = aws.Bool(true)
 			}
 		}
 
-		_, err := conn.UpdateDevicePoolWithContext(ctx, input)
+		_, err := conn.UpdateDevicePool(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DeviceFarm Device Pool (%s): %s", d.Id(), err)
@@ -205,14 +208,14 @@ func resourceDevicePoolUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDevicePoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Device Pool: %s", d.Id())
-	_, err := conn.DeleteDevicePoolWithContext(ctx, &devicefarm.DeleteDevicePoolInput{
+	_, err := conn.DeleteDevicePool(ctx, &devicefarm.DeleteDevicePoolInput{
 		Arn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
@@ -223,19 +226,43 @@ func resourceDevicePoolDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func expandDevicePoolRules(s *schema.Set) []*devicefarm.Rule {
-	rules := make([]*devicefarm.Rule, 0)
+func findDevicePoolByARN(ctx context.Context, conn *devicefarm.Client, arn string) (*awstypes.DevicePool, error) {
+	input := &devicefarm.GetDevicePoolInput{
+		Arn: aws.String(arn),
+	}
+	output, err := conn.GetDevicePool(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DevicePool == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DevicePool, nil
+}
+
+func expandDevicePoolRules(s *schema.Set) []awstypes.Rule {
+	rules := make([]awstypes.Rule, 0)
 
 	for _, r := range s.List() {
-		rule := &devicefarm.Rule{}
+		rule := awstypes.Rule{}
 		tfMap := r.(map[string]interface{})
 
 		if v, ok := tfMap["attribute"].(string); ok && v != "" {
-			rule.Attribute = aws.String(v)
+			rule.Attribute = awstypes.DeviceAttribute(v)
 		}
 
 		if v, ok := tfMap["operator"].(string); ok && v != "" {
-			rule.Operator = aws.String(v)
+			rule.Operator = awstypes.RuleOperator(v)
 		}
 
 		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
@@ -247,7 +274,7 @@ func expandDevicePoolRules(s *schema.Set) []*devicefarm.Rule {
 	return rules
 }
 
-func flattenDevicePoolRules(list []*devicefarm.Rule) []map[string]interface{} {
+func flattenDevicePoolRules(list []awstypes.Rule) []map[string]interface{} {
 	if len(list) == 0 {
 		return nil
 	}
@@ -256,16 +283,11 @@ func flattenDevicePoolRules(list []*devicefarm.Rule) []map[string]interface{} {
 	for _, setting := range list {
 		l := map[string]interface{}{}
 
-		if setting.Attribute != nil {
-			l["attribute"] = aws.StringValue(setting.Attribute)
-		}
-
-		if setting.Operator != nil {
-			l["operator"] = aws.StringValue(setting.Operator)
-		}
+		l["attribute"] = string(setting.Attribute)
+		l["operator"] = string(setting.Operator)
 
 		if setting.Value != nil {
-			l[names.AttrValue] = aws.StringValue(setting.Value)
+			l[names.AttrValue] = aws.ToString(setting.Value)
 		}
 
 		result = append(result, l)
@@ -291,7 +313,7 @@ func decodeProjectARN(id, typ string, meta interface{}) (string, error) {
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  "project:" + projectId,
-		Service:   devicefarm.ServiceName,
+		Service:   names.DeviceFarmEndpointID,
 	}.String()
 
 	return projectArn, nil

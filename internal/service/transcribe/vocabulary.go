@@ -93,6 +93,7 @@ const (
 )
 
 func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	in := &transcribe.CreateVocabularyInput{
@@ -111,23 +112,24 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	out, err := conn.CreateVocabulary(ctx, in)
 	if err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionCreating, ResNameVocabulary, d.Get("vocabulary_name").(string), err)
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionCreating, ResNameVocabulary, d.Get("vocabulary_name").(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.Transcribe, create.ErrActionCreating, ResNameVocabulary, d.Get("vocabulary_name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionCreating, ResNameVocabulary, d.Get("vocabulary_name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.VocabularyName))
 
 	if _, err := waitVocabularyCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionWaitingForCreation, ResNameVocabulary, d.Id(), err)
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionWaitingForCreation, ResNameVocabulary, d.Id(), err)
 	}
 
-	return resourceVocabularyRead(ctx, d, meta)
+	return append(diags, resourceVocabularyRead(ctx, d, meta)...)
 }
 
 func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	out, err := FindVocabularyByName(ctx, conn, d.Id())
@@ -135,11 +137,11 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transcribe Vocabulary (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionReading, ResNameVocabulary, d.Id(), err)
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionReading, ResNameVocabulary, d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -155,10 +157,11 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("vocabulary_name", out.VocabularyName)
 	d.Set(names.AttrLanguageCode, out.LanguageCode)
 
-	return nil
+	return diags
 }
 
 func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
@@ -178,18 +181,19 @@ func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		log.Printf("[DEBUG] Updating Transcribe Vocabulary (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateVocabulary(ctx, in)
 		if err != nil {
-			return create.DiagError(names.Transcribe, create.ErrActionUpdating, ResNameVocabulary, d.Id(), err)
+			return create.AppendDiagError(diags, names.Transcribe, create.ErrActionUpdating, ResNameVocabulary, d.Id(), err)
 		}
 
 		if _, err := waitVocabularyUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.Transcribe, create.ErrActionWaitingForUpdate, ResNameVocabulary, d.Id(), err)
+			return create.AppendDiagError(diags, names.Transcribe, create.ErrActionWaitingForUpdate, ResNameVocabulary, d.Id(), err)
 		}
 	}
 
-	return resourceVocabularyRead(ctx, d, meta)
+	return append(diags, resourceVocabularyRead(ctx, d, meta)...)
 }
 
 func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	log.Printf("[INFO] Deleting Transcribe Vocabulary %s", d.Id())
@@ -200,18 +204,18 @@ func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	var badRequestException *types.BadRequestException
 	if errors.As(err, &badRequestException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionDeleting, ResNameVocabulary, d.Id(), err)
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionDeleting, ResNameVocabulary, d.Id(), err)
 	}
 
 	if _, err := waitVocabularyDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionWaitingForDeletion, ResNameVocabulary, d.Id(), err)
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionWaitingForDeletion, ResNameVocabulary, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func waitVocabularyCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetVocabularyOutput, error) {

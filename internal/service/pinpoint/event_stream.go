@@ -32,7 +32,7 @@ func ResourceEventStream() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -55,7 +55,7 @@ func resourceEventStreamUpsert(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	applicationId := d.Get("application_id").(string)
+	applicationId := d.Get(names.AttrApplicationID).(string)
 
 	params := &pinpoint.WriteEventStream{
 		DestinationStreamArn: aws.String(d.Get("destination_stream_arn").(string)),
@@ -115,7 +115,7 @@ func resourceEventStreamRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	res := output.EventStream
-	d.Set("application_id", res.ApplicationId)
+	d.Set(names.AttrApplicationID, res.ApplicationId)
 	d.Set("destination_stream_arn", res.DestinationStreamArn)
 	d.Set(names.AttrRoleARN, res.RoleArn)
 

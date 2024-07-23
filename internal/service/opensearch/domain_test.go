@@ -11,7 +11,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -231,7 +230,7 @@ func TestAccOpenSearchDomain_customEndpoint(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.0.custom_endpoint_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.0.custom_endpoint_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_endpoint_options.0.custom_endpoint"),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_endpoint_options.0.custom_endpoint_certificate_arn", certResourceName, names.AttrARN),
 				),
@@ -280,7 +279,7 @@ func TestAccOpenSearchDomain_Cluster_zoneAwareness(t *testing.T) {
 					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -296,7 +295,7 @@ func TestAccOpenSearchDomain_Cluster_zoneAwareness(t *testing.T) {
 					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -304,7 +303,7 @@ func TestAccOpenSearchDomain_Cluster_zoneAwareness(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain3),
 					testAccCheckDomainNotRecreated(&domain2, &domain3), // note: this check does not work and always passes
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", acctest.Ct0),
 				),
 			},
@@ -315,7 +314,7 @@ func TestAccOpenSearchDomain_Cluster_zoneAwareness(t *testing.T) {
 					testAccCheckDomainNotRecreated(&domain3, &domain4), // note: this check does not work and always passes
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -343,7 +342,7 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
-						names.AttrEnabled: "false",
+						names.AttrEnabled: acctest.CtFalse,
 					})),
 			},
 			{
@@ -357,7 +356,7 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
-						names.AttrEnabled: "true",
+						names.AttrEnabled: acctest.CtTrue,
 					})),
 			},
 		},
@@ -380,7 +379,7 @@ func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 				Config: testAccDomainConfig_clusterWarm(rName, "ultrawarm1.medium.search", false, 6),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", ""),
 				),
@@ -389,7 +388,7 @@ func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 				Config: testAccDomainConfig_clusterWarm(rName, "ultrawarm1.medium.search", true, 6),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "6"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "ultrawarm1.medium.search"),
 				),
@@ -404,7 +403,7 @@ func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 				Config: testAccDomainConfig_clusterWarm(rName, "ultrawarm1.medium.search", true, 7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "7"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "ultrawarm1.medium.search"),
 				),
@@ -413,7 +412,7 @@ func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 				Config: testAccDomainConfig_clusterWarm(rName, "ultrawarm1.large.search", true, 7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "7"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "ultrawarm1.large.search"),
 				),
@@ -519,7 +518,7 @@ func TestAccOpenSearchDomain_Cluster_multiAzWithStandbyEnabled(t *testing.T) {
 				Config: testAccDomainConfig_multiAzWithStandbyEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.multi_az_with_standby_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.multi_az_with_standby_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -532,7 +531,7 @@ func TestAccOpenSearchDomain_Cluster_multiAzWithStandbyEnabled(t *testing.T) {
 				Config: testAccDomainConfig_multiAzWithStandbyEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.multi_az_with_standby_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.multi_az_with_standby_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -764,6 +763,50 @@ func TestAccOpenSearchDomain_VPC_internetToVPCEndpoint(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchDomain_ipAddressType(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain opensearchservice.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_ipAddressType(rName, "dualstack"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_ipAddressType(rName, "ipv4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_autoTuneOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -796,7 +839,7 @@ func TestAccOpenSearchDomain_autoTuneOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.duration.0.unit", "HOURS"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.cron_expression_for_recurrence", "cron(0 0 ? * 1 *)"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.rollback_on_disable", "NO_ROLLBACK"),
-					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.use_off_peak_window", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.use_off_peak_window", acctest.CtFalse),
 				),
 			},
 			{
@@ -815,7 +858,7 @@ func TestAccOpenSearchDomain_autoTuneOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.desired_state", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.rollback_on_disable", "NO_ROLLBACK"),
-					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.use_off_peak_window", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.use_off_peak_window", acctest.CtTrue),
 				),
 			},
 			{
@@ -1145,7 +1188,7 @@ func TestAccOpenSearchDomain_CognitoOptions_createAndRemove(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckCognitoIdentityProvider(ctx, t)
+			acctest.PreCheckCognitoIdentityProvider(ctx, t)
 			testAccPreCheckIAMServiceLinkedRole(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
@@ -1189,7 +1232,7 @@ func TestAccOpenSearchDomain_CognitoOptions_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckCognitoIdentityProvider(ctx, t)
+			acctest.PreCheckCognitoIdentityProvider(ctx, t)
 			testAccPreCheckIAMServiceLinkedRole(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
@@ -1606,7 +1649,7 @@ func TestAccOpenSearchDomain_offPeakWindowOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.hours", "9"),
@@ -1624,7 +1667,7 @@ func TestAccOpenSearchDomain_offPeakWindowOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.hours", acctest.Ct10),
@@ -1636,7 +1679,7 @@ func TestAccOpenSearchDomain_offPeakWindowOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.hours", acctest.Ct0),
@@ -1775,7 +1818,7 @@ func TestAccOpenSearchDomain_VolumeType_gp3ToGP2(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &input),
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_type", "gp3"),
 				),
@@ -1791,7 +1834,7 @@ func TestAccOpenSearchDomain_VolumeType_gp3ToGP2(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &input),
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_type", "gp2"),
 				),
@@ -1824,7 +1867,7 @@ func TestAccOpenSearchDomain_VolumeType_missing(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.instance_type", "i3.xlarge.search"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.instance_count", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_type", ""),
 				),
@@ -1903,14 +1946,14 @@ func TestAccOpenSearchDomain_softwareUpdateOptions(t *testing.T) {
 				Config: testAccDomainConfig_softwareUpdateOptions(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "software_update_options.0.auto_software_update_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "software_update_options.0.auto_software_update_enabled", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccDomainConfig_softwareUpdateOptions(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "software_update_options.0.auto_software_update_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "software_update_options.0.auto_software_update_enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -2217,24 +2260,6 @@ func testAccPreCheckIAMServiceLinkedRole(ctx context.Context, t *testing.T) {
 	acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/opensearchservice")
 }
 
-func testAccPreCheckCognitoIdentityProvider(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
-
-	input := &cognitoidentityprovider.ListUserPoolsInput{
-		MaxResults: aws.Int64(1),
-	}
-
-	_, err := conn.ListUserPoolsWithContext(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
 func testAccDomainConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
@@ -2246,6 +2271,20 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName)
+}
+
+func testAccDomainConfig_ipAddressType(rName, ipAddressType string) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name     = %[1]q
+  ip_address_type = %[2]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, rName, ipAddressType)
 }
 
 func testAccDomainConfig_autoTuneOptionsMaintenanceSchedule(rName, autoTuneStartAtTime string) string {

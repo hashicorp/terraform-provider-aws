@@ -42,7 +42,7 @@ func TestAccSageMakerEndpointConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_variant_weight", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.core_dump_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.enable_ssm_access", "false"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.enable_ssm_access", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.#", acctest.Ct0),
@@ -203,6 +203,34 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_serverless(t *test
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.max_concurrency", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.memory_size_in_mb", "1024"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.provisioned_concurrency", acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerEndpointConfiguration_ProductionVariants_ami(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_ami(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.inference_ami_version", "al2-ami-sagemaker-inference-gpu-2"), //lintignore:AWSAT002
 				),
 			},
 			{
@@ -415,11 +443,44 @@ func TestAccSageMakerEndpointConfiguration_dataCapture(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.enable_capture", "true"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.enable_capture", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.initial_sampling_percentage", "50"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.destination_s3_uri", fmt.Sprintf("s3://%s/", rName)),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.0.capture_mode", "Input"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.1.capture_mode", "Output"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_content_type_header.0.json_content_types.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "data_capture_config.0.capture_content_type_header.0.json_content_types.*", "application/json"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerEndpointConfiguration_dataCapture_inputAndOutput(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_dataCapture_inputAndOutput(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.enable_capture", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.initial_sampling_percentage", "50"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.destination_s3_uri", fmt.Sprintf("s3://%s/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.0.capture_mode", "InputAndOutput"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_content_type_header.0.json_content_types.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "data_capture_config.0.capture_content_type_header.0.json_content_types.*", "application/json"),
 				),
@@ -1006,6 +1067,41 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 `, rName))
 }
 
+func testAccEndpointConfigurationConfig_dataCapture_inputAndOutput(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.test.name
+    initial_instance_count = 2
+    instance_type          = "ml.t2.medium"
+    initial_variant_weight = 1
+  }
+
+  data_capture_config {
+    enable_capture              = true
+    initial_sampling_percentage = 50
+    destination_s3_uri          = "s3://${aws_s3_bucket.test.bucket}/"
+
+    capture_options {
+      capture_mode = "InputAndOutput"
+    }
+
+    capture_content_type_header {
+      json_content_types = ["application/json"]
+    }
+  }
+}
+`, rName))
+}
+
 func testAccEndpointConfigurationConfig_asyncKMS(rName string) string {
 	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -1259,6 +1355,24 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
       max_concurrency   = 1
       memory_size_in_mb = 1024
     }
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfigurationConfig_ami(rName string) string {
+	//lintignore:AWSAT002
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.test.name
+    inference_ami_version  = "al2-ami-sagemaker-inference-gpu-2"
+    instance_type          = "ml.t2.medium"
+    initial_instance_count = 2
+    initial_variant_weight = 1
   }
 }
 `, rName))

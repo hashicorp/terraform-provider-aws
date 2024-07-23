@@ -187,7 +187,7 @@ func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroupDataSource_tags(t *testing.T) {
+func TestAccELBV2TargetGroupDataSource_matchTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -205,7 +205,7 @@ func TestAccELBV2TargetGroupDataSource_tags(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupDataSourceConfig_tags(rName1, rName2),
+				Config: testAccTargetGroupDataSourceConfig_matchTags(rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, names.AttrName, resourceTg1, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, names.AttrARN, resourceTg1, names.AttrARN),
@@ -417,7 +417,7 @@ data "aws_alb_target_group" "alb_tg_test_with_name" {
 `, rName))
 }
 
-func testAccTargetGroupDataSourceConfig_tags(rName1, rName2 string) string {
+func testAccTargetGroupDataSourceConfig_matchTags(rName1, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test1" {
   name        = %[1]q

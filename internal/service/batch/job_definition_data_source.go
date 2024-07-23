@@ -29,7 +29,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Job Definition")
+// @FrameworkDataSource("aws_batch_job_definition", name="Job Definition")
+// @Testing(tagsTest=true)
 func newJobDefinitionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &jobDefinitionDataSource{}, nil
 }

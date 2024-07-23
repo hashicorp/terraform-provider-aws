@@ -36,7 +36,7 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			oldPermissions: []interface{}{
 				map[string]interface{}{
 					names.AttrPrincipal: "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action1",
 						"action2",
 					}),
@@ -45,7 +45,7 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			newPermissions: []interface{}{
 				map[string]interface{}{
 					names.AttrPrincipal: "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action1",
 						"action2",
 					}),
@@ -60,7 +60,7 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			newPermissions: []interface{}{
 				map[string]interface{}{
 					names.AttrPrincipal: "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action1",
 						"action2",
 					}),
@@ -79,7 +79,7 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			oldPermissions: []interface{}{
 				map[string]interface{}{
 					names.AttrPrincipal: "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action1",
 						"action2",
 					}),
@@ -99,7 +99,7 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			oldPermissions: []interface{}{
 				map[string]interface{}{
 					names.AttrPrincipal: "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action1",
 					}),
 				},
@@ -107,7 +107,7 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			newPermissions: []interface{}{
 				map[string]interface{}{
 					names.AttrPrincipal: "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action1",
 						"action2",
 					}),
@@ -126,7 +126,7 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			oldPermissions: []interface{}{
 				map[string]interface{}{
 					names.AttrPrincipal: "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"oldAction",
 						"onlyOldAction",
 					}),
@@ -135,7 +135,7 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			newPermissions: []interface{}{
 				map[string]interface{}{
 					names.AttrPrincipal: "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"oldAction",
 					}),
 				},
@@ -158,14 +158,14 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			oldPermissions: []interface{}{
 				map[string]interface{}{
 					names.AttrPrincipal: "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action1",
 						"action2",
 					}),
 				},
 				map[string]interface{}{
 					names.AttrPrincipal: "principal2",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action1",
 						"action3",
 						"action4",
@@ -173,7 +173,7 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 				},
 				map[string]interface{}{
 					names.AttrPrincipal: "principal3",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action5",
 					}),
 				},
@@ -181,14 +181,14 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			newPermissions: []interface{}{
 				map[string]interface{}{
 					names.AttrPrincipal: "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action1",
 						"action2",
 					}),
 				},
 				map[string]interface{}{
 					names.AttrPrincipal: "principal2",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
 						"action3",
 						"action5",
 					}),

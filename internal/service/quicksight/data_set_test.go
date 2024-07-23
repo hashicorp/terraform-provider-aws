@@ -165,8 +165,8 @@ func TestAccQuickSightDataSet_dataSetUsageConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "data_set_usage_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_set_usage_configuration.0.disable_use_as_direct_query_source", "false"),
-					resource.TestCheckResourceAttr(resourceName, "data_set_usage_configuration.0.disable_use_as_imported_source", "false"),
+					resource.TestCheckResourceAttr(resourceName, "data_set_usage_configuration.0.disable_use_as_direct_query_source", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "data_set_usage_configuration.0.disable_use_as_imported_source", acctest.CtFalse),
 				),
 			},
 			{

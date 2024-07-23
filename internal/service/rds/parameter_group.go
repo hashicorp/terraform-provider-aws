@@ -31,6 +31,7 @@ import (
 
 // @SDKResource("aws_db_parameter_group", name="DB Parameter Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,
@@ -338,7 +339,7 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Parameter Group (%s): %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }
 
 func FindDBParameterGroupByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DBParameterGroup, error) {

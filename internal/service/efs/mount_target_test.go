@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/efs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccEFSMountTarget_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mount efs.MountTargetDescription
+	var mount awstypes.MountTargetDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_efs_mount_target.test"
 	resourceName2 := "aws_efs_mount_target.test2"
@@ -67,7 +67,7 @@ func TestAccEFSMountTarget_basic(t *testing.T) {
 
 func TestAccEFSMountTarget_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mount efs.MountTargetDescription
+	var mount awstypes.MountTargetDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_efs_mount_target.test"
 
@@ -91,7 +91,7 @@ func TestAccEFSMountTarget_disappears(t *testing.T) {
 
 func TestAccEFSMountTarget_ipAddress(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mount efs.MountTargetDescription
+	var mount awstypes.MountTargetDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_efs_mount_target.test"
 
@@ -120,7 +120,7 @@ func TestAccEFSMountTarget_ipAddress(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13845
 func TestAccEFSMountTarget_IPAddress_emptyString(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mount efs.MountTargetDescription
+	var mount awstypes.MountTargetDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_efs_mount_target.test"
 
@@ -148,7 +148,7 @@ func TestAccEFSMountTarget_IPAddress_emptyString(t *testing.T) {
 
 func testAccCheckMountTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_efs_mount_target" {
 				continue
@@ -171,18 +171,14 @@ func testAccCheckMountTargetDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckMountTargetExists(ctx context.Context, n string, v *efs.MountTargetDescription) resource.TestCheckFunc {
+func testAccCheckMountTargetExists(ctx context.Context, n string, v *awstypes.MountTargetDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EFS Mount Target ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSClient(ctx)
 
 		output, err := tfefs.FindMountTargetByID(ctx, conn, rs.Primary.ID)
 

@@ -54,7 +54,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_basic(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.0.quantity", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.0.items.#", acctest.Ct1),
@@ -140,7 +140,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(false, "0.01", 300, 600, defaultDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                                                   "SingleWeight",
 						"single_weight_config.#":                                         acctest.Ct1,
@@ -160,7 +160,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.02", 600, 1200, defaultDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                                                   "SingleWeight",
 						"single_weight_config.#":                                         acctest.Ct1,
@@ -175,7 +175,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleHeader(false, "aws-cf-cd-test", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                  "SingleHeader",
 						"single_header_config.#":        acctest.Ct1,
@@ -193,7 +193,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleHeader(true, "aws-cf-cd-test2", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                  "SingleHeader",
 						"single_header_config.#":        acctest.Ct1,
@@ -239,7 +239,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.01", 300, 600, domain1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                                                   "SingleWeight",
 						"single_weight_config.#":                                         acctest.Ct1,
@@ -260,7 +260,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.01", 300, 600, domain2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                                                   "SingleWeight",
 						"single_weight_config.#":                                         acctest.Ct1,
