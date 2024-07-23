@@ -644,6 +644,7 @@ func resourceFlow() *schema.Resource {
 																		"prefix_hierarchy": {
 																			Type:     schema.TypeList,
 																			Optional: true,
+																			Computed: true,
 																			Elem: &schema.Schema{
 																				Type:             schema.TypeString,
 																				ValidateDiagFunc: enum.Validate[types.PathPrefix](),
