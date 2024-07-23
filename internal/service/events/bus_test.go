@@ -90,7 +90,7 @@ func TestAccEventsBus_kmsKeyIdentifier(t *testing.T) {
 				Config: testAccBusConfig_kmsKeyIdentifier1(busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test1", names.AttrARN),
 				),
 			},
 			{
@@ -102,7 +102,7 @@ func TestAccEventsBus_kmsKeyIdentifier(t *testing.T) {
 				Config: testAccBusConfig_kmsKeyIdentifier2(busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test2", names.AttrARN),
 				),
 			},
 		},
