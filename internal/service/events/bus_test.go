@@ -357,7 +357,7 @@ resource "aws_kms_key_policy" "test1" {
 }
 
 resource "aws_cloudwatch_event_bus" "test" {
-  name = %[1]q
+  name               = %[1]q
   kms_key_identifier = aws_kms_key.test1.arn
 }
 `, name)
@@ -418,7 +418,7 @@ resource "aws_kms_key_policy" "test2" {
 }
 
 resource "aws_cloudwatch_event_bus" "test" {
-  name = %[1]q
+  name               = %[1]q
   kms_key_identifier = aws_kms_key.test2.arn
 }
 `, name)

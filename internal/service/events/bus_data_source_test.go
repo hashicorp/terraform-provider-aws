@@ -123,7 +123,7 @@ resource "aws_kms_key_policy" "test" {
 }
 
 resource "aws_cloudwatch_event_bus" "test" {
-  name = %[1]q
+  name               = %[1]q
   kms_key_identifier = aws_kms_key.test.arn
 }
 
