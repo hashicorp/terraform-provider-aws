@@ -1290,11 +1290,11 @@ func resourceFlow() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"database_name": {
+									names.AttrDatabaseName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"role_arn": {
+									names.AttrRoleARN: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
@@ -2695,11 +2695,11 @@ func expandGlueDataCatalog(tfMap map[string]interface{}) *types.GlueDataCatalogC
 
 	a := &types.GlueDataCatalogConfig{}
 
-	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
 		a.DatabaseName = aws.String(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		a.RoleArn = aws.String(v)
 	}
 
@@ -2728,8 +2728,8 @@ func flattenGlueDataCatalog(in *types.GlueDataCatalogConfig) []any {
 	}
 
 	m := map[string]any{
-		"database_name": in.DatabaseName,
-		"role_arn":      in.RoleArn,
+		names.AttrDatabaseName: in.DatabaseName,
+		names.AttrRoleARN:      in.RoleArn,
 		"table_prefix":  in.TablePrefix,
 	}
 
