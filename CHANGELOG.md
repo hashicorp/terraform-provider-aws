@@ -14,6 +14,7 @@ BUG FIXES:
 * data-source/aws_fsx_ontap_storage_virtual_machine: Correctly set `tags` on Read ([#38343](https://github.com/hashicorp/terraform-provider-aws/issues/38343))
 * data-source/aws_fsx_openzfs_snapshot: Correctly set `tags` on Read ([#38343](https://github.com/hashicorp/terraform-provider-aws/issues/38343))
 * resource/aws_ce_cost_category: Fix perpetual diff with the `rule` argument on update ([#38449](https://github.com/hashicorp/terraform-provider-aws/issues/38449))
+* resource/aws_ecs_service: Fix `error marshaling prior state: a number is required` when upgrading from v5.58.0 to v5.59.0 ([#38490](https://github.com/hashicorp/terraform-provider-aws/issues/38490))
 * resource/aws_elasticache_replication_group: Fix `error marshaling prior state` when upgrading from v4.67.0 to v5.59.0 ([#38476](https://github.com/hashicorp/terraform-provider-aws/issues/38476))
 * resource/aws_fsx_openzfs_volume: Correctly set `tags` on Read ([#38343](https://github.com/hashicorp/terraform-provider-aws/issues/38343))
 * resource/aws_rds_cluster: Mark `ca_certificate_identifier` as Computed ([#38437](https://github.com/hashicorp/terraform-provider-aws/issues/38437))
