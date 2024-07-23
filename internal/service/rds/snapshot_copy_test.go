@@ -39,8 +39,8 @@ func TestAccRDSSnapshotCopy_basic(t *testing.T) {
 				Config: testAccSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -72,7 +72,7 @@ func TestAccRDSSnapshotCopy_share(t *testing.T) {
 				Config: testAccSnapshotCopyConfig_share(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "shared_accounts.*", "all"),
 				),
 			},
@@ -85,7 +85,7 @@ func TestAccRDSSnapshotCopy_share(t *testing.T) {
 				Config: testAccSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", acctest.Ct0),
 				),
 			},
 		},
