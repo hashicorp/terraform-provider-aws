@@ -9,14 +9,15 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -25,8 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-const clusterSnapshotCreateTimeout = 2 * time.Minute
 
 // @SDKResource("aws_db_cluster_snapshot", name="DB Cluster Snapshot")
 // @Tags(identifierAttribute="db_cluster_snapshot_arn")
@@ -132,18 +131,21 @@ func resourceClusterSnapshot() *schema.Resource {
 
 func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	id := d.Get("db_cluster_snapshot_identifier").(string)
 	input := &rds.CreateDBClusterSnapshotInput{
 		DBClusterIdentifier:         aws.String(d.Get("db_cluster_identifier").(string)),
 		DBClusterSnapshotIdentifier: aws.String(id),
-		Tags:                        getTagsIn(ctx),
+		Tags:                        getTagsInV2(ctx),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, clusterSnapshotCreateTimeout, func() (interface{}, error) {
-		return conn.CreateDBClusterSnapshotWithContext(ctx, input)
-	}, rds.ErrCodeInvalidDBClusterStateFault)
+	const (
+		timeout = 2 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsA[*types.InvalidDBClusterStateFault](ctx, timeout, func() (interface{}, error) {
+		return conn.CreateDBClusterSnapshot(ctx, input)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS DB Cluster Snapshot (%s): %s", id, err)
@@ -159,10 +161,10 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 		input := &rds.ModifyDBClusterSnapshotAttributeInput{
 			AttributeName:               aws.String(clusterSnapshotAttributeNameRestore),
 			DBClusterSnapshotIdentifier: aws.String(d.Id()),
-			ValuesToAdd:                 flex.ExpandStringSet(v.(*schema.Set)),
+			ValuesToAdd:                 flex.ExpandStringValueSet(v.(*schema.Set)),
 		}
 
-		_, err := conn.ModifyDBClusterSnapshotAttributeWithContext(ctx, input)
+		_, err := conn.ModifyDBClusterSnapshotAttribute(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Cluster Snapshot (%s) attribute: %s", d.Id(), err)
@@ -174,7 +176,7 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	snapshot, err := findDBClusterSnapshotByID(ctx, conn, d.Id())
 
@@ -189,7 +191,7 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
-	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(snapshot.AvailabilityZones))
+	d.Set(names.AttrAvailabilityZones, snapshot.AvailabilityZones)
 	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
 	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)
 	d.Set("db_cluster_snapshot_identifier", snapshot.DBClusterSnapshotIdentifier)
@@ -207,20 +209,20 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	attribute, err := findDBClusterSnapshotAttributeByTwoPartKey(ctx, conn, d.Id(), clusterSnapshotAttributeNameRestore)
 	switch {
 	case err == nil:
-		d.Set("shared_accounts", flex.FlattenStringSet(attribute.AttributeValues))
+		d.Set("shared_accounts", attribute.AttributeValues)
 	case tfresource.NotFound(err):
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Cluster Snapshot (%s) attribute: %s", d.Id(), err)
 	}
 
-	setTagsOut(ctx, snapshot.TagList)
+	setTagsOutV2(ctx, snapshot.TagList)
 
 	return diags
 }
 
 func resourceClusterSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	if d.HasChange("shared_accounts") {
 		o, n := d.GetChange("shared_accounts")
@@ -229,11 +231,11 @@ func resourceClusterSnapshotUpdate(ctx context.Context, d *schema.ResourceData, 
 		input := &rds.ModifyDBClusterSnapshotAttributeInput{
 			AttributeName:               aws.String(clusterSnapshotAttributeNameRestore),
 			DBClusterSnapshotIdentifier: aws.String(d.Id()),
-			ValuesToAdd:                 flex.ExpandStringSet(add),
-			ValuesToRemove:              flex.ExpandStringSet(del),
+			ValuesToAdd:                 flex.ExpandStringValueSet(add),
+			ValuesToRemove:              flex.ExpandStringValueSet(del),
 		}
 
-		_, err := conn.ModifyDBClusterSnapshotAttributeWithContext(ctx, input)
+		_, err := conn.ModifyDBClusterSnapshotAttribute(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Cluster Snapshot (%s) attribute: %s", d.Id(), err)
@@ -245,14 +247,14 @@ func resourceClusterSnapshotUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting RDS DB Cluster Snapshot: %s", d.Id())
-	_, err := conn.DeleteDBClusterSnapshotWithContext(ctx, &rds.DeleteDBClusterSnapshotInput{
+	_, err := conn.DeleteDBClusterSnapshot(ctx, &rds.DeleteDBClusterSnapshotInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
+	if errs.IsA[*types.DBClusterSnapshotNotFoundFault](err) {
 		return diags
 	}
 
@@ -263,18 +265,18 @@ func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func findDBClusterSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBClusterSnapshot, error) {
+func findDBClusterSnapshotByID(ctx context.Context, conn *rds.Client, id string) (*types.DBClusterSnapshot, error) {
 	input := &rds.DescribeDBClusterSnapshotsInput{
 		DBClusterSnapshotIdentifier: aws.String(id),
 	}
-	output, err := findDBClusterSnapshot(ctx, conn, input, tfslices.PredicateTrue[*rds.DBClusterSnapshot]())
+	output, err := findDBClusterSnapshot(ctx, conn, input, tfslices.PredicateTrue[*types.DBClusterSnapshot]())
 
 	if err != nil {
 		return nil, err
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.DBClusterSnapshotIdentifier) != id {
+	if aws.ToString(output.DBClusterSnapshotIdentifier) != id {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -283,48 +285,45 @@ func findDBClusterSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*
 	return output, nil
 }
 
-func findDBClusterSnapshot(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClusterSnapshotsInput, filter tfslices.Predicate[*rds.DBClusterSnapshot]) (*rds.DBClusterSnapshot, error) {
+func findDBClusterSnapshot(ctx context.Context, conn *rds.Client, input *rds.DescribeDBClusterSnapshotsInput, filter tfslices.Predicate[*types.DBClusterSnapshot]) (*types.DBClusterSnapshot, error) {
 	output, err := findDBClusterSnapshots(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDBClusterSnapshots(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClusterSnapshotsInput, filter tfslices.Predicate[*rds.DBClusterSnapshot]) ([]*rds.DBClusterSnapshot, error) {
-	var output []*rds.DBClusterSnapshot
+func findDBClusterSnapshots(ctx context.Context, conn *rds.Client, input *rds.DescribeDBClusterSnapshotsInput, filter tfslices.Predicate[*types.DBClusterSnapshot]) ([]types.DBClusterSnapshot, error) {
+	var output []types.DBClusterSnapshot
 
-	err := conn.DescribeDBClusterSnapshotsPagesWithContext(ctx, input, func(page *rds.DescribeDBClusterSnapshotsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := rds.NewDescribeDBClusterSnapshotsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.DBClusterSnapshots {
-			if v != nil && filter(v) {
-				output = append(output, v)
+		if errs.IsA[*types.DBClusterSnapshotNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.DBClusterSnapshots {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
 }
 
-func statusDBClusterSnapshot(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
+func statusDBClusterSnapshot(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findDBClusterSnapshotByID(ctx, conn, id)
 
@@ -336,11 +335,11 @@ func statusDBClusterSnapshot(ctx context.Context, conn *rds.RDS, id string) retr
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, aws.ToString(output.Status), nil
 	}
 }
 
-func waitDBClusterSnapshotCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBClusterSnapshot, error) {
+func waitDBClusterSnapshotCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBClusterSnapshot, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{clusterSnapshotStatusCreating},
 		Target:     []string{clusterSnapshotStatusAvailable},
@@ -352,37 +351,37 @@ func waitDBClusterSnapshotCreated(ctx context.Context, conn *rds.RDS, id string,
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*rds.DBClusterSnapshot); ok {
+	if output, ok := outputRaw.(*types.DBClusterSnapshot); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func findDBClusterSnapshotAttributeByTwoPartKey(ctx context.Context, conn *rds.RDS, id, attributeName string) (*rds.DBClusterSnapshotAttribute, error) {
+func findDBClusterSnapshotAttributeByTwoPartKey(ctx context.Context, conn *rds.Client, id, attributeName string) (*types.DBClusterSnapshotAttribute, error) {
 	input := &rds.DescribeDBClusterSnapshotAttributesInput{
 		DBClusterSnapshotIdentifier: aws.String(id),
 	}
 
-	return findDBClusterSnapshotAttribute(ctx, conn, input, func(v *rds.DBClusterSnapshotAttribute) bool {
-		return aws.StringValue(v.AttributeName) == attributeName
+	return findDBClusterSnapshotAttribute(ctx, conn, input, func(v *types.DBClusterSnapshotAttribute) bool {
+		return aws.ToString(v.AttributeName) == attributeName
 	})
 }
 
-func findDBClusterSnapshotAttribute(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClusterSnapshotAttributesInput, filter tfslices.Predicate[*rds.DBClusterSnapshotAttribute]) (*rds.DBClusterSnapshotAttribute, error) {
+func findDBClusterSnapshotAttribute(ctx context.Context, conn *rds.Client, input *rds.DescribeDBClusterSnapshotAttributesInput, filter tfslices.Predicate[*types.DBClusterSnapshotAttribute]) (*types.DBClusterSnapshotAttribute, error) {
 	output, err := findDBClusterSnapshotAttributes(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDBClusterSnapshotAttributes(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClusterSnapshotAttributesInput, filter tfslices.Predicate[*rds.DBClusterSnapshotAttribute]) ([]*rds.DBClusterSnapshotAttribute, error) {
-	output, err := conn.DescribeDBClusterSnapshotAttributesWithContext(ctx, input)
+func findDBClusterSnapshotAttributes(ctx context.Context, conn *rds.Client, input *rds.DescribeDBClusterSnapshotAttributesInput, filter tfslices.Predicate[*types.DBClusterSnapshotAttribute]) ([]types.DBClusterSnapshotAttribute, error) {
+	output, err := conn.DescribeDBClusterSnapshotAttributes(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
+	if errs.IsA[*types.DBClusterSnapshotNotFoundFault](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -397,5 +396,9 @@ func findDBClusterSnapshotAttributes(ctx context.Context, conn *rds.RDS, input *
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return tfslices.Filter(output.DBClusterSnapshotAttributesResult.DBClusterSnapshotAttributes, filter), nil
+	f := func(v types.DBClusterSnapshotAttribute) bool {
+		return filter(&v)
+	}
+
+	return tfslices.Filter(output.DBClusterSnapshotAttributesResult.DBClusterSnapshotAttributes, f), nil
 }

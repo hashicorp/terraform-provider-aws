@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccRDSClusterSnapshot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_cluster_snapshot.test"
 
@@ -72,7 +72,7 @@ func TestAccRDSClusterSnapshot_basic(t *testing.T) {
 
 func TestAccRDSClusterSnapshot_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_cluster_snapshot.test"
 
@@ -125,7 +125,7 @@ func TestAccRDSClusterSnapshot_tags(t *testing.T) {
 
 func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_cluster_snapshot" {
@@ -149,14 +149,14 @@ func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *rds.DBClusterSnapshot) resource.TestCheckFunc {
+func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *types.DBClusterSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		output, err := tfrds.FindDBClusterSnapshotByID(ctx, conn, rs.Primary.ID)
 

@@ -33,7 +33,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceClusterSnapshot,
+			Factory:  dataSourceClusterSnapshot,
 			TypeName: "aws_db_cluster_snapshot",
 			Name:     "DB Cluster Snapshot",
 			Tags:     &types.ServicePackageResourceTags{},
