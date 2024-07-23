@@ -74,6 +74,41 @@ func TestAccEventsBus_basic(t *testing.T) {
 	})
 }
 
+func TestAccEventBus_kmsKeyIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 eventbridge.DescribeEventBusOutput
+	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_bus.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBusConfig_kmsKeyIdentifier1(busName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test1", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBusConfig_kmsKeyIdentifier2(busName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusExists(ctx, resourceName, &v2),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test2", "arn"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEventsBus_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 eventbridge.DescribeEventBusOutput
@@ -263,6 +298,128 @@ func testAccBusConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
+}
+`, name)
+}
+
+func testAccBusConfig_kmsKeyIdentifier1(name string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_kms_key" "test1" {
+  deletion_window_in_days = 7
+}
+
+data "aws_iam_policy_document" "key_policy" {
+  statement {
+    actions = [
+      "kms:Decrypt",
+      "kms:GenerateDataKey"
+    ]
+
+    resources = [
+      aws_kms_key.test1.arn,
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+
+  statement {
+    actions = [
+      "kms:*",
+    ]
+
+    resources = [
+      aws_kms_key.test1.arn
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
+}
+
+resource "aws_kms_key_policy" "test1" {
+  key_id = aws_kms_key.test1.id
+  policy = data.aws_iam_policy_document.key_policy.json
+}
+
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[1]q
+  kms_key_identifier = aws_kms_key.test1.arn
+}
+`, name)
+}
+
+func testAccBusConfig_kmsKeyIdentifier2(name string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_kms_key" "test2" {
+  deletion_window_in_days = 7
+}
+
+data "aws_iam_policy_document" "key_policy" {
+  statement {
+    actions = [
+      "kms:Decrypt",
+      "kms:GenerateDataKey"
+    ]
+
+    resources = [
+      aws_kms_key.test2.arn,
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+
+  statement {
+    actions = [
+      "kms:*",
+    ]
+
+    resources = [
+      aws_kms_key.test2.arn
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
+}
+
+resource "aws_kms_key_policy" "test2" {
+  key_id = aws_kms_key.test2.id
+  policy = data.aws_iam_policy_document.key_policy.json
+}
+
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[1]q
+  kms_key_identifier = aws_kms_key.test2.arn
 }
 `, name)
 }
