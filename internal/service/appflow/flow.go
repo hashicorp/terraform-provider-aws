@@ -2730,7 +2730,7 @@ func flattenGlueDataCatalog(in *types.GlueDataCatalogConfig) []any {
 	m := map[string]any{
 		names.AttrDatabaseName: in.DatabaseName,
 		names.AttrRoleARN:      in.RoleArn,
-		"table_prefix":  in.TablePrefix,
+		"table_prefix":         in.TablePrefix,
 	}
 
 	return []any{m}
