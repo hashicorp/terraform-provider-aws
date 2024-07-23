@@ -27,6 +27,9 @@ import (
 
 // @SDKResource("aws_appautoscaling_target", name="Target")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types;awstypes;awstypes.ScalableTarget")
+// @Testing(importStateIdFunc="testAccTargetImportStateIdFunc")
+// @Testing(skipEmptyTags=true)
 func resourceTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetCreate,

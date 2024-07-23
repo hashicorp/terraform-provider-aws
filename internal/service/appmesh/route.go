@@ -28,6 +28,9 @@ import (
 
 // @SDKResource("aws_appmesh_route", name="Route")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/appmesh;appmesh.RouteData")
+// @Testing(serialize=true)
+// @Testing(importStateIdFunc=testAccRouteImportStateIdFunc)
 func resourceRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCreate,
@@ -119,6 +122,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 											names.AttrPort: {
 												Type:         schema.TypeInt,
 												Optional:     true,
+												Computed:     true,
 												ValidateFunc: validation.IsPortNumber,
 											},
 											"virtual_node": {
@@ -413,6 +417,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 													names.AttrPort: {
 														Type:         schema.TypeInt,
 														Optional:     true,
+														Computed:     true,
 														ValidateFunc: validation.IsPortNumber,
 													},
 													"virtual_node": {
@@ -670,6 +675,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 													names.AttrPort: {
 														Type:         schema.TypeInt,
 														Optional:     true,
+														Computed:     true,
 														ValidateFunc: validation.IsPortNumber,
 													},
 													"virtual_node": {

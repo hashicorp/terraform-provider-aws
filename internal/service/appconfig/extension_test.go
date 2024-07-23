@@ -255,51 +255,6 @@ func TestAccAppConfigExtension_Description(t *testing.T) {
 	})
 }
 
-func TestAccAppConfigExtension_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_appconfig_extension.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExtensionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccExtensionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccExtensionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccExtensionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAppConfigExtension_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -402,11 +357,12 @@ data "aws_iam_policy_document" "test" {
     }
   }
 }
+
 resource "aws_iam_role" "test" {
   name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.test.json
 }
-  `, rName)
+`, rName)
 }
 
 func testAccExtensionConfig_name(rName string) string {
@@ -445,49 +401,6 @@ resource "aws_appconfig_extension" "test" {
   }
 }
 `, rName, rDescription))
-}
-
-func testAccExtensionConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
-	return acctest.ConfigCompose(
-		testAccExtensionConfigBase(rName),
-		fmt.Sprintf(`
-resource "aws_appconfig_extension" "test" {
-  name = %[1]q
-  action_point {
-    point = "ON_DEPLOYMENT_COMPLETE"
-    action {
-      name     = "test"
-      role_arn = aws_iam_role.test.arn
-      uri      = aws_sns_topic.test.arn
-    }
-  }
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccExtensionConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		testAccExtensionConfigBase(rName),
-		fmt.Sprintf(`
-resource "aws_appconfig_extension" "test" {
-  name = %[1]q
-  action_point {
-    point = "ON_DEPLOYMENT_COMPLETE"
-    action {
-      name     = "test"
-      role_arn = aws_iam_role.test.arn
-      uri      = aws_sns_topic.test.arn
-    }
-  }
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccExtensionConfig_actionPoint2(rName string) string {

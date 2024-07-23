@@ -25,7 +25,7 @@ func expandCognitoOptions(c []interface{}) *opensearchservice.CognitoOptions {
 		options.Enabled = aws.Bool(cognitoEnabled.(bool))
 
 		if cognitoEnabled.(bool) {
-			if v, ok := m["user_pool_id"]; ok && v.(string) != "" {
+			if v, ok := m[names.AttrUserPoolID]; ok && v.(string) != "" {
 				options.UserPoolId = aws.String(v.(string))
 			}
 			if v, ok := m["identity_pool_id"]; ok && v.(string) != "" {
@@ -121,7 +121,7 @@ func flattenCognitoOptions(c *opensearchservice.CognitoOptions) []map[string]int
 
 	if aws.BoolValue(c.Enabled) {
 		m["identity_pool_id"] = aws.StringValue(c.IdentityPoolId)
-		m["user_pool_id"] = aws.StringValue(c.UserPoolId)
+		m[names.AttrUserPoolID] = aws.StringValue(c.UserPoolId)
 		m[names.AttrRoleARN] = aws.StringValue(c.RoleArn)
 	}
 

@@ -20,7 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_appconfig_environment")
+// @SDKDataSource("aws_appconfig_environment", name="Environment")
+// @Tags(identifierAttribute="arn")
 func DataSourceEnvironment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEnvironmentRead,
@@ -105,20 +106,6 @@ func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 	arn := environmentARN(meta.(*conns.AWSClient), appID, envID).String()
 
 	d.Set(names.AttrARN, arn)
-
-	tags, err := listTags(ctx, conn, arn)
-
-	if err != nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameEnvironment, ID, err)
-	}
-
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionSetting, DSNameEnvironment, ID, err)
-	}
 
 	return diags
 }

@@ -235,6 +235,7 @@ func TestAccCodeBuildProject_publicVisibility(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
@@ -1016,6 +1017,7 @@ func TestAccCodeBuildProject_buildBatchConfigDelete(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
@@ -1030,7 +1032,7 @@ func TestAccCodeBuildProject_buildBatchConfigDelete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.compute_types_allowed.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.maximum_builds_allowed", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.timeout_in_mins", "480"),
+					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.timeout_in_mins", "2160"),
 				),
 			},
 			{
@@ -1456,9 +1458,9 @@ func TestAccCodeBuildProject_SourceBuildStatus_gitHubEnterprise(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 			testAccPreCheck(ctx, t)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithubEnterprise)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1805,7 +1807,7 @@ phases:
 				ExpectError: regexache.MustCompile("`buildspec` must be set when source's `type` is `NO_SOURCE`"),
 			},
 			{
-				Config:      testAccProjectConfig_sourceTypeNoSource(rName, "location", rBuildspec),
+				Config:      testAccProjectConfig_sourceTypeNoSource(rName, names.AttrLocation, rBuildspec),
 				ExpectError: regexache.MustCompile("`location` must be empty when source's `type` is `NO_SOURCE`"),
 			},
 		},
@@ -1873,6 +1875,7 @@ func TestAccCodeBuildProject_windowsServer2019Container(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 			testAccPreCheck(ctx, t)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 		},
@@ -1911,6 +1914,7 @@ func TestAccCodeBuildProject_armContainer(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 			testAccPreCheck(ctx, t)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 		},
@@ -1942,6 +1946,7 @@ func TestAccCodeBuildProject_linuxLambdaContainer(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 			testAccPreCheck(ctx, t)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 		},
@@ -2353,7 +2358,11 @@ func TestAccCodeBuildProject_Artifacts_bucketOwnerAccess(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProjectDestroy(ctx),
@@ -2563,7 +2572,7 @@ func TestAccCodeBuildProject_SecondaryArtifacts_location(t *testing.T) {
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
-						"location": rName1,
+						names.AttrLocation: rName1,
 					}),
 				),
 			},
@@ -2573,7 +2582,7 @@ func TestAccCodeBuildProject_SecondaryArtifacts_location(t *testing.T) {
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
-						"location": rName2,
+						names.AttrLocation: rName2,
 					}),
 				),
 			},
@@ -2838,6 +2847,13 @@ func TestAccCodeBuildProject_concurrentBuildLimit(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "concurrent_build_limit", "12"),
+				),
+			},
+			{
+				Config: testAccProjectConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "concurrent_build_limit", acctest.Ct0),
 				),
 			},
 		},
@@ -3918,7 +3934,7 @@ build_batch_config {
   }
 
   service_role    = aws_iam_role.test.arn
-  timeout_in_mins = 480
+  timeout_in_mins = 2160
 }
 `
 

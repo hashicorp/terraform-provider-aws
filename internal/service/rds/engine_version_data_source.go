@@ -136,6 +136,11 @@ func DataSourceEngineVersion() *schema.Resource {
 				Computed: true,
 			},
 
+			"supports_limitless_database": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
 			"supports_log_exports_to_cloudwatch": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -437,6 +442,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("supported_timezones", timezones)
 
 	d.Set("supports_global_databases", found.SupportsGlobalDatabases)
+	d.Set("supports_limitless_database", found.SupportsLimitlessDatabase)
 	d.Set("supports_log_exports_to_cloudwatch", found.SupportsLogExportsToCloudwatchLogs)
 	d.Set("supports_parallel_query", found.SupportsParallelQuery)
 	d.Set("supports_read_replica", found.SupportsReadReplica)

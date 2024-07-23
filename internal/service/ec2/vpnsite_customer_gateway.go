@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_customer_gateway", name="Customer Gateway")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceCustomerGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomerGatewayCreate,
@@ -45,10 +46,18 @@ func resourceCustomerGateway() *schema.Resource {
 				Computed: true,
 			},
 			"bgp_asn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.Valid4ByteASN,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ValidateFunc:  verify.Valid4ByteASN,
+				ConflictsWith: []string{"bgp_asn_extended"},
+			},
+			"bgp_asn_extended": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ValidateFunc:  verify.Valid4ByteASN,
+				ConflictsWith: []string{"bgp_asn"},
 			},
 			names.AttrCertificateARN: {
 				Type:         schema.TypeString,
@@ -87,18 +96,28 @@ func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateCustomerGatewayInput{
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeCustomerGateway),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeCustomerGateway),
 		Type:              awstypes.GatewayType(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("bgp_asn"); ok {
-		v, err := strconv.ParseInt(v.(string), 10, 64)
+		v, err := strconv.ParseInt(v.(string), 10, 32)
 
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input.BgpAsn = aws.Int32(int32(v))
+	}
+
+	if v, ok := d.GetOk("bgp_asn_extended"); ok {
+		v, err := strconv.ParseInt(v.(string), 10, 64)
+
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		input.BgpAsnExtended = aws.Int64(v)
 	}
 
 	if v, ok := d.GetOk(names.AttrCertificateARN); ok {
@@ -153,12 +172,13 @@ func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, me
 	}.String()
 	d.Set(names.AttrARN, arn)
 	d.Set("bgp_asn", customerGateway.BgpAsn)
+	d.Set("bgp_asn_extended", customerGateway.BgpAsnExtended)
 	d.Set(names.AttrCertificateARN, customerGateway.CertificateArn)
 	d.Set(names.AttrDeviceName, customerGateway.DeviceName)
 	d.Set(names.AttrIPAddress, customerGateway.IpAddress)
 	d.Set(names.AttrType, customerGateway.Type)
 
-	setTagsOutV2(ctx, customerGateway.Tags)
+	setTagsOut(ctx, customerGateway.Tags)
 
 	return diags
 }

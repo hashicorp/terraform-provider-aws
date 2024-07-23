@@ -58,7 +58,7 @@ func testAccVirtualGateway_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -177,7 +177,7 @@ func testAccVirtualGateway_BackendDefaults(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -242,7 +242,7 @@ func testAccVirtualGateway_BackendDefaultsCertificate(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -320,7 +320,7 @@ func testAccVirtualGateway_ListenerConnectionPool(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -403,7 +403,7 @@ func testAccVirtualGateway_ListenerHealthChecks(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -462,7 +462,7 @@ func testAccVirtualGateway_ListenerTLS(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -505,7 +505,7 @@ func testAccVirtualGateway_ListenerTLS(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -576,7 +576,7 @@ func testAccVirtualGateway_ListenerValidation(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -698,7 +698,7 @@ func testAccVirtualGateway_MultiListenerValidation(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -811,7 +811,7 @@ func testAccVirtualGateway_Logging(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportStateIdFunc: testAccVirtualGatewayImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -873,54 +873,6 @@ func testAccVirtualGateway_Logging(t *testing.T) {
 	})
 }
 
-func testAccVirtualGateway_Tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v appmesh.VirtualGatewayData
-	resourceName := "aws_appmesh_virtual_gateway.test"
-	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVirtualGatewayDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVirtualGatewayConfig_tags1(meshName, vgName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccVirtualGatewayConfig_tags2(meshName, vgName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccVirtualGatewayConfig_tags1(meshName, vgName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckVirtualGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn(ctx)
@@ -969,6 +921,17 @@ func testAccCheckVirtualGatewayExists(ctx context.Context, n string, v *appmesh.
 		*v = *output
 
 		return nil
+	}
+}
+
+func testAccVirtualGatewayImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not Found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes[names.AttrName]), nil
 	}
 }
 
@@ -1635,57 +1598,4 @@ resource "aws_appmesh_virtual_gateway" "test" {
   }
 }
 `, meshName, vgName, path)
-}
-
-func testAccVirtualGatewayConfig_tags1(meshName, vgName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_appmesh_mesh" "test" {
-  name = %[1]q
-}
-
-resource "aws_appmesh_virtual_gateway" "test" {
-  name      = %[2]q
-  mesh_name = aws_appmesh_mesh.test.id
-
-  spec {
-    listener {
-      port_mapping {
-        port     = 8080
-        protocol = "http"
-      }
-    }
-  }
-
-  tags = {
-    %[3]q = %[4]q
-  }
-}
-`, meshName, vgName, tagKey1, tagValue1)
-}
-
-func testAccVirtualGatewayConfig_tags2(meshName, vgName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_appmesh_mesh" "test" {
-  name = %[1]q
-}
-
-resource "aws_appmesh_virtual_gateway" "test" {
-  name      = %[2]q
-  mesh_name = aws_appmesh_mesh.test.id
-
-  spec {
-    listener {
-      port_mapping {
-        port     = 8080
-        protocol = "http"
-      }
-    }
-  }
-
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-}
-`, meshName, vgName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

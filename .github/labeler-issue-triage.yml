@@ -69,6 +69,8 @@ service/applicationcostprofiler:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_applicationcostprofiler_'
 service/applicationinsights:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_applicationinsights_'
+service/applicationsignals:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_applicationsignals_'
 service/appmesh:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appmesh_'
 service/apprunner:
@@ -485,6 +487,8 @@ service/networkfirewall:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkfirewall_'
 service/networkmanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkmanager_'
+service/networkmonitor:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkmonitor_'
 service/nimble:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_nimble_'
 service/oam:
@@ -669,6 +673,8 @@ service/synthetics:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_synthetics_'
 service/textract:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_textract_'
+service/timestreaminfluxdb:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_timestreaminfluxdb_'
 service/timestreamquery:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_timestreamquery_'
 service/timestreamwrite:

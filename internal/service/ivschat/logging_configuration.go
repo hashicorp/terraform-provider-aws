@@ -55,7 +55,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_logs": {
+						names.AttrCloudWatchLogs: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
@@ -282,7 +282,7 @@ func flattenDestinationConfiguration(apiObject types.DestinationConfiguration) [
 
 	switch v := apiObject.(type) {
 	case *types.DestinationConfigurationMemberCloudWatchLogs:
-		m["cloudwatch_logs"] = flattenCloudWatchDestinationConfiguration(v.Value)
+		m[names.AttrCloudWatchLogs] = flattenCloudWatchDestinationConfiguration(v.Value)
 
 	case *types.DestinationConfigurationMemberFirehose:
 		m["firehose"] = flattenFirehoseDestinationConfiguration(v.Value)
@@ -337,7 +337,7 @@ func expandDestinationConfiguration(vSettings []interface{}) types.DestinationCo
 
 	tfMap := vSettings[0].(map[string]interface{})
 
-	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 {
 		return &types.DestinationConfigurationMemberCloudWatchLogs{
 			Value: *expandCloudWatchLogsDestinationConfiguration(v),
 		}

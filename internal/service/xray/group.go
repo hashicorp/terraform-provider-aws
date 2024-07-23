@@ -163,6 +163,10 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		GroupARN: aws.String(d.Id()),
 	})
 
+	if errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "Group not found") {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting XRay Group (%s): %s", d.Id(), err)
 	}

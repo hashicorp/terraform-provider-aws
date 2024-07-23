@@ -22,11 +22,11 @@ import (
 )
 
 const (
-	DefaultLogVersionValue = "ocsf-1.0.0-rc.2"
+	defaultVerifiedAccessLogVersion = "ocsf-1.0.0-rc.2"
 )
 
 // @SDKResource("aws_verifiedaccess_instance_logging_configuration", name="Verified Access Instance Logging Configuration")
-func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
+func resourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessInstanceLoggingConfigurationCreate,
 		ReadWithoutTimeout:   resourceVerifiedAccessInstanceLoggingConfigurationRead,
@@ -44,7 +44,7 @@ func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_logs": {
+						names.AttrCloudWatchLogs: {
 							Type:             schema.TypeList,
 							MaxItems:         1,
 							Optional:         true,
@@ -163,8 +163,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationRead(ctx context.Context,
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	vaiID := d.Id()
-
-	output, err := FindVerifiedAccessInstanceLoggingConfigurationByInstanceID(ctx, conn, vaiID)
+	output, err := findVerifiedAccessInstanceLoggingConfigurationByInstanceID(ctx, conn, vaiID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Verified Access Instance Logging Configuration (%s) not found, removing from state", vaiID)
@@ -238,7 +237,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationDelete(ctx context.Contex
 		// reset log_version because ocsf-0.1 is not compatible with enabling include_trust_context
 		// without reset, if practitioners previously applied and destroyed with ocsf-0.1,
 		// ocsf-0.1 will be the new "default" value, leading to errors with include_trust_context
-		LogVersion: aws.String(DefaultLogVersionValue),
+		LogVersion: aws.String(defaultVerifiedAccessLogVersion),
 	}
 
 	uuid, err := uuid.GenerateUUID()
@@ -278,7 +277,7 @@ func expandVerifiedAccessInstanceAccessLogs(accessLogs []interface{}) *types.Ver
 
 	result := &types.VerifiedAccessLogOptions{}
 
-	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 {
 		result.CloudWatchLogs = expandVerifiedAccessLogCloudWatchLogs(v)
 	}
 
@@ -380,7 +379,7 @@ func flattenVerifiedAccessInstanceAccessLogs(apiObject *types.VerifiedAccessLogs
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CloudWatchLogs; v != nil {
-		tfMap["cloudwatch_logs"] = flattenVerifiedAccessLogCloudWatchLogs(v)
+		tfMap[names.AttrCloudWatchLogs] = flattenVerifiedAccessLogCloudWatchLogs(v)
 	}
 
 	if v := apiObject.IncludeTrustContext; v != nil {

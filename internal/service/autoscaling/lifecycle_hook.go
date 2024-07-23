@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -186,12 +185,33 @@ func resourceLifecycleHookDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func findLifecycleHookByTwoPartKey(ctx context.Context, conn *autoscaling.Client, asgName, hookName string) (*awstypes.LifecycleHook, error) {
-	input := &autoscaling.DescribeLifecycleHooksInput{
-		AutoScalingGroupName: aws.String(asgName),
-		LifecycleHookNames:   []string{hookName},
+func resourceLifecycleHookImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.SplitN(d.Id(), "/", 2)
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("unexpected format (%q), expected <asg-name>/<lifecycle-hook-name>", d.Id())
 	}
 
+	asgName := idParts[0]
+	lifecycleHookName := idParts[1]
+
+	d.Set(names.AttrName, lifecycleHookName)
+	d.Set("autoscaling_group_name", asgName)
+	d.SetId(lifecycleHookName)
+
+	return []*schema.ResourceData{d}, nil
+}
+
+func findLifecycleHook(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeLifecycleHooksInput) (*awstypes.LifecycleHook, error) {
+	output, err := findLifecycleHooks(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLifecycleHooks(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeLifecycleHooksInput) ([]awstypes.LifecycleHook, error) {
 	output, err := conn.DescribeLifecycleHooks(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
@@ -209,27 +229,14 @@ func findLifecycleHookByTwoPartKey(ctx context.Context, conn *autoscaling.Client
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	for _, v := range tfslices.ToPointers(output.LifecycleHooks) {
-		if aws.ToString(v.LifecycleHookName) == hookName {
-			return v, nil
-		}
-	}
-
-	return nil, &retry.NotFoundError{LastRequest: input}
+	return output.LifecycleHooks, nil
 }
 
-func resourceLifecycleHookImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	idParts := strings.SplitN(d.Id(), "/", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format (%q), expected <asg-name>/<lifecycle-hook-name>", d.Id())
+func findLifecycleHookByTwoPartKey(ctx context.Context, conn *autoscaling.Client, asgName, hookName string) (*awstypes.LifecycleHook, error) {
+	input := &autoscaling.DescribeLifecycleHooksInput{
+		AutoScalingGroupName: aws.String(asgName),
+		LifecycleHookNames:   []string{hookName},
 	}
 
-	asgName := idParts[0]
-	lifecycleHookName := idParts[1]
-
-	d.Set(names.AttrName, lifecycleHookName)
-	d.Set("autoscaling_group_name", asgName)
-	d.SetId(lifecycleHookName)
-
-	return []*schema.ResourceData{d}, nil
+	return findLifecycleHook(ctx, conn, input)
 }

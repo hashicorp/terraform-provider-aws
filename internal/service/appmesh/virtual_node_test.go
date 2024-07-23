@@ -55,7 +55,7 @@ func testAccVirtualNode_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportStateIdFunc: testAccVirtualNodeImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -161,7 +161,7 @@ func testAccVirtualNode_backendClientPolicyACM(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportStateIdFunc: testAccVirtualNodeImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -286,7 +286,7 @@ func testAccVirtualNode_backendClientPolicyFile(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportStateIdFunc: testAccVirtualNodeImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -376,7 +376,7 @@ func testAccVirtualNode_backendDefaults(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportStateIdFunc: testAccVirtualNodeImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -439,7 +439,7 @@ func testAccVirtualNode_backendDefaultsCertificate(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportStateIdFunc: testAccVirtualNodeImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -495,7 +495,7 @@ func testAccVirtualNode_cloudMapServiceDiscovery(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportStateIdFunc: testAccVirtualNodeImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -591,7 +591,7 @@ func testAccVirtualNode_listenerConnectionPool(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportStateIdFunc: testAccVirtualNodeImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -702,7 +702,7 @@ func testAccVirtualNode_listenerHealthChecks(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportStateIdFunc: testAccVirtualNodeImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -799,7 +799,7 @@ func testAccVirtualNode_listenerOutlierDetection(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportStateIdFunc: testAccVirtualNodeImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -897,7 +897,7 @@ func testAccVirtualNode_listenerTimeout(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportStateIdFunc: testAccVirtualNodeImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -967,7 +967,7 @@ func testAccVirtualNode_listenerTLS(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportStateIdFunc: testAccVirtualNodeImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -1022,7 +1022,7 @@ func testAccVirtualNode_listenerTLS(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportStateIdFunc: testAccVirtualNodeImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -1104,7 +1104,7 @@ func testAccVirtualNode_listenerValidation(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportStateIdFunc: testAccVirtualNodeImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -1249,7 +1249,7 @@ func testAccVirtualNode_multiListenerValidation(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportStateIdFunc: testAccVirtualNodeImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -1374,7 +1374,7 @@ func testAccVirtualNode_logging(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportStateIdFunc: testAccVirtualNodeImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -1408,54 +1408,6 @@ func testAccVirtualNode_logging(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.0.format.0.json.0.value", "v1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.0.format.0.text", ""),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.0.access_log.0.file.0.path", "/tmp/access.log"),
-				),
-			},
-		},
-	})
-}
-
-func testAccVirtualNode_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var vn appmesh.VirtualNodeData
-	resourceName := "aws_appmesh_virtual_node.test"
-	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVirtualNodeDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVirtualNodeConfig_tags1(meshName, vnName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualNodeExists(ctx, resourceName, &vn),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccVirtualNodeConfig_tags2(meshName, vnName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualNodeExists(ctx, resourceName, &vn),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccVirtualNodeConfig_tags1(meshName, vnName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualNodeExists(ctx, resourceName, &vn),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -1509,6 +1461,17 @@ func testAccCheckVirtualNodeExists(ctx context.Context, n string, v *appmesh.Vir
 		*v = *output
 
 		return nil
+	}
+}
+
+func testAccVirtualNodeImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not Found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes[names.AttrName]), nil
 	}
 }
 
@@ -2616,35 +2579,4 @@ resource "aws_appmesh_virtual_node" "test" {
   }
 }
 `, vnName, path))
-}
-
-func testAccVirtualNodeConfig_tags1(meshName, vnName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
-resource "aws_appmesh_virtual_node" "test" {
-  name      = %[1]q
-  mesh_name = aws_appmesh_mesh.test.id
-
-  spec {}
-
-  tags = {
-    %[2]s = %[3]q
-  }
-}
-`, vnName, tagKey1, tagValue1))
-}
-
-func testAccVirtualNodeConfig_tags2(meshName, vnName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
-resource "aws_appmesh_virtual_node" "test" {
-  name      = %[1]q
-  mesh_name = aws_appmesh_mesh.test.id
-
-  spec {}
-
-  tags = {
-    %[2]s = %[3]q
-    %[4]s = %[5]q
-  }
-}
-`, vnName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

@@ -6,8 +6,8 @@ package ec2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_managed_prefix_lists")
-func DataSourceManagedPrefixLists() *schema.Resource {
+// @SDKDataSource("aws_ec2_managed_prefix_lists", name="Managed Prefix Lists")
+func dataSourceManagedPrefixLists() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceManagedPrefixListsRead,
 
@@ -36,7 +36,7 @@ func DataSourceManagedPrefixLists() *schema.Resource {
 func dataSourceManagedPrefixListsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeManagedPrefixListsInput{}
 
@@ -53,7 +53,7 @@ func dataSourceManagedPrefixListsRead(ctx context.Context, d *schema.ResourceDat
 		input.Filters = nil
 	}
 
-	prefixLists, err := FindManagedPrefixLists(ctx, conn, input)
+	prefixLists, err := findManagedPrefixLists(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Managed Prefix Lists: %s", err)
@@ -62,7 +62,7 @@ func dataSourceManagedPrefixListsRead(ctx context.Context, d *schema.ResourceDat
 	var prefixListIDs []string
 
 	for _, v := range prefixLists {
-		prefixListIDs = append(prefixListIDs, aws.StringValue(v.PrefixListId))
+		prefixListIDs = append(prefixListIDs, aws.ToString(v.PrefixListId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

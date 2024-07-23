@@ -14,7 +14,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -51,7 +53,6 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("patch-baseline-%s", name)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_compliance_level", string(awstypes.PatchComplianceLevelCritical)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Baseline containing all updates approved for production systems"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_enable_non_security", acctest.CtFalse),
 					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovedPatchesEnableNonSecurity", acctest.CtFalse),
 					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovedPatches|length(@)", acctest.Ct1),
@@ -61,6 +62,10 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "ApprovedPatchesEnableNonSecurity", resourceName, "approved_patches_enable_non_security"),
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "OperatingSystem", resourceName, "operating_system"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -83,7 +88,6 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("updated-patch-baseline-%s", name)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_compliance_level", string(awstypes.PatchComplianceLevelHigh)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Baseline containing all updates approved for production systems - August 2017"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "ApprovedPatches[0]", resourceName, "approved_patches.1"),
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "ApprovedPatches[1]", resourceName, "approved_patches.0"),
 					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovedPatches|length(@)", acctest.Ct2),
@@ -93,51 +97,6 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 						}
 						return nil
 					},
-				),
-			},
-		},
-	})
-}
-
-func TestAccSSMPatchBaseline_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var patch ssm.GetPatchBaselineOutput
-	name := sdkacctest.RandString(10)
-	resourceName := "aws_ssm_patch_baseline.test"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPatchBaselineConfig_tags1(name, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPatchBaselineExists(ctx, resourceName, &patch),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccPatchBaselineConfig_tags2(name, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPatchBaselineExists(ctx, resourceName, &patch),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccPatchBaselineConfig_tags1(name, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPatchBaselineExists(ctx, resourceName, &patch),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -475,37 +434,6 @@ resource "aws_ssm_patch_baseline" "test" {
   approved_patches_compliance_level = "CRITICAL"
 }
 `, rName)
-}
-
-func testAccPatchBaselineConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_ssm_patch_baseline" "test" {
-  name                              = %[1]q
-  description                       = "Baseline containing all updates approved for production systems"
-  approved_patches                  = ["KB123456"]
-  approved_patches_compliance_level = "CRITICAL"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccPatchBaselineConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_ssm_patch_baseline" "test" {
-  name                              = %[1]q
-  description                       = "Baseline containing all updates approved for production systems"
-  approved_patches                  = ["KB123456"]
-  approved_patches_compliance_level = "CRITICAL"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccPatchBaselineConfig_basicUpdated(rName string) string {

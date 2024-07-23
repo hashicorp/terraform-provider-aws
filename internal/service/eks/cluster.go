@@ -43,6 +43,15 @@ func resourceCluster() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceClusterV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: clusterStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
 			customdiff.ForceNewIfChange("encryption_config", func(_ context.Context, old, new, meta interface{}) bool {
@@ -82,6 +91,12 @@ func resourceCluster() *schema.Resource {
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"bootstrap_self_managed_addons": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  true,
 			},
 			"certificate_authority": {
 				Type:     schema.TypeList,
@@ -321,12 +336,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	name := d.Get(names.AttrName).(string)
 	input := &eks.CreateClusterInput{
-		EncryptionConfig:   expandEncryptionConfig(d.Get("encryption_config").([]interface{})),
-		Logging:            expandLogging(d.Get("enabled_cluster_log_types").(*schema.Set)),
-		Name:               aws.String(name),
-		ResourcesVpcConfig: expandVpcConfigRequest(d.Get(names.AttrVPCConfig).([]interface{})),
-		RoleArn:            aws.String(d.Get(names.AttrRoleARN).(string)),
-		Tags:               getTagsIn(ctx),
+		BootstrapSelfManagedAddons: aws.Bool(d.Get("bootstrap_self_managed_addons").(bool)),
+		EncryptionConfig:           expandEncryptionConfig(d.Get("encryption_config").([]interface{})),
+		Logging:                    expandLogging(d.Get("enabled_cluster_log_types").(*schema.Set)),
+		Name:                       aws.String(name),
+		ResourcesVpcConfig:         expandVpcConfigRequest(d.Get(names.AttrVPCConfig).([]interface{})),
+		RoleArn:                    aws.String(d.Get(names.AttrRoleARN).(string)),
+		Tags:                       getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_config"); ok {
@@ -408,6 +424,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	// bootstrap_cluster_creator_admin_permissions isn't returned from the AWS API.
+	// See https://github.com/aws/containers-roadmap/issues/185#issuecomment-1863025784.
 	var bootstrapClusterCreatorAdminPermissions *bool
 	if v, ok := d.GetOk("access_config"); ok {
 		if apiObject := expandCreateAccessConfigRequest(v.([]interface{})); apiObject != nil {
@@ -418,6 +435,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting access_config: %s", err)
 	}
 	d.Set(names.AttrARN, cluster.Arn)
+	d.Set("bootstrap_self_managed_addons", d.Get("bootstrap_self_managed_addons"))
 	if err := d.Set("certificate_authority", flattenCertificate(cluster.CertificateAuthority)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting certificate_authority: %s", err)
 	}
@@ -770,6 +788,9 @@ func waitClusterDeleted(ctx context.Context, conn *eks.Client, name string, time
 		Target:  []string{},
 		Refresh: statusCluster(ctx, conn, name),
 		Timeout: timeout,
+		// An attempt to avoid "ResourceInUseException: Cluster already exists with name: ..." errors
+		// in acceptance tests when recreating a cluster with the same randomly generated name.
+		ContinuousTargetOccurence: 3,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -1048,6 +1069,9 @@ func flattenAccessConfigResponse(apiObject *types.AccessConfigResponse, bootstra
 
 	if bootstrapClusterCreatorAdminPermissions != nil {
 		tfMap["bootstrap_cluster_creator_admin_permissions"] = aws.ToBool(bootstrapClusterCreatorAdminPermissions)
+	} else {
+		// Setting default value to true for backward compatibility.
+		tfMap["bootstrap_cluster_creator_admin_permissions"] = true
 	}
 
 	return []interface{}{tfMap}

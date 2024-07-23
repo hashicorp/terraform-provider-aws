@@ -27,6 +27,9 @@ import (
 
 // @SDKResource("aws_appmesh_virtual_router", name="Virtual Router")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/appmesh;appmesh.VirtualRouterData")
+// @Testing(serialize=true)
+// @Testing(importStateIdFunc=testAccVirtualRouterImportStateIdFunc)
 func resourceVirtualRouter() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

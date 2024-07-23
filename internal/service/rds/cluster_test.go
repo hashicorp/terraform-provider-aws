@@ -35,7 +35,7 @@ func testAccClusterImportStep(n string) resource.TestStep {
 		ImportState:       true,
 		ImportStateVerify: true,
 		ImportStateVerifyIgnore: []string{
-			"allow_major_version_upgrade",
+			names.AttrAllowMajorVersionUpgrade,
 			names.AttrApplyImmediately,
 			"cluster_members",
 			"db_instance_parameter_group_name",
@@ -77,6 +77,8 @@ func TestAccRDSCluster_basic(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "backtrack_window", acctest.Ct0),
+					resource.TestCheckNoResourceAttr(resourceName, "ca_certificate_identifier"),
+					resource.TestCheckNoResourceAttr(resourceName, "ca_certificate_valid_till"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
@@ -239,7 +241,7 @@ func TestAccRDSCluster_allowMajorVersionUpgrade(t *testing.T) {
 				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, tfrds.ClusterEngineAuroraPostgreSQL, false, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceName, "version_actual"),
 				),
@@ -249,7 +251,7 @@ func TestAccRDSCluster_allowMajorVersionUpgrade(t *testing.T) {
 				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, tfrds.ClusterEngineAuroraPostgreSQL, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceNameUpgrade, "version_actual"),
 				),
@@ -280,7 +282,7 @@ func TestAccRDSCluster_allowMajorVersionUpgradeNoApplyImmediately(t *testing.T) 
 				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, tfrds.ClusterEngineAuroraPostgreSQL, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceName, "version_actual"),
 				),
@@ -290,7 +292,7 @@ func TestAccRDSCluster_allowMajorVersionUpgradeNoApplyImmediately(t *testing.T) 
 				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, tfrds.ClusterEngineAuroraPostgreSQL, true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceNameUpgrade, "version_actual"),
 				),
@@ -319,7 +321,7 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParametersApplyImm(t *t
 				Config: testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName, false, tfrds.ClusterEngineAuroraPostgreSQL, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.test", "version_actual"),
 				),
@@ -328,7 +330,7 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParametersApplyImm(t *t
 				Config: testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName, true, tfrds.ClusterEngineAuroraPostgreSQL, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.upgrade", "version_actual"),
 				),
@@ -357,7 +359,7 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParameters(t *testing.T
 				Config: testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName, false, tfrds.ClusterEngineAuroraPostgreSQL, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.test", "version_actual"),
 				),
@@ -367,7 +369,7 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParameters(t *testing.T
 				Config: testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName, true, tfrds.ClusterEngineAuroraPostgreSQL, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.upgrade", "version_actual"),
 				),
@@ -406,7 +408,7 @@ func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
+					names.AttrAllowMajorVersionUpgrade,
 					names.AttrApplyImmediately,
 					"cluster_identifier_prefix",
 					"cluster_members",
@@ -475,6 +477,30 @@ func TestAccRDSCluster_availabilityZones(t *testing.T) {
 				Config: testAccClusterConfig_availabilityZones(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_availabilityZones_caCertificateIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_availabilityZones_caCertificateIdentifier(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrSet(resourceName, "ca_certificate_identifier"),
+					resource.TestCheckResourceAttrSet(resourceName, "ca_certificate_valid_till"),
 				),
 			},
 		},
@@ -650,7 +676,7 @@ func TestAccRDSCluster_allocatedStorage(t *testing.T) {
 				Config: testAccClusterConfig_allocatedStorage(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "100"),
 				),
 			},
 		},
@@ -1285,14 +1311,14 @@ func TestAccRDSCluster_deletionProtection(t *testing.T) {
 				Config: testAccClusterConfig_deletionProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccClusterConfig_deletionProtection(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 		},
@@ -1361,6 +1387,7 @@ func TestAccRDSCluster_engineVersion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, "engine_lifecycle_support", "open-source-rds-extended-support"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceName, names.AttrVersion),
 				),
 			},
@@ -1814,25 +1841,27 @@ func TestAccRDSCluster_scaling(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_scalingConfiguration(rName, false, 128, 4, 301, "RollbackCapacityChange"),
+				Config: testAccClusterConfig_scalingConfiguration(rName, false, 128, 4, 301, 301, "RollbackCapacityChange"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "128"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_before_timeout", "301"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_until_auto_pause", "301"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "RollbackCapacityChange"),
 				),
 			},
 			{
-				Config: testAccClusterConfig_scalingConfiguration(rName, true, 256, 8, 86400, "ForceApplyCapacityChange"),
+				Config: testAccClusterConfig_scalingConfiguration(rName, true, 256, 8, 600, 86400, "ForceApplyCapacityChange"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "256"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", "8"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_before_timeout", "600"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_until_auto_pause", "86400"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "ForceApplyCapacityChange"),
 				),
@@ -1928,7 +1957,7 @@ func TestAccRDSCluster_snapshotIdentifier(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_snapshotID(rName),
@@ -1960,7 +1989,7 @@ func TestAccRDSCluster_SnapshotIdentifier_deletionProtection(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_deletionProtection(rName, true),
@@ -1968,7 +1997,7 @@ func TestAccRDSCluster_SnapshotIdentifier_deletionProtection(t *testing.T) {
 					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
 					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
 			// Ensure we disable deletion protection before attempting to delete :)
@@ -1978,7 +2007,7 @@ func TestAccRDSCluster_SnapshotIdentifier_deletionProtection(t *testing.T) {
 					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
 					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 		},
@@ -2003,7 +2032,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_provisioned(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_engineMode(rName, "provisioned"),
@@ -2037,7 +2066,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_serverless(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_engineMode(rName, "serverless"),
@@ -2072,7 +2101,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineVersion_different(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_engineVersion(rName, false),
@@ -2107,7 +2136,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineVersion_equal(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_engineVersion(rName, true),
@@ -2141,7 +2170,7 @@ func TestAccRDSCluster_SnapshotIdentifier_kmsKeyID(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_kmsKeyID(rName),
@@ -2174,7 +2203,7 @@ func TestAccRDSCluster_SnapshotIdentifier_masterPassword(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_masterPassword(rName, "password1"),
@@ -2207,7 +2236,7 @@ func TestAccRDSCluster_SnapshotIdentifier_masterUsername(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_masterUsername(rName, "username1"),
@@ -2242,7 +2271,7 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredBackupWindow(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_preferredBackupWindow(rName, "00:00-08:00"),
@@ -2278,7 +2307,7 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredMaintenanceWindow(t *testing.
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_preferredMaintenanceWindow(rName, "sun:01:00-sun:01:30"),
@@ -2311,7 +2340,7 @@ func TestAccRDSCluster_SnapshotIdentifier_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_tags(rName),
@@ -2345,7 +2374,7 @@ func TestAccRDSCluster_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_vpcSecurityGroupIDs(rName),
@@ -2381,7 +2410,7 @@ func TestAccRDSCluster_SnapshotIdentifierVPCSecurityGroupIDs_tags(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_VPCSecurityGroupIds_tags(rName),
@@ -2416,7 +2445,7 @@ func TestAccRDSCluster_SnapshotIdentifier_encryptedRestore(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_encryptedRestore(rName),
@@ -2583,6 +2612,34 @@ func TestAccRDSCluster_NoDeleteAutomatedBackups(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_engineLifecycleSupport_disabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_engineLifecycleSupport_disabled(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "backtrack_window", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, "engine_lifecycle_support", "open-source-rds-extended-support-disabled"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return testAccCheckClusterDestroyWithProvider(ctx)(s, acctest.Provider)
@@ -2656,7 +2713,7 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 				continue
 			}
 
-			finalSnapshotID := rs.Primary.Attributes["final_snapshot_identifier"]
+			finalSnapshotID := rs.Primary.Attributes[names.AttrFinalSnapshotIdentifier]
 			_, err := tfrds.FindDBClusterSnapshotByID(ctx, conn, finalSnapshotID)
 			if err != nil {
 				return err
@@ -3106,6 +3163,34 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot = true
 }
 `, rName, tfrds.ClusterEngineAuroraMySQL))
+}
+
+func testAccClusterConfig_availabilityZones_caCertificateIdentifier(rName string) string {
+	return acctest.ConfigCompose(testAccConfig_ClusterSubnetGroup(rName), fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[2]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[3]s]
+  supports_clusters          = true
+  supports_iops              = true
+}
+
+resource "aws_rds_cluster" "test" {
+  apply_immediately         = true
+  db_subnet_group_name      = aws_db_subnet_group.test.name
+  ca_certificate_identifier = "rds-ca-2019"
+  cluster_identifier        = %[1]q
+  engine                    = data.aws_rds_orderable_db_instance.test.engine
+  engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
+  storage_type              = data.aws_rds_orderable_db_instance.test.storage_type
+  allocated_storage         = 100
+  iops                      = 1000
+  db_cluster_instance_class = "db.r6gd.xlarge"
+  master_password           = "avoid-plaintext-passwords"
+  master_username           = "tfacctest"
+  skip_final_snapshot       = true
+}
+`, rName, tfrds.ClusterEngineMySQL, mainInstanceClasses))
 }
 
 func testAccClusterConfig_storageType(rName string, sType string) string {
@@ -4499,7 +4584,7 @@ resource "aws_rds_cluster_instance" "secondary" {
 `, tfrds.ClusterEngineAuroraPostgreSQL, mainInstanceClasses, rName))
 }
 
-func testAccClusterConfig_scalingConfiguration(rName string, autoPause bool, maxCapacity, minCapacity, secondsUntilAutoPause int, timeoutAction string) string {
+func testAccClusterConfig_scalingConfiguration(rName string, autoPause bool, maxCapacity, minCapacity, secondsBeforeTimeout, secondsUntilAutoPause int, timeoutAction string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
@@ -4513,11 +4598,12 @@ resource "aws_rds_cluster" "test" {
     auto_pause               = %[3]t
     max_capacity             = %[4]d
     min_capacity             = %[5]d
-    seconds_until_auto_pause = %[6]d
-    timeout_action           = %[7]q
+    seconds_before_timeout   = %[6]d
+    seconds_until_auto_pause = %[7]d
+    timeout_action           = %[8]q
   }
 }
-`, rName, tfrds.ClusterEngineAuroraMySQL, autoPause, maxCapacity, minCapacity, secondsUntilAutoPause, timeoutAction)
+`, rName, tfrds.ClusterEngineAuroraMySQL, autoPause, maxCapacity, minCapacity, secondsBeforeTimeout, secondsUntilAutoPause, timeoutAction)
 }
 
 func testAccClusterConfig_serverlessV2ScalingConfiguration(rName string, maxCapacity, minCapacity float64) string {
@@ -5168,4 +5254,18 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot           = true
 }
 `, rName)
+}
+
+func testAccClusterConfig_engineLifecycleSupport_disabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier       = %[1]q
+  database_name            = "test"
+  engine                   = %[2]q
+  master_username          = "tfacctest"
+  master_password          = "avoid-plaintext-passwords"
+  skip_final_snapshot      = true
+  engine_lifecycle_support = "open-source-rds-extended-support-disabled"
+}
+`, rName, tfrds.ClusterEngineAuroraPostgreSQL)
 }
