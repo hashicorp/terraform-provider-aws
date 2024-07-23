@@ -394,7 +394,7 @@ resource "aws_appflow_flow" "example" {
 ```
 
 ### Metadata Catalog Config
-The `metadata_catalog_config` block only supports one attribute: `glue`, a block which in turn supports the following:
+The `metadata_catalog_config` block only supports one attribute: `glue_data_catalog`, a block which in turn supports the following:
 
 * `database_name` - (Required) The name of an existing Glue database to store the metadata tables that Amazon AppFlow creates.
 * `role_arn` - (Required) The ARN of an IAM role that grants AppFlow the permissions it needs to create Data Catalog tables, databases, and partitions.
