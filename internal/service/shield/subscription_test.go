@@ -23,10 +23,14 @@ import (
 
 func TestAccShieldSubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	t.Skipf("running this test signs up an account for $3000 yearly commitment to shield advanced")
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
+
+	// Due to the high cost of this subscription, we hardcode this test to
+	// skip rather than gating behind an environment variable.
+	// Run this test be removing the line below.
+	t.Skipf("running this test requires a $3000 yearly commitment to shield advanced in the associated account")
 
 	var subscription shield.DescribeSubscriptionOutput
 	resourceName := "aws_shield_subscription.test"
@@ -45,13 +49,11 @@ func TestAccShieldSubscription_basic(t *testing.T) {
 					testAccCheckSubscriptionExists(ctx, resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "auto_renew", string(awstypes.AutoRenewEnabled)),
 				),
-				Destroy: false,
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				Destroy:           false,
 			},
 		},
 	})

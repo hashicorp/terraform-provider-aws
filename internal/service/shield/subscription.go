@@ -19,11 +19,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_shield_subscription", name="Subscription")
 func newResourceSubscription(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceSubscription{}, nil
@@ -68,6 +68,7 @@ func (r *resourceSubscription) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 	plan.ID = types.StringValue(r.Meta().AccountID)
+
 	if plan.AutoRenew.Equal(types.StringValue(string(awstypes.AutoRenewDisabled))) {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameSubscription, plan.ID.String(), nil),
@@ -77,22 +78,15 @@ func (r *resourceSubscription) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	in := &shield.CreateSubscriptionInput{}
-	out, err := conn.CreateSubscription(ctx, in)
+	_, err := conn.CreateSubscription(ctx, in)
 	if err != nil {
-		// in error messages at this point.
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameSubscription, plan.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameSubscription, plan.ID.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -106,18 +100,19 @@ func (r *resourceSubscription) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	out, err := findSubscriptionByID(ctx, conn)
-	if tfresource.NotFound(err) {
+	if errs.IsA[*retry.NotFoundError](err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionSetting, ResNameSubscription, state.ID.String(), err),
+			create.ProblemStandardMessage(names.Shield, create.ErrActionReading, ResNameSubscription, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
-	state.AutoRenew = types.StringValue(string(out.AutoRenew))
+
+	state.AutoRenew = flex.StringValueToFramework(ctx, out.AutoRenew)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -131,26 +126,21 @@ func (r *resourceSubscription) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	in := &shield.UpdateSubscriptionInput{
-		AutoRenew: awstypes.AutoRenew(plan.AutoRenew.ValueString()),
+	if !plan.AutoRenew.Equal(state.AutoRenew) {
+		in := &shield.UpdateSubscriptionInput{
+			AutoRenew: awstypes.AutoRenew(plan.AutoRenew.ValueString()),
+		}
+
+		_, err := conn.UpdateSubscription(ctx, in)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Shield, create.ErrActionUpdating, ResNameSubscription, plan.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
 	}
 
-	out, err := conn.UpdateSubscription(ctx, in)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionUpdating, ResNameSubscription, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionUpdating, ResNameSubscription, plan.ID.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
-	plan.ID = types.StringValue(r.Meta().AccountID)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
