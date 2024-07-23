@@ -1216,7 +1216,7 @@ func TestAccRDSCluster_copyTagsToSnapshot_restorePointInTime(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					testAccCheckClusterExists(ctx, resourceName2, &v),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtTrue),
 				),
 			},
 			{
@@ -1224,7 +1224,7 @@ func TestAccRDSCluster_copyTagsToSnapshot_restorePointInTime(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					testAccCheckClusterExists(ctx, resourceName2, &v),
-					resource.TestCheckResourceAttr(resourceName2, "copy_tags_to_snapshot", "false"),
+					resource.TestCheckResourceAttr(resourceName2, "copy_tags_to_snapshot", acctest.CtFalse),
 				),
 			},
 		},
