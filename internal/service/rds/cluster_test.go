@@ -5084,8 +5084,8 @@ resource "aws_rds_cluster" "test" {
 func testAccClusterConfig_copyTagsToSnapshot_restorePointInTime(n int, f bool) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier    = "tf-aurora-cluster-test-%d"
-  engine                = "aurora-mysql"
+  cluster_identifier    = "tf-aurora-cluster-%[1]d"
+  engine                = %[2]q
   database_name         = "mydb"
   master_username       = "foo"
   master_password       = "mustbeeightcharaters"
@@ -5094,19 +5094,19 @@ resource "aws_rds_cluster" "test" {
 }
 
 resource "aws_rds_cluster" "clone" {
-  cluster_identifier    = "tf-aurora-cluster-clone-%d"
-  engine                = "aurora-mysql"
+  cluster_identifier    = "tf-aurora-cluster-clone-%[1]d"
+  engine                = %[2]q
   database_name         = "mydb"
   master_username       = "foo"
   master_password       = "mustbeeightcharaters"
-  copy_tags_to_snapshot = %t
+  copy_tags_to_snapshot = %[3]t
   skip_final_snapshot   = true
   restore_to_point_in_time {
     source_cluster_identifier  = aws_rds_cluster.test.cluster_identifier
     use_latest_restorable_time = true
   }
 }
-`, n, n, f)
+`, n, tfrds.ClusterEngineAuroraMySQL, f)
 }
 
 func testAccClusterConfig_auroraStorageType(rName, storageType string) string {
