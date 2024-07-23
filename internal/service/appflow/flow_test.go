@@ -796,9 +796,9 @@ func testAccFlowConfig_metadata_catalog(rName string) string {
 		testAccFlowConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-	name = %[1]q
-	
-	assume_role_policy = <<POLICY
+  name = %[1]q
+
+  assume_role_policy = <<POLICY
 	{
 	"Version": "2012-10-17",
 	"Statement": [
@@ -813,7 +813,7 @@ resource "aws_iam_role" "test" {
 	}
 	POLICY
 }
-  
+
 resource "aws_appflow_flow" "test" {
   name = %[1]q
 
