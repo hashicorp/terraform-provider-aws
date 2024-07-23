@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,7 +25,7 @@ func TestAccRDSSnapshotCopy_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBSnapshot
+	var v types.DBSnapshot
 	resourceName := "aws_db_snapshot_copy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -58,13 +58,13 @@ func TestAccRDSSnapshotCopy_share(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBSnapshot
+	var v types.DBSnapshot
 	resourceName := "aws_db_snapshot_copy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSnapshotCopyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -98,7 +98,7 @@ func TestAccRDSSnapshotCopy_tags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBSnapshot
+	var v types.DBSnapshot
 	resourceName := "aws_db_snapshot_copy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -148,7 +148,7 @@ func TestAccRDSSnapshotCopy_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBSnapshot
+	var v types.DBSnapshot
 	resourceName := "aws_db_snapshot_copy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -172,7 +172,7 @@ func TestAccRDSSnapshotCopy_disappears(t *testing.T) {
 
 func testAccCheckSnapshotCopyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_snapshot_copy" {
@@ -196,18 +196,14 @@ func testAccCheckSnapshotCopyDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckSnapshotCopyExists(ctx context.Context, n string, v *rds.DBSnapshot) resource.TestCheckFunc {
+func testAccCheckSnapshotCopyExists(ctx context.Context, n string, v *types.DBSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No RDS DB Snapshot Copy ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		output, err := tfrds.FindDBSnapshotByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
