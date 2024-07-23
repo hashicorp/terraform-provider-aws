@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -40,13 +41,14 @@ func DataSourceFirewallConfig() *schema.Resource {
 }
 
 func dataSourceFirewallConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	id := d.Get(names.AttrResourceID).(string)
 	firewallConfig, err := findFirewallConfigByResourceID(ctx, conn, id)
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Firewall Config (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Firewall Config (%s): %s", id, err)
 	}
 
 	d.SetId(aws.StringValue(firewallConfig.Id))
@@ -54,7 +56,7 @@ func dataSourceFirewallConfigRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrOwnerID, firewallConfig.OwnerId)
 	d.Set(names.AttrResourceID, firewallConfig.ResourceId)
 
-	return nil
+	return diags
 }
 
 func findFirewallConfigByResourceID(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.FirewallConfig, error) {

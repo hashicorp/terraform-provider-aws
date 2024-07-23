@@ -112,8 +112,8 @@ func TestAccLexV2ModelsBotLocale_voiceSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotLocaleExists(ctx, resourceName, &botlocale),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "voice_settings.*", map[string]string{
-						"voice_id": voiceID,
-						"engine":   string(types.VoiceEngineStandard),
+						"voice_id":       voiceID,
+						names.AttrEngine: string(types.VoiceEngineStandard),
 					}),
 				),
 			},

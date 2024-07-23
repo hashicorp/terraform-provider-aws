@@ -6,8 +6,8 @@ package ec2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,8 +17,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_network_insights_path")
-func DataSourceNetworkInsightsPath() *schema.Resource {
+// @SDKDataSource("aws_ec2_network_insights_path", name="Network Insights Path")
+// @Tags
+// @Testing(tagsTest=false)
+func dataSourceNetworkInsightsPath() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNetworkInsightsPathRead,
 
@@ -72,14 +74,12 @@ func DataSourceNetworkInsightsPath() *schema.Resource {
 
 func dataSourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeNetworkInsightsPathsInput{}
 
 	if v, ok := d.GetOk("network_insights_path_id"); ok {
-		input.NetworkInsightsPathIds = aws.StringSlice([]string{v.(string)})
+		input.NetworkInsightsPathIds = []string{v.(string)}
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
@@ -91,13 +91,13 @@ func dataSourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceDa
 		input.Filters = nil
 	}
 
-	nip, err := FindNetworkInsightsPath(ctx, conn, input)
+	nip, err := findNetworkInsightsPath(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Network Insights Path", err))
 	}
 
-	networkInsightsPathID := aws.StringValue(nip.NetworkInsightsPathId)
+	networkInsightsPathID := aws.ToString(nip.NetworkInsightsPathId)
 	d.SetId(networkInsightsPathID)
 	d.Set(names.AttrARN, nip.NetworkInsightsPathArn)
 	d.Set(names.AttrDestination, nip.Destination)
@@ -110,9 +110,7 @@ func dataSourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("source_arn", nip.SourceArn)
 	d.Set("source_ip", nip.SourceIp)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, nip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, nip.Tags)
 
 	return diags
 }

@@ -165,7 +165,6 @@ func TestAccAppIntegrationsEventIntegration_disappears(t *testing.T) {
 	var eventIntegration appintegrations.GetEventIntegrationOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := "disappears"
 	resourceName := "aws_appintegrations_event_integration.test"
 
 	key := "EVENT_BRIDGE_PARTNER_EVENT_SOURCE_NAME"
@@ -185,7 +184,7 @@ func TestAccAppIntegrationsEventIntegration_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckEventIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventIntegrationConfig_basic(rName, description, sourceName),
+				Config: testAccEventIntegrationConfig_basic(rName, acctest.CtDisappears, sourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventIntegrationExists(ctx, resourceName, &eventIntegration),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappintegrations.ResourceEventIntegration(), resourceName),

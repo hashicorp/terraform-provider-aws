@@ -37,7 +37,7 @@ func TestAccRAMResourceShare_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareExists(ctx, resourceName, &resourceShare),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ram", regexache.MustCompile(`resource-share/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", "false"),
+					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "permission_arns.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
@@ -69,7 +69,7 @@ func TestAccRAMResourceShare_permission(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareExists(ctx, resourceName, &resourceShare),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ram", regexache.MustCompile(`resource-share/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", "false"),
+					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "permission_arns.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
@@ -100,7 +100,7 @@ func TestAccRAMResourceShare_allowExternalPrincipals(t *testing.T) {
 				Config: testAccResourceShareConfig_allowExternalPrincipals(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareExists(ctx, resourceName, &resourceShare1),
-					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", "false"),
+					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", acctest.CtFalse),
 				),
 			},
 			{
@@ -112,7 +112,7 @@ func TestAccRAMResourceShare_allowExternalPrincipals(t *testing.T) {
 				Config: testAccResourceShareConfig_allowExternalPrincipals(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareExists(ctx, resourceName, &resourceShare2),
-					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", "true"),
+					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", acctest.CtTrue),
 				),
 			},
 		},

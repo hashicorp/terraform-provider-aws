@@ -39,66 +39,62 @@ class MyConvertedCode(TerraformStack):
 This resource supports the following arguments:
 
 * `domain_id` - (Required) The ID of the associated Domain.
-* `ownership_settings` - (Optional) A collection of ownership settings. See [Ownership Settings](#ownership-settings) below.
+* `ownership_settings` - (Optional) A collection of ownership settings. See [`ownership_settings` Block](#ownership_settings-block) below.
 * `space_display_name` - (Optional) The name of the space that appears in the SageMaker Studio UI.
 * `space_name` - (Required) The name of the space.
-* `space_settings` - (Required) A collection of space settings. See [Space Settings](#space-settings) below.
-* `space_sharing_settings` - (Optional) A collection of space sharing settings. See [Space Sharing Settings](#space-sharing-settings) below.
+* `space_settings` - (Required) A collection of space settings. See [`space_settings` Block](#space_settings-block) below.
+* `space_sharing_settings` - (Optional) A collection of space sharing settings. See [`space_sharing_settings` Block](#space_sharing_settings-block) below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Ownership Settings
+### `ownership_settings` Block
 
 * `owner_user_profile_name` - (Required) The user profile who is the owner of the private space.
 
-### Space Sharing Settings
+### `space_settings` Block
+
+* `app_type` - (Optional) The type of app created within the space.
+* `code_editor_app_settings` - (Optional) The Code Editor application settings. See [`code_editor_app_settings` Block](#code_editor_app_settings-block) below.
+* `custom_file_system` - (Optional) A file system, created by you, that you assign to a space for an Amazon SageMaker Domain. See [`custom_file_system` Block](#custom_file_system-block) below.
+* `jupyter_lab_app_settings` - (Optional) The settings for the JupyterLab application. See [`jupyter_lab_app_settings` Block](#jupyter_lab_app_settings-block) below.
+* `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [`jupyter_server_app_settings` Block](#jupyter_server_app_settings-block) below.
+* `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [`kernel_gateway_app_settings` Block](#kernel_gateway_app_settings-block) below.
+
+### `space_sharing_settings` Block
 
 * `sharing_type` - (Required) Specifies the sharing type of the space. Valid values are `Private` and `Shared`.
 
-### Space Settings
+### `code_editor_app_settings` Block
 
-* `app_type` - (Optional) The type of app created within the space.
-* `code_editor_app_settings` - (Optional) The Code Editor application settings. See [Code Editor App Settings](#code-editor-app-settings) below.
-* `custom_file_system` - (Optional) A file system, created by you, that you assign to a space for an Amazon SageMaker Domain. See [Custom File System](#custom-file-system) below.
-* `jupyter_lab_app_settings` - (Optional) The settings for the JupyterLab application. See [Jupyter Lab App Settings](#jupyter-lab-app-settings) below.
-* `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [Jupyter Server App Settings](#jupyter-server-app-settings) below.
-* `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernel-gateway-app-settings) below.
-
-#### Code Editor App Settings
-
-* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
+* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
-#### Custom File System
+### `custom_file_system` Block
 
-* `efs_file_system` - (Optional) A custom file system in Amazon EFS. see [EFS File System](#efs-file-system) below.
+* `efs_file_system` - (Optional) A custom file system in Amazon EFS. See [`efs_file_system` Block](#efs_file_system-block) below.
 
-#### Jupyter Lab App Settings
+### `jupyter_lab_app_settings` Block
 
-* `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. see [Code Repository](#code-repository) below.
-* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
+* `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. See [`code_repository` Block](#code_repository-block) below.
+* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
-#### Kernel Gateway App Settings
+### `jupyter_server_app_settings` Block
 
-* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
-* `custom_image` - (Optional) A list of custom SageMaker images that are configured to run as a KernelGateway app. see [Custom Image](#custom-image) below.
+* `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. See [`code_repository` Block](#code_repository-block) below.
+* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
-#### Jupyter Server App Settings
+### `kernel_gateway_app_settings` Block
 
-* `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. see [Code Repository](#code-repository) below.
-* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
+* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
+* `custom_image` - (Optional) A list of custom SageMaker images that are configured to run as a KernelGateway app. See [`custom_image` Block](#custom_image-block) below.
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
-#### EFS File System
-
-* `file_system_id` - (Optional) The ID of your Amazon EFS file system.
-
-##### Code Repository
+### `code_repository` Block
 
 * `repository_url` - (Optional) The URL of the Git repository.
 
-##### Default Resource Spec
+### `default_resource_spec` Block
 
 * `instance_type` - (Optional) The instance type.
 * `lifecycle_config_arn` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configuration attached to the Resource.
@@ -106,7 +102,11 @@ This resource supports the following arguments:
 * `sagemaker_image_version_alias` - (Optional) The SageMaker Image Version Alias.
 * `sagemaker_image_version_arn` - (Optional) The ARN of the image version created on the instance.
 
-##### Custom Image
+### `efs_file_system` Block
+
+* `file_system_id` - (Optional) The ID of your Amazon EFS file system.
+
+### `custom_image` Block
 
 * `app_image_config_name` - (Required) The name of the App Image Config.
 * `image_name` - (Required) The name of the Custom Image.
@@ -147,4 +147,4 @@ Using `terraform import`, import SageMaker Spaces using the `id`. For example:
 % terraform import aws_sagemaker_space.test_space arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bcf821b3994bdd26dfaebba68c2b4092348b6d04b5b1be5d002bfee4ce934430 -->
+<!-- cache-key: cdktf-0.20.1 input-9f41f02d6a7c757bb3780ec7f7388fc75d33cf3123da6ef33d12ebd2489f74e2 -->

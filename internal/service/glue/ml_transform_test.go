@@ -9,14 +9,15 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -53,7 +54,7 @@ func TestAccGlueMlTransform_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.primary_key_column_name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.accuracy_cost_trade_off", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", "false"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2880"),
 					resource.TestCheckResourceAttr(resourceName, "schema.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "schema.0.data_type", "int"),
@@ -95,7 +96,7 @@ func TestAccGlueMlTransform_typeFindMatchesFull(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.primary_key_column_name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.accuracy_cost_trade_off", "0.5"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", "0.5"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", "true"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", acctest.CtTrue),
 				),
 			},
 			{
@@ -113,7 +114,7 @@ func TestAccGlueMlTransform_typeFindMatchesFull(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.primary_key_column_name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.accuracy_cost_trade_off", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", "false"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", acctest.CtFalse),
 				),
 			},
 			{
@@ -126,7 +127,7 @@ func TestAccGlueMlTransform_typeFindMatchesFull(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.primary_key_column_name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.accuracy_cost_trade_off", "0.5"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", "0.5"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", "true"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", acctest.CtTrue),
 				),
 			},
 		},
@@ -438,9 +439,9 @@ func testAccCheckMLTransformExists(ctx context.Context, resourceName string, mlT
 			return fmt.Errorf("No Glue Job ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
-		output, err := conn.GetMLTransformWithContext(ctx, &glue.GetMLTransformInput{
+		output, err := conn.GetMLTransform(ctx, &glue.GetMLTransformInput{
 			TransformId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
@@ -451,7 +452,7 @@ func testAccCheckMLTransformExists(ctx context.Context, resourceName string, mlT
 			return fmt.Errorf("Glue ML Transform (%s) not found", rs.Primary.ID)
 		}
 
-		if aws.StringValue(output.TransformId) == rs.Primary.ID {
+		if aws.ToString(output.TransformId) == rs.Primary.ID {
 			*mlTransform = *output
 			return nil
 		}
@@ -467,19 +468,19 @@ func testAccCheckMLTransformDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
-			output, err := conn.GetMLTransformWithContext(ctx, &glue.GetMLTransformInput{
+			output, err := conn.GetMLTransform(ctx, &glue.GetMLTransformInput{
 				TransformId: aws.String(rs.Primary.ID),
 			})
 
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+				if errs.IsA[*awstypes.EntityNotFoundException](err) {
 					return nil
 				}
 			}
 
-			if output != nil && aws.StringValue(output.TransformId) == rs.Primary.ID {
+			if output != nil && aws.ToString(output.TransformId) == rs.Primary.ID {
 				return fmt.Errorf("Glue ML Transform %s still exists", rs.Primary.ID)
 			}
 

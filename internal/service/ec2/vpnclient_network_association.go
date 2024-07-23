@@ -39,7 +39,7 @@ func resourceClientVPNNetworkAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"association_id": {
+			names.AttrAssociationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,7 +104,7 @@ func resourceClientVPNNetworkAssociationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Client VPN Network Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("association_id", network.AssociationId)
+	d.Set(names.AttrAssociationID, network.AssociationId)
 	d.Set("client_vpn_endpoint_id", network.ClientVpnEndpointId)
 	d.Set(names.AttrSubnetID, network.TargetNetworkId)
 	d.Set(names.AttrVPCID, network.VpcId)

@@ -40,7 +40,7 @@ func TestAccOpsWorksApplication_basic(t *testing.T) {
 					testAccCheckCreateAppAttributes(&opsapp),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "other"),
-					resource.TestCheckResourceAttr(resourceName, "enable_ssl", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ssl", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "ssl_configuration.#", acctest.Ct0),
 					resource.TestCheckNoResourceAttr(resourceName, "domains"),
 					resource.TestCheckResourceAttr(resourceName, "app_source.#", acctest.Ct1),
@@ -67,7 +67,7 @@ func TestAccOpsWorksApplication_basic(t *testing.T) {
 					testAccCheckUpdateAppAttributes(&opsapp),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "rails"),
-					resource.TestCheckResourceAttr(resourceName, "enable_ssl", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ssl", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "ssl_configuration.0.certificate", "-----BEGIN CERTIFICATE-----\nMIIBkDCB+gIJALoScFD0sJq3MA0GCSqGSIb3DQEBBQUAMA0xCzAJBgNVBAYTAkRF\nMB4XDTE1MTIxOTIwMzU1MVoXDTE2MDExODIwMzU1MVowDTELMAkGA1UEBhMCREUw\ngZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAKKQKbTTH/Julz16xY7ArYlzJYCP\nedTCx1bopuryCx/+d1gC94MtRdlPSpQl8mfc9iBdtXbJppp73Qh/DzLzO9Ns25xZ\n+kUQMhbIyLsaCBzuEGLgAaVdGpNvRBw++UoYtd0U7QczFAreTGLH8n8+FIzuI5Mc\n+MJ1TKbbt5gFfRSzAgMBAAEwDQYJKoZIhvcNAQEFBQADgYEALARo96wCDmaHKCaX\nS0IGLGnZCfiIUfCmBxOXBSJxDBwter95QHR0dMGxYIujee5n4vvavpVsqZnfMC3I\nOZWPlwiUJbNIpK+04Bg2vd5m/NMMrvi75RfmyeMtSfq/NrIX2Q3+nyWI7DLq7yZI\nV/YEvOqdAiy5NEWBztHx8HvB9G4=\n-----END CERTIFICATE-----"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_configuration.0.private_key", "-----BEGIN RSA PRIVATE KEY-----\nMIICXQIBAAKBgQCikCm00x/ybpc9esWOwK2JcyWAj3nUwsdW6Kbq8gsf/ndYAveD\nLUXZT0qUJfJn3PYgXbV2yaaae90Ifw8y8zvTbNucWfpFEDIWyMi7Gggc7hBi4AGl\nXRqTb0QcPvlKGLXdFO0HMxQK3kxix/J/PhSM7iOTHPjCdUym27eYBX0UswIDAQAB\nAoGBAIYcrvuqDboguI8U4TUjCkfSAgds1pLLWk79wu8jXkA329d1IyNKT0y3WIye\nPbyoEzmidZmZROQ/+ZsPz8c12Y0DrX73WSVzKNyJeP7XMk9HSzA1D9RX0U0S+5Kh\nFAMc2NEVVFIfQtVtoVmHdKDpnRYtOCHLW9rRpvqOOjd4mYk5AkEAzeiFr1mtlnsa\n67shMxzDaOTAFMchRz6G7aSovvCztxcB63ulFI/w9OTUMdTQ7ff7pet+lVihLc2W\nefIL0HvsjQJBAMocNTKaR/TnsV5GSk2kPAdR+zFP5sQy8sfMy0lEXTylc7zN4ajX\nMeHVoxp+GZgpfDcZ3ya808H1umyXh+xA1j8CQE9x9ZKQYT98RAjL7KVR5btk9w+N\nPTPF1j1+mHUDXfO4ds8qp6jlWKzEVXLcj7ghRADiebaZuaZ4eiSW1SQdjEkCQQC4\nwDhQ3X9RfEpCp3ZcqvjEqEg6t5N3XitYQPjDLN8eBRBbUsgpEy3iBuxl10eGNMX7\niIbYXlwkPYAArDPv3wT5AkAwp4vym+YKmDqh6gseKfRDuJqRiW9yD5A8VGr/w88k\n5rkuduVGP7tK3uIp00Its3aEyKF8mLGWYszVGeeLxAMH\n-----END RSA PRIVATE KEY-----"),
 					resource.TestCheckResourceAttr(resourceName, "domains.0", "example.com"),
@@ -81,7 +81,7 @@ func TestAccOpsWorksApplication_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "environment.*", map[string]string{
 						names.AttrKey:   acctest.CtKey2,
 						names.AttrValue: acctest.CtValue2,
-						"secure":        "true",
+						"secure":        acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "environment.*", map[string]string{
 						names.AttrKey:   acctest.CtKey1,
@@ -89,7 +89,7 @@ func TestAccOpsWorksApplication_basic(t *testing.T) {
 						"secret":        "",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "document_root", "root"),
-					resource.TestCheckResourceAttr(resourceName, "auto_bundle_on_deploy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_bundle_on_deploy", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "rails_env", "staging"),
 				),
 			},
@@ -191,7 +191,7 @@ func testAccCheckUpdateAppAttributes(
 		expectedAttrs := map[string]*string{
 			"DocumentRoot":        aws.String("root"),
 			"RailsEnv":            aws.String("staging"),
-			"AutoBundleOnDeploy":  aws.String("true"),
+			"AutoBundleOnDeploy":  aws.String(acctest.CtTrue),
 			"AwsFlowRubySettings": nil,
 		}
 

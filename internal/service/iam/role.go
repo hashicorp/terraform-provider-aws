@@ -225,6 +225,11 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	if v, ok := d.GetOk("inline_policy"); ok && v.(*schema.Set).Len() > 0 {
 		policies := expandRoleInlinePolicies(roleName, v.(*schema.Set).List())
 		if err := addRoleInlinePolicies(ctx, conn, policies); err != nil {
+			derr := deleteRole(ctx, conn, roleName, true, true, false)
+			if derr != nil {
+				return sdkdiag.AppendErrorf(diags, "creating IAM role (%s), inline policy failed (%s), deleting role: %s", d.Id(), err, derr)
+			}
+
 			return sdkdiag.AppendErrorf(diags, "creating IAM Role (%s): %s", name, err)
 		}
 	}

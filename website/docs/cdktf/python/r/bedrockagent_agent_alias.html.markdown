@@ -1,5 +1,5 @@
 ---
-subcategory: "Agents for Amazon Bedrock"
+subcategory: "Bedrock Agents"
 layout: "aws"
 page_title: "AWS: aws_bedrockagent_agent_alias"
 description: |-
@@ -108,14 +108,15 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of the alias.
-* `routing_configuration` - (Optional) Details about the routing configuration of the alias. See [`routing_configuration` block](#routing_configuration-block) for details.
+* `routing_configuration` - (Optional) Details about the routing configuration of the alias. See [`routing_configuration` Block](#routing_configuration-block) for details.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `routing_configuration` block
+### `routing_configuration` Block
 
 The `routing_configuration` configuration block supports the following arguments:
 
-* `agent_version` - (Required) Version of the agent with which the alias is associated.
+* `agent_version` - (Optional) Version of the agent with which the alias is associated.
+* `provisioned_throughput` - (Optional) ARN of the Provisioned Throughput assigned to the agent alias.
 
 ## Attribute Reference
 
@@ -159,4 +160,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Agent Alias using the
 % terraform import aws_bedrockagent_agent_alias.example 66IVY0GUTF,GGRRAED6JP
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b3d0d3628b493deb8af0a6850882ed83529dae1b7a04714044a46e14b67fcdc8 -->
+<!-- cache-key: cdktf-0.20.1 input-ec9002dbf394ea30a92ebfbe0cd46c10a1224be5c43880fe491b2e709a8ed68e -->

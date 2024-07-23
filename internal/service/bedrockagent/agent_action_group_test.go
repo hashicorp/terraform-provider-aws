@@ -36,6 +36,19 @@ func TestAccBedrockAgentAgentActionGroup_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "action_group_state", "ENABLED"),
+					resource.TestCheckResourceAttrPair(resourceName, "agent_id", "aws_bedrockagent_agent.test", "agent_id"),
+					resource.TestCheckResourceAttr(resourceName, "agent_version", "DRAFT"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Basic Agent Action"),
+					resource.TestCheckNoResourceAttr(resourceName, "parent_action_group_signature"),
+					resource.TestCheckResourceAttr(resourceName, "skip_resource_in_use_check", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "action_group_executor.#", acctest.Ct1),
+					resource.TestCheckNoResourceAttr(resourceName, "action_group_executor.0.custom_control"),
+					resource.TestCheckResourceAttrPair(resourceName, "action_group_executor.0.lambda", "aws_lambda_function.test_lambda", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "api_schema.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "api_schema.0.payload"),
+					resource.TestCheckResourceAttr(resourceName, "api_schema.0.s3.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.#", acctest.Ct0),
 				),
 			},
 			{
@@ -48,7 +61,7 @@ func TestAccBedrockAgentAgentActionGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentAgentActionGroup_s3APISchema(t *testing.T) {
+func TestAccBedrockAgentAgentActionGroup_APISchema_s3(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_action_group.test"
@@ -61,10 +74,16 @@ func TestAccBedrockAgentAgentActionGroup_s3APISchema(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentActionGroupConfig_s3APISchema(rName),
+				Config: testAccAgentActionGroupConfig_APISchema_s3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttr(resourceName, "api_schema.#", acctest.Ct1),
+					resource.TestCheckNoResourceAttr(resourceName, "api_schema.0.payload"),
+					resource.TestCheckResourceAttr(resourceName, "api_schema.0.s3.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "api_schema.0.s3.0.s3_bucket_name", "aws_s3_bucket.test", names.AttrBucket),
+					resource.TestCheckResourceAttrPair(resourceName, "api_schema.0.s3.0.s3_object_key", "aws_s3_object.test", names.AttrKey),
 				),
 			},
 			{
@@ -90,10 +109,16 @@ func TestAccBedrockAgentAgentActionGroup_update(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentActionGroupConfig_s3APISchema(rName),
+				Config: testAccAgentActionGroupConfig_APISchema_s3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttr(resourceName, "api_schema.#", acctest.Ct1),
+					resource.TestCheckNoResourceAttr(resourceName, "api_schema.0.payload"),
+					resource.TestCheckResourceAttr(resourceName, "api_schema.0.s3.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "api_schema.0.s3.0.s3_bucket_name", "aws_s3_bucket.test", names.AttrBucket),
+					resource.TestCheckResourceAttrPair(resourceName, "api_schema.0.s3.0.s3_object_key", "aws_s3_object.test", names.AttrKey),
 				),
 			},
 			{
@@ -108,6 +133,83 @@ func TestAccBedrockAgentAgentActionGroup_update(t *testing.T) {
 					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Basic Agent Action"),
+					resource.TestCheckResourceAttr(resourceName, "api_schema.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "api_schema.0.payload"),
+					resource.TestCheckResourceAttr(resourceName, "api_schema.0.s3.#", acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check"},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentAgentActionGroup_FunctionSchema_memberFunctions(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent_action_group.test"
+	var v awstypes.AgentActionGroup
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentActionGroupConfig_FunctionSchema_memberFunctions(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.name", "sayHello"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.description", "Says Hello"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.parameters.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.parameters.0.map_block_key", names.AttrMessage),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.parameters.0.type", "string"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.parameters.0.description", "The Hello message"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.parameters.0.required", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.parameters.1.map_block_key", "unused"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.parameters.1.type", "integer"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.member_functions.0.functions.0.parameters.1.required", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check"},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentAgentActionGroup_ActionGroupExecutor_customControl(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent_action_group.test"
+	var v awstypes.AgentActionGroup
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentActionGroupConfig_ActionGroupExecutor_customControl(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "action_group_executor.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "action_group_executor.0.custom_control", "RETURN_CONTROL"),
+					resource.TestCheckNoResourceAttr(resourceName, "action_group_executor.0.lambda"),
 				),
 			},
 			{
@@ -168,7 +270,7 @@ func testAccCheckAgentActionGroupExists(ctx context.Context, n string, v *awstyp
 
 func testAccAgentActionGroupConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
-		testAccAgentActionGroupConfig_lamba(rName),
+		testAccAgentActionGroupConfig_lambda(rName),
 		fmt.Sprintf(`
 resource "aws_bedrockagent_agent_action_group" "test" {
   action_group_name          = %[1]q
@@ -186,16 +288,16 @@ resource "aws_bedrockagent_agent_action_group" "test" {
 `, rName))
 }
 
-func testAccAgentActionGroupConfig_s3APISchema(rName string) string {
+func testAccAgentActionGroupConfig_APISchema_s3(rName string) string {
 	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
-		testAccAgentActionGroupConfig_lamba(rName),
+		testAccAgentActionGroupConfig_lambda(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
 resource "aws_s3_object" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   key    = "api_schema.yaml"
   source = "${path.module}/test-fixtures/api_schema.yaml"
 }
@@ -210,7 +312,7 @@ resource "aws_bedrockagent_agent_action_group" "test" {
   }
   api_schema {
     s3 {
-      s3_bucket_name = aws_s3_bucket.test.id
+      s3_bucket_name = aws_s3_bucket.test.bucket
       s3_object_key  = aws_s3_object.test.key
     }
   }
@@ -219,7 +321,7 @@ resource "aws_bedrockagent_agent_action_group" "test" {
 `, rName))
 }
 
-func testAccAgentActionGroupConfig_lamba(rName string) string {
+func testAccAgentActionGroupConfig_lambda(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "lambda_assume" {
   statement {
@@ -250,4 +352,59 @@ resource "aws_lambda_function" "test_lambda" {
   runtime = "python3.9"
 }
 `, rName)
+}
+
+func testAccAgentActionGroupConfig_FunctionSchema_memberFunctions(rName string) string {
+	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
+		testAccAgentActionGroupConfig_lambda(rName),
+		fmt.Sprintf(`
+resource "aws_bedrockagent_agent_action_group" "test" {
+  action_group_name          = %[1]q
+  agent_id                   = aws_bedrockagent_agent.test.agent_id
+  agent_version              = "DRAFT"
+  skip_resource_in_use_check = true
+  action_group_executor {
+    lambda = aws_lambda_function.test_lambda.arn
+  }
+  function_schema {
+    member_functions {
+      functions {
+        name        = "sayHello"
+        description = "Says Hello"
+        parameters {
+          map_block_key = "message"
+          type          = "string"
+          description   = "The Hello message"
+          required      = true
+        }
+        parameters {
+          map_block_key = "unused"
+          type          = "integer"
+          required      = false
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccAgentActionGroupConfig_ActionGroupExecutor_customControl(rName string) string {
+	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
+		testAccAgentActionGroupConfig_lambda(rName),
+		fmt.Sprintf(`
+resource "aws_bedrockagent_agent_action_group" "test" {
+  action_group_name          = %[1]q
+  agent_id                   = aws_bedrockagent_agent.test.agent_id
+  agent_version              = "DRAFT"
+  description                = "Basic Agent Action"
+  skip_resource_in_use_check = true
+  action_group_executor {
+    custom_control = "RETURN_CONTROL"
+  }
+  api_schema {
+    payload = file("${path.module}/test-fixtures/api_schema.yaml")
+  }
+}
+`, rName))
 }

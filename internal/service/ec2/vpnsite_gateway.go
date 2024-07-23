@@ -27,6 +27,7 @@ import (
 
 // @SDKResource("aws_vpn_gateway", name="VPN Gateway")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceVPNGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPNGatewayCreate,
@@ -74,7 +75,7 @@ func resourceVPNGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &ec2.CreateVpnGatewayInput{
 		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeVpnGateway),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpnGateway),
 		Type:              awstypes.GatewayTypeIpsec1,
 	}
 
@@ -142,7 +143,7 @@ func resourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	setTagsOutV2(ctx, vpnGateway.Tags)
+	setTagsOut(ctx, vpnGateway.Tags)
 
 	return diags
 }

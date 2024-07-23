@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,14 +21,14 @@ import (
 
 func TestAccTransferProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedProfile
+	var conf awstypes.DescribedProfile
 	resourceName := "aws_transfer_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -58,7 +58,7 @@ func TestAccTransferProfile_basic(t *testing.T) {
 
 func TestAccTransferProfile_certificateIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedProfile
+	var conf awstypes.DescribedProfile
 	resourceName := "aws_transfer_profile.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
@@ -67,7 +67,7 @@ func TestAccTransferProfile_certificateIDs(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -92,14 +92,14 @@ func TestAccTransferProfile_certificateIDs(t *testing.T) {
 
 func TestAccTransferProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedProfile
+	var conf awstypes.DescribedProfile
 	resourceName := "aws_transfer_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -120,14 +120,14 @@ func TestAccTransferProfile_disappears(t *testing.T) {
 
 func TestAccTransferProfile_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedProfile
+	var conf awstypes.DescribedProfile
 	resourceName := "aws_transfer_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -168,7 +168,7 @@ func TestAccTransferProfile_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckProfileExists(ctx context.Context, n string, v *transfer.DescribedProfile) resource.TestCheckFunc {
+func testAccCheckProfileExists(ctx context.Context, n string, v *awstypes.DescribedProfile) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -179,7 +179,7 @@ func testAccCheckProfileExists(ctx context.Context, n string, v *transfer.Descri
 			return fmt.Errorf("No Transfer Profile ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
 		output, err := tftransfer.FindProfileByID(ctx, conn, rs.Primary.ID)
 
@@ -195,7 +195,7 @@ func testAccCheckProfileExists(ctx context.Context, n string, v *transfer.Descri
 
 func testAccCheckProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_profile" {
