@@ -6,17 +6,17 @@ package location_test
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/service/location"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/location/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/location"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/location/types"
 	"github.com/aws/aws-sdk-go/aws"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tflocation "github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
