@@ -1064,13 +1064,13 @@ func resourceService() *schema.Resource {
 						tfMap := v[0].(map[string]interface{})
 						if v, ok := tfMap["managed_ebs_volume"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 							tfMap := v[0].(map[string]interface{})
-							if v, ok := tfMap["throughput"]; ok {
+							if v, ok := tfMap[names.AttrThroughput]; ok {
 								if v, ok := v.(string); ok {
 									if v == "" {
-										tfMap["throughput"] = 0
+										tfMap[names.AttrThroughput] = 0
 									} else {
 										if v, err := strconv.Atoi(v); err == nil {
-											tfMap["throughput"] = v
+											tfMap[names.AttrThroughput] = v
 										} else {
 											return nil, err
 										}
