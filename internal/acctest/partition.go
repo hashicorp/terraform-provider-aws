@@ -4,8 +4,7 @@
 package acctest
 
 import (
-	"regexp"
-
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -17,10 +16,9 @@ func IsIsolatedRegion(region string) bool {
 }
 
 func IsIsolatedPartition(partition string) bool {
-
 	pattern := `^aws-iso-?.*$`
 
-	re := regexp.MustCompile(pattern)
+	re := regexache.MustCompile(pattern)
 
 	return re.MatchString(partition)
 }
