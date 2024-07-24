@@ -6,7 +6,7 @@ package ec2
 import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,7 +30,7 @@ const (
 
 func fleetOnDemandAllocationStrategy_Values() []string {
 	return append(
-		slices.RemoveAll(enum.Values[awstypes.FleetOnDemandAllocationStrategy](), string(awstypes.FleetOnDemandAllocationStrategyLowestPrice)),
+		tfslices.RemoveAll(enum.Values[awstypes.FleetOnDemandAllocationStrategy](), string(awstypes.FleetOnDemandAllocationStrategyLowestPrice)),
 		fleetOnDemandAllocationStrategyLowestPrice,
 	)
 }
@@ -42,7 +42,7 @@ const (
 
 func spotAllocationStrategy_Values() []string {
 	return append(
-		slices.RemoveAll(enum.Values[awstypes.SpotAllocationStrategy](), string(awstypes.SpotAllocationStrategyLowestPrice)),
+		tfslices.RemoveAll(enum.Values[awstypes.SpotAllocationStrategy](), string(awstypes.SpotAllocationStrategyLowestPrice)),
 		spotAllocationStrategyLowestPrice,
 	)
 }

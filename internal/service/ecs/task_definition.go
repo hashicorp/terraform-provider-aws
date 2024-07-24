@@ -86,7 +86,12 @@ func resourceTaskDefinition() *schema.Resource {
 					// Sort the lists of environment variables as they are serialized to state, so we won't get
 					// spurious reorderings in plans (diff is suppressed if the environment variables haven't changed,
 					// but they still show in the plan if some other property changes).
-					orderedCDs, _ := expandContainerDefinitions(v.(string))
+					orderedCDs, err := expandContainerDefinitions(v.(string))
+					if err != nil {
+						// e.g. The value is unknown ("74D93920-ED26-11E3-AC10-0800200C9A66").
+						// Mimic the pre-v5.59.0 behavior.
+						return "[]"
+					}
 					containerDefinitions(orderedCDs).orderContainers()
 					containerDefinitions(orderedCDs).orderEnvironmentVariables()
 					containerDefinitions(orderedCDs).orderSecrets()

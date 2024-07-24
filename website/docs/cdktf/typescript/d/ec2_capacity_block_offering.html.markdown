@@ -30,7 +30,6 @@ class MyConvertedCode extends TerraformStack {
       capacityDurationHours: 24,
       endDateRange: "2024-05-30T15:04:05Z",
       instanceCount: 1,
-      instance_platform: "Linux/UNIX",
       instanceType: "p4d.24xlarge",
       startDateRange: "2024-04-28T15:04:05Z",
     });
@@ -59,4 +58,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `upfrontFee` - The total price to be paid up front.
 * `tenancy` - Indicates the tenancy of the Capacity Reservation. Specify either `default` or `dedicated`.
 
-<!-- cache-key: cdktf-0.20.1 input-2d0ec202ce607796e56894766e595d335266b31b02f895f99d52626777f4ee96 -->
+<!-- cache-key: cdktf-0.20.1 input-3f3e49fd493b5f899bfdc945acc0e7294e5feb138d1e1b0272a0552baacd8b87 -->

@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_rds_cluster: Mark `ca_certificate_identifier` as Computed
+```
+
+```release-note:bug
+resource/aws_rds_cluster: Wait for no pending modified values on Update if `apply_immediately` is `true`. This fixes `InvalidParameterCombination` errors when updating `engine_version`
+```

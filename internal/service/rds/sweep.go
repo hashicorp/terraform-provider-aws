@@ -181,7 +181,7 @@ func sweepClusterSnapshots(region string) error {
 		}
 
 		for _, v := range page.DBClusterSnapshots {
-			r := ResourceClusterSnapshot()
+			r := resourceClusterSnapshot()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.DBClusterSnapshotIdentifier))
 
@@ -229,7 +229,7 @@ func sweepClusters(region string) error {
 		for _, v := range page.DBClusters {
 			arn := aws.StringValue(v.DBClusterArn)
 			id := aws.StringValue(v.DBClusterIdentifier)
-			r := ResourceCluster()
+			r := resourceCluster()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set(names.AttrApplyImmediately, true)
