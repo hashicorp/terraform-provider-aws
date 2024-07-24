@@ -291,7 +291,7 @@ func flattenImagePullSecrets(ipss []*batch.ImagePullSecret) (tfList []interface{
 		tfMap := map[string]interface{}{}
 
 		if v := ips.Name; v != nil {
-			tfMap["name"] = aws.StringValue(v)
+			tfMap[names.AttrName] = aws.StringValue(v)
 			tfList = append(tfList, tfMap) // move out of "if" when more fields are added
 		}
 	}
