@@ -221,7 +221,7 @@ The following arguments are optional:
 * `containers` - (Optional) Properties of the container that's used on the Amazon EKS pod. See [containers](#containers) below.
 * `dns_policy` - (Optional) DNS policy for the pod. The default value is `ClusterFirst`. If the `host_network` argument is not specified, the default is `ClusterFirstWithHostNet`. `ClusterFirst` indicates that any DNS query that does not match the configured cluster domain suffix is forwarded to the upstream nameserver inherited from the node. For more information, see Pod's DNS policy in the Kubernetes documentation.
 * `host_network` - (Optional) Whether the pod uses the hosts' network IP address. The default value is `true`. Setting this to `false` enables the Kubernetes pod networking model. Most AWS Batch workloads are egress-only and don't require the overhead of IP allocation for each pod for incoming connections.
-* `image_pull_secret` - (Optional) List of Kubernetes secret resources. See [`image_pull_secret`](#image-pull-secret) below.
+* `image_pull_secret` - (Optional) List of Kubernetes secret resources. See [`image_pull_secret`](#image_pull_secret) below.
 * `metadata` - (Optional) Metadata about the Kubernetes pod.
 * `service_account_name` - (Optional) Name of the service account that's used to run the pod.
 * `volumes` - (Optional) Volumes for a job definition that uses Amazon EKS resources. AWS Batch supports [emptyDir](#eks_empty_dir), [hostPath](#eks_host_path), and [secret](#eks_secret) volume types.
