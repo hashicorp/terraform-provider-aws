@@ -121,18 +121,20 @@ func (cd containerDefinitions) reduce(isAWSVPC bool) {
 }
 
 func (cd containerDefinitions) orderEnvironmentVariables() {
-	for _, def := range cd {
+	for i, def := range cd {
 		sort.Slice(def.Environment, func(i, j int) bool {
 			return aws.ToString(def.Environment[i].Name) < aws.ToString(def.Environment[j].Name)
 		})
+		cd[i].Environment = def.Environment
 	}
 }
 
 func (cd containerDefinitions) orderSecrets() {
-	for _, def := range cd {
+	for i, def := range cd {
 		sort.Slice(def.Secrets, func(i, j int) bool {
 			return aws.ToString(def.Secrets[i].Name) < aws.ToString(def.Secrets[j].Name)
 		})
+		cd[i].Secrets = def.Secrets
 	}
 }
 

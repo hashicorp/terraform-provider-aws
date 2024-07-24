@@ -453,54 +453,58 @@ func expandOpenZFSUserOrGroupQuota(conf map[string]interface{}) *awstypes.OpenZF
 	return &out
 }
 
-func expandOpenZFSNfsExports(cfg []interface{}) []awstypes.OpenZFSNfsExport { // nosemgrep:ci.caps4-in-func-name
-	exports := []awstypes.OpenZFSNfsExport{}
+func expandOpenZFSNfsExports(tfList []interface{}) []awstypes.OpenZFSNfsExport { // nosemgrep:ci.caps4-in-func-name
+	apiObjects := []awstypes.OpenZFSNfsExport{}
 
-	for _, export := range cfg {
-		expandedExport := expandOpenZFSNfsExport(export.(map[string]interface{}))
-		if expandedExport != nil {
-			exports = append(exports, *expandedExport)
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
 		}
+
+		apiObjects = append(apiObjects, expandOpenZFSNfsExport(tfMap))
 	}
 
-	return exports
+	return apiObjects
 }
 
-func expandOpenZFSNfsExport(cfg map[string]interface{}) *awstypes.OpenZFSNfsExport { // nosemgrep:ci.caps4-in-func-name
-	out := awstypes.OpenZFSNfsExport{}
+func expandOpenZFSNfsExport(tfMap map[string]interface{}) awstypes.OpenZFSNfsExport { // nosemgrep:ci.caps4-in-func-name
+	apiObject := awstypes.OpenZFSNfsExport{}
 
-	if v, ok := cfg["client_configurations"]; ok {
-		out.ClientConfigurations = expandOpenZFSClientConfigurations(v.(*schema.Set).List())
+	if v, ok := tfMap["client_configurations"]; ok {
+		apiObject.ClientConfigurations = expandOpenZFSClientConfigurations(v.(*schema.Set).List())
 	}
 
-	return &out
+	return apiObject
 }
 
-func expandOpenZFSClientConfigurations(cfg []interface{}) []awstypes.OpenZFSClientConfiguration {
-	configurations := []awstypes.OpenZFSClientConfiguration{}
+func expandOpenZFSClientConfigurations(tfList []interface{}) []awstypes.OpenZFSClientConfiguration {
+	apiObjects := []awstypes.OpenZFSClientConfiguration{}
 
-	for _, configuration := range cfg {
-		expandedConfiguration := expandOpenZFSClientConfiguration(configuration.(map[string]interface{}))
-		if expandedConfiguration != nil {
-			configurations = append(configurations, *expandedConfiguration)
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
 		}
+
+		apiObjects = append(apiObjects, expandOpenZFSClientConfiguration(tfMap))
 	}
 
-	return configurations
+	return apiObjects
 }
 
-func expandOpenZFSClientConfiguration(conf map[string]interface{}) *awstypes.OpenZFSClientConfiguration {
-	out := awstypes.OpenZFSClientConfiguration{}
+func expandOpenZFSClientConfiguration(tfMap map[string]interface{}) awstypes.OpenZFSClientConfiguration {
+	apiObject := awstypes.OpenZFSClientConfiguration{}
 
-	if v, ok := conf["clients"].(string); ok && len(v) > 0 {
-		out.Clients = aws.String(v)
+	if v, ok := tfMap["clients"].(string); ok && len(v) > 0 {
+		apiObject.Clients = aws.String(v)
 	}
 
-	if v, ok := conf["options"].([]interface{}); ok {
-		out.Options = flex.ExpandStringValueList(v)
+	if v, ok := tfMap["options"].([]interface{}); ok {
+		apiObject.Options = flex.ExpandStringValueList(v)
 	}
 
-	return &out
+	return apiObject
 }
 
 func expandCreateOpenZFSOriginSnapshotConfiguration(cfg []interface{}) *awstypes.CreateOpenZFSOriginSnapshotConfiguration {
@@ -523,34 +527,39 @@ func expandCreateOpenZFSOriginSnapshotConfiguration(cfg []interface{}) *awstypes
 	return &out
 }
 
-func flattenOpenZFSNfsExports(rs []awstypes.OpenZFSNfsExport) []map[string]interface{} { // nosemgrep:ci.caps4-in-func-name
-	exports := make([]map[string]interface{}, 0)
+func flattenOpenZFSNfsExports(apiObjects []awstypes.OpenZFSNfsExport) []interface{} { // nosemgrep:ci.caps4-in-func-name
+	tfList := make([]interface{}, 0)
 
-	for _, export := range rs {
-		cfg := make(map[string]interface{})
-		cfg["client_configurations"] = flattenOpenZFSClientConfigurations(export.ClientConfigurations)
-		exports = append(exports, cfg)
+	for _, apiObject := range apiObjects {
+		// The API may return '"NfsExports":[null]'.
+		if len(apiObject.ClientConfigurations) == 0 {
+			continue
+		}
+
+		tfMap := make(map[string]interface{})
+		tfMap["client_configurations"] = flattenOpenZFSClientConfigurations(apiObject.ClientConfigurations)
+		tfList = append(tfList, tfMap)
 	}
 
-	if len(exports) > 0 {
-		return exports
+	if len(tfList) > 0 {
+		return tfList
 	}
 
 	return nil
 }
 
-func flattenOpenZFSClientConfigurations(rs []awstypes.OpenZFSClientConfiguration) []map[string]interface{} {
-	configurations := make([]map[string]interface{}, 0)
+func flattenOpenZFSClientConfigurations(apiObjects []awstypes.OpenZFSClientConfiguration) []interface{} {
+	tfList := make([]interface{}, 0)
 
-	for _, configuration := range rs {
-		cfg := make(map[string]interface{})
-		cfg["clients"] = aws.ToString(configuration.Clients)
-		cfg["options"] = flex.FlattenStringValueList(configuration.Options)
-		configurations = append(configurations, cfg)
+	for _, apiObject := range apiObjects {
+		tfMap := make(map[string]interface{})
+		tfMap["clients"] = aws.ToString(apiObject.Clients)
+		tfMap["options"] = apiObject.Options
+		tfList = append(tfList, tfMap)
 	}
 
-	if len(configurations) > 0 {
-		return configurations
+	if len(tfList) > 0 {
+		return tfList
 	}
 
 	return nil

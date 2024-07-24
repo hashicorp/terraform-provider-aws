@@ -81,6 +81,7 @@ const (
 	FMSEndpointID                        = "fms"
 	FSxEndpointID                        = "fsx"
 	GrafanaEndpointID                    = "grafana"
+	GlueEndpointID                       = "glue"
 	IVSEndpointID                        = "ivs"
 	IVSChatEndpointID                    = "ivschat"
 	IdentityStoreEndpointID              = "identitystore"
