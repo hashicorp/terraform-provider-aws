@@ -154,7 +154,7 @@ func TestExpand(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				{
 					"@level":   "info",
-					"@module":  "provider",
+					"@module":  "provider.autoflex",
 					"@message": "AutoFlex Expand; incompatible types",
 					"from":     map[string]any{},
 					"to":       float64(reflect.Int64),
@@ -1494,7 +1494,7 @@ func TestExpandInterface(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				{
 					"@level":   "info",
-					"@module":  "provider",
+					"@module":  "provider.autoflex",
 					"@message": "AutoFlex Expand; incompatible types",
 					"from":     map[string]any{},
 					"to":       float64(reflect.Interface),
@@ -1957,7 +1957,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				{
 					"@level":   "info",
-					"@module":  "provider",
+					"@module":  "provider.autoflex",
 					"@message": "AutoFlex Expand; incompatible types",
 					"from":     map[string]any{},
 					"to":       float64(reflect.Interface),
@@ -2365,6 +2365,8 @@ func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases) {
 
 			var buf bytes.Buffer
 			ctx = tflogtest.RootLogger(ctx, &buf)
+
+			ctx = RegisterLogger(ctx)
 
 			diags := Expand(ctx, testCase.Source, testCase.Target, testCase.Options...)
 

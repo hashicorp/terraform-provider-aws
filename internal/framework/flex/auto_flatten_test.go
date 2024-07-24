@@ -179,7 +179,7 @@ func TestFlatten(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				{
 					"@level":   "info",
-					"@module":  "provider",
+					"@module":  "provider.autoflex",
 					"@message": "AutoFlex Flatten; incompatible types",
 					"from":     float64(reflect.String),
 					"to":       map[string]any{},
@@ -1268,7 +1268,7 @@ func TestFlattenInterface(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				{
 					"@level":   "info",
-					"@module":  "provider",
+					"@module":  "provider.autoflex",
 					"@message": "AutoFlex Flatten; incompatible types",
 					"from":     float64(reflect.Interface),
 					"to": map[string]any{
@@ -1736,6 +1736,8 @@ func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases) {
 
 			var buf bytes.Buffer
 			ctx = tflogtest.RootLogger(ctx, &buf)
+
+			ctx = RegisterLogger(ctx)
 
 			diags := Flatten(ctx, testCase.Source, testCase.Target, testCase.Options...)
 

@@ -149,7 +149,7 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 		return diags
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -180,7 +180,7 @@ func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, is
 		return diags
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -217,7 +217,7 @@ func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, i
 		return diags
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -248,7 +248,7 @@ func (flattener autoFlattener) int(ctx context.Context, vFrom reflect.Value, isN
 		return diags
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -282,7 +282,7 @@ func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, 
 		return diags
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -320,7 +320,7 @@ func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, is
 		return diags
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   vTo,
 	})
@@ -354,7 +354,7 @@ func (flattener autoFlattener) ptr(ctx context.Context, vFrom reflect.Value, tTo
 		return diags
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -399,7 +399,7 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 		return diags
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -555,7 +555,7 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 		}
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -769,7 +769,7 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 		}
 	}
 
-	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+	tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]interface{}{
 		"from": vFrom.Kind(),
 		"to":   tTo,
 	})
@@ -905,7 +905,7 @@ func (flattener autoFlattener) interfaceToNestedObject(ctx context.Context, vFro
 
 		vTo.Set(reflect.ValueOf(val))
 
-		tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]any{
+		tflog.SubsystemInfo(ctx, subsystemName, "AutoFlex Flatten; incompatible types", map[string]any{
 			"from": vFrom.Kind(),
 			"to":   tTo,
 		})
