@@ -93,7 +93,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_rds_orderable_db_instance",
 		},
 		{
-			Factory:  DataSourceReservedOffering,
+			Factory:  dataSourceReservedOffering,
 			TypeName: "aws_rds_reserved_instance_offering",
 		},
 	}
@@ -186,7 +186,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceSnapshotCopy,
 			TypeName: "aws_db_snapshot_copy",
-			Name:     "DB Snapshot",
+			Name:     "DB Snapshot Copy",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "db_snapshot_arn",
 			},
