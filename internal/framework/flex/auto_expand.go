@@ -39,6 +39,11 @@ func Expand(ctx context.Context, tfObject, apiObject any, optFns ...AutoFlexOpti
 	var diags diag.Diagnostics
 	expander := newAutoExpander(optFns)
 
+	tflog.SubsystemInfo(ctx, subsystemName, "Expanding", map[string]any{
+		logAttrKeySourceType: fullTypeName(reflect.TypeOf(tfObject)),
+		logAttrKeyTargetType: fullTypeName(reflect.TypeOf(apiObject)),
+	})
+
 	diags.Append(autoExpandConvert(ctx, tfObject, apiObject, expander)...)
 	if diags.HasError() {
 		diags.AddError("AutoFlEx", fmt.Sprintf("Expand[%T, %T]", tfObject, apiObject))

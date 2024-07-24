@@ -1737,7 +1737,7 @@ func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases) {
 			var buf bytes.Buffer
 			ctx = tflogtest.RootLogger(ctx, &buf)
 
-			ctx = RegisterLogger(ctx)
+			ctx = registerTestingLogger(ctx)
 
 			diags := Flatten(ctx, testCase.Source, testCase.Target, testCase.Options...)
 
