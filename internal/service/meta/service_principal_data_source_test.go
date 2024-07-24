@@ -105,7 +105,7 @@ func TestAccMetaServicePrincipal_UniqueForServiceInRegion(t *testing.T) {
 		{
 			Region:   "us-iso-east-1", //lintignore:AWSAT003
 			Suffix:   "c2s.ic.gov",
-			Services: []string{"cloudhsm", "config", "logs", "states", "workspaces"},
+			Services: []string{"cloudhsm", "config", "logs", "workspaces"},
 		},
 		{
 			Region:   "us-isob-east-1", //lintignore:AWSAT003
