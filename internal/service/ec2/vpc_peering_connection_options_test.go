@@ -136,10 +136,11 @@ func TestAccVPCPeeringConnectionOptions_differentRegionSameAccount(t *testing.T)
 				),
 			},
 			{
-				Config:            testAccVPCPeeringConnectionOptionsConfig_differentRegionSameAccount(rName, true, true),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config:                  testAccVPCPeeringConnectionOptionsConfig_differentRegionSameAccount(rName, true, true),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"accepter.0.allow_remote_vpc_dns_resolution"},
 			},
 			{
 				Config: testAccVPCPeeringConnectionOptionsConfig_differentRegionSameAccount(rName, false, false),

@@ -309,18 +309,18 @@ func TestAccFSxONTAPStorageVirtualMachine_activeDirectoryJoin(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPStorageVirtualMachineConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckONTAPStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine1),
 					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.#", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccONTAPStorageVirtualMachineConfig_selfManagedActiveDirectory(rName, netBiosName, domainNetbiosName, domainName, domainPassword),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckONTAPStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine2),
 					testAccCheckONTAPStorageVirtualMachineNotRecreated(&storageVirtualMachine1, &storageVirtualMachine2),
 					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.netbios_name", netBiosName),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.netbios_name", strings.ToUpper(netBiosName)),
 					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.file_system_administrators_group", "Admins"),
 					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name", fmt.Sprintf("OU=computers,OU=%s", domainNetbiosName)),

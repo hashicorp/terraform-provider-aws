@@ -107,6 +107,7 @@ import (
 	fsx_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fsx"
 	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
 	globalaccelerator_sdkv2 "github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
+	glue_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glue"
 	grafana_sdkv2 "github.com/aws/aws-sdk-go-v2/service/grafana"
 	greengrass_sdkv2 "github.com/aws/aws-sdk-go-v2/service/greengrass"
 	groundstation_sdkv2 "github.com/aws/aws-sdk-go-v2/service/groundstation"
@@ -114,6 +115,7 @@ import (
 	healthlake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/healthlake"
 	iam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iam"
 	identitystore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/identitystore"
+	inspector_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector"
 	inspector2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector2"
 	internetmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/internetmonitor"
 	iot_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iot"
@@ -218,10 +220,8 @@ import (
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
-	glue_sdkv1 "github.com/aws/aws-sdk-go/service/glue"
 	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
-	inspector_sdkv1 "github.com/aws/aws-sdk-go/service/inspector"
 	kinesisanalyticsv2_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
 	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
@@ -689,8 +689,8 @@ func (c *AWSClient) GlobalAcceleratorClient(ctx context.Context) *globalaccelera
 	return errs.Must(client[*globalaccelerator_sdkv2.Client](ctx, c, names.GlobalAccelerator, make(map[string]any)))
 }
 
-func (c *AWSClient) GlueConn(ctx context.Context) *glue_sdkv1.Glue {
-	return errs.Must(conn[*glue_sdkv1.Glue](ctx, c, names.Glue, make(map[string]any)))
+func (c *AWSClient) GlueClient(ctx context.Context) *glue_sdkv2.Client {
+	return errs.Must(client[*glue_sdkv2.Client](ctx, c, names.Glue, make(map[string]any)))
 }
 
 func (c *AWSClient) GrafanaClient(ctx context.Context) *grafana_sdkv2.Client {
@@ -737,8 +737,8 @@ func (c *AWSClient) ImageBuilderConn(ctx context.Context) *imagebuilder_sdkv1.Im
 	return errs.Must(conn[*imagebuilder_sdkv1.Imagebuilder](ctx, c, names.ImageBuilder, make(map[string]any)))
 }
 
-func (c *AWSClient) InspectorConn(ctx context.Context) *inspector_sdkv1.Inspector {
-	return errs.Must(conn[*inspector_sdkv1.Inspector](ctx, c, names.Inspector, make(map[string]any)))
+func (c *AWSClient) InspectorClient(ctx context.Context) *inspector_sdkv2.Client {
+	return errs.Must(client[*inspector_sdkv2.Client](ctx, c, names.Inspector, make(map[string]any)))
 }
 
 func (c *AWSClient) Inspector2Client(ctx context.Context) *inspector2_sdkv2.Client {

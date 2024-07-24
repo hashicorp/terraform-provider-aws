@@ -703,72 +703,70 @@ func expandDiskIopsConfiguration(cfg []interface{}) *awstypes.DiskIopsConfigurat
 	return &out
 }
 
-func expandOpenZFSCreateRootVolumeConfiguration(cfg []interface{}) *awstypes.OpenZFSCreateRootVolumeConfiguration {
-	if len(cfg) < 1 {
+func expandOpenZFSCreateRootVolumeConfiguration(tfList []interface{}) *awstypes.OpenZFSCreateRootVolumeConfiguration {
+	if len(tfList) < 1 {
 		return nil
 	}
 
-	conf := cfg[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &awstypes.OpenZFSCreateRootVolumeConfiguration{}
 
-	out := awstypes.OpenZFSCreateRootVolumeConfiguration{}
-
-	if v, ok := conf["copy_tags_to_snapshots"].(bool); ok {
-		out.CopyTagsToSnapshots = aws.Bool(v)
+	if v, ok := tfMap["copy_tags_to_snapshots"].(bool); ok {
+		apiObject.CopyTagsToSnapshots = aws.Bool(v)
 	}
 
-	if v, ok := conf["data_compression_type"].(string); ok {
-		out.DataCompressionType = awstypes.OpenZFSDataCompressionType(v)
+	if v, ok := tfMap["data_compression_type"].(string); ok {
+		apiObject.DataCompressionType = awstypes.OpenZFSDataCompressionType(v)
 	}
 
-	if v, ok := conf["read_only"].(bool); ok {
-		out.ReadOnly = aws.Bool(v)
+	if v, ok := tfMap["nfs_exports"].([]interface{}); ok {
+		apiObject.NfsExports = expandOpenZFSNfsExports(v)
 	}
 
-	if v, ok := conf["record_size_kib"].(int); ok {
-		out.RecordSizeKiB = aws.Int32(int32(v))
+	if v, ok := tfMap["read_only"].(bool); ok {
+		apiObject.ReadOnly = aws.Bool(v)
 	}
 
-	if v, ok := conf["user_and_group_quotas"]; ok {
-		out.UserAndGroupQuotas = expandOpenZFSUserOrGroupQuotas(v.(*schema.Set).List())
+	if v, ok := tfMap["record_size_kib"].(int); ok {
+		apiObject.RecordSizeKiB = aws.Int32(int32(v))
 	}
 
-	if v, ok := conf["nfs_exports"].([]interface{}); ok {
-		out.NfsExports = expandOpenZFSNfsExports(v)
+	if v, ok := tfMap["user_and_group_quotas"]; ok {
+		apiObject.UserAndGroupQuotas = expandOpenZFSUserOrGroupQuotas(v.(*schema.Set).List())
 	}
 
-	return &out
+	return apiObject
 }
 
-func expandUpdateOpenZFSVolumeConfiguration(cfg []interface{}) *awstypes.UpdateOpenZFSVolumeConfiguration {
-	if len(cfg) < 1 {
+func expandUpdateOpenZFSVolumeConfiguration(tfList []interface{}) *awstypes.UpdateOpenZFSVolumeConfiguration {
+	if len(tfList) < 1 {
 		return nil
 	}
 
-	conf := cfg[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &awstypes.UpdateOpenZFSVolumeConfiguration{}
 
-	out := awstypes.UpdateOpenZFSVolumeConfiguration{}
-
-	if v, ok := conf["data_compression_type"].(string); ok {
-		out.DataCompressionType = awstypes.OpenZFSDataCompressionType(v)
+	if v, ok := tfMap["data_compression_type"].(string); ok {
+		apiObject.DataCompressionType = awstypes.OpenZFSDataCompressionType(v)
 	}
 
-	if v, ok := conf["read_only"].(bool); ok {
-		out.ReadOnly = aws.Bool(v)
+	if v, ok := tfMap["nfs_exports"].([]interface{}); ok {
+		apiObject.NfsExports = expandOpenZFSNfsExports(v)
 	}
 
-	if v, ok := conf["record_size_kib"].(int); ok {
-		out.RecordSizeKiB = aws.Int32(int32(v))
+	if v, ok := tfMap["read_only"].(bool); ok {
+		apiObject.ReadOnly = aws.Bool(v)
 	}
 
-	if v, ok := conf["user_and_group_quotas"]; ok {
-		out.UserAndGroupQuotas = expandOpenZFSUserOrGroupQuotas(v.(*schema.Set).List())
+	if v, ok := tfMap["record_size_kib"].(int); ok {
+		apiObject.RecordSizeKiB = aws.Int32(int32(v))
 	}
 
-	if v, ok := conf["nfs_exports"].([]interface{}); ok {
-		out.NfsExports = expandOpenZFSNfsExports(v)
+	if v, ok := tfMap["user_and_group_quotas"]; ok {
+		apiObject.UserAndGroupQuotas = expandOpenZFSUserOrGroupQuotas(v.(*schema.Set).List())
 	}
 
-	return &out
+	return apiObject
 }
 
 func flattenDiskIopsConfiguration(rs *awstypes.DiskIopsConfiguration) []interface{} {
@@ -785,30 +783,31 @@ func flattenDiskIopsConfiguration(rs *awstypes.DiskIopsConfiguration) []interfac
 	return []interface{}{m}
 }
 
-func flattenOpenZFSFileSystemRootVolume(rs *awstypes.Volume) []interface{} {
-	if rs == nil {
+func flattenOpenZFSFileSystemRootVolume(apiObject *awstypes.Volume) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := make(map[string]interface{})
-	if rs.OpenZFSConfiguration.CopyTagsToSnapshots != nil {
-		m["copy_tags_to_snapshots"] = aws.ToBool(rs.OpenZFSConfiguration.CopyTagsToSnapshots)
+	tfMap := make(map[string]interface{})
+
+	if apiObject.OpenZFSConfiguration.CopyTagsToSnapshots != nil {
+		tfMap["copy_tags_to_snapshots"] = aws.ToBool(apiObject.OpenZFSConfiguration.CopyTagsToSnapshots)
 	}
-	m["data_compression_type"] = string(rs.OpenZFSConfiguration.DataCompressionType)
-	if rs.OpenZFSConfiguration.NfsExports != nil {
-		m["nfs_exports"] = flattenOpenZFSNfsExports(rs.OpenZFSConfiguration.NfsExports)
+	tfMap["data_compression_type"] = string(apiObject.OpenZFSConfiguration.DataCompressionType)
+	if apiObject.OpenZFSConfiguration.NfsExports != nil {
+		tfMap["nfs_exports"] = flattenOpenZFSNfsExports(apiObject.OpenZFSConfiguration.NfsExports)
 	}
-	if rs.OpenZFSConfiguration.ReadOnly != nil {
-		m["read_only"] = aws.ToBool(rs.OpenZFSConfiguration.ReadOnly)
+	if apiObject.OpenZFSConfiguration.ReadOnly != nil {
+		tfMap["read_only"] = aws.ToBool(apiObject.OpenZFSConfiguration.ReadOnly)
 	}
-	if rs.OpenZFSConfiguration.RecordSizeKiB != nil {
-		m["record_size_kib"] = aws.ToInt32(rs.OpenZFSConfiguration.RecordSizeKiB)
+	if apiObject.OpenZFSConfiguration.RecordSizeKiB != nil {
+		tfMap["record_size_kib"] = aws.ToInt32(apiObject.OpenZFSConfiguration.RecordSizeKiB)
 	}
-	if rs.OpenZFSConfiguration.UserAndGroupQuotas != nil {
-		m["user_and_group_quotas"] = flattenOpenZFSUserOrGroupQuotas(rs.OpenZFSConfiguration.UserAndGroupQuotas)
+	if apiObject.OpenZFSConfiguration.UserAndGroupQuotas != nil {
+		tfMap["user_and_group_quotas"] = flattenOpenZFSUserOrGroupQuotas(apiObject.OpenZFSConfiguration.UserAndGroupQuotas)
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
 
 func findOpenZFSFileSystemByID(ctx context.Context, conn *fsx.Client, id string) (*awstypes.FileSystem, error) {

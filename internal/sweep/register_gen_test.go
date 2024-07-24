@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/applicationinsights"
@@ -169,6 +170,7 @@ func registerSweepers() {
 	amplify.RegisterSweepers()
 	apigateway.RegisterSweepers()
 	apigatewayv2.RegisterSweepers()
+	appautoscaling.RegisterSweepers()
 	appconfig.RegisterSweepers()
 	appflow.RegisterSweepers()
 	applicationinsights.RegisterSweepers()

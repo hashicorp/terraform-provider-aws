@@ -6,6 +6,8 @@ package rds
 // Exports for use in tests only.
 var (
 	ResourceCertificate             = resourceCertificate
+	ResourceCluster                 = resourceCluster
+	ResourceClusterSnapshot         = resourceClusterSnapshot
 	ResourceEventSubscription       = resourceEventSubscription
 	ResourceProxy                   = resourceProxy
 	ResourceProxyDefaultTargetGroup = resourceProxyDefaultTargetGroup
@@ -13,6 +15,7 @@ var (
 	ResourceProxyTarget             = resourceProxyTarget
 	ResourceSubnetGroup             = resourceSubnetGroup
 
+	FindDBClusterSnapshotByID                  = findDBClusterSnapshotByID
 	FindDBInstanceByID                         = findDBInstanceByIDSDKv1
 	FindDBProxyByName                          = findDBProxyByName
 	FindDBProxyEndpointByTwoPartKey            = findDBProxyEndpointByTwoPartKey
