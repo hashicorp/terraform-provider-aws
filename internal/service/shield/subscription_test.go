@@ -21,7 +21,7 @@ import (
 )
 
 func TestAccShieldSubscription_basic(t *testing.T) {
-	ctx := acctest.Context(t) //nolint:staticcheck // will be used when hardcoded skip is uncommented
+	ctx := acctest.Context(t) //nolint:staticcheck // will be used when hardcoded skip is commented
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -29,7 +29,7 @@ func TestAccShieldSubscription_basic(t *testing.T) {
 	// Due to the high cost of this subscription, we hardcode this test to
 	// skip rather than gating behind an environment variable.
 	// Run this test be removing the line below.
-	t.Skipf("running this test requires a $3000 yearly commitment to shield advanced in the associated account")
+	t.Skipf("running this test requires a yearly commitment to AWS Shield Advanced with a $3000 monthly fee in the associated account")
 
 	var subscription shield.DescribeSubscriptionOutput
 	resourceName := "aws_shield_subscription.test"
