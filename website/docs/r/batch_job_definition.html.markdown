@@ -242,21 +242,21 @@ The following arguments are optional:
 
 * `name` - (Required) Unique identifier.
 
-### `eks_environment`
+#### `eks_environment`
 
 * `name` - (Required) Name of the environment variable.
 * `value` - (Optional) Value of the environment variable.
 
-### `eks_empty_dir`
+#### `eks_empty_dir`
 
 * `medium` - (Optional) Medium to store the volume. The default value is an empty string, which uses the storage of the node.
 * `size_limit` - (Optional) Maximum size of the volume. By default, there's no maximum size defined.
 
-### `eks_host_path`
+#### `eks_host_path`
 
 * `path` - (Optional) Path of the file or directory on the host to mount into containers on the pod.
 
-### `eks_secret`
+#### `eks_secret`
 
 * `secret_name` - (Required) Name of the secret. The name must be allowed as a DNS subdomain name.
 * `optional` - (Optional) Whether the secret or the secret's keys must be defined.
