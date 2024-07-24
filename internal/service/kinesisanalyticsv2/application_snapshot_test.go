@@ -109,7 +109,7 @@ func testAccCheckApplicationSnapshotDestroy(ctx context.Context) resource.TestCh
 				continue
 			}
 
-			_, err := tfkinesisanalyticsv2.FindSnapshotDetailsByApplicationAndSnapshotNames(ctx, conn, rs.Primary.Attributes["application_name"], rs.Primary.Attributes["snapshot_name"])
+			_, err := tfkinesisanalyticsv2.FindSnapshotDetailsByTwoPartKey(ctx, conn, rs.Primary.Attributes["application_name"], rs.Primary.Attributes["snapshot_name"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -132,19 +132,15 @@ func testAccCheckApplicationSnapshotExists(ctx context.Context, n string, v *aws
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Kinesis Analytics v2 Application Snapshot ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
 
-		application, err := tfkinesisanalyticsv2.FindSnapshotDetailsByApplicationAndSnapshotNames(ctx, conn, rs.Primary.Attributes["application_name"], rs.Primary.Attributes["snapshot_name"])
+		output, err := tfkinesisanalyticsv2.FindSnapshotDetailsByTwoPartKey(ctx, conn, rs.Primary.Attributes["application_name"], rs.Primary.Attributes["snapshot_name"])
 
 		if err != nil {
 			return err
 		}
 
-		*v = *application
+		*v = *output
 
 		return nil
 	}

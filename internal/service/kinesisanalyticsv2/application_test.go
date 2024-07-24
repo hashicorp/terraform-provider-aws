@@ -4287,6 +4287,7 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			return fmt.Errorf("Kinesis Analytics v2 Application %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
@@ -4300,13 +4301,13 @@ func testAccCheckApplicationExists(ctx context.Context, n string, v *awstypes.Ap
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
 
-		application, err := tfkinesisanalyticsv2.FindApplicationDetailByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
+		output, err := tfkinesisanalyticsv2.FindApplicationDetailByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
 		}
 
-		*v = *application
+		*v = *output
 
 		return nil
 	}

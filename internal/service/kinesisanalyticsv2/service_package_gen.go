@@ -37,8 +37,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceApplicationSnapshot,
+			Factory:  resourceApplicationSnapshot,
 			TypeName: "aws_kinesisanalyticsv2_application_snapshot",
+			Name:     "Application Snapshot",
 		},
 	}
 }
