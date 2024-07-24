@@ -8,13 +8,14 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -62,7 +63,7 @@ func ResourceRegistry() *schema.Resource {
 
 func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	input := &glue.CreateRegistryInput{
 		RegistryName: aws.String(d.Get("registry_name").(string)),
@@ -73,23 +74,23 @@ func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Glue Registry: %s", input)
-	output, err := conn.CreateRegistryWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating Glue Registry: %+v", input)
+	output, err := conn.CreateRegistry(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Registry: %s", err)
 	}
-	d.SetId(aws.StringValue(output.RegistryArn))
+	d.SetId(aws.ToString(output.RegistryArn))
 
 	return append(diags, resourceRegistryRead(ctx, d, meta)...)
 }
 
 func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	output, err := FindRegistryByID(ctx, conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			log.Printf("[WARN] Glue Registry (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -103,7 +104,7 @@ func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diags
 	}
 
-	arn := aws.StringValue(output.RegistryArn)
+	arn := aws.ToString(output.RegistryArn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("registry_name", output.RegistryName)
@@ -113,7 +114,7 @@ func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	if d.HasChanges(names.AttrDescription) {
 		input := &glue.UpdateRegistryInput{
@@ -125,7 +126,7 @@ func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		log.Printf("[DEBUG] Updating Glue Registry: %#v", input)
-		_, err := conn.UpdateRegistryWithContext(ctx, input)
+		_, err := conn.UpdateRegistry(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Registry (%s): %s", d.Id(), err)
 		}
@@ -136,16 +137,16 @@ func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceRegistryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Registry: %s", d.Id())
 	input := &glue.DeleteRegistryInput{
 		RegistryId: createRegistryID(d.Id()),
 	}
 
-	_, err := conn.DeleteRegistryWithContext(ctx, input)
+	_, err := conn.DeleteRegistry(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting Glue Registry (%s): %s", d.Id(), err)
@@ -153,7 +154,7 @@ func resourceRegistryDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	_, err = waitRegistryDeleted(ctx, conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "waiting for Glue Registry (%s) to be deleted: %s", d.Id(), err)

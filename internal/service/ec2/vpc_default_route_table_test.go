@@ -11,7 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -85,7 +85,7 @@ func TestAccVPCDefaultRouteTable_Disappears_vpc(t *testing.T) {
 				Config: testAccVPCDefaultRouteTableConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -1237,11 +1237,11 @@ resource "aws_default_route_table" "test" {
 }
 
 func testAccPreCheckELBv2GatewayLoadBalancer(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
-	input := &elbv2.DescribeAccountLimitsInput{}
+	input := &elasticloadbalancingv2.DescribeAccountLimitsInput{}
 
-	output, err := conn.DescribeAccountLimitsWithContext(ctx, input)
+	output, err := conn.DescribeAccountLimits(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -1256,10 +1256,6 @@ func testAccPreCheckELBv2GatewayLoadBalancer(ctx context.Context, t *testing.T) 
 	}
 
 	for _, limit := range output.Limits {
-		if limit == nil {
-			continue
-		}
-
 		if aws.ToString(limit.Name) == "gateway-load-balancers" {
 			return
 		}

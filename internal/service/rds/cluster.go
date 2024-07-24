@@ -27,6 +27,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -40,7 +41,7 @@ const (
 // @SDKResource("aws_rds_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
-func ResourceCluster() *schema.Resource {
+func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
 		ReadWithoutTimeout:   resourceClusterRead,
@@ -116,6 +117,7 @@ func ResourceCluster() *schema.Resource {
 			"ca_certificate_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"ca_certificate_valid_till": {
 				Type:     schema.TypeString,
@@ -228,12 +230,18 @@ func ResourceCluster() *schema.Resource {
 					validation.StringInSlice(ClusterEngine_Values(), false),
 				),
 			},
+			"engine_lifecycle_support": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(engineLifecycleSupport_Values(), false),
+			},
 			"engine_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      EngineModeProvisioned,
-				ValidateFunc: validation.StringInSlice(EngineMode_Values(), false),
+				Default:      engineModeProvisioned,
+				ValidateFunc: validation.StringInSlice(engineMode_Values(), false),
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -473,6 +481,12 @@ func ResourceCluster() *schema.Resource {
 							Optional: true,
 							Default:  clusterScalingConfiguration_DefaultMinCapacity,
 						},
+						"seconds_before_timeout": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      300,
+							ValidateFunc: validation.IntBetween(60, 600),
+						},
 						"seconds_until_auto_pause": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -648,6 +662,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
+		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+			input.EngineLifecycleSupport = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 			input.EngineVersion = aws.String(v.(string))
 		}
@@ -774,6 +792,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
+		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+			input.EngineLifecycleSupport = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 			input.EngineVersion = aws.String(v.(string))
 		}
@@ -850,6 +872,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &rds.RestoreDBClusterToPointInTimeInput{
+			CopyTagsToSnapshot:        aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier:       aws.String(identifier),
 			DeletionProtection:        aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			SourceDBClusterIdentifier: aws.String(tfMap["source_cluster_identifier"].(string)),
@@ -1040,6 +1063,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
+		if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+			input.EngineLifecycleSupport = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 			input.EngineVersion = aws.String(v.(string))
 		}
@@ -1156,7 +1183,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), true, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -1222,6 +1249,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
 	d.Set(names.AttrEndpoint, dbc.Endpoint)
 	d.Set(names.AttrEngine, dbc.Engine)
+	d.Set("engine_lifecycle_support", dbc.EngineLifecycleSupport)
 	d.Set("engine_mode", dbc.EngineMode)
 	clusterSetResourceDataEngineVersionFromCluster(d, dbc)
 	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
@@ -1284,7 +1312,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// Fetch and save Global Cluster if engine mode global
 	d.Set("global_cluster_identifier", "")
 
-	if aws.StringValue(dbc.EngineMode) == EngineModeGlobal || aws.StringValue(dbc.EngineMode) == EngineModeProvisioned {
+	if aws.StringValue(dbc.EngineMode) == engineModeGlobal || aws.StringValue(dbc.EngineMode) == engineModeProvisioned {
 		globalCluster, err := FindGlobalClusterByDBClusterARN(ctx, conn, aws.StringValue(dbc.DBClusterArn))
 
 		if err == nil {
@@ -1314,8 +1342,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		"replication_source_identifier",
 		"skip_final_snapshot",
 		names.AttrTags, names.AttrTagsAll) {
+		applyImmediately := d.Get(names.AttrApplyImmediately).(bool)
 		input := &rds.ModifyDBClusterInput{
-			ApplyImmediately:    aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
+			ApplyImmediately:    aws.Bool(applyImmediately),
 			DBClusterIdentifier: aws.String(d.Id()),
 		}
 
@@ -1490,7 +1519,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), applyImmediately, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -1617,7 +1646,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 						return false, fmt.Errorf("modifying RDS Cluster (%s) DeletionProtection=false: %s", d.Id(), err)
 					}
 
-					if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+					if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), false, d.Timeout(schema.TimeoutDelete)); err != nil {
 						return false, fmt.Errorf("waiting for RDS Cluster (%s) update: %s", d.Id(), err)
 					}
 				}
@@ -1766,7 +1795,7 @@ func findDBClusters(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClu
 	return output, nil
 }
 
-func statusDBCluster(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
+func statusDBCluster(ctx context.Context, conn *rds.RDS, id string, waitNoPendingModifiedValues bool) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDBClusterByID(ctx, conn, id)
 
@@ -1778,23 +1807,29 @@ func statusDBCluster(ctx context.Context, conn *rds.RDS, id string) retry.StateR
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		status := aws.StringValue(output.Status)
+
+		if status == clusterStatusAvailable && waitNoPendingModifiedValues && !itypes.IsZero(output.PendingModifiedValues) {
+			status = clusterStatusAvailableWithPendingModifiedValues
+		}
+
+		return output, status, nil
 	}
 }
 
 func waitDBClusterCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			ClusterStatusBackingUp,
-			ClusterStatusCreating,
-			ClusterStatusMigrating,
-			ClusterStatusModifying,
-			ClusterStatusPreparingDataMigration,
-			ClusterStatusRebooting,
-			ClusterStatusResettingMasterCredentials,
+			clusterStatusBackingUp,
+			clusterStatusCreating,
+			clusterStatusMigrating,
+			clusterStatusModifying,
+			clusterStatusPreparingDataMigration,
+			clusterStatusRebooting,
+			clusterStatusResettingMasterCredentials,
 		},
-		Target:     []string{ClusterStatusAvailable},
-		Refresh:    statusDBCluster(ctx, conn, id),
+		Target:     []string{clusterStatusAvailable},
+		Refresh:    statusDBCluster(ctx, conn, id, false),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -1809,19 +1844,24 @@ func waitDBClusterCreated(ctx context.Context, conn *rds.RDS, id string, timeout
 	return nil, err
 }
 
-func waitDBClusterUpdated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) { //nolint:unparam
+func waitDBClusterUpdated(ctx context.Context, conn *rds.RDS, id string, waitNoPendingModifiedValues bool, timeout time.Duration) (*rds.DBCluster, error) { //nolint:unparam
+	pendingStatuses := []string{
+		clusterStatusBackingUp,
+		clusterStatusConfiguringIAMDatabaseAuth,
+		clusterStatusModifying,
+		clusterStatusRenaming,
+		clusterStatusResettingMasterCredentials,
+		clusterStatusScalingCompute,
+		clusterStatusUpgrading,
+	}
+	if waitNoPendingModifiedValues {
+		pendingStatuses = append(pendingStatuses, clusterStatusAvailableWithPendingModifiedValues)
+	}
+
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			ClusterStatusBackingUp,
-			ClusterStatusConfiguringIAMDatabaseAuth,
-			ClusterStatusModifying,
-			ClusterStatusRenaming,
-			ClusterStatusResettingMasterCredentials,
-			ClusterStatusScalingCompute,
-			ClusterStatusUpgrading,
-		},
-		Target:     []string{ClusterStatusAvailable},
-		Refresh:    statusDBCluster(ctx, conn, id),
+		Pending:    pendingStatuses,
+		Target:     []string{clusterStatusAvailable},
+		Refresh:    statusDBCluster(ctx, conn, id, waitNoPendingModifiedValues),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -1839,15 +1879,15 @@ func waitDBClusterUpdated(ctx context.Context, conn *rds.RDS, id string, timeout
 func waitDBClusterDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			ClusterStatusAvailable,
-			ClusterStatusBackingUp,
-			ClusterStatusDeleting,
-			ClusterStatusModifying,
-			ClusterStatusPromoting,
-			ClusterStatusScalingCompute,
+			clusterStatusAvailable,
+			clusterStatusBackingUp,
+			clusterStatusDeleting,
+			clusterStatusModifying,
+			clusterStatusPromoting,
+			clusterStatusScalingCompute,
 		},
 		Target:     []string{},
-		Refresh:    statusDBCluster(ctx, conn, id),
+		Refresh:    statusDBCluster(ctx, conn, id, false),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

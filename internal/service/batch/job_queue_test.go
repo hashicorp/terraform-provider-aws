@@ -9,9 +9,9 @@ import (
 	"log"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -802,15 +802,15 @@ resource "aws_batch_compute_environment" "more" {
 
 func testAccCheckLaunchTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_launch_template" {
 				continue
 			}
 
-			resp, err := conn.DescribeLaunchTemplatesWithContext(ctx, &ec2.DescribeLaunchTemplatesInput{
-				LaunchTemplateIds: []*string{aws.String(rs.Primary.ID)},
+			resp, err := conn.DescribeLaunchTemplates(ctx, &ec2.DescribeLaunchTemplatesInput{
+				LaunchTemplateIds: []string{rs.Primary.ID},
 			})
 
 			if err == nil {

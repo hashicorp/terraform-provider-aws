@@ -797,6 +797,7 @@ The `managed_rule_group_configs` block support the following arguments:
 
 ### `aws_managed_rules_bot_control_rule_set` Block
 
+* `enable_machine_learning` - (Optional) Applies only to the targeted inspection level. Determines whether to use machine learning (ML) to analyze your web traffic for bot-related activity. Defaults to `true`.
 * `inspection_level` - (Optional) The inspection level to use for the Bot Control rule group.
 
 ### `aws_managed_rules_acfp_rule_set` Block
@@ -954,7 +955,7 @@ Inspect a single header. Provide the name of the header to inspect, for example,
 
 The `single_header` block supports the following arguments:
 
-* `name` - (Optional) Name of the query header to inspect. This setting must be provided as lower case characters.
+* `name` - (Required) Name of the query header to inspect. This setting must be provided as lower case characters.
 
 ### `single_query_argument` Block
 
@@ -962,7 +963,7 @@ Inspect a single query argument. Provide the name of the query argument to inspe
 
 The `single_query_argument` block supports the following arguments:
 
-* `name` - (Optional) Name of the query header to inspect. This setting must be provided as lower case characters.
+* `name` - (Required) Name of the query header to inspect. This setting must be provided as lower case characters.
 
 ### `body` Block
 
@@ -1173,4 +1174,4 @@ Using `terraform import`, import WAFv2 Web ACLs using `ID/Name/Scope`. For examp
 % terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4800ce5f2b0cf4b09a78a5bb9def790a4cefd02b621a6308dc87ff1db787c3cc -->
+<!-- cache-key: cdktf-0.20.1 input-4d5cc2755c11ee17ed48162c5f3f9e5bc71cb1c30afe0cae4bcadc19cff9f553 -->

@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -1196,6 +1198,39 @@ func TestAccRDSCluster_copyTagsToSnapshot(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_copyTagsToSnapshot_restorePointInTime(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v rds.DBCluster
+	rInt := sdkacctest.RandInt()
+	resourceName := "aws_rds_cluster.test"
+	resourceName2 := "aws_rds_cluster.clone"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_copyTagsToSnapshot_restorePointInTime(rInt, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName2, &v),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccClusterConfig_copyTagsToSnapshot_restorePointInTime(rInt, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName2, &v),
+					resource.TestCheckResourceAttr(resourceName2, "copy_tags_to_snapshot", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_ReplicationSourceIdentifier_kmsKeyID(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1387,6 +1422,7 @@ func TestAccRDSCluster_engineVersion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, "engine_lifecycle_support", "open-source-rds-extended-support"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceName, names.AttrVersion),
 				),
 			},
@@ -1840,25 +1876,27 @@ func TestAccRDSCluster_scaling(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_scalingConfiguration(rName, false, 128, 4, 301, "RollbackCapacityChange"),
+				Config: testAccClusterConfig_scalingConfiguration(rName, false, 128, 4, 301, 301, "RollbackCapacityChange"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "128"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_before_timeout", "301"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_until_auto_pause", "301"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "RollbackCapacityChange"),
 				),
 			},
 			{
-				Config: testAccClusterConfig_scalingConfiguration(rName, true, 256, 8, 86400, "ForceApplyCapacityChange"),
+				Config: testAccClusterConfig_scalingConfiguration(rName, true, 256, 8, 600, 86400, "ForceApplyCapacityChange"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "256"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", "8"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_before_timeout", "600"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_until_auto_pause", "86400"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "ForceApplyCapacityChange"),
 				),
@@ -1943,7 +1981,7 @@ func TestAccRDSCluster_snapshotIdentifier(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -1975,7 +2013,7 @@ func TestAccRDSCluster_SnapshotIdentifier_deletionProtection(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2018,7 +2056,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_provisioned(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2052,7 +2090,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_serverless(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2086,7 +2124,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineVersion_different(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2121,7 +2159,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineVersion_equal(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2155,7 +2193,7 @@ func TestAccRDSCluster_SnapshotIdentifier_kmsKeyID(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -2189,7 +2227,7 @@ func TestAccRDSCluster_SnapshotIdentifier_masterPassword(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2222,7 +2260,7 @@ func TestAccRDSCluster_SnapshotIdentifier_masterUsername(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2257,7 +2295,7 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredBackupWindow(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2290,7 +2328,7 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredMaintenanceWindow(t *testing.
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	// This config is version agnostic. Use it as a model for fixing version errors
 	// in other tests.
@@ -2326,7 +2364,7 @@ func TestAccRDSCluster_SnapshotIdentifier_tags(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2360,7 +2398,7 @@ func TestAccRDSCluster_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2396,7 +2434,7 @@ func TestAccRDSCluster_SnapshotIdentifierVPCSecurityGroupIDs_tags(t *testing.T) 
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
@@ -2430,7 +2468,7 @@ func TestAccRDSCluster_SnapshotIdentifier_encryptedRestore(t *testing.T) {
 	}
 
 	var dbCluster, sourceDbCluster rds.DBCluster
-	var dbClusterSnapshot rds.DBClusterSnapshot
+	var dbClusterSnapshot types.DBClusterSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -2609,6 +2647,34 @@ func TestAccRDSCluster_NoDeleteAutomatedBackups(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_engineLifecycleSupport_disabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_engineLifecycleSupport_disabled(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "backtrack_window", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, "engine_lifecycle_support", "open-source-rds-extended-support-disabled"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return testAccCheckClusterDestroyWithProvider(ctx)(s, acctest.Provider)
@@ -2675,7 +2741,8 @@ func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestChe
 
 func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn1 := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn2 := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster" {
@@ -2683,12 +2750,12 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 			}
 
 			finalSnapshotID := rs.Primary.Attributes[names.AttrFinalSnapshotIdentifier]
-			_, err := tfrds.FindDBClusterSnapshotByID(ctx, conn, finalSnapshotID)
+			_, err := tfrds.FindDBClusterSnapshotByID(ctx, conn2, finalSnapshotID)
 			if err != nil {
 				return err
 			}
 
-			_, err = conn.DeleteDBClusterSnapshotWithContext(ctx, &rds.DeleteDBClusterSnapshotInput{
+			_, err = conn2.DeleteDBClusterSnapshot(ctx, &rds_sdkv2.DeleteDBClusterSnapshotInput{
 				DBClusterSnapshotIdentifier: aws.String(finalSnapshotID),
 			})
 
@@ -2696,7 +2763,7 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 				return err
 			}
 
-			_, err = tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)
+			_, err = tfrds.FindDBClusterByID(ctx, conn1, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -4553,7 +4620,7 @@ resource "aws_rds_cluster_instance" "secondary" {
 `, tfrds.ClusterEngineAuroraPostgreSQL, mainInstanceClasses, rName))
 }
 
-func testAccClusterConfig_scalingConfiguration(rName string, autoPause bool, maxCapacity, minCapacity, secondsUntilAutoPause int, timeoutAction string) string {
+func testAccClusterConfig_scalingConfiguration(rName string, autoPause bool, maxCapacity, minCapacity, secondsBeforeTimeout, secondsUntilAutoPause int, timeoutAction string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
@@ -4567,11 +4634,12 @@ resource "aws_rds_cluster" "test" {
     auto_pause               = %[3]t
     max_capacity             = %[4]d
     min_capacity             = %[5]d
-    seconds_until_auto_pause = %[6]d
-    timeout_action           = %[7]q
+    seconds_before_timeout   = %[6]d
+    seconds_until_auto_pause = %[7]d
+    timeout_action           = %[8]q
   }
 }
-`, rName, tfrds.ClusterEngineAuroraMySQL, autoPause, maxCapacity, minCapacity, secondsUntilAutoPause, timeoutAction)
+`, rName, tfrds.ClusterEngineAuroraMySQL, autoPause, maxCapacity, minCapacity, secondsBeforeTimeout, secondsUntilAutoPause, timeoutAction)
 }
 
 func testAccClusterConfig_serverlessV2ScalingConfiguration(rName string, maxCapacity, minCapacity float64) string {
@@ -5013,6 +5081,34 @@ resource "aws_rds_cluster" "test" {
 `, n, tfrds.ClusterEngineAuroraMySQL, f)
 }
 
+func testAccClusterConfig_copyTagsToSnapshot_restorePointInTime(n int, f bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier    = "tf-aurora-cluster-%[1]d"
+  engine                = %[2]q
+  database_name         = "mydb"
+  master_username       = "foo"
+  master_password       = "mustbeeightcharaters"
+  copy_tags_to_snapshot = true
+  skip_final_snapshot   = true
+}
+
+resource "aws_rds_cluster" "clone" {
+  cluster_identifier    = "tf-aurora-cluster-clone-%[1]d"
+  engine                = %[2]q
+  database_name         = "mydb"
+  master_username       = "foo"
+  master_password       = "mustbeeightcharaters"
+  copy_tags_to_snapshot = %[3]t
+  skip_final_snapshot   = true
+  restore_to_point_in_time {
+    source_cluster_identifier  = aws_rds_cluster.test.cluster_identifier
+    use_latest_restorable_time = true
+  }
+}
+`, n, tfrds.ClusterEngineAuroraMySQL, f)
+}
+
 func testAccClusterConfig_auroraStorageType(rName, storageType string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
@@ -5222,4 +5318,18 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot           = true
 }
 `, rName)
+}
+
+func testAccClusterConfig_engineLifecycleSupport_disabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier       = %[1]q
+  database_name            = "test"
+  engine                   = %[2]q
+  master_username          = "tfacctest"
+  master_password          = "avoid-plaintext-passwords"
+  skip_final_snapshot      = true
+  engine_lifecycle_support = "open-source-rds-extended-support-disabled"
+}
+`, rName, tfrds.ClusterEngineAuroraPostgreSQL)
 }
