@@ -274,6 +274,10 @@ func dataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"placement_group_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"placement_partition_number": {
 				Type:     schema.TypeInt,
 				Computed: true,

@@ -380,7 +380,7 @@ func resourceInstance() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"placement_group"},
+				ConflictsWith: []string{"placement_group", "placement_group_id"},
 			},
 			"iam_instance_profile": {
 				Type:     schema.TypeString,
@@ -630,7 +630,14 @@ func resourceInstance() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"host_resource_group_arn"},
+				ConflictsWith: []string{"host_resource_group_arn", "placement_group_id"},
+			},
+			"placement_group_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"host_resource_group_arn", "placement_group"},
 			},
 			"placement_partition_number": {
 				Type:     schema.TypeInt,
@@ -2987,6 +2994,12 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	if v, ok := d.GetOk("placement_group"); ok && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == string(awstypes.InstanceInterruptionBehaviorTerminate)) {
 		opts.Placement.GroupName = aws.String(v.(string))
 		opts.SpotPlacement.GroupName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("placement_group_id"); ok && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == string(awstypes.InstanceInterruptionBehaviorTerminate)) {
+		opts.Placement.GroupId = aws.String(v.(string))
+		// AWS SDK missing groupID in type for spotplacement
+		// opts.SpotPlacement.GroupId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("tenancy"); ok {
