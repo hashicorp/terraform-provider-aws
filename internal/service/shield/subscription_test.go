@@ -21,7 +21,7 @@ import (
 )
 
 func TestAccShieldSubscription_basic(t *testing.T) {
-	ctx := acctest.Context(t)
+	ctx := acctest.Context(t) //nolint:staticcheck // will be used when hardcoded skip is uncommented
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
