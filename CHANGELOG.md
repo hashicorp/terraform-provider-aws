@@ -12,6 +12,7 @@ ENHANCEMENTS:
 * resource/aws_iam_role: Change from partial resource creation to resource creation failed if an `inline_policy` fails to create ([#38477](https://github.com/hashicorp/terraform-provider-aws/issues/38477))
 * resource/aws_rds_cluster: Add `scaling_configuration.seconds_before_timeout` argument ([#38451](https://github.com/hashicorp/terraform-provider-aws/issues/38451))
 * resource/aws_sesv2_configuration_set_event_destination: Add `event_destination.event_bridge_destination` configuration block ([#38458](https://github.com/hashicorp/terraform-provider-aws/issues/38458))
+* resource/aws_timestreamwrite_table: Fix `runtime error: invalid memory address or nil pointer dereference` panic when reading a non-existent table ([#38512](https://github.com/hashicorp/terraform-provider-aws/issues/38512))
 
 BUG FIXES:
 
