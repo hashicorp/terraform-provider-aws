@@ -4298,10 +4298,6 @@ func testAccCheckApplicationExists(ctx context.Context, n string, v *awstypes.Ap
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Kinesis Analytics v2 Application ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
 
 		application, err := tfkinesisanalyticsv2.FindApplicationDetailByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
