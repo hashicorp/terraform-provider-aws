@@ -66,6 +66,8 @@ func TestAccBedrockEvaluationJob_basic(t *testing.T) {
 	bucketAccessName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	modelAccessName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	transferRoleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sagemakerName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sagemakerCreate := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -77,7 +79,7 @@ func TestAccBedrockEvaluationJob_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEvaluationJobConfig_basic(iamName, rName, bName, bucketAccessName, modelAccessName, transferRoleName),
+				Config: testAccEvaluationJobConfig_basic(iamName, rName, bName, bucketAccessName, modelAccessName, transferRoleName, sagemakerName, sagemakerCreate, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					//testAccCheckEvaluationJobExists(ctx, resourceName, &evaluationjob),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
@@ -209,12 +211,12 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccEvaluationJobConfig_base(iamName, bucketName, bucketAccessName, modelAccessName, transferRoleName string) string {
+func testAccEvaluationJobConfig_base(iamName, bucketName, bucketAccessName, modelAccessName, transferRoleName, sagemakerName, sagemakerCreate string) string {
 	return fmt.Sprintf(`
 
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
-data "aws_partition" "current" {}
+data "aws_caller_identity" "test" {}
+data "aws_region" "test" {}
+data "aws_partition" "test" {}
 data "aws_bedrock_foundation_models" "test" {}
 data "aws_bedrock_foundation_model" "test" {
   model_id = "anthropic.claude-v2"
@@ -247,40 +249,40 @@ resource "aws_iam_policy" "test" {
   name = %[1]q
 
   policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Sid" : "BedrockConsole",
-        "Effect" : "Allow",
-        "Action" : [
-          "bedrock:CreateEvaluationJob",
-          "bedrock:GetEvaluationJob",
-          "bedrock:ListEvaluationJobs",
-          "bedrock:StopEvaluationJob",
-          "bedrock:GetCustomModel",
-          "bedrock:ListCustomModels",
-          "bedrock:CreateProvisionedModelThroughput",
-          "bedrock:UpdateProvisionedModelThroughput",
-          "bedrock:GetProvisionedModelThroughput",
-          "bedrock:ListProvisionedModelThroughputs",
-          "bedrock:ListTagsForResource",
-          "bedrock:UntagResource",
-          "bedrock:TagResource"
-        ],
-        "Resource" : "*"
-      },
-      {
-        "Sid" : "AllowConsoleS3AccessForModelEvaluation",
-        "Effect" : "Allow",
-        "Action" : [
-          "s3:GetObject",
-          "s3:GetBucketCORS",
-          "s3:ListBucket",
-          "s3:ListBucketVersions",
-          "s3:GetBucketLocation"
-        ],
-        "Resource" : "*"
-      }
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "BedrockConsole",
+            "Effect": "Allow",
+            "Action": [
+               "bedrock:CreateEvaluationJob",
+               "bedrock:GetEvaluationJob",
+               "bedrock:ListEvaluationJobs",
+               "bedrock:StopEvaluationJob",
+               "bedrock:GetCustomModel",
+               "bedrock:ListCustomModels",
+               "bedrock:CreateProvisionedModelThroughput",
+               "bedrock:UpdateProvisionedModelThroughput",
+               "bedrock:GetProvisionedModelThroughput",
+               "bedrock:ListProvisionedModelThroughputs",
+               "bedrock:ListTagsForResource",
+               "bedrock:UntagResource",
+               "bedrock:TagResource"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "AllowConsoleS3AccessForModelEvaluation",
+            "Effect": "Allow",
+            "Action": [
+              "s3:GetObject",
+              "s3:GetBucketCORS",
+              "s3:ListBucket",
+              "s3:ListBucketVersions",
+              "s3:GetBucketLocation"
+            ],
+            "Resource": "*"
+        }
     ]
   })
 }
@@ -326,56 +328,123 @@ resource "aws_iam_policy" "test" {
   name = %[4]q
 
   policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Sid" : "AllowSpecificModels",
-        "Effect" : "Allow",
-        "Action" : [
-	            "bedrock:InvokeModel",
-	            "bedrock:InvokeModelWithResponseStream",
-				"bedrock:CreateModelInvocationJob",
-				"bedrock:StopModelInvocationJob"
-        ],
-        "Resource" : [
-			"arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-v2"
-		]
-      },
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowSpecificModels",
+            "Effect": "Allow",
+            "Action": [
+                "bedrock:InvokeModel",
+                "bedrock:InvokeModelWithResponseStream"
+            ],
+            "Resource": [
+				"arn:aws:bedrock:${data.aws_region.test.name}::foundation-model/anthropic.claude-v2"
+            ]
+        }
     ]
   })
 }
 
+resource "aws_iam_policy" "pass" {
+name = %[5]q
+
+policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Effect": "Allow",
+        "Action": [
+            "iam:GetRole",
+            "iam:PassRole"
+        ],
+        "Resource": "arn:aws:iam::${data.aws_caller_identity.test.account_id}:role/bedrock-*"
+    }]
+})
+
+}
+
+resource "aws_iam_policy" "sagemaker_create" {
+	name = %[7]q
+	policy = jsonencode ({
+	"Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "ManageHumanLoops",
+            "Effect": "Allow",
+            "Action": [
+                "sagemaker:StartHumanLoop",
+                "sagemaker:DescribeFlowDefinition",
+                "sagemaker:DescribeHumanLoop",
+                "sagemaker:StopHumanLoop",
+                "sagemaker:DeleteHumanLoop"
+            ],
+            "Resource": "*"
+        }
+    ]	
+})
+}
+
+resource "aws_iam_role_policy_attachment" "sagemaker_create" {
+	role = aws_iam_role.test.name
+	policy_arn = aws_iam_policy.sagemaker_create.arn
+}
+
+resource "aws_iam_policy" "sagemaker" {
+
+name = %[6]q
+policy = jsonencode ({
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowSageMakerToAssumeRole",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "sagemaker.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+})
+}
+
+resource "aws_iam_role_policy_attachment" "sagemaker" {
+	role = aws_iam_role.test.name
+	policy_arn = aws_iam_policy.sagemaker.arn
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
 
-  # See https://docs.aws.amazon.com/bedrock/latest/userguide/model-customization-iam-role.html#model-customization-iam-role-trust.
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {
-      "Service": "bedrock.amazonaws.com"
-    },
-    "Action": "sts:AssumeRole",
-    "Condition": {
-      "StringEquals": {
-        "aws:SourceArn": "${data.aws_caller_identity.current.arn}"
-      },
-      "ArnEquals": {
-        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:model-customization-job/*"
-      }
-    }
-  }]
+  assume_role_policy = jsonencode(
+  {
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Sid": "AllowBedrockToAssumeRole",
+        "Effect": "Allow",
+        "Principal": {
+            "Service": "bedrock.amazonaws.com"
+        },
+        "Action": "sts:AssumeRole",
+        "Condition": {
+            "StringEquals": {
+                "aws:SourceArn": "${data.aws_caller_identity.test.arn}"
+            },
+            "ArnEquals": {
+				"aws:SourceArn" : "arn:aws:bedrock:${data.aws_region.test.name}:${data.aws_caller_identity.test.arn}:evaluation-job/*"
+            }
+        }
+    }]
 }
-EOF
+)
 }
 
 
-
-
-
+resource "aws_iam_service_linked_role" "bedrock" {
+  aws_service_name = "bedrock.amazonaws.com"
+}
+resource "aws_iam_role_policy_attachment" "pass" {
+	role = aws_iam_role.test.name
+	policy_arn = aws_iam_policy.pass.arn
+}
 resource "aws_iam_role_policy_attachment" "test" {
 	role = aws_iam_role.test.name
 	policy_arn = aws_iam_policy.test.arn
@@ -388,11 +457,11 @@ resource "aws_iam_role_policy_attachment" "model_access" {
 	role = aws_iam_role.test.name
 	policy_arn = aws_iam_policy.model_access.arn
 }
-	`, iamName, bucketName, bucketAccessName, modelAccessName, transferRoleName)
+	`, iamName, bucketName, bucketAccessName, modelAccessName, transferRoleName, sagemakerName, sagemakerCreate)
 }
 
-func testAccEvaluationJobConfig_basic(iamName, jobName, bucketName, bucketAccessName, modelAccessName, transferRoleName string) string {
-	return acctest.ConfigCompose(testAccEvaluationJobConfig_base(iamName, bucketName, bucketAccessName, modelAccessName, transferRoleName), fmt.Sprintf(`
+func testAccEvaluationJobConfig_basic(iamName, jobName, bucketName, bucketAccessName, modelAccessName, transferRoleName, sagemakerName, sagemakerCreate, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccEvaluationJobConfig_base(iamName, bucketName, bucketAccessName, modelAccessName, transferRoleName, sagemakerName, sagemakerCreate), fmt.Sprintf(`
 
 
 resource "aws_bedrock_evaluation_job" "test" {
@@ -429,10 +498,11 @@ resource "aws_bedrock_evaluation_job" "test" {
   }
 
   tags = {
-	test = "test"
+	%[2]q = %[3]q
+	%[4]q = %[5]q
   }
 
   role_arn = aws_iam_role.test.arn
 }
-`, jobName))
+`, jobName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
