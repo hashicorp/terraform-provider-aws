@@ -111,6 +111,71 @@ func TestAccBedrockEvaluationJob_basic(t *testing.T) {
 		},
 	})
 }
+func TestAccBedrockEvaluationJob_encryption(t *testing.T) {
+	ctx := acctest.Context(t)
+	// TIP: This is a long-running test guard for tests that run longer than
+	// 300s (5 min) generally.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	//var evaluationjob bedrock.DescribeEvaluationJobResponse
+	rName := name_regex(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
+	resourceName := "aws_bedrock_evaluation_job.test"
+	bName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	//bucketName := "aws_s3_bucket.test"
+	modelName := "aws_bedrock_foundation_model.test"
+	iamName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketAccessName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	modelAccessName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	transferRoleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sagemakerName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sagemakerCreate := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	keyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEvaluationJobConfig_encryption(iamName, rName, bName, bucketAccessName, modelAccessName, transferRoleName, sagemakerName, sagemakerCreate, keyName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					//testAccCheckEvaluationJobExists(ctx, resourceName, &evaluationjob),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_encryption_key_id", keyName, names.AttrID),
+					//resource.TestCheckResourceAttrPair(resourceName, "customer_cencryption_key_id", ""),
+					// eval config
+					resource.TestCheckResourceAttr(resourceName, "evaluation_config.automated.dataset_metric_configs.metric_names.0", "Builtin.Accuracy"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_config.automated.dataset_metric_configs.task_type", "Question and Answer"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_config.automated.dataset_metric_configs.dataset.name", "Builtin.BoolQ"),
+					resource.TestCheckResourceAttrSet(resourceName, "evaluation_config.automated.dataset_metric_configs.dataset.dataset_location.s3_uri"),
+					// eval config end
+					// inf config
+					resource.TestCheckResourceAttrPair(resourceName, "inference_config.models.bedrock_model.inference_params", modelName, "inference_types_supported.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "inference_config.models.bedrock_model.model_identifier", modelName, names.AttrID),
+					// inf config end
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "Summarization"),
+					resource.TestCheckResourceAttrSet(resourceName, "output_data_config.0.s3_uri"),
+					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
 
 func name_regex(in string) string {
 	return in
@@ -426,10 +491,10 @@ resource "aws_iam_role" "test" {
         "Action": "sts:AssumeRole",
         "Condition": {
             "StringEquals": {
-                "aws:SourceArn": "${data.aws_caller_identity.test.arn}"
+        		"awsSourceAccount:": "${data.aws_caller_identity.test.account_id}"
             },
             "ArnEquals": {
-				"aws:SourceArn" : "arn:aws:bedrock:${data.aws_region.test.name}:${data.aws_caller_identity.test.arn}:evaluation-job/*"
+				"aws:SourceArn" : "arn:aws:bedrock:${data.aws_region.test.name}:${data.aws_caller_identity.test.account_id}:evaluation-job/*"
             }
         }
     }]
@@ -490,6 +555,160 @@ resource "aws_bedrock_evaluation_job" "test" {
     }
   }
 
+  description = "test"
+  name        = %[1]q
+
+  output_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/bedrock/evaluation_jobs"
+  }
+
+  tags = {
+	%[2]q = %[3]q
+	%[4]q = %[5]q
+  }
+
+  role_arn = aws_iam_role.test.arn
+}
+`, jobName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccEvaluationJobConfig_encryptionbase(iamName, bucketName, bucketAccessName, modelAccessName, transferRoleName, sagemakerName, sagemakerCreate, keyName string) string {
+	return acctest.ConfigCompose(testAccEvaluationJobConfig_base(iamName, bucketName, bucketAccessName, modelAccessName, transferRoleName, sagemakerName, sagemakerCreate), fmt.Sprintf(
+		`
+		resource "aws_kms_key" "test" {
+			description             = %[1]q
+			deletion_window_in_days = 7
+			policy                  = data.aws_iam_policy_document.test.json
+		}
+		
+		data "aws_iam_policy_document" "test" {
+			policy_id = "KMSPolicy"
+			statement {
+				sid = "CustomKMSKeyProvidedToBedrock"
+				actions = [
+					"kms:decrypt",
+					"kms:
+				]
+				resources = [
+				    "arn:aws:kms:${data.aws_region.test.name}:${aws_caller_identity.test.account_id}:key/aws_kms_key.test.key",
+					"*"
+				]
+				condition {
+					test = "StringEquals"
+					variable = "kms:ViaService"
+					values = ["s3.${data.aws_region.test.name}.amazonaws.com"]
+				}
+			}
+			statement {
+				sid = ""
+				effect = "allow"
+				actions = [
+					"kms:DescribeKey"
+				]
+				resources = [
+				    "arn:aws:kms:${data.aws_region.test.name}:${aws_caller_identity.test.account_id}:key/aws_kms_key.test.key",
+					"*",
+				]
+			}
+			statement {
+				effect = "Allow"
+				principlas {
+					type = "Service"
+					identifiers = ["bedrock.amazonaws.com"]					
+				}
+				actions = [
+				    "kms:GenerateDataKey",
+	                "kms:Decrypt",
+    	            "kms:DescribeKey"
+				]
+				resources = [
+					"*"
+				]
+				condition {
+					test = "StringLike"
+					variable = "kms:EncryptionContext:evaluationJobArn"
+					values = ["arn:aws:bedrock:${data.aws_region.test.name}:${aws_caller_identity.test.account_id}:evaluation-job/*"]
+				}
+				condition {
+					test = "StringLike"
+					variable = "aws:SourceArn"
+					values = ["arn:aws:bedrock:${data.aws_region.test.name}:${aws_caller_identity.test.account_id}:evaluation-job/*"]
+				}
+			}
+		}
+		
+		resource "aws_iam_poliicy" "kms" {
+		name = %[1]q # should be 8
+		policy = jsonencode({
+		    "Version": "2012-10-17",
+			"Statement": [
+			{ 
+				"Sid": "CustomKMSKeyProvidedToBedrock",
+				"Effect": "Allow",
+				"Action": [
+					"kms:Decrypt",
+					"kms:GenerateDataKey"
+				],
+				"Resource": [
+				"arn:aws:kms:${data.aws_region.test.name}:${data.aws_caller_identity.test}:key/[[keyId]]"
+				],
+				"Condition": {
+					"StringEquals": {
+						"kms:ViaService": "s3.${data.aws_region.test.name}.amazonaws.com"
+					}
+				}
+			},
+			{ 
+				"Sid": "CustomKMSDescribeKeyProvidedToBedrock",
+				"Effect": "Allow",
+				"Action": [
+					"kms:DescribeKey"
+				],
+				"Resource": [
+				"arn:aws:kms:${data.aws_region.test.name}:{{accountId}}:key/[[keyId]]"
+				]
+			}
+		]
+	})
+
+
+		
+		}
+	`, keyName))
+
+}
+
+func testAccEvaluationJobConfig_encryption(iamName, jobName, bucketName, bucketAccessName, modelAccessName, transferRoleName, sagemakerName, sagemakerCreate, keyName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccEvaluationJobConfig_encryptionbase(iamName, bucketName, bucketAccessName, modelAccessName, transferRoleName, sagemakerName, sagemakerCreate, keyName), fmt.Sprintf(`
+
+
+resource "aws_bedrock_evaluation_job" "test" {
+
+  evaluation_config {
+    automated {
+        dataset_metric_configs {
+          dataset {
+		    name = "BoolQ"
+			dataset_location {
+				s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.dataset.key}"
+			}
+          }
+          metric_names = ["Builtin.Accuracy"]
+          task_type    = "QuestionAndAnswer"
+        }
+    }
+  }
+
+  inference_config {
+    models {
+      bedrock_model { 
+        inference_params = tolist(data.aws_bedrock_foundation_model.test.inference_types_supported)[0]
+        model_identifier = data.aws_bedrock_foundation_model.test.id
+		}
+    }
+  }
+
+  customer_encryption_key_id = aws_kms_key.id
   description = "test"
   name        = %[1]q
 
