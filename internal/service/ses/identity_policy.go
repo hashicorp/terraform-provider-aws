@@ -183,7 +183,7 @@ func resourceIdentityPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 		PolicyName: aws.String(policyName),
 	}
 
-	log.Printf("[DEBUG] Deleting SES Identity Policy: %s", input)
+	log.Printf("[DEBUG] Deleting SES Identity Policy: %s", *input.PolicyName)
 	_, err = conn.DeleteIdentityPolicy(ctx, input)
 
 	if err != nil {
