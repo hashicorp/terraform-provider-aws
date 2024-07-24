@@ -892,7 +892,7 @@ func PreCheckPartitionHasService(t *testing.T, serviceID string) {
 func PreCheckMultipleRegion(t *testing.T, regions int) {
 	t.Helper()
 
-	if names.IsIsolatedRegion(Region()) && len(PartitionRegions()) <= 1 {
+	if len(PartitionRegions()) <= 1 {
 		t.Skipf("Skipping multiple region test as 1 or fewer regions detected in partion (%s)", Partition())
 	}
 
