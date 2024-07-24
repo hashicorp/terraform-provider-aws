@@ -863,6 +863,13 @@ func TestAccBatchJobDefinition_EKSProperties_imagePullSecrets(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.containers.0.image_pull_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "container"),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.image_pull_secret.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "eks_properties.*.pod_properties.*.image_pull_secret.*", map[string]string{
+						names.AttrName: "my-secret",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "eks_properties.*.pod_properties.*.image_pull_secret.*", map[string]string{
+						names.AttrName: "my-secret2",
+					}),
 				),
 			},
 			{
