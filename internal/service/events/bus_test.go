@@ -302,128 +302,6 @@ resource "aws_cloudwatch_event_bus" "test" {
 `, name)
 }
 
-func testAccBusConfig_kmsKeyIdentifier1(name string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-data "aws_partition" "current" {}
-
-resource "aws_kms_key" "test1" {
-  deletion_window_in_days = 7
-}
-
-data "aws_iam_policy_document" "key_policy" {
-  statement {
-    actions = [
-      "kms:Decrypt",
-      "kms:GenerateDataKey"
-    ]
-
-    resources = [
-      aws_kms_key.test1.arn,
-    ]
-
-    principals {
-      type        = "Service"
-      identifiers = ["events.amazonaws.com"]
-    }
-
-    condition {
-      test     = "StringEquals"
-      variable = "aws:SourceAccount"
-      values   = [data.aws_caller_identity.current.account_id]
-    }
-  }
-
-  statement {
-    actions = [
-      "kms:*",
-    ]
-
-    resources = [
-      aws_kms_key.test1.arn
-    ]
-
-    principals {
-      type        = "AWS"
-      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
-    }
-  }
-}
-
-resource "aws_kms_key_policy" "test1" {
-  key_id = aws_kms_key.test1.id
-  policy = data.aws_iam_policy_document.key_policy.json
-}
-
-resource "aws_cloudwatch_event_bus" "test" {
-  name               = %[1]q
-  kms_key_identifier = aws_kms_key.test1.arn
-}
-`, name)
-}
-
-func testAccBusConfig_kmsKeyIdentifier2(name string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-data "aws_partition" "current" {}
-
-resource "aws_kms_key" "test2" {
-  deletion_window_in_days = 7
-}
-
-data "aws_iam_policy_document" "key_policy" {
-  statement {
-    actions = [
-      "kms:Decrypt",
-      "kms:GenerateDataKey"
-    ]
-
-    resources = [
-      aws_kms_key.test2.arn,
-    ]
-
-    principals {
-      type        = "Service"
-      identifiers = ["events.amazonaws.com"]
-    }
-
-    condition {
-      test     = "StringEquals"
-      variable = "aws:SourceAccount"
-      values   = [data.aws_caller_identity.current.account_id]
-    }
-  }
-
-  statement {
-    actions = [
-      "kms:*",
-    ]
-
-    resources = [
-      aws_kms_key.test2.arn
-    ]
-
-    principals {
-      type        = "AWS"
-      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
-    }
-  }
-}
-
-resource "aws_kms_key_policy" "test2" {
-  key_id = aws_kms_key.test2.id
-  policy = data.aws_iam_policy_document.key_policy.json
-}
-
-resource "aws_cloudwatch_event_bus" "test" {
-  name               = %[1]q
-  kms_key_identifier = aws_kms_key.test2.arn
-}
-`, name)
-}
-
 func testAccBusConfig_tags1(name, key, value string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
@@ -456,4 +334,93 @@ resource "aws_cloudwatch_event_bus" "test" {
   event_source_name = %[1]q
 }
 `, name)
+}
+
+func testAccBusConfig_kmsKeyIdentifierBase() string {
+	return `
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_kms_key" "test1" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key" "test2" {
+  deletion_window_in_days = 7
+}
+
+data "aws_iam_policy_document" "key_policy" {
+  statement {
+    actions = [
+      "kms:Decrypt",
+      "kms:GenerateDataKey"
+    ]
+
+    resources = [
+      aws_kms_key.test1.arn,
+      aws_kms_key.test2.arn,
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+
+  statement {
+    actions = [
+      "kms:*",
+    ]
+
+    resources = [
+      aws_kms_key.test1.arn,
+      aws_kms_key.test2.arn,
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
+}
+
+resource "aws_kms_key_policy" "test1" {
+  key_id = aws_kms_key.test1.id
+  policy = data.aws_iam_policy_document.key_policy.json
+}
+
+resource "aws_kms_key_policy" "test2" {
+  key_id = aws_kms_key.test2.id
+  policy = data.aws_iam_policy_document.key_policy.json
+}
+`
+}
+
+func testAccBusConfig_kmsKeyIdentifier1(name string) string {
+	return acctest.ConfigCompose(
+		testAccBusConfig_kmsKeyIdentifierBase(),
+		fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name               = %[1]q
+  kms_key_identifier = aws_kms_key.test1.arn
+}
+`, name))
+}
+
+func testAccBusConfig_kmsKeyIdentifier2(name string) string {
+	return acctest.ConfigCompose(
+		testAccBusConfig_kmsKeyIdentifierBase(),
+		fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name               = %[1]q
+  kms_key_identifier = aws_kms_key.test2.arn
+}
+`, name))
 }
