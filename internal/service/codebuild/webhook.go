@@ -94,12 +94,12 @@ func resourceWebhook() *schema.Resource {
 							Required: true,
 						},
 						names.AttrDomain: {
-							Type:             schema.TypeString,
-							Optional:         true,
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						names.AttrScope: {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:             schema.TypeString,
+							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.WebhookScopeType](),
 						},
 					},
