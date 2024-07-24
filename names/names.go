@@ -263,12 +263,14 @@ func IsOptInRegion(region string) bool {
 	}
 }
 
+// IsIsolatedRegion should only be used in testing - use IsUnsupportedOperationInPartitionError to build logical fallbacks within resources
 func IsIsolatedRegion(region string) bool {
 	partition := PartitionForRegion(region)
 
 	return IsIsolatedPartition(partition)
 }
 
+// IsIsolatedPartition should only be used in testing - use IsUnsupportedOperationInPartitionError to build logical fallbacks within resources
 func IsIsolatedPartition(partition string) bool {
 
 	pattern := `^aws-iso-?.*$`
@@ -278,12 +280,14 @@ func IsIsolatedPartition(partition string) bool {
 	return re.MatchString(partition)
 }
 
+// IsStandardRegion should only be used in testing - use IsUnsupportedOperationInPartitionError to build logical fallbacks within resources
 func IsStandardRegion(region string) bool {
 	partition := PartitionForRegion(region)
 
 	return IsStandardPartition(partition)
 }
 
+// IsStandardPartition should only be used in testing - use IsUnsupportedOperationInPartitionError to build logical fallbacks within resources
 func IsStandardPartition(partitionId string) bool {
 	return partitionId == StandardPartitionID
 }
