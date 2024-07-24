@@ -218,24 +218,29 @@ The following arguments are optional:
 
 ### `pod_properties`
 
-* `containers` - The properties of the container that's used on the Amazon EKS pod. See [containers](#containers) below.
+* `containers` - (Optional) The properties of the container that's used on the Amazon EKS pod. See [containers](#containers) below.
 * `dns_policy` - (Optional) The DNS policy for the pod. The default value is `ClusterFirst`. If the `host_network` argument is not specified, the default is `ClusterFirstWithHostNet`. `ClusterFirst` indicates that any DNS query that does not match the configured cluster domain suffix is forwarded to the upstream nameserver inherited from the node. For more information, see Pod's DNS policy in the Kubernetes documentation.
 * `host_network` - (Optional) Indicates if the pod uses the hosts' network IP address. The default value is `true`. Setting this to `false` enables the Kubernetes pod networking model. Most AWS Batch workloads are egress-only and don't require the overhead of IP allocation for each pod for incoming connections.
+* `image_pull_secret` - (Optional) List of Kubernetes secret resources. See [`image_pull_secret`](#image-pull-secret) below.
 * `metadata` - (Optional) Metadata about the Kubernetes pod.
 * `service_account_name` - (Optional) The name of the service account that's used to run the pod.
 * `volumes` - (Optional) Specifies the volumes for a job definition that uses Amazon EKS resources. AWS Batch supports [emptyDir](#eks_empty_dir), [hostPath](#eks_host_path), and [secret](#eks_secret) volume types.
 
-### `containers`
+#### `containers`
 
-* `image` - The Docker image used to start the container.
-* `args` - An array of arguments to the entrypoint. If this isn't specified, the CMD of the container image is used. This corresponds to the args member in the Entrypoint portion of the Pod in Kubernetes. Environment variable references are expanded using the container's environment.
-* `command` - The entrypoint for the container. This isn't run within a shell. If this isn't specified, the ENTRYPOINT of the container image is used. Environment variable references are expanded using the container's environment.
-* `env` - The environment variables to pass to a container. See [EKS Environment](#eks_environment) below.
-* `image_pull_policy` - The image pull policy for the container. Supported values are `Always`, `IfNotPresent`, and `Never`.
-* `name` - The name of the container. If the name isn't specified, the default name "Default" is used. Each container in a pod must have a unique name.
+* `args` - (Optional) An array of arguments to the entrypoint. If this isn't specified, the CMD of the container image is used. This corresponds to the args member in the Entrypoint portion of the Pod in Kubernetes. Environment variable references are expanded using the container's environment.
+* `command` - (Optional) The entrypoint for the container. This isn't run within a shell. If this isn't specified, the ENTRYPOINT of the container image is used. Environment variable references are expanded using the container's environment.
+* `env` - (Optional) The environment variables to pass to a container. See [EKS Environment](#eks_environment) below.
+* `image` - (Required) The Docker image used to start the container.
+* `image_pull_policy` - (Optional) The image pull policy for the container. Supported values are `Always`, `IfNotPresent`, and `Never`.
+* `name` - (Optional) The name of the container. If the name isn't specified, the default name "Default" is used. Each container in a pod must have a unique name.
 * `resources` - The type and amount of resources to assign to a container. The supported resources include `memory`, `cpu`, and `nvidia.com/gpu`.
 * `security_context` - The security context for a job.
 * `volume_mounts` - The volume mounts for the container.
+
+#### `image_pull_secret`
+
+* `name` - (Required) Unique identifier.
 
 ### `eks_environment`
 
