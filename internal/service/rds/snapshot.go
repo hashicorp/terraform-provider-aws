@@ -5,6 +5,7 @@ package rds
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -357,6 +358,7 @@ func waitDBSnapshotCreated(ctx context.Context, conn *rds.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.DBSnapshot); ok {
+		tfresource.SetLastError(err, fmt.Errorf("%d%% progress", aws.ToInt32(output.PercentProgress)))
 		return output, err
 	}
 
