@@ -485,9 +485,9 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 func validateIndexName(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 
-	if !regexache.MustCompile(`^(\*?[a-z][0-9a-z_]{2,63}|[a-z][0-9a-z_]{2,63}\*?)$`).MatchString(value) {
+	if !regexache.MustCompile(`^(\*?[a-z][0-9a-z_]{2,63}|[a-z][0-9a-z_]{0,63}\*?)$`).MatchString(value) {
 		es = append(es, fmt.Errorf(
-			"%q must begin with a letter and be at least 3 and no more than 64 characters long", k))
+			"%q must begin with a letter and be at least 1 and no more than 64 characters long", k))
 	}
 
 	if value == "score" {
