@@ -139,7 +139,7 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 	if v := d.Get("sending_enabled"); !v.(bool) {
 		input := &ses.UpdateConfigurationSetSendingEnabledInput{
 			ConfigurationSetName: aws.String(configurationSetName),
-			Enabled:              aws.ToBool(v.(*bool)),
+			Enabled:              v.(bool),
 		}
 
 		_, err := conn.UpdateConfigurationSetSendingEnabled(ctx, input)
@@ -236,7 +236,7 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 	if d.HasChange("reputation_metrics_enabled") {
 		input := &ses.UpdateConfigurationSetReputationMetricsEnabledInput{
 			ConfigurationSetName: aws.String(d.Id()),
-			Enabled:              aws.ToBool(d.Get("reputation_metrics_enabled").(*bool)),
+			Enabled:              d.Get("reputation_metrics_enabled").(bool),
 		}
 
 		_, err := conn.UpdateConfigurationSetReputationMetricsEnabled(ctx, input)
@@ -248,7 +248,7 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 	if d.HasChange("sending_enabled") {
 		input := &ses.UpdateConfigurationSetSendingEnabledInput{
 			ConfigurationSetName: aws.String(d.Id()),
-			Enabled:              aws.ToBool(d.Get("sending_enabled").(*bool)),
+			Enabled:              d.Get("sending_enabled").(bool),
 		}
 
 		_, err := conn.UpdateConfigurationSetSendingEnabled(ctx, input)
