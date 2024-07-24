@@ -1563,8 +1563,8 @@ func TestExpandInterface(t *testing.T) {
 		},
 		{
 			TestName: "non-empty set Source and non-empty interface Target",
-			Source: testFlexTFListNestedObject[testFlexTFInterfaceFlexer]{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
+			Source: testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
