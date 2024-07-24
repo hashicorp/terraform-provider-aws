@@ -365,7 +365,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 				"position":            i + 1,
 			}
 
-			if &element.LambdaAction.InvocationType != nil {
+			if string(element.LambdaAction.InvocationType) != "" {
 				lambdaAction["invocation_type"] = element.LambdaAction.InvocationType
 			}
 
@@ -551,10 +551,9 @@ func FindReceiptRuleByTwoPartKey(ctx context.Context, conn *ses.Client, ruleName
 		RuleName:    aws.String(ruleName),
 		RuleSetName: aws.String(ruleSetName),
 	}
-
 	output, err := conn.DescribeReceiptRule(ctx, input)
 
-	if errs.IsA[*awstypes.RuleDoesNotExistException](err) {
+	if errs.IsA[*awstypes.RuleDoesNotExistException](err) || errs.IsA[*awstypes.RuleSetDoesNotExistException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -593,13 +592,13 @@ func buildReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 		receiptRule.TlsPolicy = awstypes.TlsPolicy(v.(string))
 	}
 
-	actions := make(map[int]*awstypes.ReceiptAction)
+	actions := make(map[int]awstypes.ReceiptAction)
 
 	if v, ok := d.GetOk("add_header_action"); ok {
 		for _, element := range v.(*schema.Set).List() {
 			elem := element.(map[string]interface{})
 
-			actions[elem["position"].(int)] = &awstypes.ReceiptAction{
+			actions[elem["position"].(int)] = awstypes.ReceiptAction{
 				AddHeaderAction: &awstypes.AddHeaderAction{
 					HeaderName:  aws.String(elem["header_name"].(string)),
 					HeaderValue: aws.String(elem["header_value"].(string)),
@@ -626,7 +625,7 @@ func buildReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 				bounceAction.TopicArn = aws.String(elem[names.AttrTopicARN].(string))
 			}
 
-			actions[elem["position"].(int)] = &awstypes.ReceiptAction{
+			actions[elem["position"].(int)] = awstypes.ReceiptAction{
 				BounceAction: bounceAction,
 			}
 		}
@@ -648,7 +647,7 @@ func buildReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 				lambdaAction.TopicArn = aws.String(elem[names.AttrTopicARN].(string))
 			}
 
-			actions[elem["position"].(int)] = &awstypes.ReceiptAction{
+			actions[elem["position"].(int)] = awstypes.ReceiptAction{
 				LambdaAction: lambdaAction,
 			}
 		}
@@ -674,7 +673,7 @@ func buildReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 				s3Action.TopicArn = aws.String(elem[names.AttrTopicARN].(string))
 			}
 
-			actions[elem["position"].(int)] = &awstypes.ReceiptAction{
+			actions[elem["position"].(int)] = awstypes.ReceiptAction{
 				S3Action: s3Action,
 			}
 		}
@@ -689,7 +688,7 @@ func buildReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 				Encoding: awstypes.SNSActionEncoding(elem["encoding"].(string)),
 			}
 
-			actions[elem["position"].(int)] = &awstypes.ReceiptAction{
+			actions[elem["position"].(int)] = awstypes.ReceiptAction{
 				SNSAction: snsAction,
 			}
 		}
@@ -707,7 +706,7 @@ func buildReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 				stopAction.TopicArn = aws.String(elem[names.AttrTopicARN].(string))
 			}
 
-			actions[elem["position"].(int)] = &awstypes.ReceiptAction{
+			actions[elem["position"].(int)] = awstypes.ReceiptAction{
 				StopAction: stopAction,
 			}
 		}
@@ -725,7 +724,7 @@ func buildReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 				workmailAction.TopicArn = aws.String(elem[names.AttrTopicARN].(string))
 			}
 
-			actions[elem["position"].(int)] = &awstypes.ReceiptAction{
+			actions[elem["position"].(int)] = awstypes.ReceiptAction{
 				WorkmailAction: workmailAction,
 			}
 		}
@@ -739,7 +738,7 @@ func buildReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 
 	sortedActions := []awstypes.ReceiptAction{}
 	for _, k := range keys {
-		sortedActions = append(sortedActions, *actions[k])
+		sortedActions = append(sortedActions, actions[k])
 	}
 
 	receiptRule.Actions = sortedActions
