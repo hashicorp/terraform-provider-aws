@@ -143,18 +143,20 @@ func resourceBusUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	input := &eventbridge.UpdateEventBusInput{
-		Name: aws.String(d.Get(names.AttrName).(string)),
-	}
+	if d.HasChange("kms_key_identifier") {
+		input := &eventbridge.UpdateEventBusInput{
+			Name: aws.String(d.Get(names.AttrName).(string)),
+		}
 
-	if v, ok := d.GetOk("kms_key_identifier"); ok {
-		input.KmsKeyIdentifier = aws.String(v.(string))
-	}
+		if v, ok := d.GetOk("kms_key_identifier"); ok {
+			input.KmsKeyIdentifier = aws.String(v.(string))
+		}
 
-	_, err := conn.UpdateEventBus(ctx, input)
+		_, err := conn.UpdateEventBus(ctx, input)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating EventBridge Event Bus (%s): %s", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EventBridge Event Bus (%s): %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceBusRead(ctx, d, meta)...)
