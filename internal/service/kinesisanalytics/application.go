@@ -32,7 +32,7 @@ import (
 
 // @SDKResource("aws_kinesis_analytics_application", name="Application")
 // @Tags(identifierAttribute="arn")
-func ResourceApplication() *schema.Resource {
+func resourceApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApplicationCreate,
 		ReadWithoutTimeout:   resourceApplicationRead,
@@ -56,7 +56,6 @@ func ResourceApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"cloudwatch_logging_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -67,13 +66,11 @@ func ResourceApplication() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"log_stream_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-
 						names.AttrRoleARN: {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -82,40 +79,21 @@ func ResourceApplication() *schema.Resource {
 					},
 				},
 			},
-
 			"code": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 102400),
 			},
-
 			"create_timestamp": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-
-			"last_update_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
-				),
-			},
-
 			"inputs": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -126,7 +104,6 @@ func ResourceApplication() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"kinesis_firehose": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -138,7 +115,6 @@ func ResourceApplication() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-
 									names.AttrRoleARN: {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -147,7 +123,6 @@ func ResourceApplication() *schema.Resource {
 								},
 							},
 						},
-
 						"kinesis_stream": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -159,7 +134,6 @@ func ResourceApplication() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-
 									names.AttrRoleARN: {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -168,7 +142,6 @@ func ResourceApplication() *schema.Resource {
 								},
 							},
 						},
-
 						names.AttrNamePrefix: {
 							Type:     schema.TypeString,
 							Required: true,
@@ -177,7 +150,6 @@ func ResourceApplication() *schema.Resource {
 								validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
 							),
 						},
-
 						"parallelism": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -194,7 +166,6 @@ func ResourceApplication() *schema.Resource {
 								},
 							},
 						},
-
 						"processing_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -224,7 +195,6 @@ func ResourceApplication() *schema.Resource {
 								},
 							},
 						},
-
 						names.AttrSchema: {
 							Type:     schema.TypeList,
 							Required: true,
@@ -241,13 +211,11 @@ func ResourceApplication() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-
 												names.AttrName: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
 												},
-
 												"sql_type": {
 													Type:     schema.TypeString,
 													Required: true,
@@ -255,12 +223,10 @@ func ResourceApplication() *schema.Resource {
 											},
 										},
 									},
-
 									"record_encoding": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-
 									"record_format": {
 										Type:     schema.TypeList,
 										Required: true,
@@ -283,7 +249,6 @@ func ResourceApplication() *schema.Resource {
 																			Type:     schema.TypeString,
 																			Required: true,
 																		},
-
 																		"record_row_delimiter": {
 																			Type:     schema.TypeString,
 																			Required: true,
@@ -295,7 +260,6 @@ func ResourceApplication() *schema.Resource {
 																	"inputs.0.schema.0.record_format.0.mapping_parameters.0.json",
 																},
 															},
-
 															names.AttrJSON: {
 																Type:     schema.TypeList,
 																Optional: true,
@@ -316,7 +280,6 @@ func ResourceApplication() *schema.Resource {
 														},
 													},
 												},
-
 												"record_format_type": {
 													Type:     schema.TypeString,
 													Computed: true,
@@ -327,7 +290,6 @@ func ResourceApplication() *schema.Resource {
 								},
 							},
 						},
-
 						"starting_position_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -343,7 +305,6 @@ func ResourceApplication() *schema.Resource {
 								},
 							},
 						},
-
 						"stream_names": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -352,7 +313,19 @@ func ResourceApplication() *schema.Resource {
 					},
 				},
 			},
-
+			"last_update_timestamp": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 128),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
+				),
+			},
 			"outputs": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -363,7 +336,6 @@ func ResourceApplication() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"kinesis_firehose": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -375,7 +347,6 @@ func ResourceApplication() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-
 									names.AttrRoleARN: {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -384,7 +355,6 @@ func ResourceApplication() *schema.Resource {
 								},
 							},
 						},
-
 						"kinesis_stream": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -396,7 +366,6 @@ func ResourceApplication() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-
 									names.AttrRoleARN: {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -405,7 +374,6 @@ func ResourceApplication() *schema.Resource {
 								},
 							},
 						},
-
 						"lambda": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -417,7 +385,6 @@ func ResourceApplication() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-
 									names.AttrRoleARN: {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -426,7 +393,6 @@ func ResourceApplication() *schema.Resource {
 								},
 							},
 						},
-
 						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
@@ -435,7 +401,6 @@ func ResourceApplication() *schema.Resource {
 								validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
 							),
 						},
-
 						names.AttrSchema: {
 							Type:     schema.TypeList,
 							Required: true,
@@ -453,7 +418,6 @@ func ResourceApplication() *schema.Resource {
 					},
 				},
 			},
-
 			"reference_data_sources": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -464,7 +428,6 @@ func ResourceApplication() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"s3": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -476,12 +439,10 @@ func ResourceApplication() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-
 									"file_key": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-
 									names.AttrRoleARN: {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -490,7 +451,6 @@ func ResourceApplication() *schema.Resource {
 								},
 							},
 						},
-
 						names.AttrSchema: {
 							Type:     schema.TypeList,
 							Required: true,
@@ -507,13 +467,11 @@ func ResourceApplication() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-
 												names.AttrName: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
 												},
-
 												"sql_type": {
 													Type:     schema.TypeString,
 													Required: true,
@@ -521,12 +479,10 @@ func ResourceApplication() *schema.Resource {
 											},
 										},
 									},
-
 									"record_encoding": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-
 									"record_format": {
 										Type:     schema.TypeList,
 										Required: true,
@@ -549,7 +505,6 @@ func ResourceApplication() *schema.Resource {
 																			Type:     schema.TypeString,
 																			Required: true,
 																		},
-
 																		"record_row_delimiter": {
 																			Type:     schema.TypeString,
 																			Required: true,
@@ -561,7 +516,6 @@ func ResourceApplication() *schema.Resource {
 																	"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json",
 																},
 															},
-
 															names.AttrJSON: {
 																Type:     schema.TypeList,
 																Optional: true,
@@ -582,7 +536,6 @@ func ResourceApplication() *schema.Resource {
 														},
 													},
 												},
-
 												"record_format_type": {
 													Type:     schema.TypeString,
 													Computed: true,
@@ -593,7 +546,6 @@ func ResourceApplication() *schema.Resource {
 								},
 							},
 						},
-
 						names.AttrTableName: {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -602,20 +554,16 @@ func ResourceApplication() *schema.Resource {
 					},
 				},
 			},
-
 			"start_application": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-
 			names.AttrVersion: {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -659,8 +607,6 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 			ReferenceDataSource:         expandReferenceDataSource(v),
 		}
 
-		log.Printf("[DEBUG] Adding Kinesis Analytics Application (%s) reference data source: %+v", d.Id(), input)
-
 		_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
 			return conn.AddApplicationReferenceDataSource(ctx, input)
 		})
@@ -684,19 +630,15 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 				}
 			}
 
-			application, err := FindApplicationDetailByName(ctx, conn, applicationName)
+			application, err := findApplicationDetailByName(ctx, conn, applicationName)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "reading Kinesis Analytics Application (%s): %s", d.Id(), err)
 			}
 
-			err = startApplication(ctx, conn, application, inputStartingPosition)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "creating Kinesis Analytics Application (%s): %s", applicationName, err)
+			if err := startApplication(ctx, conn, application, inputStartingPosition); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
-		} else {
-			log.Printf("[DEBUG] Kinesis Analytics Application (%s) has no inputs", d.Id())
 		}
 	}
 
@@ -707,7 +649,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsClient(ctx)
 
-	application, err := FindApplicationDetailByName(ctx, conn, d.Get(names.AttrName).(string))
+	application, err := findApplicationDetailByName(ctx, conn, d.Get(names.AttrName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kinesis Analytics Application (%s) not found, removing from state", d.Id())
@@ -721,29 +663,25 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	arn := aws.ToString(application.ApplicationARN)
 	d.Set(names.AttrARN, arn)
-	d.Set("code", application.ApplicationCode)
-	d.Set("create_timestamp", aws.ToTime(application.CreateTimestamp).Format(time.RFC3339))
-	d.Set(names.AttrDescription, application.ApplicationDescription)
-	d.Set("last_update_timestamp", aws.ToTime(application.LastUpdateTimestamp).Format(time.RFC3339))
-	d.Set(names.AttrName, application.ApplicationName)
-	d.Set(names.AttrStatus, application.ApplicationStatus)
-	d.Set(names.AttrVersion, application.ApplicationVersionId)
-
 	if err := d.Set("cloudwatch_logging_options", flattenCloudWatchLoggingOptionDescriptions(application.CloudWatchLoggingOptionDescriptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cloudwatch_logging_options: %s", err)
 	}
-
+	d.Set("code", application.ApplicationCode)
+	d.Set("create_timestamp", aws.ToTime(application.CreateTimestamp).Format(time.RFC3339))
+	d.Set(names.AttrDescription, application.ApplicationDescription)
 	if err := d.Set("inputs", flattenInputDescriptions(application.InputDescriptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting inputs: %s", err)
 	}
-
+	d.Set("last_update_timestamp", aws.ToTime(application.LastUpdateTimestamp).Format(time.RFC3339))
+	d.Set(names.AttrName, application.ApplicationName)
 	if err := d.Set("outputs", flattenOutputDescriptions(application.OutputDescriptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting outputs: %s", err)
 	}
-
 	if err := d.Set("reference_data_sources", flattenReferenceDataSourceDescriptions(application.ReferenceDataSourceDescriptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting reference_data_sources: %s", err)
 	}
+	d.Set(names.AttrStatus, application.ApplicationStatus)
+	d.Set(names.AttrVersion, application.ApplicationVersionId)
 
 	return diags
 }
@@ -754,7 +692,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if d.HasChanges("cloudwatch_logging_options", "code", "inputs", "outputs", "reference_data_sources") {
 		applicationName := d.Get(names.AttrName).(string)
-		currentApplicationVersionId := int64(d.Get(names.AttrVersion).(int))
+		currentApplicationVersionID := int64(d.Get(names.AttrVersion).(int))
 		updateApplication := false
 
 		input := &kinesisanalytics.UpdateApplicationInput{
@@ -775,10 +713,8 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 						LogStreamARN: aws.String(mNewCloudWatchLoggingOption["log_stream_arn"].(string)),
 						RoleARN:      aws.String(mNewCloudWatchLoggingOption[names.AttrRoleARN].(string)),
 					},
-					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionID),
 				}
-
-				log.Printf("[DEBUG] Adding Kinesis Analytics Application (%s) CloudWatch logging option: %+v", d.Id(), input)
 
 				_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
 					return conn.AddApplicationCloudWatchLoggingOption(ctx, input)
@@ -789,10 +725,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				}
 
 				if _, err := waitApplicationUpdated(ctx, conn, applicationName); err != nil {
-					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) to update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) update: %s", d.Id(), err)
 				}
 
-				currentApplicationVersionId += 1
+				currentApplicationVersionID += 1
 			} else if len(n.([]interface{})) == 0 {
 				// Delete existing CloudWatch logging options.
 				mOldCloudWatchLoggingOption := o.([]interface{})[0].(map[string]interface{})
@@ -800,10 +736,8 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				input := &kinesisanalytics.DeleteApplicationCloudWatchLoggingOptionInput{
 					ApplicationName:             aws.String(applicationName),
 					CloudWatchLoggingOptionId:   aws.String(mOldCloudWatchLoggingOption[names.AttrID].(string)),
-					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionID),
 				}
-
-				log.Printf("[DEBUG] Deleting Kinesis Analytics Application (%s) CloudWatch logging option: %+v", d.Id(), input)
 
 				_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
 					return conn.DeleteApplicationCloudWatchLoggingOption(ctx, input)
@@ -814,10 +748,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				}
 
 				if _, err := waitApplicationUpdated(ctx, conn, applicationName); err != nil {
-					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) to update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) update: %s", d.Id(), err)
 				}
 
-				currentApplicationVersionId += 1
+				currentApplicationVersionID += 1
 			} else {
 				// Update existing CloudWatch logging options.
 				mOldCloudWatchLoggingOption := o.([]interface{})[0].(map[string]interface{})
@@ -848,11 +782,9 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				// Add new input.
 				input := &kinesisanalytics.AddApplicationInputInput{
 					ApplicationName:             aws.String(applicationName),
-					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionID),
 					Input:                       expandInput(n.([]interface{})),
 				}
-
-				log.Printf("[DEBUG] Adding Kinesis Analytics Application (%s) input: %+v", d.Id(), input)
 
 				_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
 					return conn.AddApplicationInput(ctx, input)
@@ -863,10 +795,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				}
 
 				if _, err := waitApplicationUpdated(ctx, conn, applicationName); err != nil {
-					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) to update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) update: %s", d.Id(), err)
 				}
 
-				currentApplicationVersionId += 1
+				currentApplicationVersionID += 1
 			} else if len(n.([]interface{})) == 0 {
 				// The existing input cannot be deleted.
 				// This should be handled by the CustomizeDiff function above.
@@ -884,12 +816,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 						// Add new input processing configuration.
 						input := &kinesisanalytics.AddApplicationInputProcessingConfigurationInput{
 							ApplicationName:              aws.String(applicationName),
-							CurrentApplicationVersionId:  aws.Int64(currentApplicationVersionId),
+							CurrentApplicationVersionId:  aws.Int64(currentApplicationVersionID),
 							InputId:                      inputUpdate.InputId,
 							InputProcessingConfiguration: expandInputProcessingConfiguration(n.([]interface{})),
 						}
-
-						log.Printf("[DEBUG] Adding Kinesis Analytics Application (%s) input processing configuration: %+v", d.Id(), input)
 
 						_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
 							return conn.AddApplicationInputProcessingConfiguration(ctx, input)
@@ -900,19 +830,17 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 						}
 
 						if _, err := waitApplicationUpdated(ctx, conn, applicationName); err != nil {
-							return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) to update: %s", d.Id(), err)
+							return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) update: %s", d.Id(), err)
 						}
 
-						currentApplicationVersionId += 1
+						currentApplicationVersionID += 1
 					} else if len(n.([]interface{})) == 0 {
 						// Delete existing input processing configuration.
 						input := &kinesisanalytics.DeleteApplicationInputProcessingConfigurationInput{
 							ApplicationName:             aws.String(applicationName),
-							CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+							CurrentApplicationVersionId: aws.Int64(currentApplicationVersionID),
 							InputId:                     inputUpdate.InputId,
 						}
-
-						log.Printf("[DEBUG] Deleting Kinesis Analytics Application (%s) input processing configuration: %+v", d.Id(), input)
 
 						_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
 							return conn.DeleteApplicationInputProcessingConfiguration(ctx, input)
@@ -923,10 +851,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 						}
 
 						if _, err := waitApplicationUpdated(ctx, conn, applicationName); err != nil {
-							return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) to update: %s", d.Id(), err)
+							return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) update: %s", d.Id(), err)
 						}
 
-						currentApplicationVersionId += 1
+						currentApplicationVersionID += 1
 					}
 				}
 
@@ -965,14 +893,12 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			}
 
 			// Delete existing outputs.
-			for _, outputId := range deletions {
+			for _, outputID := range deletions {
 				input := &kinesisanalytics.DeleteApplicationOutputInput{
 					ApplicationName:             aws.String(applicationName),
-					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
-					OutputId:                    aws.String(outputId),
+					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionID),
+					OutputId:                    aws.String(outputID),
 				}
-
-				log.Printf("[DEBUG] Deleting Kinesis Analytics Application (%s) output: %+v", d.Id(), input)
 
 				_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
 					return conn.DeleteApplicationOutput(ctx, input)
@@ -983,21 +909,19 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				}
 
 				if _, err := waitApplicationUpdated(ctx, conn, applicationName); err != nil {
-					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) to update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) update: %s", d.Id(), err)
 				}
 
-				currentApplicationVersionId += 1
+				currentApplicationVersionID += 1
 			}
 
 			// Add new outputs.
 			for _, vOutput := range additions {
 				input := &kinesisanalytics.AddApplicationOutputInput{
 					ApplicationName:             aws.String(applicationName),
-					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionID),
 					Output:                      expandOutput(vOutput),
 				}
-
-				log.Printf("[DEBUG] Adding Kinesis Analytics Application (%s) output: %+v", d.Id(), input)
 
 				_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
 					return conn.AddApplicationOutput(ctx, input)
@@ -1008,10 +932,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				}
 
 				if _, err := waitApplicationUpdated(ctx, conn, applicationName); err != nil {
-					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) to update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) update: %s", d.Id(), err)
 				}
 
-				currentApplicationVersionId += 1
+				currentApplicationVersionID += 1
 			}
 		}
 
@@ -1022,11 +946,9 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				// Add new reference data source.
 				input := &kinesisanalytics.AddApplicationReferenceDataSourceInput{
 					ApplicationName:             aws.String(applicationName),
-					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionID),
 					ReferenceDataSource:         expandReferenceDataSource(n.([]interface{})),
 				}
-
-				log.Printf("[DEBUG] Adding Kinesis Analytics Application (%s) reference data source: %+v", d.Id(), input)
 
 				_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
 					return conn.AddApplicationReferenceDataSource(ctx, input)
@@ -1037,21 +959,19 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				}
 
 				if _, err := waitApplicationUpdated(ctx, conn, applicationName); err != nil {
-					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) to update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) update: %s", d.Id(), err)
 				}
 
-				currentApplicationVersionId += 1
+				currentApplicationVersionID += 1
 			} else if len(n.([]interface{})) == 0 {
 				// Delete existing reference data source.
 				mOldReferenceDataSource := o.([]interface{})[0].(map[string]interface{})
 
 				input := &kinesisanalytics.DeleteApplicationReferenceDataSourceInput{
 					ApplicationName:             aws.String(applicationName),
-					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionID),
 					ReferenceId:                 aws.String(mOldReferenceDataSource[names.AttrID].(string)),
 				}
-
-				log.Printf("[DEBUG] Deleting Kinesis Analytics Application (%s) reference data source: %+v", d.Id(), input)
 
 				_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
 					return conn.DeleteApplicationReferenceDataSource(ctx, input)
@@ -1062,10 +982,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				}
 
 				if _, err := waitApplicationUpdated(ctx, conn, applicationName); err != nil {
-					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) to update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) update: %s", d.Id(), err)
 				}
 
-				currentApplicationVersionId += 1
+				currentApplicationVersionID += 1
 			} else {
 				// Update existing reference data source.
 				referenceDataSourceUpdate := expandReferenceDataSourceUpdate(n.([]interface{}))
@@ -1077,9 +997,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if updateApplication {
-			input.CurrentApplicationVersionId = aws.Int64(currentApplicationVersionId)
-
-			log.Printf("[DEBUG] Updating Kinesis Analytics Application (%s): %+v", d.Id(), input)
+			input.CurrentApplicationVersionId = aws.Int64(currentApplicationVersionID)
 
 			_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
 				return conn.UpdateApplication(ctx, input)
@@ -1090,13 +1008,13 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			}
 
 			if _, err := waitApplicationUpdated(ctx, conn, applicationName); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) to update: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) update: %s", d.Id(), err)
 			}
 		}
 	}
 
 	if d.HasChange("start_application") {
-		application, err := FindApplicationDetailByName(ctx, conn, d.Get(names.AttrName).(string))
+		application, err := findApplicationDetailByName(ctx, conn, d.Get(names.AttrName).(string))
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading Kinesis Analytics Application (%s): %s", d.Id(), err)
@@ -1116,19 +1034,13 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 					}
 				}
 
-				err = startApplication(ctx, conn, application, inputStartingPosition)
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "updating Kinesis Analytics Application (%s): %s", d.Id(), err)
+				if err := startApplication(ctx, conn, application, inputStartingPosition); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
 				}
-			} else {
-				log.Printf("[DEBUG] Kinesis Analytics Application (%s) has no inputs", d.Id())
 			}
 		} else {
-			err = stopApplication(ctx, conn, application)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating Kinesis Analytics Application (%s): %s", d.Id(), err)
+			if err := stopApplication(ctx, conn, application); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
@@ -1142,7 +1054,7 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	createTimestamp, err := time.Parse(time.RFC3339, d.Get("create_timestamp").(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing create_timestamp: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	applicationName := d.Get(names.AttrName).(string)
@@ -1161,10 +1073,8 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "deleting Kinesis Analytics Application (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitApplicationDeleted(ctx, conn, applicationName)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) deletion: %s", d.Id(), err)
+	if _, err := waitApplicationDeleted(ctx, conn, applicationName); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -1213,14 +1123,12 @@ func startApplication(ctx context.Context, conn *kinesisanalytics.Client, applic
 		input.InputConfigurations[0].InputStartingPositionConfiguration.InputStartingPosition = awstypes.InputStartingPosition(inputStartingPosition)
 	}
 
-	log.Printf("[DEBUG] Starting Kinesis Analytics Application (%s): %+v", applicationARN, input)
-
 	if _, err := conn.StartApplication(ctx, input); err != nil {
-		return fmt.Errorf("starting application: %w", err)
+		return fmt.Errorf("starting Kinesis Analytics Application (%s): %w", applicationARN, err)
 	}
 
 	if _, err := waitApplicationStarted(ctx, conn, applicationName); err != nil {
-		return fmt.Errorf("starting application: waiting for completion: %w", err)
+		return fmt.Errorf("waiting for Kinesis Analytics Application (%s) start: %w", applicationARN, err)
 	}
 
 	return nil
@@ -1239,14 +1147,12 @@ func stopApplication(ctx context.Context, conn *kinesisanalytics.Client, applica
 		ApplicationName: aws.String(applicationName),
 	}
 
-	log.Printf("[DEBUG] Stopping Kinesis Analytics Application (%s): %+v", applicationARN, input)
-
 	if _, err := conn.StopApplication(ctx, input); err != nil {
-		return fmt.Errorf("stopping application: %w", err)
+		return fmt.Errorf("stopping Kinesis Analytics Application (%s): %w", applicationARN, err)
 	}
 
 	if _, err := waitApplicationStopped(ctx, conn, applicationName); err != nil {
-		return fmt.Errorf("stopping application: waiting for completion: %w", err)
+		return fmt.Errorf("waiting for Kinesis Analytics Application (%s) stop: %w", applicationARN, err)
 	}
 
 	return nil

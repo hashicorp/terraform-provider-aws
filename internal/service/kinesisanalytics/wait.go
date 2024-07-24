@@ -15,15 +15,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const (
-	applicationDeletedTimeout = 5 * time.Minute
-	applicationStartedTimeout = 5 * time.Minute
-	applicationStoppedTimeout = 5 * time.Minute
-	applicationUpdatedTimeout = 5 * time.Minute
-)
-
-// waitApplicationDeleted waits for an Application to return Deleted
 func waitApplicationDeleted(ctx context.Context, conn *kinesisanalytics.Client, name string) (*awstypes.ApplicationDetail, error) {
+	const (
+		applicationDeletedTimeout = 5 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusDeleting),
 		Target:  []string{},
@@ -40,8 +35,10 @@ func waitApplicationDeleted(ctx context.Context, conn *kinesisanalytics.Client, 
 	return nil, err
 }
 
-// waitApplicationStarted waits for an Application to start
 func waitApplicationStarted(ctx context.Context, conn *kinesisanalytics.Client, name string) (*awstypes.ApplicationDetail, error) {
+	const (
+		applicationStartedTimeout = 5 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusStarting),
 		Target:  enum.Slice(awstypes.ApplicationStatusRunning),
@@ -58,8 +55,10 @@ func waitApplicationStarted(ctx context.Context, conn *kinesisanalytics.Client, 
 	return nil, err
 }
 
-// waitApplicationStopped waits for an Application to stop
 func waitApplicationStopped(ctx context.Context, conn *kinesisanalytics.Client, name string) (*awstypes.ApplicationDetail, error) {
+	const (
+		applicationStoppedTimeout = 5 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusStopping),
 		Target:  enum.Slice(awstypes.ApplicationStatusReady),
@@ -76,8 +75,10 @@ func waitApplicationStopped(ctx context.Context, conn *kinesisanalytics.Client, 
 	return nil, err
 }
 
-// waitApplicationUpdated waits for an Application to update
 func waitApplicationUpdated(ctx context.Context, conn *kinesisanalytics.Client, name string) (*awstypes.ApplicationDetail, error) { //nolint:unparam
+	const (
+		applicationUpdatedTimeout = 5 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusUpdating),
 		Target:  enum.Slice(awstypes.ApplicationStatusReady, awstypes.ApplicationStatusRunning),
@@ -94,8 +95,6 @@ func waitApplicationUpdated(ctx context.Context, conn *kinesisanalytics.Client, 
 	return nil, err
 }
 
-// waitIAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.
-// If the retries time out the specified function is called one last time.
 func waitIAMPropagation(ctx context.Context, f func() (interface{}, error)) (interface{}, error) {
 	var output interface{}
 

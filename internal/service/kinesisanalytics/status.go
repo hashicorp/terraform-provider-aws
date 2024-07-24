@@ -11,10 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// statusApplication fetches the ApplicationDetail and its Status
 func statusApplication(ctx context.Context, conn *kinesisanalytics.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		applicationDetail, err := FindApplicationDetailByName(ctx, conn, name)
+		applicationDetail, err := findApplicationDetailByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

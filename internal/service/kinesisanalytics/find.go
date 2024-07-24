@@ -11,21 +11,18 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalytics/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// FindApplicationDetailByName returns the application corresponding to the specified name.
-// Returns NotFoundError if no application is found.
-func FindApplicationDetailByName(ctx context.Context, conn *kinesisanalytics.Client, name string) (*awstypes.ApplicationDetail, error) {
+func findApplicationDetailByName(ctx context.Context, conn *kinesisanalytics.Client, name string) (*awstypes.ApplicationDetail, error) {
 	input := &kinesisanalytics.DescribeApplicationInput{
 		ApplicationName: aws.String(name),
 	}
 
-	return FindApplicationDetail(ctx, conn, input)
+	return findApplicationDetail(ctx, conn, input)
 }
 
-// FindApplicationDetail returns the application details corresponding to the specified name.
-// Returns NotFoundError if no application is found.
-func FindApplicationDetail(ctx context.Context, conn *kinesisanalytics.Client, input *kinesisanalytics.DescribeApplicationInput) (*awstypes.ApplicationDetail, error) {
+func findApplicationDetail(ctx context.Context, conn *kinesisanalytics.Client, input *kinesisanalytics.DescribeApplicationInput) (*awstypes.ApplicationDetail, error) {
 	output, err := conn.DescribeApplication(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -40,10 +37,7 @@ func FindApplicationDetail(ctx context.Context, conn *kinesisanalytics.Client, i
 	}
 
 	if output == nil || output.ApplicationDetail == nil {
-		return nil, &retry.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.ApplicationDetail, nil
