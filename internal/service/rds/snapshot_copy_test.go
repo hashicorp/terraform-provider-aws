@@ -170,6 +170,52 @@ func TestAccRDSSnapshotCopy_disappears(t *testing.T) {
 	})
 }
 
+func TestAccRDSSnapshotCopy_destinationRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v types.DBSnapshot
+	resourceName := "aws_db_snapshot_copy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckSnapshotCopyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnapshotCopyConfig_destinationRegion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSnapshotCopyExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAllocatedStorage),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrIOPS),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttrSet(resourceName, "license_model"),
+					resource.TestCheckResourceAttrSet(resourceName, "option_group_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPort),
+					resource.TestCheckResourceAttrSet(resourceName, "snapshot_type"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStorageType),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"destination_region"},
+			},
+		},
+	})
+}
+
 func testAccCheckSnapshotCopyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
@@ -290,4 +336,13 @@ resource "aws_db_snapshot_copy" "test" {
 	shared_accounts               = ["all"]
 }
 `, rName))
+}
+
+func testAccSnapshotCopyConfig_destinationRegion(rName string) string {
+	return acctest.ConfigCompose(testAccSnapshotCopyConfig_base(rName), fmt.Sprintf(`
+resource "aws_db_snapshot_copy" "test" {
+  source_db_snapshot_identifier = aws_db_snapshot.test.db_snapshot_arn
+  target_db_snapshot_identifier = "%[1]s-target"
+  destination_region            = %[2]q
+}`, rName, acctest.AlternateRegion()))
 }
