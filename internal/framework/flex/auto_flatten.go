@@ -38,6 +38,11 @@ func Flatten(ctx context.Context, apiObject, tfObject any, optFns ...AutoFlexOpt
 	var diags diag.Diagnostics
 	flattener := newAutoFlattener(optFns)
 
+	tflog.SubsystemInfo(ctx, subsystemName, "Flattening", map[string]any{
+		logAttrKeySourceType: fullTypeName(reflect.TypeOf(apiObject)),
+		logAttrKeyTargetType: fullTypeName(reflect.TypeOf(tfObject)),
+	})
+
 	diags.Append(autoFlattenConvert(ctx, apiObject, tfObject, flattener)...)
 	if diags.HasError() {
 		diags.AddError("AutoFlEx", fmt.Sprintf("Flatten[%T, %T]", apiObject, tfObject))
