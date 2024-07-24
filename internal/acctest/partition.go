@@ -4,9 +4,10 @@
 package acctest
 
 import (
+	"regexp"
+
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"regexp"
 )
 
 func IsIsolatedRegion(region string) bool {
