@@ -5,6 +5,7 @@ package kinesisanalyticsv2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -1234,6 +1235,12 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 						return sdkdiag.AppendErrorf(diags, "adding Kinesis Analytics v2 Application (%s) VPC configuration: %s", d.Id(), err)
 					}
 
+					if operationID := aws.ToString(output.OperationId); operationID != "" {
+						if _, err := waitApplicationOperationSucceeded(ctx, conn, applicationName, operationID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+							return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) operation (%s) success: %s", applicationName, operationID, err)
+						}
+					}
+
 					if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
 						return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) to update: %s", d.Id(), err)
 					}
@@ -1255,6 +1262,12 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 					if err != nil {
 						return sdkdiag.AppendErrorf(diags, "deleting Kinesis Analytics v2 Application (%s) VPC configuration: %s", d.Id(), err)
+					}
+
+					if operationID := aws.ToString(output.OperationId); operationID != "" {
+						if _, err := waitApplicationOperationSucceeded(ctx, conn, applicationName, operationID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+							return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) operation (%s) success: %s", applicationName, operationID, err)
+						}
 					}
 
 					if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -1312,6 +1325,12 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 					return sdkdiag.AppendErrorf(diags, "adding Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), err)
 				}
 
+				if operationID := aws.ToString(output.OperationId); operationID != "" {
+					if _, err := waitApplicationOperationSucceeded(ctx, conn, applicationName, operationID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+						return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) operation (%s) success: %s", applicationName, operationID, err)
+					}
+				}
+
 				if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) to update: %s", d.Id(), err)
 				}
@@ -1333,6 +1352,12 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "deleting Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), err)
+				}
+
+				if operationID := aws.ToString(output.OperationId); operationID != "" {
+					if _, err := waitApplicationOperationSucceeded(ctx, conn, applicationName, operationID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+						return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) operation (%s) success: %s", applicationName, operationID, err)
+					}
 				}
 
 				if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -1365,12 +1390,18 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if updateApplication {
 			input.CurrentApplicationVersionId = aws.Int64(currentApplicationVersionID)
 
-			_, err := waitIAMPropagation(ctx, func() (*kinesisanalyticsv2.UpdateApplicationOutput, error) {
+			output, err := waitIAMPropagation(ctx, func() (*kinesisanalyticsv2.UpdateApplicationOutput, error) {
 				return conn.UpdateApplication(ctx, input)
 			})
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating Kinesis Analytics v2 Application (%s): %s", d.Id(), err)
+			}
+
+			if operationID := aws.ToString(output.OperationId); operationID != "" {
+				if _, err := waitApplicationOperationSucceeded(ctx, conn, applicationName, operationID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) operation (%s) success: %s", applicationName, operationID, err)
+				}
 			}
 
 			if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -1469,8 +1500,16 @@ func startApplication(ctx context.Context, conn *kinesisanalyticsv2.Client, inpu
 		input.RunConfiguration.SqlRunConfigurations[0].InputId = application.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.InputDescriptions[0].InputId
 	}
 
-	if _, err := conn.StartApplication(ctx, input); err != nil {
+	output, err := conn.StartApplication(ctx, input)
+
+	if err != nil {
 		return fmt.Errorf("starting Kinesis Analytics v2 Application (%s):  %w", applicationARN, err)
+	}
+
+	if operationID := aws.ToString(output.OperationId); operationID != "" {
+		if _, err := waitApplicationOperationSucceeded(ctx, conn, applicationName, operationID, timeout); err != nil {
+			return fmt.Errorf("waiting for Kinesis Analytics v2 Application (%s) operation (%s) success: %w", applicationName, operationID, err)
+		}
 	}
 
 	if _, err := waitApplicationStarted(ctx, conn, applicationName, timeout); err != nil {
@@ -1496,8 +1535,16 @@ func stopApplication(ctx context.Context, conn *kinesisanalyticsv2.Client, input
 		return nil
 	}
 
-	if _, err := conn.StopApplication(ctx, input); err != nil {
+	output, err := conn.StopApplication(ctx, input)
+
+	if err != nil {
 		return fmt.Errorf("stopping Kinesis Analytics v2 Application (%s):  %w", applicationARN, err)
+	}
+
+	if operationID := aws.ToString(output.OperationId); operationID != "" {
+		if _, err := waitApplicationOperationSucceeded(ctx, conn, applicationName, operationID, timeout); err != nil {
+			return fmt.Errorf("waiting for Kinesis Analytics v2 Application (%s) operation (%s) success: %w", applicationName, operationID, err)
+		}
 	}
 
 	if _, err := waitApplicationStopped(ctx, conn, applicationName, timeout); err != nil {
@@ -1538,7 +1585,7 @@ func findApplicationDetail(ctx context.Context, conn *kinesisanalyticsv2.Client,
 
 func statusApplication(ctx context.Context, conn *kinesisanalyticsv2.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		applicationDetail, err := findApplicationDetailByName(ctx, conn, name)
+		output, err := findApplicationDetailByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -1548,7 +1595,7 @@ func statusApplication(ctx context.Context, conn *kinesisanalyticsv2.Client, nam
 			return nil, "", err
 		}
 
-		return applicationDetail, string(applicationDetail.ApplicationStatus), nil
+		return output, string(output.ApplicationStatus), nil
 	}
 }
 
@@ -1614,6 +1661,73 @@ func waitApplicationDeleted(ctx context.Context, conn *kinesisanalyticsv2.Client
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ApplicationDetail); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func findApplicationOperationByTwoPartKey(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, operationID string) (*awstypes.ApplicationOperationInfoDetails, error) {
+	input := &kinesisanalyticsv2.DescribeApplicationOperationInput{
+		ApplicationName: aws.String(applicationName),
+		OperationId:     aws.String(operationID),
+	}
+
+	return findApplicationOperation(ctx, conn, input)
+}
+
+func findApplicationOperation(ctx context.Context, conn *kinesisanalyticsv2.Client, input *kinesisanalyticsv2.DescribeApplicationOperationInput) (*awstypes.ApplicationOperationInfoDetails, error) {
+	output, err := conn.DescribeApplicationOperation(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ApplicationOperationInfoDetails == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ApplicationOperationInfoDetails, nil
+}
+
+func statusApplicationOperation(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, operationID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findApplicationOperationByTwoPartKey(ctx, conn, applicationName, operationID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.OperationStatus), nil
+	}
+}
+
+func waitApplicationOperationSucceeded(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, operationID string, timeout time.Duration) (*awstypes.ApplicationOperationInfoDetails, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.OperationStatusInProgress),
+		Target:  enum.Slice(awstypes.OperationStatusSuccessful),
+		Refresh: statusApplicationOperation(ctx, conn, applicationName, operationID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ApplicationOperationInfoDetails); ok {
+		if failureDetails := output.OperationFailureDetails; failureDetails != nil && failureDetails.ErrorInfo != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(failureDetails.ErrorInfo.ErrorString)))
+		}
+
 		return output, err
 	}
 
