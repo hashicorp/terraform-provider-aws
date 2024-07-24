@@ -818,9 +818,11 @@ func (expander autoExpander) nestedObjectToStruct(ctx context.Context, vFrom fwt
 
 	// Create a new target structure and walk its fields.
 	to := reflect.New(tStruct)
-	diags.Append(autoFlexConvertStruct(ctx, from, to.Interface(), expander)...)
-	if diags.HasError() {
-		return diags
+	if !reflect.ValueOf(from).IsNil() {
+		diags.Append(autoFlexConvertStruct(ctx, from, to.Interface(), expander)...)
+		if diags.HasError() {
+			return diags
+		}
 	}
 
 	// Set value.
