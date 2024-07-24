@@ -157,7 +157,11 @@ func (r *resourceSubscription) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	_, err := conn.DeleteSubscription(ctx, &shield.DeleteSubscriptionInput{})
+	in := &shield.UpdateSubscriptionInput{
+		AutoRenew: awstypes.AutoRenewDisabled,
+	}
+
+	_, err := conn.UpdateSubscription(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
