@@ -169,11 +169,6 @@ func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, met
 		input.CopyTags = aws.Bool(v.(bool))
 	}
 
-	// TODO
-	// if v, ok := d.GetOk("destination_region"); ok {
-	// 	input.DestinationRegion = aws.String(v.(string))
-	// }
-
 	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
@@ -184,6 +179,18 @@ func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, met
 
 	if v, ok := d.GetOk("presigned_url"); ok {
 		input.PreSignedUrl = aws.String(v.(string))
+	} else if v, ok := d.GetOk("destination_region"); ok {
+		output, err := rds.NewPresignClient(conn, func(o *rds.PresignOptions) {
+			o.ClientOptions = append(o.ClientOptions, func(o *rds.Options) {
+				o.Region = v.(string)
+			})
+		}).PresignCopyDBSnapshot(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "presigning RDS DB Snapshot Copy (%s) request: %s", targetDBSnapshotID, err)
+		}
+
+		input.PreSignedUrl = aws.String(output.URL)
 	}
 
 	output, err := conn.CopyDBSnapshot(ctx, input)
