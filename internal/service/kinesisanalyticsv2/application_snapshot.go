@@ -92,7 +92,14 @@ func resourceApplicationSnapshotCreate(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId(id)
 
-	if _, err := waitSnapshotCreated(ctx, conn, applicationName, snapshotName, d.Timeout(schema.TimeoutCreate)); err != nil {
+	snapshot, err := waitSnapshotCreated(ctx, conn, applicationName, snapshotName, d.Timeout(schema.TimeoutCreate))
+
+	if err != nil {
+		if snapshot != nil && snapshot.SnapshotCreationTimestamp != nil {
+			// SnapshotCreationTimestamp is required for deletion, so persist to state now in case of subsequent errors and destroy being called without refresh.
+			d.Set("snapshot_creation_timestamp", aws.ToTime(snapshot.SnapshotCreationTimestamp).Format(time.RFC3339))
+		}
+
 		return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application Snapshot (%s) create: %s", d.Id(), err)
 	}
 
@@ -226,7 +233,7 @@ func findSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.Client, i
 
 func statusSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, snapshotName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		snapshotDetails, err := findSnapshotDetailsByTwoPartKey(ctx, conn, applicationName, snapshotName)
+		output, err := findSnapshotDetailsByTwoPartKey(ctx, conn, applicationName, snapshotName)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -236,7 +243,7 @@ func statusSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.Client,
 			return nil, "", err
 		}
 
-		return snapshotDetails, string(snapshotDetails.SnapshotStatus), nil
+		return output, string(output.SnapshotStatus), nil
 	}
 }
 
