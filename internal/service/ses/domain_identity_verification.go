@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
@@ -52,7 +51,7 @@ func ResourceDomainIdentityVerification() *schema.Resource {
 func getIdentityVerificationAttributes(ctx context.Context, conn *ses.Client, domainName string) (*awstypes.IdentityVerificationAttributes, error) {
 	input := &ses.GetIdentityVerificationAttributesInput{
 		Identities: []string{
-			aws.ToString(&domainName),
+			domainName,
 		},
 	}
 
@@ -63,7 +62,7 @@ func getIdentityVerificationAttributes(ctx context.Context, conn *ses.Client, do
 
 	attributes, exists := response.VerificationAttributes[domainName]
 	if !exists {
-		return nil, fmt.Errorf("no verification found for domain: %s", domainName)
+		return nil, fmt.Errorf("SES Domain Identity %s not found in AWS", domainName)
 	}
 
 	return &attributes, nil
