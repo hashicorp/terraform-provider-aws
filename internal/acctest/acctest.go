@@ -840,7 +840,7 @@ func Partition() string {
 }
 
 func PartitionRegions() []string {
-	return names.RegionsInPartition(Partition())
+	return RegionsInPartition(Partition())
 }
 
 func PartitionDNSSuffix() string {

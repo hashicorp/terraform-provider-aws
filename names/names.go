@@ -17,9 +17,7 @@ package names
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"log"
-	"regexp"
 	"slices"
 	"strings"
 
@@ -261,48 +259,6 @@ func IsOptInRegion(region string) bool {
 	default:
 		return false
 	}
-}
-
-// IsIsolatedRegion should only be used in testing - use IsUnsupportedOperationInPartitionError to build logical fallbacks within resources
-func IsIsolatedRegion(region string) bool {
-	partition := PartitionForRegion(region)
-
-	return IsIsolatedPartition(partition)
-}
-
-// IsIsolatedPartition should only be used in testing - use IsUnsupportedOperationInPartitionError to build logical fallbacks within resources
-func IsIsolatedPartition(partition string) bool {
-
-	pattern := `^aws-iso-?.*$`
-
-	re := regexp.MustCompile(pattern)
-
-	return re.MatchString(partition)
-}
-
-// IsStandardRegion should only be used in testing - use IsUnsupportedOperationInPartitionError to build logical fallbacks within resources
-func IsStandardRegion(region string) bool {
-	partition := PartitionForRegion(region)
-
-	return IsStandardPartition(partition)
-}
-
-// IsStandardPartition should only be used in testing - use IsUnsupportedOperationInPartitionError to build logical fallbacks within resources
-func IsStandardPartition(partitionId string) bool {
-	return partitionId == StandardPartitionID
-}
-
-func RegionsInPartition(partitionName string) []string {
-	var regions []string
-	for _, partition := range endpoints.DefaultPartitions() {
-		if partition.ID() == partitionName {
-			for _, region := range partition.Regions() {
-				regions = append(regions, region.ID())
-			}
-		}
-	}
-
-	return regions
 }
 
 func PartitionForRegion(region string) string {
