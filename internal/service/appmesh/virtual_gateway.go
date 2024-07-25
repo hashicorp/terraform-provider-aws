@@ -1331,9 +1331,9 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []interface{} 
 				mHealthCheck := map[string]interface{}{
 					"healthy_threshold":   aws.ToInt32(healthCheck.HealthyThreshold),
 					"interval_millis":     aws.ToInt64(healthCheck.IntervalMillis),
-					names.AttrPath:                aws.ToString(healthCheck.Path),
-					names.AttrPort:                aws.ToInt32(healthCheck.Port),
-					names.AttrProtocol:            healthCheck.Protocol,
+					names.AttrPath:        aws.ToString(healthCheck.Path),
+					names.AttrPort:        aws.ToInt32(healthCheck.Port),
+					names.AttrProtocol:    healthCheck.Protocol,
 					"timeout_millis":      aws.ToInt64(healthCheck.TimeoutMillis),
 					"unhealthy_threshold": aws.ToInt32(healthCheck.UnhealthyThreshold),
 				}

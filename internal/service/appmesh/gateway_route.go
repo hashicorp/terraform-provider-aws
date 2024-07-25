@@ -1002,10 +1002,10 @@ func flattenGatewayRouteSpec(spec *awstypes.GatewayRouteSpec) []interface{} {
 	}
 
 	mSpec := map[string]interface{}{
-		"grpc_route":  flattenGRPCGatewayRoute(spec.GrpcRoute),
-		"http2_route": flattenHTTPGatewayRoute(spec.Http2Route),
-		"http_route":  flattenHTTPGatewayRoute(spec.HttpRoute),
-		names.AttrPriority:    aws.ToInt32(spec.Priority),
+		"grpc_route":       flattenGRPCGatewayRoute(spec.GrpcRoute),
+		"http2_route":      flattenHTTPGatewayRoute(spec.Http2Route),
+		"http_route":       flattenHTTPGatewayRoute(spec.HttpRoute),
+		names.AttrPriority: aws.ToInt32(spec.Priority),
 	}
 
 	return []interface{}{mSpec}
@@ -1079,8 +1079,8 @@ func flattenHTTPGatewayRouteMatch(routeMatch *awstypes.HttpGatewayRouteMatch) []
 
 	for _, header := range routeMatch.Headers {
 		mHeader := map[string]interface{}{
-			"invert": aws.ToBool(header.Invert),
-			names.AttrName:   aws.ToString(header.Name),
+			"invert":       aws.ToBool(header.Invert),
+			names.AttrName: aws.ToString(header.Name),
 		}
 
 		mMatch := map[string]interface{}{}

@@ -1341,9 +1341,9 @@ func flattenGRPCRoute(grpcRoute *awstypes.GrpcRoute) []interface{} {
 
 			for _, weightedTarget := range weightedTargets {
 				mWeightedTarget := map[string]interface{}{
-					"virtual_node": aws.ToString(weightedTarget.VirtualNode),
-					names.AttrWeight:       weightedTarget.Weight,
-					names.AttrPort:         aws.ToInt32(weightedTarget.Port),
+					"virtual_node":   aws.ToString(weightedTarget.VirtualNode),
+					names.AttrWeight: weightedTarget.Weight,
+					names.AttrPort:   aws.ToInt32(weightedTarget.Port),
 				}
 
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
@@ -1362,8 +1362,8 @@ func flattenGRPCRoute(grpcRoute *awstypes.GrpcRoute) []interface{} {
 
 		for _, grpcRouteMetadata := range grpcRouteMatch.Metadata {
 			mGrpcRouteMetadata := map[string]interface{}{
-				"invert": aws.ToBool(grpcRouteMetadata.Invert),
-				names.AttrName:   aws.ToString(grpcRouteMetadata.Name),
+				"invert":       aws.ToBool(grpcRouteMetadata.Invert),
+				names.AttrName: aws.ToString(grpcRouteMetadata.Name),
 			}
 
 			mMatch := map[string]interface{}{}
@@ -1393,10 +1393,10 @@ func flattenGRPCRoute(grpcRoute *awstypes.GrpcRoute) []interface{} {
 
 		mGrpcRoute["match"] = []interface{}{
 			map[string]interface{}{
-				"metadata":     vGrpcRouteMetadatas,
-				"method_name":  aws.ToString(grpcRouteMatch.MethodName),
+				"metadata":            vGrpcRouteMetadatas,
+				"method_name":         aws.ToString(grpcRouteMatch.MethodName),
 				names.AttrServiceName: aws.ToString(grpcRouteMatch.ServiceName),
-				names.AttrPort:         aws.ToInt32(grpcRouteMatch.Port),
+				names.AttrPort:        aws.ToInt32(grpcRouteMatch.Port),
 			},
 		}
 	}
@@ -1444,9 +1444,9 @@ func flattenHTTPRoute(httpRoute *awstypes.HttpRoute) []interface{} {
 
 			for _, weightedTarget := range weightedTargets {
 				mWeightedTarget := map[string]interface{}{
-					"virtual_node": aws.ToString(weightedTarget.VirtualNode),
-					names.AttrWeight:       weightedTarget.Weight,
-					names.AttrPort:         aws.ToInt32(weightedTarget.Port),
+					"virtual_node":   aws.ToString(weightedTarget.VirtualNode),
+					names.AttrWeight: weightedTarget.Weight,
+					names.AttrPort:   aws.ToInt32(weightedTarget.Port),
 				}
 
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
@@ -1465,8 +1465,8 @@ func flattenHTTPRoute(httpRoute *awstypes.HttpRoute) []interface{} {
 
 		for _, httpRouteHeader := range httpRouteMatch.Headers {
 			mHttpRouteHeader := map[string]interface{}{
-				"invert": aws.ToBool(httpRouteHeader.Invert),
-				names.AttrName:   aws.ToString(httpRouteHeader.Name),
+				"invert":       aws.ToBool(httpRouteHeader.Invert),
+				names.AttrName: aws.ToString(httpRouteHeader.Name),
 			}
 
 			mMatch := map[string]interface{}{}
@@ -1525,11 +1525,11 @@ func flattenHTTPRoute(httpRoute *awstypes.HttpRoute) []interface{} {
 
 		mHttpRoute["match"] = []interface{}{
 			map[string]interface{}{
-				names.AttrHeader:          vHttpRouteHeaders,
+				names.AttrHeader:  vHttpRouteHeaders,
 				"method":          httpRouteMatch.Method,
-				names.AttrPath:            vHttpRoutePath,
-				names.AttrPort:            aws.ToInt32(httpRouteMatch.Port),
-				names.AttrPrefix:          aws.ToString(httpRouteMatch.Prefix),
+				names.AttrPath:    vHttpRoutePath,
+				names.AttrPort:    aws.ToInt32(httpRouteMatch.Port),
+				names.AttrPrefix:  aws.ToString(httpRouteMatch.Prefix),
 				"query_parameter": vHttpRouteQueryParameters,
 				"scheme":          httpRouteMatch.Scheme,
 			},
@@ -1597,11 +1597,11 @@ func flattenRouteSpec(spec *awstypes.RouteSpec) []interface{} {
 	}
 
 	mSpec := map[string]interface{}{
-		"grpc_route":  flattenGRPCRoute(spec.GrpcRoute),
-		"http2_route": flattenHTTPRoute(spec.Http2Route),
-		"http_route":  flattenHTTPRoute(spec.HttpRoute),
-		names.AttrPriority:    aws.ToInt32(spec.Priority),
-		"tcp_route":   flattenTCPRoute(spec.TcpRoute),
+		"grpc_route":       flattenGRPCRoute(spec.GrpcRoute),
+		"http2_route":      flattenHTTPRoute(spec.Http2Route),
+		"http_route":       flattenHTTPRoute(spec.HttpRoute),
+		names.AttrPriority: aws.ToInt32(spec.Priority),
+		"tcp_route":        flattenTCPRoute(spec.TcpRoute),
 	}
 
 	return []interface{}{mSpec}
@@ -1620,9 +1620,9 @@ func flattenTCPRoute(tcpRoute *awstypes.TcpRoute) []interface{} {
 
 			for _, weightedTarget := range weightedTargets {
 				mWeightedTarget := map[string]interface{}{
-					"virtual_node": aws.ToString(weightedTarget.VirtualNode),
-					names.AttrWeight:       weightedTarget.Weight,
-					names.AttrPort:         aws.ToInt32(weightedTarget.Port),
+					"virtual_node":   aws.ToString(weightedTarget.VirtualNode),
+					names.AttrWeight: weightedTarget.Weight,
+					names.AttrPort:   aws.ToInt32(weightedTarget.Port),
 				}
 
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
@@ -1738,9 +1738,9 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []interface{} {
 				mHealthCheck := map[string]interface{}{
 					"healthy_threshold":   aws.ToInt32(healthCheck.HealthyThreshold),
 					"interval_millis":     aws.ToInt64(healthCheck.IntervalMillis),
-					names.AttrPath:                aws.ToString(healthCheck.Path),
-					names.AttrPort:                aws.ToInt32(healthCheck.Port),
-					names.AttrProtocol:            healthCheck.Protocol,
+					names.AttrPath:        aws.ToString(healthCheck.Path),
+					names.AttrPort:        aws.ToInt32(healthCheck.Port),
+					names.AttrProtocol:    healthCheck.Protocol,
 					"timeout_millis":      aws.ToInt64(healthCheck.TimeoutMillis),
 					"unhealthy_threshold": aws.ToInt32(healthCheck.UnhealthyThreshold),
 				}
@@ -1750,7 +1750,7 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []interface{} {
 			if outlierDetection := listener.OutlierDetection; outlierDetection != nil {
 				mOutlierDetection := map[string]interface{}{
 					"base_ejection_duration": flattenDuration(outlierDetection.BaseEjectionDuration),
-					names.AttrInterval:               flattenDuration(outlierDetection.Interval),
+					names.AttrInterval:       flattenDuration(outlierDetection.Interval),
 					"max_ejection_percent":   aws.ToInt32(outlierDetection.MaxEjectionPercent),
 					"max_server_errors":      aws.ToInt64(outlierDetection.MaxServerErrors),
 				}
@@ -1920,9 +1920,9 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []interface{} {
 
 			mServiceDiscovery["aws_cloud_map"] = []interface{}{
 				map[string]interface{}{
-					names.AttrAttributes:     vAttributes,
-					"namespace_name": aws.ToString(v.Value.NamespaceName),
-					names.AttrServiceName:   aws.ToString(v.Value.ServiceName),
+					names.AttrAttributes:  vAttributes,
+					"namespace_name":      aws.ToString(v.Value.NamespaceName),
+					names.AttrServiceName: aws.ToString(v.Value.ServiceName),
 				},
 			}
 		case *awstypes.ServiceDiscoveryMemberDns:
