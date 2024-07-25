@@ -185,17 +185,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `output_data_config` -  (Required) Object with the following attributes that defines wat Amazon S3 will have your results saved.
     * `s3_uri` -  (Required) Amazon S3 URI where the results of model evaluation job are saved. It must have a Length of between 1 and 1024 and follow regex of ^s3://[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9](/.*)?$.
 
-
-
-
-
-
-
-
-
-
-
-
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
