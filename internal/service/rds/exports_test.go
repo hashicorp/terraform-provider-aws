@@ -9,6 +9,7 @@ var (
 	ResourceCluster                 = resourceCluster
 	ResourceClusterSnapshot         = resourceClusterSnapshot
 	ResourceEventSubscription       = resourceEventSubscription
+	ResourceParameterGroup          = resourceParameterGroup
 	ResourceProxy                   = resourceProxy
 	ResourceProxyDefaultTargetGroup = resourceProxyDefaultTargetGroup
 	ResourceProxyEndpoint           = resourceProxyEndpoint
@@ -19,6 +20,7 @@ var (
 
 	FindDBClusterSnapshotByID                  = findDBClusterSnapshotByID
 	FindDBInstanceByID                         = findDBInstanceByIDSDKv1
+	FindDBParameterGroupByName                 = findDBParameterGroupByName
 	FindDBProxyByName                          = findDBProxyByName
 	FindDBProxyEndpointByTwoPartKey            = findDBProxyEndpointByTwoPartKey
 	FindDBProxyTargetByFourPartKey             = findDBProxyTargetByFourPartKey
@@ -29,6 +31,7 @@ var (
 	FindEventSubscriptionByID                  = findEventSubscriptionByID
 	ListTags                                   = listTags
 	NewBlueGreenOrchestrator                   = newBlueGreenOrchestrator
+	ParameterGroupModifyChunk                  = parameterGroupModifyChunk
 	ParseDBInstanceARN                         = parseDBInstanceARN
 	ProxyTargetParseResourceID                 = proxyTargetParseResourceID
 	WaitBlueGreenDeploymentDeleted             = waitBlueGreenDeploymentDeleted

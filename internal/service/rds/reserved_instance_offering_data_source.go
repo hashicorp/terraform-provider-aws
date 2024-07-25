@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_rds_reserved_instance_offering")
+// @SDKDataSource("aws_rds_reserved_instance_offering", name="Reserved Instance Offering")
 func dataSourceReservedOffering() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReservedOfferingRead,

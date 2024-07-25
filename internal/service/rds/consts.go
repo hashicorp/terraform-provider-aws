@@ -318,3 +318,9 @@ const (
 	ReservedInstanceStateRetired        = "retired"
 	ReservedInstanceStatePaymentPending = "payment-pending"
 )
+
+const (
+	parameterSourceEngineDefault = "engine-default"
+	parameterSourceSystem        = "system"
+	parameterSourceUser          = "user"
+)
