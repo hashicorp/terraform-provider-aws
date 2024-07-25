@@ -11,11 +11,13 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudwatch_event_bus: Add `kms_key_identifier` attribute ([#38492](https://github.com/hashicorp/terraform-provider-aws/issues/38492))
 * data-source/aws_cur_report_definition: Add `tags` attribute ([#38483](https://github.com/hashicorp/terraform-provider-aws/issues/38483))
 * resource/aws_appflow_flow: Add `metadata_catalog_config` attribute ([#37566](https://github.com/hashicorp/terraform-provider-aws/issues/37566))
 * resource/aws_appflow_flow: Add `prefix_hierarchy` attribute to `destination_flow_config.s3.s3_output_format_config` ([#37566](https://github.com/hashicorp/terraform-provider-aws/issues/37566))
 * resource/aws_batch_job_definition: Add `eks_properties.*.pod_properties.*.image_pull_secret` argument ([#38517](https://github.com/hashicorp/terraform-provider-aws/issues/38517))
 * resource/aws_cloudformation_stack_set_instance: Add `operation_preferences.concurrency_mode` argument ([#38498](https://github.com/hashicorp/terraform-provider-aws/issues/38498))
+* resource/aws_cloudwatch_event_bus: Add `kms_key_identifier` argument ([#38492](https://github.com/hashicorp/terraform-provider-aws/issues/38492))
 * resource/aws_cur_report_definition: Add `tags` argument and `tags_all` attribute ([#38483](https://github.com/hashicorp/terraform-provider-aws/issues/38483))
 * resource/aws_db_cluster_snapshot: Add `shared_accounts` argument ([#34885](https://github.com/hashicorp/terraform-provider-aws/issues/34885))
 * resource/aws_glue_connection: Add `AZURECOSMOS`, `AZURESQL`, `BIGQUERY`, `OPENSEARCH`, and `SNOWFLAKE` as valid values for the `connection_type` argument and `SparkProperties` as a valid value for the `connection_properties` argument ([#37731](https://github.com/hashicorp/terraform-provider-aws/issues/37731))
