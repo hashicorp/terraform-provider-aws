@@ -291,7 +291,7 @@ func resourceSnapshotCopyUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	return resourceSnapshotCopyRead(ctx, d, meta)
+	return append(diags, resourceSnapshotCopyRead(ctx, d, meta)...)
 }
 
 func resourceSnapshotCopyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
