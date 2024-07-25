@@ -159,7 +159,7 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 			continue
 		}
 
-		toFieldVal := findFieldFuzzy(ctx, fieldName, valTo, valFrom, flexer)
+		toFieldVal, toFieldName := findFieldFuzzy(ctx, fieldName, valTo, valFrom, flexer)
 		if !toFieldVal.IsValid() {
 			// Corresponding field not found in to.
 			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding field", map[string]any{
@@ -170,7 +170,14 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 			continue
 		}
 		if !toFieldVal.CanSet() {
-			continue // Corresponding field value can't be changed.
+			// Corresponding field value can't be changed.
+			tflog.SubsystemDebug(ctx, subsystemName, "Field cannot be set", map[string]any{
+				logAttrKeySourceType:      fullTypeName(reflect.TypeOf(from)),
+				logAttrKeySourceFieldname: fieldName,
+				logAttrKeyTargetType:      fullTypeName(reflect.TypeOf(to)),
+				logAttrKeyTargetFieldname: toFieldName,
+			})
+			continue
 		}
 
 		diags.Append(flexer.convert(ctx, valFrom.Field(i), toFieldVal)...)
@@ -183,10 +190,10 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 	return diags
 }
 
-func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom reflect.Value, flexer autoFlexer) reflect.Value {
+func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom reflect.Value, flexer autoFlexer) (reflect.Value, string) {
 	// first precedence is exact match (case sensitive)
 	if v := valTo.FieldByName(fieldNameFrom); v.IsValid() {
-		return v
+		return v, fieldNameFrom
 	}
 
 	// If a "from" field fuzzy matches a "to" field, we are certain the fuzzy match
@@ -208,20 +215,22 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 		}
 		if v := valTo.FieldByName(fieldNameTo); v.IsValid() && strings.EqualFold(fieldNameFrom, fieldNameTo) && !fieldExistsInStruct(fieldNameTo, valFrom) {
 			// probably could assume validity here since reflect gave the field name
-			return v
+			return v, fieldNameTo
 		}
 	}
 
 	// third precedence is singular/plural
-	if plural.IsSingular(fieldNameFrom) && !fieldExistsInStruct(plural.Plural(fieldNameFrom), valFrom) {
-		if v := valTo.FieldByName(plural.Plural(fieldNameFrom)); v.IsValid() {
-			return v
+	fieldNameTo := plural.Plural(fieldNameFrom)
+	if plural.IsSingular(fieldNameFrom) && !fieldExistsInStruct(fieldNameTo, valFrom) {
+		if v := valTo.FieldByName(fieldNameTo); v.IsValid() {
+			return v, fieldNameTo
 		}
 	}
 
-	if plural.IsPlural(fieldNameFrom) && !fieldExistsInStruct(plural.Singular(fieldNameFrom), valFrom) {
-		if v := valTo.FieldByName(plural.Singular(fieldNameFrom)); v.IsValid() {
-			return v
+	fieldNameTo = plural.Singular(fieldNameFrom)
+	if plural.IsPlural(fieldNameFrom) && !fieldExistsInStruct(fieldNameTo, valFrom) {
+		if v := valTo.FieldByName(fieldNameTo); v.IsValid() {
+			return v, fieldNameTo
 		}
 	}
 
@@ -239,15 +248,12 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 	}
 
 	// no finds, fuzzy or otherwise - return zero value
-	return valTo.FieldByName(fieldNameFrom)
+	return reflect.Value{}, ""
 }
 
-func fieldExistsInStruct(field string, str reflect.Value) bool {
-	if v := str.FieldByName(field); v.IsValid() {
-		return true
-	}
-
-	return false
+func fieldExistsInStruct(field string, structVal reflect.Value) bool {
+	v := structVal.FieldByName(field)
+	return v.IsValid()
 }
 
 // valueWithElementsAs extends the Value interface for values that have an ElementsAs method.
