@@ -395,7 +395,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 											Computed:     true,
 											ValidateFunc: validation.IsPortNumber,
 										},
-										"protocol": {
+										names.AttrProtocol: {
 											Type:             schema.TypeString,
 											Required:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.VirtualGatewayPortProtocol](),
@@ -425,7 +425,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 											Required:     true,
 											ValidateFunc: validation.IsPortNumber,
 										},
-										"protocol": {
+										names.AttrProtocol: {
 											Type:             schema.TypeString,
 											Required:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.VirtualGatewayPortProtocol](),
@@ -499,7 +499,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 												},
 											},
 										},
-										"mode": {
+										names.AttrMode: {
 											Type:             schema.TypeString,
 											Required:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.VirtualGatewayListenerTlsMode](),
@@ -706,9 +706,9 @@ func resourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	virtualGateway := outputRaw.(*awstypes.VirtualGatewayData)
 
 	arn := aws.ToString(virtualGateway.Metadata.Arn)
-	d.Set("arn", arn)
-	d.Set("created_date", virtualGateway.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", virtualGateway.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedDate, virtualGateway.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, virtualGateway.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", virtualGateway.MeshName)
 	d.Set("mesh_owner", virtualGateway.Metadata.MeshOwner)
 	d.Set(names.AttrName, virtualGateway.VirtualGatewayName)
@@ -871,7 +871,7 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 
 			mListener := vListener.(map[string]interface{})
 
-			if vHealthCheck, ok := mListener["health_check"].([]interface{}); ok && len(vHealthCheck) > 0 && vHealthCheck[0] != nil {
+			if vHealthCheck, ok := mListener[names.AttrHealthCheck].([]interface{}); ok && len(vHealthCheck) > 0 && vHealthCheck[0] != nil {
 				healthCheck := &awstypes.VirtualGatewayHealthCheckPolicy{}
 
 				mHealthCheck := vHealthCheck[0].(map[string]interface{})
@@ -885,10 +885,10 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 				if vPath, ok := mHealthCheck[names.AttrPath].(string); ok && vPath != "" {
 					healthCheck.Path = aws.String(vPath)
 				}
-				if vPort, ok := mHealthCheck["port"].(int); ok && vPort > 0 {
+				if vPort, ok := mHealthCheck[names.AttrPort].(int); ok && vPort > 0 {
 					healthCheck.Port = aws.Int32(int32(vPort))
 				}
-				if vProtocol, ok := mHealthCheck["protocol"].(string); ok && vProtocol != "" {
+				if vProtocol, ok := mHealthCheck[names.AttrProtocol].(string); ok && vProtocol != "" {
 					healthCheck.Protocol = awstypes.VirtualGatewayPortProtocol(vProtocol)
 				}
 				if vTimeoutMillis, ok := mHealthCheck["timeout_millis"].(int); ok && vTimeoutMillis > 0 {
@@ -955,10 +955,10 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 
 				mPortMapping := vPortMapping[0].(map[string]interface{})
 
-				if vPort, ok := mPortMapping["port"].(int); ok && vPort > 0 {
+				if vPort, ok := mPortMapping[names.AttrPort].(int); ok && vPort > 0 {
 					portMapping.Port = aws.Int32(int32(vPort))
 				}
-				if vProtocol, ok := mPortMapping["protocol"].(string); ok && vProtocol != "" {
+				if vProtocol, ok := mPortMapping[names.AttrProtocol].(string); ok && vProtocol != "" {
 					portMapping.Protocol = awstypes.VirtualGatewayPortProtocol(vProtocol)
 				}
 
@@ -970,11 +970,11 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 
 				mTls := vTls[0].(map[string]interface{})
 
-				if vMode, ok := mTls["mode"].(string); ok && vMode != "" {
+				if vMode, ok := mTls[names.AttrMode].(string); ok && vMode != "" {
 					tls.Mode = awstypes.VirtualGatewayListenerTlsMode(vMode)
 				}
 
-				if vCertificate, ok := mTls["certificate"].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
+				if vCertificate, ok := mTls[names.AttrCertificate].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
 					mCertificate := vCertificate[0].(map[string]interface{})
 
 					if vAcm, ok := mCertificate["acm"].([]interface{}); ok && len(vAcm) > 0 && vAcm[0] != nil {
@@ -1106,16 +1106,16 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 
 				mFile := vFile[0].(map[string]interface{})
 
-				if vFormat, ok := mFile["format"].([]interface{}); ok && len(vFormat) > 0 && vFormat[0] != nil {
+				if vFormat, ok := mFile[names.AttrFormat].([]interface{}); ok && len(vFormat) > 0 && vFormat[0] != nil {
 					mFormat := vFormat[0].(map[string]interface{})
 
-					if vJsonFormatRefs, ok := mFormat["json"].([]interface{}); ok && len(vJsonFormatRefs) > 0 {
+					if vJsonFormatRefs, ok := mFormat[names.AttrJSON].([]interface{}); ok && len(vJsonFormatRefs) > 0 {
 						format := &awstypes.LoggingFormatMemberJson{}
 						jsonFormatRefs := []awstypes.JsonFormatRef{}
 						for _, vJsonFormatRef := range vJsonFormatRefs {
 							mJsonFormatRef := awstypes.JsonFormatRef{
-								Key:   aws.String(vJsonFormatRef.(map[string]interface{})["key"].(string)),
-								Value: aws.String(vJsonFormatRef.(map[string]interface{})["value"].(string)),
+								Key:   aws.String(vJsonFormatRef.(map[string]interface{})[names.AttrKey].(string)),
+								Value: aws.String(vJsonFormatRef.(map[string]interface{})[names.AttrValue].(string)),
 							}
 							jsonFormatRefs = append(jsonFormatRefs, mJsonFormatRef)
 						}
@@ -1159,7 +1159,7 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []interface{}) *awstypes.Vir
 
 		mTls := vTls[0].(map[string]interface{})
 
-		if vCertificate, ok := mTls["certificate"].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
+		if vCertificate, ok := mTls[names.AttrCertificate].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
 			mCertificate := vCertificate[0].(map[string]interface{})
 
 			if vFile, ok := mCertificate["file"].([]interface{}); ok && len(vFile) > 0 && vFile[0] != nil {
@@ -1331,9 +1331,9 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []interface{} 
 				mHealthCheck := map[string]interface{}{
 					"healthy_threshold":   aws.ToInt32(healthCheck.HealthyThreshold),
 					"interval_millis":     aws.ToInt64(healthCheck.IntervalMillis),
-					"path":                aws.ToString(healthCheck.Path),
-					"port":                aws.ToInt32(healthCheck.Port),
-					"protocol":            healthCheck.Protocol,
+					names.AttrPath:                aws.ToString(healthCheck.Path),
+					names.AttrPort:                aws.ToInt32(healthCheck.Port),
+					names.AttrProtocol:            healthCheck.Protocol,
 					"timeout_millis":      aws.ToInt64(healthCheck.TimeoutMillis),
 					"unhealthy_threshold": aws.ToInt32(healthCheck.UnhealthyThreshold),
 				}
@@ -1342,15 +1342,15 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []interface{} 
 
 			if portMapping := listener.PortMapping; portMapping != nil {
 				mPortMapping := map[string]interface{}{
-					"port":     aws.ToInt32(portMapping.Port),
-					"protocol": portMapping.Protocol,
+					names.AttrPort:     aws.ToInt32(portMapping.Port),
+					names.AttrProtocol: portMapping.Protocol,
 				}
 				mListener["port_mapping"] = []interface{}{mPortMapping}
 			}
 
 			if tls := listener.Tls; tls != nil {
 				mTls := map[string]interface{}{
-					"mode": tls.Mode,
+					names.AttrMode: tls.Mode,
 				}
 
 				if certificate := tls.Certificate; certificate != nil {
@@ -1359,14 +1359,14 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []interface{} 
 					switch v := certificate.(type) {
 					case *awstypes.VirtualGatewayListenerTlsCertificateMemberAcm:
 						mAcm := map[string]interface{}{
-							"certificate_arn": aws.ToString(v.Value.CertificateArn),
+							names.AttrCertificateARN: aws.ToString(v.Value.CertificateArn),
 						}
 
 						mCertificate["acm"] = []interface{}{mAcm}
 					case *awstypes.VirtualGatewayListenerTlsCertificateMemberFile:
 						mFile := map[string]interface{}{
-							"certificate_chain": aws.ToString(v.Value.CertificateChain),
-							"private_key":       aws.ToString(v.Value.PrivateKey),
+							names.AttrCertificateChain: aws.ToString(v.Value.CertificateChain),
+							names.AttrPrivateKey:       aws.ToString(v.Value.PrivateKey),
 						}
 
 						mCertificate["file"] = []interface{}{mFile}
@@ -1404,7 +1404,7 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []interface{} 
 						switch v := trust.(type) {
 						case *awstypes.VirtualGatewayListenerTlsValidationContextTrustMemberFile:
 							mFile := map[string]interface{}{
-								"certificate_chain": aws.ToString(v.Value.CertificateChain),
+								names.AttrCertificateChain: aws.ToString(v.Value.CertificateChain),
 							}
 
 							mTrust["file"] = []interface{}{mFile}
@@ -1448,21 +1448,21 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []interface{} 
 
 						for _, j := range v.Value {
 							mJson := map[string]interface{}{
-								"key":   aws.ToString(j.Key),
-								"value": aws.ToString(j.Value),
+								names.AttrKey:   aws.ToString(j.Key),
+								names.AttrValue: aws.ToString(j.Value),
 							}
 
 							vJsons = append(vJsons, mJson)
 						}
 
-						mFormat["json"] = vJsons
+						mFormat[names.AttrJSON] = vJsons
 					case *awstypes.LoggingFormatMemberText:
 						mFormat["text"] = v.Value
-						mFile["format"] = []interface{}{mFormat}
+						mFile[names.AttrFormat] = []interface{}{mFormat}
 					}
 				}
 
-				mFile["path"] = aws.ToString(v.Value.Path)
+				mFile[names.AttrPath] = aws.ToString(v.Value.Path)
 
 				mAccessLog["file"] = []interface{}{mFile}
 			}
@@ -1495,8 +1495,8 @@ func flattenVirtualGatewayClientPolicy(clientPolicy *awstypes.VirtualGatewayClie
 			switch v := certificate.(type) {
 			case *awstypes.VirtualGatewayClientTlsCertificateMemberFile:
 				mFile := map[string]interface{}{
-					"certificate_chain": aws.ToString(v.Value.CertificateChain),
-					"private_key":       aws.ToString(v.Value.PrivateKey),
+					names.AttrCertificateChain: aws.ToString(v.Value.CertificateChain),
+					names.AttrPrivateKey:       aws.ToString(v.Value.PrivateKey),
 				}
 
 				mCertificate["file"] = []interface{}{mFile}
@@ -1540,7 +1540,7 @@ func flattenVirtualGatewayClientPolicy(clientPolicy *awstypes.VirtualGatewayClie
 					mTrust["acm"] = []interface{}{mAcm}
 				case *awstypes.VirtualGatewayTlsValidationContextTrustMemberFile:
 					mFile := map[string]interface{}{
-						"certificate_chain": aws.ToString(v.Value.CertificateChain),
+						names.AttrCertificateChain: aws.ToString(v.Value.CertificateChain),
 					}
 
 					mTrust["file"] = []interface{}{mFile}

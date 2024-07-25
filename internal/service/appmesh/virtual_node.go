@@ -409,7 +409,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 											Computed:     true,
 											ValidateFunc: validation.IsPortNumber,
 										},
-										"protocol": {
+										names.AttrProtocol: {
 											Type:             schema.TypeString,
 											Required:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.PortProtocol](),
@@ -441,7 +441,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"unit": {
+													names.AttrUnit: {
 														Type:             schema.TypeString,
 														Required:         true,
 														ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
@@ -460,7 +460,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"unit": {
+													names.AttrUnit: {
 														Type:             schema.TypeString,
 														Required:         true,
 														ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
@@ -497,7 +497,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 											Required:     true,
 											ValidateFunc: validation.IsPortNumber,
 										},
-										"protocol": {
+										names.AttrProtocol: {
 											Type:             schema.TypeString,
 											Required:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.PortProtocol](),
@@ -526,7 +526,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"unit": {
+																names.AttrUnit: {
 																	Type:             schema.TypeString,
 																	Required:         true,
 																	ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
@@ -545,7 +545,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"unit": {
+																names.AttrUnit: {
 																	Type:             schema.TypeString,
 																	Required:         true,
 																	ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
@@ -574,7 +574,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"unit": {
+																names.AttrUnit: {
 																	Type:             schema.TypeString,
 																	Required:         true,
 																	ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
@@ -593,7 +593,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"unit": {
+																names.AttrUnit: {
 																	Type:             schema.TypeString,
 																	Required:         true,
 																	ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
@@ -622,7 +622,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"unit": {
+																names.AttrUnit: {
 																	Type:             schema.TypeString,
 																	Required:         true,
 																	ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
@@ -641,7 +641,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"unit": {
+																names.AttrUnit: {
 																	Type:             schema.TypeString,
 																	Required:         true,
 																	ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
@@ -670,7 +670,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"unit": {
+																names.AttrUnit: {
 																	Type:             schema.TypeString,
 																	Required:         true,
 																	ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
@@ -754,7 +754,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 												},
 											},
 										},
-										"mode": {
+										names.AttrMode: {
 											Type:             schema.TypeString,
 											Required:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.ListenerTlsMode](),
@@ -1023,9 +1023,9 @@ func resourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta i
 	vn := outputRaw.(*awstypes.VirtualNodeData)
 
 	arn := aws.ToString(vn.Metadata.Arn)
-	d.Set("arn", arn)
-	d.Set("created_date", vn.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", vn.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedDate, vn.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, vn.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vn.MeshName)
 	d.Set("mesh_owner", vn.Metadata.MeshOwner)
 	d.Set(names.AttrName, vn.VirtualNodeName)

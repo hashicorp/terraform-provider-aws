@@ -557,9 +557,9 @@ func resourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	gatewayRoute := outputRaw.(*awstypes.GatewayRouteData)
 
-	d.Set("arn", gatewayRoute.Metadata.Arn)
-	d.Set("created_date", gatewayRoute.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", gatewayRoute.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, gatewayRoute.Metadata.Arn)
+	d.Set(names.AttrCreatedDate, gatewayRoute.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, gatewayRoute.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", gatewayRoute.MeshName)
 	d.Set("mesh_owner", gatewayRoute.Metadata.MeshOwner)
 	d.Set(names.AttrName, gatewayRoute.GatewayRouteName)
@@ -719,7 +719,7 @@ func expandGatewayRouteSpec(vSpec []interface{}) *awstypes.GatewayRouteSpec {
 		spec.HttpRoute = expandHTTPGatewayRoute(vHttpRoute)
 	}
 
-	if vPriority, ok := mSpec["priority"].(int); ok && vPriority > 0 {
+	if vPriority, ok := mSpec[names.AttrPriority].(int); ok && vPriority > 0 {
 		spec.Priority = aws.Int32(int32(vPriority))
 	}
 
@@ -747,7 +747,7 @@ func expandGatewayRouteTarget(vRouteTarget []interface{}) *awstypes.GatewayRoute
 		routeTarget.VirtualService = virtualService
 	}
 
-	if vPort, ok := mRouteTarget["port"].(int); ok && vPort > 0 {
+	if vPort, ok := mRouteTarget[names.AttrPort].(int); ok && vPort > 0 {
 		routeTarget.Port = aws.Int32(int32(vPort))
 	}
 
@@ -763,7 +763,7 @@ func expandGRPCGatewayRoute(vGrpcRoute []interface{}) *awstypes.GrpcGatewayRoute
 
 	mGrpcRoute := vGrpcRoute[0].(map[string]interface{})
 
-	if vRouteAction, ok := mGrpcRoute["action"].([]interface{}); ok && len(vRouteAction) > 0 && vRouteAction[0] != nil {
+	if vRouteAction, ok := mGrpcRoute[names.AttrAction].([]interface{}); ok && len(vRouteAction) > 0 && vRouteAction[0] != nil {
 		routeAction := &awstypes.GrpcGatewayRouteAction{}
 
 		mRouteAction := vRouteAction[0].(map[string]interface{})
@@ -784,7 +784,7 @@ func expandGRPCGatewayRoute(vGrpcRoute []interface{}) *awstypes.GrpcGatewayRoute
 			routeMatch.ServiceName = aws.String(vServiceName)
 		}
 
-		if vPort, ok := mRouteMatch["port"].(int); ok && vPort > 0 {
+		if vPort, ok := mRouteMatch[names.AttrPort].(int); ok && vPort > 0 {
 			routeMatch.Port = aws.Int32(int32(vPort))
 		}
 
@@ -843,7 +843,7 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []interface{}) *awstypes.HttpGa
 
 	mRouteMatch := vHttpRouteMatch[0].(map[string]interface{})
 
-	if vPort, ok := mRouteMatch["port"].(int); ok && vPort > 0 {
+	if vPort, ok := mRouteMatch[names.AttrPort].(int); ok && vPort > 0 {
 		routeMatch.Port = aws.Int32(int32(vPort))
 	}
 
@@ -851,7 +851,7 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []interface{}) *awstypes.HttpGa
 		routeMatch.Prefix = aws.String(vPrefix)
 	}
 
-	if vHeaders, ok := mRouteMatch["header"].(*schema.Set); ok && vHeaders.Len() > 0 {
+	if vHeaders, ok := mRouteMatch[names.AttrHeader].(*schema.Set); ok && vHeaders.Len() > 0 {
 		headers := []awstypes.HttpGatewayRouteHeader{}
 
 		for _, vHeader := range vHeaders.List() {
@@ -872,7 +872,7 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []interface{}) *awstypes.HttpGa
 				if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
 					header.Match = &awstypes.HeaderMatchMethodMemberExact{Value: vExact}
 				}
-				if vPrefix, ok := mMatch["prefix"].(string); ok && vPrefix != "" {
+				if vPrefix, ok := mMatch[names.AttrPrefix].(string); ok && vPrefix != "" {
 					header.Match = &awstypes.HeaderMatchMethodMemberPrefix{Value: vPrefix}
 				}
 				if vRegex, ok := mMatch["regex"].(string); ok && vRegex != "" {
@@ -918,7 +918,7 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []interface{}) *awstypes.HttpGa
 		routeMatch.Hostname = hostnameMatch
 	}
 
-	if vPath, ok := mRouteMatch["path"].([]interface{}); ok && len(vPath) > 0 && vPath[0] != nil {
+	if vPath, ok := mRouteMatch[names.AttrPath].([]interface{}); ok && len(vPath) > 0 && vPath[0] != nil {
 		pathMatch := &awstypes.HttpPathMatch{}
 
 		mHostname := vPath[0].(map[string]interface{})
@@ -973,7 +973,7 @@ func expandHTTPGatewayRoute(vHttpRoute []interface{}) *awstypes.HttpGatewayRoute
 
 	mHttpRoute := vHttpRoute[0].(map[string]interface{})
 
-	if vRouteAction, ok := mHttpRoute["action"].([]interface{}); ok && len(vRouteAction) > 0 && vRouteAction[0] != nil {
+	if vRouteAction, ok := mHttpRoute[names.AttrAction].([]interface{}); ok && len(vRouteAction) > 0 && vRouteAction[0] != nil {
 		routeAction := &awstypes.HttpGatewayRouteAction{}
 
 		mRouteAction := vRouteAction[0].(map[string]interface{})
@@ -1005,7 +1005,7 @@ func flattenGatewayRouteSpec(spec *awstypes.GatewayRouteSpec) []interface{} {
 		"grpc_route":  flattenGRPCGatewayRoute(spec.GrpcRoute),
 		"http2_route": flattenHTTPGatewayRoute(spec.Http2Route),
 		"http_route":  flattenHTTPGatewayRoute(spec.HttpRoute),
-		"priority":    aws.ToInt32(spec.Priority),
+		names.AttrPriority:    aws.ToInt32(spec.Priority),
 	}
 
 	return []interface{}{mSpec}
@@ -1017,7 +1017,7 @@ func flattenGatewayRouteTarget(routeTarget *awstypes.GatewayRouteTarget) []inter
 	}
 
 	mRouteTarget := map[string]interface{}{
-		"port": aws.ToInt32(routeTarget.Port),
+		names.AttrPort: aws.ToInt32(routeTarget.Port),
 	}
 
 	if virtualService := routeTarget.VirtualService; virtualService != nil {
@@ -1048,10 +1048,10 @@ func flattenGRPCGatewayRoute(grpcRoute *awstypes.GrpcGatewayRoute) []interface{}
 
 	if routeMatch := grpcRoute.Match; routeMatch != nil {
 		mRouteMatch := map[string]interface{}{
-			"service_name": aws.ToString(routeMatch.ServiceName),
+			names.AttrServiceName: aws.ToString(routeMatch.ServiceName),
 		}
 		if routeMatch.Port != nil {
-			mRouteMatch["port"] = aws.ToInt32(routeMatch.Port)
+			mRouteMatch[names.AttrPort] = aws.ToInt32(routeMatch.Port)
 		}
 
 		mGrpcRoute["match"] = []interface{}{mRouteMatch}
@@ -1068,11 +1068,11 @@ func flattenHTTPGatewayRouteMatch(routeMatch *awstypes.HttpGatewayRouteMatch) []
 	mRouteMatch := map[string]interface{}{}
 
 	if routeMatch.Port != nil {
-		mRouteMatch["port"] = aws.ToInt32(routeMatch.Port)
+		mRouteMatch[names.AttrPort] = aws.ToInt32(routeMatch.Port)
 	}
 
 	if routeMatch.Prefix != nil {
-		mRouteMatch["prefix"] = aws.ToString(routeMatch.Prefix)
+		mRouteMatch[names.AttrPrefix] = aws.ToString(routeMatch.Prefix)
 	}
 
 	vHeaders := []interface{}{}
@@ -1080,7 +1080,7 @@ func flattenHTTPGatewayRouteMatch(routeMatch *awstypes.HttpGatewayRouteMatch) []
 	for _, header := range routeMatch.Headers {
 		mHeader := map[string]interface{}{
 			"invert": aws.ToBool(header.Invert),
-			"name":   aws.ToString(header.Name),
+			names.AttrName:   aws.ToString(header.Name),
 		}
 
 		mMatch := map[string]interface{}{}
@@ -1090,7 +1090,7 @@ func flattenHTTPGatewayRouteMatch(routeMatch *awstypes.HttpGatewayRouteMatch) []
 			case *awstypes.HeaderMatchMethodMemberExact:
 				mMatch["exact"] = v.Value
 			case *awstypes.HeaderMatchMethodMemberPrefix:
-				mMatch["prefix"] = v.Value
+				mMatch[names.AttrPrefix] = v.Value
 			case *awstypes.HeaderMatchMethodMemberRegex:
 				mMatch["regex"] = v.Value
 			case *awstypes.HeaderMatchMethodMemberSuffix:
@@ -1141,7 +1141,7 @@ func flattenHTTPGatewayRouteMatch(routeMatch *awstypes.HttpGatewayRouteMatch) []
 
 	for _, queryParameter := range routeMatch.QueryParameters {
 		mQueryParameter := map[string]interface{}{
-			"name": aws.ToString(queryParameter.Name),
+			names.AttrName: aws.ToString(queryParameter.Name),
 		}
 
 		if match := queryParameter.Match; match != nil {
@@ -1186,7 +1186,7 @@ func flattenHTTPGatewayRouteRewrite(routeRewrite *awstypes.HttpGatewayRouteRewri
 			"default_prefix": rewritePrefix.DefaultPrefix,
 		}
 		if rewritePrefixValue := rewritePrefix.Value; rewritePrefixValue != nil {
-			mRewritePrefix["value"] = aws.ToString(rewritePrefix.Value)
+			mRewritePrefix[names.AttrValue] = aws.ToString(rewritePrefix.Value)
 		}
 		mRouteRewrite[names.AttrPrefix] = []interface{}{mRewritePrefix}
 	}

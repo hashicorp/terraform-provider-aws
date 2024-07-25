@@ -79,9 +79,9 @@ func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.ToString(gatewayRoute.GatewayRouteName))
 	arn := aws.ToString(gatewayRoute.Metadata.Arn)
-	d.Set("arn", arn)
-	d.Set("created_date", gatewayRoute.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", gatewayRoute.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedDate, gatewayRoute.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, gatewayRoute.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", gatewayRoute.MeshName)
 	meshOwner := aws.ToString(gatewayRoute.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)

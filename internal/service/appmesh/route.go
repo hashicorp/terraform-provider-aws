@@ -46,15 +46,15 @@ func resourceRoute() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"created_date": {
+				names.AttrCreatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"last_updated_date": {
+				names.AttrLastUpdatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -71,13 +71,13 @@ func resourceRoute() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: verify.ValidAccountID,
 				},
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
-				"resource_owner": {
+				names.AttrResourceOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -107,7 +107,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 			MaxItems: 1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"action": {
+					names.AttrAction: {
 						Type:     schema.TypeList,
 						Required: true,
 						MinItems: 1,
@@ -121,7 +121,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 									MaxItems: 10,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
-											"port": {
+											names.AttrPort: {
 												Type:         schema.TypeInt,
 												Optional:     true,
 												ValidateFunc: validation.IsPortNumber,
@@ -131,7 +131,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 												Required:     true,
 												ValidateFunc: validation.StringLenBetween(1, 255),
 											},
-											"weight": {
+											names.AttrWeight: {
 												Type:         schema.TypeInt,
 												Required:     true,
 												ValidateFunc: validation.IntBetween(0, 100),
@@ -149,7 +149,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 						MaxItems: 1,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"header": {
+								names.AttrHeader: {
 									Type:     schema.TypeSet,
 									Optional: true,
 									MinItems: 0,
@@ -173,7 +173,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 															Optional:     true,
 															ValidateFunc: validation.StringLenBetween(1, 255),
 														},
-														"prefix": {
+														names.AttrPrefix: {
 															Type:         schema.TypeString,
 															Optional:     true,
 															ValidateFunc: validation.StringLenBetween(1, 255),
@@ -209,7 +209,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 													},
 												},
 											},
-											"name": {
+											names.AttrName: {
 												Type:         schema.TypeString,
 												Required:     true,
 												ValidateFunc: validation.StringLenBetween(1, 50),
@@ -222,7 +222,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 									Optional:         true,
 									ValidateDiagFunc: enum.Validate[awstypes.HttpMethod](),
 								},
-								"path": {
+								names.AttrPath: {
 									Type:     schema.TypeList,
 									Optional: true,
 									MinItems: 0,
@@ -242,12 +242,12 @@ func resourceRouteSpecSchema() *schema.Schema {
 										},
 									},
 								},
-								"port": {
+								names.AttrPort: {
 									Type:         schema.TypeInt,
 									Optional:     true,
 									ValidateFunc: validation.IsPortNumber,
 								},
-								"prefix": {
+								names.AttrPrefix: {
 									Type:         schema.TypeString,
 									Optional:     true,
 									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/`), "must start with /"),
@@ -273,7 +273,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 													},
 												},
 											},
-											"name": {
+											names.AttrName: {
 												Type:     schema.TypeString,
 												Required: true,
 											},
@@ -312,12 +312,12 @@ func resourceRouteSpecSchema() *schema.Schema {
 									MaxItems: 1,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
-											"unit": {
+											names.AttrUnit: {
 												Type:             schema.TypeString,
 												Required:         true,
 												ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
 											},
-											"value": {
+											names.AttrValue: {
 												Type:     schema.TypeInt,
 												Required: true,
 											},
@@ -333,7 +333,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 							},
 						},
 					},
-					"timeout": {
+					names.AttrTimeout: {
 						Type:     schema.TypeList,
 						Optional: true,
 						MinItems: 0,
@@ -347,12 +347,12 @@ func resourceRouteSpecSchema() *schema.Schema {
 									MaxItems: 1,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
-											"unit": {
+											names.AttrUnit: {
 												Type:             schema.TypeString,
 												Required:         true,
 												ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
 											},
-											"value": {
+											names.AttrValue: {
 												Type:     schema.TypeInt,
 												Required: true,
 											},
@@ -366,12 +366,12 @@ func resourceRouteSpecSchema() *schema.Schema {
 									MaxItems: 1,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
-											"unit": {
+											names.AttrUnit: {
 												Type:             schema.TypeString,
 												Required:         true,
 												ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
 											},
-											"value": {
+											names.AttrValue: {
 												Type:     schema.TypeInt,
 												Required: true,
 											},
@@ -401,7 +401,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 					ConflictsWith: []string{"spec.0.http2_route", "spec.0.http_route", "spec.0.tcp_route"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"action": {
+							names.AttrAction: {
 								Type:     schema.TypeList,
 								Required: true,
 								MinItems: 1,
@@ -415,7 +415,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 											MaxItems: 10,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"port": {
+													names.AttrPort: {
 														Type:         schema.TypeInt,
 														Optional:     true,
 														ValidateFunc: validation.IsPortNumber,
@@ -425,7 +425,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 														Required:     true,
 														ValidateFunc: validation.StringLenBetween(1, 255),
 													},
-													"weight": {
+													names.AttrWeight: {
 														Type:         schema.TypeInt,
 														Required:     true,
 														ValidateFunc: validation.IntBetween(0, 100),
@@ -467,7 +467,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 																	Optional:     true,
 																	ValidateFunc: validation.StringLenBetween(1, 255),
 																},
-																"prefix": {
+																names.AttrPrefix: {
 																	Type:         schema.TypeString,
 																	Optional:     true,
 																	ValidateFunc: validation.StringLenBetween(1, 255),
@@ -503,7 +503,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 															},
 														},
 													},
-													"name": {
+													names.AttrName: {
 														Type:         schema.TypeString,
 														Required:     true,
 														ValidateFunc: validation.StringLenBetween(1, 50),
@@ -516,17 +516,17 @@ func resourceRouteSpecSchema() *schema.Schema {
 											Optional:     true,
 											RequiredWith: []string{"spec.0.grpc_route.0.match.0.service_name"},
 										},
-										"port": {
+										names.AttrPort: {
 											Type:         schema.TypeInt,
 											Optional:     true,
 											ValidateFunc: validation.IsPortNumber,
 										},
-										"prefix": {
+										names.AttrPrefix: {
 											Type:         schema.TypeString,
 											Optional:     true,
 											ValidateFunc: validation.StringLenBetween(0, 50),
 										},
-										"service_name": {
+										names.AttrServiceName: {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
@@ -563,12 +563,12 @@ func resourceRouteSpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"unit": {
+													names.AttrUnit: {
 														Type:             schema.TypeString,
 														Required:         true,
 														ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
 													},
-													"value": {
+													names.AttrValue: {
 														Type:     schema.TypeInt,
 														Required: true,
 													},
@@ -584,7 +584,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 									},
 								},
 							},
-							"timeout": {
+							names.AttrTimeout: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 0,
@@ -598,12 +598,12 @@ func resourceRouteSpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"unit": {
+													names.AttrUnit: {
 														Type:             schema.TypeString,
 														Required:         true,
 														ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
 													},
-													"value": {
+													names.AttrValue: {
 														Type:     schema.TypeInt,
 														Required: true,
 													},
@@ -617,12 +617,12 @@ func resourceRouteSpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"unit": {
+													names.AttrUnit: {
 														Type:             schema.TypeString,
 														Required:         true,
 														ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
 													},
-													"value": {
+													names.AttrValue: {
 														Type:     schema.TypeInt,
 														Required: true,
 													},
@@ -645,7 +645,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 					schema.ConflictsWith = []string{"spec.0.grpc_route", "spec.0.http_route", "spec.0.tcp_route"}
 					return schema
 				}(),
-				"priority": {
+				names.AttrPriority: {
 					Type:         schema.TypeInt,
 					Optional:     true,
 					ValidateFunc: validation.IntBetween(0, 1000),
@@ -658,7 +658,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 					ConflictsWith: []string{"spec.0.grpc_route", "spec.0.http2_route", "spec.0.http_route"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"action": {
+							names.AttrAction: {
 								Type:     schema.TypeList,
 								Required: true,
 								MinItems: 1,
@@ -672,7 +672,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 											MaxItems: 10,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"port": {
+													names.AttrPort: {
 														Type:         schema.TypeInt,
 														Optional:     true,
 														ValidateFunc: validation.IsPortNumber,
@@ -682,7 +682,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 														Required:     true,
 														ValidateFunc: validation.StringLenBetween(1, 255),
 													},
-													"weight": {
+													names.AttrWeight: {
 														Type:         schema.TypeInt,
 														Required:     true,
 														ValidateFunc: validation.IntBetween(0, 100),
@@ -700,7 +700,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"port": {
+										names.AttrPort: {
 											Type:         schema.TypeInt,
 											Optional:     true,
 											ValidateFunc: validation.IsPortNumber,
@@ -708,7 +708,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 									},
 								},
 							},
-							"timeout": {
+							names.AttrTimeout: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 0,
@@ -722,12 +722,12 @@ func resourceRouteSpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"unit": {
+													names.AttrUnit: {
 														Type:             schema.TypeString,
 														Required:         true,
 														ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
 													},
-													"value": {
+													names.AttrValue: {
 														Type:     schema.TypeInt,
 														Required: true,
 													},
@@ -793,9 +793,9 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	route := outputRaw.(*awstypes.RouteData)
 	arn := aws.ToString(route.Metadata.Arn)
-	d.Set("arn", arn)
-	d.Set("created_date", route.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", route.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedDate, route.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, route.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", route.MeshName)
 	d.Set("mesh_owner", route.Metadata.MeshOwner)
 	d.Set(names.AttrName, route.RouteName)

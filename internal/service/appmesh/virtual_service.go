@@ -191,9 +191,9 @@ func resourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, met
 
 	vs := outputRaw.(*awstypes.VirtualServiceData)
 
-	d.Set("arn", vs.Metadata.Arn)
-	d.Set("created_date", vs.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", vs.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, vs.Metadata.Arn)
+	d.Set(names.AttrCreatedDate, vs.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, vs.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vs.MeshName)
 	d.Set("mesh_owner", vs.Metadata.MeshOwner)
 	d.Set(names.AttrName, vs.VirtualServiceName)

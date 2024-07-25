@@ -79,9 +79,9 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.ToString(route.RouteName))
 	arn := aws.ToString(route.Metadata.Arn)
-	d.Set("arn", arn)
-	d.Set("created_date", route.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", route.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedDate, route.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, route.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", route.MeshName)
 	meshOwner := aws.ToString(route.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)

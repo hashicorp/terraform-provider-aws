@@ -74,9 +74,9 @@ func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.ToString(virtualGateway.VirtualGatewayName))
 	arn := aws.ToString(virtualGateway.Metadata.Arn)
-	d.Set("arn", arn)
-	d.Set("created_date", virtualGateway.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", virtualGateway.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedDate, virtualGateway.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, virtualGateway.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", virtualGateway.MeshName)
 	meshOwner := aws.ToString(virtualGateway.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)

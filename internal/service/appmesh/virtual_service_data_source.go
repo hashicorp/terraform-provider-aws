@@ -75,9 +75,9 @@ func dataSourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.ToString(vs.VirtualServiceName))
 	arn := aws.ToString(vs.Metadata.Arn)
-	d.Set("arn", arn)
-	d.Set("created_date", vs.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", vs.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedDate, vs.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, vs.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vs.MeshName)
 	meshOwner := aws.ToString(vs.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)

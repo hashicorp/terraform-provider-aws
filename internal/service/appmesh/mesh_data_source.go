@@ -71,9 +71,9 @@ func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(aws.ToString(mesh.MeshName))
 	arn := aws.ToString(mesh.Metadata.Arn)
-	d.Set("arn", arn)
-	d.Set("created_date", mesh.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedDate, mesh.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	meshOwner := aws.ToString(mesh.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
 	d.Set(names.AttrResourceOwner, mesh.Metadata.ResourceOwner)

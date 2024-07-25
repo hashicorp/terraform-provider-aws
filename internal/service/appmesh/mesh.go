@@ -94,7 +94,7 @@ func resourceMeshSpecSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"type": {
+							names.AttrType: {
 								Type:             schema.TypeString,
 								Optional:         true,
 								Default:          awstypes.EgressFilterTypeDropAll,
@@ -165,9 +165,9 @@ func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	mesh := outputRaw.(*awstypes.MeshData)
 	arn := aws.ToString(mesh.Metadata.Arn)
-	d.Set("arn", arn)
-	d.Set("created_date", mesh.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedDate, mesh.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_owner", mesh.Metadata.MeshOwner)
 	d.Set(names.AttrName, mesh.MeshName)
 	d.Set(names.AttrResourceOwner, mesh.Metadata.ResourceOwner)
