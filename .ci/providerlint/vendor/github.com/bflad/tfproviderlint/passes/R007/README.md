@@ -1,6 +1,6 @@
 # R007
 
-The R007 analyzer reports usage of the deprecated [(helper/schema.ResourceData).Partial()](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/helper/schema?tab=doc#ResourceData.Partial) function that does not need replacement.
+The R007 analyzer reports usage of the deprecated [(helper/schema.ResourceData).Partial()](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema?tab=doc#ResourceData.Partial) function that does not need replacement.
 
 ## Flagged Code
 

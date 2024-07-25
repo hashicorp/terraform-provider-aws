@@ -38,8 +38,8 @@ github.com/bflad/gopaniccheck/passes/logpaniccallexpr
 github.com/bflad/gopaniccheck/passes/logpanicfcallexpr
 github.com/bflad/gopaniccheck/passes/logpaniclncallexpr
 github.com/bflad/gopaniccheck/passes/paniccallexpr
-# github.com/bflad/tfproviderlint v0.29.0
-## explicit; go 1.19
+# github.com/bflad/tfproviderlint v0.30.0
+## explicit; go 1.21
 github.com/bflad/tfproviderlint/helper/analysisutils
 github.com/bflad/tfproviderlint/helper/astutils
 github.com/bflad/tfproviderlint/helper/terraformtype
@@ -145,8 +145,6 @@ github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatapartialcallexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatapartialselectorexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetcallexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetidcallexpr
-github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetpartialcallexpr
-github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetpartialselectorexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/resourceinfo
 github.com/bflad/tfproviderlint/passes/helper/schema/resourceinfodatasourceonly
 github.com/bflad/tfproviderlint/passes/helper/schema/resourceinforesourceonly
@@ -155,18 +153,9 @@ github.com/bflad/tfproviderlint/passes/helper/schema/schemainfo
 github.com/bflad/tfproviderlint/passes/helper/schema/schemainfocomputedonly
 github.com/bflad/tfproviderlint/passes/helper/schema/schemamapcompositelit
 github.com/bflad/tfproviderlint/passes/helper/schema/schemavalidatefuncinfo
-github.com/bflad/tfproviderlint/passes/helper/validation/cidrnetworkselectorexpr
-github.com/bflad/tfproviderlint/passes/helper/validation/iprangecallexpr
-github.com/bflad/tfproviderlint/passes/helper/validation/iprangeselectorexpr
-github.com/bflad/tfproviderlint/passes/helper/validation/singleipcallexpr
-github.com/bflad/tfproviderlint/passes/helper/validation/singleipselectorexpr
 github.com/bflad/tfproviderlint/passes/helper/validation/stringdoesnotmatchcallexpr
 github.com/bflad/tfproviderlint/passes/helper/validation/stringinslicecallexpr
 github.com/bflad/tfproviderlint/passes/helper/validation/stringmatchcallexpr
-github.com/bflad/tfproviderlint/passes/helper/validation/validatejsonstringselectorexpr
-github.com/bflad/tfproviderlint/passes/helper/validation/validatelistuniquestringsselectorexpr
-github.com/bflad/tfproviderlint/passes/helper/validation/validateregexpselectorexpr
-github.com/bflad/tfproviderlint/passes/helper/validation/validaterfc3339timestringselectorexpr
 github.com/bflad/tfproviderlint/passes/stdlib/fmtsprintfcallexpr
 github.com/bflad/tfproviderlint/passes/stdlib/osexeccommandcallexpr
 github.com/bflad/tfproviderlint/passes/stdlib/osexeccommandcontextcallexpr
@@ -394,13 +383,13 @@ golang.org/x/crypto/blake2b
 golang.org/x/crypto/cast5
 golang.org/x/crypto/hkdf
 golang.org/x/crypto/sha3
-# golang.org/x/mod v0.16.0
+# golang.org/x/mod v0.17.0
 ## explicit; go 1.18
 golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/modfile
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.23.0
+# golang.org/x/net v0.25.0
 ## explicit; go 1.18
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
@@ -408,10 +397,12 @@ golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
+# golang.org/x/sync v0.7.0
+## explicit; go 1.18
+golang.org/x/sync/errgroup
 # golang.org/x/sys v0.20.0
 ## explicit; go 1.18
 golang.org/x/sys/cpu
-golang.org/x/sys/execabs
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 # golang.org/x/text v0.15.0
@@ -420,8 +411,8 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# golang.org/x/tools v0.13.0
-## explicit; go 1.18
+# golang.org/x/tools v0.21.0
+## explicit; go 1.19
 golang.org/x/tools/cmd/stringer
 golang.org/x/tools/go/analysis
 golang.org/x/tools/go/analysis/analysistest
@@ -435,13 +426,14 @@ golang.org/x/tools/go/gcexportdata
 golang.org/x/tools/go/internal/packagesdriver
 golang.org/x/tools/go/packages
 golang.org/x/tools/go/types/objectpath
+golang.org/x/tools/internal/aliases
+golang.org/x/tools/internal/analysisinternal
 golang.org/x/tools/internal/diff
 golang.org/x/tools/internal/diff/lcs
 golang.org/x/tools/internal/event
 golang.org/x/tools/internal/event/core
 golang.org/x/tools/internal/event/keys
 golang.org/x/tools/internal/event/label
-golang.org/x/tools/internal/event/tag
 golang.org/x/tools/internal/facts
 golang.org/x/tools/internal/gcimporter
 golang.org/x/tools/internal/gocommand
@@ -449,10 +441,11 @@ golang.org/x/tools/internal/goroot
 golang.org/x/tools/internal/packagesinternal
 golang.org/x/tools/internal/pkgbits
 golang.org/x/tools/internal/robustio
+golang.org/x/tools/internal/stdlib
 golang.org/x/tools/internal/testenv
 golang.org/x/tools/internal/tokeninternal
-golang.org/x/tools/internal/typeparams
 golang.org/x/tools/internal/typesinternal
+golang.org/x/tools/internal/versions
 golang.org/x/tools/txtar
 # google.golang.org/appengine v1.6.8
 ## explicit; go 1.11

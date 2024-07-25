@@ -11,11 +11,11 @@ import (
 	"go/format"
 	"go/token"
 	"go/types"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -35,7 +35,7 @@ import (
 // maps file names to contents). On success it returns the name of the
 // directory and a cleanup function to delete it.
 func WriteFiles(filemap map[string]string) (dir string, cleanup func(), err error) {
-	gopath, err := ioutil.TempDir("", "analysistest")
+	gopath, err := os.MkdirTemp("", "analysistest")
 	if err != nil {
 		return "", nil, err
 	}
@@ -44,7 +44,7 @@ func WriteFiles(filemap map[string]string) (dir string, cleanup func(), err erro
 	for name, content := range filemap {
 		filename := filepath.Join(gopath, "src", name)
 		os.MkdirAll(filepath.Dir(filename), 0777) // ignore error
-		if err := ioutil.WriteFile(filename, []byte(content), 0666); err != nil {
+		if err := os.WriteFile(filename, []byte(content), 0666); err != nil {
 			cleanup()
 			return "", nil, err
 		}
@@ -129,6 +129,19 @@ type Testing interface {
 func RunWithSuggestedFixes(t Testing, dir string, a *analysis.Analyzer, patterns ...string) []*Result {
 	r := Run(t, dir, a, patterns...)
 
+	// If the immediate caller of RunWithSuggestedFixes is in
+	// x/tools, we apply stricter checks as required by gopls.
+	inTools := false
+	{
+		var pcs [1]uintptr
+		n := runtime.Callers(1, pcs[:])
+		frames := runtime.CallersFrames(pcs[:n])
+		fr, _ := frames.Next()
+		if fr.Func != nil && strings.HasPrefix(fr.Func.Name(), "golang.org/x/tools/") {
+			inTools = true
+		}
+	}
+
 	// Process each result (package) separately, matching up the suggested
 	// fixes into a diff, which we will compare to the .golden file.  We have
 	// to do this per-result in case a file appears in two packages, such as in
@@ -146,16 +159,26 @@ func RunWithSuggestedFixes(t Testing, dir string, a *analysis.Analyzer, patterns
 
 		// Validate edits, prepare the fileEdits map and read the file contents.
 		for _, diag := range act.Diagnostics {
-			for _, sf := range diag.SuggestedFixes {
-				for _, edit := range sf.TextEdits {
+			for _, fix := range diag.SuggestedFixes {
+
+				// Assert that lazy fixes have a Category (#65578, #65087).
+				if inTools && len(fix.TextEdits) == 0 && diag.Category == "" {
+					t.Errorf("missing Diagnostic.Category for SuggestedFix without TextEdits (gopls requires the category for the name of the fix command")
+				}
+
+				for _, edit := range fix.TextEdits {
+					start, end := edit.Pos, edit.End
+					if !end.IsValid() {
+						end = start
+					}
 					// Validate the edit.
-					if edit.Pos > edit.End {
+					if start > end {
 						t.Errorf(
 							"diagnostic for analysis %v contains Suggested Fix with malformed edit: pos (%v) > end (%v)",
-							act.Pass.Analyzer.Name, edit.Pos, edit.End)
+							act.Pass.Analyzer.Name, start, end)
 						continue
 					}
-					file, endfile := act.Pass.Fset.File(edit.Pos), act.Pass.Fset.File(edit.End)
+					file, endfile := act.Pass.Fset.File(start), act.Pass.Fset.File(end)
 					if file == nil || endfile == nil || file != endfile {
 						t.Errorf(
 							"diagnostic for analysis %v contains Suggested Fix with malformed spanning files %v and %v",
@@ -172,9 +195,9 @@ func RunWithSuggestedFixes(t Testing, dir string, a *analysis.Analyzer, patterns
 					if _, ok := fileEdits[file]; !ok {
 						fileEdits[file] = make(map[string][]diff.Edit)
 					}
-					fileEdits[file][sf.Message] = append(fileEdits[file][sf.Message], diff.Edit{
-						Start: file.Offset(edit.Pos),
-						End:   file.Offset(edit.End),
+					fileEdits[file][fix.Message] = append(fileEdits[file][fix.Message], diff.Edit{
+						Start: file.Offset(start),
+						End:   file.Offset(end),
 						New:   string(edit.NewText),
 					})
 				}
@@ -212,24 +235,14 @@ func RunWithSuggestedFixes(t Testing, dir string, a *analysis.Analyzer, patterns
 					for _, vf := range ar.Files {
 						if vf.Name == sf {
 							found = true
-							out, err := diff.ApplyBytes(orig, edits)
-							if err != nil {
-								t.Errorf("%s: error applying fixes: %v (see possible explanations at RunWithSuggestedFixes)", file.Name(), err)
-								continue
-							}
 							// the file may contain multiple trailing
 							// newlines if the user places empty lines
 							// between files in the archive. normalize
 							// this to a single newline.
-							want := string(bytes.TrimRight(vf.Data, "\n")) + "\n"
-							formatted, err := format.Source(out)
-							if err != nil {
-								t.Errorf("%s: error formatting edited source: %v\n%s", file.Name(), err, out)
-								continue
-							}
-							if got := string(formatted); got != want {
-								unified := diff.Unified(fmt.Sprintf("%s.golden [%s]", file.Name(), sf), "actual", want, got)
-								t.Errorf("suggested fixes failed for %s:\n%s", file.Name(), unified)
+							golden := append(bytes.TrimRight(vf.Data, "\n"), '\n')
+
+							if err := applyDiffsAndCompare(orig, golden, edits, file.Name()); err != nil {
+								t.Errorf("%s", err)
 							}
 							break
 						}
@@ -246,26 +259,37 @@ func RunWithSuggestedFixes(t Testing, dir string, a *analysis.Analyzer, patterns
 					catchallEdits = append(catchallEdits, edits...)
 				}
 
-				out, err := diff.ApplyBytes(orig, catchallEdits)
-				if err != nil {
-					t.Errorf("%s: error applying fixes: %v (see possible explanations at RunWithSuggestedFixes)", file.Name(), err)
-					continue
-				}
-				want := string(ar.Comment)
-
-				formatted, err := format.Source(out)
-				if err != nil {
-					t.Errorf("%s: error formatting resulting source: %v\n%s", file.Name(), err, out)
-					continue
-				}
-				if got := string(formatted); got != want {
-					unified := diff.Unified(file.Name()+".golden", "actual", want, got)
-					t.Errorf("suggested fixes failed for %s:\n%s", file.Name(), unified)
+				if err := applyDiffsAndCompare(orig, ar.Comment, catchallEdits, file.Name()); err != nil {
+					t.Errorf("%s", err)
 				}
 			}
 		}
 	}
 	return r
+}
+
+// applyDiffsAndCompare applies edits to src and compares the results against
+// golden after formatting both. fileName is use solely for error reporting.
+func applyDiffsAndCompare(src, golden []byte, edits []diff.Edit, fileName string) error {
+	out, err := diff.ApplyBytes(src, edits)
+	if err != nil {
+		return fmt.Errorf("%s: error applying fixes: %v (see possible explanations at RunWithSuggestedFixes)", fileName, err)
+	}
+	wantRaw, err := format.Source(golden)
+	if err != nil {
+		return fmt.Errorf("%s.golden: error formatting golden file: %v\n%s", fileName, err, out)
+	}
+	want := string(wantRaw)
+
+	formatted, err := format.Source(out)
+	if err != nil {
+		return fmt.Errorf("%s: error formatting resulting source: %v\n%s", fileName, err, out)
+	}
+	if got := string(formatted); got != want {
+		unified := diff.Unified(fileName+".golden", "actual", want, got)
+		return fmt.Errorf("suggested fixes failed for %s:\n%s", fileName, unified)
+	}
+	return nil
 }
 
 // Run applies an analysis to the packages denoted by the "go list" patterns.
@@ -345,11 +369,16 @@ type Result = checker.TestAnalyzerResult
 // loadPackages returns an error if any package had an error, or the pattern
 // matched no packages.
 func loadPackages(a *analysis.Analyzer, dir string, patterns ...string) ([]*packages.Package, error) {
-	env := []string{"GOPATH=" + dir, "GO111MODULE=off"} // GOPATH mode
+	env := []string{"GOPATH=" + dir, "GO111MODULE=off", "GOWORK=off"} // GOPATH mode
 
 	// Undocumented module mode. Will be replaced by something better.
 	if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
-		env = []string{"GO111MODULE=on", "GOPROXY=off"} // module mode
+		gowork := filepath.Join(dir, "go.work")
+		if _, err := os.Stat(gowork); err != nil {
+			gowork = "off"
+		}
+
+		env = []string{"GO111MODULE=on", "GOPROXY=off", "GOWORK=" + gowork} // module mode
 	}
 
 	// packages.Load loads the real standard library, not a minimal
@@ -373,12 +402,23 @@ func loadPackages(a *analysis.Analyzer, dir string, patterns ...string) ([]*pack
 		return nil, err
 	}
 
+	// If any named package couldn't be loaded at all
+	// (e.g. the Name field is unset), fail fast.
+	for _, pkg := range pkgs {
+		if pkg.Name == "" {
+			return nil, fmt.Errorf("failed to load %q: Errors=%v",
+				pkg.PkgPath, pkg.Errors)
+		}
+	}
+
 	// Do NOT print errors if the analyzer will continue running.
 	// It is incredibly confusing for tests to be printing to stderr
 	// willy-nilly instead of their test logs, especially when the
 	// errors are expected and are going to be fixed.
 	if !a.RunDespiteErrors {
-		packages.PrintErrors(pkgs)
+		if packages.PrintErrors(pkgs) > 0 {
+			return nil, fmt.Errorf("there were package loading errors (and RunDespiteErrors is false)")
+		}
 	}
 
 	if len(pkgs) == 0 {
@@ -451,7 +491,7 @@ func check(t Testing, gopath string, pass *analysis.Pass, diagnostics []analysis
 	// Extract 'want' comments from non-Go files.
 	// TODO(adonovan): we may need to handle //line directives.
 	for _, filename := range pass.OtherFiles {
-		data, err := ioutil.ReadFile(filename)
+		data, err := os.ReadFile(filename)
 		if err != nil {
 			t.Errorf("can't read '// want' comments from %s: %v", filename, err)
 			continue

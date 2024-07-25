@@ -178,6 +178,19 @@ func ReceiverMethodSelectorExprAnalyzer(analyzerName string, packageReceiverMeth
 	}
 }
 
+// RemovedAnalyzer returns an Analyzer that has been removed. It returns no
+// reports, but keeps the Analyzer name present to prevent conflicting future
+// usage.
+func RemovedAnalyzer(analyzerName string) *analysis.Analyzer {
+	return &analysis.Analyzer{
+		Name: analyzerName,
+		Doc:  "REMOVED check",
+		Run: func(pass *analysis.Pass) (interface{}, error) {
+			return nil, nil
+		},
+	}
+}
+
 // SelectorExprAnalyzer returns an Analyzer for *ast.SelectorExpr
 func SelectorExprAnalyzer(analyzerName string, packageFunc func(ast.Expr, *types.Info, string) bool, packagePath string, selectorName string) *analysis.Analyzer {
 	return &analysis.Analyzer{

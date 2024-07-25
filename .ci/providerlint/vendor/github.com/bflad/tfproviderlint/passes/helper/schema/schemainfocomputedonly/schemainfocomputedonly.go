@@ -10,7 +10,7 @@ import (
 
 var Analyzer = &analysis.Analyzer{
 	Name: "schemainfocomputedonly",
-	Doc:  "find github.com/hashicorp/terraform-plugin-sdk/helper/schema.Schema literals with Computed: true only for later passes",
+	Doc:  "find github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.Schema literals with Computed: true only for later passes",
 	Requires: []*analysis.Analyzer{
 		schemainfo.Analyzer,
 	},

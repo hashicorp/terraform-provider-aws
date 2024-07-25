@@ -1,6 +1,6 @@
 # R016
 
-The R016 analyzer reports [`(*schema.ResourceData).SetId()`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/schema#ResourceData.Set) usage with unstable `resource.PrefixedUniqueId()` value. Schema attributes should be stable across Terraform runs.
+The R016 analyzer reports [`(*schema.ResourceData).SetId()`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.Set) usage with unstable `resource.PrefixedUniqueId()` value. Schema attributes should be stable across Terraform runs.
 
 ## Flagged Code
 
