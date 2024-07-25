@@ -7,6 +7,7 @@ package rds
 var (
 	ResourceCertificate             = resourceCertificate
 	ResourceCluster                 = resourceCluster
+	ResourceClusterEndpoint         = resourceClusterEndpoint
 	ResourceClusterParameterGroup   = resourceClusterParameterGroup
 	ResourceClusterSnapshot         = resourceClusterSnapshot
 	ResourceEventSubscription       = resourceEventSubscription
@@ -19,6 +20,7 @@ var (
 	ResourceSnapshotCopy            = resourceSnapshotCopy
 	ResourceSubnetGroup             = resourceSubnetGroup
 
+	FindDBClusterEndpointByID                  = findDBClusterEndpointByID
 	FindDBClusterParameterGroupByName          = findDBClusterParameterGroupByName
 	FindDBClusterSnapshotByID                  = findDBClusterSnapshotByID
 	FindDBInstanceByID                         = findDBInstanceByIDSDKv1

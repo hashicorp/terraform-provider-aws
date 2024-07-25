@@ -45,6 +45,12 @@ const (
 )
 
 const (
+	clusterEndpointStatusAvailable = "available"
+	clusterEndpointStatusCreating  = "creating"
+	clusterEndpointStatusDeleting  = "deleting"
+)
+
+const (
 	storageTypeStandard    = "standard"
 	storageTypeGP2         = "gp2"
 	storageTypeGP3         = "gp3"

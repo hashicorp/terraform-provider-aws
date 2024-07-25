@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -29,8 +29,8 @@ func TestAccRDSClusterEndpoint_basic(t *testing.T) {
 	}
 
 	rInt := sdkacctest.RandInt()
-	var customReaderEndpoint rds.DBClusterEndpoint
-	var customEndpoint rds.DBClusterEndpoint
+	var customReaderEndpoint types.DBClusterEndpoint
+	var customEndpoint types.DBClusterEndpoint
 	readerResourceName := "aws_rds_cluster_endpoint.reader"
 	defaultResourceName := "aws_rds_cluster_endpoint.default"
 
@@ -77,7 +77,7 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 	}
 
 	rInt := sdkacctest.RandInt()
-	var customReaderEndpoint rds.DBClusterEndpoint
+	var customReaderEndpoint types.DBClusterEndpoint
 	resourceName := "aws_rds_cluster_endpoint.reader"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -120,28 +120,28 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterEndpointAttributes(v *rds.DBClusterEndpoint) resource.TestCheckFunc {
+func testAccCheckClusterEndpointAttributes(v *types.DBClusterEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(v.Endpoint) == "" {
+		if aws.ToString(v.Endpoint) == "" {
 			return fmt.Errorf("empty endpoint domain")
 		}
 
-		if aws.StringValue(v.CustomEndpointType) != "READER" &&
-			aws.StringValue(v.CustomEndpointType) != "ANY" {
-			return fmt.Errorf("Incorrect endpoint type: expected: READER or ANY, got: %s", aws.StringValue(v.CustomEndpointType))
+		if aws.ToString(v.CustomEndpointType) != "READER" &&
+			aws.ToString(v.CustomEndpointType) != "ANY" {
+			return fmt.Errorf("Incorrect endpoint type: expected: READER or ANY, got: %s", aws.ToString(v.CustomEndpointType))
 		}
 
 		if len(v.StaticMembers) == 0 && len(v.ExcludedMembers) == 0 {
 			return fmt.Errorf("Empty members")
 		}
 
-		for _, m := range aws.StringValueSlice(v.StaticMembers) {
+		for _, m := range v.StaticMembers {
 			if !strings.HasPrefix(m, "tf-aurora-cluster-instance") {
 				return fmt.Errorf("Incorrect StaticMember Cluster Instance Identifier prefix:\nexpected: %s\ngot: %s", "tf-aurora-cluster-instance", m)
 			}
 		}
 
-		for _, m := range aws.StringValueSlice(v.ExcludedMembers) {
+		for _, m := range v.ExcludedMembers {
 			if !strings.HasPrefix(m, "tf-aurora-cluster-instance") {
 				return fmt.Errorf("Incorrect ExcludeMember Cluster Instance Identifier prefix:\nexpected: %s\ngot: %s", "tf-aurora-cluster-instance", m)
 			}
@@ -153,7 +153,7 @@ func testAccCheckClusterEndpointAttributes(v *rds.DBClusterEndpoint) resource.Te
 
 func testAccCheckClusterEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster_endpoint" {
@@ -177,20 +177,17 @@ func testAccCheckClusterEndpointDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckClusterEndpointExists(ctx context.Context, n string, v *rds.DBClusterEndpoint) resource.TestCheckFunc {
+func testAccCheckClusterEndpointExists(ctx context.Context, n string, v *types.DBClusterEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No RDS Cluster Endpoint ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		output, err := tfrds.FindDBClusterEndpointByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
