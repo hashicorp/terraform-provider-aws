@@ -7,10 +7,6 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	elasticloadbalancingv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	elbv2_sdkv1 "github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,41 +25,49 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceLoadBalancer,
+			Factory:  dataSourceLoadBalancer,
 			TypeName: "aws_alb",
+			Name:     "Load Balancer",
 		},
 		{
-			Factory:  DataSourceListener,
+			Factory:  dataSourceListener,
 			TypeName: "aws_alb_listener",
+			Name:     "Listener",
 		},
 		{
-			Factory:  DataSourceTargetGroup,
+			Factory:  dataSourceTargetGroup,
 			TypeName: "aws_alb_target_group",
+			Name:     "Target Group",
 		},
 		{
-			Factory:  DataSourceLoadBalancer,
+			Factory:  dataSourceLoadBalancer,
 			TypeName: "aws_lb",
+			Name:     "Load Balancer",
 		},
 		{
-			Factory:  DataSourceHostedZoneID,
+			Factory:  dataSourceHostedZoneID,
 			TypeName: "aws_lb_hosted_zone_id",
+			Name:     "Hosted Zone ID",
 		},
 		{
-			Factory:  DataSourceListener,
+			Factory:  dataSourceListener,
 			TypeName: "aws_lb_listener",
+			Name:     "Listener",
 		},
 		{
-			Factory:  DataSourceTargetGroup,
+			Factory:  dataSourceTargetGroup,
 			TypeName: "aws_lb_target_group",
+			Name:     "Target Group",
 		},
 		{
-			Factory:  DataSourceTrustStore,
+			Factory:  dataSourceTrustStore,
 			TypeName: "aws_lb_trust_store",
 			Name:     "Trust Store",
 		},
 		{
-			Factory:  DataSourceLoadBalancers,
+			Factory:  dataSourceLoadBalancers,
 			TypeName: "aws_lbs",
+			Name:     "Load Balancers",
 		},
 	}
 }
@@ -71,7 +75,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceLoadBalancer,
+			Factory:  resourceLoadBalancer,
 			TypeName: "aws_alb",
 			Name:     "Load Balancer",
 			Tags: &types.ServicePackageResourceTags{
@@ -79,7 +83,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceListener,
+			Factory:  resourceListener,
 			TypeName: "aws_alb_listener",
 			Name:     "Listener",
 			Tags: &types.ServicePackageResourceTags{
@@ -87,11 +91,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceListenerCertificate,
+			Factory:  resourceListenerCertificate,
 			TypeName: "aws_alb_listener_certificate",
+			Name:     "Listener Certificate",
 		},
 		{
-			Factory:  ResourceListenerRule,
+			Factory:  resourceListenerRule,
 			TypeName: "aws_alb_listener_rule",
 			Name:     "Listener Rule",
 			Tags: &types.ServicePackageResourceTags{
@@ -99,7 +104,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTargetGroup,
+			Factory:  resourceTargetGroup,
 			TypeName: "aws_alb_target_group",
 			Name:     "Target Group",
 			Tags: &types.ServicePackageResourceTags{
@@ -107,11 +112,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTargetGroupAttachment,
+			Factory:  resourceTargetGroupAttachment,
 			TypeName: "aws_alb_target_group_attachment",
+			Name:     "Target Group Attachment",
 		},
 		{
-			Factory:  ResourceLoadBalancer,
+			Factory:  resourceLoadBalancer,
 			TypeName: "aws_lb",
 			Name:     "Load Balancer",
 			Tags: &types.ServicePackageResourceTags{
@@ -119,7 +125,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceListener,
+			Factory:  resourceListener,
 			TypeName: "aws_lb_listener",
 			Name:     "Listener",
 			Tags: &types.ServicePackageResourceTags{
@@ -127,11 +133,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceListenerCertificate,
+			Factory:  resourceListenerCertificate,
 			TypeName: "aws_lb_listener_certificate",
+			Name:     "Listener Certificate",
 		},
 		{
-			Factory:  ResourceListenerRule,
+			Factory:  resourceListenerRule,
 			TypeName: "aws_lb_listener_rule",
 			Name:     "Listener Rule",
 			Tags: &types.ServicePackageResourceTags{
@@ -139,7 +146,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTargetGroup,
+			Factory:  resourceTargetGroup,
 			TypeName: "aws_lb_target_group",
 			Name:     "Target Group",
 			Tags: &types.ServicePackageResourceTags{
@@ -147,11 +154,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTargetGroupAttachment,
+			Factory:  resourceTargetGroupAttachment,
 			TypeName: "aws_lb_target_group_attachment",
+			Name:     "Target Group Attachment",
 		},
 		{
-			Factory:  ResourceTrustStore,
+			Factory:  resourceTrustStore,
 			TypeName: "aws_lb_trust_store",
 			Name:     "Trust Store",
 			Tags: &types.ServicePackageResourceTags{
@@ -159,7 +167,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTrustStoreRevocation,
+			Factory:  resourceTrustStoreRevocation,
 			TypeName: "aws_lb_trust_store_revocation",
 			Name:     "Trust Store Revocation",
 		},
@@ -168,24 +176,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.ELBV2
-}
-
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*elbv2_sdkv1.ELBV2, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
-
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return elbv2_sdkv1.New(sess.Copy(&cfg)), nil
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.

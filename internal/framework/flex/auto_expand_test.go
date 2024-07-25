@@ -28,6 +28,11 @@ func TestExpand(t *testing.T) {
 	testString := "test"
 	testStringResult := "a"
 
+	var (
+		typedNilSource *TestFlex00
+		typedNilTarget *TestFlex00
+	)
+
 	testARN := "arn:aws:securityhub:us-west-2:1234567890:control/cis-aws-foundations-benchmark/v/1.2.0/1.1" //lintignore:AWSAT003,AWSAT005
 
 	testTimeStr := "2013-09-25T09:34:01Z"
@@ -35,10 +40,37 @@ func TestExpand(t *testing.T) {
 
 	testCases := autoFlexTestCases{
 		{
-			TestName: "nil Source and Target",
+			TestName: "nil Source",
+			Target:   &TestFlex00{},
 			expectedDiags: diag.Diagnostics{
-				diag.NewErrorDiagnostic("AutoFlEx", "target (<nil>): invalid, want pointer"),
-				diag.NewErrorDiagnostic("AutoFlEx", "Expand[<nil>, <nil>]"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Cannot expand nil source"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Expand[<nil>, *flex.TestFlex00]"),
+			},
+		},
+		{
+			TestName: "typed nil Source",
+			Source:   typedNilSource,
+			Target:   &TestFlex00{},
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "Cannot expand nil source"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Expand[*flex.TestFlex00, *flex.TestFlex00]"),
+			},
+		},
+		{
+			TestName: "nil Target",
+			Source:   TestFlex00{},
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "Target cannot be nil"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.TestFlex00, <nil>]"),
+			},
+		},
+		{
+			TestName: "typed nil Target",
+			Source:   TestFlex00{},
+			Target:   typedNilTarget,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "Target cannot be nil"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.TestFlex00, *flex.TestFlex00]"),
 			},
 		},
 		{
@@ -1211,7 +1243,7 @@ func TestExpandInterface(t *testing.T) {
 	testCases := autoFlexTestCases{
 		{
 			TestName: "top level",
-			Source: testFlexTFInterfaceExpander{
+			Source: testFlexTFInterfaceFlexer{
 				Field1: types.StringValue("value1"),
 			},
 			Target: &targetInterface,
@@ -1233,7 +1265,7 @@ func TestExpandInterface(t *testing.T) {
 		{
 			TestName: "single list Source and single interface Target",
 			Source: testFlexTFInterfaceListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceExpander{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -1248,7 +1280,7 @@ func TestExpandInterface(t *testing.T) {
 		},
 		{
 			TestName: "single list non-Expander Source and single interface Target",
-			Source: testFlexTFInterfaceListNestedObjectNonExpander{
+			Source: testFlexTFInterfaceListNestedObjectNonFlexer{
 				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
 					{
 						Field1: types.StringValue("value1"),
@@ -1272,7 +1304,7 @@ func TestExpandInterface(t *testing.T) {
 		{
 			TestName: "single set Source and single interface Target",
 			Source: testFlexTFInterfaceSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceExpander{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -1288,7 +1320,7 @@ func TestExpandInterface(t *testing.T) {
 		{
 			TestName: "empty list Source and empty interface Target",
 			Source: testFlexTFInterfaceListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceExpander{}),
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{}),
 			},
 			Target: &testFlexAWSInterfaceSlice{},
 			WantTarget: &testFlexAWSInterfaceSlice{
@@ -1298,7 +1330,7 @@ func TestExpandInterface(t *testing.T) {
 		{
 			TestName: "non-empty list Source and non-empty interface Target",
 			Source: testFlexTFInterfaceListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceExpander{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -1322,7 +1354,7 @@ func TestExpandInterface(t *testing.T) {
 		{
 			TestName: "empty set Source and empty interface Target",
 			Source: testFlexTFInterfaceSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceExpander{}),
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{}),
 			},
 			Target: &testFlexAWSInterfaceSlice{},
 			WantTarget: &testFlexAWSInterfaceSlice{
@@ -1332,7 +1364,7 @@ func TestExpandInterface(t *testing.T) {
 		{
 			TestName: "non-empty set Source and non-empty interface Target",
 			Source: testFlexTFInterfaceListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceExpander{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -1356,7 +1388,7 @@ func TestExpandInterface(t *testing.T) {
 		{
 			TestName: "object value Source and struct Target",
 			Source: testFlexTFInterfaceObjectValue{
-				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFInterfaceExpander{
+				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFInterfaceFlexer{
 					Field1: types.StringValue("value1"),
 				}),
 			},
@@ -1383,7 +1415,7 @@ func TestExpandExpander(t *testing.T) {
 	testCases := autoFlexTestCases{
 		{
 			TestName: "top level struct Target",
-			Source: testFlexTFExpander{
+			Source: testFlexTFFlexer{
 				Field1: types.StringValue("value1"),
 			},
 			Target: &testFlexAWSExpander{},
@@ -1401,13 +1433,13 @@ func TestExpandExpander(t *testing.T) {
 		},
 		{
 			TestName: "top level incompatible struct Target",
-			Source: testFlexTFExpander{
+			Source: testFlexTFFlexer{
 				Field1: types.StringValue("value1"),
 			},
 			Target: &testFlexAWSExpanderIncompatible{},
 			expectedDiags: diag.Diagnostics{
 				diagCannotBeAssigned(reflect.TypeFor[testFlexAWSExpander](), reflect.TypeFor[testFlexAWSExpanderIncompatible]()),
-				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.testFlexTFExpander, *flex.testFlexAWSExpanderIncompatible]"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.testFlexTFFlexer, *flex.testFlexAWSExpanderIncompatible]"),
 			},
 		},
 		{
@@ -1435,7 +1467,7 @@ func TestExpandExpander(t *testing.T) {
 		{
 			TestName: "single list Source and single struct Target",
 			Source: testFlexTFExpanderListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFExpander{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -1451,7 +1483,7 @@ func TestExpandExpander(t *testing.T) {
 		{
 			TestName: "single set Source and single struct Target",
 			Source: testFlexTFExpanderSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFExpander{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -1467,7 +1499,7 @@ func TestExpandExpander(t *testing.T) {
 		{
 			TestName: "single list Source and single *struct Target",
 			Source: testFlexTFExpanderListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFExpander{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -1483,7 +1515,7 @@ func TestExpandExpander(t *testing.T) {
 		{
 			TestName: "single set Source and single *struct Target",
 			Source: testFlexTFExpanderSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFExpander{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -1499,7 +1531,7 @@ func TestExpandExpander(t *testing.T) {
 		{
 			TestName: "empty list Source and empty struct Target",
 			Source: testFlexTFExpanderListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFExpander{}),
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{}),
 			},
 			Target: &testFlexAWSExpanderStructSlice{},
 			WantTarget: &testFlexAWSExpanderStructSlice{
@@ -1509,7 +1541,7 @@ func TestExpandExpander(t *testing.T) {
 		{
 			TestName: "non-empty list Source and non-empty struct Target",
 			Source: testFlexTFExpanderListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFExpander{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -1533,7 +1565,7 @@ func TestExpandExpander(t *testing.T) {
 		{
 			TestName: "empty list Source and empty *struct Target",
 			Source: testFlexTFExpanderListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFExpander{}),
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{}),
 			},
 			Target: &testFlexAWSExpanderPtrSlice{},
 			WantTarget: &testFlexAWSExpanderPtrSlice{
@@ -1543,7 +1575,7 @@ func TestExpandExpander(t *testing.T) {
 		{
 			TestName: "non-empty list Source and non-empty *struct Target",
 			Source: testFlexTFExpanderListNestedObject{
-				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFExpander{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -1567,7 +1599,7 @@ func TestExpandExpander(t *testing.T) {
 		{
 			TestName: "empty set Source and empty struct Target",
 			Source: testFlexTFExpanderSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFExpander{}),
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{}),
 			},
 			Target: &testFlexAWSExpanderStructSlice{},
 			WantTarget: &testFlexAWSExpanderStructSlice{
@@ -1577,7 +1609,7 @@ func TestExpandExpander(t *testing.T) {
 		{
 			TestName: "non-empty set Source and non-empty struct Target",
 			Source: testFlexTFExpanderSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFExpander{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -1601,7 +1633,7 @@ func TestExpandExpander(t *testing.T) {
 		{
 			TestName: "empty set Source and empty *struct Target",
 			Source: testFlexTFExpanderSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFExpander{}),
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{}),
 			},
 			Target: &testFlexAWSExpanderPtrSlice{},
 			WantTarget: &testFlexAWSExpanderPtrSlice{
@@ -1611,7 +1643,7 @@ func TestExpandExpander(t *testing.T) {
 		{
 			TestName: "non-empty set Source and non-empty *struct Target",
 			Source: testFlexTFExpanderSetNestedObject{
-				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFExpander{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFFlexer{
 					{
 						Field1: types.StringValue("value1"),
 					},
@@ -1635,7 +1667,7 @@ func TestExpandExpander(t *testing.T) {
 		{
 			TestName: "object value Source and struct Target",
 			Source: testFlexTFExpanderObjectValue{
-				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFExpander{
+				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFFlexer{
 					Field1: types.StringValue("value1"),
 				}),
 			},
@@ -1649,7 +1681,7 @@ func TestExpandExpander(t *testing.T) {
 		{
 			TestName: "object value Source and *struct Target",
 			Source: testFlexTFExpanderObjectValue{
-				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFExpander{
+				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFFlexer{
 					Field1: types.StringValue("value1"),
 				}),
 			},

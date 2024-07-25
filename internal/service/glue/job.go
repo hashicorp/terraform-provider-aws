@@ -8,14 +8,16 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -88,9 +90,9 @@ func ResourceJob() *schema.Resource {
 				Optional: true,
 			},
 			"execution_class": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(glue.ExecutionClass_Values(), true),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ExecutionClass](),
 			},
 			"execution_property": {
 				Type:     schema.TypeList,
@@ -179,11 +181,11 @@ func ResourceJob() *schema.Resource {
 				Optional: true,
 			},
 			"worker_type": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrMaxCapacity},
-				ValidateFunc:  validation.StringInSlice(glue.WorkerType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ConflictsWith:    []string{names.AttrMaxCapacity},
+				ValidateDiagFunc: enum.Validate[awstypes.WorkerType](),
 			},
 		},
 	}
@@ -191,7 +193,7 @@ func ResourceJob() *schema.Resource {
 
 func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &glue.CreateJobInput{
@@ -202,13 +204,13 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("connections"); ok {
-		input.Connections = &glue.ConnectionsList{
-			Connections: flex.ExpandStringList(v.([]interface{})),
+		input.Connections = &awstypes.ConnectionsList{
+			Connections: flex.ExpandStringValueList(v.([]interface{})),
 		}
 	}
 
 	if v, ok := d.GetOk("default_arguments"); ok {
-		input.DefaultArguments = flex.ExpandStringMap(v.(map[string]interface{}))
+		input.DefaultArguments = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -216,7 +218,7 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("execution_class"); ok {
-		input.ExecutionClass = aws.String(v.(string))
+		input.ExecutionClass = awstypes.ExecutionClass(v.(string))
 	}
 
 	if v, ok := d.GetOk("execution_property"); ok {
@@ -236,11 +238,11 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("max_retries"); ok {
-		input.MaxRetries = aws.Int64(int64(v.(int)))
+		input.MaxRetries = int32(v.(int))
 	}
 
 	if v, ok := d.GetOk("non_overridable_arguments"); ok {
-		input.NonOverridableArguments = flex.ExpandStringMap(v.(map[string]interface{}))
+		input.NonOverridableArguments = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("notification_property"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -248,7 +250,7 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("number_of_workers"); ok {
-		input.NumberOfWorkers = aws.Int64(int64(v.(int)))
+		input.NumberOfWorkers = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("security_configuration"); ok {
@@ -256,27 +258,27 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk(names.AttrTimeout); ok {
-		input.Timeout = aws.Int64(int64(v.(int)))
+		input.Timeout = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("worker_type"); ok {
-		input.WorkerType = aws.String(v.(string))
+		input.WorkerType = awstypes.WorkerType(v.(string))
 	}
 
-	output, err := conn.CreateJobWithContext(ctx, input)
+	output, err := conn.CreateJob(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Job (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Name))
+	d.SetId(aws.ToString(output.Name))
 
 	return append(diags, resourceJobRead(ctx, d, meta)...)
 }
 
 func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	job, err := FindJobByName(ctx, conn, d.Id())
 
@@ -304,7 +306,7 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface
 	if err := d.Set("connections", flattenConnectionsList(job.Connections)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting connections: %s", err)
 	}
-	d.Set("default_arguments", aws.StringValueMap(job.DefaultArguments))
+	d.Set("default_arguments", job.DefaultArguments)
 	d.Set(names.AttrDescription, job.Description)
 	d.Set("execution_class", job.ExecutionClass)
 	if err := d.Set("execution_property", flattenExecutionProperty(job.ExecutionProperty)); err != nil {
@@ -315,7 +317,7 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set(names.AttrMaxCapacity, job.MaxCapacity)
 	d.Set("max_retries", job.MaxRetries)
 	d.Set(names.AttrName, job.Name)
-	d.Set("non_overridable_arguments", aws.StringValueMap(job.NonOverridableArguments))
+	d.Set("non_overridable_arguments", job.NonOverridableArguments)
 	if err := d.Set("notification_property", flattenNotificationProperty(job.NotificationProperty)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting notification_property: %s", err)
 	}
@@ -330,22 +332,22 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		jobUpdate := &glue.JobUpdate{
+		jobUpdate := &awstypes.JobUpdate{
 			Command: expandJobCommand(d.Get("command").([]interface{})),
 			Role:    aws.String(d.Get(names.AttrRoleARN).(string)),
 		}
 
 		if v, ok := d.GetOk("connections"); ok {
-			jobUpdate.Connections = &glue.ConnectionsList{
-				Connections: flex.ExpandStringList(v.([]interface{})),
+			jobUpdate.Connections = &awstypes.ConnectionsList{
+				Connections: flex.ExpandStringValueList(v.([]interface{})),
 			}
 		}
 
 		if kv, ok := d.GetOk("default_arguments"); ok {
-			jobUpdate.DefaultArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
+			jobUpdate.DefaultArguments = flex.ExpandStringValueMap(kv.(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -353,7 +355,7 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 
 		if v, ok := d.GetOk("execution_class"); ok {
-			jobUpdate.ExecutionClass = aws.String(v.(string))
+			jobUpdate.ExecutionClass = awstypes.ExecutionClass(v.(string))
 		}
 
 		if v, ok := d.GetOk("execution_property"); ok {
@@ -369,11 +371,11 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 
 		if v, ok := d.GetOk("max_retries"); ok {
-			jobUpdate.MaxRetries = aws.Int64(int64(v.(int)))
+			jobUpdate.MaxRetries = int32(v.(int))
 		}
 
 		if kv, ok := d.GetOk("non_overridable_arguments"); ok {
-			jobUpdate.NonOverridableArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
+			jobUpdate.NonOverridableArguments = flex.ExpandStringValueMap(kv.(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("notification_property"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -381,7 +383,7 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 
 		if v, ok := d.GetOk("number_of_workers"); ok {
-			jobUpdate.NumberOfWorkers = aws.Int64(int64(v.(int)))
+			jobUpdate.NumberOfWorkers = aws.Int32(int32(v.(int)))
 		} else {
 			if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
 				jobUpdate.MaxCapacity = aws.Float64(v.(float64))
@@ -393,11 +395,11 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 
 		if v, ok := d.GetOk(names.AttrTimeout); ok {
-			jobUpdate.Timeout = aws.Int64(int64(v.(int)))
+			jobUpdate.Timeout = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk("worker_type"); ok {
-			jobUpdate.WorkerType = aws.String(v.(string))
+			jobUpdate.WorkerType = awstypes.WorkerType(v.(string))
 		}
 
 		input := &glue.UpdateJobInput{
@@ -405,7 +407,7 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			JobUpdate: jobUpdate,
 		}
 
-		_, err := conn.UpdateJobWithContext(ctx, input)
+		_, err := conn.UpdateJob(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Job (%s): %s", d.Id(), err)
@@ -417,14 +419,14 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceJobDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Job: %s", d.Id())
-	_, err := conn.DeleteJobWithContext(ctx, &glue.DeleteJobInput{
+	_, err := conn.DeleteJob(ctx, &glue.DeleteJobInput{
 		JobName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return diags
 	}
 
@@ -435,20 +437,20 @@ func resourceJobDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func expandExecutionProperty(l []interface{}) *glue.ExecutionProperty {
+func expandExecutionProperty(l []interface{}) *awstypes.ExecutionProperty {
 	m := l[0].(map[string]interface{})
 
-	executionProperty := &glue.ExecutionProperty{
-		MaxConcurrentRuns: aws.Int64(int64(m["max_concurrent_runs"].(int))),
+	executionProperty := &awstypes.ExecutionProperty{
+		MaxConcurrentRuns: int32(m["max_concurrent_runs"].(int)),
 	}
 
 	return executionProperty
 }
 
-func expandJobCommand(l []interface{}) *glue.JobCommand {
+func expandJobCommand(l []interface{}) *awstypes.JobCommand {
 	m := l[0].(map[string]interface{})
 
-	jobCommand := &glue.JobCommand{
+	jobCommand := &awstypes.JobCommand{
 		Name:           aws.String(m[names.AttrName].(string)),
 		ScriptLocation: aws.String(m["script_location"].(string)),
 	}
@@ -464,62 +466,62 @@ func expandJobCommand(l []interface{}) *glue.JobCommand {
 	return jobCommand
 }
 
-func expandNotificationProperty(tfMap map[string]interface{}) *glue.NotificationProperty {
+func expandNotificationProperty(tfMap map[string]interface{}) *awstypes.NotificationProperty {
 	if tfMap == nil {
 		return nil
 	}
 
-	notificationProperty := &glue.NotificationProperty{}
+	notificationProperty := &awstypes.NotificationProperty{}
 
 	if v, ok := tfMap["notify_delay_after"].(int); ok && v != 0 {
-		notificationProperty.NotifyDelayAfter = aws.Int64(int64(v))
+		notificationProperty.NotifyDelayAfter = aws.Int32(int32(v))
 	}
 
 	return notificationProperty
 }
 
-func flattenConnectionsList(connectionsList *glue.ConnectionsList) []interface{} {
+func flattenConnectionsList(connectionsList *awstypes.ConnectionsList) []interface{} {
 	if connectionsList == nil {
 		return []interface{}{}
 	}
 
-	return flex.FlattenStringList(connectionsList.Connections)
+	return flex.FlattenStringValueList(connectionsList.Connections)
 }
 
-func flattenExecutionProperty(executionProperty *glue.ExecutionProperty) []map[string]interface{} {
+func flattenExecutionProperty(executionProperty *awstypes.ExecutionProperty) []map[string]interface{} {
 	if executionProperty == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"max_concurrent_runs": int(aws.Int64Value(executionProperty.MaxConcurrentRuns)),
+		"max_concurrent_runs": int(executionProperty.MaxConcurrentRuns),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenJobCommand(jobCommand *glue.JobCommand) []map[string]interface{} {
+func flattenJobCommand(jobCommand *awstypes.JobCommand) []map[string]interface{} {
 	if jobCommand == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		names.AttrName:    aws.StringValue(jobCommand.Name),
-		"script_location": aws.StringValue(jobCommand.ScriptLocation),
-		"python_version":  aws.StringValue(jobCommand.PythonVersion),
-		"runtime":         aws.StringValue(jobCommand.Runtime),
+		names.AttrName:    aws.ToString(jobCommand.Name),
+		"script_location": aws.ToString(jobCommand.ScriptLocation),
+		"python_version":  aws.ToString(jobCommand.PythonVersion),
+		"runtime":         aws.ToString(jobCommand.Runtime),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenNotificationProperty(notificationProperty *glue.NotificationProperty) []map[string]interface{} {
+func flattenNotificationProperty(notificationProperty *awstypes.NotificationProperty) []map[string]interface{} {
 	if notificationProperty == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"notify_delay_after": int(aws.Int64Value(notificationProperty.NotifyDelayAfter)),
+		"notify_delay_after": int(aws.ToInt32(notificationProperty.NotifyDelayAfter)),
 	}
 
 	return []map[string]interface{}{m}

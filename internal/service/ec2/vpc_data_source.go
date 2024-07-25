@@ -23,7 +23,7 @@ import (
 
 // @SDKDataSource("aws_vpc", name="VPC")
 // @Tags
-func DataSourceVPC() *schema.Resource {
+func dataSourceVPC() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCRead,
 
@@ -133,7 +133,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		isDefaultStr = "true"
 	}
 	input := &ec2.DescribeVpcsInput{
-		Filters: newAttributeFilterListV2(
+		Filters: newAttributeFilterList(
 			map[string]string{
 				"cidr":            d.Get(names.AttrCIDRBlock).(string),
 				"dhcp-options-id": d.Get("dhcp_options_id").(string),
@@ -147,7 +147,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.VpcIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(d.Get(names.AttrFilter).(*schema.Set))...)
+	input.Filters = append(input.Filters, newCustomFilterList(d.Get(names.AttrFilter).(*schema.Set))...)
 	input.Filters = append(input.Filters, tagFilters(ctx)...)
 
 	if len(input.Filters) == 0 {
@@ -224,7 +224,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("ipv6_cidr_block", nil)
 	}
 
-	setTagsOutV2(ctx, vpc.Tags)
+	setTagsOut(ctx, vpc.Tags)
 
 	return diags
 }

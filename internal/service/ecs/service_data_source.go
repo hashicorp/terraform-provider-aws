@@ -6,7 +6,7 @@ package ecs
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -58,7 +58,7 @@ func dataSourceService() *schema.Resource {
 
 func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
 	service, err := findServiceByTwoPartKey(ctx, conn, d.Get(names.AttrServiceName).(string), d.Get("cluster_arn").(string))
 
@@ -66,8 +66,9 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("ECS Service", err))
 	}
 
-	d.SetId(aws.StringValue(service.ServiceArn))
-	d.Set(names.AttrARN, service.ServiceArn)
+	arn := aws.ToString(service.ServiceArn)
+	d.SetId(arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("cluster_arn", service.ClusterArn)
 	d.Set("desired_count", service.DesiredCount)
 	d.Set("launch_type", service.LaunchType)

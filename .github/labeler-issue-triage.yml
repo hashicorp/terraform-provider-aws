@@ -460,7 +460,7 @@ service/mediatailor:
 service/memorydb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_memorydb_'
 service/meta:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(arn|billing_service_account|default_tags|ip_ranges|partition|regions?|service)$'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(arn|billing_service_account|default_tags|ip_ranges|partition|regions?|service|service_principal)$'
 service/mgh:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mgh_'
 service/mgn:

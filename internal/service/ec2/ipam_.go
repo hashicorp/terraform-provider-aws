@@ -130,7 +130,7 @@ func resourceIPAMCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	input := &ec2.CreateIpamInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		OperatingRegions:  expandIPAMOperatingRegions(d.Get("operating_regions").(*schema.Set).List()),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeIpam),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeIpam),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -184,7 +184,7 @@ func resourceIPAMRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("scope_count", ipam.ScopeCount)
 	d.Set("tier", ipam.Tier)
 
-	setTagsOutV2(ctx, ipam.Tags)
+	setTagsOut(ctx, ipam.Tags)
 
 	return diags
 }
@@ -240,7 +240,7 @@ func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	return diags
+	return append(diags, resourceIPAMRead(ctx, d, meta)...)
 }
 
 func resourceIPAMDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -234,7 +234,7 @@ func TestAccVPCNetworkACLRule_ipv6ICMP(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6710
 func TestAccVPCNetworkACLRule_ipv6VPCAssignGeneratedIPv6CIDRBlockUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Vpc
+	var v awstypes.Vpc
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vpcResourceName := "aws_vpc.test"
 	resourceName := "aws_network_acl_rule.test"
@@ -358,7 +358,7 @@ func TestAccVPCNetworkACLRule_duplicate(t *testing.T) {
 
 func testAccCheckNetworkACLRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_network_acl_rule" {
@@ -398,7 +398,7 @@ func testAccCheckNetworkACLRuleDestroy(ctx context.Context) resource.TestCheckFu
 
 func testAccCheckNetworkACLRuleExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)

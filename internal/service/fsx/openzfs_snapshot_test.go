@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,12 +23,12 @@ import (
 
 func TestAccFSxOpenZFSSnapshot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var snapshot fsx.Snapshot
+	var snapshot awstypes.Snapshot
 	resourceName := "aws_fsx_openzfs_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSSnapshotDestroy(ctx),
@@ -55,12 +55,12 @@ func TestAccFSxOpenZFSSnapshot_basic(t *testing.T) {
 
 func TestAccFSxOpenZFSSnapshot_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var snapshot fsx.Snapshot
+	var snapshot awstypes.Snapshot
 	resourceName := "aws_fsx_openzfs_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSSnapshotDestroy(ctx),
@@ -79,12 +79,12 @@ func TestAccFSxOpenZFSSnapshot_disappears(t *testing.T) {
 
 func TestAccFSxOpenZFSSnapshot_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var snapshot fsx.Snapshot
+	var snapshot awstypes.Snapshot
 	resourceName := "aws_fsx_openzfs_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSSnapshotDestroy(ctx),
@@ -125,13 +125,13 @@ func TestAccFSxOpenZFSSnapshot_tags(t *testing.T) {
 
 func TestAccFSxOpenZFSSnapshot_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	var snapshot1, snapshot2 fsx.Snapshot
+	var snapshot1, snapshot2 awstypes.Snapshot
 	resourceName := "aws_fsx_openzfs_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSSnapshotDestroy(ctx),
@@ -162,12 +162,12 @@ func TestAccFSxOpenZFSSnapshot_name(t *testing.T) {
 
 func TestAccFSxOpenZFSSnapshot_childVolume(t *testing.T) {
 	ctx := acctest.Context(t)
-	var snapshot fsx.Snapshot
+	var snapshot awstypes.Snapshot
 	resourceName := "aws_fsx_openzfs_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSSnapshotDestroy(ctx),
@@ -192,13 +192,13 @@ func TestAccFSxOpenZFSSnapshot_childVolume(t *testing.T) {
 
 func TestAccFSxOpenZFSSnapshot_volumeID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var snapshot1, snapshot2 fsx.Snapshot
+	var snapshot1, snapshot2 awstypes.Snapshot
 	resourceName := "aws_fsx_openzfs_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSSnapshotDestroy(ctx),
@@ -227,14 +227,14 @@ func TestAccFSxOpenZFSSnapshot_volumeID(t *testing.T) {
 	})
 }
 
-func testAccCheckOpenZFSSnapshotExists(ctx context.Context, n string, v *fsx.Snapshot) resource.TestCheckFunc {
+func testAccCheckOpenZFSSnapshotExists(ctx context.Context, n string, v *awstypes.Snapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxClient(ctx)
 
 		output, err := tffsx.FindSnapshotByID(ctx, conn, rs.Primary.ID)
 
@@ -250,7 +250,7 @@ func testAccCheckOpenZFSSnapshotExists(ctx context.Context, n string, v *fsx.Sna
 
 func testAccCheckOpenZFSSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fsx_openzfs_snapshot" {
@@ -274,20 +274,20 @@ func testAccCheckOpenZFSSnapshotDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckOpenZFSSnapshotNotRecreated(i, j *fsx.Snapshot) resource.TestCheckFunc {
+func testAccCheckOpenZFSSnapshotNotRecreated(i, j *awstypes.Snapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.SnapshotId) != aws.StringValue(j.SnapshotId) {
-			return fmt.Errorf("FSx OpenZFS Snapshot (%s) recreated", aws.StringValue(i.SnapshotId))
+		if aws.ToString(i.SnapshotId) != aws.ToString(j.SnapshotId) {
+			return fmt.Errorf("FSx OpenZFS Snapshot (%s) recreated", aws.ToString(i.SnapshotId))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckOpenZFSSnapshotRecreated(i, j *fsx.Snapshot) resource.TestCheckFunc {
+func testAccCheckOpenZFSSnapshotRecreated(i, j *awstypes.Snapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.SnapshotId) == aws.StringValue(j.SnapshotId) {
-			return fmt.Errorf("FSx OpenZFS Snapshot (%s) not recreated", aws.StringValue(i.SnapshotId))
+		if aws.ToString(i.SnapshotId) == aws.ToString(j.SnapshotId) {
+			return fmt.Errorf("FSx OpenZFS Snapshot (%s) not recreated", aws.ToString(i.SnapshotId))
 		}
 
 		return nil

@@ -17,9 +17,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/ratelimit"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
-	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -422,9 +421,9 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 			}
 
 			ec2Conn := meta.(*conns.AWSClient).EC2Client(ctx)
-			networkInterfaces, err := tfec2.FindNetworkInterfacesV2(ctx, ec2Conn, &ec2_sdkv2.DescribeNetworkInterfacesInput{
+			networkInterfaces, err := tfec2.FindNetworkInterfaces(ctx, ec2Conn, &ec2.DescribeNetworkInterfacesInput{
 				Filters: []ec2types.Filter{
-					tfec2.NewFilterV2("tag:"+documentClassifierTagKey, []string{aws.ToString(v.DocumentClassifierArn)}),
+					tfec2.NewFilter("tag:"+documentClassifierTagKey, []string{aws.ToString(v.DocumentClassifierArn)}),
 				},
 			})
 			if err != nil {
@@ -549,7 +548,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 
 	if in.VpcConfig != nil {
 		g.Go(func() error {
-			ec2Conn := awsClient.EC2Conn(ctx)
+			ec2Conn := awsClient.EC2Client(ctx)
 			enis, err := findNetworkInterfaces(waitCtx, ec2Conn, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets)
 			if err != nil {
 				diags = sdkdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, err)
@@ -572,9 +571,9 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 
 			modelVPCENILock.Unlock()
 
-			_, err = ec2Conn.CreateTagsWithContext(waitCtx, &ec2.CreateTagsInput{
-				Resources: []*string{newENI.NetworkInterfaceId},
-				Tags: []*ec2.Tag{
+			_, err = ec2Conn.CreateTags(waitCtx, &ec2.CreateTagsInput{ // nosemgrep:ci.semgrep.migrate.aws-api-context
+				Resources: []string{aws.ToString(newENI.NetworkInterfaceId)},
+				Tags: []ec2types.Tag{
 					{
 						Key:   aws.String(documentClassifierTagKey),
 						Value: aws.String(d.Id()),

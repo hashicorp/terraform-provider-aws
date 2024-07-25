@@ -615,8 +615,12 @@ func testAccTrail_insightSelector(t *testing.T) {
 				Config: testAccCloudTrailConfig_insightSelectorMulti(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "insight_selector.0.insight_type", "ApiCallRateInsight"),
-					resource.TestCheckResourceAttr(resourceName, "insight_selector.1.insight_type", "ApiErrorRateInsight"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insight_selector.*", map[string]string{
+						"insight_type": "ApiCallRateInsight",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insight_selector.*", map[string]string{
+						"insight_type": "ApiErrorRateInsight",
+					}),
 				),
 			},
 			{

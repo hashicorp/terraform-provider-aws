@@ -79,7 +79,7 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	input := &ec2.DescribeCustomerGatewaysInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = newCustomFilterListV2(v.(*schema.Set))
+		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk(names.AttrID); ok {
@@ -129,7 +129,7 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrIPAddress, cgw.IpAddress)
 	d.Set(names.AttrType, cgw.Type)
 
-	setTagsOutV2(ctx, cgw.Tags)
+	setTagsOut(ctx, cgw.Tags)
 
 	return diags
 }

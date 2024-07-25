@@ -8,14 +8,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -160,9 +162,9 @@ func TestAccGlueRegistry_disappears(t *testing.T) {
 }
 
 func testAccPreCheckRegistry(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
-	_, err := conn.ListRegistriesWithContext(ctx, &glue.ListRegistriesInput{})
+	_, err := conn.ListRegistries(ctx, &glue.ListRegistriesInput{})
 
 	// Some endpoints that do not support Glue Registrys return InternalFailure
 	if acctest.PreCheckSkipError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
@@ -185,7 +187,7 @@ func testAccCheckRegistryExists(ctx context.Context, resourceName string, regist
 			return fmt.Errorf("No Glue Registry ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 		output, err := tfglue.FindRegistryByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -195,7 +197,7 @@ func testAccCheckRegistryExists(ctx context.Context, resourceName string, regist
 			return fmt.Errorf("Glue Registry (%s) not found", rs.Primary.ID)
 		}
 
-		if aws.StringValue(output.RegistryArn) == rs.Primary.ID {
+		if aws.ToString(output.RegistryArn) == rs.Primary.ID {
 			*registry = *output
 			return nil
 		}
@@ -211,15 +213,15 @@ func testAccCheckRegistryDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 			output, err := tfglue.FindRegistryByID(ctx, conn, rs.Primary.ID)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+				if errs.IsA[*awstypes.EntityNotFoundException](err) {
 					return nil
 				}
 			}
 
-			if output != nil && aws.StringValue(output.RegistryArn) == rs.Primary.ID {
+			if output != nil && aws.ToString(output.RegistryArn) == rs.Primary.ID {
 				return fmt.Errorf("Glue Registry %s still exists", rs.Primary.ID)
 			}
 

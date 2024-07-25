@@ -146,6 +146,7 @@ func Register(name string, f SweeperFn, dependencies ...string) {
 			if err != nil {
 				return fmt.Errorf("getting client: %w", err)
 			}
+			tflog.Info(ctx, "listing resources")
 			sweepResources, err := f(ctx, client)
 
 			if SkipSweepError(err) {

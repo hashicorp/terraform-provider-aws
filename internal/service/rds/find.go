@@ -21,7 +21,7 @@ func FindDBClusterRoleByDBClusterIDAndRoleARN(ctx context.Context, conn *rds.RDS
 
 	for _, associatedRole := range dbCluster.AssociatedRoles {
 		if aws.StringValue(associatedRole.RoleArn) == roleARN {
-			if status := aws.StringValue(associatedRole.Status); status == ClusterRoleStatusDeleted {
+			if status := aws.StringValue(associatedRole.Status); status == clusterRoleStatusDeleted {
 				return nil, &retry.NotFoundError{
 					Message: status,
 				}

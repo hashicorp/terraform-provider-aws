@@ -32,6 +32,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the created ElastiCache Replication Group.
 * `auth_token_enabled` - Whether an AuthToken (password) is enabled.
 * `automatic_failover_enabled` - A flag whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails.
+* `cluster_mode` - Whether cluster mode is enabled or disabled.
 * `node_type` – The cluster node type.
 * `num_cache_clusters` – The number of cache clusters that the replication group has.
 * `num_node_groups` - Number of node groups (shards) for the replication group.

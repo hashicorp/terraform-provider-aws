@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -74,7 +74,8 @@ func resourceUserGroup() *schema.Resource {
 
 func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
+	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 
 	userGroupID := d.Get("user_group_id").(string)
 	input := &elasticache.CreateUserGroupInput{
@@ -84,23 +85,23 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("user_ids"); ok && v.(*schema.Set).Len() > 0 {
-		input.UserIds = flex.ExpandStringSet(v.(*schema.Set))
+		input.UserIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	output, err := conn.CreateUserGroupWithContext(ctx, input)
+	output, err := conn.CreateUserGroup(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
-		output, err = conn.CreateUserGroupWithContext(ctx, input)
+		output, err = conn.CreateUserGroup(ctx, input)
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ElastiCache User Group (%s): %s", userGroupID, err)
 	}
 
-	d.SetId(aws.StringValue(output.UserGroupId))
+	d.SetId(aws.ToString(output.UserGroupId))
 
 	if _, err := waitUserGroupCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache User Group (%s) create: %s", d.Id(), err)
@@ -108,10 +109,10 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
-		err := createTags(ctx, conn, aws.StringValue(output.ARN), tags)
+		err := createTags(ctx, conn, aws.ToString(output.ARN), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceUserGroupRead(ctx, d, meta)...)
 		}
 
@@ -125,7 +126,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
+	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	userGroup, err := findUserGroupByID(ctx, conn, d.Id())
 
@@ -141,7 +142,7 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set(names.AttrARN, userGroup.ARN)
 	d.Set(names.AttrEngine, userGroup.Engine)
-	d.Set("user_ids", aws.StringValueSlice(userGroup.UserIds))
+	d.Set("user_ids", userGroup.UserIds)
 	d.Set("user_group_id", userGroup.UserGroupId)
 
 	return diags
@@ -149,7 +150,7 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
+	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &elasticache.ModifyUserGroupInput{
@@ -162,14 +163,14 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			add := n.(*schema.Set).Difference(o.(*schema.Set))
 
 			if add.Len() > 0 {
-				input.UserIdsToAdd = flex.ExpandStringSet(add)
+				input.UserIdsToAdd = flex.ExpandStringValueSet(add)
 			}
 			if del.Len() > 0 {
-				input.UserIdsToRemove = flex.ExpandStringSet(del)
+				input.UserIdsToRemove = flex.ExpandStringValueSet(del)
 			}
 		}
 
-		_, err := conn.ModifyUserGroupWithContext(ctx, input)
+		_, err := conn.ModifyUserGroup(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating ElastiCache User Group (%q): %s", d.Id(), err)
@@ -185,14 +186,14 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
+	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	log.Printf("[INFO] Deleting ElastiCache User Group: %s", d.Id())
-	_, err := conn.DeleteUserGroupWithContext(ctx, &elasticache.DeleteUserGroupInput{
+	_, err := conn.DeleteUserGroup(ctx, &elasticache.DeleteUserGroupInput{
 		UserGroupId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserGroupNotFoundFault) {
+	if errs.IsA[*awstypes.UserGroupNotFoundFault](err) {
 		return diags
 	}
 
@@ -207,56 +208,54 @@ func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func findUserGroupByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.UserGroup, error) {
+func findUserGroupByID(ctx context.Context, conn *elasticache.Client, id string) (*awstypes.UserGroup, error) {
 	input := &elasticache.DescribeUserGroupsInput{
 		UserGroupId: aws.String(id),
 	}
 
-	return findUserGroup(ctx, conn, input, tfslices.PredicateTrue[*elasticache.UserGroup]())
+	return findUserGroup(ctx, conn, input, tfslices.PredicateTrue[*awstypes.UserGroup]())
 }
 
-func findUserGroup(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeUserGroupsInput, filter tfslices.Predicate[*elasticache.UserGroup]) (*elasticache.UserGroup, error) {
+func findUserGroup(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeUserGroupsInput, filter tfslices.Predicate[*awstypes.UserGroup]) (*awstypes.UserGroup, error) {
 	output, err := findUserGroups(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findUserGroups(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeUserGroupsInput, filter tfslices.Predicate[*elasticache.UserGroup]) ([]*elasticache.UserGroup, error) {
-	var output []*elasticache.UserGroup
+func findUserGroups(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeUserGroupsInput, filter tfslices.Predicate[*awstypes.UserGroup]) ([]awstypes.UserGroup, error) {
+	var output []awstypes.UserGroup
 
-	err := conn.DescribeUserGroupsPagesWithContext(ctx, input, func(page *elasticache.DescribeUserGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := elasticache.NewDescribeUserGroupsPaginator(conn, input)
 
-		for _, v := range page.UserGroups {
-			if v != nil && filter(v) {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.UserGroupNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserGroupNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.UserGroups {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
 }
 
-func statusUserGroup(ctx context.Context, conn *elasticache.ElastiCache, id string) retry.StateRefreshFunc {
+func statusUserGroup(ctx context.Context, conn *elasticache.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findUserGroupByID(ctx, conn, id)
 
@@ -268,7 +267,7 @@ func statusUserGroup(ctx context.Context, conn *elasticache.ElastiCache, id stri
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, aws.ToString(output.Status), nil
 	}
 }
 
@@ -279,7 +278,7 @@ const (
 	userGroupStatusModifying = "modifying"
 )
 
-func waitUserGroupCreated(ctx context.Context, conn *elasticache.ElastiCache, id string, timeout time.Duration) (*elasticache.UserGroup, error) {
+func waitUserGroupCreated(ctx context.Context, conn *elasticache.Client, id string, timeout time.Duration) (*awstypes.UserGroup, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{userGroupStatusCreating, userGroupStatusModifying},
 		Target:     []string{userGroupStatusActive},
@@ -291,14 +290,14 @@ func waitUserGroupCreated(ctx context.Context, conn *elasticache.ElastiCache, id
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*elasticache.UserGroup); ok {
+	if output, ok := outputRaw.(*awstypes.UserGroup); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitUserGroupUpdated(ctx context.Context, conn *elasticache.ElastiCache, id string, timeout time.Duration) (*elasticache.UserGroup, error) { //nolint:unparam
+func waitUserGroupUpdated(ctx context.Context, conn *elasticache.Client, id string, timeout time.Duration) (*awstypes.UserGroup, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{userGroupStatusModifying},
 		Target:     []string{userGroupStatusActive},
@@ -310,14 +309,14 @@ func waitUserGroupUpdated(ctx context.Context, conn *elasticache.ElastiCache, id
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*elasticache.UserGroup); ok {
+	if output, ok := outputRaw.(*awstypes.UserGroup); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitUserGroupDeleted(ctx context.Context, conn *elasticache.ElastiCache, id string, timeout time.Duration) (*elasticache.UserGroup, error) {
+func waitUserGroupDeleted(ctx context.Context, conn *elasticache.Client, id string, timeout time.Duration) (*awstypes.UserGroup, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{userGroupStatusDeleting},
 		Target:     []string{},
@@ -329,7 +328,7 @@ func waitUserGroupDeleted(ctx context.Context, conn *elasticache.ElastiCache, id
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*elasticache.UserGroup); ok {
+	if output, ok := outputRaw.(*awstypes.UserGroup); ok {
 		return output, err
 	}
 

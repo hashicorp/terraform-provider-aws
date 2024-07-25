@@ -50,30 +50,30 @@ func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *sch
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{
-		Filters: newAttributeFilterListV2(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"resource-type": string(awstypes.TransitGatewayAttachmentResourceTypeDirectConnectGateway),
 		}),
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if v, ok := d.GetOk(names.AttrTags); ok {
-		input.Filters = append(input.Filters, newTagFilterListV2(
-			TagsV2(tftags.New(ctx, v.(map[string]interface{}))),
+		input.Filters = append(input.Filters, newTagFilterList(
+			Tags(tftags.New(ctx, v.(map[string]interface{}))),
 		)...)
 	}
 
 	// to preserve original functionality
 	if v, ok := d.GetOk("dx_gateway_id"); ok {
-		input.Filters = append(input.Filters, newAttributeFilterListV2(map[string]string{
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"resource-id": v.(string),
 		})...)
 	}
 
 	if v, ok := d.GetOk(names.AttrTransitGatewayID); ok {
-		input.Filters = append(input.Filters, newAttributeFilterListV2(map[string]string{
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"transit-gateway-id": v.(string),
 		})...)
 	}
@@ -88,7 +88,7 @@ func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *sch
 	d.Set("dx_gateway_id", transitGatewayAttachment.ResourceId)
 	d.Set(names.AttrTransitGatewayID, transitGatewayAttachment.TransitGatewayId)
 
-	setTagsOutV2(ctx, transitGatewayAttachment.Tags)
+	setTagsOut(ctx, transitGatewayAttachment.Tags)
 
 	return diags
 }

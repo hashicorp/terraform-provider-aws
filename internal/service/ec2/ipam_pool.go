@@ -158,7 +158,7 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		AddressFamily:     addressFamily,
 		ClientToken:       aws.String(id.UniqueId()),
 		IpamScopeId:       aws.String(d.Get("ipam_scope_id").(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeIpamPool),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeIpamPool),
 	}
 
 	if v, ok := d.GetOk("allocation_default_netmask_length"); ok {
@@ -241,7 +241,7 @@ func resourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("address_family", pool.AddressFamily)
-	d.Set("allocation_resource_tags", keyValueTagsV2(ctx, tagsFromIPAMAllocationTags(pool.AllocationResourceTags)).Map())
+	d.Set("allocation_resource_tags", keyValueTags(ctx, tagsFromIPAMAllocationTags(pool.AllocationResourceTags)).Map())
 	d.Set(names.AttrARN, pool.IpamPoolArn)
 	d.Set("auto_import", pool.AutoImport)
 	d.Set("aws_service", pool.AwsService)
@@ -256,7 +256,7 @@ func resourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
 	d.Set(names.AttrState, pool.State)
 
-	setTagsOutV2(ctx, pool.Tags)
+	setTagsOut(ctx, pool.Tags)
 
 	return diags
 }

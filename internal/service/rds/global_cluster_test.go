@@ -119,6 +119,7 @@ func TestAccRDSGlobalCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "aurora-postgresql"),
+					resource.TestCheckResourceAttr(resourceName, "engine_lifecycle_support", "open-source-rds-extended-support"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", rName),
 					resource.TestMatchResourceAttr(resourceName, "global_cluster_resource_id", regexache.MustCompile(`cluster-.+`)),
@@ -225,6 +226,38 @@ func TestAccRDSGlobalCluster_deletionProtection(t *testing.T) {
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRDSGlobalCluster_engineLifecycleSupport_disabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var globalCluster1 rds.GlobalCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_global_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalClusterConfig_engineLifecycleSupport_disabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "aurora-postgresql"),
+					resource.TestCheckResourceAttr(resourceName, "engine_lifecycle_support", "open-source-rds-extended-support-disabled"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -673,6 +706,16 @@ resource "aws_rds_global_cluster" "test" {
   engine                    = "aurora-postgresql"
 }
 `, deletionProtection, rName)
+}
+
+func testAccGlobalClusterConfig_engineLifecycleSupport_disabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_global_cluster" "test" {
+  global_cluster_identifier = %[1]q
+  engine                    = "aurora-postgresql"
+  engine_lifecycle_support  = "open-source-rds-extended-support-disabled"
+}
+`, rName)
 }
 
 func testAccGlobalClusterConfig_engineVersion(rName, engine string) string {

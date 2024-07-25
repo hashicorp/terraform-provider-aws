@@ -101,6 +101,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	output, err := conn.CreateDBSubnetGroup(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS DB Subnet Group (%s): %s", name, err)
 	}

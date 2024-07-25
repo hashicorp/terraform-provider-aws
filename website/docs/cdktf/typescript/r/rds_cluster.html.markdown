@@ -18,6 +18,8 @@ Changes to an RDS Cluster can occur when you manually change a parameter, such a
 
 ~> **Note:** Multi-AZ DB clusters are supported only for the MySQL and PostgreSQL DB engines.
 
+~> **Note:** `caCertificateIdentifier` is only supported for Multi-AZ DB clusters.
+
 ~> **Note:** using `applyImmediately` can result in a brief downtime as the server reboots. See the AWS Docs on [RDS Maintenance][4] for more information.
 
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
@@ -48,7 +50,7 @@ class MyConvertedCode extends TerraformStack {
       databaseName: "mydb",
       engine: "aurora-mysql",
       engineVersion: "5.7.mysql_aurora.2.03.2",
-      masterPassword: "bar",
+      masterPassword: "must_be_eight_characters",
       masterUsername: "foo",
       preferredBackupWindow: "07:00-09:00",
     });
@@ -79,7 +81,7 @@ class MyConvertedCode extends TerraformStack {
       backupRetentionPeriod: 5,
       clusterIdentifier: "aurora-cluster-demo",
       databaseName: "mydb",
-      masterPassword: "bar",
+      masterPassword: "must_be_eight_characters",
       masterUsername: "foo",
       preferredBackupWindow: "07:00-09:00",
       engine: config.engine,
@@ -109,7 +111,7 @@ class MyConvertedCode extends TerraformStack {
       clusterIdentifier: "aurora-cluster-demo",
       databaseName: "mydb",
       engine: "aurora-postgresql",
-      masterPassword: "bar",
+      masterPassword: "must_be_eight_characters",
       masterUsername: "foo",
       preferredBackupWindow: "07:00-09:00",
     });
@@ -338,6 +340,7 @@ This resource supports the following arguments:
   A maximum of 3 AZs can be configured.
 * `backtrackWindow` - (Optional) Target backtrack window, in seconds. Only available for `aurora` and `aurora-mysql` engines currently. To disable backtracking, set this value to `0`. Defaults to `0`. Must be between `0` and `259200` (72 hours)
 * `backupRetentionPeriod` - (Optional) Days to retain backups for. Default `1`
+* `caCertificateIdentifier` - (Optional) The CA certificate identifier to use for the DB cluster's server certificate.
 * `clusterIdentifierPrefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `clusterIdentifier`.
 * `clusterIdentifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `copyTagsToSnapshot` – (Optional, boolean) Copy all Cluster `tags` to snapshots. Default is `false`.
@@ -359,6 +362,7 @@ This resource supports the following arguments:
 * `enableLocalWriteForwarding` - (Optional) Whether read replicas can forward write operations to the writer DB instance in the DB cluster. By default, write operations aren't allowed on reader DB instances.. See the [User Guide for Aurora](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-mysql-write-forwarding.html) for more information. **NOTE:** Local write forwarding requires Aurora MySQL version 3.04 or higher.
 * `enabledCloudwatchLogsExports` - (Optional) Set of log types to export to cloudwatch. If omitted, no logs will be exported. The following log types are supported: `audit`, `error`, `general`, `slowquery`, `postgresql` (PostgreSQL).
 * `engineMode` - (Optional) Database engine mode. Valid values: `global` (only valid for Aurora MySQL 1.21 and earlier), `parallelquery`, `provisioned`, `serverless`. Defaults to: `provisioned`. See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html) for limitations when using `serverless`.
+* `engineLifecycleSupport` - (Optional) The life cycle type for this DB instance. This setting is valid for cluster types Aurora DB clusters and Multi-AZ DB clusters. Valid values are `open-source-rds-extended-support`, `open-source-rds-extended-support-disabled`. Default value is `open-source-rds-extended-support`. [Using Amazon RDS Extended Support]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/extended-support.html
 * `engineVersion` - (Optional) Database engine version. Updating this argument results in an outage. See the [Aurora MySQL](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Updates.html) and [Aurora Postgres](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.Updates.html) documentation for your configured engine to determine this value, or by running `aws rds describe-db-engine-versions`. For example with Aurora MySQL 2, a potential value for this argument is `5.7.mysql_aurora.2.03.2`. The value can contain a partial version where supported by the API. The actual engine version used is returned in the attribute `engineVersionActual`, , see [Attribute Reference](#attribute-reference) below.
 * `engine` - (Required) Name of the database engine to be used for this DB cluster. Valid Values: `aurora-mysql`, `aurora-postgresql`, `mysql`, `postgres`. (Note that `mysql` and `postgres` are Multi-AZ RDS clusters).
 * `finalSnapshotIdentifier` - (Optional) Name of your final DB snapshot when this DB cluster is deleted. If omitted, no final snapshot will be made.
@@ -559,6 +563,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `clusterMembers` – List of RDS Instances that are a part of this cluster
 * `availabilityZones` - Availability zone of the instance
 * `backupRetentionPeriod` - Backup retention period
+* `caCertificateIdentifier` - CA identifier of the CA certificate used for the DB instance's server certificate
+* `caCertificateValidTill` - Expiration date of the DB instance’s server certificate
 * `preferredBackupWindow` - Daily time range during which the backups happen
 * `preferredMaintenanceWindow` - Maintenance window
 * `endpoint` - DNS address of the RDS instance
@@ -630,4 +636,4 @@ Using `terraform import`, import RDS Clusters using the `clusterIdentifier`. For
 % terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4aa8b7ab5177f43e0123092bcb7fcd25b90ce3aa7103428fa9b42656f0208fe7 -->
+<!-- cache-key: cdktf-0.20.1 input-96f1b4387956a9233d123c31823c01cf2cc20093886e0c2ade4590ff6e41561a -->

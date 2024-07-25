@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_msk_cluster: Add `broker_node_group_info` attribute
+```

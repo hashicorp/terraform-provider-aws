@@ -61,6 +61,10 @@ func ResourceDataLakeSettings() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"allow_full_table_external_data_access": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"authorized_session_tag_value_list": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -188,6 +192,10 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 		settings.TrustedResourceOwners = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("allow_full_table_external_data_access"); ok {
+		settings.AllowFullTableExternalDataAccess = aws.Bool(v.(bool))
+	}
+
 	input.DataLakeSettings = settings
 
 	var output *lakeformation.PutDataLakeSettingsOutput
@@ -261,6 +269,7 @@ func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
 	d.Set("external_data_filtering_allow_list", flattenDataLakeSettingsDataFilteringAllowList(settings.ExternalDataFilteringAllowList))
 	d.Set("trusted_resource_owners", flex.FlattenStringValueList(settings.TrustedResourceOwners))
+	d.Set("allow_full_table_external_data_access", settings.AllowFullTableExternalDataAccess)
 
 	return diags
 }

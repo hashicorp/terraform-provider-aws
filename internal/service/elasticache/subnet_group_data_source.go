@@ -6,8 +6,8 @@ package elasticache
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -52,7 +52,7 @@ func dataSourceSubnetGroup() *schema.Resource {
 
 func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
+	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
@@ -63,12 +63,12 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("ElastiCache Subnet Group", err))
 	}
 
-	d.SetId(aws.StringValue(group.CacheSubnetGroupName))
+	d.SetId(aws.ToString(group.CacheSubnetGroupName))
 	d.Set(names.AttrARN, group.ARN)
 	d.Set(names.AttrDescription, group.CacheSubnetGroupDescription)
 	d.Set(names.AttrName, group.CacheSubnetGroupName)
-	d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(group.Subnets, func(v *elasticache.Subnet) string {
-		return aws.StringValue(v.SubnetIdentifier)
+	d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(group.Subnets, func(v awstypes.Subnet) string {
+		return aws.ToString(v.SubnetIdentifier)
 	}))
 	d.Set(names.AttrVPCID, group.VpcId)
 

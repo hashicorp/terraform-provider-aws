@@ -40,22 +40,27 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `deploymentType` - (Required) - The filesystem deployment type. Valid values: `SINGLE_AZ_1`, `SINGLE_AZ_2` and `MULTI_AZ_1`.
+* `deploymentType` - (Required) The filesystem deployment type. Valid values: `SINGLE_AZ_1`, `SINGLE_AZ_2` and `MULTI_AZ_1`.
 * `storageCapacity` - (Required) The storage capacity (GiB) of the file system. Valid values between `64` and `524288`.
 * `subnetIds` - (Required) A list of IDs for the subnets that the file system will be accessible from.
 * `throughputCapacity` - (Required) Throughput (MB/s) of the file system. Valid values depend on `deploymentType`. Must be one of `64`, `128`, `256`, `512`, `1024`, `2048`, `3072`, `4096` for `SINGLE_AZ_1`. Must be one of `160`, `320`, `640`, `1280`, `2560`, `3840`, `5120`, `7680`, `10240` for `SINGLE_AZ_2`.
+
+The following arguments are optional:
+
 * `automaticBackupRetentionDays` - (Optional) The number of days to retain automatic backups. Setting this to 0 disables automatic backups. You can retain automatic backups for a maximum of 90 days.
 * `backupId` - (Optional) The ID of the source backup to create the filesystem from.
 * `copyTagsToBackups` - (Optional) A boolean flag indicating whether tags for the file system should be copied to backups. The default value is false.
 * `copyTagsToVolumes` - (Optional) A boolean flag indicating whether tags for the file system should be copied to snapshots. The default value is false.
 * `dailyAutomaticBackupStartTime` - (Optional) A recurring daily time, in the format HH:MM. HH is the zero-padded hour of the day (0-23), and MM is the zero-padded minute of the hour. For example, 05:00 specifies 5 AM daily. Requires `automaticBackupRetentionDays` to be set.
-* `diskIopsConfiguration` - (Optional) The SSD IOPS configuration for the Amazon FSx for OpenZFS file system. See [Disk Iops Configuration](#disk-iops-configuration) below.
+* `deleteOptions` - (Optional) List of delete options, which at present supports only one value that specifies whether to delete all child volumes and snapshots when the file system is deleted. Valid values: `DELETE_CHILD_VOLUMES_AND_SNAPSHOTS`.
+* `diskIopsConfiguration` - (Optional) The SSD IOPS configuration for the Amazon FSx for OpenZFS file system. See [`diskIopsConfiguration` Block](#disk_iops_configuration-block) for details.
 * `endpointIpAddressRange` - (Optional) (Multi-AZ only) Specifies the IP address range in which the endpoints to access your file system will be created.
+* `finalBackupTags` - (Optional) A map of tags to apply to the file system's final backup.
 * `kmsKeyId` - (Optional) ARN for the KMS Key to encrypt the file system at rest, Defaults to an AWS managed KMS Key.
 * `preferredSubnetId` - (Optional) (Multi-AZ only) Required when `deploymentType` is set to `MULTI_AZ_1`. This specifies the subnet in which you want the preferred file server to be located.
-* `rootVolumeConfiguration` - (Optional) The configuration for the root volume of the file system. All other volumes are children or the root volume. See [Root Volume Configuration](#root-volume-configuration) below.
+* `rootVolumeConfiguration` - (Optional) The configuration for the root volume of the file system. All other volumes are children or the root volume. See [`rootVolumeConfiguration` Block](#root_volume_configuration-block) for details.
 * `routeTableIds` - (Optional) (Multi-AZ only) Specifies the route tables in which Amazon FSx creates the rules for routing traffic to the correct file server. You should specify all virtual private cloud (VPC) route tables associated with the subnets in which your clients are located. By default, Amazon FSx selects your VPC's default route table.
 * `securityGroupIds` - (Optional) A list of IDs for the security groups that apply to the specified network interfaces created for file system access. These security groups will apply to all network interfaces.
 * `skipFinalBackup` - (Optional) When enabled, will skip the default final backup taken when the file system is deleted. This configuration must be applied separately before attempting to delete the resource to have the desired behavior. Defaults to `false`.
@@ -63,34 +68,44 @@ This resource supports the following arguments:
 * `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `weeklyMaintenanceStartTime` - (Optional) The preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
 
-### Disk Iops Configuration
+### `diskIopsConfiguration` Block
 
-* `iops` - (Optional) - The total number of SSD IOPS provisioned for the file system.
-* `mode` - (Optional) - Specifies whether the number of IOPS for the file system is using the system. Valid values are `AUTOMATIC` and `USER_PROVISIONED`. Default value is `AUTOMATIC`.
+The `diskIopsConfiguration` configuration block supports the following arguments:
 
-### Root Volume Configuration
+* `iops` - (Optional) The total number of SSD IOPS provisioned for the file system.
+* `mode` - (Optional) Specifies whether the number of IOPS for the file system is using the system. Valid values are `AUTOMATIC` and `USER_PROVISIONED`. Default value is `AUTOMATIC`.
 
-* `copyTagsToSnapshots` - (Optional) - A boolean flag indicating whether tags for the file system should be copied to snapshots. The default value is false.
-* `dataCompressionType` - (Optional) - Method used to compress the data on the volume. Valid values are `LZ4`, `NONE` or `ZSTD`. Child volumes that don't specify compression option will inherit from parent volume. This option on file system applies to the root volume.
-* `nfsExports` - (Optional) - NFS export configuration for the root volume. Exactly 1 item. See [NFS Exports](#nfs-exports) Below.
-* `readOnly` - (Optional) - specifies whether the volume is read-only. Default is false.
-* `recordSizeKib` - (Optional) - Specifies the record size of an OpenZFS root volume, in kibibytes (KiB). Valid values are `4`, `8`, `16`, `32`, `64`, `128`, `256`, `512`, or `1024` KiB. The default is `128` KiB.
-* `userAndGroupQuotas` - (Optional) - Specify how much storage users or groups can use on the volume. Maximum of 100 items. See [User and Group Quotas](#user-and-group-quotas) Below.
+### `rootVolumeConfiguration` Block
 
-### NFS Exports
+The `rootVolumeConfiguration` configuration block supports the following arguments:
 
-* `clientConfigurations` - (Required) - A list of configuration objects that contain the client and options for mounting the OpenZFS file system. Maximum of 25 items. See [Client Configurations](#client configurations) Below.
+* `copyTagsToSnapshots` - (Optional) A boolean flag indicating whether tags for the file system should be copied to snapshots. The default value is false.
+* `dataCompressionType` - (Optional) Method used to compress the data on the volume. Valid values are `LZ4`, `NONE` or `ZSTD`. Child volumes that don't specify compression option will inherit from parent volume. This option on file system applies to the root volume.
+* `nfsExports` - (Optional) NFS export configuration for the root volume. Exactly 1 item. See [`nfsExports` Block](#nfs_exports-block) for details.
+* `readOnly` - (Optional) specifies whether the volume is read-only. Default is false.
+* `recordSizeKib` - (Optional) Specifies the record size of an OpenZFS root volume, in kibibytes (KiB). Valid values are `4`, `8`, `16`, `32`, `64`, `128`, `256`, `512`, or `1024` KiB. The default is `128` KiB.
+* `userAndGroupQuotas` - (Optional) Specify how much storage users or groups can use on the volume. Maximum of 100 items. See [`userAndGroupQuotas` Block](#user_and_group_quotas-block) for details.
 
-### Client Configurations
+### `nfsExports` Block
 
-* `clients` - (Required) - A value that specifies who can mount the file system. You can provide a wildcard character (*), an IP address (0.0.0.0), or a CIDR address (192.0.2.0/24. By default, Amazon FSx uses the wildcard character when specifying the client.
-* `options` - (Required) -  The options to use when mounting the file system. Maximum of 20 items. See the [Linix NFS exports man page](https://linux.die.net/man/5/exports) for more information. `crossmount` and `sync` are used by default.
+The `nfsExports` configuration block supports the following arguments:
 
-### User and Group Quotas
+* `clientConfigurations` - (Required) A list of configuration objects that contain the client and options for mounting the OpenZFS file system. Maximum of 25 items. See [`clientConfigurations` Block](#client_configurations-block) for details.
 
-* `id` - (Required) - The ID of the user or group. Valid values between `0` and `2147483647`
-* `storageCapacityQuotaGib` - (Required) - The amount of storage that the user or group can use in gibibytes (GiB). Valid values between `0` and `2147483647`
-* `type` - (Required) - A value that specifies whether the quota applies to a user or group. Valid values are `USER` or `GROUP`.
+### `clientConfigurations` Block
+
+The `clientConfigurations` configuration block supports the following arguments:
+
+* `clients` - (Required) A value that specifies who can mount the file system. You can provide a wildcard character (*), an IP address (0.0.0.0), or a CIDR address (192.0.2.0/24. By default, Amazon FSx uses the wildcard character when specifying the client.
+* `options` - (Required)  The options to use when mounting the file system. Maximum of 20 items. See the [Linix NFS exports man page](https://linux.die.net/man/5/exports) for more information. `crossmount` and `sync` are used by default.
+
+### `userAndGroupQuotas` Block
+
+The `userAndGroupQuotas` configuration block supports the following arguments:
+
+* `id` - (Required) The ID of the user or group. Valid values between `0` and `2147483647`
+* `storageCapacityQuotaGib` - (Required) The amount of storage that the user or group can use in gibibytes (GiB). Valid values between `0` and `2147483647`
+* `type` - (Required) A value that specifies whether the quota applies to a user or group. Valid values are `USER` or `GROUP`.
 
 ## Attribute Reference
 
@@ -101,8 +116,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `endpointIpAddress` - IP address of the endpoint that is used to access data or to manage the file system.
 * `id` - Identifier of the file system, e.g., `fs-12345678`
 * `networkInterfaceIds` - Set of Elastic Network Interface identifiers from which the file system is accessible The first network interface returned is the primary network interface.
-* `rootVolumeId` - Identifier of the root volume, e.g., `fsvol-12345678`
 * `ownerId` - AWS account identifier that created the file system.
+* `rootVolumeId` - Identifier of the root volume, e.g., `fsvol-12345678`
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpcId` - Identifier of the Virtual Private Cloud for the file system.
 
@@ -179,4 +194,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4e0cc4e5a4a2e688dc6d768e513f95dfd4aaaf5fcbbac16ed12f3207f063ad29 -->
+<!-- cache-key: cdktf-0.20.1 input-ead07c5a51409d6865de56af2f23af356f99f1ccc00dcccfb4cee601285b9122 -->

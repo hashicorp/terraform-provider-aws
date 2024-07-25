@@ -6,7 +6,7 @@ package dms
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_dms_replication_task")
-func DataSourceReplicationTask() *schema.Resource {
+// @SDKDataSource("aws_dms_replication_task", name="Replication Task")
+func dataSourceReplicationTask() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationTaskRead,
 
@@ -77,19 +77,18 @@ func DataSourceReplicationTask() *schema.Resource {
 func dataSourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	taskID := d.Get("replication_task_id").(string)
-
-	task, err := FindReplicationTaskByID(ctx, conn, taskID)
+	task, err := findReplicationTaskByID(ctx, conn, taskID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Task (%s): %s", taskID, err)
 	}
 
-	d.SetId(aws.StringValue(task.ReplicationTaskIdentifier))
+	d.SetId(aws.ToString(task.ReplicationTaskIdentifier))
 	d.Set("cdc_start_position", task.CdcStartPosition)
 	d.Set("migration_type", task.MigrationType)
 	d.Set("replication_instance_arn", task.ReplicationInstanceArn)
@@ -101,7 +100,7 @@ func dataSourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("table_mappings", task.TableMappings)
 	d.Set("target_endpoint_arn", task.TargetEndpointArn)
 
-	tags, err := listTags(ctx, conn, aws.StringValue(task.ReplicationTaskArn))
+	tags, err := listTags(ctx, conn, aws.ToString(task.ReplicationTaskArn))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing DMS Replication Task (%s) tags: %s", d.Id(), err)

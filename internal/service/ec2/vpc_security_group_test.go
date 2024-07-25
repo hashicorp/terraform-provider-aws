@@ -12,8 +12,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -379,13 +380,13 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 func TestSecurityGroupIPPermGather(t *testing.T) {
 	t.Parallel()
 
-	raw := []*ec2.IpPermission{
+	raw := []awstypes.IpPermission{
 		{
 			IpProtocol: aws.String("tcp"),
-			FromPort:   aws.Int64(1),
-			ToPort:     aws.Int64(int64(-1)),
-			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
-			UserIdGroupPairs: []*ec2.UserIdGroupPair{
+			FromPort:   aws.Int32(1),
+			ToPort:     aws.Int32(int32(-1)),
+			IpRanges:   []awstypes.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
+			UserIdGroupPairs: []awstypes.UserIdGroupPair{
 				{
 					GroupId:     aws.String("sg-11111"),
 					Description: aws.String("desc"),
@@ -394,9 +395,9 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 		},
 		{
 			IpProtocol: aws.String("tcp"),
-			FromPort:   aws.Int64(80),
-			ToPort:     aws.Int64(80),
-			UserIdGroupPairs: []*ec2.UserIdGroupPair{
+			FromPort:   aws.Int32(80),
+			ToPort:     aws.Int32(80),
+			UserIdGroupPairs: []awstypes.UserIdGroupPair{
 				// VPC
 				{
 					GroupId: aws.String("sg-22222"),
@@ -405,9 +406,9 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 		},
 		{
 			IpProtocol: aws.String("tcp"),
-			FromPort:   aws.Int64(443),
-			ToPort:     aws.Int64(443),
-			UserIdGroupPairs: []*ec2.UserIdGroupPair{
+			FromPort:   aws.Int32(443),
+			ToPort:     aws.Int32(443),
+			UserIdGroupPairs: []awstypes.UserIdGroupPair{
 				{
 					UserId:    aws.String("amazon-elb"),
 					GroupId:   aws.String("sg-d2c979d3"),
@@ -417,15 +418,15 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 		},
 		{
 			IpProtocol: aws.String("-1"),
-			FromPort:   aws.Int64(0),
-			ToPort:     aws.Int64(0),
-			PrefixListIds: []*ec2.PrefixListId{
+			FromPort:   aws.Int32(0),
+			ToPort:     aws.Int32(0),
+			PrefixListIds: []awstypes.PrefixListId{
 				{
 					PrefixListId: aws.String("pl-12345678"),
 					Description:  aws.String("desc"),
 				},
 			},
-			UserIdGroupPairs: []*ec2.UserIdGroupPair{
+			UserIdGroupPairs: []awstypes.UserIdGroupPair{
 				// VPC
 				{
 					GroupId: aws.String("sg-22222"),
@@ -515,7 +516,7 @@ func TestExpandIPPerms(t *testing.T) {
 			"self":             true,
 		},
 	}
-	group := &ec2.SecurityGroup{
+	group := &awstypes.SecurityGroup{
 		GroupId: aws.String("foo"),
 		VpcId:   aws.String("bar"),
 	}
@@ -524,18 +525,18 @@ func TestExpandIPPerms(t *testing.T) {
 		t.Fatalf("error expanding perms: %v", err)
 	}
 
-	expected := []ec2.IpPermission{
+	expected := []awstypes.IpPermission{
 		{
 			IpProtocol: aws.String("icmp"),
-			FromPort:   aws.Int64(1),
-			ToPort:     aws.Int64(int64(-1)),
-			IpRanges: []*ec2.IpRange{
+			FromPort:   aws.Int32(1),
+			ToPort:     aws.Int32(int32(-1)),
+			IpRanges: []awstypes.IpRange{
 				{
 					CidrIp:      aws.String("0.0.0.0/0"),
 					Description: aws.String("desc"),
 				},
 			},
-			UserIdGroupPairs: []*ec2.UserIdGroupPair{
+			UserIdGroupPairs: []awstypes.UserIdGroupPair{
 				{
 					UserId:      aws.String("foo"),
 					GroupId:     aws.String("sg-22222"),
@@ -549,9 +550,9 @@ func TestExpandIPPerms(t *testing.T) {
 		},
 		{
 			IpProtocol: aws.String("icmp"),
-			FromPort:   aws.Int64(1),
-			ToPort:     aws.Int64(int64(-1)),
-			UserIdGroupPairs: []*ec2.UserIdGroupPair{
+			FromPort:   aws.Int32(1),
+			ToPort:     aws.Int32(int32(-1)),
+			UserIdGroupPairs: []awstypes.UserIdGroupPair{
 				{
 					GroupId: aws.String("foo"),
 				},
@@ -562,49 +563,49 @@ func TestExpandIPPerms(t *testing.T) {
 	exp := expected[0]
 	perm := perms[0]
 
-	if aws.Int64Value(exp.FromPort) != aws.Int64Value(perm.FromPort) {
+	if aws.ToInt32(exp.FromPort) != aws.ToInt32(perm.FromPort) {
 		t.Fatalf(
 			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.Int64Value(perm.FromPort),
-			aws.Int64Value(exp.FromPort))
+			aws.ToInt32(perm.FromPort),
+			aws.ToInt32(exp.FromPort))
 	}
 
-	if aws.StringValue(exp.IpRanges[0].CidrIp) != aws.StringValue(perm.IpRanges[0].CidrIp) {
+	if aws.ToString(exp.IpRanges[0].CidrIp) != aws.ToString(perm.IpRanges[0].CidrIp) {
 		t.Fatalf(
 			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.IpRanges[0].CidrIp),
-			aws.StringValue(exp.IpRanges[0].CidrIp))
+			aws.ToString(perm.IpRanges[0].CidrIp),
+			aws.ToString(exp.IpRanges[0].CidrIp))
 	}
 
-	if aws.StringValue(exp.UserIdGroupPairs[0].UserId) != aws.StringValue(perm.UserIdGroupPairs[0].UserId) {
+	if aws.ToString(exp.UserIdGroupPairs[0].UserId) != aws.ToString(perm.UserIdGroupPairs[0].UserId) {
 		t.Fatalf(
 			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.UserIdGroupPairs[0].UserId),
-			aws.StringValue(exp.UserIdGroupPairs[0].UserId))
+			aws.ToString(perm.UserIdGroupPairs[0].UserId),
+			aws.ToString(exp.UserIdGroupPairs[0].UserId))
 	}
 
-	if aws.StringValue(exp.UserIdGroupPairs[0].GroupId) != aws.StringValue(perm.UserIdGroupPairs[0].GroupId) {
+	if aws.ToString(exp.UserIdGroupPairs[0].GroupId) != aws.ToString(perm.UserIdGroupPairs[0].GroupId) {
 		t.Fatalf(
 			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.UserIdGroupPairs[0].GroupId),
-			aws.StringValue(exp.UserIdGroupPairs[0].GroupId))
+			aws.ToString(perm.UserIdGroupPairs[0].GroupId),
+			aws.ToString(exp.UserIdGroupPairs[0].GroupId))
 	}
 
-	if aws.StringValue(exp.UserIdGroupPairs[1].GroupId) != aws.StringValue(perm.UserIdGroupPairs[1].GroupId) {
+	if aws.ToString(exp.UserIdGroupPairs[1].GroupId) != aws.ToString(perm.UserIdGroupPairs[1].GroupId) {
 		t.Fatalf(
 			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.UserIdGroupPairs[1].GroupId),
-			aws.StringValue(exp.UserIdGroupPairs[1].GroupId))
+			aws.ToString(perm.UserIdGroupPairs[1].GroupId),
+			aws.ToString(exp.UserIdGroupPairs[1].GroupId))
 	}
 
 	exp = expected[1]
 	perm = perms[1]
 
-	if aws.StringValue(exp.UserIdGroupPairs[0].GroupId) != aws.StringValue(perm.UserIdGroupPairs[0].GroupId) {
+	if aws.ToString(exp.UserIdGroupPairs[0].GroupId) != aws.ToString(perm.UserIdGroupPairs[0].GroupId) {
 		t.Fatalf(
 			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.UserIdGroupPairs[0].GroupId),
-			aws.StringValue(exp.UserIdGroupPairs[0].GroupId))
+			aws.ToString(perm.UserIdGroupPairs[0].GroupId),
+			aws.ToString(exp.UserIdGroupPairs[0].GroupId))
 	}
 }
 
@@ -625,7 +626,7 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 			}),
 		},
 	}
-	group := &ec2.SecurityGroup{
+	group := &awstypes.SecurityGroup{
 		GroupId: aws.String("foo"),
 		VpcId:   aws.String("bar"),
 	}
@@ -635,13 +636,13 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 		t.Fatalf("error expanding perms: %v", err)
 	}
 
-	expected := []ec2.IpPermission{
+	expected := []awstypes.IpPermission{
 		{
 			IpProtocol: aws.String("-1"),
-			FromPort:   aws.Int64(0),
-			ToPort:     aws.Int64(0),
-			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
-			UserIdGroupPairs: []*ec2.UserIdGroupPair{
+			FromPort:   aws.Int32(0),
+			ToPort:     aws.Int32(0),
+			IpRanges:   []awstypes.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
+			UserIdGroupPairs: []awstypes.UserIdGroupPair{
 				{
 					UserId:  aws.String("foo"),
 					GroupId: aws.String("sg-22222"),
@@ -656,25 +657,25 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 	exp := expected[0]
 	perm := perms[0]
 
-	if aws.Int64Value(exp.FromPort) != aws.Int64Value(perm.FromPort) {
+	if aws.ToInt32(exp.FromPort) != aws.ToInt32(perm.FromPort) {
 		t.Fatalf(
 			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.Int64Value(perm.FromPort),
-			aws.Int64Value(exp.FromPort))
+			aws.ToInt32(perm.FromPort),
+			aws.ToInt32(exp.FromPort))
 	}
 
-	if aws.StringValue(exp.IpRanges[0].CidrIp) != aws.StringValue(perm.IpRanges[0].CidrIp) {
+	if aws.ToString(exp.IpRanges[0].CidrIp) != aws.ToString(perm.IpRanges[0].CidrIp) {
 		t.Fatalf(
 			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.IpRanges[0].CidrIp),
-			aws.StringValue(exp.IpRanges[0].CidrIp))
+			aws.ToString(perm.IpRanges[0].CidrIp),
+			aws.ToString(exp.IpRanges[0].CidrIp))
 	}
 
-	if aws.StringValue(exp.UserIdGroupPairs[0].UserId) != aws.StringValue(perm.UserIdGroupPairs[0].UserId) {
+	if aws.ToString(exp.UserIdGroupPairs[0].UserId) != aws.ToString(perm.UserIdGroupPairs[0].UserId) {
 		t.Fatalf(
 			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.UserIdGroupPairs[0].UserId),
-			aws.StringValue(exp.UserIdGroupPairs[0].UserId))
+			aws.ToString(perm.UserIdGroupPairs[0].UserId),
+			aws.ToString(exp.UserIdGroupPairs[0].UserId))
 	}
 
 	// Now test the error case. This *should* error when either from_port
@@ -691,7 +692,7 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 			}),
 		},
 	}
-	securityGroups := &ec2.SecurityGroup{
+	securityGroups := &awstypes.SecurityGroup{
 		GroupId: aws.String("foo"),
 		VpcId:   aws.String("bar"),
 	}
@@ -719,7 +720,7 @@ func TestExpandIPPerms_AllProtocol(t *testing.T) {
 			}),
 		},
 	}
-	group := &ec2.SecurityGroup{
+	group := &awstypes.SecurityGroup{
 		GroupId: aws.String("foo"),
 		VpcId:   aws.String("bar"),
 	}
@@ -729,13 +730,13 @@ func TestExpandIPPerms_AllProtocol(t *testing.T) {
 		t.Fatalf("error expanding perms: %v", err)
 	}
 
-	expected := []ec2.IpPermission{
+	expected := []awstypes.IpPermission{
 		{
 			IpProtocol: aws.String("-1"),
-			FromPort:   aws.Int64(0),
-			ToPort:     aws.Int64(0),
-			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
-			UserIdGroupPairs: []*ec2.UserIdGroupPair{
+			FromPort:   aws.Int32(0),
+			ToPort:     aws.Int32(0),
+			IpRanges:   []awstypes.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
+			UserIdGroupPairs: []awstypes.UserIdGroupPair{
 				{
 					UserId:  aws.String("foo"),
 					GroupId: aws.String("sg-22222"),
@@ -750,25 +751,25 @@ func TestExpandIPPerms_AllProtocol(t *testing.T) {
 	exp := expected[0]
 	perm := perms[0]
 
-	if aws.Int64Value(exp.FromPort) != aws.Int64Value(perm.FromPort) {
+	if aws.ToInt32(exp.FromPort) != aws.ToInt32(perm.FromPort) {
 		t.Fatalf(
 			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.Int64Value(perm.FromPort),
-			aws.Int64Value(exp.FromPort))
+			aws.ToInt32(perm.FromPort),
+			aws.ToInt32(exp.FromPort))
 	}
 
-	if aws.StringValue(exp.IpRanges[0].CidrIp) != aws.StringValue(perm.IpRanges[0].CidrIp) {
+	if aws.ToString(exp.IpRanges[0].CidrIp) != aws.ToString(perm.IpRanges[0].CidrIp) {
 		t.Fatalf(
 			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.IpRanges[0].CidrIp),
-			aws.StringValue(exp.IpRanges[0].CidrIp))
+			aws.ToString(perm.IpRanges[0].CidrIp),
+			aws.ToString(exp.IpRanges[0].CidrIp))
 	}
 
-	if aws.StringValue(exp.UserIdGroupPairs[0].UserId) != aws.StringValue(perm.UserIdGroupPairs[0].UserId) {
+	if aws.ToString(exp.UserIdGroupPairs[0].UserId) != aws.ToString(perm.UserIdGroupPairs[0].UserId) {
 		t.Fatalf(
 			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.UserIdGroupPairs[0].UserId),
-			aws.StringValue(exp.UserIdGroupPairs[0].UserId))
+			aws.ToString(perm.UserIdGroupPairs[0].UserId),
+			aws.ToString(exp.UserIdGroupPairs[0].UserId))
 	}
 
 	// Now test the error case. This *should* error when either from_port
@@ -785,7 +786,7 @@ func TestExpandIPPerms_AllProtocol(t *testing.T) {
 			}),
 		},
 	}
-	securityGroups := &ec2.SecurityGroup{
+	securityGroups := &awstypes.SecurityGroup{
 		GroupId: aws.String("foo"),
 		VpcId:   aws.String("bar"),
 	}
@@ -801,13 +802,13 @@ func TestFlattenSecurityGroups(t *testing.T) {
 
 	cases := []struct {
 		ownerId  *string
-		pairs    []*ec2.UserIdGroupPair
+		pairs    []awstypes.UserIdGroupPair
 		expected []*tfec2.GroupIdentifier
 	}{
 		// simple, no user id included (we ignore it mostly)
 		{
 			ownerId: aws.String("user1234"),
-			pairs: []*ec2.UserIdGroupPair{
+			pairs: []awstypes.UserIdGroupPair{
 				{
 					GroupId: aws.String("sg-12345"),
 				},
@@ -820,7 +821,7 @@ func TestFlattenSecurityGroups(t *testing.T) {
 		},
 		{
 			ownerId: aws.String("user1234"),
-			pairs: []*ec2.UserIdGroupPair{
+			pairs: []awstypes.UserIdGroupPair{
 				{
 					GroupId: aws.String("sg-12345"),
 					UserId:  aws.String("user1234"),
@@ -834,7 +835,7 @@ func TestFlattenSecurityGroups(t *testing.T) {
 		},
 		{
 			ownerId: aws.String("user1234"),
-			pairs: []*ec2.UserIdGroupPair{
+			pairs: []awstypes.UserIdGroupPair{
 				{
 					GroupId: aws.String("sg-12345"),
 					UserId:  aws.String("user4321"),
@@ -850,7 +851,7 @@ func TestFlattenSecurityGroups(t *testing.T) {
 		// include description
 		{
 			ownerId: aws.String("user1234"),
-			pairs: []*ec2.UserIdGroupPair{
+			pairs: []awstypes.UserIdGroupPair{
 				{
 					GroupId:     aws.String("sg-12345"),
 					Description: aws.String("desc"),
@@ -875,7 +876,7 @@ func TestFlattenSecurityGroups(t *testing.T) {
 
 func TestAccVPCSecurityGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -913,7 +914,7 @@ func TestAccVPCSecurityGroup_basic(t *testing.T) {
 
 func TestAccVPCSecurityGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -937,7 +938,7 @@ func TestAccVPCSecurityGroup_disappears(t *testing.T) {
 
 func TestAccVPCSecurityGroup_noVPC(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -974,7 +975,7 @@ func TestAccVPCSecurityGroup_noVPC(t *testing.T) {
 
 func TestAccVPCSecurityGroup_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1005,7 +1006,7 @@ func TestAccVPCSecurityGroup_nameGenerated(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17017
 func TestAccVPCSecurityGroup_nameTerraformPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix("terraform-test")
 
@@ -1035,7 +1036,7 @@ func TestAccVPCSecurityGroup_nameTerraformPrefix(t *testing.T) {
 
 func TestAccVPCSecurityGroup_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1066,7 +1067,7 @@ func TestAccVPCSecurityGroup_namePrefix(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17017
 func TestAccVPCSecurityGroup_namePrefixTerraform(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1096,7 +1097,7 @@ func TestAccVPCSecurityGroup_namePrefixTerraform(t *testing.T) {
 
 func TestAccVPCSecurityGroup_allowAll(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1124,7 +1125,7 @@ func TestAccVPCSecurityGroup_allowAll(t *testing.T) {
 
 func TestAccVPCSecurityGroup_sourceSecurityGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1152,7 +1153,7 @@ func TestAccVPCSecurityGroup_sourceSecurityGroup(t *testing.T) {
 
 func TestAccVPCSecurityGroup_ipRangeAndSecurityGroupWithSameRules(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1180,7 +1181,7 @@ func TestAccVPCSecurityGroup_ipRangeAndSecurityGroupWithSameRules(t *testing.T) 
 
 func TestAccVPCSecurityGroup_ipRangesWithSameRules(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1208,7 +1209,7 @@ func TestAccVPCSecurityGroup_ipRangesWithSameRules(t *testing.T) {
 
 func TestAccVPCSecurityGroup_egressMode(t *testing.T) {
 	ctx := acctest.Context(t)
-	var securityGroup1, securityGroup2, securityGroup3 ec2.SecurityGroup
+	var securityGroup1, securityGroup2, securityGroup3 awstypes.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1251,7 +1252,7 @@ func TestAccVPCSecurityGroup_egressMode(t *testing.T) {
 
 func TestAccVPCSecurityGroup_ingressMode(t *testing.T) {
 	ctx := acctest.Context(t)
-	var securityGroup1, securityGroup2, securityGroup3 ec2.SecurityGroup
+	var securityGroup1, securityGroup2, securityGroup3 awstypes.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1294,7 +1295,7 @@ func TestAccVPCSecurityGroup_ingressMode(t *testing.T) {
 
 func TestAccVPCSecurityGroup_ruleGathering(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
@@ -1400,8 +1401,8 @@ func TestAccVPCSecurityGroup_ruleGathering(t *testing.T) {
 // cyclic rules that were added.
 func TestAccVPCSecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 	ctx := acctest.Context(t)
-	var primary ec2.SecurityGroup
-	var secondary ec2.SecurityGroup
+	var primary awstypes.SecurityGroup
+	var secondary awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.primary"
 	resourceName2 := "aws_security_group.secondary"
@@ -1429,10 +1430,12 @@ func TestAccVPCSecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Because of the cyclic dependency created in testAddCycle, we add data outside of terraform to this resource.
+				// During an import this cannot be accounted for and should be ignored.
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "egress"},
 			},
 			// Verify the DependencyViolation error by using a configuration with the
 			// groups removed. Terraform tries to destroy them but cannot. Expect a
@@ -1485,8 +1488,8 @@ func TestAccVPCSecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var primary ec2.SecurityGroup
-	var secondary ec2.SecurityGroup
+	var primary awstypes.SecurityGroup
+	var secondary awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.primary"
 	resourceName2 := "aws_security_group.secondary"
@@ -1516,10 +1519,12 @@ func TestAccVPCSecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Because of the cyclic dependency created in testAddCycle, we add data outside of terraform to this resource.
+				// During an import this cannot be accounted for and should be ignored.
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "egress"},
 			},
 			// Verify the DependencyViolation error by using a configuration with the
 			// groups removed, and the Groups not configured to revoke their ruls.
@@ -1549,7 +1554,7 @@ func TestAccVPCSecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 
 func TestAccVPCSecurityGroup_change(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
@@ -1619,7 +1624,7 @@ func TestAccVPCSecurityGroup_change(t *testing.T) {
 
 func TestAccVPCSecurityGroup_ipv6(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
@@ -1672,14 +1677,14 @@ func TestAccVPCSecurityGroup_ipv6(t *testing.T) {
 
 func TestAccVPCSecurityGroup_self(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
 	checkSelf := func(s *terraform.State) (err error) {
 		if len(group.IpPermissions) > 0 &&
 			len(group.IpPermissions[0].UserIdGroupPairs) > 0 &&
-			aws.StringValue(group.IpPermissions[0].UserIdGroupPairs[0].GroupId) == aws.StringValue(group.GroupId) {
+			aws.ToString(group.IpPermissions[0].UserIdGroupPairs[0].GroupId) == aws.ToString(group.GroupId) {
 			return nil
 		}
 
@@ -1718,7 +1723,7 @@ func TestAccVPCSecurityGroup_self(t *testing.T) {
 
 func TestAccVPCSecurityGroup_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
@@ -1763,7 +1768,7 @@ func TestAccVPCSecurityGroup_vpc(t *testing.T) {
 
 func TestAccVPCSecurityGroup_vpcNegOneIngress(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
@@ -1800,7 +1805,7 @@ func TestAccVPCSecurityGroup_vpcNegOneIngress(t *testing.T) {
 
 func TestAccVPCSecurityGroup_vpcProtoNumIngress(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
@@ -1837,7 +1842,7 @@ func TestAccVPCSecurityGroup_vpcProtoNumIngress(t *testing.T) {
 
 func TestAccVPCSecurityGroup_multiIngress(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1865,7 +1870,7 @@ func TestAccVPCSecurityGroup_multiIngress(t *testing.T) {
 
 func TestAccVPCSecurityGroup_vpcAllEgress(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
@@ -1902,7 +1907,7 @@ func TestAccVPCSecurityGroup_vpcAllEgress(t *testing.T) {
 
 func TestAccVPCSecurityGroup_ruleDescription(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2016,7 +2021,7 @@ func TestAccVPCSecurityGroup_ruleDescription(t *testing.T) {
 
 func TestAccVPCSecurityGroup_defaultEgressVPC(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2047,7 +2052,7 @@ func TestAccVPCSecurityGroup_defaultEgressVPC(t *testing.T) {
 // Testing drift detection with groups containing the same port and types
 func TestAccVPCSecurityGroup_driftComplex(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2154,7 +2159,7 @@ func TestAccVPCSecurityGroup_invalidCIDRBlock(t *testing.T) {
 
 func TestAccVPCSecurityGroup_cidrAndGroups(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2182,7 +2187,7 @@ func TestAccVPCSecurityGroup_cidrAndGroups(t *testing.T) {
 
 func TestAccVPCSecurityGroup_ingressWithCIDRAndSGsVPC(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2235,7 +2240,7 @@ func TestAccVPCSecurityGroup_ingressWithCIDRAndSGsVPC(t *testing.T) {
 
 func TestAccVPCSecurityGroup_egressWithPrefixList(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2264,7 +2269,7 @@ func TestAccVPCSecurityGroup_egressWithPrefixList(t *testing.T) {
 
 func TestAccVPCSecurityGroup_ingressWithPrefixList(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2293,7 +2298,7 @@ func TestAccVPCSecurityGroup_ingressWithPrefixList(t *testing.T) {
 
 func TestAccVPCSecurityGroup_ipv4AndIPv6Egress(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2347,7 +2352,7 @@ func TestAccVPCSecurityGroup_ipv4AndIPv6Egress(t *testing.T) {
 
 func TestAccVPCSecurityGroup_failWithDiffMismatch(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test1"
 
@@ -2400,7 +2405,7 @@ func TestAccVPCSecurityGroup_RuleLimit_exceededAppend(t *testing.T) {
 		testAccSecurityGroup_ruleLimit(t)
 	}
 
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
@@ -2427,7 +2432,7 @@ func TestAccVPCSecurityGroup_RuleLimit_exceededAppend(t *testing.T) {
 			{
 				PreConfig: func() {
 					// should have the original rules still
-					err := testSecurityGroupRuleCount(ctx, aws.StringValue(group.GroupId), 0, ruleLimit)
+					err := testSecurityGroupRuleCount(ctx, aws.ToString(group.GroupId), 0, ruleLimit)
 					if err != nil {
 						t.Fatalf("PreConfig check failed: %s", err)
 					}
@@ -2450,7 +2455,7 @@ func TestAccVPCSecurityGroup_RuleLimit_cidrBlockExceededAppend(t *testing.T) {
 		testAccSecurityGroup_ruleLimit(t)
 	}
 
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
@@ -2476,14 +2481,14 @@ func TestAccVPCSecurityGroup_RuleLimit_cidrBlockExceededAppend(t *testing.T) {
 			{
 				PreConfig: func() {
 					// should have the original cidr blocks still in 1 rule
-					err := testSecurityGroupRuleCount(ctx, aws.StringValue(group.GroupId), 0, 1)
+					err := testSecurityGroupRuleCount(ctx, aws.ToString(group.GroupId), 0, 1)
 					if err != nil {
 						t.Fatalf("PreConfig check failed: %s", err)
 					}
 
-					id := aws.StringValue(group.GroupId)
+					id := aws.ToString(group.GroupId)
 
-					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 					match, err := tfec2.FindSecurityGroupByID(ctx, conn, id)
 					if tfresource.NotFound(err) {
@@ -2514,7 +2519,7 @@ func TestAccVPCSecurityGroup_RuleLimit_exceededPrepend(t *testing.T) {
 		testAccSecurityGroup_ruleLimit(t)
 	}
 
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
@@ -2540,7 +2545,7 @@ func TestAccVPCSecurityGroup_RuleLimit_exceededPrepend(t *testing.T) {
 			{
 				PreConfig: func() {
 					// should have the original rules still (limit - 1 because of the shift)
-					err := testSecurityGroupRuleCount(ctx, aws.StringValue(group.GroupId), 0, ruleLimit-1)
+					err := testSecurityGroupRuleCount(ctx, aws.ToString(group.GroupId), 0, ruleLimit-1)
 					if err != nil {
 						t.Fatalf("PreConfig check failed: %s", err)
 					}
@@ -2562,7 +2567,7 @@ func TestAccVPCSecurityGroup_RuleLimit_exceededAllNew(t *testing.T) {
 		testAccSecurityGroup_ruleLimit(t)
 	}
 
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
@@ -2588,7 +2593,7 @@ func TestAccVPCSecurityGroup_RuleLimit_exceededAllNew(t *testing.T) {
 			{
 				// all the rules should have been revoked and the add failed
 				PreConfig: func() {
-					err := testSecurityGroupRuleCount(ctx, aws.StringValue(group.GroupId), 0, 0)
+					err := testSecurityGroupRuleCount(ctx, aws.ToString(group.GroupId), 0, 0)
 					if err != nil {
 						t.Fatalf("PreConfig check failed: %s", err)
 					}
@@ -2606,7 +2611,7 @@ func TestAccVPCSecurityGroup_RuleLimit_exceededAllNew(t *testing.T) {
 
 func TestAccVPCSecurityGroup_rulesDropOnError(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
@@ -2648,7 +2653,7 @@ func TestAccVPCSecurityGroup_emrDependencyViolation(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	resourceName := "aws_security_group.allow_access"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2680,22 +2685,22 @@ func TestAccVPCSecurityGroup_emrDependencyViolation(t *testing.T) {
 // UserIdGroupPair for the groupid given. Used in
 // TestAccAWSSecurityGroup_forceRevokeRules_should_fail to create a cyclic rule
 // between 2 security groups
-func cycleIPPermForGroup(groupId string) *ec2.IpPermission {
-	var perm ec2.IpPermission
-	perm.FromPort = aws.Int64(0)
-	perm.ToPort = aws.Int64(0)
+func cycleIPPermForGroup(groupId string) awstypes.IpPermission {
+	var perm awstypes.IpPermission
+	perm.FromPort = aws.Int32(0)
+	perm.ToPort = aws.Int32(0)
 	perm.IpProtocol = aws.String("icmp")
-	perm.UserIdGroupPairs = make([]*ec2.UserIdGroupPair, 1)
-	perm.UserIdGroupPairs[0] = &ec2.UserIdGroupPair{
+	perm.UserIdGroupPairs = make([]awstypes.UserIdGroupPair, 1)
+	perm.UserIdGroupPairs[0] = awstypes.UserIdGroupPair{
 		GroupId: aws.String(groupId),
 	}
-	return &perm
+	return perm
 }
 
 // testAddRuleCycle returns a TestCheckFunc to use at the end of a test, such
 // that a Security Group Rule cyclic dependency will be created between the two
 // Security Groups. A companion function, testRemoveRuleCycle, will undo this.
-func testAddRuleCycle(ctx context.Context, primary, secondary *ec2.SecurityGroup) resource.TestCheckFunc {
+func testAddRuleCycle(ctx context.Context, primary, secondary *awstypes.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if primary.GroupId == nil {
 			return fmt.Errorf("Primary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
@@ -2704,30 +2709,30 @@ func testAddRuleCycle(ctx context.Context, primary, secondary *ec2.SecurityGroup
 			return fmt.Errorf("Secondary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		// cycle from primary to secondary
-		perm1 := cycleIPPermForGroup(aws.StringValue(secondary.GroupId))
+		perm1 := cycleIPPermForGroup(aws.ToString(secondary.GroupId))
 		// cycle from secondary to primary
-		perm2 := cycleIPPermForGroup(aws.StringValue(primary.GroupId))
+		perm2 := cycleIPPermForGroup(aws.ToString(primary.GroupId))
 
 		req1 := &ec2.AuthorizeSecurityGroupEgressInput{
 			GroupId:       primary.GroupId,
-			IpPermissions: []*ec2.IpPermission{perm1},
+			IpPermissions: []awstypes.IpPermission{perm1},
 		}
 		req2 := &ec2.AuthorizeSecurityGroupEgressInput{
 			GroupId:       secondary.GroupId,
-			IpPermissions: []*ec2.IpPermission{perm2},
+			IpPermissions: []awstypes.IpPermission{perm2},
 		}
 
 		var err error
-		_, err = conn.AuthorizeSecurityGroupEgressWithContext(ctx, req1)
+		_, err = conn.AuthorizeSecurityGroupEgress(ctx, req1)
 		if err != nil {
-			return fmt.Errorf("Error authorizing primary security group %s rules: %w", aws.StringValue(primary.GroupId), err)
+			return fmt.Errorf("Error authorizing primary security group %s rules: %w", aws.ToString(primary.GroupId), err)
 		}
-		_, err = conn.AuthorizeSecurityGroupEgressWithContext(ctx, req2)
+		_, err = conn.AuthorizeSecurityGroupEgress(ctx, req2)
 		if err != nil {
-			return fmt.Errorf("Error authorizing secondary security group %s rules: %w", aws.StringValue(secondary.GroupId), err)
+			return fmt.Errorf("Error authorizing secondary security group %s rules: %w", aws.ToString(secondary.GroupId), err)
 		}
 		return nil
 	}
@@ -2735,7 +2740,7 @@ func testAddRuleCycle(ctx context.Context, primary, secondary *ec2.SecurityGroup
 
 // testRemoveRuleCycle removes the cyclic dependency between two security groups
 // that was added in testAddRuleCycle
-func testRemoveRuleCycle(ctx context.Context, primary, secondary *ec2.SecurityGroup) resource.TestCheckFunc {
+func testRemoveRuleCycle(ctx context.Context, primary, secondary *awstypes.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if primary.GroupId == nil {
 			return fmt.Errorf("Primary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
@@ -2744,28 +2749,28 @@ func testRemoveRuleCycle(ctx context.Context, primary, secondary *ec2.SecurityGr
 			return fmt.Errorf("Secondary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
-		for _, sg := range []*ec2.SecurityGroup{primary, secondary} {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		for _, sg := range []*awstypes.SecurityGroup{primary, secondary} {
 			var err error
-			if sg.IpPermissions != nil {
+			if sg.IpPermissions != nil && len(sg.IpPermissions) > 0 {
 				req := &ec2.RevokeSecurityGroupIngressInput{
 					GroupId:       sg.GroupId,
 					IpPermissions: sg.IpPermissions,
 				}
 
-				if _, err = conn.RevokeSecurityGroupIngressWithContext(ctx, req); err != nil {
-					return fmt.Errorf("Error revoking default ingress rule for Security Group in testRemoveCycle (%s): %w", aws.StringValue(primary.GroupId), err)
+				if _, err = conn.RevokeSecurityGroupIngress(ctx, req); err != nil {
+					return fmt.Errorf("Error revoking default ingress rule for Security Group in testRemoveCycle (%s): %w", aws.ToString(primary.GroupId), err)
 				}
 			}
 
-			if sg.IpPermissionsEgress != nil {
+			if sg.IpPermissionsEgress != nil && len(sg.IpPermissionsEgress) > 0 {
 				req := &ec2.RevokeSecurityGroupEgressInput{
 					GroupId:       sg.GroupId,
 					IpPermissions: sg.IpPermissionsEgress,
 				}
 
-				if _, err = conn.RevokeSecurityGroupEgressWithContext(ctx, req); err != nil {
-					return fmt.Errorf("Error revoking default egress rule for Security Group in testRemoveCycle (%s): %w", aws.StringValue(sg.GroupId), err)
+				if _, err = conn.RevokeSecurityGroupEgress(ctx, req); err != nil {
+					return fmt.Errorf("Error revoking default egress rule for Security Group in testRemoveCycle (%s): %w", aws.ToString(sg.GroupId), err)
 				}
 			}
 		}
@@ -2775,7 +2780,7 @@ func testRemoveRuleCycle(ctx context.Context, primary, secondary *ec2.SecurityGr
 
 func testAccCheckSecurityGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_security_group" {
@@ -2799,7 +2804,7 @@ func testAccCheckSecurityGroupDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckSecurityGroupExists(ctx context.Context, n string, v *ec2.SecurityGroup) resource.TestCheckFunc {
+func testAccCheckSecurityGroupExists(ctx context.Context, n string, v *awstypes.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -2810,7 +2815,7 @@ func testAccCheckSecurityGroupExists(ctx context.Context, n string, v *ec2.Secur
 			return fmt.Errorf("No VPC Security Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindSecurityGroupByID(ctx, conn, rs.Primary.ID)
 
@@ -2846,15 +2851,15 @@ func testAccCheckSecurityGroupRuleLimit(n string, v *int) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckSecurityGroupRuleCount(ctx context.Context, group *ec2.SecurityGroup, expectedIngressCount, expectedEgressCount int) resource.TestCheckFunc {
+func testAccCheckSecurityGroupRuleCount(ctx context.Context, group *awstypes.SecurityGroup, expectedIngressCount, expectedEgressCount int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		id := aws.StringValue(group.GroupId)
+		id := aws.ToString(group.GroupId)
 		return testSecurityGroupRuleCount(ctx, id, expectedIngressCount, expectedEgressCount)
 	}
 }
 
 func testSecurityGroupRuleCount(ctx context.Context, id string, expectedIngressCount, expectedEgressCount int) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	group, err := tfec2.FindSecurityGroupByID(ctx, conn, id)
 	if tfresource.NotFound(err) {

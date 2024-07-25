@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_endpoint_subnet_association")
-func ResourceVPCEndpointSubnetAssociation() *schema.Resource {
+// @SDKResource("aws_vpc_endpoint_subnet_association", name="VPC Endpoint Subnet Association")
+func resourceVPCEndpointSubnetAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointSubnetAssociationCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointSubnetAssociationRead,
@@ -90,7 +90,7 @@ func resourceVPCEndpointSubnetAssociationCreate(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "creating VPC Endpoint Subnet Association (%s): %s", id, err)
 	}
 
-	d.SetId(VPCEndpointSubnetAssociationCreateID(endpointID, subnetID))
+	d.SetId(vpcEndpointSubnetAssociationCreateID(endpointID, subnetID))
 
 	_, err = waitVPCEndpointAvailable(ctx, conn, endpointID, d.Timeout(schema.TimeoutCreate))
 
@@ -169,7 +169,7 @@ func resourceVPCEndpointSubnetAssociationImport(ctx context.Context, d *schema.R
 	subnetID := parts[1]
 	log.Printf("[DEBUG] Importing VPC Endpoint (%s) Subnet (%s) Association", endpointID, subnetID)
 
-	d.SetId(VPCEndpointSubnetAssociationCreateID(endpointID, subnetID))
+	d.SetId(vpcEndpointSubnetAssociationCreateID(endpointID, subnetID))
 	d.Set(names.AttrVPCEndpointID, endpointID)
 	d.Set(names.AttrSubnetID, subnetID)
 

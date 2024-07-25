@@ -9,14 +9,15 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -332,7 +333,7 @@ func DataSourceCatalogTable() *schema.Resource {
 func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get(names.AttrDatabaseName).(string)
@@ -354,9 +355,9 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 		input.TransactionId = aws.String(v.(string))
 	}
 
-	out, err := conn.GetTableWithContext(ctx, input)
+	out, err := conn.GetTable(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			return sdkdiag.AppendErrorf(diags, "No Glue table %s found for catalog_id: %s, database_name: %s", name, catalogID,
 				dbName)
 		}
@@ -370,7 +371,7 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 		Service:   "glue",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("table/%s/%s", dbName, aws.StringValue(table.Name)),
+		Resource:  fmt.Sprintf("table/%s/%s", dbName, aws.ToString(table.Name)),
 	}.String()
 	d.Set(names.AttrARN, tableArn)
 
@@ -393,7 +394,7 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("view_expanded_text", table.ViewExpandedText)
 	d.Set("table_type", table.TableType)
 
-	if err := d.Set(names.AttrParameters, aws.StringValueMap(table.Parameters)); err != nil {
+	if err := d.Set(names.AttrParameters, table.Parameters); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 
@@ -410,7 +411,7 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 		TableName:    out.Table.Name,
 		DatabaseName: out.Table.DatabaseName,
 	}
-	partOut, err := conn.GetPartitionIndexesWithContext(ctx, partIndexInput)
+	partOut, err := conn.GetPartitionIndexes(ctx, partIndexInput)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Glue Partition Indexes: %s", err)
 	}

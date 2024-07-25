@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/elb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccELBPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy elb.PolicyDescription
+	var policy awstypes.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test-policy"
 	rInt := sdkacctest.RandInt()
 
@@ -44,7 +44,7 @@ func TestAccELBPolicy_basic(t *testing.T) {
 
 func TestAccELBPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy elb.PolicyDescription
+	var policy awstypes.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test-policy"
 	rInt := sdkacctest.RandInt()
 
@@ -68,7 +68,7 @@ func TestAccELBPolicy_disappears(t *testing.T) {
 
 func TestAccELBPolicy_LBCookieStickinessPolicyType_computedAttributesOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy elb.PolicyDescription
+	var policy awstypes.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyTypeName := "LBCookieStickinessPolicyType"
@@ -93,7 +93,7 @@ func TestAccELBPolicy_LBCookieStickinessPolicyType_computedAttributesOnly(t *tes
 
 func TestAccELBPolicy_SSLNegotiationPolicyType_computedAttributesOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy elb.PolicyDescription
+	var policy awstypes.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -104,10 +104,10 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_computedAttributesOnly(t *testing
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_typeNameOnly(rName, tfelb.SSLNegotiationPolicyType),
+				Config: testAccPolicyConfig_typeNameOnly(rName, "SSLNegotiationPolicyType"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "policy_type_name", tfelb.SSLNegotiationPolicyType),
+					resource.TestCheckResourceAttr(resourceName, "policy_type_name", "SSLNegotiationPolicyType"),
 					resource.TestMatchResourceAttr(resourceName, "policy_attribute.#", regexache.MustCompile(`[^0]+`)),
 				),
 			},
@@ -117,7 +117,7 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_computedAttributesOnly(t *testing
 
 func TestAccELBPolicy_SSLNegotiationPolicyType_customPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy elb.PolicyDescription
+	var policy awstypes.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -132,7 +132,7 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_customPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "policy_type_name", tfelb.SSLNegotiationPolicyType),
+					resource.TestCheckResourceAttr(resourceName, "policy_type_name", "SSLNegotiationPolicyType"),
 					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
 						names.AttrName:  "Protocol-TLSv1.1",
@@ -149,7 +149,7 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_customPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "policy_type_name", tfelb.SSLNegotiationPolicyType),
+					resource.TestCheckResourceAttr(resourceName, "policy_type_name", "SSLNegotiationPolicyType"),
 					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
 						names.AttrName:  "Protocol-TLSv1.2",
@@ -167,7 +167,7 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_customPolicy(t *testing.T) {
 
 func TestAccELBPolicy_SSLSecurityPolicy_predefined(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy elb.PolicyDescription
+	var policy awstypes.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	predefinedSecurityPolicy := "ELBSecurityPolicy-TLS-1-2-2017-01"
@@ -185,10 +185,10 @@ func TestAccELBPolicy_SSLSecurityPolicy_predefined(t *testing.T) {
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
-						names.AttrName:  tfelb.ReferenceSecurityPolicy,
+						names.AttrName:  "Reference-Security-Policy",
 						names.AttrValue: predefinedSecurityPolicy,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "policy_type_name", tfelb.SSLNegotiationPolicyType),
+					resource.TestCheckResourceAttr(resourceName, "policy_type_name", "SSLNegotiationPolicyType"),
 				),
 			},
 			{
@@ -197,10 +197,10 @@ func TestAccELBPolicy_SSLSecurityPolicy_predefined(t *testing.T) {
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
-						names.AttrName:  tfelb.ReferenceSecurityPolicy,
+						names.AttrName:  "Reference-Security-Policy",
 						names.AttrValue: predefinedSecurityPolicyUpdated,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "policy_type_name", tfelb.SSLNegotiationPolicyType),
+					resource.TestCheckResourceAttr(resourceName, "policy_type_name", "SSLNegotiationPolicyType"),
 				),
 			},
 		},
@@ -209,7 +209,7 @@ func TestAccELBPolicy_SSLSecurityPolicy_predefined(t *testing.T) {
 
 func TestAccELBPolicy_updateWhileAssigned(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy elb.PolicyDescription
+	var policy awstypes.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test-policy"
 	rInt := sdkacctest.RandInt()
 
@@ -235,24 +235,19 @@ func TestAccELBPolicy_updateWhileAssigned(t *testing.T) {
 	})
 }
 
-func testAccCheckPolicyExists(ctx context.Context, n string, v *elb.PolicyDescription) resource.TestCheckFunc {
+func testAccCheckPolicyExists(ctx context.Context, n string, v *awstypes.PolicyDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ELB Classic Load Balancer Policy is set")
-		}
-
 		lbName, policyName, err := tfelb.PolicyParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
 		output, err := tfelb.FindLoadBalancerPolicyByTwoPartKey(ctx, conn, lbName, policyName)
 
@@ -268,7 +263,7 @@ func testAccCheckPolicyExists(ctx context.Context, n string, v *elb.PolicyDescri
 
 func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_load_balancer_policy" {
@@ -276,7 +271,6 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			lbName, policyName, err := tfelb.PolicyParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}

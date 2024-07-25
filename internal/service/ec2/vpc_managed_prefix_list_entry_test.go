@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccVPCManagedPrefixListEntry_ipv4(t *testing.T) {
 	ctx := acctest.Context(t)
-	var entry ec2.PrefixListEntry
+	var entry awstypes.PrefixListEntry
 	resourceName := "aws_ec2_managed_prefix_list_entry.test"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -54,7 +54,7 @@ func TestAccVPCManagedPrefixListEntry_ipv4(t *testing.T) {
 
 func TestAccVPCManagedPrefixListEntry_ipv4Multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	var entry ec2.PrefixListEntry
+	var entry awstypes.PrefixListEntry
 	resourceName1 := "aws_ec2_managed_prefix_list_entry.test1"
 	resourceName2 := "aws_ec2_managed_prefix_list_entry.test2"
 	resourceName3 := "aws_ec2_managed_prefix_list_entry.test3"
@@ -83,7 +83,7 @@ func TestAccVPCManagedPrefixListEntry_ipv4Multiple(t *testing.T) {
 
 func TestAccVPCManagedPrefixListEntry_ipv6(t *testing.T) {
 	ctx := acctest.Context(t)
-	var entry ec2.PrefixListEntry
+	var entry awstypes.PrefixListEntry
 	resourceName := "aws_ec2_managed_prefix_list_entry.test"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -155,7 +155,7 @@ func TestAccVPCManagedPrefixListEntry_expectInvalidCIDR(t *testing.T) {
 
 func TestAccVPCManagedPrefixListEntry_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var entry ec2.PrefixListEntry
+	var entry awstypes.PrefixListEntry
 	resourceName := "aws_ec2_managed_prefix_list_entry.test"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -187,7 +187,7 @@ func TestAccVPCManagedPrefixListEntry_description(t *testing.T) {
 
 func TestAccVPCManagedPrefixListEntry_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var entry ec2.PrefixListEntry
+	var entry awstypes.PrefixListEntry
 	resourceName := "aws_ec2_managed_prefix_list_entry.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -211,7 +211,7 @@ func TestAccVPCManagedPrefixListEntry_disappears(t *testing.T) {
 
 func testAccCheckManagedPrefixListEntryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_managed_prefix_list_entry" {
@@ -241,7 +241,7 @@ func testAccCheckManagedPrefixListEntryDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckManagedPrefixListEntryExists(ctx context.Context, n string, v *ec2.PrefixListEntry) resource.TestCheckFunc {
+func testAccCheckManagedPrefixListEntryExists(ctx context.Context, n string, v *awstypes.PrefixListEntry) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -252,7 +252,7 @@ func testAccCheckManagedPrefixListEntryExists(ctx context.Context, n string, v *
 			return fmt.Errorf("No EC2 Managed Prefix List Entry ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		plID, cidr, err := tfec2.ManagedPrefixListEntryParseResourceID(rs.Primary.ID)
 

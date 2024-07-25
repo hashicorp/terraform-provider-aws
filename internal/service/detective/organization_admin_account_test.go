@@ -101,7 +101,7 @@ func testAccOrganizationAdminAccount_MultiRegion(t *testing.T) {
 
 func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_detective_organization_admin_account" {
@@ -132,7 +132,7 @@ func testAccCheckOrganizationAdminAccountExists(ctx context.Context, n string) r
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveClient(ctx)
 
 		_, err := tfdetective.FindOrganizationAdminAccountByAccountID(ctx, conn, rs.Primary.ID)
 

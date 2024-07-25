@@ -11,9 +11,9 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -111,7 +111,7 @@ func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 	// and we would end up managing the same MT as 2 resources.
 	// So we make it fail by calling 1 request per AZ at a time.
 	subnetID := d.Get(names.AttrSubnetID).(string)
-	az, err := getAZFromSubnetID(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), subnetID)
+	az, err := getAZFromSubnetID(ctx, meta.(*conns.AWSClient).EC2Client(ctx), subnetID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Subnet (%s): %s", subnetID, err)
@@ -242,7 +242,7 @@ func resourceMountTargetDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func getAZFromSubnetID(ctx context.Context, conn *ec2.EC2, subnetID string) (string, error) {
+func getAZFromSubnetID(ctx context.Context, conn *ec2.Client, subnetID string) (string, error) {
 	subnet, err := tfec2.FindSubnetByID(ctx, conn, subnetID)
 
 	if err != nil {

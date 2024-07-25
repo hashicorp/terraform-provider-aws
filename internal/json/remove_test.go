@@ -1,10 +1,12 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package json
+package json_test
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 func TestRemoveFields(t *testing.T) {
@@ -37,7 +39,7 @@ func TestRemoveFields(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			if got, want := RemoveFields(testCase.input, `"plugins"`), testCase.want; got != want {
+			if got, want := json.RemoveFields(testCase.input, `"plugins"`), testCase.want; got != want {
 				t.Errorf("RemoveReadOnlyFields(%q) = %q, want %q", testCase.input, got, want)
 			}
 		})
@@ -119,7 +121,7 @@ func TestRemoveEmptyFields(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			if got, want := RemoveEmptyFields([]byte(testCase.input)), testCase.want; string(got) != want {
+			if got, want := json.RemoveEmptyFields([]byte(testCase.input)), testCase.want; string(got) != want {
 				t.Errorf("RemoveEmptyFields(%q) = %q, want %q", testCase.input, got, want)
 			}
 		})

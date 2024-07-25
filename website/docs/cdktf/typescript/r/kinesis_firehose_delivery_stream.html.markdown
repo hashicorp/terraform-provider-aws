@@ -828,13 +828,14 @@ The `extendedS3Configuration` configuration block supports the same fields from 
 The `redshiftConfiguration` configuration block supports the following arguments:
 
 * `clusterJdbcurl` - (Required) The jdbcurl of the redshift cluster.
-* `username` - (Required) The username that the firehose delivery stream will assume. It is strongly recommended that the username and password provided is used exclusively for Amazon Kinesis Firehose purposes, and that the permissions for the account are restricted for Amazon Redshift INSERT permissions.
-* `password` - (Required) The password for the username above.
+* `username` - (Optional) The username that the firehose delivery stream will assume. It is strongly recommended that the username and password provided is used exclusively for Amazon Kinesis Firehose purposes, and that the permissions for the account are restricted for Amazon Redshift INSERT permissions. This value is required if `secretsManagerConfiguration` is not provided.
+* `password` - (Optional) The password for the username above. This value is required if `secretsManagerConfiguration` is not provided.
 * `retryDuration` - (Optional) The length of time during which Firehose retries delivery after a failure, starting from the initial request and including the first attempt. The default value is 3600 seconds (60 minutes). Firehose does not retry if the value of DurationInSeconds is 0 (zero) or if the first delivery attempt takes longer than the current value.
 * `roleArn` - (Required) The arn of the role the stream assumes.
 * `s3Configuration` - (Required) The S3 Configuration. See [s3_configuration](#s3_configuration-block) below for details.
 * `s3BackupMode` - (Optional) The Amazon S3 backup mode.  Valid values are `Disabled` and `Enabled`.  Default value is `Disabled`.
 * `s3BackupConfiguration` - (Optional) The configuration for backup in Amazon S3. Required if `s3BackupMode` is `Enabled`. Supports the same fields as `s3Configuration` object.
+`secretsManagerConfiguration` - (Optional) The Secrets Manager configuration. See [`secretsManagerConfiguration` block](#secrets_manager_configuration-block) below for details. This value is required if `username` and `password` are not provided.
 * `dataTableName` - (Required) The name of the table in the redshift cluster that the s3 bucket will copy to.
 * `copyOptions` - (Optional) Copy options for copying the data from the s3 intermediate bucket into redshift, for example to change the default delimiter. For valid values, see the [AWS documentation](http://docs.aws.amazon.com/firehose/latest/APIReference/API_CopyCommand.html)
 * `dataTableColumns` - (Optional) The data table columns that will be targeted by the copy command.
@@ -905,9 +906,10 @@ The `splunkConfiguration` configuration block supports the following arguments:
 * `hecAcknowledgmentTimeout` - (Optional) The amount of time, in seconds between 180 and 600, that Kinesis Firehose waits to receive an acknowledgment from Splunk after it sends it data.
 * `hecEndpoint` - (Required) The HTTP Event Collector (HEC) endpoint to which Kinesis Firehose sends your data.
 * `hecEndpointType` - (Optional) The HEC endpoint type. Valid values are `Raw` or `Event`. The default value is `Raw`.
-* `hecToken` - (Required) The GUID that you obtain from your Splunk cluster when you create a new HEC endpoint.
+* `hecToken` - (Optional) The GUID that you obtain from your Splunk cluster when you create a new HEC endpoint. This value is required if `secretsManagerConfiguration` is not provided.
 * `s3Configuration` - (Required) The S3 Configuration. See [`s3Configuration` block](#s3_configuration-block) below for details.
 * `s3BackupMode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedEventsOnly` and `AllEvents`.  Default value is `FailedEventsOnly`.
+`secretsManagerConfiguration` - (Optional) The Secrets Manager configuration. See [`secretsManagerConfiguration` block](#secrets_manager_configuration-block) below for details. This value is required if `hecToken` is not provided.
 * `retryDuration` - (Optional) After an initial failure to deliver to Splunk, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
 * `cloudwatchLoggingOptions` - (Optional) The CloudWatch Logging Options for the delivery stream. See [`cloudwatchLoggingOptions` block](#cloudwatch_logging_options-block) below for details.
 * `processingConfiguration` - (Optional) The data processing configuration.  See [`processingConfiguration` block](#processing_configuration-block) below for details.
@@ -928,15 +930,16 @@ The `httpEndpointConfiguration` configuration block supports the following argum
 * `processingConfiguration` - (Optional) The data processing configuration.  See [`processingConfiguration` block](#processing_configuration-block) below for details.
 * `requestConfiguration` - (Optional) The request configuration.  See [`requestConfiguration` block](#request_configuration-block) below for details.
 * `retryDuration` - (Optional) Total amount of seconds Firehose spends on retries. This duration starts after the initial attempt fails, It does not include the time periods during which Firehose waits for acknowledgment from the specified destination after each attempt. Valid values between `0` and `7200`. Default is `300`.
+* `secretsManagerConfiguration` - (Optional) The Secret Manager Configuration. See [`secretsManagerConfiguration` block](#secrets_manager_configuration-block) below for details.
 
 ### `snowflakeConfiguration` block
 
 The `snowflakeConfiguration` configuration block supports the following arguments:
 
 * `accountUrl` - (Required) The URL of the Snowflake account. Format: https://[account_identifier].snowflakecomputing.com.
-* `privateKey` - (Required) The private key for authentication.
-* `keyPassphrase` - (Required) The passphrase for the private key.
-* `user` - (Required) The user for authentication.
+* `privateKey` - (Optional) The private key for authentication. This value is required if `secretsManagerConfiguration` is not provided.
+* `keyPassphrase` - (Optional) The passphrase for the private key.
+* `user` - (Optional) The user for authentication. This value is required if `secretsManagerConfiguration` is not provided.
 * `database` - (Required) The Snowflake database name.
 * `schema` - (Required) The Snowflake schema name.
 * `table` - (Required) The Snowflake table name.
@@ -954,6 +957,7 @@ The `snowflakeConfiguration` configuration block supports the following argument
 * `retryDuration` - (Optional) After an initial failure to deliver to Snowflake, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 60s.  There will be no retry if the value is 0.
 * `s3BackupMode` - (Optional) The S3 backup mode.
 * `s3Configuration` - (Required) The S3 configuration. See [`s3Configuration` block](#s3_configuration-block) below for details.
+* `secretsManagerConfiguration` - (Optional) The Secrets Manager configuration. See [`secretsManagerConfiguration` block](#secrets_manager_configuration-block) below for details. This value is required if `user` and `privateKey` are not provided.
 
 ### `cloudwatchLoggingOptions` block
 
@@ -1087,6 +1091,14 @@ The `s3Configuration` configuration block supports the following arguments:
 * `kmsKeyArn` - (Optional) Specifies the KMS key ARN the stream will use to encrypt data. If not set, no encryption will
   be used.
 * `cloudwatchLoggingOptions` - (Optional) The CloudWatch Logging Options for the delivery stream. See [`cloudwatchLoggingOptions` block](#cloudwatch_logging_options-block) below for details.
+
+### `secretsManagerConfiguration` block
+
+The `secretsManagerConfiguration` configuration block supports the following arguments:
+
+* `enabled` - (Optional) Enables or disables the Secrets Manager configuration.
+* `secretArn` - (Optional) The ARN of the Secrets Manager secret. This value is required if `enabled` is true.
+* `roleArn` - (Optional) The ARN of the role the stream assumes.
 
 ### `inputFormatConfiguration` block
 
@@ -1235,4 +1247,4 @@ Using `terraform import`, import Kinesis Firehose Delivery streams using the str
 
 Note: Import does not work for stream destination `s3`. Consider using `extended_s3` since `s3` destination is deprecated.
 
-<!-- cache-key: cdktf-0.20.1 input-2c6063ec427e3ac07464dc913fe6cf5d44dcddc10bba5b89c894d3c8d90aa865 -->
+<!-- cache-key: cdktf-0.20.1 input-542173d779b798e435a3f65b63119440e76a1f7f3289989b1ee44bb96fe4a601 -->

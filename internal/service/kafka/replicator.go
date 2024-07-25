@@ -159,6 +159,22 @@ func resourceReplicator() *schema.Resource {
 										Optional: true,
 										Default:  true,
 									},
+									"starting_position": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrType: {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[types.ReplicationStartingPositionType](),
+												},
+											},
+										},
+									},
 									"topics_to_exclude": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -522,19 +538,19 @@ func flattenConsumerGroupReplication(apiObject *types.ConsumerGroupReplication) 
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ConsumerGroupsToReplicate; v != nil {
-		tfMap["consumer_groups_to_replicate"] = flex.FlattenStringValueSet(v)
+		tfMap["consumer_groups_to_replicate"] = v
 	}
 
 	if v := apiObject.ConsumerGroupsToExclude; v != nil {
-		tfMap["consumer_groups_to_exclude"] = flex.FlattenStringValueSet(v)
-	}
-
-	if aws.ToBool(apiObject.SynchroniseConsumerGroupOffsets) {
-		tfMap["synchronise_consumer_group_offsets"] = apiObject.SynchroniseConsumerGroupOffsets
+		tfMap["consumer_groups_to_exclude"] = v
 	}
 
 	if aws.ToBool(apiObject.DetectAndCopyNewConsumerGroups) {
 		tfMap["detect_and_copy_new_consumer_groups"] = apiObject.DetectAndCopyNewConsumerGroups
+	}
+
+	if aws.ToBool(apiObject.SynchroniseConsumerGroupOffsets) {
+		tfMap["synchronise_consumer_group_offsets"] = apiObject.SynchroniseConsumerGroupOffsets
 	}
 
 	return tfMap
@@ -547,24 +563,42 @@ func flattenTopicReplication(apiObject *types.TopicReplication) map[string]inter
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.TopicsToReplicate; v != nil {
-		tfMap["topics_to_replicate"] = flex.FlattenStringValueSet(v)
-	}
-
-	if v := apiObject.TopicsToExclude; v != nil {
-		tfMap["topics_to_exclude"] = flex.FlattenStringValueSet(v)
+	if aws.ToBool(apiObject.CopyAccessControlListsForTopics) {
+		tfMap["copy_access_control_lists_for_topics"] = apiObject.CopyAccessControlListsForTopics
 	}
 
 	if aws.ToBool(apiObject.CopyTopicConfigurations) {
 		tfMap["copy_topic_configurations"] = apiObject.CopyTopicConfigurations
 	}
 
-	if aws.ToBool(apiObject.CopyAccessControlListsForTopics) {
-		tfMap["copy_access_control_lists_for_topics"] = apiObject.CopyAccessControlListsForTopics
-	}
-
 	if aws.ToBool(apiObject.DetectAndCopyNewTopics) {
 		tfMap["detect_and_copy_new_topics"] = apiObject.DetectAndCopyNewTopics
+	}
+
+	if v := apiObject.StartingPosition; v != nil {
+		tfMap["starting_position"] = []interface{}{flattenReplicationStartingPosition(v)}
+	}
+
+	if v := apiObject.TopicsToReplicate; v != nil {
+		tfMap["topics_to_replicate"] = v
+	}
+
+	if v := apiObject.TopicsToExclude; v != nil {
+		tfMap["topics_to_exclude"] = v
+	}
+
+	return tfMap
+}
+
+func flattenReplicationStartingPosition(apiObject *types.ReplicationStartingPosition) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Type; v != "" {
+		tfMap[names.AttrType] = v
 	}
 
 	return tfMap
@@ -606,11 +640,11 @@ func flattenKafkaClusterClientVPCConfig(apiObject *types.KafkaClusterClientVpcCo
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
-		tfMap["security_groups_ids"] = flex.FlattenStringValueSet(v)
+		tfMap["security_groups_ids"] = v
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap[names.AttrSubnetIDs] = flex.FlattenStringValueSet(v)
+		tfMap[names.AttrSubnetIDs] = v
 	}
 
 	return tfMap
@@ -749,6 +783,22 @@ func expandConsumerGroupReplication(tfMap map[string]interface{}) *types.Consume
 func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplication {
 	apiObject := &types.TopicReplication{}
 
+	if v, ok := tfMap["copy_access_control_lists_for_topics"].(bool); ok {
+		apiObject.CopyAccessControlListsForTopics = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["copy_topic_configurations"].(bool); ok {
+		apiObject.CopyTopicConfigurations = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["detect_and_copy_new_topics"].(bool); ok {
+		apiObject.DetectAndCopyNewTopics = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["starting_position"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.StartingPosition = expandReplicationStartingPosition(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["topics_to_replicate"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.TopicsToReplicate = flex.ExpandStringValueSet(v)
 	}
@@ -757,16 +807,14 @@ func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplicatio
 		apiObject.TopicsToExclude = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["copy_topic_configurations"].(bool); ok {
-		apiObject.CopyTopicConfigurations = aws.Bool(v)
-	}
+	return apiObject
+}
 
-	if v, ok := tfMap["copy_access_control_lists_for_topics"].(bool); ok {
-		apiObject.CopyAccessControlListsForTopics = aws.Bool(v)
-	}
+func expandReplicationStartingPosition(tfMap map[string]interface{}) *types.ReplicationStartingPosition {
+	apiObject := &types.ReplicationStartingPosition{}
 
-	if v, ok := tfMap["detect_and_copy_new_topics"].(bool); ok {
-		apiObject.DetectAndCopyNewTopics = aws.Bool(v)
+	if v, ok := tfMap[names.AttrType].(string); ok {
+		apiObject.Type = types.ReplicationStartingPositionType(v)
 	}
 
 	return apiObject

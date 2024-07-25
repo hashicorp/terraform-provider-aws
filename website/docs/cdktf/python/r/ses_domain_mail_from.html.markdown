@@ -50,7 +50,7 @@ class MyConvertedCode(TerraformStack):
         )
         Route53Record(self, "example_ses_domain_mail_from_txt",
             name=Token.as_string(aws_ses_domain_mail_from_example.mail_from_domain),
-            records=["v=spf1 include:amazonses.com -all"],
+            records=["v=spf1 include:amazonses.com ~all"],
             ttl=Token.as_number("600"),
             type="TXT",
             zone_id=Token.as_string(aws_route53_zone_example.id)
@@ -125,4 +125,4 @@ Using `terraform import`, import MAIL FROM domain using the `domain` attribute. 
 % terraform import aws_ses_domain_mail_from.example example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ca24fb442521ea4cf6a544f70a00738a2579cf348f475450dda372fb8e1b83f2 -->
+<!-- cache-key: cdktf-0.20.1 input-cca74ce9256128a7d6ff8310ec22a5ff479d41f4dbdb04a2e94b2f5957898ed1 -->

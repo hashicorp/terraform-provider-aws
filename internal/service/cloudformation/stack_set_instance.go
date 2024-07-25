@@ -145,6 +145,11 @@ func resourceStackSetInstance() *schema.Resource {
 							ValidateFunc:  validation.IntBetween(1, 100),
 							ConflictsWith: []string{"operation_preferences.0.max_concurrent_count"},
 						},
+						"concurrency_mode": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ConcurrencyMode](),
+						},
 						"region_concurrency_type": {
 							Type:             schema.TypeString,
 							Optional:         true,

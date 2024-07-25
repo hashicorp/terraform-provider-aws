@@ -1277,6 +1277,11 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"enable_machine_learning": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
 							"inspection_level": {
 								Type:             schema.TypeString,
 								Required:         true,

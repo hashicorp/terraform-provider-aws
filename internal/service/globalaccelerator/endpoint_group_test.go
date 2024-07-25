@@ -10,8 +10,8 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -88,7 +88,7 @@ func TestAccGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
 func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.EndpointGroup
-	var vpc ec2.Vpc
+	var vpc ec2types.Vpc
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	albResourceName := "aws_lb.test"
 	vpcResourceName := "aws_vpc.test"
@@ -163,7 +163,7 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 func TestAccGlobalAcceleratorEndpointGroup_instanceEndpoint(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.EndpointGroup
-	var vpc ec2.Vpc
+	var vpc ec2types.Vpc
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	instanceResourceName := "aws_instance.test"
 	vpcResourceName := "aws_vpc.test"
@@ -477,10 +477,10 @@ func testAccCheckEndpointGroupDestroy(ctx context.Context) resource.TestCheckFun
 
 // testAccCheckEndpointGroupDeleteSecurityGroup deletes the security group
 // placed into the VPC when Global Accelerator client IP address preservation is enabled.
-func testAccCheckEndpointGroupDeleteSecurityGroup(ctx context.Context, vpc *ec2.Vpc) resource.TestCheckFunc {
+func testAccCheckEndpointGroupDeleteSecurityGroup(ctx context.Context, vpc *ec2types.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		meta := acctest.Provider.Meta()
-		conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+		conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 		v, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, conn, "GlobalAccelerator", aws.ToString(vpc.VpcId), aws.ToString(vpc.OwnerId))
 

@@ -4,13 +4,10 @@
 package firehose_test
 
 import (
-	"fmt"
-	"log"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tffirehose "github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -77,70 +74,5 @@ func TestMigrateState(t *testing.T) {
 					tn, k, v, k, is.Attributes[k], is.Attributes)
 			}
 		}
-	}
-}
-
-func TestMigrateState_empty(t *testing.T) {
-	t.Parallel()
-
-	var is *terraform.InstanceState
-	var meta interface{}
-
-	// should handle nil
-	is, err := tffirehose.MigrateState(0, is, meta)
-
-	if err != nil {
-		t.Fatalf("err: %#v", err)
-	}
-	if is != nil {
-		t.Fatalf("expected nil instancestate, got: %#v", is)
-	}
-
-	// should handle non-nil but empty
-	is = &terraform.InstanceState{}
-	_, err = resourceInstanceMigrateState(0, is)
-
-	if err != nil {
-		t.Fatalf("err: %#v", err)
-	}
-}
-
-func migrateInstanceStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
-	if is.Empty() || is.Attributes == nil {
-		log.Println("[DEBUG] Empty InstanceState; nothing to migrate.")
-		return is, nil
-	}
-
-	log.Printf("[DEBUG] Attributes before migration: %#v", is.Attributes)
-
-	// Delete old count
-	delete(is.Attributes, "block_device.#")
-
-	oldBds, err := tfec2.ReadV0BlockDevices(is)
-	if err != nil {
-		return is, err
-	}
-	// seed count fields for new types
-	is.Attributes["ebs_block_device.#"] = acctest.Ct0
-	is.Attributes["ephemeral_block_device.#"] = acctest.Ct0
-	// depending on if state was v0.3.7 or an earlier version, it might have
-	// root_block_device defined already
-	if _, ok := is.Attributes["root_block_device.#"]; !ok {
-		is.Attributes["root_block_device.#"] = acctest.Ct0
-	}
-	for _, oldBd := range oldBds {
-		tfec2.WriteV1BlockDevice(is, oldBd)
-	}
-	log.Printf("[DEBUG] Attributes after migration: %#v", is.Attributes)
-	return is, nil
-}
-
-func resourceInstanceMigrateState(v int, is *terraform.InstanceState) (*terraform.InstanceState, error) {
-	switch v {
-	case 0:
-		log.Println("[INFO] Found AWS Instance State v0; migrating to v1")
-		return migrateInstanceStateV0toV1(is)
-	default:
-		return is, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }

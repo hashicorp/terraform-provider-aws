@@ -13,7 +13,7 @@ For community members interested in contributing to this effort, this guide docu
 
 ### Re-generate Service Client
 
-When fully replacing the client, [`names/data/names_data.csv`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/data/names_data.csv) should be updated to remove the v1 indicator and add v2 (ie. delete the `1` in the `ClientSDKV1` column and add a `2` in the `ClientSDKV2` column).
+When fully replacing the client, [`names/data/names_data.hcl`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/data/names_data.hcl) should be updated to remove the v1 indicator and add v2 (ie. delete the `1` in the `ClientSDKV1` column and add a `2` in the `ClientSDKV2` column).
 Once complete, re-generate the client.
 
 ```console

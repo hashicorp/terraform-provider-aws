@@ -1,35 +1,34 @@
-name: 'Process issue_comment Events'
-
+name: Process issue_comment Events
 on:
   issue_comment:
     types: [created]
 
-jobs:
-  community_check:
-    name: 'Community Check'
-    uses: ./.github/workflows/community-check.yml
-    secrets: inherit
-    with:
-      username: ${{ github.event.comment.user.login }}
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
 
-  automation_labeler:
-    name: 'Automation Labeler'
-    needs: community_check
+jobs:
+  labeler:
+    name: Labeler
     runs-on: ubuntu-latest
-    # Since the only step in this job requires non-maintainer, skip the job entirely if that's not met.
-    if: needs.community_check.outputs.maintainer == 'false'
-    env:
-      # This is a ternary that sets the variable to the assigned user's login on assigned events,
-      # and otherwise sets it to the username of the pull request's author. For more information:
-      # https://docs.github.com/en/actions/learn-github-actions/expressions#example
-      #
-      # issue_comment events are triggered by comments on issues and pull requests. Checking the
-      # value of github.event.issue.pull_request tells us whether the issue is an issue or is
-      # actually a pull request, allowing us to dynamically set the gh subcommand:
-      # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#issue_comment-on-issues-only-or-pull-requests-only
-      COMMAND: ${{ github.event.issue.pull_request && 'pr' || 'issue' }}
-      GH_TOKEN: ${{ github.token }}
+    if: contains(github.event.issue.labels.*.name, 'stale') || contains(github.event.issue.labels.*.name, 'waiting-response')
     steps:
-      - name: 'Remove stale and waiting-response on non-maintainer comment'
-        # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#issue_comment-on-issues-only-or-pull-requests-only
-        run: gh ${{ env.COMMAND }} edit ${{ github.event.issue.html_url }} --remove-label stale,waiting-response
+      - name: Checkout Community Check
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          sparse-checkout: .github/actions/community_check
+
+      - name: Run Community Check
+        id: community_check
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ github.event.comment.user.login }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+
+      - name: Remove stale and waiting-response
+        if: steps.community_check.outputs.maintainer == 'false'
+        env:
+          COMMAND: ${{ github.event.issue.pull_request && 'pr' || 'issue' }}
+          GH_TOKEN: ${{ github.token }}
+        run: gh $COMMAND edit ${{ github.event.issue.html_url }} --remove-label stale,waiting-response

@@ -2081,7 +2081,7 @@ resource "aws_route_table" "test" {
 }
 
 resource "aws_route_table_association" "test" {
-  count = length(aws_subnet.test)
+  count = %[2]d
 
   subnet_id      = aws_subnet.test[count.index].id
   route_table_id = aws_route_table.test.id
@@ -2125,7 +2125,7 @@ data "aws_iam_policy_document" "s3_endpoint" {
     ]
   }
 }
-`, rName))
+`, rName, subnetCount))
 }
 
 func testAccEntityRecognizerConfig_vpcConfig_Update(rName string) string {
@@ -2202,7 +2202,7 @@ resource "aws_route_table" "test" {
 }
 
 resource "aws_route_table_association" "test" {
-  count = length(aws_subnet.test)
+  count = %[2]d
 
   subnet_id      = aws_subnet.test[count.index].id
   route_table_id = aws_route_table.test.id
@@ -2246,7 +2246,7 @@ data "aws_iam_policy_document" "s3_endpoint" {
     ]
   }
 }
-`, rName))
+`, rName, subnetCount))
 }
 
 func testAccEntityRecognizerConfig_vpcConfig_None(rName string) string {

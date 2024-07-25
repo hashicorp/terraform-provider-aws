@@ -20,7 +20,7 @@ import (
 
 func testAccCheckVPCIPv6CIDRBlockAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_ipv6_cidr_block_association" {
@@ -57,7 +57,7 @@ func testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx context.Context, n string
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, _, err := tfec2.FindVPCIPv6CIDRBlockAssociationByIDV2(ctx, conn, rs.Primary.ID)
+		output, _, err := tfec2.FindVPCIPv6CIDRBlockAssociationByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

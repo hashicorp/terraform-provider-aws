@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -39,7 +38,7 @@ func TestAccVPCEndpointPrivateDNS_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointPrivateDNSConfig_basic(rName, true),
@@ -78,7 +77,7 @@ func TestAccVPCEndpointPrivateDNS_disabled(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointPrivateDNSConfig_disabled(rName),
@@ -117,7 +116,7 @@ func TestAccVPCEndpointPrivateDNS_disappears_Endpoint(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointPrivateDNSConfig_basic(rName, true),
@@ -150,7 +149,7 @@ func TestAccVPCEndpointPrivateDNS_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointPrivateDNSConfig_basic(rName, true),
@@ -184,49 +183,47 @@ func TestAccVPCEndpointPrivateDNS_update(t *testing.T) {
 }
 
 // testAccCheckVPCEndpointPrivateDNSEnabled verifies private DNS is enabled for a given VPC endpoint
-func testAccCheckVPCEndpointPrivateDNSEnabled(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckVPCEndpointPrivateDNSEnabled(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEndpointPrivateDNS, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEndpointPrivateDNS, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-		out, err := tfec2.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tfec2.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEndpointPrivateDNS, rs.Primary.ID, err)
+			return err
 		}
-		if out.PrivateDnsEnabled != nil && aws.ToBool(out.PrivateDnsEnabled) {
+
+		if aws.ToBool(output.PrivateDnsEnabled) {
 			return nil
 		}
 
-		return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEndpointPrivateDNS, rs.Primary.ID, errors.New("private DNS not enabled"))
+		return errors.New("private DNS not enabled")
 	}
 }
 
 // testAccCheckVPCEndpointPrivateDNSDisabled verifies private DNS is not enabled for a given VPC endpoint
-func testAccCheckVPCEndpointPrivateDNSDisabled(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckVPCEndpointPrivateDNSDisabled(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEndpointPrivateDNS, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEndpointPrivateDNS, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-		out, err := tfec2.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tfec2.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEndpointPrivateDNS, rs.Primary.ID, err)
+			return err
 		}
-		if out.PrivateDnsEnabled != nil && aws.ToBool(out.PrivateDnsEnabled) {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEndpointPrivateDNS, rs.Primary.ID, errors.New("private DNS enabled"))
+
+		if aws.ToBool(output.PrivateDnsEnabled) {
+			return errors.New("private DNS enabled")
 		}
 
 		return nil

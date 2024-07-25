@@ -58,7 +58,7 @@ func resourceInstance() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  InstanceMigrateState,
+		MigrateState:  instanceMigrateState,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -198,7 +198,7 @@ func resourceInstance() *schema.Resource {
 						"cpu_credits": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice(CPUCredits_Values(), false),
+							ValidateFunc: validation.StringInSlice(cpuCredits_Values(), false),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// Only work with existing instances
 								if d.Id() == "" {
@@ -519,7 +519,7 @@ func resourceInstance() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
-							Default:      LaunchTemplateVersionDefault,
+							Default:      launchTemplateVersionDefault,
 						},
 					},
 				},
@@ -876,11 +876,11 @@ func resourceInstance() *schema.Resource {
 					}
 
 					switch stateVersion {
-					case LaunchTemplateVersionDefault:
+					case launchTemplateVersionDefault:
 						if instanceVersion != defaultVersion {
 							diff.ForceNew("launch_template.0.version")
 						}
-					case LaunchTemplateVersionLatest:
+					case launchTemplateVersionLatest:
 						if instanceVersion != latestVersion {
 							diff.ForceNew("launch_template.0.version")
 						}
@@ -969,7 +969,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	// instance itself
-	tagSpecifications := getTagSpecificationsInV2(ctx, awstypes.ResourceTypeInstance)
+	tagSpecifications := getTagSpecificationsIn(ctx, awstypes.ResourceTypeInstance)
 
 	// block devices
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -1106,7 +1106,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	for vol, blockDeviceTags := range blockDeviceTagsToCreate {
-		if err := createTagsV2(ctx, conn, vol, TagsV2(tftags.New(ctx, blockDeviceTags))); err != nil {
+		if err := createTags(ctx, conn, vol, Tags(tftags.New(ctx, blockDeviceTags))); err != nil {
 			log.Printf("[ERR] Error creating tags for EBS volume %s: %s", vol, err)
 		}
 	}
@@ -1322,7 +1322,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("monitoring", monitoringState == awstypes.MonitoringStateEnabled || monitoringState == awstypes.MonitoringStatePending)
 	}
 
-	setTagsOutV2(ctx, instance.Tags)
+	setTagsOut(ctx, instance.Tags)
 
 	if _, ok := d.GetOk("volume_tags"); ok && !blockDeviceTagsDefined(d) {
 		volumeTags, err := readVolumeTags(ctx, conn, d.Id())
@@ -1332,7 +1332,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 		defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 		ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-		tags := keyValueTagsV2(ctx, volumeTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+		tags := keyValueTags(ctx, volumeTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		if err := d.Set("volume_tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting volume_tags: %s", err)
@@ -1516,7 +1516,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		o, n := d.GetChange("volume_tags")
 
 		for _, volID := range volIDs {
-			if err := updateTagsV2(ctx, conn, volID, o, n); err != nil {
+			if err := updateTags(ctx, conn, volID, o, n); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating volume_tags (%s): %s", volID, err)
 			}
 		}
@@ -2041,7 +2041,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("root_block_device.0.tags") {
 			o, n := d.GetChange("root_block_device.0.tags")
 
-			if err := updateTagsV2(ctx, conn, volID, o, n); err != nil {
+			if err := updateTags(ctx, conn, volID, o, n); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating tags for volume (%s): %s", volID, err)
 			}
 		}
@@ -2049,7 +2049,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("root_block_device.0.tags_all") && !d.HasChange("root_block_device.0.tags") {
 			o, n := d.GetChange("root_block_device.0.tags_all")
 
-			if err := updateTagsV2(ctx, conn, volID, o, n); err != nil {
+			if err := updateTags(ctx, conn, volID, o, n); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating tags for volume (%s): %s", volID, err)
 			}
 		}
@@ -2060,7 +2060,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("capacity_reservation_specification") && !d.IsNewResource() {
 		if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			if v := expandCapacityReservationSpecification(v.([]interface{})[0].(map[string]interface{})); v != nil && (v.CapacityReservationPreference != "" || v.CapacityReservationTarget != nil) {
-				if err := stopInstance(ctx, conn, d.Id(), false, InstanceStopTimeout); err != nil {
+				if err := stopInstance(ctx, conn, d.Id(), false, instanceStopTimeout); err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 
@@ -2095,7 +2095,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) capacity reservation attributes update: %s", d.Id(), err)
 				}
 
-				if err := startInstance(ctx, conn, d.Id(), true, InstanceStartTimeout); err != nil {
+				if err := startInstance(ctx, conn, d.Id(), true, instanceStartTimeout); err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 			}
@@ -2219,7 +2219,7 @@ func disableInstanceAPITermination(ctx context.Context, conn *ec2.Client, id str
 func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.Client, input *ec2.ModifyInstanceAttributeInput, attrName string) error {
 	id := aws.ToString(input.InstanceId)
 
-	if err := stopInstance(ctx, conn, id, false, InstanceStopTimeout); err != nil {
+	if err := stopInstance(ctx, conn, id, false, instanceStopTimeout); err != nil {
 		return err
 	}
 
@@ -2227,7 +2227,7 @@ func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.Client,
 		return fmt.Errorf("modifying EC2 Instance (%s) %s attribute: %w", id, attrName, err)
 	}
 
-	if err := startInstance(ctx, conn, id, true, InstanceStartTimeout); err != nil {
+	if err := startInstance(ctx, conn, id, true, instanceStartTimeout); err != nil {
 		return err
 	}
 
@@ -2353,9 +2353,9 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 		}
 		if v, ok := d.GetOk("volume_tags"); !ok || v == nil || len(v.(map[string]interface{})) == 0 {
 			if ds {
-				bd[names.AttrTags] = keyValueTagsV2(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
+				bd[names.AttrTags] = keyValueTags(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
 			} else {
-				tags := keyValueTagsV2(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+				tags := keyValueTags(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 				bd[names.AttrTags] = tags.RemoveDefaultConfig(defaultTagsConfig).Map()
 				bd[names.AttrTagsAll] = tags.Map()
 			}
@@ -2424,7 +2424,7 @@ func disassociateInstanceProfile(ctx context.Context, associationId *string, con
 	return nil
 }
 
-func FetchRootDeviceName(ctx context.Context, conn *ec2.Client, amiID string) (*string, error) {
+func findRootDeviceName(ctx context.Context, conn *ec2.Client, amiID string) (*string, error) {
 	if amiID == "" {
 		return nil, errors.New("Cannot fetch root device name for blank AMI ID.")
 	}
@@ -2691,7 +2691,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 				return nil, errors.New("`ami` must be set or provided via `launch_template`")
 			}
 
-			if dn, err := FetchRootDeviceName(ctx, conn, amiID); err == nil {
+			if dn, err := findRootDeviceName(ctx, conn, amiID); err == nil {
 				if dn == nil {
 					return nil, fmt.Errorf(
 						"Expected 1 AMI for ID: %s, got none",
@@ -2919,7 +2919,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	// Set default cpu_credits as Unlimited for T3/T3a instance type
 	if strings.HasPrefix(instanceType, "t3") {
 		opts.CreditSpecification = &awstypes.CreditSpecificationRequest{
-			CpuCredits: aws.String(CPUCreditsUnlimited),
+			CpuCredits: aws.String(cpuCreditsUnlimited),
 		}
 	}
 
@@ -3334,7 +3334,7 @@ func getInstanceVolIDs(ctx context.Context, conn *ec2.Client, instanceId string)
 	volIDs := []string{}
 
 	resp, err := conn.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{
-		Filters: newAttributeFilterListV2(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"attachment.instance-id": instanceId,
 		}),
 	})
@@ -3853,15 +3853,15 @@ func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.Client, instan
 	}
 
 	switch previousLaunchTemplateVersion {
-	case LaunchTemplateVersionDefault:
+	case launchTemplateVersionDefault:
 		if currentLaunchTemplateVersion == defaultVersion {
-			tfMap[names.AttrVersion] = LaunchTemplateVersionDefault
+			tfMap[names.AttrVersion] = launchTemplateVersionDefault
 		} else {
 			tfMap[names.AttrVersion] = currentLaunchTemplateVersion
 		}
-	case LaunchTemplateVersionLatest:
+	case launchTemplateVersionLatest:
 		if currentLaunchTemplateVersion == latestVersion {
-			tfMap[names.AttrVersion] = LaunchTemplateVersionLatest
+			tfMap[names.AttrVersion] = launchTemplateVersionLatest
 		} else {
 			tfMap[names.AttrVersion] = currentLaunchTemplateVersion
 		}
@@ -3905,11 +3905,11 @@ func findLaunchTemplateData(ctx context.Context, conn *ec2.Client, launchTemplat
 
 	if v := aws.ToString(launchTemplateSpecification.Version); v != "" {
 		switch v {
-		case LaunchTemplateVersionDefault:
-			input.Filters = newAttributeFilterListV2(map[string]string{
+		case launchTemplateVersionDefault:
+			input.Filters = newAttributeFilterList(map[string]string{
 				"is-default-version": "true",
 			})
-		case LaunchTemplateVersionLatest:
+		case launchTemplateVersionLatest:
 			latestVersion = true
 		default:
 			input.Versions = []string{v}
@@ -3942,7 +3942,7 @@ func findLaunchTemplateNameAndVersions(ctx context.Context, conn *ec2.Client, id
 
 func findInstanceTagValue(ctx context.Context, conn *ec2.Client, instanceID, tagKey string) (string, error) {
 	input := &ec2.DescribeTagsInput{
-		Filters: newAttributeFilterListV2(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"resource-id": instanceID,
 			names.AttrKey: tagKey,
 		}),
@@ -3969,8 +3969,8 @@ func isSnowballEdgeInstance(id string) bool {
 	return strings.Contains(id, "s.")
 }
 
-// InstanceType describes an EC2 instance type.
-type InstanceType struct {
+// instanceType describes an EC2 instance type.
+type instanceType struct {
 	// e.g. "m6i"
 	Type string
 	// e.g. "m"
@@ -3983,7 +3983,7 @@ type InstanceType struct {
 	Size string
 }
 
-func ParseInstanceType(s string) (*InstanceType, error) {
+func parseInstanceType(s string) (*instanceType, error) {
 	matches := regexache.MustCompile(`(([[:alpha:]]+)([[:digit:]])+([[:alpha:]]*))\.([[:alnum:]]+)`).FindStringSubmatch(s)
 
 	if matches == nil {
@@ -3996,7 +3996,7 @@ func ParseInstanceType(s string) (*InstanceType, error) {
 		return nil, err
 	}
 
-	return &InstanceType{
+	return &instanceType{
 		Type:                   matches[1],
 		Family:                 matches[2],
 		Generation:             generation,

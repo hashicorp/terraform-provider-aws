@@ -9,7 +9,7 @@ import (
 	"github.com/YakDriver/regexache"
 )
 
-func ValidName(v interface{}, k string) (ws []string, errors []error) {
+func validName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) == 0 {
 		return // short-circuit

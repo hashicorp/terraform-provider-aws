@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -287,7 +287,7 @@ func testAccCheckDataQualityRulesetExists(ctx context.Context, n string) resourc
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
 		resp, err := tfglue.FindDataQualityRulesetByName(ctx, conn, rs.Primary.ID)
 
@@ -299,9 +299,9 @@ func testAccCheckDataQualityRulesetExists(ctx context.Context, n string) resourc
 			return fmt.Errorf("No Glue Data Quality Ruleset Found")
 		}
 
-		if aws.StringValue(resp.Name) != rs.Primary.ID {
+		if aws.ToString(resp.Name) != rs.Primary.ID {
 			return fmt.Errorf("Glue Data Quality Ruleset Mismatch - existing: %q, state: %q",
-				aws.StringValue(resp.Name), rs.Primary.ID)
+				aws.ToString(resp.Name), rs.Primary.ID)
 		}
 
 		return nil
@@ -310,7 +310,7 @@ func testAccCheckDataQualityRulesetExists(ctx context.Context, n string) resourc
 
 func testAccCheckDataQualityRulesetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_data_quality_ruleset" {

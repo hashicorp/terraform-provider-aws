@@ -44,7 +44,7 @@ func dataSourceTransitGatewayPeeringAttachmentsRead(ctx context.Context, d *sche
 
 	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 

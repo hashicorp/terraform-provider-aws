@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -32,15 +32,15 @@ import (
 )
 
 const (
-	VPCCIDRMaxIPv4 = 28
-	VPCCIDRMinIPv4 = 16
-	VPCCIDRMaxIPv6 = 56
+	vpcCIDRMaxIPv4Netmask = 28
+	vpcCIDRMinIPv4Netmask = 16
+	vpcCIDRMaxIPv6Netmask = 56
 )
 
 // @SDKResource("aws_vpc", name="VPC")
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Vpc")
-func ResourceVPC() *schema.Resource {
+func resourceVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCCreate,
@@ -58,7 +58,7 @@ func ResourceVPC() *schema.Resource {
 		),
 
 		SchemaVersion: 1,
-		MigrateState:  VPCMigrateState,
+		MigrateState:  vpcMigrateState,
 
 		// Keep in sync with aws_default_vpc's schema.
 		// See notes in default_vpc.go.
@@ -77,7 +77,7 @@ func ResourceVPC() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IsCIDRNetwork(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
+				ValidateFunc:  validation.IsCIDRNetwork(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
 				ConflictsWith: []string{"ipv4_netmask_length"},
 			},
 			"default_network_acl_id": {
@@ -126,7 +126,7 @@ func ResourceVPC() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IntBetween(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
+				ValidateFunc:  validation.IntBetween(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
 				ConflictsWith: []string{names.AttrCIDRBlock},
 				RequiredWith:  []string{"ipv4_ipam_pool_id"},
 			},
@@ -142,7 +142,7 @@ func ResourceVPC() *schema.Resource {
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 				ValidateFunc: validation.All(
 					verify.ValidIPv6CIDRNetworkAddress,
-					validation.IsCIDRNetwork(VPCCIDRMaxIPv6, VPCCIDRMaxIPv6)),
+					validation.IsCIDRNetwork(vpcCIDRMaxIPv6Netmask, vpcCIDRMaxIPv6Netmask)),
 			},
 			"ipv6_cidr_block_network_border_group": {
 				Type:         schema.TypeString,
@@ -158,7 +158,7 @@ func ResourceVPC() *schema.Resource {
 			"ipv6_netmask_length": {
 				Type:          schema.TypeInt,
 				Optional:      true,
-				ValidateFunc:  validation.IntInSlice([]int{VPCCIDRMaxIPv6}),
+				ValidateFunc:  validation.IntInSlice([]int{vpcCIDRMaxIPv6Netmask}),
 				ConflictsWith: []string{"ipv6_cidr_block"},
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 			},
@@ -183,7 +183,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	input := &ec2.CreateVpcInput{
 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
 		InstanceTenancy:             types.Tenancy(d.Get("instance_tenancy").(string)),
-		TagSpecifications:           getTagSpecificationsInV2(ctx, types.ResourceTypeVpc),
+		TagSpecifications:           getTagSpecificationsIn(ctx, types.ResourceTypeVpc),
 	}
 
 	if v, ok := d.GetOk(names.AttrCIDRBlock); ok {
@@ -374,7 +374,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		}
 	}
 
-	setTagsOutV2(ctx, vpc.Tags)
+	setTagsOut(ctx, vpc.Tags)
 
 	return diags
 }
@@ -451,11 +451,11 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[INFO] Deleting EC2 VPC: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, vpcDeletedTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteVpc(ctx, input)
 	}, errCodeDependencyViolation)
 
-	if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
 		return diags
 	}
 
@@ -463,7 +463,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPC (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, vpcDeletedTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return findVPCByID(ctx, conn, d.Id())
 	})
 
@@ -659,7 +659,7 @@ func modifyVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client, vp
 			return "", fmt.Errorf("disassociating IPv6 CIDR block (%s): %w", associationID, err)
 		}
 
-		if _, err := waitVPCIPv6CIDRBlockAssociationDeleted(ctx, conn, associationID, vpcIPv6CIDRBlockAssociationDeletedTimeout); err != nil {
+		if err := waitVPCIPv6CIDRBlockAssociationDeleted(ctx, conn, associationID, vpcIPv6CIDRBlockAssociationDeletedTimeout); err != nil {
 			return "", fmt.Errorf("disassociating IPv6 CIDR block (%s): waiting for completion: %w", associationID, err)
 		}
 	}

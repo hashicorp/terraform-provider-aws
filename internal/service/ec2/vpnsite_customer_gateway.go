@@ -96,7 +96,7 @@ func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateCustomerGatewayInput{
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeCustomerGateway),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeCustomerGateway),
 		Type:              awstypes.GatewayType(d.Get(names.AttrType).(string)),
 	}
 
@@ -178,7 +178,7 @@ func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrIPAddress, customerGateway.IpAddress)
 	d.Set(names.AttrType, customerGateway.Type)
 
-	setTagsOutV2(ctx, customerGateway.Tags)
+	setTagsOut(ctx, customerGateway.Tags)
 
 	return diags
 }

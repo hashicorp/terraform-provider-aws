@@ -5,10 +5,8 @@ package elb
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	elb_sdkv1 "github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	elasticloadbalancing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,16 +25,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceLoadBalancer,
+			Factory:  dataSourceLoadBalancer,
 			TypeName: "aws_elb",
+			Name:     "Classic Load Balancer",
 		},
 		{
-			Factory:  DataSourceHostedZoneID,
+			Factory:  dataSourceHostedZoneID,
 			TypeName: "aws_elb_hosted_zone_id",
+			Name:     "Hosted Zone ID",
 		},
 		{
-			Factory:  DataSourceServiceAccount,
+			Factory:  dataSourceServiceAccount,
 			TypeName: "aws_elb_service_account",
+			Name:     "Service Account",
 		},
 	}
 }
@@ -44,11 +45,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAppCookieStickinessPolicy,
+			Factory:  resourceAppCookieStickinessPolicy,
 			TypeName: "aws_app_cookie_stickiness_policy",
+			Name:     "App Cookie Stickiness Policy",
 		},
 		{
-			Factory:  ResourceLoadBalancer,
+			Factory:  resourceLoadBalancer,
 			TypeName: "aws_elb",
 			Name:     "Classic Load Balancer",
 			Tags: &types.ServicePackageResourceTags{
@@ -56,32 +58,39 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceAttachment,
+			Factory:  resourceAttachment,
 			TypeName: "aws_elb_attachment",
+			Name:     "Attachment",
 		},
 		{
-			Factory:  ResourceCookieStickinessPolicy,
+			Factory:  resourceCookieStickinessPolicy,
 			TypeName: "aws_lb_cookie_stickiness_policy",
+			Name:     "LB Cookie Stickiness Policy",
 		},
 		{
-			Factory:  ResourceSSLNegotiationPolicy,
+			Factory:  resourceSSLNegotiationPolicy,
 			TypeName: "aws_lb_ssl_negotiation_policy",
+			Name:     "SSL Negotiation Policy",
 		},
 		{
-			Factory:  ResourceBackendServerPolicy,
+			Factory:  resourceBackendServerPolicy,
 			TypeName: "aws_load_balancer_backend_server_policy",
+			Name:     "Backend Server Policy",
 		},
 		{
-			Factory:  ResourceListenerPolicy,
+			Factory:  resourceListenerPolicy,
 			TypeName: "aws_load_balancer_listener_policy",
+			Name:     "Listener Policy",
 		},
 		{
-			Factory:  ResourcePolicy,
+			Factory:  resourcePolicy,
 			TypeName: "aws_load_balancer_policy",
+			Name:     "Load Balancer Policy",
 		},
 		{
-			Factory:  ResourceProxyProtocolPolicy,
+			Factory:  resourceProxyProtocolPolicy,
 			TypeName: "aws_proxy_protocol_policy",
+			Name:     "Proxy Protocol Policy",
 		},
 	}
 }
@@ -90,22 +99,14 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.ELB
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*elb_sdkv1.ELB, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*elasticloadbalancing_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return elb_sdkv1.New(sess.Copy(&cfg)), nil
+	return elasticloadbalancing_sdkv2.NewFromConfig(cfg,
+		elasticloadbalancing_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

@@ -286,6 +286,7 @@ The following arguments are optional:
   Only supported for engine type `"redis"` and if the engine version is 6 or higher.
   Defaults to `true`.
 * `automaticFailoverEnabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. If enabled, `numCacheClusters` must be greater than 1. Must be enabled for Redis (cluster mode enabled) replication groups. Defaults to `false`.
+* `clusterMode` - (Optional) Specifies whether cluster mode is enabled or disabled. Valid values are `enabled` or `disabled` or `compatible`
 * `dataTieringEnabled` - (Optional) Enables data tiering. Data tiering is only supported for replication groups using the r6gd node type. This parameter must be set to `true` when using r6gd nodes.
 * `engine` - (Optional) Name of the cache engine to be used for the clusters in this replication group. The only valid value is `redis`.
 * `engineVersion` - (Optional) Version number of the cache engine to be used for the cache clusters in this replication group.
@@ -300,19 +301,28 @@ The following arguments are optional:
 * `kmsKeyId` - (Optional) The ARN of the key that you wish to use if encrypting at rest. If not supplied, uses service managed encryption. Can be specified only if `at_rest_encryption_enabled = true`.
 * `logDeliveryConfiguration` - (Optional, Redis only) Specifies the destination and format of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See the documentation on [Amazon ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See [Log Delivery Configuration](#log-delivery-configuration) below for more details.
 * `maintenanceWindow` – (Optional) Specifies the weekly time range for when maintenance on the cache cluster is performed. The format is `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC). The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09:00`
-* `multiAzEnabled` - (Optional) Specifies whether to enable Multi-AZ Support for the replication group. If `true`, `automaticFailoverEnabled` must also be enabled. Defaults to `false`.
+* `multiAzEnabled` - (Optional) Specifies whether to enable Multi-AZ Support for the replication group.
+  If `true`, `automaticFailoverEnabled` must also be enabled.
+  Defaults to `false`.
 * `networkType` - (Optional) The IP versions for cache cluster connections. Valid values are `ipv4`, `ipv6` or `dual_stack`.
 * `nodeType` - (Optional) Instance class to be used. See AWS documentation for information on [supported node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html). Required unless `globalReplicationGroupId` is set. Cannot be set if `globalReplicationGroupId` is set.
 * `notificationTopicArn` – (Optional) ARN of an SNS topic to send ElastiCache notifications to. Example: `arn:aws:sns:us-east-1:012345678999:my_sns_topic`
-* `numCacheClusters` - (Optional) Number of cache clusters (primary and replicas) this replication group will have. If Multi-AZ is enabled, the value of this parameter must be at least 2. Updates will occur before other modifications. Conflicts with `numNodeGroups`. Defaults to `1`.
+* `numCacheClusters` - (Optional) Number of cache clusters (primary and replicas) this replication group will have.
+  If `automaticFailoverEnabled` or `multiAzEnabled` are `true`, must be at least 2.
+  Updates will occur before other modifications.
+  Conflicts with `numNodeGroups` and `replicasPerNodeGroup`.
+  Defaults to `1`.
 * `numNodeGroups` - (Optional) Number of node groups (shards) for this Redis replication group.
   Changing this number will trigger a resizing operation before other settings modifications.
+  Conflicts with `numCacheClusters`.
 * `parameterGroupName` - (Optional) Name of the parameter group to associate with this replication group. If this argument is omitted, the default cache parameter group for the specified engine is used. To enable "cluster mode", i.e., data sharding, use a parameter group that has the parameter `cluster-enabled` set to true.
 * `port` – (Optional) Port number on which each of the cache nodes will accept connections. For Memcache the default is 11211, and for Redis the default port is 6379.
 * `preferredCacheClusterAzs` - (Optional) List of EC2 availability zones in which the replication group's cache clusters will be created. The order of the availability zones in the list is considered. The first item in the list will be the primary node. Ignored when updating.
 * `replicasPerNodeGroup` - (Optional) Number of replica nodes in each node group.
   Changing this number will trigger a resizing operation before other settings modifications.
   Valid values are 0 to 5.
+  Conflicts with `numCacheClusters`.
+  Can only be set if `numNodeGroups` is set.
 * `securityGroupIds` - (Optional) IDs of one or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud.
 * `securityGroupNames` - (Optional) Names of one or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud.
 * `snapshotArns` – (Optional) List of ARNs that identify Redis RDB snapshot files stored in Amazon S3. The names object names cannot contain any commas.
@@ -393,4 +403,4 @@ Using `terraform import`, import ElastiCache Replication Groups using the `repli
 % terraform import aws_elasticache_replication_group.my_replication_group replication-group-1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-10b8b8327add4ca2c312f6193624fd2f09afd1f475ca281760fdc359c19e7edb -->
+<!-- cache-key: cdktf-0.20.1 input-a06a9b6971ab807b7497ee50364b06ba349ae1d5cfaaabe4594b06c00721c11f -->

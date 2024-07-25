@@ -6,8 +6,8 @@ package ec2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,7 +20,7 @@ import (
 // @SDKResource("aws_default_security_group", name="Security Group")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceDefaultSecurityGroup() *schema.Resource {
+func resourceDefaultSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultSecurityGroupCreate,
@@ -33,7 +33,7 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 		},
 
 		SchemaVersion: 1, // Keep in sync with aws_security_group's schema version.
-		MigrateState:  SecurityGroupMigrateState,
+		MigrateState:  securityGroupMigrateState,
 
 		// Keep in sync with aws_security_group's schema with the following changes:
 		//   - description is Computed-only
@@ -85,12 +85,12 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeSecurityGroupsInput{
 		Filters: newAttributeFilterList(
 			map[string]string{
-				"group-name": DefaultSecurityGroupName,
+				"group-name": defaultSecurityGroupName,
 			},
 		),
 	}
@@ -109,17 +109,17 @@ func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceD
 		)...)
 	}
 
-	sg, err := FindSecurityGroup(ctx, conn, input)
+	sg, err := findSecurityGroup(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Default Security Group: %s", err)
 	}
 
-	d.SetId(aws.StringValue(sg.GroupId))
+	d.SetId(aws.ToString(sg.GroupId))
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := KeyValueTags(ctx, getTagsIn(ctx))
-	oldTags := KeyValueTags(ctx, sg.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
+	newTags := keyValueTags(ctx, getTagsIn(ctx))
+	oldTags := keyValueTags(ctx, sg.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
 	if !newTags.Equal(oldTags) {
 		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {

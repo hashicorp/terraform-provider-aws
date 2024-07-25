@@ -23,6 +23,11 @@ import (
 
 // Flatten = AWS --> TF
 
+// Flattener is implemented by types that customize their flattening
+type Flattener interface {
+	Flatten(ctx context.Context, v any) diag.Diagnostics
+}
+
 // Flatten "flattens" an AWS SDK for Go v2 API data structure into
 // a resource's "business logic" data structure, implemented using
 // Terraform Plugin Framework data types.
@@ -72,6 +77,12 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 
 	valTo, ok := vTo.Interface().(attr.Value)
 	if !ok {
+		// Check for `nil` (i.e. Kind == Invalid) here, because primitive types can be `nil`
+		if vFrom.Kind() == reflect.Invalid {
+			diags.AddError("AutoFlEx", "Cannot flatten nil source")
+			return diags
+		}
+
 		diags.AddError("AutoFlEx", fmt.Sprintf("does not implement attr.Value: %s", vTo.Kind()))
 		return diags
 	}
@@ -356,6 +367,13 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 
 		vTo.Set(reflect.ValueOf(v))
 		return diags
+
+	case fwtypes.NestedObjectType:
+		//
+		// interface -> types.List(OfObject) or types.Object.
+		//
+		diags.Append(flattener.interfaceToNestedObject(ctx, vFrom, vFrom.IsNil(), tTo, vTo)...)
+		return diags
 	}
 
 	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
@@ -505,8 +523,13 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 		}
 
 	case reflect.Interface:
-		// Smithy union type handling not yet implemented. Silently skip.
-		return diags
+		if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
+			//
+			// []interface -> types.List(OfObject).
+			//
+			diags.Append(flattener.sliceOfStructToNestedObjectCollection(ctx, vFrom, tTo, vTo)...)
+			return diags
+		}
 	}
 
 	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
@@ -828,6 +851,67 @@ func (flattener autoFlattener) structToNestedObject(ctx context.Context, vFrom r
 	return diags
 }
 
+// interfaceToNestedObject copies an AWS API interface value to a compatible Plugin Framework NestedObjectValue value.
+func (flattener autoFlattener) interfaceToNestedObject(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if isNullFrom {
+		val, d := tTo.NullValue(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(val))
+		return diags
+	}
+
+	to, d := tTo.NewObjectPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	toFlattener, ok := to.(Flattener)
+	if !ok {
+		val, d := tTo.NullValue(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(val))
+
+		tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]any{
+			"from": vFrom.Kind(),
+			"to":   tTo,
+		})
+		return diags
+	}
+
+	// Dereference interface
+	vFrom = vFrom.Elem()
+	// If it's a pointer, dereference again to get the underlying type
+	if vFrom.Kind() == reflect.Pointer {
+		vFrom = vFrom.Elem()
+	}
+
+	diags.Append(flattenFlattener(ctx, vFrom, toFlattener)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Set the target structure as a mapped Object.
+	val, d := tTo.ValueFromObjectPtr(ctx, toFlattener)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	vTo.Set(reflect.ValueOf(val))
+	return diags
+}
+
 // sliceOfPrimtiveToList copies an AWS API slice of primitive (or pointer to primitive) value to a compatible Plugin Framework List value.
 func (flattener autoFlattener) sliceOfPrimtiveToList(ctx context.Context, vFrom reflect.Value, tTo basetypes.ListTypable, vTo reflect.Value, elementType attr.Type, f attrValueFromReflectValueFunc) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -1019,4 +1103,68 @@ func newStringValueFromReflectPointerValue(v reflect.Value) attr.Value {
 	}
 
 	return newStringValueFromReflectValue(v.Elem())
+}
+
+func flattenFlattener(ctx context.Context, fromVal reflect.Value, toFlattener Flattener) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	valTo := reflect.ValueOf(toFlattener)
+
+	diags.Append(flattenPrePopulate(ctx, valTo)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	from := fromVal.Interface()
+
+	diags.Append(toFlattener.Flatten(ctx, from)...)
+
+	return diags
+}
+
+func flattenPrePopulate(ctx context.Context, toVal reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if toVal.Kind() == reflect.Ptr {
+		toVal = toVal.Elem()
+	}
+
+	typeTo := toVal.Type()
+	for i := 0; i < typeTo.NumField(); i++ {
+		field := typeTo.Field(i)
+		if !field.IsExported() {
+			continue // Skip unexported fields.
+		}
+
+		fieldVal := toVal.Field(i)
+		if !fieldVal.CanSet() {
+			diags.AddError(
+				"Incompatible Types",
+				"An unexpected error occurred while flattening configuration. "+
+					"This is always an error in the provider. "+
+					"Please report the following to the provider developer:\n\n"+
+					fmt.Sprintf("Field %q in %q is not settable.", field.Name, fullTypeName(fieldVal.Type())),
+			)
+		}
+
+		fieldTo, ok := fieldVal.Interface().(attr.Value)
+		if !ok {
+			continue // Skip non-attr.Type fields.
+		}
+		tTo := fieldTo.Type(ctx)
+		switch tTo := tTo.(type) {
+		// The zero values of primitive types are Null.
+
+		// Aggregate types.
+		case fwtypes.NestedObjectType:
+			v, d := tTo.NullValue(ctx)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+			fieldVal.Set(reflect.ValueOf(v))
+		}
+	}
+
+	return diags
 }

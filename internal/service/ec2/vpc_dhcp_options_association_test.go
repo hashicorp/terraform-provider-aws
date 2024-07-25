@@ -154,7 +154,7 @@ func testAccVPCDHCPOptionsAssociationVPCImportIdFunc(resourceName string) resour
 
 func testAccCheckVPCDHCPOptionsAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_dhcp_options_association" {
@@ -201,7 +201,7 @@ func testAccCheckVPCDHCPOptionsAssociationExist(ctx context.Context, n string) r
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		return tfec2.FindVPCDHCPOptionsAssociation(ctx, conn, vpcID, dhcpOptionsID)
 	}

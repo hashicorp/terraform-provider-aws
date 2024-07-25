@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +23,7 @@ import (
 
 func TestAccNetworkMonitorProbe_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vpc ec2.Vpc
+	var vpc awstypes.Vpc
 	resourceName := "aws_networkmonitor_probe.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -67,7 +67,7 @@ func TestAccNetworkMonitorProbe_basic(t *testing.T) {
 
 func TestAccNetworkMonitorProbe_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vpc ec2.Vpc
+	var vpc awstypes.Vpc
 	resourceName := "aws_networkmonitor_probe.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -99,7 +99,7 @@ func TestAccNetworkMonitorProbe_disappears(t *testing.T) {
 
 func TestAccNetworkMonitorProbe_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vpc ec2.Vpc
+	var vpc awstypes.Vpc
 	resourceName := "aws_networkmonitor_probe.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -153,7 +153,7 @@ func TestAccNetworkMonitorProbe_tags(t *testing.T) {
 
 func TestAccNetworkMonitorProbe_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vpc ec2.Vpc
+	var vpc awstypes.Vpc
 	resourceName := "aws_networkmonitor_probe.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -251,10 +251,10 @@ func testAccCheckProbeExists(ctx context.Context, n string) resource.TestCheckFu
 	}
 }
 
-func testAccCheckProbeDeleteSecurityGroup(ctx context.Context, rName string, vpc *ec2.Vpc) resource.TestCheckFunc {
+func testAccCheckProbeDeleteSecurityGroup(ctx context.Context, rName string, vpc *awstypes.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		meta := acctest.Provider.Meta()
-		conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+		conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 		description := "Created By Amazon CloudWatch Network Monitor for " + rName
 		v, err := tfec2.FindSecurityGroupByDescriptionAndVPCID(ctx, conn, description, aws.ToString(vpc.VpcId))

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +23,7 @@ import (
 
 func TestAccVPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var associationSecondary, associationTertiary ec2.VpcCidrBlockAssociation
+	var associationSecondary, associationTertiary awstypes.VpcCidrBlockAssociation
 	resource1Name := "aws_vpc_ipv4_cidr_block_association.secondary_cidr"
 	resource2Name := "aws_vpc_ipv4_cidr_block_association.tertiary_cidr"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -59,7 +59,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
 
 func TestAccVPCIPv4CIDRBlockAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var associationSecondary, associationTertiary ec2.VpcCidrBlockAssociation
+	var associationSecondary, associationTertiary awstypes.VpcCidrBlockAssociation
 	resource1Name := "aws_vpc_ipv4_cidr_block_association.secondary_cidr"
 	resource2Name := "aws_vpc_ipv4_cidr_block_association.tertiary_cidr"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -89,7 +89,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var associationSecondary ec2.VpcCidrBlockAssociation
+	var associationSecondary awstypes.VpcCidrBlockAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -115,7 +115,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasicExplicitCIDR(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var associationSecondary ec2.VpcCidrBlockAssociation
+	var associationSecondary awstypes.VpcCidrBlockAssociation
 	cidr := "172.2.0.32/28"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -135,7 +135,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_ipamBasicExplicitCIDR(t *testing.T) {
 	})
 }
 
-func testAccCheckAdditionalVPCIPv4CIDRBlock(association *ec2.VpcCidrBlockAssociation, expected string) resource.TestCheckFunc {
+func testAccCheckAdditionalVPCIPv4CIDRBlock(association *awstypes.VpcCidrBlockAssociation, expected string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		CIDRBlock := association.CidrBlock
 		if *CIDRBlock != expected {
@@ -146,10 +146,10 @@ func testAccCheckAdditionalVPCIPv4CIDRBlock(association *ec2.VpcCidrBlockAssocia
 	}
 }
 
-func testAccCheckVPCAssociationCIDRPrefix(association *ec2.VpcCidrBlockAssociation, expected string) resource.TestCheckFunc {
+func testAccCheckVPCAssociationCIDRPrefix(association *awstypes.VpcCidrBlockAssociation, expected string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if strings.Split(aws.StringValue(association.CidrBlock), "/")[1] != expected {
-			return fmt.Errorf("Bad cidr prefix: %s", aws.StringValue(association.CidrBlock))
+		if strings.Split(aws.ToString(association.CidrBlock), "/")[1] != expected {
+			return fmt.Errorf("Bad cidr prefix: %s", aws.ToString(association.CidrBlock))
 		}
 
 		return nil
@@ -158,7 +158,7 @@ func testAccCheckVPCAssociationCIDRPrefix(association *ec2.VpcCidrBlockAssociati
 
 func testAccCheckVPCIPv4CIDRBlockAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_ipv4_cidr_block_association" {
@@ -182,7 +182,7 @@ func testAccCheckVPCIPv4CIDRBlockAssociationDestroy(ctx context.Context) resourc
 	}
 }
 
-func testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx context.Context, n string, v *ec2.VpcCidrBlockAssociation) resource.TestCheckFunc {
+func testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx context.Context, n string, v *awstypes.VpcCidrBlockAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -193,7 +193,7 @@ func testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx context.Context, n string
 			return fmt.Errorf("No EC2 VPC IPv4 CIDR Block Association is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, _, err := tfec2.FindVPCCIDRBlockAssociationByID(ctx, conn, rs.Primary.ID)
 

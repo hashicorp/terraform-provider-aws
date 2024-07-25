@@ -240,6 +240,18 @@ func ResourceJobDefinition() *schema.Resource {
 										Optional: true,
 										Default:  true,
 									},
+									"image_pull_secret": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrName: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
 									"metadata": {
 										Type:     schema.TypeList,
 										Optional: true,

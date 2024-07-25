@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_vpc_endpoint_service_allowed_principal")
-func ResourceVPCEndpointServiceAllowedPrincipal() *schema.Resource {
+// @SDKResource("aws_vpc_endpoint_service_allowed_principal", name="Endpoint Service Allowed Principal")
+func resourceVPCEndpointServiceAllowedPrincipal() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointServiceAllowedPrincipalCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointServiceAllowedPrincipalRead,

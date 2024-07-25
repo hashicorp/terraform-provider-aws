@@ -56,6 +56,7 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 							MaxItems: 1,
 							ExactlyOneOf: []string{
 								"event_destination.0.cloud_watch_destination",
+								"event_destination.0.event_bridge_destination",
 								"event_destination.0.kinesis_firehose_destination",
 								"event_destination.0.pinpoint_destination",
 								"event_destination.0.sns_destination",
@@ -92,12 +93,34 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+						"event_bridge_destination": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							ExactlyOneOf: []string{
+								"event_destination.0.cloud_watch_destination",
+								"event_destination.0.event_bridge_destination",
+								"event_destination.0.kinesis_firehose_destination",
+								"event_destination.0.pinpoint_destination",
+								"event_destination.0.sns_destination",
+							},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"event_bus_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
 						"kinesis_firehose_destination": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							ExactlyOneOf: []string{
 								"event_destination.0.cloud_watch_destination",
+								"event_destination.0.event_bridge_destination",
 								"event_destination.0.kinesis_firehose_destination",
 								"event_destination.0.pinpoint_destination",
 								"event_destination.0.sns_destination",
@@ -131,6 +154,7 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 							MaxItems: 1,
 							ExactlyOneOf: []string{
 								"event_destination.0.cloud_watch_destination",
+								"event_destination.0.event_bridge_destination",
 								"event_destination.0.kinesis_firehose_destination",
 								"event_destination.0.pinpoint_destination",
 								"event_destination.0.sns_destination",
@@ -151,6 +175,7 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 							MaxItems: 1,
 							ExactlyOneOf: []string{
 								"event_destination.0.cloud_watch_destination",
+								"event_destination.0.event_bridge_destination",
 								"event_destination.0.kinesis_firehose_destination",
 								"event_destination.0.pinpoint_destination",
 								"event_destination.0.sns_destination",
@@ -336,6 +361,10 @@ func flattenEventDestination(apiObject types.EventDestination) map[string]interf
 		m["cloud_watch_destination"] = []interface{}{flattenCloudWatchDestination(v)}
 	}
 
+	if v := apiObject.EventBridgeDestination; v != nil {
+		m["event_bridge_destination"] = []interface{}{flattenEventBridgeDestination(v)}
+	}
+
 	if v := apiObject.KinesisFirehoseDestination; v != nil {
 		m["kinesis_firehose_destination"] = []interface{}{flattenKinesisFirehoseDestination(v)}
 	}
@@ -364,6 +393,20 @@ func flattenCloudWatchDestination(apiObject *types.CloudWatchDestination) map[st
 
 	if v := apiObject.DimensionConfigurations; v != nil {
 		m["dimension_configuration"] = flattenCloudWatchDimensionConfigurations(v)
+	}
+
+	return m
+}
+
+func flattenEventBridgeDestination(apiObject *types.EventBridgeDestination) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.EventBusArn; v != nil {
+		m["event_bus_arn"] = aws.ToString(v)
 	}
 
 	return m
@@ -460,6 +503,10 @@ func expandEventDestination(tfMap map[string]interface{}) *types.EventDestinatio
 		a.Enabled = v
 	}
 
+	if v, ok := tfMap["event_bridge_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		a.EventBridgeDestination = expandEventBridgeDestinaton(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["kinesis_firehose_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.KinesisFirehoseDestination = expandKinesisFirehoseDestination(v[0].(map[string]interface{}))
 	}
@@ -488,6 +535,20 @@ func expandCloudWatchDestination(tfMap map[string]interface{}) *types.CloudWatch
 
 	if v, ok := tfMap["dimension_configuration"].([]interface{}); ok && len(v) > 0 {
 		a.DimensionConfigurations = expandCloudWatchDimensionConfigurations(v)
+	}
+
+	return a
+}
+
+func expandEventBridgeDestinaton(tfMap map[string]interface{}) *types.EventBridgeDestination {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.EventBridgeDestination{}
+
+	if v, ok := tfMap["event_bus_arn"].(string); ok && v != "" {
+		a.EventBusArn = aws.String(v)
 	}
 
 	return a

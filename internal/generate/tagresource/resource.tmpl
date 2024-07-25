@@ -55,7 +55,7 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	value := d.Get(names.AttrValue).(string)
 
 	{{ if eq .ServicePackage "ec2" }}
-	if err := createTagsV2(ctx, conn, identifier, TagsV2(tftags.New(ctx, map[string]string{key: value}))); err != nil {
+	if err := createTags(ctx, conn, identifier, Tags(tftags.New(ctx, map[string]string{key: value}))); err != nil {
 	{{- else }}
 	if err := {{ .UpdateTagsFunc }}(ctx, conn, identifier, nil, map[string]string{key: value}); err != nil {
 	{{- end }}

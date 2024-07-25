@@ -8,10 +8,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +24,7 @@ import (
 )
 
 func testAccPreCheckDefaultSubnetExists(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeSubnetsInput{
 		Filters: tfec2.NewAttributeFilterList(
@@ -45,7 +46,7 @@ func testAccPreCheckDefaultSubnetExists(ctx context.Context, t *testing.T) {
 }
 
 func testAccPreCheckDefaultSubnetNotFound(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeSubnetsInput{
 		Filters: tfec2.NewAttributeFilterList(
@@ -62,7 +63,7 @@ func testAccPreCheckDefaultSubnetNotFound(ctx context.Context, t *testing.T) {
 	}
 
 	for _, v := range subnets {
-		subnetID := aws.StringValue(v.SubnetId)
+		subnetID := aws.ToString(v.SubnetId)
 
 		t.Logf("Deleting existing default subnet: %s", subnetID)
 
@@ -80,13 +81,13 @@ func testAccPreCheckDefaultSubnetNotFound(ctx context.Context, t *testing.T) {
 
 func testAccDefaultSubnet_Existing_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Subnet
+	var v awstypes.Subnet
 	resourceName := "aws_default_subnet.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
+			acctest.PreCheckRegionNot(t, names.USWest2RegionID, names.USGovWest1RegionID)
 			testAccPreCheckDefaultSubnetExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -126,7 +127,7 @@ func testAccDefaultSubnet_Existing_basic(t *testing.T) {
 
 func testAccDefaultSubnet_Existing_forceDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Subnet
+	var v awstypes.Subnet
 	resourceName := "aws_default_subnet.test"
 
 	resource.Test(t, resource.TestCase{
@@ -153,7 +154,7 @@ func testAccDefaultSubnet_Existing_forceDestroy(t *testing.T) {
 
 func testAccDefaultSubnet_Existing_ipv6(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Subnet
+	var v awstypes.Subnet
 	resourceName := "aws_default_subnet.test"
 
 	resource.Test(t, resource.TestCase{
@@ -199,7 +200,7 @@ func testAccDefaultSubnet_Existing_ipv6(t *testing.T) {
 
 func testAccDefaultSubnet_Existing_privateDNSNameOptionsOnLaunch(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Subnet
+	var v awstypes.Subnet
 	resourceName := "aws_default_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -247,7 +248,7 @@ func testAccDefaultSubnet_Existing_privateDNSNameOptionsOnLaunch(t *testing.T) {
 
 func testAccDefaultSubnet_NotFound_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Subnet
+	var v awstypes.Subnet
 	resourceName := "aws_default_subnet.test"
 
 	resource.Test(t, resource.TestCase{
@@ -293,7 +294,7 @@ func testAccDefaultSubnet_NotFound_basic(t *testing.T) {
 
 func testAccDefaultSubnet_NotFound_ipv6Native(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Subnet
+	var v awstypes.Subnet
 	resourceName := "aws_default_subnet.test"
 
 	resource.Test(t, resource.TestCase{
@@ -342,7 +343,7 @@ func testAccDefaultSubnet_NotFound_ipv6Native(t *testing.T) {
 // Any missing default subnets are then created.
 func testAccCheckDefaultSubnetDestroyExists(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_subnet" {
@@ -365,7 +366,7 @@ func testAccCheckDefaultSubnetDestroyExists(ctx context.Context) resource.TestCh
 // Any missing default subnets are then created.
 func testAccCheckDefaultSubnetDestroyNotFound(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_subnet" {
@@ -390,9 +391,9 @@ func testAccCheckDefaultSubnetDestroyNotFound(ctx context.Context) resource.Test
 }
 
 func testAccCreateMissingDefaultSubnets(ctx context.Context) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	output, err := conn.DescribeAvailabilityZonesWithContext(ctx, &ec2.DescribeAvailabilityZonesInput{
+	output, err := conn.DescribeAvailabilityZones(ctx, &ec2.DescribeAvailabilityZonesInput{
 		Filters: tfec2.NewAttributeFilterList(
 			map[string]string{
 				"opt-in-status": "opt-in-not-required",
@@ -406,9 +407,9 @@ func testAccCreateMissingDefaultSubnets(ctx context.Context) error {
 	}
 
 	for _, v := range output.AvailabilityZones {
-		availabilityZone := aws.StringValue(v.ZoneName)
+		availabilityZone := aws.ToString(v.ZoneName)
 
-		_, err := conn.CreateDefaultSubnetWithContext(ctx, &ec2.CreateDefaultSubnetInput{
+		_, err := conn.CreateDefaultSubnet(ctx, &ec2.CreateDefaultSubnetInput{
 			AvailabilityZone: aws.String(availabilityZone),
 		})
 

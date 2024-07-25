@@ -152,7 +152,7 @@ func (r *instanceConnectEndpointResource) Create(ctx context.Context, request re
 
 	// Additional fields.
 	input.ClientToken = aws.String(id.UniqueId())
-	input.TagSpecifications = getTagSpecificationsInV2(ctx, awstypes.ResourceTypeInstanceConnectEndpoint)
+	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeInstanceConnectEndpoint)
 
 	output, err := conn.CreateInstanceConnectEndpoint(ctx, input)
 
@@ -212,7 +212,7 @@ func (r *instanceConnectEndpointResource) Read(ctx context.Context, request reso
 		return
 	}
 
-	setTagsOutV2(ctx, instanceConnectEndpoint.Tags)
+	setTagsOut(ctx, instanceConnectEndpoint.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

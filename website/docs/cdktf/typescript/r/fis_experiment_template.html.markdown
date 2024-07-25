@@ -78,9 +78,17 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `experimentOptions` - (Optional) The experiment options for the experiment template. See [experiment_options](#experiment_options) below for more details!
 * `tags` - (Optional) Key-value mapping of tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target` - (Optional) Target of an action. See below.
 * `logConfiguration` - (Optional) The configuration for experiment logging. See below.
+
+### experiment_options
+
+The `experimentOptions` block supports the following:
+
+* `accountTargeting` - (Optional) Specifies the account targeting setting for experiment options. Supports `single-account` and `multi-account`.
+* `emptyTargetResolutionMode` - (Optional) Specifies the empty target resolution mode for experiment options. Supports `fail` and `skip`.
 
 ### `action`
 
@@ -185,4 +193,4 @@ Using `terraform import`, import FIS Experiment Templates using the `id`. For ex
 % terraform import aws_fis_experiment_template.template EXT123AbCdEfGhIjK
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c6ac5c5c97e3007e8434c71f6194fb00054605e896f327f647ed933df70248d8 -->
+<!-- cache-key: cdktf-0.20.1 input-3b2c1302322bcf775a8a5629d06178ffe45700ee275181f9d2d5b482e9c22cf2 -->

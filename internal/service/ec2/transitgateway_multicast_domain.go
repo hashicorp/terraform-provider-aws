@@ -96,7 +96,7 @@ func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.
 			Igmpv2Support:                awstypes.Igmpv2SupportValue(d.Get("igmpv2_support").(string)),
 			StaticSourcesSupport:         awstypes.StaticSourcesSupportValue(d.Get("static_sources_support").(string)),
 		},
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeTransitGatewayMulticastDomain),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeTransitGatewayMulticastDomain),
 		TransitGatewayId:  aws.String(d.Get(names.AttrTransitGatewayID).(string)),
 	}
 
@@ -140,7 +140,7 @@ func resourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.Re
 	d.Set("static_sources_support", multicastDomain.Options.StaticSourcesSupport)
 	d.Set(names.AttrTransitGatewayID, multicastDomain.TransitGatewayId)
 
-	setTagsOutV2(ctx, multicastDomain.Tags)
+	setTagsOut(ctx, multicastDomain.Tags)
 
 	return diags
 }

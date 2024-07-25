@@ -143,7 +143,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  EngineModeProvisioned,
+				Default:  engineModeProvisioned,
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,

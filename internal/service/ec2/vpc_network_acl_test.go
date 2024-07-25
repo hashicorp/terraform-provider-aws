@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccVPCNetworkACL_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -57,7 +57,7 @@ func TestAccVPCNetworkACL_basic(t *testing.T) {
 
 func TestAccVPCNetworkACL_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -81,7 +81,7 @@ func TestAccVPCNetworkACL_disappears(t *testing.T) {
 
 func TestAccVPCNetworkACL_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -127,7 +127,7 @@ func TestAccVPCNetworkACL_tags(t *testing.T) {
 
 func TestAccVPCNetworkACL_Egress_mode(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -164,7 +164,7 @@ func TestAccVPCNetworkACL_Egress_mode(t *testing.T) {
 
 func TestAccVPCNetworkACL_Ingress_mode(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -201,7 +201,7 @@ func TestAccVPCNetworkACL_Ingress_mode(t *testing.T) {
 
 func TestAccVPCNetworkACL_egressAndIngressRules(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -239,7 +239,7 @@ func TestAccVPCNetworkACL_egressAndIngressRules(t *testing.T) {
 
 func TestAccVPCNetworkACL_OnlyIngressRules_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -269,7 +269,7 @@ func TestAccVPCNetworkACL_OnlyIngressRules_basic(t *testing.T) {
 
 func TestAccVPCNetworkACL_OnlyIngressRules_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -319,7 +319,7 @@ func TestAccVPCNetworkACL_OnlyIngressRules_update(t *testing.T) {
 
 func TestAccVPCNetworkACL_caseSensitivityNoChanges(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -341,7 +341,7 @@ func TestAccVPCNetworkACL_caseSensitivityNoChanges(t *testing.T) {
 
 func TestAccVPCNetworkACL_onlyEgressRules(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -363,7 +363,7 @@ func TestAccVPCNetworkACL_onlyEgressRules(t *testing.T) {
 
 func TestAccVPCNetworkACL_subnetChange(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -400,7 +400,7 @@ func TestAccVPCNetworkACL_subnetChange(t *testing.T) {
 
 func TestAccVPCNetworkACL_subnets(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -440,7 +440,7 @@ func TestAccVPCNetworkACL_subnets(t *testing.T) {
 
 func TestAccVPCNetworkACL_subnetsDelete(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -478,7 +478,7 @@ func TestAccVPCNetworkACL_subnetsDelete(t *testing.T) {
 
 func TestAccVPCNetworkACL_ipv6Rules(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -510,7 +510,7 @@ func TestAccVPCNetworkACL_ipv6Rules(t *testing.T) {
 
 func TestAccVPCNetworkACL_ipv6ICMPRules(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -532,7 +532,7 @@ func TestAccVPCNetworkACL_ipv6ICMPRules(t *testing.T) {
 
 func TestAccVPCNetworkACL_ipv6VPCRules(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -558,7 +558,7 @@ func TestAccVPCNetworkACL_ipv6VPCRules(t *testing.T) {
 
 func TestAccVPCNetworkACL_espProtocol(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -580,7 +580,7 @@ func TestAccVPCNetworkACL_espProtocol(t *testing.T) {
 
 func testAccCheckNetworkACLDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_network_acl" {
@@ -604,7 +604,7 @@ func testAccCheckNetworkACLDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckNetworkACLExists(ctx context.Context, n string, v *ec2.NetworkAcl) resource.TestCheckFunc {
+func testAccCheckNetworkACLExists(ctx context.Context, n string, v *awstypes.NetworkAcl) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -615,7 +615,7 @@ func testAccCheckNetworkACLExists(ctx context.Context, n string, v *ec2.NetworkA
 			return fmt.Errorf("No EC2 Network ACL ID is set: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindNetworkACLByID(ctx, conn, rs.Primary.ID)
 
