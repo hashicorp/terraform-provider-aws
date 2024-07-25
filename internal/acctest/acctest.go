@@ -838,6 +838,10 @@ func Partition() string {
 	return names.PartitionForRegion(Region())
 }
 
+func PartitionRegions() []string {
+	return RegionsInPartition(Partition())
+}
+
 func PartitionDNSSuffix() string {
 	return names.DNSSuffixForPartition(Partition())
 }
@@ -886,6 +890,10 @@ func PreCheckPartitionHasService(t *testing.T, serviceID string) {
 
 func PreCheckMultipleRegion(t *testing.T, regions int) {
 	t.Helper()
+
+	if len(PartitionRegions()) <= 1 {
+		t.Skipf("Skipping multiple region test as 1 or fewer regions detected in partion (%s)", Partition())
+	}
 
 	if Region() == AlternateRegion() {
 		t.Fatalf("%s and %s must be set to different values for acceptance tests", envvar.DefaultRegion, envvar.AlternateRegion)

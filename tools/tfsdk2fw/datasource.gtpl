@@ -15,10 +15,7 @@ import (
 
 // @FrameworkDataSource
 func newDataSource{{ .Name }}(context.Context) (datasource.DataSourceWithConfigure, error) {
-	d := &dataSource{{ .Name }}{}
-	d.SetMigratedFromPluginSDK(true)
-
-	return d, nil
+	return &dataSource{{ .Name }}{}, nil
 }
 
 type dataSource{{ .Name }} struct {
