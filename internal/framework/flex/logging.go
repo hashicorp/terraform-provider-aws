@@ -15,7 +15,8 @@ const (
 )
 
 const (
-	logAttrKeySourceType = "autoflex.source.type"
+	logAttrKeySourceType      = "autoflex.source.type"
+	logAttrKeySourceFieldname = "autoflex.source.fieldname"
 
 	logAttrKeyTargetKind = "autoflex.target.kind"
 	logAttrKeyTargetType = "autoflex.target.type"

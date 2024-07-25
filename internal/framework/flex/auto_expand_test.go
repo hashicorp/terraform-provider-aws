@@ -1674,6 +1674,7 @@ func TestExpandOptions(t *testing.T) {
 			WantTarget: &aws01{},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*tf01](), reflect.TypeFor[*aws01]()),
+				ignoredFieldLogLine(reflect.TypeFor[*tf01](), "Tags"),
 			},
 		},
 		{
@@ -1691,6 +1692,7 @@ func TestExpandOptions(t *testing.T) {
 			WantTarget: &aws01{Field1: true},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*tf01](), reflect.TypeFor[*aws01]()),
+				ignoredFieldLogLine(reflect.TypeFor[*tf01](), "Tags"),
 			},
 		},
 		{
@@ -1740,6 +1742,7 @@ func TestExpandOptions(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*tf01](), reflect.TypeFor[*aws01]()),
+				ignoredFieldLogLine(reflect.TypeFor[*tf01](), "Field1"),
 			},
 		},
 	}

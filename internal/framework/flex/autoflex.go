@@ -145,6 +145,10 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 		}
 		fieldName := field.Name
 		if opts.IsIgnoredField(fieldName) {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored field", map[string]any{
+				logAttrKeySourceType:      fullTypeName(reflect.TypeOf(from)),
+				logAttrKeySourceFieldname: fieldName,
+			})
 			continue
 		}
 		if fieldName == MapBlockKey {

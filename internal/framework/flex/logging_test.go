@@ -21,6 +21,16 @@ func flatteningLogLine(sourceType, targetType reflect.Type) map[string]any {
 	return infoLogLine("Flattening", sourceType, targetType)
 }
 
+func ignoredFieldLogLine(sourceType reflect.Type, fieldName string) map[string]any {
+	return map[string]any{
+		"@level":                  hclog.Trace.String(),
+		"@module":                 logModule,
+		"@message":                "Skipping ignored field",
+		logAttrKeySourceType:      fullTypeName(sourceType),
+		logAttrKeySourceFieldname: fieldName,
+	}
+}
+
 func infoLogLine(message string, sourceType, targetType reflect.Type) map[string]any {
 	return map[string]any{
 		"@level":             hclog.Info.String(),

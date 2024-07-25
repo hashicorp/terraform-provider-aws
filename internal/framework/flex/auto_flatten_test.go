@@ -1368,6 +1368,7 @@ func TestFlattenOptions(t *testing.T) {
 			WantDiff: true, // Ignored MapValue type, expect diff
 			expectedLogLines: []map[string]any{
 				flatteningLogLine(reflect.TypeFor[*aws01](), reflect.TypeFor[*tf01]()),
+				ignoredFieldLogLine(reflect.TypeFor[*aws01](), "Tags"),
 			},
 		},
 		{
@@ -1384,6 +1385,7 @@ func TestFlattenOptions(t *testing.T) {
 			WantDiff: true, // Ignored MapValue type, expect diff
 			expectedLogLines: []map[string]any{
 				flatteningLogLine(reflect.TypeFor[*aws01](), reflect.TypeFor[*tf01]()),
+				ignoredFieldLogLine(reflect.TypeFor[*aws01](), "Tags"),
 			},
 		},
 		{
@@ -1434,6 +1436,7 @@ func TestFlattenOptions(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				flatteningLogLine(reflect.TypeFor[*aws01](), reflect.TypeFor[*tf01]()),
+				ignoredFieldLogLine(reflect.TypeFor[*aws01](), "Field1"),
 			},
 		},
 	}
