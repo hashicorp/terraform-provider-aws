@@ -794,8 +794,8 @@ github.com/katbyte/andreyvit-diff v0.0.2 h1:uQGxP2z57bTUGn3SCFzYKgtIKLeuYE+k9dxq
 github.com/katbyte/andreyvit-diff v0.0.2/go.mod h1:TdKKfasbASLXZHMVyCoXJw999kjRmOIeHSdG1Pm/x1Y=
 github.com/katbyte/sergi-go-diff v1.2.1 h1:etD07v2OL+HOzN32zF202yZbpzoUkizbfvbggpBSn/s=
 github.com/katbyte/sergi-go-diff v1.2.1/go.mod h1:BxkLLDDB1iVQsnURErqoQMjkyXIlR0DefDKzZCUHNEw=
-github.com/katbyte/terrafmt v0.5.3 h1:lBWDMv9YRurXFUuHXdpEJHkAO4YFluanIyiStK8zZJQ=
-github.com/katbyte/terrafmt v0.5.3/go.mod h1:QSiA1xE/ld7Iy0VgByR8hWBmIy74Ah9XSeOYNE7JA7Y=
+github.com/katbyte/terrafmt v0.5.4 h1:pL/6Ro/lAxuq4uClAxCFFHSMymdkJoZ+r0BRtktFTdk=
+github.com/katbyte/terrafmt v0.5.4/go.mod h1:sgkrsKcZoOxgmoNfFrSYoxXiF+FdBEXcS/ZKfDSvc3o=
 github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 h1:Z9n2FFNUXsshfwJMBgNA0RU6/i7WVaAegv3PtuIHPMs=
 github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51/go.mod h1:CzGEWj7cYgsdH8dAjBGEr58BoE7ScuLd+fwFZ44+/x8=
 github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd/go.mod h1:CT57kijsi8u/K/BOFA39wgDQJ9CxiF4nAY/ojJ6r6mM=
