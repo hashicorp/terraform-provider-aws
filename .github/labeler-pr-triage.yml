@@ -1460,6 +1460,7 @@ service/meta:
               - 'website/**/partition*'
               - 'website/**/region*'
               - 'website/**/service\.*'
+              - 'website/**/service_principal*'
 service/mgh:
   - any:
       - changed-files:

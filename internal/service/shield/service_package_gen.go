@@ -34,6 +34,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newProactiveEngagementResource,
 			Name:    "Proactive Engagement",
 		},
+		{
+			Factory: newResourceSubscription,
+			Name:    "Subscription",
+		},
 	}
 }
 

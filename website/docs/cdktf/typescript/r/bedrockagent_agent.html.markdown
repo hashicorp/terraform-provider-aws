@@ -1,5 +1,5 @@
 ---
-subcategory: "Agents for Amazon Bedrock"
+subcategory: "Bedrock Agents"
 layout: "aws"
 page_title: "AWS: aws_bedrockagent_agent"
 description: |-
@@ -137,28 +137,29 @@ The following arguments are optional:
 * `idleSessionTtlInSeconds` - (Optional) Number of seconds for which Amazon Bedrock keeps information about a user's conversation with the agent. A user interaction remains active for the amount of time specified. If no conversation occurs during this time, the session expires and Amazon Bedrock deletes any data provided before the timeout.
 * `instruction` - (Optional) Instructions that tell the agent what it should do and how it should interact with users.
 * `prepareAgent` (Optional) Whether to prepare the agent after creation or modification. Defaults to `true`.
-* `promptOverrideConfiguration` (Optional) Configurations to override prompt templates in different parts of an agent sequence. For more information, see [Advanced prompts](https://docs.aws.amazon.com/bedrock/latest/userguide/advanced-prompts.html). See [`promptOverrideConfiguration` block](#prompt_override_configuration-block) for details.
+* `promptOverrideConfiguration` (Optional) Configurations to override prompt templates in different parts of an agent sequence. For more information, see [Advanced prompts](https://docs.aws.amazon.com/bedrock/latest/userguide/advanced-prompts.html). See [`promptOverrideConfiguration` Block](#prompt_override_configuration-block) for details.
+* `skipResourceInUseCheck` - (Optional) Whether the in-use check is skipped when deleting the agent.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `promptOverrideConfiguration` block
+### `promptOverrideConfiguration` Block
 
 The `promptOverrideConfiguration` configuration block supports the following arguments:
 
-* `prompt_configurations` - (Required) Configurations to override a prompt template in one part of an agent sequence. See [`prompt_configurations` block](#prompt_configurations-block) for details.
+* `prompt_configurations` - (Required) Configurations to override a prompt template in one part of an agent sequence. See [`prompt_configurations` Block](#prompt_configurations-block) for details.
 * `override_lambda` - (Optional) ARN of the Lambda function to use when parsing the raw foundation model output in parts of the agent sequence. If you specify this field, at least one of the `prompt_configurations` block must contain a `parser_mode` value that is set to `OVERRIDDEN`.
 
-### `prompt_configurations` block
+### `prompt_configurations` Block
 
 The `prompt_configurations` configuration block supports the following arguments:
 
 * `base_prompt_template` - (Required) prompt template with which to replace the default prompt template. You can use placeholder variables in the base prompt template to customize the prompt. For more information, see [Prompt template placeholder variables](https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-placeholders.html).
-* `inference_configuration` - (Required) Inference parameters to use when the agent invokes a foundation model in the part of the agent sequence defined by the `prompt_type`. For more information, see [Inference parameters for foundation models](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html). See [`inference_configuration` block](#inference_configuration-block) for details.
+* `inference_configuration` - (Required) Inference parameters to use when the agent invokes a foundation model in the part of the agent sequence defined by the `prompt_type`. For more information, see [Inference parameters for foundation models](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html). See [`inference_configuration` Block](#inference_configuration-block) for details.
 * `parser_mode` - (Required) Whether to override the default parser Lambda function when parsing the raw foundation model output in the part of the agent sequence defined by the `prompt_type`. If you set the argument as `OVERRIDDEN`, the `override_lambda` argument in the [`promptOverrideConfiguration`](#prompt_override_configuration-block) block must be specified with the ARN of a Lambda function. Valid values: `DEFAULT`, `OVERRIDDEN`.
 * `prompt_creation_mode` - (Required) Whether to override the default prompt template for this `prompt_type`. Set this argument to `OVERRIDDEN` to use the prompt that you provide in the `base_prompt_template`. If you leave it as `DEFAULT`, the agent uses a default prompt template. Valid values: `DEFAULT`, `OVERRIDDEN`.
 * `prompt_state` - (Required) Whether to allow the agent to carry out the step specified in the `prompt_type`. If you set this argument to `DISABLED`, the agent skips that step. Valid Values: `ENABLED`, `DISABLED`.
 * `prompt_type` - (Required) Step in the agent sequence that this prompt configuration applies to. Valid values: `PRE_PROCESSING`, `ORCHESTRATION`, `POST_PROCESSING`, `KNOWLEDGE_BASE_RESPONSE_GENERATION`.
 
-### `inference_configuration` block
+### `inference_configuration` Block
 
 The `inference_configuration` configuration block supports the following arguments:
 
@@ -214,4 +215,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Agent using the agent
 % terraform import aws_bedrockagent_agent.example GGRRAED6JP
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e31025b680e674ea65764d99b335cb39542a596b973c195203ca856e04a62bb7 -->
+<!-- cache-key: cdktf-0.20.1 input-acb4c2d3b81a79eb9e4203112e86e0dbc9c4e32ff252ce91902801ea3f230570 -->

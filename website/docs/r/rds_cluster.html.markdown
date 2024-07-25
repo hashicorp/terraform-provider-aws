@@ -16,6 +16,8 @@ Changes to an RDS Cluster can occur when you manually change a parameter, such a
 
 ~> **Note:** Multi-AZ DB clusters are supported only for the MySQL and PostgreSQL DB engines.
 
+~> **Note:** `ca_certificate_identifier` is only supported for Multi-AZ DB clusters.
+
 ~> **Note:** using `apply_immediately` can result in a brief downtime as the server reboots. See the AWS Docs on [RDS Maintenance][4] for more information.
 
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
@@ -35,7 +37,7 @@ resource "aws_rds_cluster" "default" {
   availability_zones      = ["us-west-2a", "us-west-2b", "us-west-2c"]
   database_name           = "mydb"
   master_username         = "foo"
-  master_password         = "bar"
+  master_password         = "must_be_eight_characters"
   backup_retention_period = 5
   preferred_backup_window = "07:00-09:00"
 }
@@ -49,7 +51,7 @@ resource "aws_rds_cluster" "default" {
   availability_zones      = ["us-west-2a", "us-west-2b", "us-west-2c"]
   database_name           = "mydb"
   master_username         = "foo"
-  master_password         = "bar"
+  master_password         = "must_be_eight_characters"
   backup_retention_period = 5
   preferred_backup_window = "07:00-09:00"
 }
@@ -64,7 +66,7 @@ resource "aws_rds_cluster" "postgresql" {
   availability_zones      = ["us-west-2a", "us-west-2b", "us-west-2c"]
   database_name           = "mydb"
   master_username         = "foo"
-  master_password         = "bar"
+  master_password         = "must_be_eight_characters"
   backup_retention_period = 5
   preferred_backup_window = "07:00-09:00"
 }
@@ -208,6 +210,7 @@ This resource supports the following arguments:
   A maximum of 3 AZs can be configured.
 * `backtrack_window` - (Optional) Target backtrack window, in seconds. Only available for `aurora` and `aurora-mysql` engines currently. To disable backtracking, set this value to `0`. Defaults to `0`. Must be between `0` and `259200` (72 hours)
 * `backup_retention_period` - (Optional) Days to retain backups for. Default `1`
+* `ca_certificate_identifier` - (Optional) The CA certificate identifier to use for the DB cluster's server certificate.
 * `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifier`.
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `copy_tags_to_snapshot` – (Optional, boolean) Copy all Cluster `tags` to snapshots. Default is `false`.
@@ -229,6 +232,7 @@ This resource supports the following arguments:
 * `enable_local_write_forwarding` - (Optional) Whether read replicas can forward write operations to the writer DB instance in the DB cluster. By default, write operations aren't allowed on reader DB instances.. See the [User Guide for Aurora](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-mysql-write-forwarding.html) for more information. **NOTE:** Local write forwarding requires Aurora MySQL version 3.04 or higher.
 * `enabled_cloudwatch_logs_exports` - (Optional) Set of log types to export to cloudwatch. If omitted, no logs will be exported. The following log types are supported: `audit`, `error`, `general`, `slowquery`, `postgresql` (PostgreSQL).
 * `engine_mode` - (Optional) Database engine mode. Valid values: `global` (only valid for Aurora MySQL 1.21 and earlier), `parallelquery`, `provisioned`, `serverless`. Defaults to: `provisioned`. See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html) for limitations when using `serverless`.
+* `engine_lifecycle_support` - (Optional) The life cycle type for this DB instance. This setting is valid for cluster types Aurora DB clusters and Multi-AZ DB clusters. Valid values are `open-source-rds-extended-support`, `open-source-rds-extended-support-disabled`. Default value is `open-source-rds-extended-support`. [Using Amazon RDS Extended Support]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/extended-support.html
 * `engine_version` - (Optional) Database engine version. Updating this argument results in an outage. See the [Aurora MySQL](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Updates.html) and [Aurora Postgres](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.Updates.html) documentation for your configured engine to determine this value, or by running `aws rds describe-db-engine-versions`. For example with Aurora MySQL 2, a potential value for this argument is `5.7.mysql_aurora.2.03.2`. The value can contain a partial version where supported by the API. The actual engine version used is returned in the attribute `engine_version_actual`, , see [Attribute Reference](#attribute-reference) below.
 * `engine` - (Required) Name of the database engine to be used for this DB cluster. Valid Values: `aurora-mysql`, `aurora-postgresql`, `mysql`, `postgres`. (Note that `mysql` and `postgres` are Multi-AZ RDS clusters).
 * `final_snapshot_identifier` - (Optional) Name of your final DB snapshot when this DB cluster is deleted. If omitted, no final snapshot will be made.
@@ -325,6 +329,7 @@ resource "aws_rds_cluster" "example" {
     auto_pause               = true
     max_capacity             = 256
     min_capacity             = 2
+    seconds_before_timeout   = 360
     seconds_until_auto_pause = 300
     timeout_action           = "ForceApplyCapacityChange"
   }
@@ -334,6 +339,7 @@ resource "aws_rds_cluster" "example" {
 * `auto_pause` - (Optional) Whether to enable automatic pause. A DB cluster can be paused only when it's idle (it has no connections). If a DB cluster is paused for more than seven days, the DB cluster might be backed up with a snapshot. In this case, the DB cluster is restored when there is a request to connect to it. Defaults to `true`.
 * `max_capacity` - (Optional) Maximum capacity for an Aurora DB cluster in `serverless` DB engine mode. The maximum capacity must be greater than or equal to the minimum capacity. Valid Aurora MySQL capacity values are `1`, `2`, `4`, `8`, `16`, `32`, `64`, `128`, `256`. Valid Aurora PostgreSQL capacity values are (`2`, `4`, `8`, `16`, `32`, `64`, `192`, and `384`). Defaults to `16`.
 * `min_capacity` - (Optional) Minimum capacity for an Aurora DB cluster in `serverless` DB engine mode. The minimum capacity must be lesser than or equal to the maximum capacity. Valid Aurora MySQL capacity values are `1`, `2`, `4`, `8`, `16`, `32`, `64`, `128`, `256`. Valid Aurora PostgreSQL capacity values are (`2`, `4`, `8`, `16`, `32`, `64`, `192`, and `384`). Defaults to `1`.
+* `seconds_before_timeout` - (Optional) Amount of time, in seconds, that Aurora Serverless v1 tries to find a scaling point to perform seamless scaling before enforcing the timeout action. Valid values are `60` through `600`. Defaults to `300`.
 * `seconds_until_auto_pause` - (Optional) Time, in seconds, before an Aurora DB cluster in serverless mode is paused. Valid values are `300` through `86400`. Defaults to `300`.
 * `timeout_action` - (Optional) Action to take when the timeout is reached. Valid values: `ForceApplyCapacityChange`, `RollbackCapacityChange`. Defaults to `RollbackCapacityChange`. See [documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v1.how-it-works.html#aurora-serverless.how-it-works.timeout-action).
 
@@ -368,6 +374,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `cluster_members` – List of RDS Instances that are a part of this cluster
 * `availability_zones` - Availability zone of the instance
 * `backup_retention_period` - Backup retention period
+* `ca_certificate_identifier` - CA identifier of the CA certificate used for the DB instance's server certificate
+* `ca_certificate_valid_till` - Expiration date of the DB instance’s server certificate
 * `preferred_backup_window` - Daily time range during which the backups happen
 * `preferred_maintenance_window` - Maintenance window
 * `endpoint` - DNS address of the RDS instance

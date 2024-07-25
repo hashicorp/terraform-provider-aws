@@ -94,7 +94,7 @@ func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	input := &ec2.CreatePlacementGroupInput{
 		GroupName:         aws.String(name),
 		Strategy:          awstypes.PlacementStrategy(d.Get("strategy").(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypePlacementGroup),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypePlacementGroup),
 	}
 
 	if v, ok := d.GetOk("partition_count"); ok {
@@ -152,7 +152,7 @@ func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("spread_level", pg.SpreadLevel)
 	d.Set("strategy", pg.Strategy)
 
-	setTagsOutV2(ctx, pg.Tags)
+	setTagsOut(ctx, pg.Tags)
 
 	return diags
 }

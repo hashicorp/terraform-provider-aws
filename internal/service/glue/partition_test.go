@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -179,7 +179,7 @@ func TestAccGluePartition_Disappears_table(t *testing.T) {
 
 func testAccCheckPartitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_partition" {
@@ -187,7 +187,7 @@ func testAccCheckPartitionDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			if _, err := tfglue.FindPartitionByValues(ctx, conn, rs.Primary.ID); err != nil {
-				if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+				if errs.IsA[*awstypes.EntityNotFoundException](err) {
 					continue
 				}
 
@@ -210,7 +210,7 @@ func testAccCheckPartitionExists(ctx context.Context, name string) resource.Test
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 		out, err := tfglue.FindPartitionByValues(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

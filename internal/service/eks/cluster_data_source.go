@@ -30,6 +30,10 @@ func dataSourceCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"bootstrap_cluster_creator_admin_permissions": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 					},
 				},
 			},

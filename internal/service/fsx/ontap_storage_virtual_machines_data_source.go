@@ -6,8 +6,9 @@ package fsx
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/fsx"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -34,7 +35,7 @@ func dataSourceONTAPStorageVirtualMachines() *schema.Resource {
 
 func dataSourceONTAPStorageVirtualMachinesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	input := &fsx.DescribeStorageVirtualMachinesInput{}
 
@@ -46,15 +47,15 @@ func dataSourceONTAPStorageVirtualMachinesRead(ctx context.Context, d *schema.Re
 		input.Filters = nil
 	}
 
-	svms, err := findStorageVirtualMachines(ctx, conn, input, tfslices.PredicateTrue[*fsx.StorageVirtualMachine]())
+	svms, err := findStorageVirtualMachines(ctx, conn, input, tfslices.PredicateTrue[*awstypes.StorageVirtualMachine]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading FSx ONTAP Storage Virtual Machines: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set(names.AttrIDs, tfslices.ApplyToAll(svms, func(svm *fsx.StorageVirtualMachine) string {
-		return aws.StringValue(svm.StorageVirtualMachineId)
+	d.Set(names.AttrIDs, tfslices.ApplyToAll(svms, func(svm awstypes.StorageVirtualMachine) string {
+		return aws.ToString(svm.StorageVirtualMachineId)
 	}))
 
 	return diags
