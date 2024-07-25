@@ -331,9 +331,9 @@ resource "aws_db_snapshot_copy" "test" {
 func testAccSnapshotCopyConfig_share(rName string) string {
 	return acctest.ConfigCompose(testAccSnapshotCopyConfig_base(rName), fmt.Sprintf(`
 resource "aws_db_snapshot_copy" "test" {
-	source_db_snapshot_identifier = aws_db_snapshot.test.db_snapshot_arn
-	target_db_snapshot_identifier = "%[1]s-target"
-	shared_accounts               = ["all"]
+  source_db_snapshot_identifier = aws_db_snapshot.test.db_snapshot_arn
+  target_db_snapshot_identifier = "%[1]s-target"
+  shared_accounts               = ["all"]
 }
 `, rName))
 }
