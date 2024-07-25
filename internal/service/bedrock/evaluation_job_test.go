@@ -326,7 +326,7 @@ resource "aws_s3_object" "dataset" {
         		"aws:SourceAccount": "${data.aws_caller_identity.test.user_id}"
             },
             "ArnEquals": {
-				"aws:SourceArn" : "${data.aws_caller_identity.test.arn}:aws:bedrock:${data.aws_region.test.name}:${data.aws_caller_identity.test.user_id}:evaluation-job/*"
+				"aws:SourceArn" : "arn:aws:bedrock:${data.aws_region.test.name}:${data.aws_caller_identity.test.user_id}:evaluation-job/*"
             }
         }
     }]
