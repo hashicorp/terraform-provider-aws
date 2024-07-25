@@ -64,13 +64,13 @@ func TestAccIoTPolicyAttachment_basic(t *testing.T) {
 
 func testAccCheckPolicyAttchmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_policy_attachment" {
 				continue
 			}
 
-			_, err := tfiot.FindAttachedPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["policy"], rs.Primary.Attributes["target"])
+			_, err := tfiot.FindAttachedPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrPolicy], rs.Primary.Attributes[names.AttrTarget])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -94,9 +94,9 @@ func testAccCheckPolicyAttachmentExists(ctx context.Context, n string) resource.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
-		_, err := tfiot.FindAttachedPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["policy"], rs.Primary.Attributes["target"])
+		_, err := tfiot.FindAttachedPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrPolicy], rs.Primary.Attributes[names.AttrTarget])
 
 		return err
 	}

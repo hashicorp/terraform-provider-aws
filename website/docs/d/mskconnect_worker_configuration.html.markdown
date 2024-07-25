@@ -32,3 +32,4 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - a summary description of the worker configuration.
 * `latest_revision` - an ID of the latest successfully created revision of the worker configuration.
 * `properties_file_content` - contents of connect-distributed.properties file.
+* `tags` - A map of tags assigned to the resource.

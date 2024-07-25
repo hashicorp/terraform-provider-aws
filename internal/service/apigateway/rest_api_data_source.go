@@ -32,7 +32,7 @@ func dataSourceRestAPI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -41,7 +41,7 @@ func dataSourceRestAPI() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,11 +71,11 @@ func dataSourceRestAPI() *schema.Resource {
 				Type:     nullable.TypeNullableInt,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,7 +92,7 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	name := d.Get("name")
+	name := d.Get(names.AttrName)
 	inputGRAs := &apigateway.GetRestApisInput{}
 
 	match, err := findRestAPI(ctx, conn, inputGRAs, func(v *types.RestApi) bool {
@@ -105,9 +105,9 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.ToString(match.Id))
 	d.Set("api_key_source", match.ApiKeySource)
-	d.Set("arn", apiARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, apiARN(meta.(*conns.AWSClient), d.Id()))
 	d.Set("binary_media_types", match.BinaryMediaTypes)
-	d.Set("description", match.Description)
+	d.Set(names.AttrDescription, match.Description)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(match.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
@@ -117,7 +117,7 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta int
 	} else {
 		d.Set("minimum_compression_size", strconv.FormatInt(int64(aws.ToInt32(match.MinimumCompressionSize)), 10))
 	}
-	d.Set("policy", match.Policy)
+	d.Set(names.AttrPolicy, match.Policy)
 
 	inputGRs := &apigateway.GetResourcesInput{
 		RestApiId: aws.String(d.Id()),

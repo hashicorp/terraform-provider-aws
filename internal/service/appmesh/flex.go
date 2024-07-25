@@ -8,6 +8,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appmesh/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandClientPolicy(vClientPolicy []interface{}) *awstypes.ClientPolicy {
@@ -24,7 +25,7 @@ func expandClientPolicy(vClientPolicy []interface{}) *awstypes.ClientPolicy {
 
 		mTls := vTls[0].(map[string]interface{})
 
-		if vCertificate, ok := mTls["certificate"].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
+		if vCertificate, ok := mTls[names.AttrCertificate].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
 			mCertificate := vCertificate[0].(map[string]interface{})
 
 			if vFile, ok := mCertificate["file"].([]interface{}); ok && len(vFile) > 0 && vFile[0] != nil {
@@ -34,10 +35,10 @@ func expandClientPolicy(vClientPolicy []interface{}) *awstypes.ClientPolicy {
 
 				mFile := vFile[0].(map[string]interface{})
 
-				if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
+				if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 					file.CertificateChain = aws.String(vCertificateChain)
 				}
-				if vPrivateKey, ok := mFile["private_key"].(string); ok && vPrivateKey != "" {
+				if vPrivateKey, ok := mFile[names.AttrPrivateKey].(string); ok && vPrivateKey != "" {
 					file.PrivateKey = aws.String(vPrivateKey)
 				}
 
@@ -119,7 +120,7 @@ func expandClientPolicy(vClientPolicy []interface{}) *awstypes.ClientPolicy {
 
 					mFile := vFile[0].(map[string]interface{})
 
-					if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
+					if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 						file.CertificateChain = aws.String(vCertificateChain)
 					}
 
@@ -161,10 +162,10 @@ func expandDuration(vDuration []interface{}) *awstypes.Duration {
 
 	mDuration := vDuration[0].(map[string]interface{})
 
-	if vUnit, ok := mDuration["unit"].(string); ok && vUnit != "" {
+	if vUnit, ok := mDuration[names.AttrUnit].(string); ok && vUnit != "" {
 		duration.Unit = awstypes.DurationUnit(vUnit)
 	}
-	if vValue, ok := mDuration["value"].(int); ok && vValue > 0 {
+	if vValue, ok := mDuration[names.AttrValue].(int); ok && vValue > 0 {
 		duration.Value = aws.Int64(int64(vValue))
 	}
 
@@ -180,7 +181,7 @@ func expandGRPCRoute(vGrpcRoute []interface{}) *awstypes.GrpcRoute {
 
 	grpcRoute := &awstypes.GrpcRoute{}
 
-	if vGrpcRouteAction, ok := mGrpcRoute["action"].([]interface{}); ok && len(vGrpcRouteAction) > 0 && vGrpcRouteAction[0] != nil {
+	if vGrpcRouteAction, ok := mGrpcRoute[names.AttrAction].([]interface{}); ok && len(vGrpcRouteAction) > 0 && vGrpcRouteAction[0] != nil {
 		mGrpcRouteAction := vGrpcRouteAction[0].(map[string]interface{})
 
 		if vWeightedTargets, ok := mGrpcRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
@@ -191,15 +192,16 @@ func expandGRPCRoute(vGrpcRoute []interface{}) *awstypes.GrpcRoute {
 
 				mWeightedTarget := vWeightedTarget.(map[string]interface{})
 
+				if vPort, ok := mWeightedTarget["port"].(int); ok && vPort > 0 {
+					weightedTarget.Port = aws.Int32(int32(vPort))
+				}
+
 				if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
 					weightedTarget.VirtualNode = aws.String(vVirtualNode)
 				}
+
 				if vWeight, ok := mWeightedTarget["weight"].(int); ok {
 					weightedTarget.Weight = int32(vWeight)
-				}
-
-				if vPort, ok := mWeightedTarget["port"].(int); ok && vPort > 0 {
-					weightedTarget.Port = aws.Int32(int32(vPort))
 				}
 
 				weightedTargets = append(weightedTargets, weightedTarget)
@@ -223,7 +225,7 @@ func expandGRPCRoute(vGrpcRoute []interface{}) *awstypes.GrpcRoute {
 			if vMethodName, ok := mGrpcRouteMatch["method_name"].(string); ok && vMethodName != "" {
 				grpcRouteMatch.MethodName = aws.String(vMethodName)
 			}
-			if vServiceName, ok := mGrpcRouteMatch["service_name"].(string); ok && vServiceName != "" {
+			if vServiceName, ok := mGrpcRouteMatch[names.AttrServiceName].(string); ok && vServiceName != "" {
 				grpcRouteMatch.ServiceName = aws.String(vServiceName)
 			}
 
@@ -242,7 +244,7 @@ func expandGRPCRoute(vGrpcRoute []interface{}) *awstypes.GrpcRoute {
 					if vInvert, ok := mGrpcRouteMetadata["invert"].(bool); ok {
 						grpcRouteMetadata.Invert = aws.Bool(vInvert)
 					}
-					if vName, ok := mGrpcRouteMetadata["name"].(string); ok && vName != "" {
+					if vName, ok := mGrpcRouteMetadata[names.AttrName].(string); ok && vName != "" {
 						grpcRouteMetadata.Name = aws.String(vName)
 					}
 
@@ -316,7 +318,7 @@ func expandGRPCRoute(vGrpcRoute []interface{}) *awstypes.GrpcRoute {
 		grpcRoute.RetryPolicy = grpcRetryPolicy
 	}
 
-	if vGrpcTimeout, ok := mGrpcRoute["timeout"].([]interface{}); ok {
+	if vGrpcTimeout, ok := mGrpcRoute[names.AttrTimeout].([]interface{}); ok {
 		grpcRoute.Timeout = expandGRPCTimeout(vGrpcTimeout)
 	}
 
@@ -352,7 +354,7 @@ func expandHTTPRoute(vHttpRoute []interface{}) *awstypes.HttpRoute {
 
 	httpRoute := &awstypes.HttpRoute{}
 
-	if vHttpRouteAction, ok := mHttpRoute["action"].([]interface{}); ok && len(vHttpRouteAction) > 0 && vHttpRouteAction[0] != nil {
+	if vHttpRouteAction, ok := mHttpRoute[names.AttrAction].([]interface{}); ok && len(vHttpRouteAction) > 0 && vHttpRouteAction[0] != nil {
 		mHttpRouteAction := vHttpRouteAction[0].(map[string]interface{})
 
 		if vWeightedTargets, ok := mHttpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
@@ -363,15 +365,14 @@ func expandHTTPRoute(vHttpRoute []interface{}) *awstypes.HttpRoute {
 
 				mWeightedTarget := vWeightedTarget.(map[string]interface{})
 
+				if vPort, ok := mWeightedTarget["port"].(int); ok && vPort > 0 {
+					weightedTarget.Port = aws.Int32(int32(vPort))
+				}
 				if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
 					weightedTarget.VirtualNode = aws.String(vVirtualNode)
 				}
 				if vWeight, ok := mWeightedTarget["weight"].(int); ok {
 					weightedTarget.Weight = int32(vWeight)
-				}
-
-				if vPort, ok := mWeightedTarget["port"].(int); ok && vPort > 0 {
-					weightedTarget.Port = aws.Int32(int32(vPort))
 				}
 
 				weightedTargets = append(weightedTargets, weightedTarget)
@@ -394,7 +395,7 @@ func expandHTTPRoute(vHttpRoute []interface{}) *awstypes.HttpRoute {
 		if vPort, ok := mHttpRouteMatch["port"].(int); ok && vPort > 0 {
 			httpRouteMatch.Port = aws.Int32(int32(vPort))
 		}
-		if vPrefix, ok := mHttpRouteMatch["prefix"].(string); ok && vPrefix != "" {
+		if vPrefix, ok := mHttpRouteMatch[names.AttrPrefix].(string); ok && vPrefix != "" {
 			httpRouteMatch.Prefix = aws.String(vPrefix)
 		}
 		if vScheme, ok := mHttpRouteMatch["scheme"].(string); ok && vScheme != "" {
@@ -412,7 +413,7 @@ func expandHTTPRoute(vHttpRoute []interface{}) *awstypes.HttpRoute {
 				if vInvert, ok := mHttpRouteHeader["invert"].(bool); ok {
 					httpRouteHeader.Invert = aws.Bool(vInvert)
 				}
-				if vName, ok := mHttpRouteHeader["name"].(string); ok && vName != "" {
+				if vName, ok := mHttpRouteHeader[names.AttrName].(string); ok && vName != "" {
 					httpRouteHeader.Name = aws.String(vName)
 				}
 
@@ -477,7 +478,7 @@ func expandHTTPRoute(vHttpRoute []interface{}) *awstypes.HttpRoute {
 
 				mHttpRouteQueryParameter := vHttpRouteQueryParameter.(map[string]interface{})
 
-				if vName, ok := mHttpRouteQueryParameter["name"].(string); ok && vName != "" {
+				if vName, ok := mHttpRouteQueryParameter[names.AttrName].(string); ok && vName != "" {
 					httpRouteQueryParameter.Name = aws.String(vName)
 				}
 
@@ -524,7 +525,7 @@ func expandHTTPRoute(vHttpRoute []interface{}) *awstypes.HttpRoute {
 		httpRoute.RetryPolicy = httpRetryPolicy
 	}
 
-	if vHttpTimeout, ok := mHttpRoute["timeout"].([]interface{}); ok {
+	if vHttpTimeout, ok := mHttpRoute[names.AttrTimeout].([]interface{}); ok {
 		httpRoute.Timeout = expandHTTPTimeout(vHttpTimeout)
 	}
 
@@ -624,7 +625,7 @@ func expandTCPRoute(vTcpRoute []interface{}) *awstypes.TcpRoute {
 
 	tcpRoute := &awstypes.TcpRoute{}
 
-	if vTcpRouteAction, ok := mTcpRoute["action"].([]interface{}); ok && len(vTcpRouteAction) > 0 && vTcpRouteAction[0] != nil {
+	if vTcpRouteAction, ok := mTcpRoute[names.AttrAction].([]interface{}); ok && len(vTcpRouteAction) > 0 && vTcpRouteAction[0] != nil {
 		mTcpRouteAction := vTcpRouteAction[0].(map[string]interface{})
 
 		if vWeightedTargets, ok := mTcpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
@@ -635,15 +636,16 @@ func expandTCPRoute(vTcpRoute []interface{}) *awstypes.TcpRoute {
 
 				mWeightedTarget := vWeightedTarget.(map[string]interface{})
 
+				if vPort, ok := mWeightedTarget["port"].(int); ok && vPort > 0 {
+					weightedTarget.Port = aws.Int32(int32(vPort))
+				}
+
 				if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
 					weightedTarget.VirtualNode = aws.String(vVirtualNode)
 				}
+
 				if vWeight, ok := mWeightedTarget["weight"].(int); ok {
 					weightedTarget.Weight = int32(vWeight)
-				}
-
-				if vPort, ok := mWeightedTarget["port"].(int); ok && vPort > 0 {
-					weightedTarget.Port = aws.Int32(int32(vPort))
 				}
 
 				weightedTargets = append(weightedTargets, weightedTarget)
@@ -663,10 +665,11 @@ func expandTCPRoute(vTcpRoute []interface{}) *awstypes.TcpRoute {
 		if vPort, ok := mTcpRouteMatch["port"].(int); ok && vPort > 0 {
 			tcpRouteMatch.Port = aws.Int32(int32(vPort))
 		}
+
 		tcpRoute.Match = tcpRouteMatch
 	}
 
-	if vTcpTimeout, ok := mTcpRoute["timeout"].([]interface{}); ok {
+	if vTcpTimeout, ok := mTcpRoute[names.AttrTimeout].([]interface{}); ok {
 		tcpRoute.Timeout = expandTCPTimeout(vTcpTimeout)
 	}
 
@@ -824,7 +827,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *awstypes.VirtualNodeSpec {
 				if vIntervalMillis, ok := mHealthCheck["interval_millis"].(int); ok && vIntervalMillis > 0 {
 					healthCheck.IntervalMillis = aws.Int64(int64(vIntervalMillis))
 				}
-				if vPath, ok := mHealthCheck["path"].(string); ok && vPath != "" {
+				if vPath, ok := mHealthCheck[names.AttrPath].(string); ok && vPath != "" {
 					healthCheck.Path = aws.String(vPath)
 				}
 				if vPort, ok := mHealthCheck["port"].(int); ok && vPort > 0 {
@@ -859,7 +862,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *awstypes.VirtualNodeSpec {
 					outlierDetection.BaseEjectionDuration = expandDuration(vBaseEjectionDuration)
 				}
 
-				if vInterval, ok := mOutlierDetection["interval"].([]interface{}); ok {
+				if vInterval, ok := mOutlierDetection[names.AttrInterval].([]interface{}); ok {
 					outlierDetection.Interval = expandDuration(vInterval)
 				}
 
@@ -881,7 +884,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *awstypes.VirtualNodeSpec {
 				listener.PortMapping = portMapping
 			}
 
-			if vTimeout, ok := mListener["timeout"].([]interface{}); ok && len(vTimeout) > 0 && vTimeout[0] != nil {
+			if vTimeout, ok := mListener[names.AttrTimeout].([]interface{}); ok && len(vTimeout) > 0 && vTimeout[0] != nil {
 				mTimeout := vTimeout[0].(map[string]interface{})
 
 				if vGrpcTimeout, ok := mTimeout["grpc"].([]interface{}); ok {
@@ -919,7 +922,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *awstypes.VirtualNodeSpec {
 
 						mAcm := vAcm[0].(map[string]interface{})
 
-						if vCertificateArn, ok := mAcm["certificate_arn"].(string); ok && vCertificateArn != "" {
+						if vCertificateArn, ok := mAcm[names.AttrCertificateARN].(string); ok && vCertificateArn != "" {
 							acm.CertificateArn = aws.String(vCertificateArn)
 						}
 
@@ -934,10 +937,10 @@ func expandVirtualNodeSpec(vSpec []interface{}) *awstypes.VirtualNodeSpec {
 
 						mFile := vFile[0].(map[string]interface{})
 
-						if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
+						if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 							file.CertificateChain = aws.String(vCertificateChain)
 						}
-						if vPrivateKey, ok := mFile["private_key"].(string); ok && vPrivateKey != "" {
+						if vPrivateKey, ok := mFile[names.AttrPrivateKey].(string); ok && vPrivateKey != "" {
 							file.PrivateKey = aws.String(vPrivateKey)
 						}
 
@@ -996,7 +999,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *awstypes.VirtualNodeSpec {
 
 							mFile := vFile[0].(map[string]interface{})
 
-							if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
+							if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 								file.CertificateChain = aws.String(vCertificateChain)
 							}
 
@@ -1073,7 +1076,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *awstypes.VirtualNodeSpec {
 					logging.AccessLog = accessLog
 				}
 
-				if vPath, ok := mFile["path"].(string); ok && vPath != "" {
+				if vPath, ok := mFile[names.AttrPath].(string); ok && vPath != "" {
 					file.Path = aws.String(vPath)
 				}
 
@@ -1110,7 +1113,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *awstypes.VirtualNodeSpec {
 			if vNamespaceName, ok := mAwsCloudMap["namespace_name"].(string); ok && vNamespaceName != "" {
 				awsCloudMap.NamespaceName = aws.String(vNamespaceName)
 			}
-			if vServiceName, ok := mAwsCloudMap["service_name"].(string); ok && vServiceName != "" {
+			if vServiceName, ok := mAwsCloudMap[names.AttrServiceName].(string); ok && vServiceName != "" {
 				awsCloudMap.ServiceName = aws.String(vServiceName)
 			}
 
@@ -1256,7 +1259,7 @@ func flattenClientPolicy(clientPolicy *awstypes.ClientPolicy) []interface{} {
 				mCertificate["sds"] = []interface{}{mSds}
 			}
 
-			mTls["certificate"] = []interface{}{mCertificate}
+			mTls[names.AttrCertificate] = []interface{}{mCertificate}
 		}
 
 		if validation := tls.Validation; validation != nil {
@@ -1267,7 +1270,7 @@ func flattenClientPolicy(clientPolicy *awstypes.ClientPolicy) []interface{} {
 
 				if match := subjectAlternativeNames.Match; match != nil {
 					mMatch := map[string]interface{}{
-						"exact": flex.FlattenStringValueSet(match.Exact),
+						"exact": match.Exact,
 					}
 
 					mSubjectAlternativeNames["match"] = []interface{}{mMatch}
@@ -1282,7 +1285,7 @@ func flattenClientPolicy(clientPolicy *awstypes.ClientPolicy) []interface{} {
 				switch v := trust.(type) {
 				case *awstypes.TlsValidationContextTrustMemberAcm:
 					mAcm := map[string]interface{}{
-						"certificate_authority_arns": flex.FlattenStringValueSet(v.Value.CertificateAuthorityArns),
+						"certificate_authority_arns": v.Value.CertificateAuthorityArns,
 					}
 
 					mTrust["acm"] = []interface{}{mAcm}
@@ -1318,8 +1321,8 @@ func flattenDuration(duration *awstypes.Duration) []interface{} {
 	}
 
 	mDuration := map[string]interface{}{
-		"unit":  string(duration.Unit),
-		"value": int(aws.ToInt64(duration.Value)),
+		"unit":  duration.Unit,
+		"value": aws.ToInt64(duration.Value),
 	}
 
 	return []interface{}{mDuration}
@@ -1339,14 +1342,14 @@ func flattenGRPCRoute(grpcRoute *awstypes.GrpcRoute) []interface{} {
 			for _, weightedTarget := range weightedTargets {
 				mWeightedTarget := map[string]interface{}{
 					"virtual_node": aws.ToString(weightedTarget.VirtualNode),
-					"weight":       int(weightedTarget.Weight),
-					"port":         int(aws.ToInt32(weightedTarget.Port)),
+					"weight":       weightedTarget.Weight,
+					"port":         aws.ToInt32(weightedTarget.Port),
 				}
 
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
 			}
 
-			mGrpcRoute["action"] = []interface{}{
+			mGrpcRoute[names.AttrAction] = []interface{}{
 				map[string]interface{}{
 					"weighted_target": vWeightedTargets,
 				},
@@ -1376,8 +1379,8 @@ func flattenGRPCRoute(grpcRoute *awstypes.GrpcRoute) []interface{} {
 				mMatch["suffix"] = v.Value
 			case *awstypes.GrpcRouteMetadataMatchMethodMemberRange:
 				mRange := map[string]interface{}{
-					"end":   int(aws.ToInt64(v.Value.End)),
-					"start": int(aws.ToInt64(v.Value.Start)),
+					"end":   aws.ToInt64(v.Value.End),
+					"start": aws.ToInt64(v.Value.Start),
 				}
 
 				mMatch["range"] = []interface{}{mRange}
@@ -1393,24 +1396,24 @@ func flattenGRPCRoute(grpcRoute *awstypes.GrpcRoute) []interface{} {
 				"metadata":     vGrpcRouteMetadatas,
 				"method_name":  aws.ToString(grpcRouteMatch.MethodName),
 				"service_name": aws.ToString(grpcRouteMatch.ServiceName),
-				"port":         int(aws.ToInt32(grpcRouteMatch.Port)),
+				"port":         aws.ToInt32(grpcRouteMatch.Port),
 			},
 		}
 	}
 
 	if grpcRetryPolicy := grpcRoute.RetryPolicy; grpcRetryPolicy != nil {
 		mGrpcRetryPolicy := map[string]interface{}{
-			"grpc_retry_events": flex.FlattenStringyValueSet(grpcRetryPolicy.GrpcRetryEvents),
-			"http_retry_events": flex.FlattenStringValueSet(grpcRetryPolicy.HttpRetryEvents),
-			"max_retries":       int(aws.ToInt64(grpcRetryPolicy.MaxRetries)),
+			"grpc_retry_events": grpcRetryPolicy.GrpcRetryEvents,
+			"http_retry_events": grpcRetryPolicy.HttpRetryEvents,
+			"max_retries":       aws.ToInt64(grpcRetryPolicy.MaxRetries),
 			"per_retry_timeout": flattenDuration(grpcRetryPolicy.PerRetryTimeout),
-			"tcp_retry_events":  flex.FlattenStringyValueSet(grpcRetryPolicy.TcpRetryEvents),
+			"tcp_retry_events":  grpcRetryPolicy.TcpRetryEvents,
 		}
 
 		mGrpcRoute["retry_policy"] = []interface{}{mGrpcRetryPolicy}
 	}
 
-	mGrpcRoute["timeout"] = flattenGRPCTimeout(grpcRoute.Timeout)
+	mGrpcRoute[names.AttrTimeout] = flattenGRPCTimeout(grpcRoute.Timeout)
 
 	return []interface{}{mGrpcRoute}
 }
@@ -1442,14 +1445,14 @@ func flattenHTTPRoute(httpRoute *awstypes.HttpRoute) []interface{} {
 			for _, weightedTarget := range weightedTargets {
 				mWeightedTarget := map[string]interface{}{
 					"virtual_node": aws.ToString(weightedTarget.VirtualNode),
-					"weight":       int(weightedTarget.Weight),
-					"port":         int(aws.ToInt32(weightedTarget.Port)),
+					"weight":       weightedTarget.Weight,
+					"port":         aws.ToInt32(weightedTarget.Port),
 				}
 
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
 			}
 
-			mHttpRoute["action"] = []interface{}{
+			mHttpRoute[names.AttrAction] = []interface{}{
 				map[string]interface{}{
 					"weighted_target": vWeightedTargets,
 				},
@@ -1480,8 +1483,8 @@ func flattenHTTPRoute(httpRoute *awstypes.HttpRoute) []interface{} {
 					mMatch["suffix"] = v.Value
 				case *awstypes.HeaderMatchMethodMemberRange:
 					mRange := map[string]interface{}{
-						"end":   int(aws.ToInt64(v.Value.End)),
-						"start": int(aws.ToInt64(v.Value.Start)),
+						"end":   aws.ToInt64(v.Value.End),
+						"start": aws.ToInt64(v.Value.Start),
 					}
 					mMatch["range"] = []interface{}{mRange}
 				}
@@ -1523,28 +1526,28 @@ func flattenHTTPRoute(httpRoute *awstypes.HttpRoute) []interface{} {
 		mHttpRoute["match"] = []interface{}{
 			map[string]interface{}{
 				"header":          vHttpRouteHeaders,
-				"method":          string(httpRouteMatch.Method),
+				"method":          httpRouteMatch.Method,
 				"path":            vHttpRoutePath,
-				"port":            int(aws.ToInt32(httpRouteMatch.Port)),
+				"port":            aws.ToInt32(httpRouteMatch.Port),
 				"prefix":          aws.ToString(httpRouteMatch.Prefix),
 				"query_parameter": vHttpRouteQueryParameters,
-				"scheme":          string(httpRouteMatch.Scheme),
+				"scheme":          httpRouteMatch.Scheme,
 			},
 		}
 	}
 
 	if httpRetryPolicy := httpRoute.RetryPolicy; httpRetryPolicy != nil {
 		mHttpRetryPolicy := map[string]interface{}{
-			"http_retry_events": flex.FlattenStringValueSet(httpRetryPolicy.HttpRetryEvents),
-			"max_retries":       int(aws.ToInt64(httpRetryPolicy.MaxRetries)),
+			"http_retry_events": httpRetryPolicy.HttpRetryEvents,
+			"max_retries":       aws.ToInt64(httpRetryPolicy.MaxRetries),
 			"per_retry_timeout": flattenDuration(httpRetryPolicy.PerRetryTimeout),
-			"tcp_retry_events":  flex.FlattenStringyValueSet(httpRetryPolicy.TcpRetryEvents),
+			"tcp_retry_events":  httpRetryPolicy.TcpRetryEvents,
 		}
 
 		mHttpRoute["retry_policy"] = []interface{}{mHttpRetryPolicy}
 	}
 
-	mHttpRoute["timeout"] = flattenHTTPTimeout(httpRoute.Timeout)
+	mHttpRoute[names.AttrTimeout] = flattenHTTPTimeout(httpRoute.Timeout)
 
 	return []interface{}{mHttpRoute}
 }
@@ -1572,7 +1575,7 @@ func flattenMeshSpec(spec *awstypes.MeshSpec) []interface{} {
 	if spec.EgressFilter != nil {
 		mSpec["egress_filter"] = []interface{}{
 			map[string]interface{}{
-				"type": string(spec.EgressFilter.Type),
+				"type": spec.EgressFilter.Type,
 			},
 		}
 	}
@@ -1580,7 +1583,7 @@ func flattenMeshSpec(spec *awstypes.MeshSpec) []interface{} {
 	if spec.ServiceDiscovery != nil {
 		mSpec["service_discovery"] = []interface{}{
 			map[string]interface{}{
-				"ip_preference": string(spec.ServiceDiscovery.IpPreference),
+				"ip_preference": spec.ServiceDiscovery.IpPreference,
 			},
 		}
 	}
@@ -1597,7 +1600,7 @@ func flattenRouteSpec(spec *awstypes.RouteSpec) []interface{} {
 		"grpc_route":  flattenGRPCRoute(spec.GrpcRoute),
 		"http2_route": flattenHTTPRoute(spec.Http2Route),
 		"http_route":  flattenHTTPRoute(spec.HttpRoute),
-		"priority":    int(aws.ToInt32(spec.Priority)),
+		"priority":    aws.ToInt32(spec.Priority),
 		"tcp_route":   flattenTCPRoute(spec.TcpRoute),
 	}
 
@@ -1618,14 +1621,14 @@ func flattenTCPRoute(tcpRoute *awstypes.TcpRoute) []interface{} {
 			for _, weightedTarget := range weightedTargets {
 				mWeightedTarget := map[string]interface{}{
 					"virtual_node": aws.ToString(weightedTarget.VirtualNode),
-					"weight":       int(weightedTarget.Weight),
-					"port":         int(aws.ToInt32(weightedTarget.Port)),
+					"weight":       weightedTarget.Weight,
+					"port":         aws.ToInt32(weightedTarget.Port),
 				}
 
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
 			}
 
-			mTcpRoute["action"] = []interface{}{
+			mTcpRoute[names.AttrAction] = []interface{}{
 				map[string]interface{}{
 					"weighted_target": vWeightedTargets,
 				},
@@ -1636,12 +1639,12 @@ func flattenTCPRoute(tcpRoute *awstypes.TcpRoute) []interface{} {
 	if tcpRouteMatch := tcpRoute.Match; tcpRouteMatch != nil {
 		mTcpRoute["match"] = []interface{}{
 			map[string]interface{}{
-				"port": int(aws.ToInt32(tcpRouteMatch.Port)),
+				"port": aws.ToInt32(tcpRouteMatch.Port),
 			},
 		}
 	}
 
-	mTcpRoute["timeout"] = flattenTCPTimeout(tcpRoute.Timeout)
+	mTcpRoute[names.AttrTimeout] = flattenTCPTimeout(tcpRoute.Timeout)
 
 	return []interface{}{mTcpRoute}
 }
@@ -1707,23 +1710,23 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []interface{} {
 				switch v := connectionPool.(type) {
 				case *awstypes.VirtualNodeConnectionPoolMemberGrpc:
 					mGrpcConnectionPool := map[string]interface{}{
-						"max_requests": int(aws.ToInt32(v.Value.MaxRequests)),
+						"max_requests": aws.ToInt32(v.Value.MaxRequests),
 					}
 					mConnectionPool["grpc"] = []interface{}{mGrpcConnectionPool}
 				case *awstypes.VirtualNodeConnectionPoolMemberHttp:
 					mHttpConnectionPool := map[string]interface{}{
-						"max_connections":      int(aws.ToInt32(v.Value.MaxConnections)),
-						"max_pending_requests": int(aws.ToInt32(v.Value.MaxPendingRequests)),
+						"max_connections":      aws.ToInt32(v.Value.MaxConnections),
+						"max_pending_requests": aws.ToInt32(v.Value.MaxPendingRequests),
 					}
 					mConnectionPool["http"] = []interface{}{mHttpConnectionPool}
 				case *awstypes.VirtualNodeConnectionPoolMemberHttp2:
 					mHttp2ConnectionPool := map[string]interface{}{
-						"max_requests": int(aws.ToInt32(v.Value.MaxRequests)),
+						"max_requests": aws.ToInt32(v.Value.MaxRequests),
 					}
 					mConnectionPool["http2"] = []interface{}{mHttp2ConnectionPool}
 				case *awstypes.VirtualNodeConnectionPoolMemberTcp:
 					mTcpConnectionPool := map[string]interface{}{
-						"max_connections": int(aws.ToInt32(v.Value.MaxConnections)),
+						"max_connections": aws.ToInt32(v.Value.MaxConnections),
 					}
 					mConnectionPool["tcp"] = []interface{}{mTcpConnectionPool}
 				}
@@ -1733,31 +1736,31 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []interface{} {
 
 			if healthCheck := listener.HealthCheck; healthCheck != nil {
 				mHealthCheck := map[string]interface{}{
-					"healthy_threshold":   int(aws.ToInt32(healthCheck.HealthyThreshold)),
-					"interval_millis":     int(aws.ToInt64(healthCheck.IntervalMillis)),
+					"healthy_threshold":   aws.ToInt32(healthCheck.HealthyThreshold),
+					"interval_millis":     aws.ToInt64(healthCheck.IntervalMillis),
 					"path":                aws.ToString(healthCheck.Path),
-					"port":                int(aws.ToInt32(healthCheck.Port)),
-					"protocol":            string(healthCheck.Protocol),
-					"timeout_millis":      int(aws.ToInt64(healthCheck.TimeoutMillis)),
-					"unhealthy_threshold": int(aws.ToInt32(healthCheck.UnhealthyThreshold)),
+					"port":                aws.ToInt32(healthCheck.Port),
+					"protocol":            healthCheck.Protocol,
+					"timeout_millis":      aws.ToInt64(healthCheck.TimeoutMillis),
+					"unhealthy_threshold": aws.ToInt32(healthCheck.UnhealthyThreshold),
 				}
-				mListener["health_check"] = []interface{}{mHealthCheck}
+				mListener[names.AttrHealthCheck] = []interface{}{mHealthCheck}
 			}
 
 			if outlierDetection := listener.OutlierDetection; outlierDetection != nil {
 				mOutlierDetection := map[string]interface{}{
 					"base_ejection_duration": flattenDuration(outlierDetection.BaseEjectionDuration),
 					"interval":               flattenDuration(outlierDetection.Interval),
-					"max_ejection_percent":   int(aws.ToInt32(outlierDetection.MaxEjectionPercent)),
-					"max_server_errors":      int(aws.ToInt64(outlierDetection.MaxServerErrors)),
+					"max_ejection_percent":   aws.ToInt32(outlierDetection.MaxEjectionPercent),
+					"max_server_errors":      aws.ToInt64(outlierDetection.MaxServerErrors),
 				}
 				mListener["outlier_detection"] = []interface{}{mOutlierDetection}
 			}
 
 			if portMapping := listener.PortMapping; portMapping != nil {
 				mPortMapping := map[string]interface{}{
-					"port":     int(aws.ToInt32(portMapping.Port)),
-					"protocol": string(portMapping.Protocol),
+					"port":     aws.ToInt32(portMapping.Port),
+					"protocol": portMapping.Protocol,
 				}
 				mListener["port_mapping"] = []interface{}{mPortMapping}
 			}
@@ -1775,12 +1778,12 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []interface{} {
 				case *awstypes.ListenerTimeoutMemberTcp:
 					mListenerTimeout["tcp"] = flattenTCPTimeout(&v.Value)
 				}
-				mListener["timeout"] = []interface{}{mListenerTimeout}
+				mListener[names.AttrTimeout] = []interface{}{mListenerTimeout}
 			}
 
 			if tls := listener.Tls; tls != nil {
 				mTls := map[string]interface{}{
-					"mode": string(tls.Mode),
+					"mode": tls.Mode,
 				}
 
 				if certificate := tls.Certificate; certificate != nil {
@@ -1808,7 +1811,7 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []interface{} {
 						mCertificate["sds"] = []interface{}{mSds}
 					}
 
-					mTls["certificate"] = []interface{}{mCertificate}
+					mTls[names.AttrCertificate] = []interface{}{mCertificate}
 				}
 
 				if validation := tls.Validation; validation != nil {
@@ -1819,7 +1822,7 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []interface{} {
 
 						if match := subjectAlternativeNames.Match; match != nil {
 							mMatch := map[string]interface{}{
-								"exact": flex.FlattenStringValueSet(match.Exact),
+								"exact": match.Exact,
 							}
 
 							mSubjectAlternativeNames["match"] = []interface{}{mMatch}
@@ -1890,7 +1893,7 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []interface{} {
 						mFormat["text"] = v.Value
 					}
 
-					mFile["format"] = []interface{}{mFormat}
+					mFile[names.AttrFormat] = []interface{}{mFormat}
 				}
 
 				mFile["path"] = aws.ToString(v.Value.Path)
@@ -1926,8 +1929,8 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []interface{} {
 			mServiceDiscovery["dns"] = []interface{}{
 				map[string]interface{}{
 					"hostname":      aws.ToString(v.Value.Hostname),
-					"ip_preference": string(v.Value.IpPreference),
-					"response_type": string(v.Value.ResponseType),
+					"ip_preference": v.Value.IpPreference,
+					"response_type": v.Value.ResponseType,
 				},
 			}
 		}
@@ -1949,8 +1952,8 @@ func flattenVirtualRouterSpec(spec *awstypes.VirtualRouterSpec) []interface{} {
 			mListener := map[string]interface{}{}
 			if listener.PortMapping != nil {
 				mPortMapping := map[string]interface{}{
-					"port":     int(aws.ToInt32(listener.PortMapping.Port)),
-					"protocol": string(listener.PortMapping.Protocol),
+					"port":     aws.ToInt32(listener.PortMapping.Port),
+					"protocol": listener.PortMapping.Protocol,
 				}
 				mListener["port_mapping"] = []interface{}{mPortMapping}
 			}

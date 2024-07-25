@@ -78,7 +78,7 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_tags(t *testing.T) {
 				Config: testAccApplicationVersionConfig_tags(sdkacctest.RandInt(), "test1", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists(ctx, resourceName, &appVersion),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags.firstTag", "test1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.secondTag", "test2"),
 				),
@@ -87,7 +87,7 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_tags(t *testing.T) {
 				Config: testAccApplicationVersionConfig_tags(sdkacctest.RandInt(), "updateTest1", "updateTest2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists(ctx, resourceName, &appVersion),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags.firstTag", "updateTest1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.secondTag", "updateTest2"),
 				),
@@ -96,7 +96,7 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_tags(t *testing.T) {
 				Config: testAccApplicationVersionConfig_addTags(sdkacctest.RandInt(), "updateTest1", "updateTest2", "addTest3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists(ctx, resourceName, &appVersion),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "tags.firstTag", "updateTest1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.secondTag", "updateTest2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.thirdTag", "addTest3"),
@@ -106,7 +106,7 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_tags(t *testing.T) {
 				Config: testAccApplicationVersionConfig_tags(sdkacctest.RandInt(), "updateTest1", "updateTest2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists(ctx, resourceName, &appVersion),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags.firstTag", "updateTest1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.secondTag", "updateTest2"),
 				),

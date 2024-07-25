@@ -30,6 +30,9 @@ import (
 
 // @SDKResource("aws_appmesh_virtual_gateway", name="Virtual Gateway")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appmesh/types;types.VirtualGatewayData")
+// @Testing(serialize=true)
+// @Testing(importStateIdFunc=testAccVirtualGatewayImportStateIdFunc)
 func resourceVirtualGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualGatewayCreate,
@@ -43,15 +46,15 @@ func resourceVirtualGateway() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"created_date": {
+				names.AttrCreatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"last_updated_date": {
+				names.AttrLastUpdatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -68,13 +71,13 @@ func resourceVirtualGateway() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: verify.ValidAccountID,
 				},
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
-				"resource_owner": {
+				names.AttrResourceOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -117,7 +120,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"certificate": {
+													names.AttrCertificate: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
@@ -131,12 +134,12 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"certificate_chain": {
+																			names.AttrCertificateChain: {
 																				Type:         schema.TypeString,
 																				Required:     true,
 																				ValidateFunc: validation.StringLenBetween(1, 255),
 																			},
-																			"private_key": {
+																			names.AttrPrivateKey: {
 																				Type:         schema.TypeString,
 																				Required:     true,
 																				ValidateFunc: validation.StringLenBetween(1, 255),
@@ -251,7 +254,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 																				MaxItems: 1,
 																				Elem: &schema.Resource{
 																					Schema: map[string]*schema.Schema{
-																						"certificate_chain": {
+																						names.AttrCertificateChain: {
 																							Type:         schema.TypeString,
 																							Required:     true,
 																							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -365,7 +368,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 									},
 								},
 							},
-							"health_check": {
+							names.AttrHealthCheck: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 0,
@@ -382,11 +385,11 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 											Required:     true,
 											ValidateFunc: validation.IntBetween(5000, 300000),
 										},
-										"path": {
+										names.AttrPath: {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"port": {
+										names.AttrPort: {
 											Type:         schema.TypeInt,
 											Optional:     true,
 											Computed:     true,
@@ -417,7 +420,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"port": {
+										names.AttrPort: {
 											Type:         schema.TypeInt,
 											Required:     true,
 											ValidateFunc: validation.IsPortNumber,
@@ -437,7 +440,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"certificate": {
+										names.AttrCertificate: {
 											Type:     schema.TypeList,
 											Required: true,
 											MinItems: 1,
@@ -451,7 +454,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"certificate_arn": {
+																names.AttrCertificateARN: {
 																	Type:         schema.TypeString,
 																	Required:     true,
 																	ValidateFunc: verify.ValidARN,
@@ -466,12 +469,12 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"certificate_chain": {
+																names.AttrCertificateChain: {
 																	Type:         schema.TypeString,
 																	Required:     true,
 																	ValidateFunc: validation.StringLenBetween(1, 255),
 																},
-																"private_key": {
+																names.AttrPrivateKey: {
 																	Type:         schema.TypeString,
 																	Required:     true,
 																	ValidateFunc: validation.StringLenBetween(1, 255),
@@ -547,7 +550,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"certificate_chain": {
+																			names.AttrCertificateChain: {
 																				Type:         schema.TypeString,
 																				Required:     true,
 																				ValidateFunc: validation.StringLenBetween(1, 255),
@@ -603,24 +606,24 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"format": {
+													names.AttrFormat: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"json": {
+																names.AttrJSON: {
 																	Type:     schema.TypeList,
 																	Optional: true,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"key": {
+																			names.AttrKey: {
 																				Type:         schema.TypeString,
 																				Required:     true,
 																				ValidateFunc: validation.StringLenBetween(1, 100),
 																			},
-																			"value": {
+																			names.AttrValue: {
 																				Type:         schema.TypeString,
 																				Required:     true,
 																				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -636,7 +639,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 															},
 														},
 													},
-													"path": {
+													names.AttrPath: {
 														Type:         schema.TypeString,
 														Required:     true,
 														ValidateFunc: validation.StringLenBetween(1, 255),
@@ -659,7 +662,7 @@ func resourceVirtualGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appmesh.CreateVirtualGatewayInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		Spec:               expandVirtualGatewaySpec(d.Get("spec").([]interface{})),
@@ -687,7 +690,7 @@ func resourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return findVirtualGatewayByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("name").(string))
+		return findVirtualGatewayByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get(names.AttrName).(string))
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -708,8 +711,8 @@ func resourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("last_updated_date", virtualGateway.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", virtualGateway.MeshName)
 	d.Set("mesh_owner", virtualGateway.Metadata.MeshOwner)
-	d.Set("name", virtualGateway.VirtualGatewayName)
-	d.Set("resource_owner", virtualGateway.Metadata.ResourceOwner)
+	d.Set(names.AttrName, virtualGateway.VirtualGatewayName)
+	d.Set(names.AttrResourceOwner, virtualGateway.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenVirtualGatewaySpec(virtualGateway.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
@@ -725,7 +728,7 @@ func resourceVirtualGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 		input := &appmesh.UpdateVirtualGatewayInput{
 			MeshName:           aws.String(d.Get("mesh_name").(string)),
 			Spec:               expandVirtualGatewaySpec(d.Get("spec").([]interface{})),
-			VirtualGatewayName: aws.String(d.Get("name").(string)),
+			VirtualGatewayName: aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		if v, ok := d.GetOk("mesh_owner"); ok {
@@ -749,7 +752,7 @@ func resourceVirtualGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 	log.Printf("[DEBUG] Deleting App Mesh Virtual Gateway: %s", d.Id())
 	input := &appmesh.DeleteVirtualGatewayInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
-		VirtualGatewayName: aws.String(d.Get("name").(string)),
+		VirtualGatewayName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("mesh_owner"); ok {
@@ -788,7 +791,7 @@ func resourceVirtualGatewayImport(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.ToString(virtualGateway.Metadata.Uid))
 	d.Set("mesh_name", virtualGateway.MeshName)
-	d.Set("name", virtualGateway.VirtualGatewayName)
+	d.Set(names.AttrName, virtualGateway.VirtualGatewayName)
 
 	return []*schema.ResourceData{d}, nil
 }
@@ -879,7 +882,7 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 				if vIntervalMillis, ok := mHealthCheck["interval_millis"].(int); ok && vIntervalMillis > 0 {
 					healthCheck.IntervalMillis = aws.Int64(int64(vIntervalMillis))
 				}
-				if vPath, ok := mHealthCheck["path"].(string); ok && vPath != "" {
+				if vPath, ok := mHealthCheck[names.AttrPath].(string); ok && vPath != "" {
 					healthCheck.Path = aws.String(vPath)
 				}
 				if vPort, ok := mHealthCheck["port"].(int); ok && vPort > 0 {
@@ -980,7 +983,7 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 
 						mAcm := vAcm[0].(map[string]interface{})
 
-						if vCertificateArn, ok := mAcm["certificate_arn"].(string); ok && vCertificateArn != "" {
+						if vCertificateArn, ok := mAcm[names.AttrCertificateARN].(string); ok && vCertificateArn != "" {
 							acm.CertificateArn = aws.String(vCertificateArn)
 						}
 
@@ -994,10 +997,10 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 
 						mFile := vFile[0].(map[string]interface{})
 
-						if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
+						if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 							file.CertificateChain = aws.String(vCertificateChain)
 						}
-						if vPrivateKey, ok := mFile["private_key"].(string); ok && vPrivateKey != "" {
+						if vPrivateKey, ok := mFile[names.AttrPrivateKey].(string); ok && vPrivateKey != "" {
 							file.PrivateKey = aws.String(vPrivateKey)
 						}
 
@@ -1054,7 +1057,7 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 
 							mFile := vFile[0].(map[string]interface{})
 
-							if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
+							if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 								file.CertificateChain = aws.String(vCertificateChain)
 							}
 
@@ -1127,7 +1130,7 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 					}
 				}
 
-				if vPath, ok := mFile["path"].(string); ok && vPath != "" {
+				if vPath, ok := mFile[names.AttrPath].(string); ok && vPath != "" {
 					file.Path = aws.String(vPath)
 				}
 
@@ -1165,10 +1168,10 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []interface{}) *awstypes.Vir
 
 				mFile := vFile[0].(map[string]interface{})
 
-				if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
+				if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 					file.CertificateChain = aws.String(vCertificateChain)
 				}
-				if vPrivateKey, ok := mFile["private_key"].(string); ok && vPrivateKey != "" {
+				if vPrivateKey, ok := mFile[names.AttrPrivateKey].(string); ok && vPrivateKey != "" {
 					file.PrivateKey = aws.String(vPrivateKey)
 				}
 
@@ -1247,7 +1250,7 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []interface{}) *awstypes.Vir
 
 					mFile := vFile[0].(map[string]interface{})
 
-					if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
+					if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 						file.CertificateChain = aws.String(vCertificateChain)
 					}
 
@@ -1305,18 +1308,18 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []interface{} 
 				switch v := connectionPool.(type) {
 				case *awstypes.VirtualGatewayConnectionPoolMemberGrpc:
 					mGrpcConnectionPool := map[string]interface{}{
-						"max_requests": int(aws.ToInt32(v.Value.MaxRequests)),
+						"max_requests": aws.ToInt32(v.Value.MaxRequests),
 					}
 					mConnectionPool["grpc"] = []interface{}{mGrpcConnectionPool}
 				case *awstypes.VirtualGatewayConnectionPoolMemberHttp:
 					mHttpConnectionPool := map[string]interface{}{
-						"max_connections":      int(aws.ToInt32(v.Value.MaxConnections)),
-						"max_pending_requests": int(aws.ToInt32(v.Value.MaxPendingRequests)),
+						"max_connections":      aws.ToInt32(v.Value.MaxConnections),
+						"max_pending_requests": aws.ToInt32(v.Value.MaxPendingRequests),
 					}
 					mConnectionPool["http"] = []interface{}{mHttpConnectionPool}
 				case *awstypes.VirtualGatewayConnectionPoolMemberHttp2:
 					mHttp2ConnectionPool := map[string]interface{}{
-						"max_requests": int(aws.ToInt32(v.Value.MaxRequests)),
+						"max_requests": aws.ToInt32(v.Value.MaxRequests),
 					}
 					mConnectionPool["http2"] = []interface{}{mHttp2ConnectionPool}
 				}
@@ -1326,28 +1329,28 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []interface{} 
 
 			if healthCheck := listener.HealthCheck; healthCheck != nil {
 				mHealthCheck := map[string]interface{}{
-					"healthy_threshold":   int(aws.ToInt32(healthCheck.HealthyThreshold)),
-					"interval_millis":     int(aws.ToInt64(healthCheck.IntervalMillis)),
+					"healthy_threshold":   aws.ToInt32(healthCheck.HealthyThreshold),
+					"interval_millis":     aws.ToInt64(healthCheck.IntervalMillis),
 					"path":                aws.ToString(healthCheck.Path),
-					"port":                int(aws.ToInt32(healthCheck.Port)),
-					"protocol":            string(healthCheck.Protocol),
-					"timeout_millis":      int(aws.ToInt64(healthCheck.TimeoutMillis)),
-					"unhealthy_threshold": int(aws.ToInt32(healthCheck.UnhealthyThreshold)),
+					"port":                aws.ToInt32(healthCheck.Port),
+					"protocol":            healthCheck.Protocol,
+					"timeout_millis":      aws.ToInt64(healthCheck.TimeoutMillis),
+					"unhealthy_threshold": aws.ToInt32(healthCheck.UnhealthyThreshold),
 				}
-				mListener["health_check"] = []interface{}{mHealthCheck}
+				mListener[names.AttrHealthCheck] = []interface{}{mHealthCheck}
 			}
 
 			if portMapping := listener.PortMapping; portMapping != nil {
 				mPortMapping := map[string]interface{}{
-					"port":     int(aws.ToInt32(portMapping.Port)),
-					"protocol": string(portMapping.Protocol),
+					"port":     aws.ToInt32(portMapping.Port),
+					"protocol": portMapping.Protocol,
 				}
 				mListener["port_mapping"] = []interface{}{mPortMapping}
 			}
 
 			if tls := listener.Tls; tls != nil {
 				mTls := map[string]interface{}{
-					"mode": string(tls.Mode),
+					"mode": tls.Mode,
 				}
 
 				if certificate := tls.Certificate; certificate != nil {
@@ -1375,7 +1378,7 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []interface{} 
 						mCertificate["sds"] = []interface{}{mSds}
 					}
 
-					mTls["certificate"] = []interface{}{mCertificate}
+					mTls[names.AttrCertificate] = []interface{}{mCertificate}
 				}
 
 				if validation := tls.Validation; validation != nil {
@@ -1386,7 +1389,7 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []interface{} 
 
 						if match := subjectAlternativeNames.Match; match != nil {
 							mMatch := map[string]interface{}{
-								"exact": flex.FlattenStringValueSet(match.Exact),
+								"exact": match.Exact,
 							}
 
 							mSubjectAlternativeNames["match"] = []interface{}{mMatch}
@@ -1505,7 +1508,7 @@ func flattenVirtualGatewayClientPolicy(clientPolicy *awstypes.VirtualGatewayClie
 				mCertificate["sds"] = []interface{}{mSds}
 			}
 
-			mTls["certificate"] = []interface{}{mCertificate}
+			mTls[names.AttrCertificate] = []interface{}{mCertificate}
 		}
 
 		if validation := tls.Validation; validation != nil {
@@ -1516,7 +1519,7 @@ func flattenVirtualGatewayClientPolicy(clientPolicy *awstypes.VirtualGatewayClie
 
 				if match := subjectAlternativeNames.Match; match != nil {
 					mMatch := map[string]interface{}{
-						"exact": flex.FlattenStringValueSet(match.Exact),
+						"exact": match.Exact,
 					}
 
 					mSubjectAlternativeNames["match"] = []interface{}{mMatch}
@@ -1531,7 +1534,7 @@ func flattenVirtualGatewayClientPolicy(clientPolicy *awstypes.VirtualGatewayClie
 				switch v := trust.(type) {
 				case *awstypes.VirtualGatewayTlsValidationContextTrustMemberAcm:
 					mAcm := map[string]interface{}{
-						"certificate_authority_arns": flex.FlattenStringValueSet(v.Value.CertificateAuthorityArns),
+						"certificate_authority_arns": v.Value.CertificateAuthorityArns,
 					}
 
 					mTrust["acm"] = []interface{}{mAcm}

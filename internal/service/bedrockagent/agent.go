@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -55,7 +56,6 @@ func newAgentResource(context.Context) (resource.ResourceWithConfigure, error) {
 
 type agentResource struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -91,7 +91,7 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 200),
@@ -118,7 +118,7 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(40, 1200),
+					stringvalidator.LengthBetween(40, 4000),
 				},
 			},
 			"prompt_override_configuration": schema.ListAttribute{ // proto5 Optional+Computed nested block.
@@ -143,11 +143,19 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"skip_resource_in_use_check": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -249,8 +257,6 @@ func (r *agentResource) Read(ctx context.Context, request resource.ReadRequest, 
 		return
 	}
 
-	data.PrepareAgent = types.BoolValue(agent.AgentStatus == awstypes.AgentStatusPrepared)
-
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -346,7 +352,8 @@ func (r *agentResource) Delete(ctx context.Context, request resource.DeleteReque
 
 	agentID := data.ID.ValueString()
 	_, err := conn.DeleteAgent(ctx, &bedrockagent.DeleteAgentInput{
-		AgentId: fwflex.StringFromFramework(ctx, data.AgentID),
+		AgentId:                fwflex.StringFromFramework(ctx, data.AgentID),
+		SkipResourceInUseCheck: fwflex.BoolValueFromFramework(ctx, data.SkipResourceInUseCheck),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -364,6 +371,12 @@ func (r *agentResource) Delete(ctx context.Context, request resource.DeleteReque
 
 		return
 	}
+}
+
+func (r *agentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
+	// Set prepare_agent to default value on import
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("prepare_agent"), true)...)
 }
 
 func (r *agentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
@@ -540,6 +553,7 @@ type agentResourceModel struct {
 	Instruction                 types.String                                                      `tfsdk:"instruction"`
 	PrepareAgent                types.Bool                                                        `tfsdk:"prepare_agent"`
 	PromptOverrideConfiguration fwtypes.ListNestedObjectValueOf[promptOverrideConfigurationModel] `tfsdk:"prompt_override_configuration"`
+	SkipResourceInUseCheck      types.Bool                                                        `tfsdk:"skip_resource_in_use_check"`
 	Tags                        types.Map                                                         `tfsdk:"tags"`
 	TagsAll                     types.Map                                                         `tfsdk:"tags_all"`
 	Timeouts                    timeouts.Value                                                    `tfsdk:"timeouts"`

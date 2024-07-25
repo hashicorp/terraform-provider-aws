@@ -30,6 +30,9 @@ import (
 
 // @SDKResource("aws_appmesh_route", name="Route")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appmesh/types;types.RouteData")
+// @Testing(serialize=true)
+// @Testing(importStateIdFunc=testAccRouteImportStateIdFunc)
 func resourceRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCreate,
@@ -746,7 +749,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appmesh.CreateRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		RouteName:         aws.String(name),
@@ -775,7 +778,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return findRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_router_name").(string), d.Get("name").(string))
+		return findRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_router_name").(string), d.Get(names.AttrName).(string))
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -795,8 +798,8 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("last_updated_date", route.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", route.MeshName)
 	d.Set("mesh_owner", route.Metadata.MeshOwner)
-	d.Set("name", route.RouteName)
-	d.Set("resource_owner", route.Metadata.ResourceOwner)
+	d.Set(names.AttrName, route.RouteName)
+	d.Set(names.AttrResourceOwner, route.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenRouteSpec(route.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
@@ -812,7 +815,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateRouteInput{
 			MeshName:          aws.String(d.Get("mesh_name").(string)),
-			RouteName:         aws.String(d.Get("name").(string)),
+			RouteName:         aws.String(d.Get(names.AttrName).(string)),
 			Spec:              expandRouteSpec(d.Get("spec").([]interface{})),
 			VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 		}
@@ -838,7 +841,7 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Deleting App Mesh Route: %s", d.Id())
 	input := &appmesh.DeleteRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
-		RouteName:         aws.String(d.Get("name").(string)),
+		RouteName:         aws.String(d.Get(names.AttrName).(string)),
 		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 	}
 
@@ -879,7 +882,7 @@ func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.ToString(route.Metadata.Uid))
 	d.Set("mesh_name", route.MeshName)
-	d.Set("name", route.RouteName)
+	d.Set(names.AttrName, route.RouteName)
 	d.Set("virtual_router_name", route.VirtualRouterName)
 
 	return []*schema.ResourceData{d}, nil

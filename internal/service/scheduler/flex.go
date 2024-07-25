@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandCapacityProviderStrategyItem(tfMap map[string]interface{}) types.CapacityProviderStrategyItem {
@@ -28,7 +29,7 @@ func expandCapacityProviderStrategyItem(tfMap map[string]interface{}) types.Capa
 		a.CapacityProvider = aws.String(v)
 	}
 
-	if v, ok := tfMap["weight"].(int); ok {
+	if v, ok := tfMap[names.AttrWeight].(int); ok {
 		a.Weight = int32(v)
 	}
 
@@ -44,7 +45,7 @@ func flattenCapacityProviderStrategyItem(apiObject types.CapacityProviderStrateg
 		m["capacity_provider"] = aws.ToString(v)
 	}
 
-	m["weight"] = apiObject.Weight
+	m[names.AttrWeight] = apiObject.Weight
 
 	return m
 }
@@ -56,7 +57,7 @@ func expandDeadLetterConfig(tfMap map[string]interface{}) *types.DeadLetterConfi
 
 	a := &types.DeadLetterConfig{}
 
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		a.Arn = aws.String(v)
 	}
 
@@ -71,7 +72,7 @@ func flattenDeadLetterConfig(apiObject *types.DeadLetterConfig) map[string]inter
 	m := map[string]interface{}{}
 
 	if v := apiObject.Arn; v != nil {
-		m["arn"] = aws.ToString(v)
+		m[names.AttrARN] = aws.ToString(v)
 	}
 
 	return m
@@ -84,7 +85,7 @@ func expandECSParameters(ctx context.Context, tfMap map[string]interface{}) *typ
 
 	a := &types.EcsParameters{}
 
-	if v, ok := tfMap["capacity_provider_strategy"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrCapacityProviderStrategy].(*schema.Set); ok && v.Len() > 0 {
 		for _, s := range v.List() {
 			a.CapacityProviderStrategy = append(a.CapacityProviderStrategy, expandCapacityProviderStrategyItem(s.(map[string]interface{})))
 		}
@@ -106,7 +107,7 @@ func expandECSParameters(ctx context.Context, tfMap map[string]interface{}) *typ
 		a.LaunchType = types.LaunchType(v)
 	}
 
-	if v, ok := tfMap["network_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrNetworkConfiguration].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.NetworkConfiguration = expandNetworkConfiguration(v[0].(map[string]interface{}))
 	}
 
@@ -126,7 +127,7 @@ func expandECSParameters(ctx context.Context, tfMap map[string]interface{}) *typ
 		a.PlatformVersion = aws.String(v)
 	}
 
-	if v, ok := tfMap["propagate_tags"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPropagateTags].(string); ok && v != "" {
 		a.PropagateTags = types.PropagateTags(v)
 	}
 
@@ -134,13 +135,13 @@ func expandECSParameters(ctx context.Context, tfMap map[string]interface{}) *typ
 		a.ReferenceId = aws.String(v)
 	}
 
-	tags := tftags.New(ctx, tfMap["tags"].(map[string]interface{}))
+	tags := tftags.New(ctx, tfMap[names.AttrTags].(map[string]interface{}))
 
 	if len(tags) > 0 {
 		for k, v := range tags.IgnoreAWS().Map() {
 			a.Tags = append(a.Tags, map[string]string{
-				"key":   k,
-				"value": v,
+				names.AttrKey:   k,
+				names.AttrValue: v,
 			})
 		}
 	}
@@ -170,7 +171,7 @@ func flattenECSParameters(ctx context.Context, apiObject *types.EcsParameters) m
 			set.Add(flattenCapacityProviderStrategyItem(p))
 		}
 
-		m["capacity_provider_strategy"] = set
+		m[names.AttrCapacityProviderStrategy] = set
 	}
 
 	if v := apiObject.EnableECSManagedTags; v != nil {
@@ -190,7 +191,7 @@ func flattenECSParameters(ctx context.Context, apiObject *types.EcsParameters) m
 	}
 
 	if v := apiObject.NetworkConfiguration; v != nil {
-		m["network_configuration"] = []interface{}{flattenNetworkConfiguration(v)}
+		m[names.AttrNetworkConfiguration] = []interface{}{flattenNetworkConfiguration(v)}
 	}
 
 	if v := apiObject.PlacementConstraints; len(v) > 0 {
@@ -218,7 +219,7 @@ func flattenECSParameters(ctx context.Context, apiObject *types.EcsParameters) m
 	}
 
 	if v := string(apiObject.PropagateTags); v != "" {
-		m["propagate_tags"] = v
+		m[names.AttrPropagateTags] = v
 	}
 
 	if v := apiObject.ReferenceId; v != nil {
@@ -229,7 +230,7 @@ func flattenECSParameters(ctx context.Context, apiObject *types.EcsParameters) m
 		tags := make(map[string]interface{})
 
 		for _, tagMap := range v {
-			key := tagMap["key"]
+			key := tagMap[names.AttrKey]
 
 			// The EventBridge Scheduler API documents raw maps instead of
 			// the key-value structure expected by the RunTask API.
@@ -237,10 +238,10 @@ func flattenECSParameters(ctx context.Context, apiObject *types.EcsParameters) m
 				continue
 			}
 
-			tags[key] = tagMap["value"]
+			tags[key] = tagMap[names.AttrValue]
 		}
 
-		m["tags"] = tftags.New(ctx, tags).IgnoreAWS().Map()
+		m[names.AttrTags] = tftags.New(ctx, tags).IgnoreAWS().Map()
 	}
 
 	if v := apiObject.TaskCount; v != nil {
@@ -265,7 +266,7 @@ func expandEventBridgeParameters(tfMap map[string]interface{}) *types.EventBridg
 		a.DetailType = aws.String(v)
 	}
 
-	if v, ok := tfMap["source"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSource].(string); ok && v != "" {
 		a.Source = aws.String(v)
 	}
 
@@ -284,7 +285,7 @@ func flattenEventBridgeParameters(apiObject *types.EventBridgeParameters) map[st
 	}
 
 	if v := apiObject.Source; v != nil {
-		m["source"] = aws.ToString(v)
+		m[names.AttrSource] = aws.ToString(v)
 	}
 
 	return m
@@ -301,7 +302,7 @@ func expandFlexibleTimeWindow(tfMap map[string]interface{}) *types.FlexibleTimeW
 		a.MaximumWindowInMinutes = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["mode"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrMode].(string); ok && v != "" {
 		a.Mode = types.FlexibleTimeWindowMode(v)
 	}
 
@@ -320,7 +321,7 @@ func flattenFlexibleTimeWindow(apiObject *types.FlexibleTimeWindow) map[string]i
 	}
 
 	if v := string(apiObject.Mode); v != "" {
-		m["mode"] = v
+		m[names.AttrMode] = v
 	}
 
 	return m
@@ -369,11 +370,11 @@ func expandNetworkConfiguration(tfMap map[string]interface{}) *types.NetworkConf
 		}
 	}
 
-	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		awsvpcConfig.SecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["subnets"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnets].(*schema.Set); ok && v.Len() > 0 {
 		awsvpcConfig.Subnets = flex.ExpandStringValueSet(v)
 	}
 
@@ -397,11 +398,11 @@ func flattenNetworkConfiguration(apiObject *types.NetworkConfiguration) map[stri
 	}
 
 	if v := apiObject.AwsvpcConfiguration.SecurityGroups; v != nil {
-		m["security_groups"] = flex.FlattenStringValueSet(v)
+		m[names.AttrSecurityGroups] = flex.FlattenStringValueSet(v)
 	}
 
 	if v := apiObject.AwsvpcConfiguration.Subnets; v != nil {
-		m["subnets"] = flex.FlattenStringValueSet(v)
+		m[names.AttrSubnets] = flex.FlattenStringValueSet(v)
 	}
 
 	return m
@@ -414,11 +415,11 @@ func expandPlacementConstraint(tfMap map[string]interface{}) types.PlacementCons
 
 	a := types.PlacementConstraint{}
 
-	if v, ok := tfMap["expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
 		a.Expression = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		a.Type = types.PlacementConstraintType(v)
 	}
 
@@ -429,11 +430,11 @@ func flattenPlacementConstraint(apiObject types.PlacementConstraint) map[string]
 	m := map[string]interface{}{}
 
 	if v := apiObject.Expression; v != nil {
-		m["expression"] = aws.ToString(v)
+		m[names.AttrExpression] = aws.ToString(v)
 	}
 
 	if v := string(apiObject.Type); v != "" {
-		m["type"] = v
+		m[names.AttrType] = v
 	}
 
 	return m
@@ -446,11 +447,11 @@ func expandPlacementStrategy(tfMap map[string]interface{}) types.PlacementStrate
 
 	a := types.PlacementStrategy{}
 
-	if v, ok := tfMap["field"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrField].(string); ok && v != "" {
 		a.Field = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		a.Type = types.PlacementStrategyType(v)
 	}
 
@@ -461,11 +462,11 @@ func flattenPlacementStrategy(apiObject types.PlacementStrategy) map[string]inte
 	m := map[string]interface{}{}
 
 	if v := apiObject.Field; v != nil {
-		m["field"] = aws.ToString(v)
+		m[names.AttrField] = aws.ToString(v)
 	}
 
 	if v := string(apiObject.Type); v != "" {
-		m["type"] = v
+		m[names.AttrType] = v
 	}
 
 	return m
@@ -514,11 +515,11 @@ func expandSageMakerPipelineParameter(tfMap map[string]interface{}) types.SageMa
 
 	a := types.SageMakerPipelineParameter{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		a.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		a.Value = aws.String(v)
 	}
 
@@ -529,11 +530,11 @@ func flattenSageMakerPipelineParameter(apiObject types.SageMakerPipelineParamete
 	m := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		m["name"] = aws.ToString(v)
+		m[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Value; v != nil {
-		m["value"] = aws.ToString(v)
+		m[names.AttrValue] = aws.ToString(v)
 	}
 
 	return m
@@ -610,7 +611,7 @@ func expandTarget(ctx context.Context, tfMap map[string]interface{}) *types.Targ
 
 	a := &types.Target{}
 
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		a.Arn = aws.String(v)
 	}
 
@@ -634,7 +635,7 @@ func expandTarget(ctx context.Context, tfMap map[string]interface{}) *types.Targ
 		a.KinesisParameters = expandKinesisParameters(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		a.RoleArn = aws.String(v)
 	}
 
@@ -661,7 +662,7 @@ func flattenTarget(ctx context.Context, apiObject *types.Target) map[string]inte
 	m := map[string]interface{}{}
 
 	if v := apiObject.Arn; v != nil {
-		m["arn"] = aws.ToString(v)
+		m[names.AttrARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.DeadLetterConfig; v != nil {
@@ -685,7 +686,7 @@ func flattenTarget(ctx context.Context, apiObject *types.Target) map[string]inte
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		m["role_arn"] = aws.ToString(v)
+		m[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.RetryPolicy; v != nil {

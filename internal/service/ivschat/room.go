@@ -45,7 +45,7 @@ func ResourceRoom() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -81,7 +81,7 @@ func ResourceRoom() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice(fallbackResultValues(types.FallbackResult("").Values()), false),
 						},
-						"uri": {
+						names.AttrURI: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -89,7 +89,7 @@ func ResourceRoom() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]{0,128}$`), "must contain only alphanumeric, hyphen, and underscore characters, with max length of 128 characters"),
@@ -131,17 +131,17 @@ func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		in.MessageReviewHandler = expandMessageReviewHandler(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		in.Name = aws.String(v.(string))
 	}
 
 	out, err := conn.CreateRoom(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionCreating, ResNameRoom, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionCreating, ResNameRoom, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil {
-		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionCreating, ResNameRoom, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionCreating, ResNameRoom, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Arn))
@@ -170,7 +170,7 @@ func resourceRoomRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionReading, ResNameRoom, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 
 	if err := d.Set("logging_configuration_identifiers", flex.FlattenStringValueList(out.LoggingConfigurationIdentifiers)); err != nil {
 		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionSetting, ResNameRoom, d.Id(), err)
@@ -183,7 +183,7 @@ func resourceRoomRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionSetting, ResNameRoom, d.Id(), err)
 	}
 
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 
 	return diags
 }
@@ -219,8 +219,8 @@ func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		update = true
 	}
 
-	if d.HasChanges("name") {
-		in.Name = aws.String(d.Get("name").(string))
+	if d.HasChanges(names.AttrName) {
+		in.Name = aws.String(d.Get(names.AttrName).(string))
 		update = true
 	}
 
@@ -280,7 +280,7 @@ func flattenMessageReviewHandler(apiObject *types.MessageReviewHandler) []interf
 	}
 
 	if v := apiObject.Uri; v != nil {
-		m["uri"] = aws.ToString(v)
+		m[names.AttrURI] = aws.ToString(v)
 	}
 
 	return []interface{}{m}
@@ -299,7 +299,7 @@ func expandMessageReviewHandler(vSettings []interface{}) *types.MessageReviewHan
 		messageReviewHandler.FallbackResult = types.FallbackResult(v)
 	}
 
-	if v, ok := tfMap["uri"].(string); ok {
+	if v, ok := tfMap[names.AttrURI].(string); ok {
 		messageReviewHandler.Uri = aws.String(v)
 	}
 

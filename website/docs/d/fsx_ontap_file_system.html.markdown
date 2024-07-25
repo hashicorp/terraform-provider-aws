@@ -35,7 +35,9 @@ In addition to all arguments above, the following attributes are exported:
 * `daily_automatic_backup_start_time` - The preferred time (in `HH:MM` format) to take daily automatic backups, in the UTC time zone.
 * `deployment_type` - The file system deployment type.
 * `disk_iops_configuration` - The SSD IOPS configuration for the Amazon FSx for NetApp ONTAP file system, specifying the number of provisioned IOPS and the provision mode. See [Disk IOPS](#disk-iops) Below.
-* `dns_name` - DNS name for the file system (e.g. `fs-12345678.corp.example.com`).
+* `dns_name` - DNS name for the file system.
+
+  **Note:** This attribute does not apply to FSx for ONTAP file systems and is consequently not set. You can access your FSx for ONTAP file system and volumes via a [Storage Virtual Machine (SVM)](fsx_ontap_storage_virtual_machine.html) using its DNS name or IP address.
 * `endpoint_ip_address_range` - (Multi-AZ only) Specifies the IP address range in which the endpoints to access your file system exist.
 * `endpoints` - The Management and Intercluster FileSystemEndpoints that are used to access data or to manage the file system using the NetApp ONTAP CLI, REST API, or NetApp SnapMirror. See [FileSystemEndpoints](#file-system-endpoints) below.
 * `ha_pairs` - The number of HA pairs for the file system.

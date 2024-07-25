@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dx_connection_confirmation")
@@ -24,7 +25,7 @@ func ResourceConnectionConfirmation() *schema.Resource {
 		DeleteWithoutTimeout: resourceConnectionConfirmationDelete,
 
 		Schema: map[string]*schema.Schema{
-			"connection_id": {
+			names.AttrConnectionID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -37,7 +38,7 @@ func resourceConnectionConfirmationCreate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
-	connectionID := d.Get("connection_id").(string)
+	connectionID := d.Get(names.AttrConnectionID).(string)
 	input := &directconnect.ConfirmConnectionInput{
 		ConnectionId: aws.String(connectionID),
 	}

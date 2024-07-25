@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_redshift_snapshot_schedule_association", name="Snapshot Schedule Association")
@@ -33,7 +34,7 @@ func resourceSnapshotScheduleAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -51,7 +52,7 @@ func resourceSnapshotScheduleAssociationCreate(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	clusterIdentifier := d.Get("cluster_identifier").(string)
+	clusterIdentifier := d.Get(names.AttrClusterIdentifier).(string)
 	scheduleIdentifier := d.Get("schedule_identifier").(string)
 	id := SnapshotScheduleAssociationCreateResourceID(clusterIdentifier, scheduleIdentifier)
 	input := &redshift.ModifyClusterSnapshotScheduleInput{
@@ -96,7 +97,7 @@ func resourceSnapshotScheduleAssociationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Snapshot Schedule Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("cluster_identifier", association.ClusterIdentifier)
+	d.Set(names.AttrClusterIdentifier, association.ClusterIdentifier)
 	d.Set("schedule_identifier", scheduleIdentifier)
 
 	return diags
