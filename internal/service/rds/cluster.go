@@ -401,7 +401,7 @@ func resourceCluster() *schema.Resource {
 						},
 						"source_cluster_identifier": {
 							Type:     schema.TypeString,
-							Required: false,
+							Optional: true,
 							ForceNew: true,
 							ValidateFunc: validation.Any(
 								verify.ValidARN,
@@ -414,7 +414,7 @@ func resourceCluster() *schema.Resource {
 						},
 						"source_cluster_resource_id": {
 							Type:     schema.TypeString,
-							Required: false,
+							Optional: true,
 							ForceNew: true,
 							ExactlyOneOf: []string{
 								"restore_to_point_in_time.0.source_cluster_identifier",
