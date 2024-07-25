@@ -1096,6 +1096,7 @@ func testAccCheckParameterGroupExists(ctx context.Context, n string, v *types.DB
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		output, err := tfrds.FindDBParameterGroupByName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}

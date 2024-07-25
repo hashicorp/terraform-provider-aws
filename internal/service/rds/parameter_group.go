@@ -172,7 +172,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		input.Source = aws.String(parameterSourceUser)
 	}
 
-	parameters, err := findParameters(ctx, conn, input, tfslices.PredicateTrue[*types.Parameter]())
+	parameters, err := findDBParameters(ctx, conn, input, tfslices.PredicateTrue[*types.Parameter]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Parameter Group (%s) parameters: %s", d.Id(), err)
@@ -254,7 +254,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 				_, err := conn.ModifyDBParameterGroup(ctx, input)
 
 				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "modifying DB Parameter Group (%s): %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "modifying RDS DB Parameter Group (%s): %s", d.Id(), err)
 				}
 			}
 		}
@@ -292,7 +292,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 				_, err := conn.ResetDBParameterGroup(ctx, input)
 
 				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "resetting DB Parameter Group (%s): %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "resetting RDS DB Parameter Group (%s): %s", d.Id(), err)
 				}
 			}
 		}
@@ -384,7 +384,7 @@ func findDBParameterGroups(ctx context.Context, conn *rds.Client, input *rds.Des
 	return output, nil
 }
 
-func findParameters(ctx context.Context, conn *rds.Client, input *rds.DescribeDBParametersInput, filter tfslices.Predicate[*types.Parameter]) ([]types.Parameter, error) {
+func findDBParameters(ctx context.Context, conn *rds.Client, input *rds.DescribeDBParametersInput, filter tfslices.Predicate[*types.Parameter]) ([]types.Parameter, error) {
 	var output []types.Parameter
 
 	pages := rds.NewDescribeDBParametersPaginator(conn, input)
