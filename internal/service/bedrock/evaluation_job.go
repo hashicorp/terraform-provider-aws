@@ -53,7 +53,7 @@ import (
 // @Tags(identifierAttribute="evaluation_job_arn")
 func newResourceEvaluationJob(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEvaluationJob{}
-	r.SetDefaultReadTimeout(30 * time.Minute)
+	r.SetDefaultReadTimeout(60 * time.Minute)
 	return r, nil
 }
 

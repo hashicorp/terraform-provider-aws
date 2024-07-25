@@ -558,67 +558,10 @@ func testAccEvaluationJobConfig_encryptionbase(iamName, bucketName, bucketAccess
 		resource "aws_kms_key" "test" {
 			description             = %[1]q
 			deletion_window_in_days = 7
-			policy                  = data.aws_iam_policy_document.test.json
 		}
-		
-		data "aws_iam_policy_document" "test" {
-			policy_id = "KMSPolicy"
-			statement {
-				sid = "CustomKMSKeyProvidedToBedrock"
-				actions = [
-					"kms:decrypt",
-					"kms:
-				]
-				resources = [
-				    "arn:aws:kms:${data.aws_region.test.name}:${aws_caller_identity.test.account_id}:key/aws_kms_key.test.key",
-					"*"
-				]
-				condition {
-					test = "StringEquals"
-					variable = "kms:ViaService"
-					values = ["s3.${data.aws_region.test.name}.amazonaws.com"]
-				}
-			}
-			statement {
-				sid = ""
-				effect = "allow"
-				actions = [
-					"kms:DescribeKey"
-				]
-				resources = [
-				    "arn:aws:kms:${data.aws_region.test.name}:${aws_caller_identity.test.account_id}:key/aws_kms_key.test.key",
-					"*",
-				]
-			}
-			statement {
-				effect = "Allow"
-				principlas {
-					type = "Service"
-					identifiers = ["bedrock.amazonaws.com"]					
-				}
-				actions = [
-				    "kms:GenerateDataKey",
-	                "kms:Decrypt",
-    	            "kms:DescribeKey"
-				]
-				resources = [
-					"*"
-				]
-				condition {
-					test = "StringLike"
-					variable = "kms:EncryptionContext:evaluationJobArn"
-					values = ["arn:aws:bedrock:${data.aws_region.test.name}:${aws_caller_identity.test.account_id}:evaluation-job/*"]
-				}
-				condition {
-					test = "StringLike"
-					variable = "aws:SourceArn"
-					values = ["arn:aws:bedrock:${data.aws_region.test.name}:${aws_caller_identity.test.account_id}:evaluation-job/*"]
-				}
-			}
-		}
-		
-		resource "aws_iam_poliicy" "kms" {
-		name = %[1]q # should be 8
+				
+		resource "aws_iam_policy" "kms" {
+		name = %[1]q 
 		policy = jsonencode({
 		    "Version": "2012-10-17",
 			"Statement": [
@@ -630,7 +573,7 @@ func testAccEvaluationJobConfig_encryptionbase(iamName, bucketName, bucketAccess
 					"kms:GenerateDataKey"
 				],
 				"Resource": [
-				"arn:aws:kms:${data.aws_region.test.name}:${data.aws_caller_identity.test}:key/[[keyId]]"
+				"arn:aws:kms:${data.aws_region.test.name}:${data.aws_caller_identity.test.account_id}:key/${aws_kms_key.test.id}"
 				],
 				"Condition": {
 					"StringEquals": {
@@ -645,15 +588,56 @@ func testAccEvaluationJobConfig_encryptionbase(iamName, bucketName, bucketAccess
 					"kms:DescribeKey"
 				],
 				"Resource": [
-				"arn:aws:kms:${data.aws_region.test.name}:{{accountId}}:key/[[keyId]]"
+				"arn:aws:kms:${data.aws_region.test.name}:${data.aws_caller_identity.test.account_id}:key/${aws_kms_key.test.id}"
 				]
 			}
 		]
 	})
+	}
+	resource "aws_iam_role_policy_attachment" "kms" {
+		role = aws_iam_role.test.name
+		policy_arn = aws_iam_policy.kms.arn
+	}
+	resource "aws_kms_key_policy" "test" {
+		key_id = aws_kms_key.test.id
+		policy = jsonencode(
+		{
+			"Version": "2012-10-17",
+			"Id": "key-consolepolicy-3",
+			"Statement": [
+				{
+					"Sid": "EnableIAMUserPermissions",
+					"Effect": "Allow",
+					"Principal": {
+						"AWS": "arn:aws:iam::${data.aws_caller_identity.test.account_id}:root"
+					},
+					"Action": "kms:*",
+					"Resource": "*"
+				},
+				{
+					"Effect": "Allow",
+					"Principal": {
+						"Service": "bedrock.amazonaws.com"
+					},
+					"Action": [
+						"kms:GenerateDataKey",
+						"kms:Decrypt",
+						"kms:DescribeKey"
+					],
+					"Resource": "*",
+					"Condition": {
+						"StringLike": {
+							"kms:EncryptionContext:evaluationJobArn": "arn:aws:bedrock:${data.aws_region.test.name}:${data.aws_caller_identity.test.account_id}:evaluation-job/*",
+							"aws:SourceArn": "arn:aws:bedrock:${data.aws_region.test.name}:${data.aws_caller_identity.test.account_id}:evaluation-job/*"
+						}
+					}
+				}
+			]
+			}
+		)	
+	}
 
-
-		
-		}
+	
 	`, keyName))
 
 }
@@ -688,7 +672,7 @@ resource "aws_bedrock_evaluation_job" "test" {
     }
   }
 
-  customer_encryption_key_id = aws_kms_key.id
+  customer_encryption_key_id = aws_kms_key.test.arn
   description = "test"
   name        = %[1]q
 
