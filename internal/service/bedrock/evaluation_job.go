@@ -35,8 +35,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -146,16 +144,10 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
 				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"automated": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[automated](ctx),
-							PlanModifiers: []planmodifier.List{
-								listplanmodifier.RequiresReplace(),
-							},
 							Validators: []validator.List{
 								listvalidator.ExactlyOneOf(
 									path.MatchRelative().AtParent().AtName("automated"),
@@ -302,6 +294,57 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 											},
 										},
 									},
+									"custom_metrics": schema.SetNestedBlock{
+										CustomType: fwtypes.NewSetNestedObjectTypeOf[customMetrics](ctx),
+										Validators: []validator.Set{
+											setvalidator.SizeBetween(1, 10),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrARN: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 63),
+														stringvalidator.RegexMatches(regexache.MustCompile("^[0-9a-zA-Z-_.]+$"), " must conform to ^[0-9a-zA-Z-_.]+$"),
+													},
+												},
+												"rating_method": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.OneOf("ThumbsUpDown", "IndividualLikertScale", "ComparisonLikertScale", "ComparisonChoice", "ComparisonRank"),
+													},
+												},
+												"description": schema.StringAttribute{
+													Optional: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 63),
+														stringvalidator.RegexMatches(regexache.MustCompile("^.+$"), " must conform to ^.+$"),
+													},
+												},
+											},
+										},
+									},
+									"human_workflow_config": schema.SetNestedBlock{
+										CustomType: fwtypes.NewSetNestedObjectTypeOf[humanWorkflowConfig](ctx),
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"flow_definition_arn": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 1024),
+														stringvalidator.RegexMatches(regexache.MustCompile("^arn:aws(-[^:]+)?:sagemaker:[a-z0-9-]{1,20}:[0-9]{12}:flow-definition/.*$"), " must conform to ^arn:aws(-[^:]+)?:sagemaker:[a-z0-9-]{1,20}:[0-9]{12}:flow-definition/.*$"),
+													},
+												},
+												"description": schema.StringAttribute{
+													Optional: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 5000),
+														stringvalidator.RegexMatches(regexache.MustCompile("^[\\S\\s]+$"), " must conform to [\\S\\s]+$"),
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -310,9 +353,6 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"inference_config": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[evaluationInferenceConfig](ctx),
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"models": schema.SetNestedBlock{
@@ -356,10 +396,6 @@ func (r *resourceEvaluationJob) Schema(ctx context.Context, req resource.SchemaR
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
 				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
-
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"s3_uri": schema.StringAttribute{
@@ -395,7 +431,7 @@ func (r *resourceEvaluationJob) Create(ctx context.Context, req resource.CreateR
 	}
 	in.JobTags = getTagsIn(ctx)
 	fmt.Println(in.JobTags)
-	out, err := conn.CreateEvaluationJob(ctx, in)
+	outputRaw, err := conn.CreateEvaluationJob(ctx, in)
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -404,7 +440,7 @@ func (r *resourceEvaluationJob) Create(ctx context.Context, req resource.CreateR
 		)
 		return
 	}
-	if out == nil || out.JobArn == nil {
+	if outputRaw == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Bedrock, create.ErrActionCreating, ResNameEvaluationJob, plan.Name.String(), nil),
 			errors.New("empty output").Error(),
@@ -412,7 +448,7 @@ func (r *resourceEvaluationJob) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	plan.Arn = flex.StringToFramework(ctx, out.JobArn)
+	plan.Arn = flex.StringToFramework(ctx, (outputRaw.JobArn))
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 func (r *resourceEvaluationJob) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -441,8 +477,31 @@ func (r *resourceEvaluationJob) Read(ctx context.Context, req resource.ReadReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 func (r *resourceEvaluationJob) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().BedrockClient(ctx)
+
+	var state dataEvaluationJob
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	in := &bedrock.StopEvaluationJobInput{
+		JobIdentifier: state.Arn.ValueStringPointer(),
+	}
+
+	_, err := conn.StopEvaluationJob(ctx, in)
+
+	if err != nil && !errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForDeletion, ResNameEvaluationJob, state.Arn.String(), err),
+			err.Error(),
+		)
+		return
+	}
 }
 func (r *resourceEvaluationJob) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+
 }
 
 func (r *resourceEvaluationJob) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -583,17 +642,17 @@ type OutputDataConfig struct {
 
 type human struct {
 	DatasetMetricConfigs fwtypes.SetNestedObjectValueOf[DatasetMetricConfigs] `tfsdk:"dataset_metric_configs"`
-	CustomMetrics        fwtypes.SetNestedObjectValueOf[CustomMetrics]        `tfsdk:"custom_metrics"`
-	HumanWorkflowConfig  fwtypes.ListNestedObjectValueOf[HumanWorkflowConfig] `tfsdk:"human_workflow_config"`
+	CustomMetrics        fwtypes.SetNestedObjectValueOf[customMetrics]        `tfsdk:"custom_metrics"`
+	HumanWorkflowConfig  fwtypes.ListNestedObjectValueOf[humanWorkflowConfig] `tfsdk:"human_workflow_config"`
 }
 
-type CustomMetrics struct {
+type customMetrics struct {
 	Name         types.String `tfsdk:"name"`
 	RatingMethod types.String `tfsdk:"rating_method"`
 	Description  types.String `tfsdk:"description"`
 }
 
-type HumanWorkflowConfig struct {
+type humanWorkflowConfig struct {
 	FlowDefinitionArn types.String `tfsdk:"flow_definition_arn"`
 	Instructions      types.String `tfsdk:"instructions"`
 }

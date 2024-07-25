@@ -284,7 +284,7 @@ data "aws_region" "test" {}
 data "aws_partition" "test" {}
 data "aws_bedrock_foundation_models" "test" {}
 data "aws_bedrock_foundation_model" "test" {
-  model_id = "anthropic.claude-v2"
+  model_id = "amazon.titan-text-lite-v1"
 }
 
 resource "aws_s3_bucket" "test" {
@@ -308,11 +308,36 @@ resource "aws_s3_object" "dataset" {
 	key = "data/dataset.jsonl"
 	source = "dataset.jsonl"	
 }
+	resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode(
+  {
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Sid": "AllowBedrockToAssumeRole",
+        "Effect": "Allow",
+        "Principal": {
+            "Service": "bedrock.amazonaws.com"
+        },
+        "Action": "sts:AssumeRole",
+        "Condition": {
+            "StringEquals": {
+        		"aws:SourceAccount": "${data.aws_caller_identity.test.user_id}"
+            },
+            "ArnEquals": {
+				"aws:SourceArn" : "${data.aws_caller_identity.test.arn}:aws:bedrock:${data.aws_region.test.name}:${data.aws_caller_identity.test.user_id}:evaluation-job/*"
+            }
+        }
+    }]
+}
+)
+}
+
 
 
 resource "aws_iam_policy" "test" {
   name = %[1]q
-
   policy = jsonencode({
     "Version": "2012-10-17",
     "Statement": [
@@ -351,7 +376,12 @@ resource "aws_iam_policy" "test" {
     ]
   })
 }
-  resource "aws_iam_policy" "bucket_access" {
+resource "aws_iam_role_policy_attachment" "test" {
+	role = aws_iam_role.test.name
+	policy_arn = aws_iam_policy.test.arn
+}
+
+resource "aws_iam_policy" "bucket_access" {
   name = %[3]q
 
   policy = jsonencode({
@@ -366,7 +396,8 @@ resource "aws_iam_policy" "test" {
             ],
             "Resource": [
             "arn:aws:s3:::${aws_s3_bucket.test.bucket}",
-            "arn:aws:s3:::${aws_s3_bucket.test.bucket}/${aws_s3_object.dataset.key}"
+            "arn:aws:s3:::${aws_s3_bucket.test.bucket}/${aws_s3_object.dataset.key}",
+			"*"
 			]
         },
         {
@@ -382,11 +413,16 @@ resource "aws_iam_policy" "test" {
             ],
             "Resource": [
             "arn:aws:s3:::${aws_s3_bucket.test.bucket}",
-			"arn:aws:s3:::${aws_s3_bucket.test.bucket}/${aws_s3_object.output.key}"            
+			"arn:aws:s3:::${aws_s3_bucket.test.bucket}/${aws_s3_object.output.key}",
+			"*"            
 			]
         }
     ]
   })
+}
+resource "aws_iam_role_policy_attachment" "bucket_access" {
+	role = aws_iam_role.test.name
+	policy_arn = aws_iam_policy.bucket_access.arn
 }
 
   resource "aws_iam_policy" "model_access" {
@@ -400,14 +436,20 @@ resource "aws_iam_policy" "test" {
             "Effect": "Allow",
             "Action": [
                 "bedrock:InvokeModel",
-                "bedrock:InvokeModelWithResponseStream"
+                "bedrock:InvokeModelWithResponseStream",
+				"bedrock:CreateModelInvocationJob"
             ],
             "Resource": [
-				"arn:aws:bedrock:${data.aws_region.test.name}::foundation-model/anthropic.claude-v2"
+				"arn:aws:bedrock:${data.aws_region.test.name}::foundation-model/amazon.titan-text-lite-v1",
+				"*"
             ]
         }
     ]
   })
+}
+resource "aws_iam_role_policy_attachment" "model_access" {
+	role = aws_iam_role.test.name
+	policy_arn = aws_iam_policy.model_access.arn
 }
 
 resource "aws_iam_policy" "pass" {
@@ -421,10 +463,16 @@ policy = jsonencode({
             "iam:GetRole",
             "iam:PassRole"
         ],
-        "Resource": "arn:aws:iam::${data.aws_caller_identity.test.account_id}:role/bedrock-*"
+        "Resource": [
+		"arn:aws:iam::${data.aws_caller_identity.test.account_id}:role/bedrock-*",
+		"*"
+		]
     }]
 })
-
+}
+resource "aws_iam_role_policy_attachment" "pass" {
+	role = aws_iam_role.test.name
+	policy_arn = aws_iam_policy.pass.arn
 }
 
 resource "aws_iam_policy" "sagemaker_create" {
@@ -453,75 +501,10 @@ resource "aws_iam_role_policy_attachment" "sagemaker_create" {
 	policy_arn = aws_iam_policy.sagemaker_create.arn
 }
 
-resource "aws_iam_policy" "sagemaker" {
-
-name = %[6]q
-policy = jsonencode ({
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "AllowSageMakerToAssumeRole",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "sagemaker.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-})
-}
-
-resource "aws_iam_role_policy_attachment" "sagemaker" {
-	role = aws_iam_role.test.name
-	policy_arn = aws_iam_policy.sagemaker.arn
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode(
-  {
-    "Version": "2012-10-17",
-    "Statement": [{
-        "Sid": "AllowBedrockToAssumeRole",
-        "Effect": "Allow",
-        "Principal": {
-            "Service": "bedrock.amazonaws.com"
-        },
-        "Action": "sts:AssumeRole",
-        "Condition": {
-            "StringEquals": {
-        		"awsSourceAccount:": "${data.aws_caller_identity.test.account_id}"
-            },
-            "ArnEquals": {
-				"aws:SourceArn" : "arn:aws:bedrock:${data.aws_region.test.name}:${data.aws_caller_identity.test.account_id}:evaluation-job/*"
-            }
-        }
-    }]
-}
-)
-}
 
 
-resource "aws_iam_service_linked_role" "bedrock" {
-  aws_service_name = "bedrock.amazonaws.com"
-}
-resource "aws_iam_role_policy_attachment" "pass" {
-	role = aws_iam_role.test.name
-	policy_arn = aws_iam_policy.pass.arn
-}
-resource "aws_iam_role_policy_attachment" "test" {
-	role = aws_iam_role.test.name
-	policy_arn = aws_iam_policy.test.arn
-}
-resource "aws_iam_role_policy_attachment" "bucket_access" {
-	role = aws_iam_role.test.name
-	policy_arn = aws_iam_policy.bucket_access.arn
-}
-resource "aws_iam_role_policy_attachment" "model_access" {
-	role = aws_iam_role.test.name
-	policy_arn = aws_iam_policy.model_access.arn
-}
+
+
 	`, iamName, bucketName, bucketAccessName, modelAccessName, transferRoleName, sagemakerName, sagemakerCreate)
 }
 
@@ -535,10 +518,7 @@ resource "aws_bedrock_evaluation_job" "test" {
     automated {
         dataset_metric_configs {
           dataset {
-		    name = "BoolQ"
-			dataset_location {
-				s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.dataset.key}"
-			}
+		    name = "Builtin.BoolQ"
           }
           metric_names = ["Builtin.Accuracy"]
           task_type    = "QuestionAndAnswer"
