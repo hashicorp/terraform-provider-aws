@@ -5,7 +5,7 @@ go 1.22.5
 require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.3-proton
 	github.com/YakDriver/go-version v0.1.0
-	github.com/YakDriver/regexache v0.23.0
+	github.com/YakDriver/regexache v0.24.0
 	github.com/aws/aws-sdk-go v1.55.2
 	github.com/aws/aws-sdk-go-v2 v1.30.3
 	github.com/aws/aws-sdk-go-v2/config v1.27.27
