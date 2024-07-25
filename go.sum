@@ -13,8 +13,8 @@ github.com/ProtonMail/go-crypto v1.1.0-alpha.3-proton h1:0RXAi0EJFs81j+MMsqvHNuA
 github.com/ProtonMail/go-crypto v1.1.0-alpha.3-proton/go.mod h1:rA3QumHc/FZ8pAHreoekgiAbzpNsfQAosU5td4SnOrE=
 github.com/YakDriver/go-version v0.1.0 h1:/x+Xg2+l89Mjtxl0VRf2+ue8cnHkw6jfYv49j6f7gZw=
 github.com/YakDriver/go-version v0.1.0/go.mod h1:LXwFAp1E3KBhS7FHO/FE8r3XCmvKizs/VXXXFWfoSYY=
-github.com/YakDriver/regexache v0.23.0 h1:kv3j4XKhbx/vqUilSBgizXDUXHvvH1KdYekdmGwz4C4=
-github.com/YakDriver/regexache v0.23.0/go.mod h1:K4BZ3MYKAqSFbYWqmbsG+OzYUDyJjnMEr27DJEsVG3U=
+github.com/YakDriver/regexache v0.24.0 h1:zUKaixelkswzdqsqPc2sveiV//Mi/msJn0teG8zBDiA=
+github.com/YakDriver/regexache v0.24.0/go.mod h1:awcd8uBj614F3ScW06JqlfSGqq2/7vdJHy+RiKzVC+g=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=
 github.com/agext/levenshtein v1.2.3/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/apparentlymart/go-textseg/v12 v12.0.0/go.mod h1:S/4uRK2UtaQttw1GenVJEynmyUenKwP++x/+DdGV/Ec=
