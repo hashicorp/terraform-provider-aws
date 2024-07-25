@@ -401,12 +401,25 @@ func resourceCluster() *schema.Resource {
 						},
 						"source_cluster_identifier": {
 							Type:     schema.TypeString,
-							Required: true,
+							Required: false,
 							ForceNew: true,
 							ValidateFunc: validation.Any(
 								verify.ValidARN,
 								validIdentifier,
 							),
+							ExactlyOneOf: []string{
+								"restore_to_point_in_time.0.source_cluster_identifier",
+								"restore_to_point_in_time.0.source_cluster_resource_id",
+							},
+						},
+						"source_cluster_resource_id": {
+							Type:     schema.TypeString,
+							Required: false,
+							ForceNew: true,
+							ExactlyOneOf: []string{
+								"restore_to_point_in_time.0.source_cluster_identifier",
+								"restore_to_point_in_time.0.source_cluster_resource_id",
+							},
 						},
 						"use_latest_restorable_time": {
 							Type:          schema.TypeBool,
@@ -872,11 +885,18 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &rds.RestoreDBClusterToPointInTimeInput{
-			CopyTagsToSnapshot:        aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
-			DBClusterIdentifier:       aws.String(identifier),
-			DeletionProtection:        aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
-			SourceDBClusterIdentifier: aws.String(tfMap["source_cluster_identifier"].(string)),
-			Tags:                      getTagsIn(ctx),
+			CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
+			DBClusterIdentifier: aws.String(identifier),
+			DeletionProtection:  aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
+			Tags:                getTagsIn(ctx),
+		}
+
+		if v, ok := tfMap["source_cluster_identifier"].(string); ok && v != "" {
+			input.SourceDBClusterIdentifier = aws.String(v)
+		}
+
+		if v, ok := tfMap["source_cluster_resource_id"].(string); ok && v != "" {
+			input.SourceDbClusterResourceId = aws.String(v)
 		}
 
 		if v, ok := tfMap["restore_to_time"].(string); ok && v != "" {
