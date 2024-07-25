@@ -59,7 +59,6 @@ func flattenParameters(apiObject []types.Parameter) []interface{} {
 		}
 
 		apiObjects = append(apiObjects, tfMap)
-
 	}
 
 	return apiObjects
