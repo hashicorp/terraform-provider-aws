@@ -242,8 +242,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceClusterRoleAssociation,
+			Factory:  resourceClusterRoleAssociation,
 			TypeName: "aws_rds_cluster_role_association",
+			Name:     "Cluster IAM Role Association",
 		},
 		{
 			Factory:  ResourceCustomDBEngineVersion,

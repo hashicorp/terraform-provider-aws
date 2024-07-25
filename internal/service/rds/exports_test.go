@@ -9,6 +9,7 @@ var (
 	ResourceCluster                 = resourceCluster
 	ResourceClusterEndpoint         = resourceClusterEndpoint
 	ResourceClusterParameterGroup   = resourceClusterParameterGroup
+	ResourceClusterRoleAssociation  = resourceClusterRoleAssociation
 	ResourceClusterSnapshot         = resourceClusterSnapshot
 	ResourceEventSubscription       = resourceEventSubscription
 	ResourceParameterGroup          = resourceParameterGroup
@@ -22,6 +23,7 @@ var (
 
 	FindDBClusterEndpointByID                  = findDBClusterEndpointByID
 	FindDBClusterParameterGroupByName          = findDBClusterParameterGroupByName
+	FindDBClusterRoleByTwoPartKey              = findDBClusterRoleByTwoPartKey
 	FindDBClusterSnapshotByID                  = findDBClusterSnapshotByID
 	FindDBInstanceByID                         = findDBInstanceByIDSDKv1
 	FindDBParameterGroupByName                 = findDBParameterGroupByName
