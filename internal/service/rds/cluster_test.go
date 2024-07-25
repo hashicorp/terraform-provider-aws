@@ -3479,7 +3479,7 @@ resource "aws_rds_cluster" "restore" {
   engine              = aws_rds_cluster.test.engine
 
   restore_to_point_in_time {
-    source_cluster_resource_id  = aws_rds_cluster.test.cluster_resource_id
+    source_cluster_resource_id = aws_rds_cluster.test.cluster_resource_id
     restore_type               = "full-copy"
     use_latest_restorable_time = true
   }
