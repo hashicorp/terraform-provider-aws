@@ -705,6 +705,8 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				mapBlockKeyFieldLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
+				mapBlockKeyFieldLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
 			},
 		},
 		{
@@ -738,6 +740,8 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF03](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				mapBlockKeyFieldLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
+				mapBlockKeyFieldLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
 			},
 		},
 		{
@@ -771,6 +775,8 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				mapBlockKeyFieldLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
+				mapBlockKeyFieldLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
 			},
 		},
 		{
@@ -804,6 +810,8 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS03]()),
+				mapBlockKeyFieldLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
+				mapBlockKeyFieldLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF02]()),
 			},
 		},
 		{
@@ -837,6 +845,8 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF04](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				mapBlockKeyFieldLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF05]()),
+				mapBlockKeyFieldLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF05]()),
 			},
 		},
 	}

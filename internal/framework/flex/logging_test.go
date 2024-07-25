@@ -31,6 +31,16 @@ func ignoredFieldLogLine(sourceType reflect.Type, fieldName string) map[string]a
 	}
 }
 
+func mapBlockKeyFieldLogLine(sourceType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":                  hclog.Trace.String(),
+		"@module":                 logModule,
+		"@message":                "Skipping map block key",
+		logAttrKeySourceType:      fullTypeName(sourceType),
+		logAttrKeySourceFieldname: MapBlockKey,
+	}
+}
+
 func infoLogLine(message string, sourceType, targetType reflect.Type) map[string]any {
 	return map[string]any{
 		"@level":             hclog.Info.String(),

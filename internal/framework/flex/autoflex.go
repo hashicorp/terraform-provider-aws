@@ -152,6 +152,10 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 			continue
 		}
 		if fieldName == MapBlockKey {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping map block key", map[string]any{
+				logAttrKeySourceType:      fullTypeName(reflect.TypeOf(from)),
+				logAttrKeySourceFieldname: MapBlockKey,
+			})
 			continue
 		}
 
