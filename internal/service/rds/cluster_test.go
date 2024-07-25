@@ -58,6 +58,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 		"requested engine version was not found or does not support parallelquery functionality",
 		"Backtrack is not enabled for the aurora engine",
 		"Read replica DB clusters are not available in this region for engine aurora",
+		"no matching RDS Reserved Instance Offering found",
 	)
 }
 

@@ -45,6 +45,12 @@ const (
 )
 
 const (
+	clusterEndpointStatusAvailable = "available"
+	clusterEndpointStatusCreating  = "creating"
+	clusterEndpointStatusDeleting  = "deleting"
+)
+
+const (
 	storageTypeStandard    = "standard"
 	storageTypeGP2         = "gp2"
 	storageTypeGP3         = "gp3"
@@ -134,8 +140,12 @@ const (
 )
 
 const (
-	DBSnapshotAvailable = "available"
-	DBSnapshotCreating  = "creating"
+	dbSnapshotAvailable = "available"
+	dbSnapshotCreating  = "creating"
+)
+
+const (
+	dbSnapshotAttributeNameRestore = "restore"
 )
 
 const (
@@ -313,4 +323,10 @@ const (
 	ReservedInstanceStateActive         = "active"
 	ReservedInstanceStateRetired        = "retired"
 	ReservedInstanceStatePaymentPending = "payment-pending"
+)
+
+const (
+	parameterSourceEngineDefault = "engine-default"
+	parameterSourceSystem        = "system"
+	parameterSourceUser          = "user"
 )
