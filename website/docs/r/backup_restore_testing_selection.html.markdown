@@ -23,8 +23,8 @@ resource "aws_backup_restore_testing_selection" "example" {
   iam_role_arn              = aws_iam_role.example.arn
 
   protected_resource_conditions {
-    string_equals           = []
-    string_not_equals       = []
+    string_equals     = []
+    string_not_equals = []
   }
 }
 ```
@@ -40,13 +40,13 @@ resource "aws_backup_restore_testing_selection" "example" {
   iam_role_arn              = aws_iam_role.example.arn
 
   protected_resource_conditions {
-    string_equals           = [
+    string_equals = [
       {
-        key = "Backup Test",
+        key   = "Backup Test",
         value = true
       }
     ]
-    string_not_equals       = []
+    string_not_equals = []
   }
 }
 ```
@@ -81,7 +81,6 @@ The `protected_resource_conditions` block supports the following arguments:
 ## Timeouts
 
 The following timeouts are available for this resource:
-
 
 * `create` - (Default `5m`)
 * `update` - (Default `5m`)

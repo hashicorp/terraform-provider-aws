@@ -16,11 +16,11 @@ Terraform resource for managing an AWS Backup Restore Testing Plan.
 ```terraform
 resource "aws_backup_restore_testing_plan" "example" {
   recovery_point_selection {
-    algorithm = "LATEST_WITHIN_WINDOW"
-    include_vaults = ["*"]
+    algorithm            = "LATEST_WITHIN_WINDOW"
+    include_vaults       = ["*"]
     recovery_point_types = ["CONTINUOUS"]
   }
-  
+
   schedule_expression = "cron(0 12 ? * * *)" # Daily at 12:00
 }
 ```
@@ -47,7 +47,7 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Restore Testing Plan. 
+* `arn` - ARN of the Restore Testing Plan.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
