@@ -171,7 +171,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 		p = new(schema.Set)
 	}
 	s := p.(*schema.Set)
-	configParameters := expandParameters2(s.List())
+	configParameters := expandParameters(s.List())
 
 	input = &rds.DescribeDBClusterParametersInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
@@ -190,7 +190,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 
 	parameters = append(parameters, systemParameters...)
 
-	if err := d.Set(names.AttrParameter, flattenParameters2(parameters)); err != nil {
+	if err := d.Set(names.AttrParameter, flattenParameters(parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 
@@ -208,7 +208,7 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 		o, n := d.GetChange(names.AttrParameter)
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
-		for _, chunk := range tfslices.Chunks(expandParameters2(ns.Difference(os).List()), maxParamModifyChunk) {
+		for _, chunk := range tfslices.Chunks(expandParameters(ns.Difference(os).List()), maxParamModifyChunk) {
 			input := &rds.ModifyDBClusterParameterGroupInput{
 				DBClusterParameterGroupName: aws.String(d.Id()),
 				Parameters:                  chunk,
@@ -223,13 +223,13 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 
 		toRemove := map[string]types.Parameter{}
 
-		for _, p := range expandParameters2(os.List()) {
+		for _, p := range expandParameters(os.List()) {
 			if p.ParameterName != nil {
 				toRemove[aws.ToString(p.ParameterName)] = p
 			}
 		}
 
-		for _, p := range expandParameters2(ns.List()) {
+		for _, p := range expandParameters(ns.List()) {
 			if p.ParameterName != nil {
 				delete(toRemove, aws.ToString(p.ParameterName))
 			}

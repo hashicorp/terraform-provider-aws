@@ -204,7 +204,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 			}
 
 			var paramFound bool
-			for _, cp := range expandParameters2(configParams.List()) {
+			for _, cp := range expandParameters(configParams.List()) {
 				if cp.ParameterName == nil {
 					continue
 				}
@@ -221,7 +221,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if err := d.Set(names.AttrParameter, flattenParameters2(userParams)); err != nil {
+	if err := d.Set(names.AttrParameter, flattenParameters(userParams)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 
@@ -239,7 +239,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 		o, n := d.GetChange(names.AttrParameter)
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
-		if parameters := expandParameters2(ns.Difference(os).List()); len(parameters) > 0 {
+		if parameters := expandParameters(ns.Difference(os).List()); len(parameters) > 0 {
 			// We can only modify 20 parameters at a time, so walk them until
 			// we've got them all.
 			for parameters != nil {
@@ -261,13 +261,13 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		toRemove := map[string]types.Parameter{}
 
-		for _, p := range expandParameters2(os.List()) {
+		for _, p := range expandParameters(os.List()) {
 			if p.ParameterName != nil {
 				toRemove[aws.ToString(p.ParameterName)] = p
 			}
 		}
 
-		for _, p := range expandParameters2(ns.List()) {
+		for _, p := range expandParameters(ns.List()) {
 			if p.ParameterName != nil {
 				delete(toRemove, aws.ToString(p.ParameterName))
 			}
@@ -482,60 +482,4 @@ func parameterGroupModifyChunk(all []types.Parameter, maxChunkSize int) ([]types
 	}
 
 	return modifyChunk, remainder
-}
-
-// TODO Rename once aws_rds_cluster_parameter_group has been migrated.
-func expandParameters2(tfList []interface{}) []types.Parameter {
-	var apiObjects []types.Parameter
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		if tfMap[names.AttrName].(string) == "" {
-			continue
-		}
-
-		apiObject := types.Parameter{
-			ParameterName:  aws.String(strings.ToLower(tfMap[names.AttrName].(string))),
-			ParameterValue: aws.String(tfMap[names.AttrValue].(string)),
-		}
-
-		if v, ok := tfMap["apply_method"].(string); ok && v != "" {
-			apiObject.ApplyMethod = types.ApplyMethod(strings.ToLower(v))
-		}
-
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
-// TODO Rename once aws_rds_cluster_parameter_group has been migrated.
-func flattenParameters2(apiObject []types.Parameter) []interface{} {
-	apiObjects := make([]interface{}, 0)
-
-	for _, apiObject := range apiObject {
-		if apiObject.ParameterName == nil {
-			continue
-		}
-
-		tfMap := make(map[string]interface{})
-
-		tfMap["apply_method"] = strings.ToLower(string(apiObject.ApplyMethod))
-		tfMap[names.AttrName] = strings.ToLower(aws.ToString(apiObject.ParameterName))
-
-		// Default empty string, guard against nil parameter values.
-		tfMap[names.AttrValue] = ""
-		if apiObject.ParameterValue != nil {
-			tfMap[names.AttrValue] = aws.ToString(apiObject.ParameterValue)
-		}
-
-		apiObjects = append(apiObjects, tfMap)
-
-	}
-
-	return apiObjects
 }
