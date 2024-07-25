@@ -345,7 +345,7 @@ func statusDBSnapshot(ctx context.Context, conn *rds.Client, id string) retry.St
 	}
 }
 
-func waitDBSnapshotCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBSnapshot, error) {
+func waitDBSnapshotCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBSnapshot, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{dbSnapshotCreating},
 		Target:     []string{dbSnapshotAvailable},
