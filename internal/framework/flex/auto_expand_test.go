@@ -155,6 +155,7 @@ func TestExpand(t *testing.T) {
 			WantTarget: &TestFlex00{},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF01](), reflect.TypeFor[*TestFlex00]()),
+				noCorrespondingFieldLogLine(reflect.TypeFor[*TestFlexTF01](), "Field1", reflect.TypeFor[*TestFlex00]()),
 			},
 		},
 		{

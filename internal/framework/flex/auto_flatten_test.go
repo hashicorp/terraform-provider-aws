@@ -168,6 +168,7 @@ func TestFlatten(t *testing.T) {
 			WantTarget: &TestFlex00{},
 			expectedLogLines: []map[string]any{
 				flatteningLogLine(reflect.TypeFor[*TestFlexAWS01](), reflect.TypeFor[*TestFlex00]()),
+				noCorrespondingFieldLogLine(reflect.TypeFor[*TestFlexAWS01](), "Field1", reflect.TypeFor[*TestFlex00]()),
 			},
 		},
 		{
@@ -500,6 +501,7 @@ func TestFlatten(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				flatteningLogLine(reflect.TypeFor[*TestFlexPluralityAWS01](), reflect.TypeFor[*TestFlexPluralityTF01]()),
+				noCorrespondingFieldLogLine(reflect.TypeFor[*TestFlexPluralityAWS01](), "Values", reflect.TypeFor[*TestFlexPluralityTF01]()),
 			},
 		},
 		{

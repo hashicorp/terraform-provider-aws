@@ -161,7 +161,13 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 
 		toFieldVal := findFieldFuzzy(ctx, fieldName, valTo, valFrom, flexer)
 		if !toFieldVal.IsValid() {
-			continue // Corresponding field not found in to.
+			// Corresponding field not found in to.
+			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding field", map[string]any{
+				logAttrKeySourceType:      fullTypeName(reflect.TypeOf(from)),
+				logAttrKeySourceFieldname: fieldName,
+				logAttrKeyTargetType:      fullTypeName(reflect.TypeOf(to)),
+			})
+			continue
 		}
 		if !toFieldVal.CanSet() {
 			continue // Corresponding field value can't be changed.
