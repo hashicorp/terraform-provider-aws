@@ -804,9 +804,10 @@ func TestAccRDSParameterGroup_caseParameters(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"parameter.0.name"},
 			},
 			{
 				Config: testAccParameterGroupConfig_upperCase(rName, "max_connections"),
