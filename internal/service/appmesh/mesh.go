@@ -164,8 +164,8 @@ func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	mesh := outputRaw.(*awstypes.MeshData)
-	arn := aws.ToString(mesh.Metadata.Arn)
-	d.Set(names.AttrARN, arn)
+
+	d.Set(names.AttrARN, mesh.Metadata.Arn)
 	d.Set(names.AttrCreatedDate, mesh.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_owner", mesh.Metadata.MeshOwner)

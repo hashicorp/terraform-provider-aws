@@ -792,8 +792,8 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	route := outputRaw.(*awstypes.RouteData)
-	arn := aws.ToString(route.Metadata.Arn)
-	d.Set(names.AttrARN, arn)
+
+	d.Set(names.AttrARN, route.Metadata.Arn)
 	d.Set(names.AttrCreatedDate, route.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, route.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", route.MeshName)

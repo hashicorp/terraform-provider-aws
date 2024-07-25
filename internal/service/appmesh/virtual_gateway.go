@@ -705,8 +705,7 @@ func resourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, met
 
 	virtualGateway := outputRaw.(*awstypes.VirtualGatewayData)
 
-	arn := aws.ToString(virtualGateway.Metadata.Arn)
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, virtualGateway.Metadata.Arn)
 	d.Set(names.AttrCreatedDate, virtualGateway.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, virtualGateway.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", virtualGateway.MeshName)

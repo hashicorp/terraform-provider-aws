@@ -183,8 +183,7 @@ func resourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, meta
 
 	vr := outputRaw.(*awstypes.VirtualRouterData)
 
-	arn := aws.ToString(vr.Metadata.Arn)
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, vr.Metadata.Arn)
 	d.Set(names.AttrCreatedDate, vr.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, vr.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vr.MeshName)

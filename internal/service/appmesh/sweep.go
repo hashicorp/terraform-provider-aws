@@ -76,7 +76,6 @@ func sweepMeshes(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := appmesh.NewListMeshesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -114,13 +113,11 @@ func sweepVirtualGateways(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.AppMeshClient(ctx)
-	var sweeperErrs *multierror.Error
-	sweepResources := make([]sweep.Sweepable, 0)
-
 	input := &appmesh.ListMeshesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	pages := appmesh.NewListMeshesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -140,7 +137,6 @@ func sweepVirtualGateways(region string) error {
 			}
 
 			pages := appmesh.NewListVirtualGatewaysPaginator(conn, input)
-
 			for pages.HasMorePages() {
 				page, err := pages.NextPage(ctx)
 
@@ -183,11 +179,10 @@ func sweepVirtualNodes(region string) error {
 	}
 	conn := client.AppMeshClient(ctx)
 	input := &appmesh.ListMeshesInput{}
-	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	pages := appmesh.NewListMeshesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -207,7 +202,6 @@ func sweepVirtualNodes(region string) error {
 			}
 
 			pages := appmesh.NewListVirtualNodesPaginator(conn, input)
-
 			for pages.HasMorePages() {
 				page, err := pages.NextPage(ctx)
 
@@ -250,11 +244,10 @@ func sweepVirtualRouters(region string) error {
 	}
 	conn := client.AppMeshClient(ctx)
 	input := &appmesh.ListMeshesInput{}
-	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	pages := appmesh.NewListMeshesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -274,7 +267,6 @@ func sweepVirtualRouters(region string) error {
 			}
 
 			pages := appmesh.NewListVirtualRoutersPaginator(conn, input)
-
 			for pages.HasMorePages() {
 				page, err := pages.NextPage(ctx)
 
@@ -317,11 +309,10 @@ func sweepVirtualServices(region string) error {
 	}
 	conn := client.AppMeshClient(ctx)
 	input := &appmesh.ListMeshesInput{}
-	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	pages := appmesh.NewListMeshesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -341,7 +332,6 @@ func sweepVirtualServices(region string) error {
 			}
 
 			pages := appmesh.NewListVirtualServicesPaginator(conn, input)
-
 			for pages.HasMorePages() {
 				page, err := pages.NextPage(ctx)
 
@@ -384,11 +374,10 @@ func sweepGatewayRoutes(region string) error {
 	}
 	conn := client.AppMeshClient(ctx)
 	input := &appmesh.ListMeshesInput{}
-	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	pages := appmesh.NewListMeshesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -408,7 +397,6 @@ func sweepGatewayRoutes(region string) error {
 			}
 
 			pages := appmesh.NewListVirtualGatewaysPaginator(conn, input)
-
 			for pages.HasMorePages() {
 				page, err := pages.NextPage(ctx)
 
@@ -428,7 +416,6 @@ func sweepGatewayRoutes(region string) error {
 					}
 
 					pages := appmesh.NewListGatewayRoutesPaginator(conn, input)
-
 					for pages.HasMorePages() {
 						page, err := pages.NextPage(ctx)
 
@@ -474,11 +461,10 @@ func sweepRoutes(region string) error {
 	}
 	conn := client.AppMeshClient(ctx)
 	input := &appmesh.ListMeshesInput{}
-	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	pages := appmesh.NewListMeshesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -498,7 +484,6 @@ func sweepRoutes(region string) error {
 			}
 
 			pages := appmesh.NewListVirtualRoutersPaginator(conn, input)
-
 			for pages.HasMorePages() {
 				page, err := pages.NextPage(ctx)
 
@@ -518,7 +503,6 @@ func sweepRoutes(region string) error {
 					}
 
 					pages := appmesh.NewListRoutesPaginator(conn, input)
-
 					for pages.HasMorePages() {
 						page, err := pages.NextPage(ctx)
 

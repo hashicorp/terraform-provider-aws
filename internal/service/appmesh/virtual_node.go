@@ -1022,8 +1022,7 @@ func resourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	vn := outputRaw.(*awstypes.VirtualNodeData)
 
-	arn := aws.ToString(vn.Metadata.Arn)
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, vn.Metadata.Arn)
 	d.Set(names.AttrCreatedDate, vn.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, vn.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vn.MeshName)
