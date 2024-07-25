@@ -41,6 +41,18 @@ func mapBlockKeyFieldLogLine(sourceType reflect.Type) map[string]any {
 	}
 }
 
+func matchedFieldsLogLine(sourceType reflect.Type, sourceFieldName string, targetType reflect.Type, targetFieldName string) map[string]any {
+	return map[string]any{
+		"@level":                  hclog.Trace.String(),
+		"@module":                 logModule,
+		"@message":                "Matched fields",
+		logAttrKeySourceType:      fullTypeName(sourceType),
+		logAttrKeySourceFieldname: sourceFieldName,
+		logAttrKeyTargetType:      fullTypeName(targetType),
+		logAttrKeyTargetFieldname: targetFieldName,
+	}
+}
+
 func noCorrespondingFieldLogLine(sourceType reflect.Type, sourceFieldName string, targetType reflect.Type) map[string]any {
 	return map[string]any{
 		"@level":                  hclog.Debug.String(),

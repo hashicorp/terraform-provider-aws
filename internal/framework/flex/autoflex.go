@@ -19,7 +19,7 @@ type ResourcePrefixCtxKey string
 
 const (
 	ResourcePrefix        ResourcePrefixCtxKey = "RESOURCE_PREFIX"
-	ResourcePrefixRecurse ResourcePrefixCtxKey = "RESOURCE_PREFIX_RECURSE"
+	resourcePrefixRecurse ResourcePrefixCtxKey = "RESOURCE_PREFIX_RECURSE"
 	MapBlockKey                                = "MapBlockKey"
 )
 
@@ -180,6 +180,13 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 			continue
 		}
 
+		tflog.SubsystemTrace(ctx, subsystemName, "Matched fields", map[string]any{
+			logAttrKeySourceType:      fullTypeName(reflect.TypeOf(from)),
+			logAttrKeySourceFieldname: fieldName,
+			logAttrKeyTargetType:      fullTypeName(reflect.TypeOf(to)),
+			logAttrKeyTargetFieldname: toFieldName,
+		})
+
 		diags.Append(flexer.convert(ctx, valFrom.Field(i), toFieldVal)...)
 		if diags.HasError() {
 			diags.AddError("AutoFlEx", fmt.Sprintf("convert (%s)", fieldName))
@@ -237,9 +244,9 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 	// fourth precedence is using resource prefix
 	if v, ok := ctx.Value(ResourcePrefix).(string); ok && v != "" {
 		v = strings.ReplaceAll(v, " ", "")
-		if ctx.Value(ResourcePrefixRecurse) == nil {
+		if ctx.Value(resourcePrefixRecurse) == nil {
 			// so it will only recurse once
-			ctx = context.WithValue(ctx, ResourcePrefixRecurse, true)
+			ctx = context.WithValue(ctx, resourcePrefixRecurse, true)
 			if strings.HasPrefix(fieldNameFrom, v) {
 				return findFieldFuzzy(ctx, strings.TrimPrefix(fieldNameFrom, v), valTo, valFrom, flexer)
 			}
