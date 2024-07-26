@@ -7,8 +7,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 const (
@@ -24,9 +26,9 @@ const (
 	fileSystemAssociationDeletedDelay         = 5 * time.Second
 )
 
-func waitGatewayConnected(ctx context.Context, conn *storagegateway.StorageGateway, gatewayARN string, timeout time.Duration) (*storagegateway.DescribeGatewayInformationOutput, error) {
+func waitGatewayConnected(ctx context.Context, conn *storagegateway.Client, gatewayARN string, timeout time.Duration) (*storagegateway.DescribeGatewayInformationOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{storagegateway.ErrorCodeGatewayNotConnected},
+		Pending:                   enum.Slice(awstypes.ErrorCodeGatewayNotConnected),
 		Target:                    []string{gatewayStatusConnected},
 		Refresh:                   statusGateway(ctx, conn, gatewayARN),
 		Timeout:                   timeout,
@@ -44,10 +46,10 @@ func waitGatewayConnected(ctx context.Context, conn *storagegateway.StorageGatew
 	}
 }
 
-func waitGatewayJoinDomainJoined(ctx context.Context, conn *storagegateway.StorageGateway, volumeARN string) (*storagegateway.DescribeSMBSettingsOutput, error) { //nolint:unparam
+func waitGatewayJoinDomainJoined(ctx context.Context, conn *storagegateway.Client, volumeARN string) (*storagegateway.DescribeSMBSettingsOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{storagegateway.ActiveDirectoryStatusJoining},
-		Target:  []string{storagegateway.ActiveDirectoryStatusJoined},
+		Pending: enum.Slice(awstypes.ActiveDirectoryStatusJoining),
+		Target:  enum.Slice(awstypes.ActiveDirectoryStatusJoined),
 		Refresh: statusGatewayJoinDomain(ctx, conn, volumeARN),
 		Timeout: gatewayJoinDomainJoinedTimeout,
 	}
@@ -62,7 +64,7 @@ func waitGatewayJoinDomainJoined(ctx context.Context, conn *storagegateway.Stora
 }
 
 // waitStorediSCSIVolumeAvailable waits for a StoredIscsiVolume to return Available
-func waitStorediSCSIVolumeAvailable(ctx context.Context, conn *storagegateway.StorageGateway, volumeARN string) (*storagegateway.DescribeStorediSCSIVolumesOutput, error) {
+func waitStorediSCSIVolumeAvailable(ctx context.Context, conn *storagegateway.Client, volumeARN string) (*storagegateway.DescribeStorediSCSIVolumesOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"BOOTSTRAPPING", "CREATING", "RESTORING"},
 		Target:  []string{"AVAILABLE"},
@@ -79,7 +81,7 @@ func waitStorediSCSIVolumeAvailable(ctx context.Context, conn *storagegateway.St
 	return nil, err
 }
 
-func waitNFSFileShareCreated(ctx context.Context, conn *storagegateway.StorageGateway, arn string, timeout time.Duration) (*storagegateway.NFSFileShareInfo, error) {
+func waitNFSFileShareCreated(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.NFSFileShareInfo, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{fileShareStatusCreating},
 		Target:  []string{fileShareStatusAvailable},
@@ -90,14 +92,14 @@ func waitNFSFileShareCreated(ctx context.Context, conn *storagegateway.StorageGa
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*storagegateway.NFSFileShareInfo); ok {
+	if output, ok := outputRaw.(*awstypes.NFSFileShareInfo); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitNFSFileShareDeleted(ctx context.Context, conn *storagegateway.StorageGateway, arn string, timeout time.Duration) (*storagegateway.NFSFileShareInfo, error) {
+func waitNFSFileShareDeleted(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.NFSFileShareInfo, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:        []string{fileShareStatusAvailable, fileShareStatusDeleting, fileShareStatusForceDeleting},
 		Target:         []string{},
@@ -109,14 +111,14 @@ func waitNFSFileShareDeleted(ctx context.Context, conn *storagegateway.StorageGa
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*storagegateway.NFSFileShareInfo); ok {
+	if output, ok := outputRaw.(*awstypes.NFSFileShareInfo); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitNFSFileShareUpdated(ctx context.Context, conn *storagegateway.StorageGateway, arn string, timeout time.Duration) (*storagegateway.NFSFileShareInfo, error) {
+func waitNFSFileShareUpdated(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.NFSFileShareInfo, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{fileShareStatusUpdating},
 		Target:  []string{fileShareStatusAvailable},
@@ -127,14 +129,14 @@ func waitNFSFileShareUpdated(ctx context.Context, conn *storagegateway.StorageGa
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*storagegateway.NFSFileShareInfo); ok {
+	if output, ok := outputRaw.(*awstypes.NFSFileShareInfo); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitSMBFileShareCreated(ctx context.Context, conn *storagegateway.StorageGateway, arn string, timeout time.Duration) (*storagegateway.SMBFileShareInfo, error) {
+func waitSMBFileShareCreated(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.SMBFileShareInfo, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{fileShareStatusCreating},
 		Target:  []string{fileShareStatusAvailable},
@@ -145,14 +147,14 @@ func waitSMBFileShareCreated(ctx context.Context, conn *storagegateway.StorageGa
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*storagegateway.SMBFileShareInfo); ok {
+	if output, ok := outputRaw.(*awstypes.SMBFileShareInfo); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitSMBFileShareDeleted(ctx context.Context, conn *storagegateway.StorageGateway, arn string, timeout time.Duration) (*storagegateway.SMBFileShareInfo, error) {
+func waitSMBFileShareDeleted(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.SMBFileShareInfo, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:        []string{fileShareStatusAvailable, fileShareStatusDeleting, fileShareStatusForceDeleting},
 		Target:         []string{},
@@ -164,14 +166,14 @@ func waitSMBFileShareDeleted(ctx context.Context, conn *storagegateway.StorageGa
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*storagegateway.SMBFileShareInfo); ok {
+	if output, ok := outputRaw.(*awstypes.SMBFileShareInfo); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitSMBFileShareUpdated(ctx context.Context, conn *storagegateway.StorageGateway, arn string, timeout time.Duration) (*storagegateway.SMBFileShareInfo, error) {
+func waitSMBFileShareUpdated(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.SMBFileShareInfo, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{fileShareStatusUpdating},
 		Target:  []string{fileShareStatusAvailable},
@@ -182,14 +184,14 @@ func waitSMBFileShareUpdated(ctx context.Context, conn *storagegateway.StorageGa
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*storagegateway.SMBFileShareInfo); ok {
+	if output, ok := outputRaw.(*awstypes.SMBFileShareInfo); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitFileSystemAssociationAvailable(ctx context.Context, conn *storagegateway.StorageGateway, fileSystemArn string, timeout time.Duration) (*storagegateway.FileSystemAssociationInfo, error) { //nolint:unparam
+func waitFileSystemAssociationAvailable(ctx context.Context, conn *storagegateway.Client, fileSystemArn string, timeout time.Duration) (*awstypes.FileSystemAssociationInfo, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{fileSystemAssociationStatusCreating, fileSystemAssociationStatusUpdating},
 		Target:  []string{fileSystemAssociationStatusAvailable},
@@ -200,14 +202,14 @@ func waitFileSystemAssociationAvailable(ctx context.Context, conn *storagegatewa
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*storagegateway.FileSystemAssociationInfo); ok {
+	if output, ok := outputRaw.(*awstypes.FileSystemAssociationInfo); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitFileSystemAssociationDeleted(ctx context.Context, conn *storagegateway.StorageGateway, fileSystemArn string, timeout time.Duration) (*storagegateway.FileSystemAssociationInfo, error) {
+func waitFileSystemAssociationDeleted(ctx context.Context, conn *storagegateway.Client, fileSystemArn string, timeout time.Duration) (*awstypes.FileSystemAssociationInfo, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:        []string{fileSystemAssociationStatusAvailable, fileSystemAssociationStatusDeleting, fileSystemAssociationStatusForceDeleting},
 		Target:         []string{},
@@ -219,7 +221,7 @@ func waitFileSystemAssociationDeleted(ctx context.Context, conn *storagegateway.
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*storagegateway.FileSystemAssociationInfo); ok {
+	if output, ok := outputRaw.(*awstypes.FileSystemAssociationInfo); ok {
 		return output, err
 	}
 
