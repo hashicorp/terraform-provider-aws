@@ -16,14 +16,11 @@ jobs:
   labels:
     name: Labelers
     runs-on: ubuntu-latest
-    steps:
-      - name: Generate GitHub App Token
-        id: token
-        uses: actions/create-github-app-token@31c86eb3b33c9b601a1f60f98dcbfd1d70f379b4 # v1.10.3
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PEM }}
+    permissions:
+      contents: read
+      pull-requests: write
 
+    steps:
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
@@ -34,13 +31,13 @@ jobs:
         uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9 # v5.0.0
         with:
           configuration-path: .github/labeler-pr-triage.yml
-          repo-token: ${{ steps.token.outputs.token }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Apply Size Labels
         if: contains(fromJSON('["opened", "edited"]'), github.event.action)
         uses: codelytv/pr-size-labeler@56f6f0fc35c7cc0f72963b8467729e1120cb4bed # v1.10.0
         with:
-          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           xs_label: "size/XS"
           xs_max_size: "30"
           s_label: "size/S"
@@ -67,7 +64,7 @@ jobs:
           github.event.action == 'opened'
           && steps.author.outputs.maintainer == 'false'
         env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr edit "$ISSUE_URL" --add-label needs-triage
 
       - name: Add prioritized to Maintainer Contributions
@@ -75,7 +72,7 @@ jobs:
           github.event.action == 'opened'
           && steps.author.outputs.maintainer == 'true'
         env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr edit "$ISSUE_URL" --add-label prioritized
 
       - name: Credit Core Contributor Contributions
@@ -83,7 +80,7 @@ jobs:
           github.event.action == 'opened'
           && steps.author.outputs.core_contributor == 'true'
         env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr edit "$ISSUE_URL" --add-label external-maintainer
 
@@ -92,7 +89,7 @@ jobs:
           github.event.action == 'opened'
           && steps.author.outputs.partner == 'true'
         env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr edit "$ISSUE_URL" --add-label partner
 
@@ -109,7 +106,7 @@ jobs:
           github.event.action == 'assigned'
           && steps.assignee.outputs.maintainer == 'true'
         env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr edit "$ISSUE_URL" --add-label prioritized
 
@@ -118,7 +115,7 @@ jobs:
           github.event.action == 'closed'
           && (contains(github.event.pull_request.labels.*.name, 'needs-triage') || contains(github.event.pull_request.labels.*.name, 'waiting-response'))
         env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr edit "$ISSUE_URL" --remove-label needs-triage,waiting-response
 
   project:
