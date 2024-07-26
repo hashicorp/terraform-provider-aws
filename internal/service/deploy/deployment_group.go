@@ -338,8 +338,10 @@ func resourceDeploymentGroup() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"listener_arns": {
-													Type:     schema.TypeSet,
+													Type:     schema.TypeList,
 													Required: true,
+													MinItems: 1,
+													MaxItems: 1,
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
 														ValidateFunc: verify.ValidARN,
@@ -370,8 +372,10 @@ func resourceDeploymentGroup() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"listener_arns": {
-													Type:     schema.TypeSet,
+													Type:     schema.TypeList,
 													Required: true,
+													MinItems: 1,
+													MaxItems: 1,
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
 														ValidateFunc: verify.ValidARN,
