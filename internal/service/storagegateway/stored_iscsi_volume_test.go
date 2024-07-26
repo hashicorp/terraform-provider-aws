@@ -9,21 +9,23 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccStorageGatewayStorediSCSIVolume_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var storedIscsiVolume storagegateway.StorediSCSIVolume
+	var storedIscsiVolume awstypes.StorediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
 
@@ -65,7 +67,7 @@ func TestAccStorageGatewayStorediSCSIVolume_basic(t *testing.T) {
 
 func TestAccStorageGatewayStorediSCSIVolume_kms(t *testing.T) {
 	ctx := acctest.Context(t)
-	var storedIscsiVolume storagegateway.StorediSCSIVolume
+	var storedIscsiVolume awstypes.StorediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
 	keyResourceName := "aws_kms_key.test"
@@ -95,7 +97,7 @@ func TestAccStorageGatewayStorediSCSIVolume_kms(t *testing.T) {
 
 func TestAccStorageGatewayStorediSCSIVolume_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var storedIscsiVolume storagegateway.StorediSCSIVolume
+	var storedIscsiVolume awstypes.StorediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
 
@@ -144,7 +146,7 @@ func TestAccStorageGatewayStorediSCSIVolume_tags(t *testing.T) {
 
 func TestAccStorageGatewayStorediSCSIVolume_snapshotID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var storedIscsiVolume storagegateway.StorediSCSIVolume
+	var storedIscsiVolume awstypes.StorediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
 
@@ -182,7 +184,7 @@ func TestAccStorageGatewayStorediSCSIVolume_snapshotID(t *testing.T) {
 
 func TestAccStorageGatewayStorediSCSIVolume_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var storedIscsiVolume storagegateway.StorediSCSIVolume
+	var storedIscsiVolume awstypes.StorediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
 
@@ -204,30 +206,30 @@ func TestAccStorageGatewayStorediSCSIVolume_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckStorediSCSIVolumeExists(ctx context.Context, resourceName string, storedIscsiVolume *storagegateway.StorediSCSIVolume) resource.TestCheckFunc {
+func testAccCheckStorediSCSIVolumeExists(ctx context.Context, resourceName string, storedIscsiVolume *awstypes.StorediSCSIVolume) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
 
 		input := &storagegateway.DescribeStorediSCSIVolumesInput{
-			VolumeARNs: []*string{aws.String(rs.Primary.ID)},
+			VolumeARNs: []string{rs.Primary.ID},
 		}
 
-		output, err := conn.DescribeStorediSCSIVolumesWithContext(ctx, input)
+		output, err := conn.DescribeStorediSCSIVolumes(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error reading Storage Gateway stored iSCSI volume: %w", err)
 		}
 
-		if output == nil || len(output.StorediSCSIVolumes) == 0 || output.StorediSCSIVolumes[0] == nil || aws.StringValue(output.StorediSCSIVolumes[0].VolumeARN) != rs.Primary.ID {
+		if output == nil || len(output.StorediSCSIVolumes) == 0 || aws.ToString(output.StorediSCSIVolumes[0].VolumeARN) != rs.Primary.ID {
 			return fmt.Errorf("Storage Gateway stored iSCSI volume %q not found", rs.Primary.ID)
 		}
 
-		*storedIscsiVolume = *output.StorediSCSIVolumes[0]
+		*storedIscsiVolume = output.StorediSCSIVolumes[0]
 
 		return nil
 	}
@@ -235,7 +237,7 @@ func testAccCheckStorediSCSIVolumeExists(ctx context.Context, resourceName strin
 
 func testAccCheckStorediSCSIVolumeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_storagegateway_stored_iscsi_volume" {
@@ -243,25 +245,25 @@ func testAccCheckStorediSCSIVolumeDestroy(ctx context.Context) resource.TestChec
 			}
 
 			input := &storagegateway.DescribeStorediSCSIVolumesInput{
-				VolumeARNs: []*string{aws.String(rs.Primary.ID)},
+				VolumeARNs: []string{rs.Primary.ID},
 			}
 
-			output, err := conn.DescribeStorediSCSIVolumesWithContext(ctx, input)
+			output, err := conn.DescribeStorediSCSIVolumes(ctx, input)
 
 			if err != nil {
 				if tfstoragegateway.IsErrGatewayNotFound(err) {
 					return nil
 				}
-				if tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeVolumeNotFound) {
+				if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeVolumeNotFound)) {
 					return nil
 				}
-				if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
+				if errs.IsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](err, "The specified volume was not found") {
 					return nil
 				}
 				return err
 			}
 
-			if output != nil && len(output.StorediSCSIVolumes) > 0 && output.StorediSCSIVolumes[0] != nil && aws.StringValue(output.StorediSCSIVolumes[0].VolumeARN) == rs.Primary.ID {
+			if output != nil && len(output.StorediSCSIVolumes) > 0 && aws.ToString(output.StorediSCSIVolumes[0].VolumeARN) == rs.Primary.ID {
 				return fmt.Errorf("Storage Gateway stored iSCSI volume %q still exists", rs.Primary.ID)
 			}
 		}
