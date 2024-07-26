@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_ip_ranges: Fix regression causing filtering on `regions` and `services` to become case-sensitive
+```

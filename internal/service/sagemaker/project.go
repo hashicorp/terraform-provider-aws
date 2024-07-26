@@ -1,34 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sagemaker_project", name="Project")
+// @Tags(identifierAttribute="arn")
 func ResourceProject() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceProjectCreate,
-		Read:   resourceProjectRead,
-		Update: resourceProjectUpdate,
-		Delete: resourceProjectDelete,
+		CreateWithoutTimeout: resourceProjectCreate,
+		ReadWithoutTimeout:   resourceProjectRead,
+		UpdateWithoutTimeout: resourceProjectUpdate,
+		DeleteWithoutTimeout: resourceProjectDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,7 +50,7 @@ func ResourceProject() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 32),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,31}$`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,31}$`),
 						"Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
@@ -77,11 +85,11 @@ func ResourceProject() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -91,98 +99,77 @@ func ResourceProject() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("project_name").(string)
 	input := &sagemaker.CreateProjectInput{
 		ProjectName:                       aws.String(name),
 		ServiceCatalogProvisioningDetails: expandProjectServiceCatalogProvisioningDetails(d.Get("service_catalog_provisioning_details").([]interface{})),
+		Tags:                              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("project_description"); ok {
 		input.ProjectDescription = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
-		return conn.CreateProject(input)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+		return conn.CreateProjectWithContext(ctx, input)
 	}, "ValidationException")
 	if err != nil {
-		return fmt.Errorf("creating SageMaker project: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker project: %s", err)
 	}
 
 	d.SetId(name)
 
-	if _, err := WaitProjectCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for SageMaker Project (%s) to be created: %w", d.Id(), err)
+	if _, err := WaitProjectCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Project (%s) to be created: %s", d.Id(), err)
 	}
 
-	return resourceProjectRead(d, meta)
+	return append(diags, resourceProjectRead(ctx, d, meta)...)
 }
 
-func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	project, err := FindProjectByName(conn, d.Id())
+	project, err := FindProjectByName(ctx, conn, d.Id())
 	if err != nil {
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker Project (%s); removing from state", d.Id())
-			return nil
+			return diags
 		}
-		return fmt.Errorf("reading SageMaker Project (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker Project (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(project.ProjectArn)
 	d.Set("project_name", project.ProjectName)
 	d.Set("project_id", project.ProjectId)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("project_description", project.ProjectDescription)
 
 	if err := d.Set("service_catalog_provisioning_details", flattenProjectServiceCatalogProvisioningDetails(project.ServiceCatalogProvisioningDetails)); err != nil {
-		return fmt.Errorf("setting service_catalog_provisioning_details: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting service_catalog_provisioning_details: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("listing tags for SageMaker Project (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	if d.HasChangesExcept("tags_all", "tags") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &sagemaker.UpdateProjectInput{
 			ProjectName: aws.String(d.Id()),
 		}
@@ -195,48 +182,43 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.ServiceCatalogProvisioningUpdateDetails = expandProjectServiceCatalogProvisioningDetailsUpdate(d.Get("service_catalog_provisioning_details").([]interface{}))
 		}
 
-		_, err := conn.UpdateProject(input)
+		_, err := conn.UpdateProjectWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("updating SageMaker Project (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker Project (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitProjectUpdated(conn, d.Id()); err != nil {
-			return fmt.Errorf("waiting for SageMaker Project (%s) to be updated: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating SageMaker Project (%s) tags: %w", d.Id(), err)
+		if _, err := WaitProjectUpdated(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Project (%s) to be updated: %s", d.Id(), err)
 		}
 	}
 
-	return resourceProjectRead(d, meta)
+	return append(diags, resourceProjectRead(ctx, d, meta)...)
 }
 
-func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	input := &sagemaker.DeleteProjectInput{
+	log.Printf("[DEBUG] Deleting SageMaker Project: %s", d.Id())
+	_, err := conn.DeleteProjectWithContext(ctx, &sagemaker.DeleteProjectInput{
 		ProjectName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") ||
+		tfawserr.ErrMessageContains(err, "ValidationException", "Cannot delete Project in DeleteCompleted status") {
+		return diags
 	}
 
-	if _, err := conn.DeleteProject(input); err != nil {
-		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") ||
-			tfawserr.ErrMessageContains(err, "ValidationException", "Cannot delete Project in DeleteCompleted status") {
-			return nil
-		}
-		return fmt.Errorf("deleting SageMaker Project (%s): %w", d.Id(), err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Project (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitProjectDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for SageMaker Project (%s) to delete: %w", d.Id(), err)
+	if _, err := WaitProjectDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Project (%s) to delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandProjectServiceCatalogProvisioningDetails(l []interface{}) *sagemaker.ServiceCatalogProvisioningDetails {
@@ -296,10 +278,10 @@ func expandProjectProvisioningParameters(l []interface{}) []*sagemaker.Provision
 		data := lRaw.(map[string]interface{})
 
 		scpd := &sagemaker.ProvisioningParameter{
-			Key: aws.String(data["key"].(string)),
+			Key: aws.String(data[names.AttrKey].(string)),
 		}
 
-		if v, ok := data["value"].(string); ok && v != "" {
+		if v, ok := data[names.AttrValue].(string); ok && v != "" {
 			scpd.Value = aws.String(v)
 		}
 
@@ -338,10 +320,10 @@ func flattenProjectProvisioningParameters(scpd []*sagemaker.ProvisioningParamete
 
 	for _, lRaw := range scpd {
 		param := make(map[string]interface{})
-		param["key"] = aws.StringValue(lRaw.Key)
+		param[names.AttrKey] = aws.StringValue(lRaw.Key)
 
 		if lRaw.Value != nil {
-			param["value"] = lRaw.Value
+			param[names.AttrValue] = lRaw.Value
 		}
 
 		params = append(params, param)

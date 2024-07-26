@@ -1,48 +1,43 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package sweep
 
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	SweepThrottlingRetryTimeout = 10 * time.Minute
+	ThrottlingRetryTimeout = 10 * time.Minute
 
 	ResourcePrefix = "tf-acc-test"
 )
 
 const defaultSweeperAssumeRoleDurationSeconds = 3600
 
-// SweeperClients is a shared cache of regional conns.AWSClient
+// ServicePackages is set in TestMain in order to break an import cycle.
+var ServicePackages []conns.ServicePackage
+
+// sweeperClients is a shared cache of regional conns.AWSClient
 // This prevents client re-initialization for every resource with no benefit.
-var SweeperClients map[string]interface{}
+var sweeperClients map[string]*conns.AWSClient = make(map[string]*conns.AWSClient)
 
-// SharedRegionalSweepClient returns a common conns.AWSClient setup needed for the sweeper
-// functions for a given region
-func SharedRegionalSweepClient(region string) (interface{}, error) {
-	return SharedRegionalSweepClientWithContext(context.Background(), region)
-}
-
-func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (interface{}, error) {
-	if client, ok := SweeperClients[region]; ok {
+// SharedRegionalSweepClient returns a common conns.AWSClient setup needed for the sweeper functions for a given Region.
+func SharedRegionalSweepClient(ctx context.Context, region string) (*conns.AWSClient, error) {
+	if client, ok := sweeperClients[region]; ok {
 		return client, nil
 	}
 
@@ -57,6 +52,14 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 			return nil, err
 		}
 	}
+
+	meta := new(conns.AWSClient)
+	servicePackageMap := make(map[string]conns.ServicePackage)
+	for _, sp := range ServicePackages {
+		servicePackageName := sp.ServicePackageName()
+		servicePackageMap[servicePackageName] = sp
+	}
+	meta.ServicePackages = servicePackageMap
 
 	conf := &conns.Config{
 		MaxRetries:       5,
@@ -86,189 +89,82 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 	}
 
 	// configures a default client for the region, using the above env vars
-	client, diags := conf.ConfigureProvider(ctx, &conns.AWSClient{})
+	client, diags := conf.ConfigureProvider(ctx, meta)
 
 	if diags.HasError() {
 		return nil, fmt.Errorf("getting AWS client: %#v", diags)
 	}
 
-	SweeperClients[region] = client
+	sweeperClients[region] = client
 
 	return client, nil
 }
 
 type Sweepable interface {
-	Delete(ctx context.Context, rc RetryConfig) error
+	Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error
 }
 
-type SweepResource struct {
-	d        *schema.ResourceData
-	meta     interface{}
-	resource *schema.Resource
-}
-
-func NewSweepResource(resource *schema.Resource, d *schema.ResourceData, meta interface{}) *SweepResource {
-	return &SweepResource{
-		d:        d,
-		meta:     meta,
-		resource: resource,
-	}
-}
-
-type RetryConfig struct {
-	Delay        time.Duration
-	DelayRand    time.Duration
-	MinTimeout   time.Duration
-	PollInterval time.Duration
-	Timeout      time.Duration
-}
-
-func (sr *SweepResource) Delete(ctx context.Context, rc RetryConfig) error {
-	err := tfresource.RetryConfigContext(ctx, rc.Delay, rc.DelayRand, rc.MinTimeout, rc.PollInterval, rc.Timeout, func() *resource.RetryError {
-		err := DeleteResource(sr.resource, sr.d, sr.meta)
-
-		if err != nil {
-			if strings.Contains(err.Error(), "Throttling") {
-				log.Printf("[INFO] While sweeping resource (%s), encountered throttling error (%s). Retrying...", sr.d.Id(), err)
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		err = DeleteResource(sr.resource, sr.d, sr.meta)
+func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tfresource.OptionsFunc) error {
+	if len(sweepables) == 0 {
+		tflog.Info(ctx, "No resources to sweep")
 	}
 
-	return err
-
-}
-
-func SweepOrchestrator(sweepables []Sweepable) error {
-	return SweepOrchestratorWithContext(context.Background(), sweepables, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, SweepThrottlingRetryTimeout)
-}
-
-func SweepOrchestratorWithContext(ctx context.Context, sweepables []Sweepable, delay time.Duration, delayRand time.Duration, minTimeout time.Duration, pollInterval time.Duration, timeout time.Duration) error {
 	var g multierror.Group
 
 	for _, sweepable := range sweepables {
 		sweepable := sweepable
 
 		g.Go(func() error {
-			return sweepable.Delete(ctx, RetryConfig{
-				Delay:        delay,
-				DelayRand:    delayRand,
-				MinTimeout:   minTimeout,
-				PollInterval: pollInterval,
-				Timeout:      timeout,
-			})
+			return sweepable.Delete(ctx, ThrottlingRetryTimeout, optFns...)
 		})
 	}
 
 	return g.Wait().ErrorOrNil()
 }
 
-// Check sweeper API call error for reasons to skip sweeping
-// These include missing API endpoints and unsupported API calls
-func SkipSweepError(err error) bool {
-	// Ignore missing API endpoints
-	if tfawserr.ErrMessageContains(err, "RequestError", "send request failed") {
-		return true
-	}
-	// Ignore unsupported API calls
-	if tfawserr.ErrCodeEquals(err, "UnsupportedOperation") {
-		return true
-	}
-	// Ignore more unsupported API calls
-	// InvalidParameterValue: Use of cache security groups is not permitted in this API version for your account.
-	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "not permitted in this API version for your account") {
-		return true
-	}
-	// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
-	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Access Denied to API Version") {
-		return true
-	}
-	// GovCloud has endpoints that respond with (no message provided):
-	// AccessDeniedException:
-	// Since acceptance test sweepers are best effort and this response is very common,
-	// we allow bypassing this error globally instead of individual test sweeper fixes.
-	if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
-		return true
-	}
-	// Example: BadRequestException: vpc link not supported for region us-gov-west-1
-	if tfawserr.ErrMessageContains(err, "BadRequestException", "not supported") {
-		return true
-	}
-	// Example: InvalidAction: InvalidAction: Operation (ListPlatformApplications) is not supported in this region
-	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not supported in this region") {
-		return true
-	}
-	// Example: InvalidAction: The action DescribeTransitGatewayAttachments is not valid for this web service
-	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not valid") {
-		return true
-	}
-	// For example from GovCloud SES.SetActiveReceiptRuleSet.
-	if tfawserr.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") {
-		return true
-	}
-	// For example from us-west-2 Route53 key signing key
-	if tfawserr.ErrMessageContains(err, "InvalidKeySigningKeyStatus", "cannot be deleted because") {
-		return true
-	}
-	// For example from us-west-2 Route53 zone
-	if tfawserr.ErrMessageContains(err, "KeySigningKeyInParentDSRecord", "Due to DNS lookup failure") {
-		return true
-	}
-	// For example from us-gov-west-1 EventBridge archive
-	if tfawserr.ErrMessageContains(err, "UnknownOperationException", "Operation is disabled in this region") {
-		return true
-	}
-	// For example from us-west-2 ECR public repository
-	if tfawserr.ErrMessageContains(err, "UnsupportedCommandException", "command is only supported in") {
-		return true
-	}
-	// For example from us-west-1 EMR studio
-	if tfawserr.ErrMessageContains(err, "ValidationException", "Account is not whitelisted to use this feature") {
-		return true
-	}
-	return false
-}
-
-func DeleteResource(resource *schema.Resource, d *schema.ResourceData, meta interface{}) error {
-	if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
-		var diags diag.Diagnostics
-
-		if resource.DeleteContext != nil {
-			diags = resource.DeleteContext(context.Background(), d, meta)
-		} else {
-			diags = resource.DeleteWithoutTimeout(context.Background(), d, meta)
-		}
-
-		for i := range diags {
-			if diags[i].Severity == diag.Error {
-				return fmt.Errorf("deleting resource: %s", diags[i].Summary)
-			}
-		}
-
-		return nil
-	}
-
-	return resource.Delete(d, meta)
-}
+// Deprecated: Use awsv1.SkipSweepError
+var SkipSweepError = awsv1.SkipSweepError
 
 func Partition(region string) string {
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok {
-		return partition.ID()
-	}
-	return "aws"
+	return names.PartitionForRegion(region)
 }
 
 func PartitionDNSSuffix(region string) string {
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok {
-		return partition.DNSSuffix()
-	}
-	return "amazonaws.com"
+	return names.DNSSuffixForPartition(Partition(region))
+}
+
+type SweeperFn func(ctx context.Context, client *conns.AWSClient) ([]Sweepable, error)
+
+func Register(name string, f SweeperFn, dependencies ...string) {
+	resource.AddTestSweepers(name, &resource.Sweeper{
+		Name: name,
+		F: func(region string) error {
+			ctx := Context(region)
+			ctx = logWithResourceType(ctx, name)
+
+			client, err := SharedRegionalSweepClient(ctx, region)
+			if err != nil {
+				return fmt.Errorf("getting client: %w", err)
+			}
+			tflog.Info(ctx, "listing resources")
+			sweepResources, err := f(ctx, client)
+
+			if SkipSweepError(err) {
+				tflog.Warn(ctx, "Skipping sweeper", map[string]any{
+					"error": err.Error(),
+				})
+				return nil
+			}
+			if err != nil {
+				return fmt.Errorf("listing %q (%s): %w", name, region, err)
+			}
+
+			err = SweepOrchestrator(ctx, sweepResources)
+			if err != nil {
+				return fmt.Errorf("sweeping %q (%s): %w", name, region, err)
+			}
+
+			return nil
+		},
+	})
 }

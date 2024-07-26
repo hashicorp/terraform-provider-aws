@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package naming_test
 
 import (
@@ -31,6 +34,26 @@ func TestToCamelCase(t *testing.T) {
 			TestName:      "multiple words",
 			Value:         "health_check_config",
 			ExpectedValue: "HealthCheckConfig",
+		},
+		{
+			TestName:      "ID",
+			Value:         "id",
+			ExpectedValue: "ID",
+		},
+		{
+			TestName:      "something ID",
+			Value:         "something_id",
+			ExpectedValue: "SomethingID",
+		},
+		{
+			TestName:      "ARN",
+			Value:         "arn",
+			ExpectedValue: "ARN",
+		},
+		{
+			TestName:      "something ARN",
+			Value:         "something_arn",
+			ExpectedValue: "SomethingARN",
 		},
 	}
 

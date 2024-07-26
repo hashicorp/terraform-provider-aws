@@ -1,27 +1,35 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package outposts
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/outposts"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_outposts_outpost")
 func DataSourceOutpost() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceOutpostRead,
+		ReadWithoutTimeout: dataSourceOutpostRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -29,41 +37,54 @@ func DataSourceOutpost() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": {
+			"lifecycle_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"site_arn": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"site_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"supported_hardware_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceOutpostRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OutpostsConn
-
+func dataSourceOutpostRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OutpostsConn(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	input := &outposts.ListOutpostsInput{}
 
 	var results []*outposts.Outpost
 
-	err := conn.ListOutpostsPages(input, func(page *outposts.ListOutpostsOutput, lastPage bool) bool {
+	err := conn.ListOutpostsPagesWithContext(ctx, input, func(page *outposts.ListOutpostsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -73,19 +94,19 @@ func dataSourceOutpostRead(d *schema.ResourceData, meta interface{}) error {
 				continue
 			}
 
-			if v, ok := d.GetOk("id"); ok && v.(string) != aws.StringValue(outpost.OutpostId) {
+			if v, ok := d.GetOk(names.AttrID); ok && v.(string) != aws.StringValue(outpost.OutpostId) {
 				continue
 			}
 
-			if v, ok := d.GetOk("name"); ok && v.(string) != aws.StringValue(outpost.Name) {
+			if v, ok := d.GetOk(names.AttrName); ok && v.(string) != aws.StringValue(outpost.Name) {
 				continue
 			}
 
-			if v, ok := d.GetOk("arn"); ok && v.(string) != aws.StringValue(outpost.OutpostArn) {
+			if v, ok := d.GetOk(names.AttrARN); ok && v.(string) != aws.StringValue(outpost.OutpostArn) {
 				continue
 			}
 
-			if v, ok := d.GetOk("owner_id"); ok && v.(string) != aws.StringValue(outpost.OwnerId) {
+			if v, ok := d.GetOk(names.AttrOwnerID); ok && v.(string) != aws.StringValue(outpost.OwnerId) {
 				continue
 			}
 
@@ -96,27 +117,34 @@ func dataSourceOutpostRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing Outposts Outposts: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing Outposts Outposts: %s", err)
 	}
 
 	if len(results) == 0 {
-		return fmt.Errorf("no Outposts Outpost found matching criteria; try different search")
+		return sdkdiag.AppendErrorf(diags, "no Outposts Outpost found matching criteria; try different search")
 	}
 
 	if len(results) > 1 {
-		return fmt.Errorf("multiple Outposts Outpost found matching criteria; try different search")
+		return sdkdiag.AppendErrorf(diags, "multiple Outposts Outpost found matching criteria; try different search")
 	}
 
 	outpost := results[0]
 
 	d.SetId(aws.StringValue(outpost.OutpostId))
-	d.Set("arn", outpost.OutpostArn)
-	d.Set("availability_zone", outpost.AvailabilityZone)
+	d.Set(names.AttrARN, outpost.OutpostArn)
+	d.Set(names.AttrAvailabilityZone, outpost.AvailabilityZone)
 	d.Set("availability_zone_id", outpost.AvailabilityZoneId)
-	d.Set("description", outpost.Description)
-	d.Set("name", outpost.Name)
-	d.Set("owner_id", outpost.OwnerId)
+	d.Set(names.AttrDescription, outpost.Description)
+	d.Set("lifecycle_status", outpost.LifeCycleStatus)
+	d.Set(names.AttrName, outpost.Name)
+	d.Set(names.AttrOwnerID, outpost.OwnerId)
+	d.Set("site_arn", outpost.SiteArn)
 	d.Set("site_id", outpost.SiteId)
+	d.Set("supported_hardware_type", outpost.SupportedHardwareType)
 
-	return nil
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, outpost.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
+
+	return diags
 }

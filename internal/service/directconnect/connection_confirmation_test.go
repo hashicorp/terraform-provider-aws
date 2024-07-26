@@ -1,22 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDirectConnectConnectionConfirmation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	env, err := testAccCheckHostedConnectionEnv()
 	if err != nil {
 		acctest.Skip(t, err.Error())
@@ -31,22 +37,22 @@ func TestAccDirectConnectConnectionConfirmation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      testAccCheckHostedConnectionDestroy(altProviderFunc),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckHostedConnectionDestroy(ctx, altProviderFunc),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfirmationConfig_basic(connectionName, env.ConnectionId, env.OwnerAccountId),
-				Check:  testAccCheckConnectionConfirmationExists(resourceName, providerFunc),
+				Check:  testAccCheckConnectionConfirmationExists(ctx, resourceName, providerFunc),
 			},
 		},
 	})
 }
 
-func testAccCheckConnectionConfirmationExists(name string, providerFunc func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckConnectionConfirmationExists(ctx context.Context, name string, providerFunc func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -58,9 +64,9 @@ func testAccCheckConnectionConfirmationExists(name string, providerFunc func() *
 		}
 
 		provider := providerFunc()
-		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn
+		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
 
-		connection, err := tfdirectconnect.FindConnectionByID(conn, rs.Primary.ID)
+		connection, err := tfdirectconnect.FindConnectionByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

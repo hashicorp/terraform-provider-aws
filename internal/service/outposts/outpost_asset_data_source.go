@@ -1,21 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package outposts
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/outposts"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_outposts_asset")
 func DataSourceOutpostAsset() *schema.Resource {
 	return &schema.Resource{
-		Read: DataSourceOutpostAssetRead,
+		ReadWithoutTimeout: DataSourceOutpostAssetRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -44,16 +51,17 @@ func DataSourceOutpostAsset() *schema.Resource {
 	}
 }
 
-func DataSourceOutpostAssetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OutpostsConn
-	outpost_id := aws.String(d.Get("arn").(string))
+func DataSourceOutpostAssetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OutpostsConn(ctx)
+	outpost_id := aws.String(d.Get(names.AttrARN).(string))
 
 	input := &outposts.ListAssetsInput{
 		OutpostIdentifier: outpost_id,
 	}
 
 	var results []*outposts.AssetInfo
-	err := conn.ListAssetsPages(input, func(page *outposts.ListAssetsOutput, lastPage bool) bool {
+	err := conn.ListAssetsPagesWithContext(ctx, input, func(page *outposts.ListAssetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -70,10 +78,10 @@ func DataSourceOutpostAssetRead(d *schema.ResourceData, meta interface{}) error 
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing Outposts Asset: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing Outposts Asset: %s", err)
 	}
 	if len(results) == 0 {
-		return fmt.Errorf("no Outposts Asset found matching criteria; try different search")
+		return sdkdiag.AppendErrorf(diags, "no Outposts Asset found matching criteria; try different search")
 	}
 
 	asset := results[0]
@@ -84,5 +92,5 @@ func DataSourceOutpostAssetRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("host_id", asset.ComputeAttributes.HostId)
 	d.Set("rack_elevation", asset.AssetLocation.RackElevation)
 	d.Set("rack_id", asset.RackId)
-	return nil
+	return diags
 }

@@ -1,19 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceOrderableCluster() *schema.Resource {
+// @SDKDataSource("aws_redshift_orderable_cluster", name="Orderable Cluster Options")
+func dataSourceOrderableCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceOrderableClusterRead,
+		ReadWithoutTimeout: dataSourceOrderableClusterRead,
+
 		Schema: map[string]*schema.Schema{
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -42,8 +50,9 @@ func DataSourceOrderableCluster() *schema.Resource {
 	}
 }
 
-func dataSourceOrderableClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func dataSourceOrderableClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	input := &redshift.DescribeOrderableClusterOptionsInput{}
 
@@ -57,7 +66,7 @@ func dataSourceOrderableClusterRead(d *schema.ResourceData, meta interface{}) er
 
 	var orderableClusterOptions []*redshift.OrderableClusterOption
 
-	err := conn.DescribeOrderableClusterOptionsPages(input, func(page *redshift.DescribeOrderableClusterOptionsOutput, lastPage bool) bool {
+	err := conn.DescribeOrderableClusterOptionsPagesWithContext(ctx, input, func(page *redshift.DescribeOrderableClusterOptionsOutput, lastPage bool) bool {
 		for _, orderableClusterOption := range page.OrderableClusterOptions {
 			if orderableClusterOption == nil {
 				continue
@@ -75,11 +84,11 @@ func dataSourceOrderableClusterRead(d *schema.ResourceData, meta interface{}) er
 	})
 
 	if err != nil {
-		return fmt.Errorf("reading Redshift Orderable Cluster Options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Orderable Cluster Options: %s", err)
 	}
 
 	if len(orderableClusterOptions) == 0 {
-		return fmt.Errorf("no Redshift Orderable Cluster Options found matching criteria; try different search")
+		return sdkdiag.AppendErrorf(diags, "no Redshift Orderable Cluster Options found matching criteria; try different search")
 	}
 
 	var orderableClusterOption *redshift.OrderableClusterOption
@@ -106,7 +115,7 @@ func dataSourceOrderableClusterRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if orderableClusterOption == nil && len(orderableClusterOptions) > 1 {
-		return fmt.Errorf("multiple Redshift Orderable Cluster Options (%v) match the criteria; try a different search", orderableClusterOptions)
+		return sdkdiag.AppendErrorf(diags, "multiple Redshift Orderable Cluster Options (%v) match the criteria; try a different search", orderableClusterOptions)
 	}
 
 	if orderableClusterOption == nil && len(orderableClusterOptions) == 1 {
@@ -114,7 +123,7 @@ func dataSourceOrderableClusterRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if orderableClusterOption == nil {
-		return fmt.Errorf("no Redshift Orderable Cluster Options match the criteria; try a different search")
+		return sdkdiag.AppendErrorf(diags, "no Redshift Orderable Cluster Options match the criteria; try a different search")
 	}
 
 	d.SetId(aws.StringValue(orderableClusterOption.NodeType))
@@ -123,11 +132,11 @@ func dataSourceOrderableClusterRead(d *schema.ResourceData, meta interface{}) er
 	for _, az := range orderableClusterOption.AvailabilityZones {
 		availabilityZones = append(availabilityZones, aws.StringValue(az.Name))
 	}
-	d.Set("availability_zones", availabilityZones)
+	d.Set(names.AttrAvailabilityZones, availabilityZones)
 
 	d.Set("cluster_type", orderableClusterOption.ClusterType)
 	d.Set("cluster_version", orderableClusterOption.ClusterVersion)
 	d.Set("node_type", orderableClusterOption.NodeType)
 
-	return nil
+	return diags
 }

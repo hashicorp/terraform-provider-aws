@@ -1,0 +1,12 @@
+rules:
+  - id: data-source-with-resource-read
+    languages: [go]
+    message: Data sources should not have a `tags_all` attribute
+    paths:
+      include:
+        - internal/service/**/*_data_source.go
+    patterns:
+      - pattern-either:
+          - pattern-regex: '"tags_all":\s*tftags.TagsSchemaComputed'
+          - pattern-regex: 'names\.AttrTagsAll:\s*tftags.TagsSchemaComputed'
+    severity: WARNING

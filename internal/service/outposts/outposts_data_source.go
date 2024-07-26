@@ -1,25 +1,32 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package outposts
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/outposts"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_outposts_outposts")
 func DataSourceOutposts() *schema.Resource { // nosemgrep:ci.outposts-in-func-name
 	return &schema.Resource{
-		Read: dataSourceOutpostsRead,
+		ReadWithoutTimeout: dataSourceOutpostsRead,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -29,7 +36,7 @@ func DataSourceOutposts() *schema.Resource { // nosemgrep:ci.outposts-in-func-na
 				Optional: true,
 				Computed: true,
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -39,7 +46,7 @@ func DataSourceOutposts() *schema.Resource { // nosemgrep:ci.outposts-in-func-na
 				Optional: true,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -48,14 +55,15 @@ func DataSourceOutposts() *schema.Resource { // nosemgrep:ci.outposts-in-func-na
 	}
 }
 
-func dataSourceOutpostsRead(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.outposts-in-func-name
-	conn := meta.(*conns.AWSClient).OutpostsConn
+func dataSourceOutpostsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.outposts-in-func-name
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OutpostsConn(ctx)
 
 	input := &outposts.ListOutpostsInput{}
 
 	var arns, ids []string
 
-	err := conn.ListOutpostsPages(input, func(page *outposts.ListOutpostsOutput, lastPage bool) bool {
+	err := conn.ListOutpostsPagesWithContext(ctx, input, func(page *outposts.ListOutpostsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -65,7 +73,7 @@ func dataSourceOutpostsRead(d *schema.ResourceData, meta interface{}) error { //
 				continue
 			}
 
-			if v, ok := d.GetOk("availability_zone"); ok && v.(string) != aws.StringValue(outpost.AvailabilityZone) {
+			if v, ok := d.GetOk(names.AttrAvailabilityZone); ok && v.(string) != aws.StringValue(outpost.AvailabilityZone) {
 				continue
 			}
 
@@ -77,7 +85,7 @@ func dataSourceOutpostsRead(d *schema.ResourceData, meta interface{}) error { //
 				continue
 			}
 
-			if v, ok := d.GetOk("owner_id"); ok && v.(string) != aws.StringValue(outpost.OwnerId) {
+			if v, ok := d.GetOk(names.AttrOwnerID); ok && v.(string) != aws.StringValue(outpost.OwnerId) {
 				continue
 			}
 
@@ -89,18 +97,18 @@ func dataSourceOutpostsRead(d *schema.ResourceData, meta interface{}) error { //
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing Outposts Outposts: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing Outposts Outposts: %s", err)
 	}
 
-	if err := d.Set("arns", arns); err != nil {
-		return fmt.Errorf("error setting arns: %w", err)
+	if err := d.Set(names.AttrARNs, arns); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting arns: %s", err)
 	}
 
-	if err := d.Set("ids", ids); err != nil {
-		return fmt.Errorf("error setting ids: %w", err)
+	if err := d.Set(names.AttrIDs, ids); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ids: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	return nil
+	return diags
 }

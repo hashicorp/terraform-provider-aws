@@ -1,37 +1,47 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codecommit
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codecommit"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/codecommit"
+	"github.com/aws/aws-sdk-go-v2/service/codecommit/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceApprovalRuleTemplate() *schema.Resource {
+// @SDKResource("aws_codecommit_approval_rule_template", name="Approval Rule Template")
+func resourceApprovalRuleTemplate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceApprovalRuleTemplateCreate,
-		Read:   resourceApprovalRuleTemplateRead,
-		Update: resourceApprovalRuleTemplateUpdate,
-		Delete: resourceApprovalRuleTemplateDelete,
+		CreateWithoutTimeout: resourceApprovalRuleTemplateCreate,
+		ReadWithoutTimeout:   resourceApprovalRuleTemplateRead,
+		UpdateWithoutTimeout: resourceApprovalRuleTemplateUpdate,
+		DeleteWithoutTimeout: resourceApprovalRuleTemplateDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
+			"approval_rule_template_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
-			"content": {
+			names.AttrContent: {
 				Type:             schema.TypeString,
 				Required:         true,
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
@@ -44,18 +54,14 @@ func ResourceApprovalRuleTemplate() *schema.Resource {
 					validation.StringLenBetween(1, 3000),
 				),
 			},
-			"description": {
+			names.AttrCreationDate: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1000),
-			},
-			"approval_rule_template_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creation_date": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"last_modified_date": {
 				Type:     schema.TypeString,
@@ -65,6 +71,11 @@ func ResourceApprovalRuleTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrName: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 100),
+			},
 			"rule_content_sha256": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -73,133 +84,151 @@ func ResourceApprovalRuleTemplate() *schema.Resource {
 	}
 }
 
-func resourceApprovalRuleTemplateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+func resourceApprovalRuleTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
-	name := d.Get("name").(string)
-
+	name := d.Get(names.AttrName).(string)
 	input := &codecommit.CreateApprovalRuleTemplateInput{
 		ApprovalRuleTemplateName:    aws.String(name),
-		ApprovalRuleTemplateContent: aws.String(d.Get("content").(string)),
+		ApprovalRuleTemplateContent: aws.String(d.Get(names.AttrContent).(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.ApprovalRuleTemplateDescription = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateApprovalRuleTemplate(input)
+	_, err := conn.CreateApprovalRuleTemplate(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating CodeCommit Approval Rule Template (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeCommit Approval Rule Template (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceApprovalRuleTemplateRead(d, meta)
+	return append(diags, resourceApprovalRuleTemplateRead(ctx, d, meta)...)
 }
 
-func resourceApprovalRuleTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+func resourceApprovalRuleTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
-	input := &codecommit.GetApprovalRuleTemplateInput{
-		ApprovalRuleTemplateName: aws.String(d.Id()),
-	}
+	result, err := findApprovalRuleTemplateByName(ctx, conn, d.Id())
 
-	resp, err := conn.GetApprovalRuleTemplate(input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codecommit.ErrCodeApprovalRuleTemplateDoesNotExistException) {
-		log.Printf("[WARN] CodeCommit Approval Rule Template (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CodeCommit Approval Rule Template %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CodeCommit Approval Rule Template (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CodeCommit Approval Rule Template (%s): %s", d.Id(), err)
 	}
 
-	if resp == nil || resp.ApprovalRuleTemplate == nil {
-		return fmt.Errorf("error reading CodeCommit Approval Rule Template (%s): empty output", d.Id())
-	}
-
-	result := resp.ApprovalRuleTemplate
-
-	d.Set("name", result.ApprovalRuleTemplateName)
 	d.Set("approval_rule_template_id", result.ApprovalRuleTemplateId)
-	d.Set("description", result.ApprovalRuleTemplateDescription)
-	d.Set("content", result.ApprovalRuleTemplateContent)
-	d.Set("creation_date", result.CreationDate.Format(time.RFC3339))
+	d.Set(names.AttrDescription, result.ApprovalRuleTemplateDescription)
+	d.Set(names.AttrContent, result.ApprovalRuleTemplateContent)
+	d.Set(names.AttrCreationDate, result.CreationDate.Format(time.RFC3339))
 	d.Set("last_modified_date", result.LastModifiedDate.Format(time.RFC3339))
 	d.Set("last_modified_user", result.LastModifiedUser)
+	d.Set(names.AttrName, result.ApprovalRuleTemplateName)
 	d.Set("rule_content_sha256", result.RuleContentSha256)
 
-	return nil
+	return diags
 }
 
-func resourceApprovalRuleTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+func resourceApprovalRuleTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		input := &codecommit.UpdateApprovalRuleTemplateDescriptionInput{
-			ApprovalRuleTemplateDescription: aws.String(d.Get("description").(string)),
+			ApprovalRuleTemplateDescription: aws.String(d.Get(names.AttrDescription).(string)),
 			ApprovalRuleTemplateName:        aws.String(d.Id()),
 		}
 
-		_, err := conn.UpdateApprovalRuleTemplateDescription(input)
+		_, err := conn.UpdateApprovalRuleTemplateDescription(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating CodeCommit Approval Rule Template (%s) description: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CodeCommit Approval Rule Template (%s) description: %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("content") {
+	if d.HasChange(names.AttrContent) {
 		input := &codecommit.UpdateApprovalRuleTemplateContentInput{
 			ApprovalRuleTemplateName:  aws.String(d.Id()),
 			ExistingRuleContentSha256: aws.String(d.Get("rule_content_sha256").(string)),
-			NewRuleContent:            aws.String(d.Get("content").(string)),
+			NewRuleContent:            aws.String(d.Get(names.AttrContent).(string)),
 		}
 
-		_, err := conn.UpdateApprovalRuleTemplateContent(input)
+		_, err := conn.UpdateApprovalRuleTemplateContent(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating CodeCommit Approval Rule Template (%s) content: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CodeCommit Approval Rule Template (%s) content: %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("name") {
-		newName := d.Get("name").(string)
+	if d.HasChange(names.AttrName) {
+		newName := d.Get(names.AttrName).(string)
 
 		input := &codecommit.UpdateApprovalRuleTemplateNameInput{
 			NewApprovalRuleTemplateName: aws.String(newName),
 			OldApprovalRuleTemplateName: aws.String(d.Id()),
 		}
 
-		_, err := conn.UpdateApprovalRuleTemplateName(input)
+		_, err := conn.UpdateApprovalRuleTemplateName(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating CodeCommit Approval Rule Template (%s) name: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CodeCommit Approval Rule Template (%s) name: %s", d.Id(), err)
 		}
 
 		d.SetId(newName)
 	}
 
-	return resourceApprovalRuleTemplateRead(d, meta)
+	return append(diags, resourceApprovalRuleTemplateRead(ctx, d, meta)...)
 }
 
-func resourceApprovalRuleTemplateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+func resourceApprovalRuleTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
-	input := &codecommit.DeleteApprovalRuleTemplateInput{
+	log.Printf("[INFO] Deleting CodeCommit Approval Rule Template: %s", d.Id())
+	_, err := conn.DeleteApprovalRuleTemplate(ctx, &codecommit.DeleteApprovalRuleTemplateInput{
 		ApprovalRuleTemplateName: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteApprovalRuleTemplate(input)
-
-	if tfawserr.ErrCodeEquals(err, codecommit.ErrCodeApprovalRuleTemplateDoesNotExistException) {
-		return nil
+	if errs.IsA[*types.ApprovalRuleTemplateDoesNotExistException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CodeCommit Approval Rule Template (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CodeCommit Approval Rule Template (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func findApprovalRuleTemplateByName(ctx context.Context, conn *codecommit.Client, name string) (*types.ApprovalRuleTemplate, error) {
+	input := &codecommit.GetApprovalRuleTemplateInput{
+		ApprovalRuleTemplateName: aws.String(name),
+	}
+
+	output, err := conn.GetApprovalRuleTemplate(ctx, input)
+
+	if errs.IsA[*types.ApprovalRuleTemplateDoesNotExistException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ApprovalRuleTemplate == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ApprovalRuleTemplate, nil
 }

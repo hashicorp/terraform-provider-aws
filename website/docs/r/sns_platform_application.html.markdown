@@ -12,7 +12,7 @@ Provides an SNS platform application resource
 
 ## Example Usage
 
-### Apple Push Notification Service (APNS)
+### Apple Push Notification Service (APNS) using certificate-based authentication
 
 ```terraform
 resource "aws_sns_platform_application" "apns_application" {
@@ -20,6 +20,19 @@ resource "aws_sns_platform_application" "apns_application" {
   platform            = "APNS"
   platform_credential = "<APNS PRIVATE KEY>"
   platform_principal  = "<APNS CERTIFICATE>"
+}
+```
+
+### Apple Push Notification Service (APNS) using token-based authentication
+
+```terraform
+resource "aws_sns_platform_application" "apns_application" {
+  name                     = "apns_application"
+  platform                 = "APNS"
+  platform_credential      = "<APNS SIGNING KEY>"
+  platform_principal       = "<APNS SIGNING KEY ID>"
+  apple_platform_team_id   = "<APPLE TEAM ID>"
+  apple_platform_bundle_id = "<APPLE BUNDLE ID>"
 }
 ```
 
@@ -35,7 +48,7 @@ resource "aws_sns_platform_application" "gcm_application" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The friendly name for the SNS platform application
 * `platform` - (Required) The platform that the app is registered with. See [Platform][1] for supported platforms.
@@ -49,9 +62,14 @@ The following arguments are supported:
 * `success_feedback_role_arn` - (Optional) The IAM role ARN permitted to receive success feedback for this application and give SNS write access to use CloudWatch logs on your behalf.
 * `success_feedback_sample_rate` - (Optional) The sample rate percentage (0-100) of successfully delivered messages.
 
-## Attributes Reference
+The following attributes are needed only when using APNS token credentials:
 
-In addition to all arguments above, the following attributes are exported:
+* `apple_platform_team_id` - (Required) The identifier that's assigned to your Apple developer account team. Must be 10 alphanumeric characters.
+* `apple_platform_bundle_id` - (Required) The bundle identifier that's assigned to your iOS app. May only include alphanumeric characters, hyphens (-), and periods (.).
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the SNS platform application
 * `arn` - The ARN of the SNS platform application
@@ -61,8 +79,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SNS platform applications can be imported using the ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SNS platform applications using the ARN. For example:
 
+```terraform
+import {
+  to = aws_sns_platform_application.gcm_application
+  id = "arn:aws:sns:us-west-2:0123456789012:app/GCM/gcm_application"
+}
 ```
-$ terraform import aws_sns_platform_application.gcm_application arn:aws:sns:us-west-2:0123456789012:app/GCM/gcm_application
+
+Using `terraform import`, import SNS platform applications using the ARN. For example:
+
+```console
+% terraform import aws_sns_platform_application.gcm_application arn:aws:sns:us-west-2:0123456789012:app/GCM/gcm_application
 ```

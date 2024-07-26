@@ -1,27 +1,35 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_batch_job_queue", name="Job Queue")
+// @Tags
 func DataSourceJobQueue() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceJobQueueRead,
+		ReadWithoutTimeout: dataSourceJobQueueRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -31,24 +39,24 @@ func DataSourceJobQueue() *schema.Resource {
 				Computed: true,
 			},
 
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 
-			"priority": {
+			names.AttrPriority: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -73,37 +81,35 @@ func DataSourceJobQueue() *schema.Resource {
 	}
 }
 
-func dataSourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	params := &batch.DescribeJobQueuesInput{
-		JobQueues: []*string{aws.String(d.Get("name").(string))},
+		JobQueues: []*string{aws.String(d.Get(names.AttrName).(string))},
 	}
 	log.Printf("[DEBUG] Reading Batch Job Queue: %s", params)
-	desc, err := conn.DescribeJobQueues(params)
+	desc, err := conn.DescribeJobQueuesWithContext(ctx, params)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Batch Job Queue (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
-	if len(desc.JobQueues) == 0 {
-		return fmt.Errorf("no matches found for name: %s", d.Get("name").(string))
-	}
-
-	if len(desc.JobQueues) > 1 {
-		return fmt.Errorf("multiple matches found for name: %s", d.Get("name").(string))
+	if l := len(desc.JobQueues); l == 0 {
+		return sdkdiag.AppendErrorf(diags, "reading Batch Job Queue (%s): empty response", d.Get(names.AttrName).(string))
+	} else if l > 1 {
+		return sdkdiag.AppendErrorf(diags, "reading Batch Job Queue (%s): too many results: wanted 1, got %d", d.Get(names.AttrName).(string), l)
 	}
 
 	jobQueue := desc.JobQueues[0]
 	d.SetId(aws.StringValue(jobQueue.JobQueueArn))
-	d.Set("arn", jobQueue.JobQueueArn)
-	d.Set("name", jobQueue.JobQueueName)
+	d.Set(names.AttrARN, jobQueue.JobQueueArn)
+	d.Set(names.AttrName, jobQueue.JobQueueName)
 	d.Set("scheduling_policy_arn", jobQueue.SchedulingPolicyArn)
-	d.Set("status", jobQueue.Status)
-	d.Set("status_reason", jobQueue.StatusReason)
-	d.Set("state", jobQueue.State)
-	d.Set("priority", jobQueue.Priority)
+	d.Set(names.AttrStatus, jobQueue.Status)
+	d.Set(names.AttrStatusReason, jobQueue.StatusReason)
+	d.Set(names.AttrState, jobQueue.State)
+	d.Set(names.AttrPriority, jobQueue.Priority)
 
 	ceos := make([]map[string]interface{}, 0)
 	for _, v := range jobQueue.ComputeEnvironmentOrder {
@@ -113,12 +119,10 @@ func dataSourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
 		ceos = append(ceos, ceo)
 	}
 	if err := d.Set("compute_environment_order", ceos); err != nil {
-		return fmt.Errorf("error setting compute_environment_order: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting compute_environment_order: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(jobQueue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
+	setTagsOut(ctx, jobQueue.Tags)
 
-	return nil
+	return diags
 }

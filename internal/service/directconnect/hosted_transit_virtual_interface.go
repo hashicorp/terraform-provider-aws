@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,19 +13,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_dx_hosted_transit_virtual_interface")
 func ResourceHostedTransitVirtualInterface() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceHostedTransitVirtualInterfaceCreate,
-		Read:   resourceHostedTransitVirtualInterfaceRead,
-		Delete: resourceHostedTransitVirtualInterfaceDelete,
+		CreateWithoutTimeout: resourceHostedTransitVirtualInterfaceCreate,
+		ReadWithoutTimeout:   resourceHostedTransitVirtualInterfaceRead,
+		DeleteWithoutTimeout: resourceHostedTransitVirtualInterfaceDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceHostedTransitVirtualInterfaceImport,
+			StateContext: resourceHostedTransitVirtualInterfaceImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -44,7 +52,7 @@ func ResourceHostedTransitVirtualInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +71,7 @@ func ResourceHostedTransitVirtualInterface() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"connection_id": {
+			names.AttrConnectionID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -85,12 +93,12 @@ func ResourceHostedTransitVirtualInterface() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntInSlice([]int{1500, 8500}),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -111,17 +119,18 @@ func ResourceHostedTransitVirtualInterface() *schema.Resource {
 	}
 }
 
-func resourceHostedTransitVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceHostedTransitVirtualInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	req := &directconnect.AllocateTransitVirtualInterfaceInput{
-		ConnectionId: aws.String(d.Get("connection_id").(string)),
-		OwnerAccount: aws.String(d.Get("owner_account_id").(string)),
+		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
+		OwnerAccount: aws.String(d.Get(names.AttrOwnerAccountID).(string)),
 		NewTransitVirtualInterfaceAllocation: &directconnect.NewTransitVirtualInterfaceAllocation{
 			AddressFamily:        aws.String(d.Get("address_family").(string)),
 			Asn:                  aws.Int64(int64(d.Get("bgp_asn").(int))),
 			Mtu:                  aws.Int64(int64(d.Get("mtu").(int))),
-			VirtualInterfaceName: aws.String(d.Get("name").(string)),
+			VirtualInterfaceName: aws.String(d.Get(names.AttrName).(string)),
 			Vlan:                 aws.Int64(int64(d.Get("vlan").(int))),
 		},
 	}
@@ -136,31 +145,32 @@ func resourceHostedTransitVirtualInterfaceCreate(d *schema.ResourceData, meta in
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect hosted transit virtual interface: %s", req)
-	resp, err := conn.AllocateTransitVirtualInterface(req)
+	resp, err := conn.AllocateTransitVirtualInterfaceWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("error creating Direct Connect hosted transit virtual interface: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Direct Connect hosted transit virtual interface: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.VirtualInterface.VirtualInterfaceId))
 
-	if err := hostedTransitVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return err
+	if err := hostedTransitVirtualInterfaceWaitUntilAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return resourceHostedTransitVirtualInterfaceRead(d, meta)
+	return append(diags, resourceHostedTransitVirtualInterfaceRead(ctx, d, meta)...)
 }
 
-func resourceHostedTransitVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceHostedTransitVirtualInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
-	vif, err := virtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	if vif == nil {
 		log.Printf("[WARN] Direct Connect hosted transit virtual interface (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("address_family", vif.AddressFamily)
@@ -173,29 +183,29 @@ func resourceHostedTransitVirtualInterfaceRead(d *schema.ResourceData, meta inte
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("aws_device", vif.AwsDeviceV2)
 	d.Set("bgp_asn", vif.Asn)
 	d.Set("bgp_auth_key", vif.AuthKey)
-	d.Set("connection_id", vif.ConnectionId)
+	d.Set(names.AttrConnectionID, vif.ConnectionId)
 	d.Set("customer_address", vif.CustomerAddress)
 	d.Set("jumbo_frame_capable", vif.JumboFrameCapable)
 	d.Set("mtu", vif.Mtu)
-	d.Set("name", vif.VirtualInterfaceName)
-	d.Set("owner_account_id", vif.OwnerAccount)
+	d.Set(names.AttrName, vif.VirtualInterfaceName)
+	d.Set(names.AttrOwnerAccountID, vif.OwnerAccount)
 	d.Set("vlan", vif.Vlan)
 
-	return nil
+	return diags
 }
 
-func resourceHostedTransitVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
-	return virtualInterfaceDelete(d, meta)
+func resourceHostedTransitVirtualInterfaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return virtualInterfaceDelete(ctx, d, meta)
 }
 
-func resourceHostedTransitVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceHostedTransitVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
-	vif, err := virtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
 		return nil, err
 	}
@@ -210,9 +220,8 @@ func resourceHostedTransitVirtualInterfaceImport(d *schema.ResourceData, meta in
 	return []*schema.ResourceData{d}, nil
 }
 
-func hostedTransitVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
-	return virtualInterfaceWaitUntilAvailable(
-		conn,
+func hostedTransitVirtualInterfaceWaitUntilAvailable(ctx context.Context, conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
+	return virtualInterfaceWaitUntilAvailable(ctx, conn,
 		vifId,
 		timeout,
 		[]string{

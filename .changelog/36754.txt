@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ec2_capacity_reservation: Add configurable timeouts
+```
+
+```release-note:enhancement
+resource/aws_ec2_capacity_reservation: Retry `InsufficientInstanceCapacity` errors
+```

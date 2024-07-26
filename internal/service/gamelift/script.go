@@ -1,41 +1,49 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package gamelift
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/go-homedir"
 )
 
 const scriptMutex = `aws_gamelift_script`
 
+// @SDKResource("aws_gamelift_script", name="Script")
+// @Tags(identifierAttribute="arn")
 func ResourceScript() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceScriptCreate,
-		Read:   resourceScriptRead,
-		Update: resourceScriptUpdate,
-		Delete: resourceScriptDelete,
+		CreateWithoutTimeout: resourceScriptCreate,
+		ReadWithoutTimeout:   resourceScriptRead,
+		UpdateWithoutTimeout: resourceScriptUpdate,
+		DeleteWithoutTimeout: resourceScriptDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -49,11 +57,11 @@ func ResourceScript() *schema.Resource {
 				ExactlyOneOf: []string{"zip_file", "storage_location"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket": {
+						names.AttrBucket: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -61,7 +69,7 @@ func ResourceScript() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"role_arn": {
+						names.AttrRoleARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -69,13 +77,13 @@ func ResourceScript() *schema.Resource {
 					},
 				},
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"zip_file": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -87,21 +95,20 @@ func ResourceScript() *schema.Resource {
 	}
 }
 
-func resourceScriptCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	input := gamelift.CreateScriptInput{
-		Name: aws.String(d.Get("name").(string)),
-		Tags: Tags(tags.IgnoreAWS()),
+		Name: aws.String(d.Get(names.AttrName).(string)),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("storage_location"); ok && len(v.([]interface{})) > 0 {
 		input.StorageLocation = expandStorageLocation(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.Version = aws.String(v.(string))
 	}
 
@@ -111,95 +118,79 @@ func resourceScriptCreate(d *schema.ResourceData, meta interface{}) error {
 
 		file, err := loadFileContent(v.(string))
 		if err != nil {
-			return fmt.Errorf("unable to load %q: %w", v.(string), err)
+			return sdkdiag.AppendErrorf(diags, "unable to load %q: %s", v.(string), err)
 		}
 		input.ZipFile = file
 	}
 
 	log.Printf("[INFO] Creating GameLift Script: %s", input)
 	var out *gamelift.CreateScriptOutput
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
-		out, err = conn.CreateScript(&input)
+		out, err = conn.CreateScriptWithContext(ctx, &input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, "GameLift cannot assume the role") ||
 				tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, "Provided resource is not accessible") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		out, err = conn.CreateScript(&input)
+		out, err = conn.CreateScriptWithContext(ctx, &input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating GameLift script client: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating GameLift script client: %s", err)
 	}
 
 	d.SetId(aws.StringValue(out.Script.ScriptId))
 
-	return resourceScriptRead(d, meta)
+	return append(diags, resourceScriptRead(ctx, d, meta)...)
 }
 
-func resourceScriptRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceScriptRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	log.Printf("[INFO] Reading GameLift Script: %s", d.Id())
-	script, err := FindScriptByID(conn, d.Id())
+	script, err := FindScriptByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] GameLift Script (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading GameLift Script (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading GameLift Script (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", script.Name)
-	d.Set("version", script.Version)
+	d.Set(names.AttrName, script.Name)
+	d.Set(names.AttrVersion, script.Version)
 
 	if err := d.Set("storage_location", flattenStorageLocation(script.StorageLocation)); err != nil {
-		return fmt.Errorf("error setting storage_location: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting storage_location: %s", err)
 	}
 
 	arn := aws.StringValue(script.ScriptArn)
-	d.Set("arn", arn)
-	tags, err := ListTags(conn, arn)
+	d.Set(names.AttrARN, arn)
 
-	if err != nil {
-		return fmt.Errorf("error listing tags for Game Lift Script (%s): %w", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceScriptUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+func resourceScriptUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		log.Printf("[INFO] Updating GameLift Script: %s", d.Id())
 		input := gamelift.UpdateScriptInput{
 			ScriptId: aws.String(d.Id()),
-			Name:     aws.String(d.Get("name").(string)),
+			Name:     aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		if d.HasChange("version") {
-			if v, ok := d.GetOk("version"); ok {
+		if d.HasChange(names.AttrVersion) {
+			if v, ok := d.GetOk(names.AttrVersion); ok {
 				input.Version = aws.String(v.(string))
 			}
 		}
@@ -217,46 +208,38 @@ func resourceScriptUpdate(d *schema.ResourceData, meta interface{}) error {
 
 				file, err := loadFileContent(v.(string))
 				if err != nil {
-					return fmt.Errorf("unable to load %q: %w", v.(string), err)
+					return sdkdiag.AppendErrorf(diags, "unable to load %q: %s", v.(string), err)
 				}
 				input.ZipFile = file
 			}
 		}
 
-		_, err := conn.UpdateScript(&input)
+		_, err := conn.UpdateScriptWithContext(ctx, &input)
 		if err != nil {
-			return fmt.Errorf("Error updating GameLift Script: %w", err)
+			return sdkdiag.AppendErrorf(diags, "updating GameLift Script: %s", err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		arn := d.Get("arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Game Lift Script (%s) tags: %w", arn, err)
-		}
-	}
-
-	return resourceScriptRead(d, meta)
+	return append(diags, resourceScriptRead(ctx, d, meta)...)
 }
 
-func resourceScriptDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+func resourceScriptDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	log.Printf("[INFO] Deleting GameLift Script: %s", d.Id())
-	_, err := conn.DeleteScript(&gamelift.DeleteScriptInput{
+	_, err := conn.DeleteScriptWithContext(ctx, &gamelift.DeleteScriptInput{
 		ScriptId: aws.String(d.Id()),
 	})
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("Error deleting GameLift script: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting GameLift script: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenStorageLocation(sl *gamelift.S3Location) []interface{} {
@@ -265,10 +248,10 @@ func flattenStorageLocation(sl *gamelift.S3Location) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"bucket":         aws.StringValue(sl.Bucket),
-		"key":            aws.StringValue(sl.Key),
-		"role_arn":       aws.StringValue(sl.RoleArn),
-		"object_version": aws.StringValue(sl.ObjectVersion),
+		names.AttrBucket:  aws.StringValue(sl.Bucket),
+		names.AttrKey:     aws.StringValue(sl.Key),
+		names.AttrRoleARN: aws.StringValue(sl.RoleArn),
+		"object_version":  aws.StringValue(sl.ObjectVersion),
 	}
 
 	return []interface{}{m}

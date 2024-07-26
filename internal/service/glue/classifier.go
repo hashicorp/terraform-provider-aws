@@ -1,28 +1,37 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
 	"context"
-	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_glue_classifier")
 func ResourceClassifier() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceClassifierCreate,
-		Read:   resourceClassifierRead,
-		Update: resourceClassifierUpdate,
-		Delete: resourceClassifierDelete,
+		CreateWithoutTimeout: resourceClassifierCreate,
+		ReadWithoutTimeout:   resourceClassifierRead,
+		UpdateWithoutTimeout: resourceClassifierUpdate,
+		DeleteWithoutTimeout: resourceClassifierDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		CustomizeDiff: customdiff.Sequence(
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
@@ -69,9 +78,33 @@ func ResourceClassifier() *schema.Resource {
 							Optional: true,
 						},
 						"contains_header": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(glue.CsvHeaderOption_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.CsvHeaderOption](),
+						},
+						"custom_datatype_configured": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"custom_datatypes": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringInSlice([]string{
+									"BINARY",
+									"BOOLEAN",
+									"DATE",
+									"DECIMAL",
+									"DOUBLE",
+									"FLOAT",
+									"INT",
+									"LONG",
+									"SHORT",
+									"STRING",
+									"TIMESTAMP",
+								}, false),
+							},
 						},
 						"delimiter": {
 							Type:     schema.TypeString,
@@ -82,7 +115,7 @@ func ResourceClassifier() *schema.Resource {
 							Optional: true,
 							Default:  true,
 						},
-						"header": {
+						names.AttrHeader: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -90,6 +123,12 @@ func ResourceClassifier() *schema.Resource {
 						"quote_symbol": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"serde": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.CsvSerdeOption](),
 						},
 					},
 				},
@@ -132,7 +171,7 @@ func ResourceClassifier() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -160,9 +199,10 @@ func ResourceClassifier() *schema.Resource {
 	}
 }
 
-func resourceClassifierCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
-	name := d.Get("name").(string)
+func resourceClassifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
+	name := d.Get(names.AttrName).(string)
 
 	input := &glue.CreateClassifierInput{}
 
@@ -186,65 +226,56 @@ func resourceClassifierCreate(d *schema.ResourceData, meta interface{}) error {
 		input.XMLClassifier = expandXmlClassifierCreate(name, m)
 	}
 
-	log.Printf("[DEBUG] Creating Glue Classifier: %s", input)
-	_, err := conn.CreateClassifier(input)
+	log.Printf("[DEBUG] Creating Glue Classifier: %+v", input)
+	_, err := conn.CreateClassifier(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Glue Classifier (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Glue Classifier (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceClassifierRead(d, meta)
+	return append(diags, resourceClassifierRead(ctx, d, meta)...)
 }
 
-func resourceClassifierRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceClassifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	input := &glue.GetClassifierInput{
-		Name: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Reading Glue Classifier: %s", input)
-	output, err := conn.GetClassifier(input)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			log.Printf("[WARN] Glue Classifier (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading Glue Classifier (%s): %s", d.Id(), err)
-	}
-
-	classifier := output.Classifier
-	if classifier == nil {
+	classifier, err := FindClassifierByName(ctx, conn, d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Classifier (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Glue Classifier (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("csv_classifier", flattenCSVClassifier(classifier.CsvClassifier)); err != nil {
-		return fmt.Errorf("error setting match_criteria: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting csv_classifier: %s", err)
 	}
 
 	if err := d.Set("grok_classifier", flattenGrokClassifier(classifier.GrokClassifier)); err != nil {
-		return fmt.Errorf("error setting match_criteria: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting grok_classifier: %s", err)
 	}
 
 	if err := d.Set("json_classifier", flattenJSONClassifier(classifier.JsonClassifier)); err != nil {
-		return fmt.Errorf("error setting json_classifier: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting json_classifier: %s", err)
 	}
 
-	d.Set("name", d.Id())
+	d.Set(names.AttrName, d.Id())
 
 	if err := d.Set("xml_classifier", flattenXmlClassifier(classifier.XMLClassifier)); err != nil {
-		return fmt.Errorf("error setting xml_classifier: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting xml_classifier: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceClassifierUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceClassifierUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	input := &glue.UpdateClassifierInput{}
 
@@ -268,35 +299,36 @@ func resourceClassifierUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.XMLClassifier = expandXmlClassifierUpdate(d.Id(), m)
 	}
 
-	log.Printf("[DEBUG] Updating Glue Classifier: %s", input)
-	_, err := conn.UpdateClassifier(input)
+	log.Printf("[DEBUG] Updating Glue Classifier: %+v", input)
+	_, err := conn.UpdateClassifier(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error updating Glue Classifier (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Glue Classifier (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceClassifierDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceClassifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Classifier: %s", d.Id())
-	err := DeleteClassifier(conn, d.Id())
+	err := DeleteClassifier(ctx, conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error deleting Glue Classifier (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Classifier (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func DeleteClassifier(conn *glue.Glue, name string) error {
+func DeleteClassifier(ctx context.Context, conn *glue.Client, name string) error {
 	input := &glue.DeleteClassifierInput{
 		Name: aws.String(name),
 	}
 
-	_, err := conn.DeleteClassifier(input)
+	_, err := conn.DeleteClassifier(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			return nil
 		}
 		return err
@@ -305,10 +337,10 @@ func DeleteClassifier(conn *glue.Glue, name string) error {
 	return nil
 }
 
-func expandCSVClassifierCreate(name string, m map[string]interface{}) *glue.CreateCsvClassifierRequest {
-	csvClassifier := &glue.CreateCsvClassifierRequest{
+func expandCSVClassifierCreate(name string, m map[string]interface{}) *awstypes.CreateCsvClassifierRequest {
+	csvClassifier := &awstypes.CreateCsvClassifierRequest{
 		AllowSingleColumn:    aws.Bool(m["allow_single_column"].(bool)),
-		ContainsHeader:       aws.String(m["contains_header"].(string)),
+		ContainsHeader:       awstypes.CsvHeaderOption(m["contains_header"].(string)),
 		Delimiter:            aws.String(m["delimiter"].(string)),
 		DisableValueTrimming: aws.Bool(m["disable_value_trimming"].(bool)),
 		Name:                 aws.String(name),
@@ -318,17 +350,28 @@ func expandCSVClassifierCreate(name string, m map[string]interface{}) *glue.Crea
 		csvClassifier.QuoteSymbol = aws.String(v)
 	}
 
-	if v, ok := m["header"].([]interface{}); ok {
-		csvClassifier.Header = flex.ExpandStringList(v)
+	if v, ok := m[names.AttrHeader].([]interface{}); ok {
+		csvClassifier.Header = flex.ExpandStringValueList(v)
+	}
+
+	if v, ok := m["custom_datatypes"].([]interface{}); ok && len(v) > 0 {
+		if confV, confOk := m["custom_datatype_configured"].(bool); confOk {
+			csvClassifier.CustomDatatypeConfigured = aws.Bool(confV)
+		}
+		csvClassifier.CustomDatatypes = flex.ExpandStringValueList(v)
+	}
+
+	if v, ok := m["serde"].(string); ok && v != "" {
+		csvClassifier.Serde = awstypes.CsvSerdeOption(v)
 	}
 
 	return csvClassifier
 }
 
-func expandCSVClassifierUpdate(name string, m map[string]interface{}) *glue.UpdateCsvClassifierRequest {
-	csvClassifier := &glue.UpdateCsvClassifierRequest{
+func expandCSVClassifierUpdate(name string, m map[string]interface{}) *awstypes.UpdateCsvClassifierRequest {
+	csvClassifier := &awstypes.UpdateCsvClassifierRequest{
 		AllowSingleColumn:    aws.Bool(m["allow_single_column"].(bool)),
-		ContainsHeader:       aws.String(m["contains_header"].(string)),
+		ContainsHeader:       awstypes.CsvHeaderOption(m["contains_header"].(string)),
 		Delimiter:            aws.String(m["delimiter"].(string)),
 		DisableValueTrimming: aws.Bool(m["disable_value_trimming"].(bool)),
 		Name:                 aws.String(name),
@@ -338,15 +381,26 @@ func expandCSVClassifierUpdate(name string, m map[string]interface{}) *glue.Upda
 		csvClassifier.QuoteSymbol = aws.String(v)
 	}
 
-	if v, ok := m["header"].([]interface{}); ok {
-		csvClassifier.Header = flex.ExpandStringList(v)
+	if v, ok := m[names.AttrHeader].([]interface{}); ok {
+		csvClassifier.Header = flex.ExpandStringValueList(v)
+	}
+
+	if v, ok := m["custom_datatypes"].([]interface{}); ok && len(v) > 0 {
+		if confV, confOk := m["custom_datatype_configured"].(bool); confOk {
+			csvClassifier.CustomDatatypeConfigured = aws.Bool(confV)
+		}
+		csvClassifier.CustomDatatypes = flex.ExpandStringValueList(v)
+	}
+
+	if v, ok := m["serde"].(string); ok && v != "" {
+		csvClassifier.Serde = awstypes.CsvSerdeOption(v)
 	}
 
 	return csvClassifier
 }
 
-func expandGrokClassifierCreate(name string, m map[string]interface{}) *glue.CreateGrokClassifierRequest {
-	grokClassifier := &glue.CreateGrokClassifierRequest{
+func expandGrokClassifierCreate(name string, m map[string]interface{}) *awstypes.CreateGrokClassifierRequest {
+	grokClassifier := &awstypes.CreateGrokClassifierRequest{
 		Classification: aws.String(m["classification"].(string)),
 		GrokPattern:    aws.String(m["grok_pattern"].(string)),
 		Name:           aws.String(name),
@@ -359,8 +413,8 @@ func expandGrokClassifierCreate(name string, m map[string]interface{}) *glue.Cre
 	return grokClassifier
 }
 
-func expandGrokClassifierUpdate(name string, m map[string]interface{}) *glue.UpdateGrokClassifierRequest {
-	grokClassifier := &glue.UpdateGrokClassifierRequest{
+func expandGrokClassifierUpdate(name string, m map[string]interface{}) *awstypes.UpdateGrokClassifierRequest {
+	grokClassifier := &awstypes.UpdateGrokClassifierRequest{
 		Classification: aws.String(m["classification"].(string)),
 		GrokPattern:    aws.String(m["grok_pattern"].(string)),
 		Name:           aws.String(name),
@@ -373,8 +427,8 @@ func expandGrokClassifierUpdate(name string, m map[string]interface{}) *glue.Upd
 	return grokClassifier
 }
 
-func expandJSONClassifierCreate(name string, m map[string]interface{}) *glue.CreateJsonClassifierRequest {
-	jsonClassifier := &glue.CreateJsonClassifierRequest{
+func expandJSONClassifierCreate(name string, m map[string]interface{}) *awstypes.CreateJsonClassifierRequest {
+	jsonClassifier := &awstypes.CreateJsonClassifierRequest{
 		JsonPath: aws.String(m["json_path"].(string)),
 		Name:     aws.String(name),
 	}
@@ -382,8 +436,8 @@ func expandJSONClassifierCreate(name string, m map[string]interface{}) *glue.Cre
 	return jsonClassifier
 }
 
-func expandJSONClassifierUpdate(name string, m map[string]interface{}) *glue.UpdateJsonClassifierRequest {
-	jsonClassifier := &glue.UpdateJsonClassifierRequest{
+func expandJSONClassifierUpdate(name string, m map[string]interface{}) *awstypes.UpdateJsonClassifierRequest {
+	jsonClassifier := &awstypes.UpdateJsonClassifierRequest{
 		JsonPath: aws.String(m["json_path"].(string)),
 		Name:     aws.String(name),
 	}
@@ -391,8 +445,8 @@ func expandJSONClassifierUpdate(name string, m map[string]interface{}) *glue.Upd
 	return jsonClassifier
 }
 
-func expandXmlClassifierCreate(name string, m map[string]interface{}) *glue.CreateXMLClassifierRequest {
-	xmlClassifier := &glue.CreateXMLClassifierRequest{
+func expandXmlClassifierCreate(name string, m map[string]interface{}) *awstypes.CreateXMLClassifierRequest {
+	xmlClassifier := &awstypes.CreateXMLClassifierRequest{
 		Classification: aws.String(m["classification"].(string)),
 		Name:           aws.String(name),
 		RowTag:         aws.String(m["row_tag"].(string)),
@@ -401,8 +455,8 @@ func expandXmlClassifierCreate(name string, m map[string]interface{}) *glue.Crea
 	return xmlClassifier
 }
 
-func expandXmlClassifierUpdate(name string, m map[string]interface{}) *glue.UpdateXMLClassifierRequest {
-	xmlClassifier := &glue.UpdateXMLClassifierRequest{
+func expandXmlClassifierUpdate(name string, m map[string]interface{}) *awstypes.UpdateXMLClassifierRequest {
+	xmlClassifier := &awstypes.UpdateXMLClassifierRequest{
 		Classification: aws.String(m["classification"].(string)),
 		Name:           aws.String(name),
 		RowTag:         aws.String(m["row_tag"].(string)),
@@ -415,57 +469,60 @@ func expandXmlClassifierUpdate(name string, m map[string]interface{}) *glue.Upda
 	return xmlClassifier
 }
 
-func flattenCSVClassifier(csvClassifier *glue.CsvClassifier) []map[string]interface{} {
+func flattenCSVClassifier(csvClassifier *awstypes.CsvClassifier) []map[string]interface{} {
 	if csvClassifier == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"allow_single_column":    aws.BoolValue(csvClassifier.AllowSingleColumn),
-		"contains_header":        aws.StringValue(csvClassifier.ContainsHeader),
-		"delimiter":              aws.StringValue(csvClassifier.Delimiter),
-		"disable_value_trimming": aws.BoolValue(csvClassifier.DisableValueTrimming),
-		"header":                 aws.StringValueSlice(csvClassifier.Header),
-		"quote_symbol":           aws.StringValue(csvClassifier.QuoteSymbol),
+		"allow_single_column":        aws.ToBool(csvClassifier.AllowSingleColumn),
+		"contains_header":            string(csvClassifier.ContainsHeader),
+		"delimiter":                  aws.ToString(csvClassifier.Delimiter),
+		"disable_value_trimming":     aws.ToBool(csvClassifier.DisableValueTrimming),
+		names.AttrHeader:             csvClassifier.Header,
+		"quote_symbol":               aws.ToString(csvClassifier.QuoteSymbol),
+		"custom_datatype_configured": aws.ToBool(csvClassifier.CustomDatatypeConfigured),
+		"custom_datatypes":           csvClassifier.CustomDatatypes,
+		"serde":                      string(csvClassifier.Serde),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenGrokClassifier(grokClassifier *glue.GrokClassifier) []map[string]interface{} {
+func flattenGrokClassifier(grokClassifier *awstypes.GrokClassifier) []map[string]interface{} {
 	if grokClassifier == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"classification":  aws.StringValue(grokClassifier.Classification),
-		"custom_patterns": aws.StringValue(grokClassifier.CustomPatterns),
-		"grok_pattern":    aws.StringValue(grokClassifier.GrokPattern),
+		"classification":  aws.ToString(grokClassifier.Classification),
+		"custom_patterns": aws.ToString(grokClassifier.CustomPatterns),
+		"grok_pattern":    aws.ToString(grokClassifier.GrokPattern),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenJSONClassifier(jsonClassifier *glue.JsonClassifier) []map[string]interface{} {
+func flattenJSONClassifier(jsonClassifier *awstypes.JsonClassifier) []map[string]interface{} {
 	if jsonClassifier == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"json_path": aws.StringValue(jsonClassifier.JsonPath),
+		"json_path": aws.ToString(jsonClassifier.JsonPath),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenXmlClassifier(xmlClassifier *glue.XMLClassifier) []map[string]interface{} {
+func flattenXmlClassifier(xmlClassifier *awstypes.XMLClassifier) []map[string]interface{} {
 	if xmlClassifier == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"classification": aws.StringValue(xmlClassifier.Classification),
-		"row_tag":        aws.StringValue(xmlClassifier.RowTag),
+		"classification": aws.ToString(xmlClassifier.Classification),
+		"row_tag":        aws.ToString(xmlClassifier.RowTag),
 	}
 
 	return []map[string]interface{}{m}

@@ -1,33 +1,45 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssoadmin
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	customerPolicyAttachmentTimeout = 5 * time.Minute
-)
-
+// @SDKResource("aws_ssoadmin_customer_managed_policy_attachment")
 func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCustomerManagedPolicyAttachmentCreate,
-		Read:   resourceCustomerManagedPolicyAttachmentRead,
-		Delete: resourceCustomerManagedPolicyAttachmentDelete,
+		CreateWithoutTimeout: resourceCustomerManagedPolicyAttachmentCreate,
+		ReadWithoutTimeout:   resourceCustomerManagedPolicyAttachmentRead,
+		DeleteWithoutTimeout: resourceCustomerManagedPolicyAttachmentDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -38,13 +50,13 @@ func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(0, 128),
 						},
-						"path": {
+						names.AttrPath: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "/",
@@ -70,12 +82,13 @@ func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceCustomerManagedPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func resourceCustomerManagedPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
 	tfMap := d.Get("customer_managed_policy_reference").([]interface{})[0].(map[string]interface{})
-	policyName := tfMap["name"].(string)
-	policyPath := tfMap["path"].(string)
+	policyName := tfMap[names.AttrName].(string)
+	policyPath := tfMap[names.AttrPath].(string)
 	instanceARN := d.Get("instance_arn").(string)
 	permissionSetARN := d.Get("permission_set_arn").(string)
 	id := CustomerManagedPolicyAttachmentCreateResourceID(policyName, policyPath, permissionSetARN, instanceARN)
@@ -85,66 +98,63 @@ func resourceCustomerManagedPolicyAttachmentCreate(d *schema.ResourceData, meta 
 		PermissionSetArn:               aws.String(permissionSetARN),
 	}
 
-	log.Printf("[INFO] Attaching customer managed policy reference to permission set: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(customerPolicyAttachmentTimeout, func() (interface{}, error) {
-		return conn.AttachCustomerManagedPolicyReferenceToPermissionSet(input)
-	}, ssoadmin.ErrCodeConflictException, ssoadmin.ErrCodeThrottlingException)
+	_, err := conn.AttachCustomerManagedPolicyReferenceToPermissionSet(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating SSO Customer Managed Policy Attachment (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating SSO Customer Managed Policy Attachment (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
 	// After the policy has been attached to the permission set, provision in all accounts that use this permission set.
-	if err := provisionPermissionSet(conn, permissionSetARN, instanceARN); err != nil {
-		return err
+	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return resourceCustomerManagedPolicyAttachmentRead(d, meta)
+	return append(diags, resourceCustomerManagedPolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceCustomerManagedPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func resourceCustomerManagedPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
 	policyName, policyPath, permissionSetARN, instanceARN, err := CustomerManagedPolicyAttachmentParseResourceID(d.Id())
-
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policy, err := FindCustomerManagedPolicy(conn, policyName, policyPath, permissionSetARN, instanceARN)
+	policy, err := FindCustomerManagedPolicy(ctx, conn, policyName, policyPath, permissionSetARN, instanceARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSO Customer Managed Policy Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading SSO Customer Managed Policy Attachment (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SSO Customer Managed Policy Attachment (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("customer_managed_policy_reference", []interface{}{flattenCustomerManagedPolicyReference(policy)}); err != nil {
-		return fmt.Errorf("setting customer_managed_policy_reference: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting customer_managed_policy_reference: %s", err)
 	}
 	d.Set("instance_arn", instanceARN)
 	d.Set("permission_set_arn", permissionSetARN)
 
-	return nil
+	return diags
 }
 
-func resourceCustomerManagedPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func resourceCustomerManagedPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
 	policyName, policyPath, permissionSetARN, instanceARN, err := CustomerManagedPolicyAttachmentParseResourceID(d.Id())
-
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &ssoadmin.DetachCustomerManagedPolicyReferenceFromPermissionSetInput{
-		CustomerManagedPolicyReference: &ssoadmin.CustomerManagedPolicyReference{
+		CustomerManagedPolicyReference: &awstypes.CustomerManagedPolicyReference{
 			Name: aws.String(policyName),
 			Path: aws.String(policyPath),
 		},
@@ -152,25 +162,23 @@ func resourceCustomerManagedPolicyAttachmentDelete(d *schema.ResourceData, meta 
 		PermissionSetArn: aws.String(permissionSetARN),
 	}
 
-	log.Printf("[INFO] Detaching customer managed policy reference from permission set: %s", input)
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(customerPolicyAttachmentTimeout, func() (interface{}, error) {
-		return conn.DetachCustomerManagedPolicyReferenceFromPermissionSet(input)
-	}, ssoadmin.ErrCodeConflictException, ssoadmin.ErrCodeThrottlingException)
+	log.Printf("[INFO] Deleting SSO Customer Managed Policy Attachment: %s", d.Id())
+	_, err = conn.DetachCustomerManagedPolicyReferenceFromPermissionSet(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting SSO Customer Managed Policy Attachment (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SSO Customer Managed Policy Attachment (%s): %s", d.Id(), err)
 	}
 
 	// After the policy has been detached from the permission set, provision in all accounts that use this permission set.
-	if err := provisionPermissionSet(conn, permissionSetARN, instanceARN); err != nil {
-		return err
+	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return nil
+	return diags
 }
 
 const customerManagedPolicyAttachmentIDSeparator = ","
@@ -192,25 +200,84 @@ func CustomerManagedPolicyAttachmentParseResourceID(id string) (string, string, 
 	return "", "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected CUSTOMER_MANAGED_POLICY_NAME%[2]sCUSTOMER_MANAGED_POLICY_PATH%[2]sPERMISSION_SET_ARN%[2]sINSTANCE_ARN", id, customerManagedPolicyAttachmentIDSeparator)
 }
 
-func expandCustomerManagedPolicyReference(tfMap map[string]interface{}) *ssoadmin.CustomerManagedPolicyReference {
+func FindCustomerManagedPolicy(ctx context.Context, conn *ssoadmin.Client, policyName, policyPath, permissionSetARN, instanceARN string) (*awstypes.CustomerManagedPolicyReference, error) {
+	input := &ssoadmin.ListCustomerManagedPolicyReferencesInPermissionSetInput{
+		InstanceArn:      aws.String(instanceARN),
+		PermissionSetArn: aws.String(permissionSetARN),
+	}
+	filter := func(c awstypes.CustomerManagedPolicyReference) bool {
+		return aws.ToString(c.Name) == policyName && aws.ToString(c.Path) == policyPath
+	}
+
+	return findCustomerManagedPolicyReference(ctx, conn, input, filter)
+}
+
+func findCustomerManagedPolicyReference(
+	ctx context.Context,
+	conn *ssoadmin.Client,
+	input *ssoadmin.ListCustomerManagedPolicyReferencesInPermissionSetInput,
+	filter tfslices.Predicate[awstypes.CustomerManagedPolicyReference],
+) (*awstypes.CustomerManagedPolicyReference, error) {
+	output, err := findCustomerManagedPolicyReferences(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findCustomerManagedPolicyReferences(
+	ctx context.Context,
+	conn *ssoadmin.Client,
+	input *ssoadmin.ListCustomerManagedPolicyReferencesInPermissionSetInput,
+	filter tfslices.Predicate[awstypes.CustomerManagedPolicyReference],
+) ([]awstypes.CustomerManagedPolicyReference, error) {
+	var output []awstypes.CustomerManagedPolicyReference
+
+	paginator := ssoadmin.NewListCustomerManagedPolicyReferencesInPermissionSetPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.CustomerManagedPolicyReferences {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func expandCustomerManagedPolicyReference(tfMap map[string]interface{}) *awstypes.CustomerManagedPolicyReference {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &ssoadmin.CustomerManagedPolicyReference{}
+	apiObject := &awstypes.CustomerManagedPolicyReference{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["path"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPath].(string); ok && v != "" {
 		apiObject.Path = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func flattenCustomerManagedPolicyReference(apiObject *ssoadmin.CustomerManagedPolicyReference) map[string]interface{} {
+func flattenCustomerManagedPolicyReference(apiObject *awstypes.CustomerManagedPolicyReference) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -218,11 +285,11 @@ func flattenCustomerManagedPolicyReference(apiObject *ssoadmin.CustomerManagedPo
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Path; v != nil {
-		tfMap["path"] = aws.StringValue(v)
+		tfMap[names.AttrPath] = aws.ToString(v)
 	}
 
 	return tfMap

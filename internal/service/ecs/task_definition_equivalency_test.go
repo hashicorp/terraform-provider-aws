@@ -1,12 +1,15 @@
-package ecs_test
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package ecs
 
 import (
 	"testing"
-
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 )
 
 func TestContainerDefinitionsAreEquivalent_basic(t *testing.T) {
+	t.Parallel()
+
 	cfgRepresention := `
 [
     {
@@ -80,7 +83,7 @@ func TestContainerDefinitionsAreEquivalent_basic(t *testing.T) {
     }
 ]`
 
-	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err := containerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -90,6 +93,8 @@ func TestContainerDefinitionsAreEquivalent_basic(t *testing.T) {
 }
 
 func TestContainerDefinitionsAreEquivalent_portMappings(t *testing.T) {
+	t.Parallel()
+
 	cfgRepresention := `
 [
     {
@@ -127,7 +132,7 @@ func TestContainerDefinitionsAreEquivalent_portMappings(t *testing.T) {
     }
 ]`
 
-	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err := containerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -137,6 +142,8 @@ func TestContainerDefinitionsAreEquivalent_portMappings(t *testing.T) {
 }
 
 func TestContainerDefinitionsAreEquivalent_portMappingsIgnoreHostPort(t *testing.T) {
+	t.Parallel()
+
 	cfgRepresention := `
 [
     {
@@ -169,7 +176,7 @@ func TestContainerDefinitionsAreEquivalent_portMappingsIgnoreHostPort(t *testing
 		err   error
 	)
 
-	equal, err = tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err = containerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -177,7 +184,7 @@ func TestContainerDefinitionsAreEquivalent_portMappingsIgnoreHostPort(t *testing
 		t.Fatal("Expected definitions to differ.")
 	}
 
-	equal, err = tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, true)
+	equal, err = containerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,6 +194,8 @@ func TestContainerDefinitionsAreEquivalent_portMappingsIgnoreHostPort(t *testing
 }
 
 func TestContainerDefinitionsAreEquivalent_arrays(t *testing.T) {
+	t.Parallel()
+
 	cfgRepresention := `
 [
     {
@@ -430,7 +439,7 @@ func TestContainerDefinitionsAreEquivalent_arrays(t *testing.T) {
 ]
 `
 
-	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err := containerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -440,6 +449,8 @@ func TestContainerDefinitionsAreEquivalent_arrays(t *testing.T) {
 }
 
 func TestContainerDefinitionsAreEquivalent_negative(t *testing.T) {
+	t.Parallel()
+
 	cfgRepresention := `
 [
     {
@@ -468,7 +479,7 @@ func TestContainerDefinitionsAreEquivalent_negative(t *testing.T) {
     }
 ]`
 
-	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err := containerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -478,6 +489,8 @@ func TestContainerDefinitionsAreEquivalent_negative(t *testing.T) {
 }
 
 func TestContainerDefinitionsAreEquivalent_missingEnvironmentName(t *testing.T) {
+	t.Parallel()
+
 	cfgRepresention := `
 [
     {
@@ -555,7 +568,7 @@ func TestContainerDefinitionsAreEquivalent_missingEnvironmentName(t *testing.T) 
     }
 ]`
 
-	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err := containerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}

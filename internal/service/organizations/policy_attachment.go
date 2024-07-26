@@ -1,27 +1,38 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/organizations"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourcePolicyAttachment() *schema.Resource {
+// @SDKResource("aws_organizations_policy_attachment", name="Policy Attachment")
+func resourcePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePolicyAttachmentCreate,
-		Read:   resourcePolicyAttachmentRead,
-		Delete: resourcePolicyAttachmentDelete,
+		CreateWithoutTimeout: resourcePolicyAttachmentCreate,
+		ReadWithoutTimeout:   resourcePolicyAttachmentRead,
+		UpdateWithoutTimeout: resourcePolicyAttachmentUpdate,
+		DeleteWithoutTimeout: resourcePolicyAttachmentDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -29,6 +40,10 @@ func ResourcePolicyAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			names.AttrSkipDestroy: {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"target_id": {
 				Type:     schema.TypeString,
@@ -39,122 +54,160 @@ func ResourcePolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourcePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	policyID := d.Get("policy_id").(string)
 	targetID := d.Get("target_id").(string)
-
+	id := policyAttachmentCreateResourceID(targetID, policyID)
 	input := &organizations.AttachPolicyInput{
 		PolicyId: aws.String(policyID),
 		TargetId: aws.String(targetID),
 	}
 
-	log.Printf("[DEBUG] Creating Organizations Policy Attachment: %s", input)
-
-	err := resource.Retry(4*time.Minute, func() *resource.RetryError {
-		_, err := conn.AttachPolicy(input)
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, organizations.ErrCodeFinalizingOrganizationException) {
-				log.Printf("[DEBUG] Trying to create policy attachment again: %q", err.Error())
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
+	_, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout, func() (interface{}, error) {
+		return conn.AttachPolicy(ctx, input)
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.AttachPolicy(input)
-	}
 
 	if err != nil {
-		return fmt.Errorf("error creating Organizations Policy Attachment: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Organizations Policy Attachment (%s): %s", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", targetID, policyID))
+	d.SetId(id)
 
-	return resourcePolicyAttachmentRead(d, meta)
+	return append(diags, resourcePolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	targetID, policyID, err := DecodePolicyAttachmentID(d.Id())
+	targetID, policyID, err := policyAttachmentParseResourceID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &organizations.ListTargetsForPolicyInput{
-		PolicyId: aws.String(policyID),
-	}
+	_, err = findPolicyAttachmentByTwoPartKey(ctx, conn, targetID, policyID)
 
-	log.Printf("[DEBUG] Listing Organizations Policies for Target: %s", input)
-	var output *organizations.PolicyTargetSummary
-
-	err = conn.ListTargetsForPolicyPages(input, func(page *organizations.ListTargetsForPolicyOutput, lastPage bool) bool {
-		for _, policySummary := range page.Targets {
-			if aws.StringValue(policySummary.TargetId) == targetID {
-				output = policySummary
-				return true
-			}
-		}
-		return !lastPage
-	})
-
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeTargetNotFoundException) {
-			log.Printf("[WARN] Target does not exist, removing from state: %s", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	if output == nil {
-		log.Printf("[WARN] Attachment does not exist, removing from state: %s", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Organizations Policy Attachment %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Organizations Policy Attachment (%s): %s", d.Id(), err)
 	}
 
 	d.Set("policy_id", policyID)
 	d.Set("target_id", targetID)
-	return nil
+
+	return diags
 }
 
-func resourcePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+func resourcePolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	targetID, policyID, err := DecodePolicyAttachmentID(d.Id())
-	if err != nil {
-		return err
+	// Update is just a pass-through to allow skip_destroy to be updated in-place.
+
+	return append(diags, resourcePolicyAttachmentRead(ctx, d, meta)...)
+}
+
+func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
+
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining Organizations Policy Attachment: %s", d.Id())
+		return nil
 	}
 
-	input := &organizations.DetachPolicyInput{
+	targetID, policyID, err := policyAttachmentParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	log.Printf("[DEBUG] Deleting Organizations Policy Attachment: %s", d.Id())
+	_, err = conn.DetachPolicy(ctx, &organizations.DetachPolicyInput{
 		PolicyId: aws.String(policyID),
 		TargetId: aws.String(targetID),
+	})
+
+	if errs.IsA[*awstypes.PolicyNotAttachedException](err) || errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.TargetNotFoundException](err) {
+		return diags
 	}
 
-	log.Printf("[DEBUG] Detaching Organizations Policy %q from %q", policyID, targetID)
-	_, err = conn.DetachPolicy(input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
-			return nil
-		}
-		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeTargetNotFoundException) {
-			return nil
-		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Organizations Policy Attachment (%s): %s", d.Id(), err)
 	}
-	return nil
+
+	return diags
 }
 
-func DecodePolicyAttachmentID(id string) (string, string, error) {
-	idParts := strings.Split(id, ":")
-	if len(idParts) != 2 {
-		return "", "", fmt.Errorf("expected ID in format of TARGETID:POLICYID, received: %s", id)
+const policyAttachmentResourceIDSeparator = ":"
+
+func policyAttachmentCreateResourceID(targetID, policyID string) string {
+	parts := []string{targetID, policyID}
+	id := strings.Join(parts, policyAttachmentResourceIDSeparator)
+
+	return id
+}
+
+func policyAttachmentParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, policyAttachmentResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
 	}
-	return idParts[0], idParts[1], nil
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected TARGETID%[2]sPOLICYID", id, policyAttachmentResourceIDSeparator)
+}
+
+func findPolicyAttachmentByTwoPartKey(ctx context.Context, conn *organizations.Client, targetID, policyID string) (*awstypes.PolicyTargetSummary, error) {
+	input := &organizations.ListTargetsForPolicyInput{
+		PolicyId: aws.String(policyID),
+	}
+
+	return findPolicyTarget(ctx, conn, input, func(v *awstypes.PolicyTargetSummary) bool {
+		return aws.ToString(v.TargetId) == targetID
+	})
+}
+
+func findPolicyTarget(ctx context.Context, conn *organizations.Client, input *organizations.ListTargetsForPolicyInput, filter tfslices.Predicate[*awstypes.PolicyTargetSummary]) (*awstypes.PolicyTargetSummary, error) {
+	output, err := findPolicyTargets(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findPolicyTargets(ctx context.Context, conn *organizations.Client, input *organizations.ListTargetsForPolicyInput, filter tfslices.Predicate[*awstypes.PolicyTargetSummary]) ([]awstypes.PolicyTargetSummary, error) {
+	var output []awstypes.PolicyTargetSummary
+
+	pages := organizations.NewListTargetsForPolicyPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) || errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.TargetNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Targets {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

@@ -6,7 +6,7 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/apparentlymart/go-textseg/v13/textseg"
+	"github.com/apparentlymart/go-textseg/v15/textseg"
 
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
@@ -18,33 +18,7 @@ import (
 //go:generate gofmt -w format_fsm.go
 
 var FormatFunc = function.New(&function.Spec{
-	Params: []function.Parameter{
-		{
-			Name: "format",
-			Type: cty.String,
-		},
-	},
-	VarParam: &function.Parameter{
-		Name:      "args",
-		Type:      cty.DynamicPseudoType,
-		AllowNull: true,
-	},
-	Type: function.StaticReturnType(cty.String),
-	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
-		for _, arg := range args[1:] {
-			if !arg.IsWhollyKnown() {
-				// We require all nested values to be known because the only
-				// thing we can do for a collection/structural type is print
-				// it as JSON and that requires it to be wholly known.
-				return cty.UnknownVal(cty.String), nil
-			}
-		}
-		str, err := formatFSM(args[0].AsString(), args[1:])
-		return cty.StringVal(str), err
-	},
-})
-
-var FormatListFunc = function.New(&function.Spec{
+	Description: `Constructs a string by applying formatting verbs to a series of arguments, using a similar syntax to the C function \"printf\".`,
 	Params: []function.Parameter{
 		{
 			Name: "format",
@@ -57,7 +31,46 @@ var FormatListFunc = function.New(&function.Spec{
 		AllowNull:    true,
 		AllowUnknown: true,
 	},
-	Type: function.StaticReturnType(cty.List(cty.String)),
+	Type:         function.StaticReturnType(cty.String),
+	RefineResult: refineNonNull,
+	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
+		for _, arg := range args[1:] {
+			if !arg.IsWhollyKnown() {
+				// We require all nested values to be known because the only
+				// thing we can do for a collection/structural type is print
+				// it as JSON and that requires it to be wholly known.
+				// However, we might be able to refine the result with a
+				// known prefix, if there are literal characters before the
+				// first formatting verb.
+				f := args[0].AsString()
+				if idx := strings.IndexByte(f, '%'); idx > 0 {
+					prefix := f[:idx]
+					return cty.UnknownVal(cty.String).Refine().StringPrefix(prefix).NewValue(), nil
+				}
+				return cty.UnknownVal(cty.String), nil
+			}
+		}
+		str, err := formatFSM(args[0].AsString(), args[1:])
+		return cty.StringVal(str), err
+	},
+})
+
+var FormatListFunc = function.New(&function.Spec{
+	Description: `Constructs a list of strings by applying formatting verbs to a series of arguments, using a similar syntax to the C function \"printf\".`,
+	Params: []function.Parameter{
+		{
+			Name: "format",
+			Type: cty.String,
+		},
+	},
+	VarParam: &function.Parameter{
+		Name:         "args",
+		Type:         cty.DynamicPseudoType,
+		AllowNull:    true,
+		AllowUnknown: true,
+	},
+	Type:         function.StaticReturnType(cty.List(cty.String)),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		fmtVal := args[0]
 		args = args[1:]
@@ -162,7 +175,7 @@ var FormatListFunc = function.New(&function.Spec{
 					// We require all nested values to be known because the only
 					// thing we can do for a collection/structural type is print
 					// it as JSON and that requires it to be wholly known.
-					ret = append(ret, cty.UnknownVal(cty.String))
+					ret = append(ret, cty.UnknownVal(cty.String).RefineNotNull())
 					continue Results
 				}
 			}

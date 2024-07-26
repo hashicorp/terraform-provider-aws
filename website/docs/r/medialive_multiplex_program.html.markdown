@@ -76,26 +76,35 @@ The following arguments are optional:
 
 ### Video Settings
 
-`constant_bitrate` - (Optional) Constant bitrate value.
-`statemux_settings` - (Optional) Statemux settings. See [Statemux Settings](#statemux-settings) for more details.
+* `constant_bitrate` - (Optional) Constant bitrate value.
+* `statmux_settings` - (Optional) Statmux settings. See [Statmux Settings](#statmux-settings) for more details.
 
-### Statemux Settings
+### Statmux Settings
 
 * `minimum_bitrate` - (Optional) Minimum bitrate.
 * `maximum_bitrate` - (Optional) Maximum bitrate.
 * `priority` - (Optional) Priority value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the MultiplexProgram.
 * `example_attribute` - Concise description.
 
 ## Import
 
-MediaLive MultiplexProgram can be imported using the `id`, or a combination of "`program_name`/`multiplex_id`" e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MediaLive MultiplexProgram using the `id`, or a combination of "`program_name`/`multiplex_id`". For example:
 
+```terraform
+import {
+  to = aws_medialive_multiplex_program.example
+  id = "example_program/1234567"
+}
 ```
-$ terraform import aws_medialive_multiplex_program.example example_program/1234567
+
+Using `terraform import`, import MediaLive MultiplexProgram using the `id`, or a combination of "`program_name`/`multiplex_id`". For example:
+
+```console
+% terraform import aws_medialive_multiplex_program.example example_program/1234567
 ```

@@ -1,43 +1,50 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccOrganizationManagedRule_basic(t *testing.T) {
-	var rule configservice.OrganizationConfigRule
+	ctx := acctest.Context(t)
+	var rule types.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy,
+		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfig_identifier(rName, "IAM_PASSWORD_POLICY"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("organization-config-rule/%s-.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("organization-config-rule/%s-.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "input_parameters", ""),
 					resource.TestCheckResourceAttr(resourceName, "maximum_execution_frequency", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_id_scope", ""),
-					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "rule_identifier", "IAM_PASSWORD_POLICY"),
 					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", ""),
 					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", ""),
@@ -53,21 +60,22 @@ func testAccOrganizationManagedRule_basic(t *testing.T) {
 }
 
 func testAccOrganizationManagedRule_disappears(t *testing.T) {
-	var rule configservice.OrganizationConfigRule
+	ctx := acctest.Context(t)
+	var rule types.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy,
+		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfig_identifier(rName, "IAM_PASSWORD_POLICY"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconfig.ResourceOrganizationManagedRule(), resourceName),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceOrganizationManagedRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -76,38 +84,40 @@ func testAccOrganizationManagedRule_disappears(t *testing.T) {
 }
 
 func testAccOrganizationManagedRule_errorHandling(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy,
+		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccOrganizationManagedRuleConfig_errorHandling(rName),
-				ExpectError: regexp.MustCompile(`NoAvailableConfigurationRecorder`),
+				ExpectError: regexache.MustCompile(`NoAvailableConfigurationRecorder`),
 			},
 		},
 	})
 }
 
 func testAccOrganizationManagedRule_Description(t *testing.T) {
-	var rule configservice.OrganizationConfigRule
+	ctx := acctest.Context(t)
+	var rule types.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy,
+		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -118,8 +128,8 @@ func testAccOrganizationManagedRule_Description(t *testing.T) {
 			{
 				Config: testAccOrganizationManagedRuleConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 		},
@@ -127,21 +137,22 @@ func testAccOrganizationManagedRule_Description(t *testing.T) {
 }
 
 func testAccOrganizationManagedRule_ExcludedAccounts(t *testing.T) {
-	var rule configservice.OrganizationConfigRule
+	ctx := acctest.Context(t)
+	var rule types.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy,
+		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfig_excludedAccounts1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "1"),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.Ct1),
 				),
 			},
 			{
@@ -152,8 +163,8 @@ func testAccOrganizationManagedRule_ExcludedAccounts(t *testing.T) {
 			{
 				Config: testAccOrganizationManagedRuleConfig_excludedAccounts2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "2"),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.Ct2),
 				),
 			},
 		},
@@ -161,7 +172,8 @@ func testAccOrganizationManagedRule_ExcludedAccounts(t *testing.T) {
 }
 
 func testAccOrganizationManagedRule_InputParameters(t *testing.T) {
-	var rule configservice.OrganizationConfigRule
+	ctx := acctest.Context(t)
+	var rule types.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_managed_rule.test"
 
@@ -169,16 +181,16 @@ func testAccOrganizationManagedRule_InputParameters(t *testing.T) {
 	inputParameters2 := `{"tag1Key":"Department", "tag2Key":"Owner"}`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy,
+		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfig_inputParameters(rName, inputParameters1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
-					resource.TestMatchResourceAttr(resourceName, "input_parameters", regexp.MustCompile(`CostCenter`)),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
+					resource.TestMatchResourceAttr(resourceName, "input_parameters", regexache.MustCompile(`CostCenter`)),
 				),
 			},
 			{
@@ -189,8 +201,8 @@ func testAccOrganizationManagedRule_InputParameters(t *testing.T) {
 			{
 				Config: testAccOrganizationManagedRuleConfig_inputParameters(rName, inputParameters2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
-					resource.TestMatchResourceAttr(resourceName, "input_parameters", regexp.MustCompile(`Department`)),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
+					resource.TestMatchResourceAttr(resourceName, "input_parameters", regexache.MustCompile(`Department`)),
 				),
 			},
 		},
@@ -198,20 +210,21 @@ func testAccOrganizationManagedRule_InputParameters(t *testing.T) {
 }
 
 func testAccOrganizationManagedRule_MaximumExecutionFrequency(t *testing.T) {
-	var rule configservice.OrganizationConfigRule
+	ctx := acctest.Context(t)
+	var rule types.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy,
+		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfig_maximumExecutionFrequency(rName, "One_Hour"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "maximum_execution_frequency", "One_Hour"),
 				),
 			},
@@ -223,7 +236,7 @@ func testAccOrganizationManagedRule_MaximumExecutionFrequency(t *testing.T) {
 			{
 				Config: testAccOrganizationManagedRuleConfig_maximumExecutionFrequency(rName, "Three_Hours"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "maximum_execution_frequency", "Three_Hours"),
 				),
 			},
@@ -232,20 +245,21 @@ func testAccOrganizationManagedRule_MaximumExecutionFrequency(t *testing.T) {
 }
 
 func testAccOrganizationManagedRule_ResourceIdScope(t *testing.T) {
-	var rule configservice.OrganizationConfigRule
+	ctx := acctest.Context(t)
+	var rule types.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy,
+		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfig_resourceIdScope(rName, "i-12345678"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "resource_id_scope", "i-12345678"),
 				),
 			},
@@ -257,7 +271,7 @@ func testAccOrganizationManagedRule_ResourceIdScope(t *testing.T) {
 			{
 				Config: testAccOrganizationManagedRuleConfig_resourceIdScope(rName, "i-87654321"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "resource_id_scope", "i-87654321"),
 				),
 			},
@@ -266,21 +280,22 @@ func testAccOrganizationManagedRule_ResourceIdScope(t *testing.T) {
 }
 
 func testAccOrganizationManagedRule_ResourceTypesScope(t *testing.T) {
-	var rule configservice.OrganizationConfigRule
+	ctx := acctest.Context(t)
+	var rule types.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy,
+		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfig_resourceTypesScope1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "1"),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", acctest.Ct1),
 				),
 			},
 			{
@@ -291,8 +306,8 @@ func testAccOrganizationManagedRule_ResourceTypesScope(t *testing.T) {
 			{
 				Config: testAccOrganizationManagedRuleConfig_resourceTypesScope2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "2"),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", acctest.Ct2),
 				),
 			},
 		},
@@ -300,20 +315,21 @@ func testAccOrganizationManagedRule_ResourceTypesScope(t *testing.T) {
 }
 
 func testAccOrganizationManagedRule_RuleIdentifier(t *testing.T) {
-	var rule configservice.OrganizationConfigRule
+	ctx := acctest.Context(t)
+	var rule types.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy,
+		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationManagedRuleConfig_identifier(rName, "EC2_INSTANCE_DETAILED_MONITORING_ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "rule_identifier", "EC2_INSTANCE_DETAILED_MONITORING_ENABLED"),
 				),
 			},
@@ -325,7 +341,7 @@ func testAccOrganizationManagedRule_RuleIdentifier(t *testing.T) {
 			{
 				Config: testAccOrganizationManagedRuleConfig_identifier(rName, "EC2_INSTANCE_NO_PUBLIC_IP"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "rule_identifier", "EC2_INSTANCE_NO_PUBLIC_IP"),
 				),
 			},
@@ -334,21 +350,22 @@ func testAccOrganizationManagedRule_RuleIdentifier(t *testing.T) {
 }
 
 func testAccOrganizationManagedRule_TagKeyScope(t *testing.T) {
-	var rule configservice.OrganizationConfigRule
+	ctx := acctest.Context(t)
+	var rule types.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy,
+		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationManagedRuleConfig_tagKeyScope(rName, "key1"),
+				Config: testAccOrganizationManagedRuleConfig_tagKeyScope(rName, acctest.CtKey1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", "key1"),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", acctest.CtKey1),
 				),
 			},
 			{
@@ -357,10 +374,10 @@ func testAccOrganizationManagedRule_TagKeyScope(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationManagedRuleConfig_tagKeyScope(rName, "key2"),
+				Config: testAccOrganizationManagedRuleConfig_tagKeyScope(rName, acctest.CtKey2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", "key2"),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", acctest.CtKey2),
 				),
 			},
 		},
@@ -368,21 +385,22 @@ func testAccOrganizationManagedRule_TagKeyScope(t *testing.T) {
 }
 
 func testAccOrganizationManagedRule_TagValueScope(t *testing.T) {
-	var rule configservice.OrganizationConfigRule
+	ctx := acctest.Context(t)
+	var rule types.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_managed_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy,
+		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationManagedRuleConfig_tagValueScope(rName, "value1"),
+				Config: testAccOrganizationManagedRuleConfig_tagValueScope(rName, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", "value1"),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", acctest.CtValue1),
 				),
 			},
 			{
@@ -391,65 +409,61 @@ func testAccOrganizationManagedRule_TagValueScope(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationManagedRuleConfig_tagValueScope(rName, "value2"),
+				Config: testAccOrganizationManagedRuleConfig_tagValueScope(rName, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationManagedRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", "value2"),
+					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", acctest.CtValue2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckOrganizationManagedRuleExists(resourceName string, ocr *configservice.OrganizationConfigRule) resource.TestCheckFunc {
+func testAccCheckOrganizationManagedRuleExists(ctx context.Context, n string, v *types.OrganizationConfigRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not Found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
 
-		rule, err := tfconfig.DescribeOrganizationConfigRule(conn, rs.Primary.ID)
+		output, err := tfconfig.FindOrganizationManagedRuleByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error describing Config Organization Managed Rule (%s): %s", rs.Primary.ID, err)
+			return err
 		}
 
-		if rule == nil {
-			return fmt.Errorf("Config Organization Managed Rule (%s) not found", rs.Primary.ID)
-		}
-
-		*ocr = *rule
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckOrganizationManagedRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
+func testAccCheckOrganizationManagedRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_config_organization_managed_rule" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_config_organization_managed_rule" {
+				continue
+			}
+
+			_, err := tfconfig.FindOrganizationManagedRuleByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) || errs.IsA[*types.OrganizationAccessDeniedException](err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("ConfigService Organization Managed Rule %s still exists", rs.Primary.ID)
 		}
 
-		rule, err := tfconfig.DescribeOrganizationConfigRule(conn, rs.Primary.ID)
-
-		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error describing Config Organization Managed Rule (%s): %s", rs.Primary.ID, err)
-		}
-
-		if rule != nil {
-			return fmt.Errorf("Config Organization Managed Rule (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccOrganizationManagedRuleConfigBase(rName string) string {
@@ -485,7 +499,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSConfigRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWS_ConfigRole"
   role       = aws_iam_role.test.name
 }
 

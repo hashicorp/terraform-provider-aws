@@ -1,27 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_opensearch_domain_saml_options")
 func ResourceDomainSAMLOptions() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDomainSAMLOptionsPut,
-		Read:   resourceDomainSAMLOptionsRead,
-		Update: resourceDomainSAMLOptionsPut,
-		Delete: resourceDomainSAMLOptionsDelete,
+		CreateWithoutTimeout: resourceDomainSAMLOptionsPut,
+		ReadWithoutTimeout:   resourceDomainSAMLOptionsRead,
+		UpdateWithoutTimeout: resourceDomainSAMLOptionsPut,
+		DeleteWithoutTimeout: resourceDomainSAMLOptionsDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("domain_name", d.Id())
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set(names.AttrDomainName, d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -32,7 +39,7 @@ func ResourceDomainSAMLOptions() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -43,7 +50,7 @@ func ResourceDomainSAMLOptions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -102,26 +109,27 @@ func ResourceDomainSAMLOptions() *schema.Resource {
 }
 func domainSamlOptionsDiffSupress(k, old, new string, d *schema.ResourceData) bool {
 	if v, ok := d.Get("saml_options").([]interface{}); ok && len(v) > 0 {
-		if enabled, ok := v[0].(map[string]interface{})["enabled"].(bool); ok && !enabled {
+		if enabled, ok := v[0].(map[string]interface{})[names.AttrEnabled].(bool); ok && !enabled {
 			return true
 		}
 	}
 	return false
 }
 
-func resourceDomainSAMLOptionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpenSearchConn
+func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	ds, err := FindDomainByName(conn, d.Get("domain_name").(string))
+	ds, err := FindDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Domain SAML Options (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading OpenSearch Domain SAML Options (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Domain SAML Options (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Received OpenSearch domain: %s", ds)
@@ -129,59 +137,61 @@ func resourceDomainSAMLOptionsRead(d *schema.ResourceData, meta interface{}) err
 	options := ds.AdvancedSecurityOptions.SAMLOptions
 
 	if err := d.Set("saml_options", flattenESSAMLOptions(d, options)); err != nil {
-		return fmt.Errorf("error setting saml_options for OpenSearch Configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting saml_options for OpenSearch Configuration: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceDomainSAMLOptionsPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpenSearchConn
+func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 	config := opensearchservice.AdvancedSecurityOptionsInput_{}
 	config.SetSAMLOptions(expandESSAMLOptions(d.Get("saml_options").([]interface{})))
 
 	log.Printf("[DEBUG] Updating OpenSearch domain SAML Options %s", config)
 
-	_, err := conn.UpdateDomainConfig(&opensearchservice.UpdateDomainConfigInput{
+	_, err := conn.UpdateDomainConfigWithContext(ctx, &opensearchservice.UpdateDomainConfigInput{
 		DomainName:              aws.String(domainName),
 		AdvancedSecurityOptions: &config,
 	})
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain SAML Options (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(domainName)
 
-	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("error waiting for OpenSearch Domain SAML Options update (%s) to succeed: %w", d.Id(), err)
+	if err := waitForDomainUpdate(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain SAML Options (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	return resourceDomainSAMLOptionsRead(d, meta)
+	return append(diags, resourceDomainSAMLOptionsRead(ctx, d, meta)...)
 }
 
-func resourceDomainSAMLOptionsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpenSearchConn
+func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 	config := opensearchservice.AdvancedSecurityOptionsInput_{}
 	config.SetSAMLOptions(nil)
 
-	_, err := conn.UpdateDomainConfig(&opensearchservice.UpdateDomainConfigInput{
+	_, err := conn.UpdateDomainConfigWithContext(ctx, &opensearchservice.UpdateDomainConfigInput{
 		DomainName:              aws.String(domainName),
 		AdvancedSecurityOptions: &config,
 	})
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting OpenSearch Domain SAML Options (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Waiting for OpenSearch domain SAML Options %q to be deleted", d.Get("domain_name").(string))
+	log.Printf("[DEBUG] Waiting for OpenSearch domain SAML Options %q to be deleted", d.Get(names.AttrDomainName).(string))
 
-	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for OpenSearch Domain SAML Options (%s) to be deleted: %w", d.Id(), err)
+	if err := waitForDomainUpdate(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting OpenSearch Domain SAML Options (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

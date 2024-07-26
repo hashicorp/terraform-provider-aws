@@ -1,9 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -16,13 +21,13 @@ const (
 )
 
 // statusMLTransform fetches the MLTransform and its Status
-func statusMLTransform(conn *glue.Glue, transformId string) resource.StateRefreshFunc {
+func statusMLTransform(ctx context.Context, conn *glue.Client, transformId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &glue.GetMLTransformInput{
 			TransformId: aws.String(transformId),
 		}
 
-		output, err := conn.GetMLTransform(input)
+		output, err := conn.GetMLTransform(ctx, input)
 
 		if err != nil {
 			return nil, mlTransformStatusUnknown, err
@@ -32,14 +37,14 @@ func statusMLTransform(conn *glue.Glue, transformId string) resource.StateRefres
 			return output, mlTransformStatusUnknown, nil
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
 // statusRegistry fetches the Registry and its Status
-func statusRegistry(conn *glue.Glue, id string) resource.StateRefreshFunc {
+func statusRegistry(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindRegistryByID(conn, id)
+		output, err := FindRegistryByID(ctx, conn, id)
 		if err != nil {
 			return nil, registryStatusUnknown, err
 		}
@@ -48,14 +53,14 @@ func statusRegistry(conn *glue.Glue, id string) resource.StateRefreshFunc {
 			return output, registryStatusUnknown, nil
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
 // statusSchema fetches the Schema and its Status
-func statusSchema(conn *glue.Glue, id string) resource.StateRefreshFunc {
+func statusSchema(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSchemaByID(conn, id)
+		output, err := FindSchemaByID(ctx, conn, id)
 		if err != nil {
 			return nil, schemaStatusUnknown, err
 		}
@@ -64,14 +69,14 @@ func statusSchema(conn *glue.Glue, id string) resource.StateRefreshFunc {
 			return output, schemaStatusUnknown, nil
 		}
 
-		return output, aws.StringValue(output.SchemaStatus), nil
+		return output, string(output.SchemaStatus), nil
 	}
 }
 
 // statusSchemaVersion fetches the Schema Version and its Status
-func statusSchemaVersion(conn *glue.Glue, id string) resource.StateRefreshFunc {
+func statusSchemaVersion(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSchemaVersionByID(conn, id)
+		output, err := FindSchemaVersionByID(ctx, conn, id)
 		if err != nil {
 			return nil, schemaVersionStatusUnknown, err
 		}
@@ -80,18 +85,18 @@ func statusSchemaVersion(conn *glue.Glue, id string) resource.StateRefreshFunc {
 			return output, schemaVersionStatusUnknown, nil
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
 // statusTrigger fetches the Trigger and its Status
-func statusTrigger(conn *glue.Glue, triggerName string) resource.StateRefreshFunc {
+func statusTrigger(ctx context.Context, conn *glue.Client, triggerName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &glue.GetTriggerInput{
 			Name: aws.String(triggerName),
 		}
 
-		output, err := conn.GetTrigger(input)
+		output, err := conn.GetTrigger(ctx, input)
 
 		if err != nil {
 			return nil, triggerStatusUnknown, err
@@ -101,13 +106,13 @@ func statusTrigger(conn *glue.Glue, triggerName string) resource.StateRefreshFun
 			return output, triggerStatusUnknown, nil
 		}
 
-		return output, aws.StringValue(output.Trigger.State), nil
+		return output, string(output.Trigger.State), nil
 	}
 }
 
-func statusDevEndpoint(conn *glue.Glue, name string) resource.StateRefreshFunc {
+func statusDevEndpoint(ctx context.Context, conn *glue.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDevEndpointByName(conn, name)
+		output, err := FindDevEndpointByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -117,13 +122,13 @@ func statusDevEndpoint(conn *glue.Glue, name string) resource.StateRefreshFunc {
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, aws.ToString(output.Status), nil
 	}
 }
 
-func statusPartitionIndex(conn *glue.Glue, id string) resource.StateRefreshFunc {
+func statusPartitionIndex(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindPartitionIndexByName(conn, id)
+		output, err := FindPartitionIndexByName(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -133,6 +138,6 @@ func statusPartitionIndex(conn *glue.Glue, id string) resource.StateRefreshFunc 
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.IndexStatus), nil
+		return output, string(output.IndexStatus), nil
 	}
 }

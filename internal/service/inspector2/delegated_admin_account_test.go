@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector2_test
 
 import (
@@ -6,10 +9,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -18,39 +20,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccInspector2DelegatedAdminAccount_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":      testAccDelegatedAdminAccount_basic,
-		"disappears": testAccDelegatedAdminAccount_disappears,
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccDelegatedAdminAccount_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_inspector2_delegated_admin_account.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
-			testAccPreCheck(t)
-			acctest.PreCheckOrganizationManagementAccount(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			acctest.PreCheckInspector2(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDelegatedAdminAccountDestroy,
+		CheckDestroy:             testAccCheckDelegatedAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegatedAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDelegatedAdminAccountExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", "data.aws_caller_identity.current", "account_id"),
+					testAccCheckDelegatedAdminAccountExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, "relationship_status"),
 				),
 			},
@@ -83,24 +72,25 @@ func testAccDelegatedAdminAccount_basic(t *testing.T) {
 }
 
 func testAccDelegatedAdminAccount_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_inspector2_delegated_admin_account.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
-			testAccPreCheck(t)
-			acctest.PreCheckOrganizationManagementAccount(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			acctest.PreCheckInspector2(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDelegatedAdminAccountDestroy,
+		CheckDestroy:             testAccCheckDelegatedAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegatedAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDelegatedAdminAccountExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfinspector2.ResourceDelegatedAdminAccount(), resourceName),
+					testAccCheckDelegatedAdminAccountExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceDelegatedAdminAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -108,32 +98,33 @@ func testAccDelegatedAdminAccount_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDelegatedAdminAccountDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Conn
-	ctx := context.Background()
+func testAccCheckDelegatedAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_inspector2_delegated_admin_account" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_inspector2_delegated_admin_account" {
+				continue
+			}
+
+			st, _, err := tfinspector2.FindDelegatedAdminAccountStatusID(ctx, conn, rs.Primary.ID)
+
+			if st == "" && errs.Contains(err, "admin account not found") {
+				return nil
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameDelegatedAdminAccount, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		st, _, err := tfinspector2.FindDelegatedAdminAccountStatusID(ctx, conn, rs.Primary.ID)
-
-		if st == "" && errs.Contains(err, "admin account not found") {
-			return nil
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameDelegatedAdminAccount, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckDelegatedAdminAccountExists(name string) resource.TestCheckFunc {
+func testAccCheckDelegatedAdminAccountExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -144,8 +135,8 @@ func testAccCheckDelegatedAdminAccountExists(name string) resource.TestCheckFunc
 			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameDelegatedAdminAccount, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Conn
-		ctx := context.Background()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
+
 		_, _, err := tfinspector2.FindDelegatedAdminAccountStatusID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -153,21 +144,6 @@ func testAccCheckDelegatedAdminAccountExists(name string) resource.TestCheckFunc
 		}
 
 		return nil
-	}
-}
-
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Conn
-	ctx := context.Background()
-
-	_, err := conn.ListDelegatedAdminAccounts(ctx, &inspector2.ListDelegatedAdminAccountsInput{})
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 

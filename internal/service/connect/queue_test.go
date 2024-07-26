@@ -1,21 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccQueue_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeQueueOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -24,24 +30,24 @@ func testAccQueue_basic(t *testing.T) {
 	updatedDescription := "Updated"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckQueueDestroy,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueueConfig_basic(rName, rName2, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+					testAccCheckQueueExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, connect.QueueStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 				),
 			},
 			{
@@ -52,16 +58,16 @@ func testAccQueue_basic(t *testing.T) {
 			{
 				Config: testAccQueueConfig_basic(rName, rName2, updatedDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+					testAccCheckQueueExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, connect.QueueStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 				),
 			},
 		},
@@ -69,23 +75,24 @@ func testAccQueue_basic(t *testing.T) {
 }
 
 func testAccQueue_disappears(t *testing.T) {
-	t.Skip("Queues do not support deletion today")
+	ctx := acctest.Context(t)
+
 	var v connect.DescribeQueueOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_queue.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckQueueDestroy,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueueConfig_basic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceQueue(), resourceName),
+					testAccCheckQueueExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,30 +101,31 @@ func testAccQueue_disappears(t *testing.T) {
 }
 
 func testAccQueue_updateHoursOfOperationId(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeQueueOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_queue.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckQueueDestroy,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueueConfig_hoursOfOperation(rName, rName2, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					testAccCheckQueueExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, connect.QueueStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 				),
 			},
 			{
@@ -128,16 +136,16 @@ func testAccQueue_updateHoursOfOperationId(t *testing.T) {
 			{
 				Config: testAccQueueConfig_hoursOfOperation(rName, rName2, "second"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					testAccCheckQueueExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "aws_connect_hours_of_operation.test", "hours_of_operation_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, connect.QueueStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 				),
 			},
 			{
@@ -148,16 +156,16 @@ func testAccQueue_updateHoursOfOperationId(t *testing.T) {
 			{
 				Config: testAccQueueConfig_hoursOfOperation(rName, rName2, "first"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					testAccCheckQueueExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, connect.QueueStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 				),
 			},
 		},
@@ -166,33 +174,36 @@ func testAccQueue_updateHoursOfOperationId(t *testing.T) {
 
 func testAccQueue_updateMaxContacts(t *testing.T) {
 	t.Skip("A bug in the service API has been reported")
+
+	ctx := acctest.Context(t)
+
 	var v connect.DescribeQueueOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_queue.test"
-	originalMaxContacts := "1"
-	updatedMaxContacts := "2"
+	originalMaxContacts := acctest.Ct1
+	updatedMaxContacts := acctest.Ct2
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckQueueDestroy,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueueConfig_maxContacts(rName, rName2, originalMaxContacts),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					testAccCheckQueueExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "max_contacts", originalMaxContacts),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, connect.QueueStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 				),
 			},
 			{
@@ -203,17 +214,17 @@ func testAccQueue_updateMaxContacts(t *testing.T) {
 			{
 				Config: testAccQueueConfig_maxContacts(rName, rName2, updatedMaxContacts),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					testAccCheckQueueExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "max_contacts", updatedMaxContacts),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, connect.QueueStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 				),
 			},
 		},
@@ -221,6 +232,7 @@ func testAccQueue_updateMaxContacts(t *testing.T) {
 }
 
 func testAccQueue_updateOutboundCallerConfig(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeQueueOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -229,26 +241,26 @@ func testAccQueue_updateOutboundCallerConfig(t *testing.T) {
 	updatedOutboundCallerIdName := "updated"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckQueueDestroy,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueueConfig_outboundCaller(rName, rName2, originalOutboundCallerIdName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					testAccCheckQueueExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
-					resource.TestCheckResourceAttr(resourceName, "outbound_caller_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttr(resourceName, "outbound_caller_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "outbound_caller_config.0.outbound_caller_id_name", originalOutboundCallerIdName),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, connect.QueueStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 				),
 			},
 			{
@@ -259,18 +271,18 @@ func testAccQueue_updateOutboundCallerConfig(t *testing.T) {
 			{
 				Config: testAccQueueConfig_outboundCaller(rName, rName2, updatedOutboundCallerIdName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					testAccCheckQueueExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
-					resource.TestCheckResourceAttr(resourceName, "outbound_caller_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttr(resourceName, "outbound_caller_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "outbound_caller_config.0.outbound_caller_id_name", updatedOutboundCallerIdName),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, connect.QueueStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 				),
 			},
 		},
@@ -278,6 +290,7 @@ func testAccQueue_updateOutboundCallerConfig(t *testing.T) {
 }
 
 func testAccQueue_updateStatus(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeQueueOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -286,24 +299,24 @@ func testAccQueue_updateStatus(t *testing.T) {
 	updatedStatus := connect.QueueStatusDisabled
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckQueueDestroy,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueueConfig_status(rName, rName2, originalStatus),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					testAccCheckQueueExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", originalStatus),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, originalStatus),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 				),
 			},
 			{
@@ -314,16 +327,16 @@ func testAccQueue_updateStatus(t *testing.T) {
 			{
 				Config: testAccQueueConfig_status(rName, rName2, updatedStatus),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					testAccCheckQueueExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", updatedStatus),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, updatedStatus),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 				),
 			},
 		},
@@ -331,6 +344,7 @@ func testAccQueue_updateStatus(t *testing.T) {
 }
 
 func testAccQueue_updateQuickConnectIds(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeQueueOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -340,25 +354,25 @@ func testAccQueue_updateQuickConnectIds(t *testing.T) {
 	description := "test queue integrations with quick connects"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckQueueDestroy,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				// start with no quick connects associated with the queue
 				Config: testAccQueueConfig_basic(rName, rName4, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					testAccCheckQueueExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName4),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName4),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, connect.QueueStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 				),
 			},
 			{
@@ -370,17 +384,17 @@ func testAccQueue_updateQuickConnectIds(t *testing.T) {
 				// associate one quick connect to the queue
 				Config: testAccQueueConfig_quickConnect1(rName, rName2, rName3, rName4, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					testAccCheckQueueExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName4),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName4),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "quick_connect_ids.0", "aws_connect_quick_connect.test1", "quick_connect_id"),
-					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, connect.QueueStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 				),
 			},
 			{
@@ -392,16 +406,16 @@ func testAccQueue_updateQuickConnectIds(t *testing.T) {
 				// associate two quick connects to the queue
 				Config: testAccQueueConfig_quickConnect2(rName, rName2, rName3, rName4, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					testAccCheckQueueExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName4),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName4),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, connect.QueueStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 				),
 			},
 			{
@@ -413,17 +427,17 @@ func testAccQueue_updateQuickConnectIds(t *testing.T) {
 				// remove one quick connect
 				Config: testAccQueueConfig_quickConnect1(rName, rName2, rName3, rName4, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					testAccCheckQueueExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName4),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName4),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "quick_connect_ids.0", "aws_connect_quick_connect.test1", "quick_connect_id"),
-					resource.TestCheckResourceAttr(resourceName, "status", connect.QueueStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, connect.QueueStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 				),
 			},
 		},
@@ -431,24 +445,24 @@ func testAccQueue_updateQuickConnectIds(t *testing.T) {
 }
 
 func testAccQueue_updateTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeQueueOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := "tags"
 
 	resourceName := "aws_connect_queue.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckQueueDestroy,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueueConfig_basic(rName, rName2, description),
+				Config: testAccQueueConfig_basic(rName, rName2, names.AttrTags),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					testAccCheckQueueExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Queue"),
 				),
 			},
@@ -458,19 +472,19 @@ func testAccQueue_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccQueueConfig_tags(rName, rName2, description),
+				Config: testAccQueueConfig_tags(rName, rName2, names.AttrTags),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					testAccCheckQueueExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Queue"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
 				),
 			},
 			{
-				Config: testAccQueueConfig_tagsUpdated(rName, rName2, description),
+				Config: testAccQueueConfig_tagsUpdated(rName, rName2, names.AttrTags),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckQueueExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					testAccCheckQueueExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Queue"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
@@ -480,7 +494,7 @@ func testAccQueue_updateTags(t *testing.T) {
 	})
 }
 
-func testAccCheckQueueExists(resourceName string, function *connect.DescribeQueueOutput) resource.TestCheckFunc {
+func testAccCheckQueueExists(ctx context.Context, resourceName string, function *connect.DescribeQueueOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -496,14 +510,14 @@ func testAccCheckQueueExists(resourceName string, function *connect.DescribeQueu
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 		params := &connect.DescribeQueueInput{
 			QueueId:    aws.String(queueID),
 			InstanceId: aws.String(instanceID),
 		}
 
-		getFunction, err := conn.DescribeQueue(params)
+		getFunction, err := conn.DescribeQueueWithContext(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -514,37 +528,39 @@ func testAccCheckQueueExists(resourceName string, function *connect.DescribeQueu
 	}
 }
 
-func testAccCheckQueueDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_connect_queue" {
-			continue
+func testAccCheckQueueDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_connect_queue" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
+
+			instanceID, queueID, err := tfconnect.QueueParseID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			params := &connect.DescribeQueueInput{
+				QueueId:    aws.String(queueID),
+				InstanceId: aws.String(instanceID),
+			}
+
+			_, err = conn.DescribeQueueWithContext(ctx, params)
+
+			if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
-
-		instanceID, queueID, err := tfconnect.QueueParseID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		params := &connect.DescribeQueueInput{
-			QueueId:    aws.String(queueID),
-			InstanceId: aws.String(instanceID),
-		}
-
-		_, err = conn.DescribeQueue(params)
-
-		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccQueueConfig_base(rName string) string {

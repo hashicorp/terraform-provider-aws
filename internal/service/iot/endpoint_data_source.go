@@ -1,24 +1,31 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceEndpoint() *schema.Resource {
+// @SDKDataSource("aws_iot_endpoint", name="Endpoint")
+func dataSourceEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceEndpointRead,
+		ReadWithoutTimeout: dataSourceEndpointRead,
 		Schema: map[string]*schema.Schema{
 			"endpoint_address": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint_type": {
+			names.AttrEndpointType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.StringInSlice([]string{
@@ -32,22 +39,27 @@ func DataSourceEndpoint() *schema.Resource {
 	}
 }
 
-func dataSourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
+
 	input := &iot.DescribeEndpointInput{}
 
-	if v, ok := d.GetOk("endpoint_type"); ok {
+	if v, ok := d.GetOk(names.AttrEndpointType); ok {
 		input.EndpointType = aws.String(v.(string))
 	}
 
-	output, err := conn.DescribeEndpoint(input)
+	output, err := conn.DescribeEndpoint(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error while describing iot endpoint: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading IoT Endpoint: %s", err)
 	}
-	endpointAddress := aws.StringValue(output.EndpointAddress)
+
+	endpointAddress := aws.ToString(output.EndpointAddress)
 	d.SetId(endpointAddress)
 	if err := d.Set("endpoint_address", endpointAddress); err != nil {
-		return fmt.Errorf("error setting endpoint_address: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting endpoint_address: %s", err)
 	}
-	return nil
+
+	return diags
 }

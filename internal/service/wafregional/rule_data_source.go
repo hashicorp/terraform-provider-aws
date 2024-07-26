@@ -1,20 +1,30 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/wafregional"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceRule() *schema.Resource {
+// @SDKDataSource("aws_wafregional_rule", name="Rule")
+func dataSourceRule() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRuleRead,
+		ReadWithoutTimeout: dataSourceRuleRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -22,41 +32,55 @@ func DataSourceRule() *schema.Resource {
 	}
 }
 
-func dataSourceRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
-	name := d.Get("name").(string)
+func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 
-	rules := make([]*waf.RuleSummary, 0)
-	// ListRulesInput does not have a name parameter for filtering
-	input := &waf.ListRulesInput{}
-	for {
-		output, err := conn.ListRules(input)
-		if err != nil {
-			return fmt.Errorf("error reading WAF Rule: %w", err)
+	name := d.Get(names.AttrName).(string)
+	input := &wafregional.ListRulesInput{}
+	output, err := findRule(ctx, conn, input, func(v *awstypes.RuleSummary) bool {
+		return aws.ToString(v.Name) == name
+	})
+
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("WAF Regional Rule", err))
+	}
+
+	d.SetId(aws.ToString(output.RuleId))
+
+	return diags
+}
+
+func findRule(ctx context.Context, conn *wafregional.Client, input *wafregional.ListRulesInput, filter tfslices.Predicate[*awstypes.RuleSummary]) (*awstypes.RuleSummary, error) {
+	output, err := findRules(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findRules(ctx context.Context, conn *wafregional.Client, input *wafregional.ListRulesInput, filter tfslices.Predicate[*awstypes.RuleSummary]) ([]awstypes.RuleSummary, error) {
+	var output []awstypes.RuleSummary
+
+	err := listRulesPages(ctx, conn, input, func(page *wafregional.ListRulesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		for _, rule := range output.Rules {
-			if aws.StringValue(rule.Name) == name {
-				rules = append(rules, rule)
+
+		for _, v := range page.Rules {
+			if filter(&v) {
+				output = append(output, v)
 			}
 		}
 
-		if output.NextMarker == nil {
-			break
-		}
-		input.NextMarker = output.NextMarker
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
-	if len(rules) == 0 {
-		return fmt.Errorf("WAF Rule not found for name: %s", name)
-	}
-
-	if len(rules) > 1 {
-		return fmt.Errorf("multiple WAF Rules found for name: %s", name)
-	}
-
-	rule := rules[0]
-
-	d.SetId(aws.StringValue(rule.RuleId))
-
-	return nil
+	return output, nil
 }

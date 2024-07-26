@@ -1,67 +1,77 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package devicefarm
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/devicefarm"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceTestGridProject() *schema.Resource {
+// @SDKResource("aws_devicefarm_test_grid_project", name="Test Grid Project")
+// @Tags(identifierAttribute="arn")
+func resourceTestGridProject() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTestGridProjectCreate,
-		Read:   resourceTestGridProjectRead,
-		Update: resourceTestGridProjectUpdate,
-		Delete: resourceTestGridProjectDelete,
+		CreateWithoutTimeout: resourceTestGridProjectCreate,
+		ReadWithoutTimeout:   resourceTestGridProjectRead,
+		UpdateWithoutTimeout: resourceTestGridProjectUpdate,
+		DeleteWithoutTimeout: resourceTestGridProjectDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"vpc_config": {
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							MinItems: 1,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Required: true,
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							MinItems: 1,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Required: true,
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -73,166 +83,161 @@ func ResourceTestGridProject() *schema.Resource {
 	}
 }
 
-func resourceTestGridProjectCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceTestGridProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &devicefarm.CreateTestGridProjectInput{
 		Name: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("vpc_config"); ok {
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok {
 		input.VpcConfig = expandTestGridProjectVPCConfig(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating DeviceFarm Test Grid Project: %s", name)
-	out, err := conn.CreateTestGridProject(input)
+	output, err := conn.CreateTestGridProject(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating DeviceFarm Test Grid Project: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating DeviceFarm Test Grid Project (%s): %s", name, err)
 	}
 
-	arn := aws.StringValue(out.TestGridProject.Arn)
-	log.Printf("[DEBUG] Successsfully Created DeviceFarm Test Grid Project: %s", arn)
-	d.SetId(arn)
+	d.SetId(aws.ToString(output.TestGridProject.Arn))
 
-	if len(tags) > 0 {
-		if err := UpdateTags(conn, arn, nil, tags); err != nil {
-			return fmt.Errorf("error updating DeviceFarm Test Grid Project (%s) tags: %w", arn, err)
-		}
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting DeviceFarm Test Grid Project (%s) tags: %s", d.Id(), err)
 	}
 
-	return resourceTestGridProjectRead(d, meta)
+	return append(diags, resourceTestGridProjectRead(ctx, d, meta)...)
 }
 
-func resourceTestGridProjectRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceTestGridProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
-	project, err := FindTestGridProjectByARN(conn, d.Id())
+	project, err := findTestGridProjectByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Test Grid Project (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DeviceFarm Test Grid Project (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DeviceFarm Test Grid Project (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(project.Arn)
-	d.Set("name", project.Name)
-	d.Set("arn", arn)
-	d.Set("description", project.Description)
-	if err := d.Set("vpc_config", flattenTestGridProjectVPCConfig(project.VpcConfig)); err != nil {
-		return fmt.Errorf("error setting vpc_config: %w", err)
+	arn := aws.ToString(project.Arn)
+	d.Set(names.AttrName, project.Name)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, project.Description)
+	if err := d.Set(names.AttrVPCConfig, flattenTestGridProjectVPCConfig(project.VpcConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for DeviceFarm Test Grid Project (%s): %w", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceTestGridProjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+func resourceTestGridProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &devicefarm.UpdateTestGridProjectInput{
 			ProjectArn: aws.String(d.Id()),
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		log.Printf("[DEBUG] Updating DeviceFarm Test Grid Project: %s", d.Id())
-		_, err := conn.UpdateTestGridProject(input)
+		_, err := conn.UpdateTestGridProject(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("Error Updating DeviceFarm Test Grid Project: %w", err)
+			return sdkdiag.AppendErrorf(diags, "updating DeviceFarm Test Grid Project (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating DeviceFarm Test Grid Project (%s) tags: %w", d.Get("arn").(string), err)
-		}
-	}
-
-	return resourceTestGridProjectRead(d, meta)
+	return append(diags, resourceTestGridProjectRead(ctx, d, meta)...)
 }
 
-func resourceTestGridProjectDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
-
-	input := &devicefarm.DeleteTestGridProjectInput{
-		ProjectArn: aws.String(d.Id()),
-	}
+func resourceTestGridProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Test Grid Project: %s", d.Id())
-	_, err := conn.DeleteTestGridProject(input)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
-			return nil
-		}
-		return fmt.Errorf("Error deleting DeviceFarm Test Grid Project: %w", err)
+	_, err := conn.DeleteTestGridProject(ctx, &devicefarm.DeleteTestGridProjectInput{
+		ProjectArn: aws.String(d.Id()),
+	})
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting DeviceFarm Test Grid Project (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func expandTestGridProjectVPCConfig(l []interface{}) *devicefarm.TestGridVpcConfig {
+func findTestGridProjectByARN(ctx context.Context, conn *devicefarm.Client, arn string) (*awstypes.TestGridProject, error) {
+	input := &devicefarm.GetTestGridProjectInput{
+		ProjectArn: aws.String(arn),
+	}
+	output, err := conn.GetTestGridProject(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.TestGridProject == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.TestGridProject, nil
+}
+
+func expandTestGridProjectVPCConfig(l []interface{}) *awstypes.TestGridVpcConfig {
 	if len(l) == 0 {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	config := &devicefarm.TestGridVpcConfig{
-		VpcId:            aws.String(m["vpc_id"].(string)),
-		SubnetIds:        flex.ExpandStringSet(m["subnet_ids"].(*schema.Set)),
-		SecurityGroupIds: flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
+	config := &awstypes.TestGridVpcConfig{
+		VpcId:            aws.String(m[names.AttrVPCID].(string)),
+		SubnetIds:        flex.ExpandStringValueSet(m[names.AttrSubnetIDs].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
 	}
 
 	return config
 }
 
-func flattenTestGridProjectVPCConfig(conf *devicefarm.TestGridVpcConfig) []interface{} {
+func flattenTestGridProjectVPCConfig(conf *awstypes.TestGridVpcConfig) []interface{} {
 	if conf == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"vpc_id":             aws.StringValue(conf.VpcId),
-		"subnet_ids":         flex.FlattenStringSet(conf.SubnetIds),
-		"security_group_ids": flex.FlattenStringSet(conf.SecurityGroupIds),
+		names.AttrVPCID:            aws.ToString(conf.VpcId),
+		names.AttrSubnetIDs:        flex.FlattenStringValueSet(conf.SubnetIds),
+		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(conf.SecurityGroupIds),
 	}
 
 	return []interface{}{m}

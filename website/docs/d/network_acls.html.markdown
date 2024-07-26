@@ -10,7 +10,7 @@ description: |-
 
 ## Example Usage
 
-The following shows outputing all network ACL ids in a vpc.
+The following shows outputting all network ACL ids in a vpc.
 
 ```terraform
 data "aws_network_acls" "example" {
@@ -67,13 +67,15 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `ids` - List of all the network ACL ids found.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

@@ -25,15 +25,15 @@ data "aws_efs_mount_target" "by_id" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `access_point_id` - (Optional) ID or ARN of the access point whose mount target that you want to find. It must be included if a `file_system_id` and `mount_target_id` are not included.
 * `file_system_id` - (Optional) ID or ARN of the file system whose mount target that you want to find. It must be included if an `access_point_id` and `mount_target_id` are not included.
 * `mount_target_id` - (Optional) ID or ARN of the mount target that you want to find. It must be included in your request if an `access_point_id` and `file_system_id` are not included.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `file_system_arn` - Amazon Resource Name of the file system for which the mount target is intended.
 * `subnet_id` - ID of the mount target's subnet.

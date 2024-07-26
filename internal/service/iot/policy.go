@@ -1,46 +1,53 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"slices"
+	"strconv"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourcePolicy() *schema.Resource {
+// @SDKResource("aws_iot_policy", name="Policy")
+// @Tags(identifierAttribute="arn")
+func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePolicyCreate,
-		Read:   resourcePolicyRead,
-		Update: resourcePolicyUpdate,
-		Delete: resourcePolicyDelete,
+		CreateWithoutTimeout: resourcePolicyCreate,
+		ReadWithoutTimeout:   resourcePolicyRead,
+		UpdateWithoutTimeout: resourcePolicyUpdate,
+		DeleteWithoutTimeout: resourcePolicyDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Update: schema.DefaultTimeout(1 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,131 +55,272 @@ func ResourcePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			names.AttrPolicy: {
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	conn := meta.(*conns.AWSClient).IoTConn
-
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	out, err := conn.CreatePolicy(&iot.CreatePolicyInput{
-		PolicyName:     aws.String(d.Get("name").(string)),
+	name := d.Get(names.AttrName).(string)
+	input := &iot.CreatePolicyInput{
 		PolicyDocument: aws.String(policy),
-	})
-
-	if err != nil {
-		return fmt.Errorf("error creating IoT Policy: %s", err)
+		PolicyName:     aws.String(name),
+		Tags:           getTagsIn(ctx),
 	}
 
-	d.SetId(aws.StringValue(out.PolicyName))
+	output, err := conn.CreatePolicy(ctx, input)
 
-	return resourcePolicyRead(d, meta)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating IoT Policy (%s): %s", name, err)
+	}
+
+	d.SetId(aws.ToString(output.PolicyName))
+
+	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
-func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	out, err := conn.GetPolicy(&iot.GetPolicyInput{
-		PolicyName: aws.String(d.Id()),
-	})
+	output, err := findPolicyByName(ctx, conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IoT Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading IoT Policy (%s): %s", d.Id(), err)
+	}
+
+	d.Set(names.AttrARN, output.PolicyArn)
+	d.Set("default_version_id", output.DefaultVersionId)
+	d.Set(names.AttrName, output.PolicyName)
+
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(output.PolicyDocument))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	d.Set(names.AttrPolicy, policyToSet)
+
+	return diags
+}
+
+func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
+
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		input := &iot.CreatePolicyVersionInput{
+			PolicyDocument: aws.String(policy),
+			PolicyName:     aws.String(d.Id()),
+			SetAsDefault:   true,
+		}
+
+		_, errCreate := conn.CreatePolicyVersion(ctx, input)
+
+		// "VersionsLimitExceededException: The policy ... already has the maximum number of versions (5)"
+		if errs.IsA[*awstypes.VersionsLimitExceededException](errCreate) {
+			// Prune the lowest version and retry.
+			policyVersions, err := findPolicyVersionsByName(ctx, conn, d.Id())
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading IoT Policy (%s) versions: %s", d.Id(), err)
+			}
+
+			var versionIDs []int
+
+			for _, v := range policyVersions {
+				if v.IsDefaultVersion {
+					continue
+				}
+
+				v, err := strconv.Atoi(aws.ToString(v.VersionId))
+
+				if err != nil {
+					continue
+				}
+
+				versionIDs = append(versionIDs, v)
+			}
+
+			if len(versionIDs) > 0 {
+				// Sort ascending.
+				slices.Sort(versionIDs)
+				versionID := strconv.Itoa(versionIDs[0])
+
+				if err := deletePolicyVersion(ctx, conn, d.Id(), versionID); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+
+				_, errCreate = conn.CreatePolicyVersion(ctx, input)
+			}
+		}
+
+		if errCreate != nil {
+			return sdkdiag.AppendErrorf(diags, "updating IoT Policy (%s): %s", d.Id(), errCreate)
+		}
+	}
+
+	return append(diags, resourcePolicyRead(ctx, d, meta)...)
+}
+
+func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
+
+	policyVersions, err := findPolicyVersionsByName(ctx, conn, d.Id())
+
+	if tfresource.NotFound(err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading IoT Policy (%s) versions: %s", d.Id(), err)
+	}
+
+	// Delete all non-default versions of the policy.
+	for _, v := range policyVersions {
+		if v.IsDefaultVersion {
+			continue
+		}
+
+		if err := deletePolicyVersion(ctx, conn, d.Id(), aws.ToString(v.VersionId)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	// Delete default policy version.
+	if err := deletePolicy(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func findPolicyByName(ctx context.Context, conn *iot.Client, name string) (*iot.GetPolicyOutput, error) {
+	input := &iot.GetPolicyInput{
+		PolicyName: aws.String(name),
+	}
+
+	output, err := conn.GetPolicy(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findPolicyVersionsByName(ctx context.Context, conn *iot.Client, name string) ([]awstypes.PolicyVersion, error) {
+	input := &iot.ListPolicyVersionsInput{
+		PolicyName: aws.String(name),
+	}
+
+	output, err := conn.ListPolicyVersions(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.PolicyVersions) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.PolicyVersions, nil
+}
+
+func deletePolicy(ctx context.Context, conn *iot.Client, name string) error {
+	input := &iot.DeletePolicyInput{
+		PolicyName: aws.String(name),
+	}
+
+	_, err := tfresource.RetryWhenIsA[*awstypes.DeleteConflictException](ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.DeletePolicy(ctx, input)
+		})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IoT Policy (%s): %s", d.Id(), err)
+		return fmt.Errorf("deleting IoT Policy (%s): %w", name, err)
 	}
-
-	d.Set("arn", out.PolicyArn)
-	d.Set("default_version_id", out.DefaultVersionId)
-	d.Set("name", out.PolicyName)
-
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(out.PolicyDocument))
-
-	if err != nil {
-		return err
-	}
-
-	d.Set("policy", policyToSet)
 
 	return nil
 }
 
-func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func deletePolicyVersion(ctx context.Context, conn *iot.Client, name, versionID string) error {
+	input := &iot.DeletePolicyVersionInput{
+		PolicyName:      aws.String(name),
+		PolicyVersionId: aws.String(versionID),
+	}
 
-	if d.HasChange("policy") {
-		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
-		if err != nil {
-			return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
-		}
-
-		_, err = conn.CreatePolicyVersion(&iot.CreatePolicyVersionInput{
-			PolicyName:     aws.String(d.Id()),
-			PolicyDocument: aws.String(policy),
-			SetAsDefault:   aws.Bool(true),
+	_, err := tfresource.RetryWhenIsA[*awstypes.DeleteConflictException](ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.DeletePolicyVersion(ctx, input)
 		})
 
-		if err != nil {
-			return fmt.Errorf("error updating IoT Policy (%s): %s", d.Id(), err)
-		}
-	}
-
-	return resourcePolicyRead(d, meta)
-}
-
-func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-
-	conn := meta.(*conns.AWSClient).IoTConn
-
-	out, err := conn.ListPolicyVersions(&iot.ListPolicyVersionsInput{
-		PolicyName: aws.String(d.Id()),
-	})
-
-	if err != nil {
-		return fmt.Errorf("error listing IoT Policy (%s) versions: %s", d.Id(), err)
-	}
-
-	// Delete all non-default versions of the policy
-	for _, ver := range out.PolicyVersions {
-		if !aws.BoolValue(ver.IsDefaultVersion) {
-			_, err = conn.DeletePolicyVersion(&iot.DeletePolicyVersionInput{
-				PolicyName:      aws.String(d.Id()),
-				PolicyVersionId: ver.VersionId,
-			})
-
-			if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-				continue
-			}
-
-			if err != nil {
-				return fmt.Errorf("error deleting IoT Policy (%s) version (%s): %s", d.Id(), aws.StringValue(ver.VersionId), err)
-			}
-		}
-	}
-
-	//Delete default policy version
-	_, err = conn.DeletePolicy(&iot.DeletePolicyInput{
-		PolicyName: aws.String(d.Id()),
-	})
-
-	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting IoT Policy (%s): %s", d.Id(), err)
+		return fmt.Errorf("deleting IoT Policy (%s) version (%s): %w", name, versionID, err)
 	}
 
 	return nil

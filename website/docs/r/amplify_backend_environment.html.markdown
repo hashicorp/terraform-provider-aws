@@ -28,24 +28,33 @@ resource "aws_amplify_backend_environment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `app_id` - (Required) Unique ID for an Amplify app.
 * `environment_name` - (Required) Name for the backend environment.
 * `deployment_artifacts` - (Optional) Name of deployment artifacts.
 * `stack_name` - (Optional) AWS CloudFormation stack name of a backend environment.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN for a backend environment that is part of an Amplify app.
 * `id` - Unique ID of the Amplify backend environment.
 
 ## Import
 
-Amplify backend environment can be imported using `app_id` and `environment_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amplify backend environment using `app_id` and `environment_name`. For example:
 
+```terraform
+import {
+  to = aws_amplify_backend_environment.example
+  id = "d2ypk4k47z8u6/example"
+}
 ```
-$ terraform import aws_amplify_backend_environment.example d2ypk4k47z8u6/example
+
+Using `terraform import`, import Amplify backend environment using `app_id` and `environment_name`. For example:
+
+```console
+% terraform import aws_amplify_backend_environment.example d2ypk4k47z8u6/example
 ```

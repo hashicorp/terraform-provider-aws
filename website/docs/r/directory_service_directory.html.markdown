@@ -1,5 +1,5 @@
 ---
-subcategory: "DS (Directory Service)"
+subcategory: "Directory Service"
 layout: "aws"
 page_title: "AWS: aws_directory_service_directory"
 description: |-
@@ -122,11 +122,11 @@ resource "aws_subnet" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The fully qualified name for the directory, such as `corp.example.com`
 * `password` - (Required) The password for the directory administrator or connector user.
-* `size` - (Required for `SimpleAD` and `ADConnector`) The size of the directory (`Small` or `Large` are accepted values).
+* `size` - (Optional) (For `SimpleAD` and `ADConnector` types) The size of the directory (`Small` or `Large` are accepted values). `Large` by default.
 * `vpc_settings` - (Required for `SimpleAD` and `MicrosoftAD`) VPC related information about the directory. Fields documented below.
 * `connect_settings` - (Required for `ADConnector`) Connector related information about the directory. Fields documented below.
 * `alias` - (Optional) The alias for the directory (must be unique amongst all aliases in AWS). Required for `enable_sso`.
@@ -135,7 +135,7 @@ The following arguments are supported:
 * `short_name` - (Optional) The short name of the directory, such as `CORP`.
 * `enable_sso` - (Optional) Whether to enable single-sign on for the directory. Requires `alias`. Defaults to `false`.
 * `type` (Optional) - The directory type (`SimpleAD`, `ADConnector` or `MicrosoftAD` are accepted values). Defaults to `SimpleAD`.
-* `edition` - (Optional) The MicrosoftAD edition (`Standard` or `Enterprise`). Defaults to `Enterprise` (applies to MicrosoftAD type only).
+* `edition` - (Optional, for type `MicrosoftAD` only) The MicrosoftAD edition (`Standard` or `Enterprise`). Defaults to `Enterprise`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 **vpc_settings** supports the following:
@@ -150,9 +150,9 @@ The following arguments are supported:
 * `subnet_ids` - (Required) The identifiers of the subnets for the directory servers (2 subnets in 2 different AZs).
 * `vpc_id` - (Required) The identifier of the VPC that the directory is in.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The directory identifier.
 * `access_url` - The access URL for the directory, such as `http://alias.awsapps.com`.
@@ -166,7 +166,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_directory_service_directory` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+`aws_directory_service_directory` provides the following [Timeouts](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts) configuration options:
 
 - `create` - (Default `60 minutes`) Used for directory creation
 - `update` - (Default `60 minutes`) Used for directory update
@@ -174,8 +174,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DirectoryService directories can be imported using the directory `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DirectoryService directories using the directory `id`. For example:
 
+```terraform
+import {
+  to = aws_directory_service_directory.sample
+  id = "d-926724cf57"
+}
 ```
-$ terraform import aws_directory_service_directory.sample d-926724cf57
+
+Using `terraform import`, import DirectoryService directories using the directory `id`. For example:
+
+```console
+% terraform import aws_directory_service_directory.sample d-926724cf57
 ```

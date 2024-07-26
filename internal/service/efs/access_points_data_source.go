@@ -1,31 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceAccessPoints() *schema.Resource {
+// @SDKDataSource("aws_efs_access_points", name="Access Point")
+func dataSourceAccessPoints() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAccessPointsRead,
+		ReadWithoutTimeout: dataSourceAccessPointsRead,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -34,53 +42,48 @@ func DataSourceAccessPoints() *schema.Resource {
 	}
 }
 
-func dataSourceAccessPointsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+func dataSourceAccessPointsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
-	fileSystemID := d.Get("file_system_id").(string)
+	fileSystemID := d.Get(names.AttrFileSystemID).(string)
 	input := &efs.DescribeAccessPointsInput{
 		FileSystemId: aws.String(fileSystemID),
 	}
 
-	output, err := findAccessPointDescriptions(conn, input)
+	output, err := findAccessPointDescriptions(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EFS Access Points: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EFS Access Points: %s", err)
 	}
 
 	var accessPointIDs, arns []string
 
 	for _, v := range output {
-		accessPointIDs = append(accessPointIDs, aws.StringValue(v.AccessPointId))
-		arns = append(arns, aws.StringValue(v.AccessPointArn))
+		accessPointIDs = append(accessPointIDs, aws.ToString(v.AccessPointId))
+		arns = append(arns, aws.ToString(v.AccessPointArn))
 	}
 
 	d.SetId(fileSystemID)
-	d.Set("arns", arns)
-	d.Set("ids", accessPointIDs)
+	d.Set(names.AttrARNs, arns)
+	d.Set(names.AttrIDs, accessPointIDs)
 
-	return nil
+	return diags
 }
 
-func findAccessPointDescriptions(conn *efs.EFS, input *efs.DescribeAccessPointsInput) ([]*efs.AccessPointDescription, error) {
-	var output []*efs.AccessPointDescription
+func findAccessPointDescriptions(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput) ([]awstypes.AccessPointDescription, error) {
+	var output []awstypes.AccessPointDescription
 
-	err := conn.DescribeAccessPointsPages(input, func(page *efs.DescribeAccessPointsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := efs.NewDescribeAccessPointsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
-		for _, v := range page.AccessPoints {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
+		output = append(output, page.AccessPoints...)
 	}
 
 	return output, nil

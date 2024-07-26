@@ -1,25 +1,38 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apprunner"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceVPCConnector() *schema.Resource {
+// @SDKResource("aws_apprunner_vpc_connector", name="VPC Connector")
+// @Tags(identifierAttribute="arn")
+func resourceVPCConnector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCConnectorCreate,
 		ReadWithoutTimeout:   resourceVPCConnectorRead,
+		UpdateWithoutTimeout: resourceVPCConnectorUpdate,
 		DeleteWithoutTimeout: resourceVPCConnectorDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -27,173 +40,212 @@ func ResourceVPCConnector() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrSecurityGroups: {
+				Type:     schema.TypeSet,
+				Required: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			names.AttrStatus: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrSubnets: {
+				Type:     schema.TypeSet,
+				Required: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_connector_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(4, 40),
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"security_groups": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"subnets": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"tags": tftags.TagsSchemaComputed(),
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"vpc_connector_revision": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
 
-	vpcConnectorName := d.Get("vpc_connector_name").(string)
-	subnets := flex.ExpandStringSet(d.Get("subnets").(*schema.Set))
-	securityGroups := flex.ExpandStringSet(d.Get("security_groups").(*schema.Set))
+	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
+	name := d.Get("vpc_connector_name").(string)
 	input := &apprunner.CreateVpcConnectorInput{
-		VpcConnectorName: aws.String(vpcConnectorName),
-		Subnets:          subnets,
-		SecurityGroups:   securityGroups,
+		SecurityGroups:   flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
+		Subnets:          flex.ExpandStringValueSet(d.Get(names.AttrSubnets).(*schema.Set)),
+		Tags:             getTagsIn(ctx),
+		VpcConnectorName: aws.String(name),
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	output, err := conn.CreateVpcConnectorWithContext(ctx, input)
+	output, err := conn.CreateVpcConnector(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating App Runner vpc (%s): %w", vpcConnectorName, err))
+		return sdkdiag.AppendErrorf(diags, "creating App Runner VPC Connector (%s): %s", name, err)
 	}
 
-	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating App Runner vpc (%s): empty output", vpcConnectorName))
+	d.SetId(aws.ToString(output.VpcConnector.VpcConnectorArn))
+
+	if _, err := waitVPCConnectorCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for App Runner VPC Connector (%s) create: %s", d.Id(), err)
 	}
 
-	d.SetId(aws.StringValue(output.VpcConnector.VpcConnectorArn))
-
-	if err := waitVPCConnectorActive(ctx, conn, d.Id()); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for creating App Runner vpc (%s) creation: %w", d.Id(), err))
-	}
-
-	return resourceVPCConnectorRead(ctx, d, meta)
+	return append(diags, resourceVPCConnectorRead(ctx, d, meta)...)
 }
 
 func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
 
-	input := &apprunner.DescribeVpcConnectorInput{
-		VpcConnectorArn: aws.String(d.Id()),
+	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
+
+	vpcConnector, err := findVPCConnectorByARN(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] App Runner VPC Connector (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
-
-	output, err := conn.DescribeVpcConnectorWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading App Runner vpc connector (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading App Runner VPC Connector (%s): %s", d.Id(), err)
 	}
 
-	if output == nil || output.VpcConnector == nil {
-		return diag.FromErr(fmt.Errorf("error reading App Runner vpc connector (%s): empty output", d.Id()))
-	}
-
-	if aws.StringValue(output.VpcConnector.Status) == apprunner.VpcConnectorStatusInactive {
-		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error reading App Runner vpc connector (%s): %s after creation", d.Id(), aws.StringValue(output.VpcConnector.Status)))
-		}
-		log.Printf("[WARN] App Runner vpc connector (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	vpcConnector := output.VpcConnector
-	arn := aws.StringValue(vpcConnector.VpcConnectorArn)
-
+	d.Set(names.AttrARN, vpcConnector.VpcConnectorArn)
+	d.Set(names.AttrSecurityGroups, vpcConnector.SecurityGroups)
+	d.Set(names.AttrStatus, vpcConnector.Status)
+	d.Set(names.AttrSubnets, vpcConnector.Subnets)
 	d.Set("vpc_connector_name", vpcConnector.VpcConnectorName)
 	d.Set("vpc_connector_revision", vpcConnector.VpcConnectorRevision)
-	d.Set("arn", vpcConnector.VpcConnectorArn)
-	d.Set("status", vpcConnector.Status)
 
-	var subnets []string
-	for _, sn := range vpcConnector.Subnets {
-		subnets = append(subnets, aws.StringValue(sn))
-	}
-	if err := d.Set("subnets", subnets); err != nil {
-		return diag.FromErr(fmt.Errorf("Error saving Subnet IDs to state for App Runner vpc connector (%s): %s", d.Id(), err))
-	}
+	return diags
+}
 
-	var securityGroups []string
-	for _, sn := range vpcConnector.SecurityGroups {
-		securityGroups = append(securityGroups, aws.StringValue(sn))
-	}
-	if err := d.Set("security_groups", securityGroups); err != nil {
-		return diag.FromErr(fmt.Errorf("Error saving securityGroup IDs to state for App Runner vpc connector (%s): %s", d.Id(), err))
-	}
-
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return diag.Errorf("error listing tags for App Runner vpc connector (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	return nil
+func resourceVPCConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// Tags only.
+	return resourceVPCConnectorRead(ctx, d, meta)
 }
 
 func resourceVPCConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	var diags diag.Diagnostics
 
-	input := &apprunner.DeleteVpcConnectorInput{
+	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
+
+	log.Printf("[DEBUG] Deleting App Runner VPC Connector: %s", d.Id())
+	_, err := conn.DeleteVpcConnector(ctx, &apprunner.DeleteVpcConnectorInput{
 		VpcConnectorArn: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteVpcConnectorWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting App Runner vpc connector (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "deleting App Runner VPC Connector (%s): %s", d.Id(), err)
 	}
 
-	if err := waitVPCConnectorInactive(ctx, conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
-			return nil
+	if _, err := waitVPCConnectorDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for App Runner VPC Connector (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findVPCConnectorByARN(ctx context.Context, conn *apprunner.Client, arn string) (*types.VpcConnector, error) {
+	input := &apprunner.DescribeVpcConnectorInput{
+		VpcConnectorArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeVpcConnector(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.VpcConnector == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if status := output.VpcConnector.Status; status == types.VpcConnectorStatusInactive {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	return output.VpcConnector, nil
+}
+
+func statusVPCConnector(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findVPCConnectorByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		return diag.FromErr(fmt.Errorf("error waiting for App Runner vpc connector (%s) deletion: %w", d.Id(), err))
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitVPCConnectorCreated(ctx context.Context, conn *apprunner.Client, arn string) (*types.VpcConnector, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Target:  enum.Slice(types.VpcConnectorStatusActive),
+		Refresh: statusVPCConnector(ctx, conn, arn),
+		Timeout: timeout,
 	}
 
-	return nil
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.VpcConnector); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCConnectorDeleted(ctx context.Context, conn *apprunner.Client, arn string) (*types.VpcConnector, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.VpcConnectorStatusActive),
+		Target:  []string{},
+		Refresh: statusVPCConnector(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.VpcConnector); ok {
+		return output, err
+	}
+
+	return nil, err
 }

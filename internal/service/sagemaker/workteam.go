@@ -1,40 +1,48 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sagemaker_workteam", name="Workteam")
+// @Tags(identifierAttribute="arn")
 func ResourceWorkteam() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWorkteamCreate,
-		Read:   resourceWorkteamRead,
-		Update: resourceWorkteamUpdate,
-		Delete: resourceWorkteamDelete,
+		CreateWithoutTimeout: resourceWorkteamCreate,
+		ReadWithoutTimeout:   resourceWorkteamRead,
+		UpdateWithoutTimeout: resourceWorkteamUpdate,
+		DeleteWithoutTimeout: resourceWorkteamDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 200),
@@ -52,7 +60,7 @@ func ResourceWorkteam() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"client_id": {
+									names.AttrClientID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -103,12 +111,56 @@ func ResourceWorkteam() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
+			"worker_access_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"s3_presign": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"iam_policy_constraints": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"source_ip": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.EnabledOrDisabled_Values(), false),
+													ExactlyOneOf: []string{"worker_access_configuration.0.s3_presign.0.iam_policy_constraints.0.source_ip", "worker_access_configuration.0.s3_presign.0.iam_policy_constraints.0.vpc_source_ip"},
+												},
+												"vpc_source_ip": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.EnabledOrDisabled_Values(), false),
+													ExactlyOneOf: []string{"worker_access_configuration.0.s3_presign.0.iam_policy_constraints.0.source_ip", "worker_access_configuration.0.s3_presign.0.iam_policy_constraints.0.vpc_source_ip"},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"subdomain": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"workforce_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -120,7 +172,7 @@ func ResourceWorkteam() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
 		},
@@ -129,145 +181,129 @@ func ResourceWorkteam() *schema.Resource {
 	}
 }
 
-func resourceWorkteamCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("workteam_name").(string)
 	input := &sagemaker.CreateWorkteamInput{
 		WorkteamName:      aws.String(name),
 		WorkforceName:     aws.String(d.Get("workforce_name").(string)),
-		Description:       aws.String(d.Get("description").(string)),
+		Description:       aws.String(d.Get(names.AttrDescription).(string)),
 		MemberDefinitions: expandWorkteamMemberDefinition(d.Get("member_definition").([]interface{})),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("notification_configuration"); ok {
 		input.NotificationConfiguration = expandWorkteamNotificationConfiguration(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+	if v, ok := d.GetOk("worker_access_configuration"); ok {
+		input.WorkerAccessConfiguration = expandWorkerAccessConfiguration(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Updating SageMaker Workteam: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
-		return conn.CreateWorkteam(input)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+		return conn.CreateWorkteamWithContext(ctx, input)
 	}, "ValidationException")
 
 	if err != nil {
-		return fmt.Errorf("creating SageMaker Workteam (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker Workteam (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceWorkteamRead(d, meta)
+	return append(diags, resourceWorkteamRead(ctx, d, meta)...)
 }
 
-func resourceWorkteamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceWorkteamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	workteam, err := FindWorkteamByName(conn, d.Id())
+	workteam, err := FindWorkteamByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SageMaker Workteam (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading SageMaker Workteam (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker Workteam (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(workteam.WorkteamArn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("subdomain", workteam.SubDomain)
-	d.Set("description", workteam.Description)
+	d.Set(names.AttrDescription, workteam.Description)
 	d.Set("workteam_name", workteam.WorkteamName)
 
 	if err := d.Set("member_definition", flattenWorkteamMemberDefinition(workteam.MemberDefinitions)); err != nil {
-		return fmt.Errorf("setting member_definition: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting member_definition: %s", err)
 	}
 
 	if err := d.Set("notification_configuration", flattenWorkteamNotificationConfiguration(workteam.NotificationConfiguration)); err != nil {
-		return fmt.Errorf("setting notification_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting notification_configuration: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("listing tags for SageMaker Workteam (%s): %w", d.Id(), err)
+	if err := d.Set("worker_access_configuration", flattenWorkerAccessConfiguration(workteam.WorkerAccessConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting worker_access_configuration: %s", err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceWorkteamUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceWorkteamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &sagemaker.UpdateWorkteamInput{
 			WorkteamName:      aws.String(d.Id()),
 			MemberDefinitions: expandWorkteamMemberDefinition(d.Get("member_definition").([]interface{})),
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("notification_configuration") {
 			input.NotificationConfiguration = expandWorkteamNotificationConfiguration(d.Get("notification_configuration").([]interface{}))
 		}
 
+		if d.HasChange("worker_access_configuration") {
+			input.WorkerAccessConfiguration = expandWorkerAccessConfiguration(d.Get("worker_access_configuration").([]interface{}))
+		}
+
 		log.Printf("[DEBUG] Updating SageMaker Workteam: %s", input)
-		_, err := conn.UpdateWorkteam(input)
+		_, err := conn.UpdateWorkteamWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("updating SageMaker Workteam (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker Workteam (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating SageMaker Workteam (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return resourceWorkteamRead(d, meta)
+	return append(diags, resourceWorkteamRead(ctx, d, meta)...)
 }
 
-func resourceWorkteamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceWorkteamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting SageMaker Workteam: %s", d.Id())
-	_, err := conn.DeleteWorkteam(&sagemaker.DeleteWorkteamInput{
+	_, err := conn.DeleteWorkteamWithContext(ctx, &sagemaker.DeleteWorkteamInput{
 		WorkteamName: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrMessageContains(err, "ValidationException", "The work team") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting SageMaker Workteam (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Workteam (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandWorkteamMemberDefinition(l []interface{}) []*sagemaker.MemberDefinition {
@@ -323,7 +359,7 @@ func expandWorkteamCognitoMemberDefinition(l []interface{}) *sagemaker.CognitoMe
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.CognitoMemberDefinition{
-		ClientId:  aws.String(m["client_id"].(string)),
+		ClientId:  aws.String(m[names.AttrClientID].(string)),
 		UserPool:  aws.String(m["user_pool"].(string)),
 		UserGroup: aws.String(m["user_group"].(string)),
 	}
@@ -337,9 +373,9 @@ func flattenWorkteamCognitoMemberDefinition(config *sagemaker.CognitoMemberDefin
 	}
 
 	m := map[string]interface{}{
-		"client_id":  aws.StringValue(config.ClientId),
-		"user_pool":  aws.StringValue(config.UserPool),
-		"user_group": aws.StringValue(config.UserGroup),
+		names.AttrClientID: aws.StringValue(config.ClientId),
+		"user_pool":        aws.StringValue(config.UserPool),
+		"user_group":       aws.StringValue(config.UserGroup),
 	}
 
 	return []map[string]interface{}{m}
@@ -396,6 +432,99 @@ func flattenWorkteamNotificationConfiguration(config *sagemaker.NotificationConf
 
 	m := map[string]interface{}{
 		"notification_topic_arn": aws.StringValue(config.NotificationTopicArn),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandWorkerAccessConfiguration(l []interface{}) *sagemaker.WorkerAccessConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.WorkerAccessConfiguration{}
+
+	if v, ok := m["s3_presign"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		config.S3Presign = expandS3Presign(v)
+	} else {
+		return nil
+	}
+
+	return config
+}
+
+func flattenWorkerAccessConfiguration(config *sagemaker.WorkerAccessConfiguration) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"s3_presign": flattenS3Presign(config.S3Presign),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandS3Presign(l []interface{}) *sagemaker.S3Presign {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.S3Presign{}
+
+	if v, ok := m["iam_policy_constraints"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		config.IamPolicyConstraints = expandIAMPolicyConstraints(v)
+	} else {
+		return nil
+	}
+
+	return config
+}
+
+func flattenS3Presign(config *sagemaker.S3Presign) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"iam_policy_constraints": flattenIAMPolicyConstraints(config.IamPolicyConstraints),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandIAMPolicyConstraints(l []interface{}) *sagemaker.IamPolicyConstraints {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.IamPolicyConstraints{}
+
+	if v, ok := m["source_ip"].(string); ok && v != "" {
+		config.SourceIp = aws.String(v)
+	}
+
+	if v, ok := m["vpc_source_ip"].(string); ok && v != "" {
+		config.VpcSourceIp = aws.String(v)
+	}
+
+	return config
+}
+
+func flattenIAMPolicyConstraints(config *sagemaker.IamPolicyConstraints) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"source_ip":     aws.StringValue(config.SourceIp),
+		"vpc_source_ip": aws.StringValue(config.VpcSourceIp),
 	}
 
 	return []map[string]interface{}{m}

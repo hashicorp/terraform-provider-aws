@@ -1,7 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -9,21 +13,26 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_opsworks_instance")
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceInstanceCreate,
-		Read:   resourceInstanceRead,
-		Update: resourceInstanceUpdate,
-		Delete: resourceInstanceDelete,
+		CreateWithoutTimeout: resourceInstanceCreate,
+		ReadWithoutTimeout:   resourceInstanceRead,
+		UpdateWithoutTimeout: resourceInstanceUpdate,
+		DeleteWithoutTimeout: resourceInstanceDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceInstanceImport,
+			StateContext: resourceInstanceImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -59,14 +68,14 @@ func ResourceInstance() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(opsworks.AutoScalingType_Values(), false),
 			},
 
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -133,7 +142,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -219,7 +228,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -248,7 +257,7 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.StringInSlice([]string{
@@ -257,13 +266,13 @@ func ResourceInstance() *schema.Resource {
 				}, false),
 			},
 
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -297,41 +306,41 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
 							ForceNew: true,
 						},
 
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
 
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
 
-						"snapshot_id": {
+						names.AttrSnapshotID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
 
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
 
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -342,8 +351,8 @@ func ResourceInstance() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -354,12 +363,12 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -368,8 +377,8 @@ func ResourceInstance() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -388,28 +397,28 @@ func ResourceInstance() *schema.Resource {
 					// Termination flag on the block device mapping entry for the root
 					// device volume." - bit.ly/ec2bdmap
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
 							ForceNew: true,
 						},
 
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
 
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
 
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -449,8 +458,9 @@ func resourceInstanceValidate(d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	req := &opsworks.DescribeInstancesInput{
 		InstanceIds: []*string{
@@ -460,23 +470,23 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Reading OpsWorks instance: %s", d.Id())
 
-	resp, err := conn.DescribeInstances(req)
+	resp, err := conn.DescribeInstancesWithContext(ctx, req)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] OpsWorks instance %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Opsworks intance (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Instance (%s): %s", d.Id(), err)
 	}
 
 	// If nothing was found, then return no state
 	if len(resp.Instances) == 0 || resp.Instances[0] == nil || resp.Instances[0].InstanceId == nil {
 		log.Printf("[WARN] OpsWorks instance %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	instance := resp.Instances[0]
@@ -486,8 +496,8 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ami_id", instance.AmiId)
 	d.Set("architecture", instance.Architecture)
 	d.Set("auto_scaling_type", instance.AutoScalingType)
-	d.Set("availability_zone", instance.AvailabilityZone)
-	d.Set("created_at", instance.CreatedAt)
+	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
+	d.Set(names.AttrCreatedAt, instance.CreatedAt)
 	d.Set("ebs_optimized", instance.EbsOptimized)
 	d.Set("ec2_instance_id", instance.Ec2InstanceId)
 	d.Set("ecs_cluster_arn", instance.EcsClusterArn)
@@ -496,7 +506,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("infrastructure_class", instance.InfrastructureClass)
 	d.Set("install_updates_on_boot", instance.InstallUpdatesOnBoot)
 	d.Set("instance_profile_arn", instance.InstanceProfileArn)
-	d.Set("instance_type", instance.InstanceType)
+	d.Set(names.AttrInstanceType, instance.InstanceType)
 	d.Set("last_service_error_id", instance.LastServiceErrorId)
 	var layerIds []string
 	for _, v := range instance.LayerIds {
@@ -504,10 +514,10 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	layerIds, err = sortListBasedonTFFile(layerIds, d)
 	if err != nil {
-		return fmt.Errorf("Error sorting layer_ids attribute: %#v", err)
+		return sdkdiag.AppendErrorf(diags, "sorting layer_ids attribute: %#v", err)
 	}
 	if err := d.Set("layer_ids", layerIds); err != nil {
-		return fmt.Errorf("Error setting layer_ids attribute: %#v, error: %#v", layerIds, err)
+		return sdkdiag.AppendErrorf(diags, "setting layer_ids attribute: %#v, error: %#v", layerIds, err)
 	}
 	d.Set("os", instance.Os)
 	d.Set("platform", instance.Platform)
@@ -526,8 +536,8 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ssh_host_rsa_key_fingerprint", instance.SshHostRsaKeyFingerprint)
 	d.Set("ssh_key_name", instance.SshKeyName)
 	d.Set("stack_id", instance.StackId)
-	d.Set("status", instance.Status)
-	d.Set("subnet_id", instance.SubnetId)
+	d.Set(names.AttrStatus, instance.Status)
+	d.Set(names.AttrSubnetID, instance.SubnetId)
 	d.Set("tenancy", instance.Tenancy)
 	d.Set("virtualization_type", instance.VirtualizationType)
 
@@ -535,14 +545,14 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	ibds := readBlockDevices(instance)
 
 	if err := d.Set("ebs_block_device", ibds["ebs"]); err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Instance (%s): setting ebs_block_device: %s", d.Id(), err)
 	}
 	if err := d.Set("ephemeral_block_device", ibds["ephemeral"]); err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Instance (%s): setting ephemeral_block_device: %s", d.Id(), err)
 	}
 	if ibds["root"] != nil {
 		if err := d.Set("root_block_device", []interface{}{ibds["root"]}); err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "reading OpsWorks Instance (%s): setting root_block_device: %s", d.Id(), err)
 		}
 	} else {
 		d.Set("root_block_device", []interface{}{})
@@ -553,16 +563,19 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	for _, sg := range instance.SecurityGroupIds {
 		sgs = append(sgs, *sg)
 	}
-	err1 := d.Set("security_group_ids", sgs)
-	return err1
+	if err := d.Set(names.AttrSecurityGroupIDs, sgs); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Instance (%s): setting security_group_ids: %s", d.Id(), err)
+	}
+	return diags
 }
 
-func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	err := resourceInstanceValidate(d)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Instance: %s", err)
 	}
 
 	req := &opsworks.CreateInstanceInput{
@@ -570,7 +583,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		Architecture:         aws.String(d.Get("architecture").(string)),
 		EbsOptimized:         aws.Bool(d.Get("ebs_optimized").(bool)),
 		InstallUpdatesOnBoot: aws.Bool(d.Get("install_updates_on_boot").(bool)),
-		InstanceType:         aws.String(d.Get("instance_type").(string)),
+		InstanceType:         aws.String(d.Get(names.AttrInstanceType).(string)),
 		LayerIds:             flex.ExpandStringList(d.Get("layer_ids").([]interface{})),
 		StackId:              aws.String(d.Get("stack_id").(string)),
 	}
@@ -584,7 +597,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		req.AutoScalingType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		req.AvailabilityZone = aws.String(v.(string))
 	}
 
@@ -604,7 +617,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		req.SshKeyName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("subnet_id"); ok {
+	if v, ok := d.GetOk(names.AttrSubnetID); ok {
 		req.SubnetId = aws.String(v.(string))
 	}
 
@@ -623,27 +636,27 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			ebs := &opsworks.EbsBlockDevice{
-				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
+				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
-			if v, ok := bd["snapshot_id"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrSnapshotID].(string); ok && v != "" {
 				ebs.SnapshotId = aws.String(v)
 			}
 
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
+			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
 			}
 
-			if v, ok := bd["iops"].(int); ok && v > 0 {
+			if v, ok := bd[names.AttrIOPS].(int); ok && v > 0 {
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
 			blockDevices = append(blockDevices, &opsworks.BlockDeviceMapping{
-				DeviceName: aws.String(bd["device_name"].(string)),
+				DeviceName: aws.String(bd[names.AttrDeviceName].(string)),
 				Ebs:        ebs,
 			})
 		}
@@ -654,8 +667,8 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			blockDevices = append(blockDevices, &opsworks.BlockDeviceMapping{
-				DeviceName:  aws.String(bd["device_name"].(string)),
-				VirtualName: aws.String(bd["virtual_name"].(string)),
+				DeviceName:  aws.String(bd[names.AttrDeviceName].(string)),
+				VirtualName: aws.String(bd[names.AttrVirtualName].(string)),
 			})
 		}
 	}
@@ -663,23 +676,23 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("root_block_device"); ok {
 		vL := v.(*schema.Set).List()
 		if len(vL) > 1 {
-			return fmt.Errorf("Cannot specify more than one root_block_device.")
+			return sdkdiag.AppendErrorf(diags, "Cannot specify more than one root_block_device.")
 		}
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			ebs := &opsworks.EbsBlockDevice{
-				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
+				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
+			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
 			}
 
-			if v, ok := bd["iops"].(int); ok && v > 0 {
+			if v, ok := bd[names.AttrIOPS].(int); ok && v > 0 {
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
@@ -698,34 +711,35 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	var resp *opsworks.CreateInstanceOutput
 
-	resp, err = conn.CreateInstance(req)
+	resp, err = conn.CreateInstanceWithContext(ctx, req)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating OpsWorks Instance: %s", err)
 	}
 
 	if resp.InstanceId == nil {
-		return fmt.Errorf("Error launching instance: no instance returned in response")
+		return sdkdiag.AppendErrorf(diags, "creating OpsWorks Instance: no instance returned")
 	}
 
 	instanceId := aws.StringValue(resp.InstanceId)
 	d.SetId(instanceId)
 
-	if v, ok := d.GetOk("state"); ok && v.(string) == instanceStatusRunning {
-		err := startInstance(d, meta, true, d.Timeout(schema.TimeoutCreate))
+	if v, ok := d.GetOk(names.AttrState); ok && v.(string) == instanceStatusRunning {
+		err := startInstance(ctx, d, meta, true, d.Timeout(schema.TimeoutCreate))
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "creating OpsWorks Instance: %s", err)
 		}
 	}
 
-	return resourceInstanceRead(d, meta)
+	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
-func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	err := resourceInstanceValidate(d)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating OpsWorks Instance (%s): %s", d.Id(), err)
 	}
 
 	req := &opsworks.UpdateInstanceInput{
@@ -748,7 +762,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		req.Hostname = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("instance_type"); ok {
+	if v, ok := d.GetOk(names.AttrInstanceType); ok {
 		req.InstanceType = aws.String(v.(string))
 	}
 
@@ -766,48 +780,49 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Updating OpsWorks instance: %s", d.Id())
 
-	_, err = conn.UpdateInstance(req)
+	_, err = conn.UpdateInstanceWithContext(ctx, req)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating OpsWorks Instance (%s): %s", d.Id(), err)
 	}
 
 	var status string
 
-	if v, ok := d.GetOk("status"); ok {
+	if v, ok := d.GetOk(names.AttrStatus); ok {
 		status = v.(string)
 	} else {
 		status = "stopped"
 	}
 
-	if v, ok := d.GetOk("state"); ok {
+	if v, ok := d.GetOk(names.AttrState); ok {
 		state := v.(string)
 		if state == instanceStatusRunning {
 			if status == instanceStatusStopped || status == instanceStatusStopping || status == instanceStatusShuttingDown {
-				err := startInstance(d, meta, false, d.Timeout(schema.TimeoutUpdate))
+				err := startInstance(ctx, d, meta, false, d.Timeout(schema.TimeoutUpdate))
 				if err != nil {
-					return err
+					return sdkdiag.AppendErrorf(diags, "updating OpsWorks Instance (%s): %s", d.Id(), err)
 				}
 			}
 		} else {
 			if status != instanceStatusStopped && status != instanceStatusStopping && status != instanceStatusShuttingDown {
-				err := stopInstance(d, meta, d.Timeout(schema.TimeoutUpdate))
+				err := stopInstance(ctx, d, meta, d.Timeout(schema.TimeoutUpdate))
 				if err != nil {
-					return err
+					return sdkdiag.AppendErrorf(diags, "updating OpsWorks Instance (%s): %s", d.Id(), err)
 				}
 			}
 		}
 	}
 
-	return resourceInstanceRead(d, meta)
+	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
-func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
-	if v, ok := d.GetOk("status"); ok && v.(string) != instanceStatusStopped {
-		err := stopInstance(d, meta, d.Timeout(schema.TimeoutDelete))
+	if v, ok := d.GetOk(names.AttrStatus); ok && v.(string) != instanceStatusStopped {
+		err := stopInstance(ctx, d, meta, d.Timeout(schema.TimeoutDelete))
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "deleting OpsWorks instance (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -819,25 +834,24 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Deleting OpsWorks instance: %s", d.Id())
 
-	_, err := conn.DeleteInstance(req)
+	_, err := conn.DeleteInstanceWithContext(ctx, req)
 
 	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting OpsWorks instance (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting OpsWorks instance (%s): %s", d.Id(), err)
 	}
 
-	if err := waitInstanceDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for OpsWorks instance (%s) to be deleted: %w", d.Id(), err)
+	if err := waitInstanceDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting OpsWorks instance (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceInstanceImport(
-	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceInstanceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	// Neither delete_eip nor delete_ebs can be fetched
 	// from any API call, so we need to default to the values
 	// we set in the schema by default
@@ -846,8 +860,8 @@ func resourceInstanceImport(
 	return []*schema.ResourceData{d}, nil
 }
 
-func startInstance(d *schema.ResourceData, meta interface{}, wait bool, timeout time.Duration) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+func startInstance(ctx context.Context, d *schema.ResourceData, meta interface{}, wait bool, timeout time.Duration) error {
+	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	req := &opsworks.StartInstanceInput{
 		InstanceId: aws.String(d.Id()),
@@ -855,25 +869,25 @@ func startInstance(d *schema.ResourceData, meta interface{}, wait bool, timeout 
 
 	log.Printf("[DEBUG] Starting OpsWorks instance: %s", d.Id())
 
-	_, err := conn.StartInstance(req)
+	_, err := conn.StartInstanceWithContext(ctx, req)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("starting instance: %w", err)
 	}
 
 	if wait {
 		log.Printf("[DEBUG] Waiting for OpsWorks instance (%s) to start", d.Id())
 
-		if err := waitInstanceStarted(conn, d.Id(), timeout); err != nil {
-			return fmt.Errorf("error waiting for OpsWorks instance (%s) to start: %w", d.Id(), err)
+		if err := waitInstanceStarted(ctx, conn, d.Id(), timeout); err != nil {
+			return fmt.Errorf("starting instance: waiting for completion: %w", err)
 		}
 	}
 
 	return nil
 }
 
-func stopInstance(d *schema.ResourceData, meta interface{}, timeout time.Duration) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+func stopInstance(ctx context.Context, d *schema.ResourceData, meta interface{}, timeout time.Duration) error {
+	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	req := &opsworks.StopInstanceInput{
 		InstanceId: aws.String(d.Id()),
@@ -881,23 +895,87 @@ func stopInstance(d *schema.ResourceData, meta interface{}, timeout time.Duratio
 
 	log.Printf("[DEBUG] Stopping OpsWorks instance: %s", d.Id())
 
-	_, err := conn.StopInstance(req)
+	_, err := conn.StopInstanceWithContext(ctx, req)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("stopping instance: %w", err)
 	}
 
 	log.Printf("[DEBUG] Waiting for OpsWorks instance (%s) to become stopped", d.Id())
 
-	if err := waitInstanceStopped(conn, d.Id(), timeout); err != nil {
-		return fmt.Errorf("error waiting for OpsWorks instance (%s) to become stopped: %w", d.Id(), err)
+	if err := waitInstanceStopped(ctx, conn, d.Id(), timeout); err != nil {
+		return fmt.Errorf("stopping instance: waiting for completion: %w", err)
 	}
 
 	return nil
 }
 
-func readBlockDevices(instance *opsworks.Instance) map[string]interface{} {
+func waitInstanceDeleted(ctx context.Context, conn *opsworks.OpsWorks, instanceId string) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{instanceStatusStopped, instanceStatusTerminating, instanceStatusTerminated},
+		Target:     []string{},
+		Refresh:    instanceStatus(ctx, conn, instanceId),
+		Timeout:    2 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
 
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
+
+func waitInstanceStarted(ctx context.Context, conn *opsworks.OpsWorks, instanceId string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{instanceStatusRequested, instanceStatusPending, instanceStatusBooting, instanceStatusRunningSetup},
+		Target:     []string{instanceStatusOnline},
+		Refresh:    instanceStatus(ctx, conn, instanceId),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
+
+func waitInstanceStopped(ctx context.Context, conn *opsworks.OpsWorks, instanceId string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{instanceStatusStopping, instanceStatusTerminating, instanceStatusShuttingDown, instanceStatusTerminated},
+		Target:     []string{instanceStatusStopped},
+		Refresh:    instanceStatus(ctx, conn, instanceId),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
+
+func instanceStatus(ctx context.Context, conn *opsworks.OpsWorks, instanceID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := conn.DescribeInstancesWithContext(ctx, &opsworks.DescribeInstancesInput{
+			InstanceIds: []*string{aws.String(instanceID)},
+		})
+
+		if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if resp == nil || len(resp.Instances) == 0 || resp.Instances[0] == nil {
+			// Sometimes AWS just has consistency issues and doesn't see
+			// our instance yet. Return an empty state.
+			return nil, "", nil
+		}
+
+		i := resp.Instances[0]
+		return i, aws.StringValue(i.Status), nil
+	}
+}
+
+func readBlockDevices(instance *opsworks.Instance) map[string]interface{} {
 	blockDevices := make(map[string]interface{})
 	blockDevices["ebs"] = make([]map[string]interface{}, 0)
 	blockDevices["ephemeral"] = make([]map[string]interface{}, 0)
@@ -910,29 +988,29 @@ func readBlockDevices(instance *opsworks.Instance) map[string]interface{} {
 	for _, bdm := range instance.BlockDeviceMappings {
 		bd := make(map[string]interface{})
 		if bdm.Ebs != nil && bdm.Ebs.DeleteOnTermination != nil {
-			bd["delete_on_termination"] = aws.BoolValue(bdm.Ebs.DeleteOnTermination)
+			bd[names.AttrDeleteOnTermination] = aws.BoolValue(bdm.Ebs.DeleteOnTermination)
 		}
 		if bdm.Ebs != nil && bdm.Ebs.VolumeSize != nil {
-			bd["volume_size"] = aws.Int64Value(bdm.Ebs.VolumeSize)
+			bd[names.AttrVolumeSize] = aws.Int64Value(bdm.Ebs.VolumeSize)
 		}
 		if bdm.Ebs != nil && bdm.Ebs.VolumeType != nil {
-			bd["volume_type"] = aws.StringValue(bdm.Ebs.VolumeType)
+			bd[names.AttrVolumeType] = aws.StringValue(bdm.Ebs.VolumeType)
 		}
 		if bdm.Ebs != nil && bdm.Ebs.Iops != nil {
-			bd["iops"] = aws.Int64Value(bdm.Ebs.Iops)
+			bd[names.AttrIOPS] = aws.Int64Value(bdm.Ebs.Iops)
 		}
 		if aws.StringValue(bdm.DeviceName) == "ROOT_DEVICE" {
 			blockDevices["root"] = bd
 		} else {
 			if bdm.DeviceName != nil {
-				bd["device_name"] = aws.StringValue(bdm.DeviceName)
+				bd[names.AttrDeviceName] = aws.StringValue(bdm.DeviceName)
 			}
 			if bdm.VirtualName != nil {
-				bd["virtual_name"] = aws.StringValue(bdm.VirtualName)
+				bd[names.AttrVirtualName] = aws.StringValue(bdm.VirtualName)
 				blockDevices["ephemeral"] = append(blockDevices["ephemeral"].([]map[string]interface{}), bd)
 			} else {
 				if bdm.Ebs != nil && bdm.Ebs.SnapshotId != nil {
-					bd["snapshot_id"] = aws.StringValue(bdm.Ebs.SnapshotId)
+					bd[names.AttrSnapshotID] = aws.StringValue(bdm.Ebs.SnapshotId)
 				}
 				blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
 			}

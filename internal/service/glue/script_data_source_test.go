@@ -1,26 +1,30 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue_test
 
 import (
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGlueScriptDataSource_Language_python(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_glue_script.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScriptDataSourceConfig_python(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "python_script", regexp.MustCompile(`from awsglue\.job import Job`)),
+					resource.TestMatchResourceAttr(dataSourceName, "python_script", regexache.MustCompile(`from awsglue\.job import Job`)),
 				),
 			},
 		},
@@ -28,17 +32,18 @@ func TestAccGlueScriptDataSource_Language_python(t *testing.T) {
 }
 
 func TestAccGlueScriptDataSource_Language_scala(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_glue_script.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScriptDataSourceConfig_scala(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "scala_code", regexp.MustCompile(`import com\.amazonaws\.services\.glue\.util\.Job`)),
+					resource.TestMatchResourceAttr(dataSourceName, "scala_code", regexache.MustCompile(`import com\.amazonaws\.services\.glue\.util\.Job`)),
 				),
 			},
 		},

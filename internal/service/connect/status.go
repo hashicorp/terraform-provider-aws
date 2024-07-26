@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -6,16 +9,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-func statusInstance(ctx context.Context, conn *connect.Connect, instanceId string) resource.StateRefreshFunc {
+func statusPhoneNumber(ctx context.Context, conn *connect.Connect, phoneNumberId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &connect.DescribeInstanceInput{
-			InstanceId: aws.String(instanceId),
+		input := &connect.DescribePhoneNumberInput{
+			PhoneNumberId: aws.String(phoneNumberId),
 		}
 
-		output, err := conn.DescribeInstanceWithContext(ctx, input)
+		output, err := conn.DescribePhoneNumberWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 			return output, connect.ErrCodeResourceNotFoundException, nil
@@ -25,11 +28,11 @@ func statusInstance(ctx context.Context, conn *connect.Connect, instanceId strin
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Instance.InstanceStatus), nil
+		return output, aws.StringValue(output.ClaimedPhoneNumberSummary.PhoneNumberStatus.Status), nil
 	}
 }
 
-func statusVocabulary(ctx context.Context, conn *connect.Connect, instanceId, vocabularyId string) resource.StateRefreshFunc {
+func statusVocabulary(ctx context.Context, conn *connect.Connect, instanceId, vocabularyId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &connect.DescribeVocabularyInput{
 			InstanceId:   aws.String(instanceId),

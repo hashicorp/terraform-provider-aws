@@ -1,10 +1,18 @@
-package directconnect
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package directconnect_test
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 )
 
 func TestValidConnectionBandWidth(t *testing.T) {
+	t.Parallel()
+
 	validBandwidths := []string{
 		"1Gbps",
 		"2Gbps",
@@ -19,7 +27,7 @@ func TestValidConnectionBandWidth(t *testing.T) {
 		"500Mbps",
 	}
 	for _, v := range validBandwidths {
-		_, errors := validConnectionBandWidth()(v, "bandwidth")
+		_, errors := tfdirectconnect.ValidConnectionBandWidth()(v, "bandwidth")
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid bandwidth: %q", v, errors)
 		}
@@ -29,58 +37,14 @@ func TestValidConnectionBandWidth(t *testing.T) {
 		"1Tbps",
 		"10GBpS",
 		"42Mbps",
-		"0",
+		acctest.Ct0,
 		"???",
 		"a lot",
 	}
 	for _, v := range invalidBandwidths {
-		_, errors := validConnectionBandWidth()(v, "bandwidth")
+		_, errors := tfdirectconnect.ValidConnectionBandWidth()(v, "bandwidth")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid bandwidth", v)
-		}
-	}
-}
-
-func TestValidAmazonSideASN(t *testing.T) {
-	validAsns := []string{
-		"7224",
-		"9059",
-		"10124",
-		"17493",
-		"64512",
-		"64513",
-		"65533",
-		"65534",
-		"4200000000",
-		"4200000001",
-		"4294967293",
-		"4294967294",
-	}
-	for _, v := range validAsns {
-		_, errors := validAmazonSideASN(v, "amazon_side_asn")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid ASN: %q", v, errors)
-		}
-	}
-
-	invalidAsns := []string{
-		"1",
-		"ABCDEFG",
-		"",
-		"7225",
-		"9058",
-		"10125",
-		"17492",
-		"64511",
-		"65535",
-		"4199999999",
-		"4294967295",
-		"9999999999",
-	}
-	for _, v := range invalidAsns {
-		_, errors := validAmazonSideASN(v, "amazon_side_asn")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid ASN", v)
 		}
 	}
 }

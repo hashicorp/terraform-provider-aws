@@ -30,7 +30,7 @@ provider "aws" {
 }
 
 resource "aws_dynamodb_table" "example" {
-  provider         = "aws.main"
+  provider         = aws.main
   name             = "TestTable"
   hash_key         = "BrodoBaggins"
   billing_mode     = "PAY_PER_REQUEST"
@@ -48,7 +48,7 @@ resource "aws_dynamodb_table" "example" {
 }
 
 resource "aws_dynamodb_table_replica" "example" {
-  provider         = "aws.alt"
+  provider         = aws.alt
   global_table_arn = aws_dynamodb_table.example.arn
 
   tags = {
@@ -66,14 +66,14 @@ Required arguments:
 
 Optional arguments:
 
-* `kms_key_arn` - (Optional) ARN of the CMK that should be used for the AWS KMS encryption.
+* `kms_key_arn` - (Optional, Forces new resource) ARN of the CMK that should be used for the AWS KMS encryption. This argument should only be used if the key is different from the default KMS-managed DynamoDB key, `alias/aws/dynamodb`. **Note:** This attribute will _not_ be populated with the ARN of _default_ keys.
 * `point_in_time_recovery` - (Optional) Whether to enable Point In Time Recovery for the replica. Default is `false`.
 * `table_class_override` - (Optional, Forces new resource) Storage class of the table replica. Valid values are `STANDARD` and `STANDARD_INFREQUENT_ACCESS`. If not used, the table replica will use the same class as the global table.
 * `tags` - (Optional) Map of tags to populate on the created table. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the table replica.
 * `id` - Name of the table and region of the main global table joined with a semicolon (_e.g._, `TableName:us-east-1`).
@@ -81,7 +81,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
 * `update` - (Default `30m`)
@@ -89,10 +89,21 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DynamoDB table replicas can be imported using the `table-name:main-region`, _e.g._,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB table replicas using the `table-name:main-region`. For example:
 
 ~> **Note:** When importing, use the region where the initial or _main_ global table resides, _not_ the region of the replica.
 
+```terraform
+import {
+  to = aws_dynamodb_table_replica.example
+  id = "TestTable:us-west-2"
+}
 ```
-$ terraform import aws_dynamodb_table_replica.example TestTable:us-west-2
+
+Using `terraform import`, import DynamoDB table replicas using the `table-name:main-region`. For example:
+
+~> **Note:** When importing, use the region where the initial or _main_ global table resides, _not_ the region of the replica.
+
+```console
+% terraform import aws_dynamodb_table_replica.example TestTable:us-west-2
 ```

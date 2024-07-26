@@ -1,42 +1,45 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/wafv2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWAFV2WebACLAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAPIGatewayTypeEDGE(t)
-			testAccPreCheckScopeRegional(t)
+			testAccPreCheckScopeRegional(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLAssociationDestroy,
+		CheckDestroy:             testAccCheckWebACLAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLAssociationExists(resourceName),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "resource_arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/restapis/.*/stages/%s", rName))),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "web_acl_arn", "wafv2", regexp.MustCompile(fmt.Sprintf("regional/webacl/%s/.*", rName))),
+					testAccCheckWebACLAssociationExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrResourceARN, "apigateway", regexache.MustCompile(fmt.Sprintf("/restapis/.*/stages/%s", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "web_acl_arn", "wafv2", regexache.MustCompile(fmt.Sprintf("regional/webacl/%s/.*", rName))),
 				),
 			},
 			{
@@ -49,32 +52,25 @@ func TestAccWAFV2WebACLAssociation_basic(t *testing.T) {
 }
 
 func TestAccWAFV2WebACLAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAPIGatewayTypeEDGE(t)
-			testAccPreCheckScopeRegional(t)
+			testAccPreCheckScopeRegional(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLAssociationDestroy,
+		CheckDestroy:             testAccCheckWebACLAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfwafv2.ResourceWebACLAssociation(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				Config: testAccWebACLAssociationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, apigateway.ResourceStage(), "aws_api_gateway_stage.test"),
+					testAccCheckWebACLAssociationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafv2.ResourceWebACLAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,56 +78,42 @@ func TestAccWAFV2WebACLAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckWebACLAssociationDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_wafv2_web_acl_association" {
-			continue
+func testAccCheckWebACLAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_wafv2_web_acl_association" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
+
+			_, err := tfwafv2.FindWebACLByResourceARN(ctx, conn, rs.Primary.Attributes[names.AttrResourceARN])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("WAFv2 WebACL Association %s still exists", rs.Primary.ID)
 		}
 
-		_, resourceARN, err := tfwafv2.WebACLAssociationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
-
-		_, err = tfwafv2.FindWebACLByResourceARN(context.Background(), conn, resourceARN)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("WAFv2 WebACL Association %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckWebACLAssociationExists(n string) resource.TestCheckFunc {
+func testAccCheckWebACLAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAFv2 WebACL Association ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
 
-		_, resourceARN, err := tfwafv2.WebACLAssociationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
-
-		_, err = tfwafv2.FindWebACLByResourceARN(context.Background(), conn, resourceARN)
+		_, err := tfwafv2.FindWebACLByResourceARN(ctx, conn, rs.Primary.Attributes[names.AttrResourceARN])
 
 		return err
 	}

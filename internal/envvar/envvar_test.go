@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package envvar
 
 import (
@@ -10,7 +13,7 @@ import (
 func TestGetWithDefault(t *testing.T) {
 	envVar := "TESTENVVAR_GETWITHDEFAULT"
 
-	t.Run("missing", func(t *testing.T) {
+	t.Run("missing", func(t *testing.T) { //nolint:paralleltest
 		want := "default"
 
 		os.Unsetenv(envVar)
@@ -25,8 +28,7 @@ func TestGetWithDefault(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
 		want := "default"
 
-		os.Setenv(envVar, "")
-		defer os.Unsetenv(envVar)
+		t.Setenv(envVar, "")
 
 		got := GetWithDefault(envVar, want)
 
@@ -38,8 +40,7 @@ func TestGetWithDefault(t *testing.T) {
 	t.Run("not empty", func(t *testing.T) {
 		want := "notempty"
 
-		os.Setenv(envVar, want)
-		defer os.Unsetenv(envVar)
+		t.Setenv(envVar, want)
 
 		got := GetWithDefault(envVar, "default")
 
@@ -54,7 +55,7 @@ func TestRequireOneOf(t *testing.T) {
 	envVar2 := "TESTENVVAR_REQUIREONEOF2"
 	envVars := []string{envVar1, envVar2}
 
-	t.Run("missing", func(t *testing.T) {
+	t.Run("missing", func(t *testing.T) { //nolint:paralleltest
 		for _, envVar := range envVars {
 			os.Unsetenv(envVar)
 		}
@@ -67,9 +68,8 @@ func TestRequireOneOf(t *testing.T) {
 	})
 
 	t.Run("all empty", func(t *testing.T) {
-		os.Setenv(envVar1, "")
-		os.Setenv(envVar2, "")
-		defer unsetEnvVars(envVars)
+		t.Setenv(envVar1, "")
+		t.Setenv(envVar2, "")
 
 		_, _, err := RequireOneOf(envVars, "usage")
 
@@ -81,9 +81,8 @@ func TestRequireOneOf(t *testing.T) {
 	t.Run("some empty", func(t *testing.T) {
 		wantValue := "pickme"
 
-		os.Setenv(envVar1, "")
-		os.Setenv(envVar2, wantValue)
-		defer unsetEnvVars(envVars)
+		t.Setenv(envVar1, "")
+		t.Setenv(envVar2, wantValue)
 
 		gotName, gotValue, err := RequireOneOf(envVars, "usage")
 
@@ -103,9 +102,8 @@ func TestRequireOneOf(t *testing.T) {
 	t.Run("all not empty", func(t *testing.T) {
 		wantValue := "pickme"
 
-		os.Setenv(envVar1, wantValue)
-		os.Setenv(envVar2, "other")
-		defer unsetEnvVars(envVars)
+		t.Setenv(envVar1, wantValue)
+		t.Setenv(envVar2, "other")
 
 		gotName, gotValue, err := RequireOneOf(envVars, "usage")
 
@@ -126,7 +124,7 @@ func TestRequireOneOf(t *testing.T) {
 func TestRequire(t *testing.T) {
 	envVar := "TESTENVVAR_REQUIRE"
 
-	t.Run("missing", func(t *testing.T) {
+	t.Run("missing", func(t *testing.T) { //nolint:paralleltest
 		os.Unsetenv(envVar)
 
 		_, err := Require(envVar, "usage")
@@ -137,8 +135,7 @@ func TestRequire(t *testing.T) {
 	})
 
 	t.Run("empty", func(t *testing.T) {
-		os.Setenv(envVar, "")
-		defer os.Unsetenv(envVar)
+		t.Setenv(envVar, "")
 
 		_, err := Require(envVar, "usage")
 
@@ -150,8 +147,7 @@ func TestRequire(t *testing.T) {
 	t.Run("not empty", func(t *testing.T) {
 		want := "notempty"
 
-		os.Setenv(envVar, want)
-		defer os.Unsetenv(envVar)
+		t.Setenv(envVar, want)
 
 		got, err := Require(envVar, "usage")
 
@@ -170,7 +166,7 @@ func TestTestFailIfAllEmpty(t *testing.T) {
 	envVar2 := "TESTENVVAR_FAILIFALLEMPTY2"
 	envVars := []string{envVar1, envVar2}
 
-	t.Run("missing", func(t *testing.T) {
+	t.Run("missing", func(t *testing.T) { //nolint:paralleltest
 		defer testingifaceRecover()
 
 		for _, envVar := range envVars {
@@ -185,9 +181,8 @@ func TestTestFailIfAllEmpty(t *testing.T) {
 	t.Run("all empty", func(t *testing.T) {
 		defer testingifaceRecover()
 
-		os.Setenv(envVar1, "")
-		os.Setenv(envVar2, "")
-		defer unsetEnvVars(envVars)
+		t.Setenv(envVar1, "")
+		t.Setenv(envVar2, "")
 
 		FailIfAllEmpty(&testingiface.RuntimeT{}, envVars, "usage")
 
@@ -197,9 +192,8 @@ func TestTestFailIfAllEmpty(t *testing.T) {
 	t.Run("some empty", func(t *testing.T) {
 		wantValue := "pickme"
 
-		os.Setenv(envVar1, "")
-		os.Setenv(envVar2, wantValue)
-		defer unsetEnvVars(envVars)
+		t.Setenv(envVar1, "")
+		t.Setenv(envVar2, wantValue)
 
 		gotName, gotValue := FailIfAllEmpty(&testingiface.RuntimeT{}, envVars, "usage")
 
@@ -215,9 +209,8 @@ func TestTestFailIfAllEmpty(t *testing.T) {
 	t.Run("all not empty", func(t *testing.T) {
 		wantValue := "pickme"
 
-		os.Setenv(envVar1, wantValue)
-		os.Setenv(envVar2, "other")
-		defer unsetEnvVars(envVars)
+		t.Setenv(envVar1, wantValue)
+		t.Setenv(envVar2, "other")
 
 		gotName, gotValue := FailIfAllEmpty(&testingiface.RuntimeT{}, envVars, "usage")
 
@@ -234,7 +227,7 @@ func TestTestFailIfAllEmpty(t *testing.T) {
 func TestTestFailIfEmpty(t *testing.T) {
 	envVar := "TESTENVVAR_FAILIFEMPTY"
 
-	t.Run("missing", func(t *testing.T) {
+	t.Run("missing", func(t *testing.T) { //nolint:paralleltest
 		defer testingifaceRecover()
 
 		os.Unsetenv(envVar)
@@ -247,8 +240,7 @@ func TestTestFailIfEmpty(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
 		defer testingifaceRecover()
 
-		os.Setenv(envVar, "")
-		defer os.Unsetenv(envVar)
+		t.Setenv(envVar, "")
 
 		FailIfEmpty(&testingiface.RuntimeT{}, envVar, "usage")
 
@@ -258,8 +250,7 @@ func TestTestFailIfEmpty(t *testing.T) {
 	t.Run("not empty", func(t *testing.T) {
 		want := "notempty"
 
-		os.Setenv(envVar, want)
-		defer os.Unsetenv(envVar)
+		t.Setenv(envVar, want)
 
 		got := FailIfEmpty(&testingiface.RuntimeT{}, envVar, "usage")
 
@@ -272,7 +263,7 @@ func TestTestFailIfEmpty(t *testing.T) {
 func TestTestSkipIfEmpty(t *testing.T) {
 	envVar := "TESTENVVAR_SKIPIFEMPTY"
 
-	t.Run("missing", func(t *testing.T) {
+	t.Run("missing", func(t *testing.T) { //nolint:paralleltest
 		mockT := &testingiface.RuntimeT{}
 
 		os.Unsetenv(envVar)
@@ -287,8 +278,7 @@ func TestTestSkipIfEmpty(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
 		mockT := &testingiface.RuntimeT{}
 
-		os.Setenv(envVar, "")
-		defer os.Unsetenv(envVar)
+		t.Setenv(envVar, "")
 
 		SkipIfEmpty(mockT, envVar, "usage")
 
@@ -300,8 +290,7 @@ func TestTestSkipIfEmpty(t *testing.T) {
 	t.Run("not empty", func(t *testing.T) {
 		want := "notempty"
 
-		os.Setenv(envVar, want)
-		defer os.Unsetenv(envVar)
+		t.Setenv(envVar, want)
 
 		got := SkipIfEmpty(&testingiface.RuntimeT{}, envVar, "usage")
 
@@ -317,11 +306,5 @@ func testingifaceRecover() {
 	// this string is hardcoded in github.com/mitchellh/go-testing-interface
 	if s, ok := r.(string); !ok || s != "testing.T failed, see logs for output (if any)" {
 		panic(r)
-	}
-}
-
-func unsetEnvVars(envVars []string) {
-	for _, envVar := range envVars {
-		os.Unsetenv(envVar)
 	}
 }

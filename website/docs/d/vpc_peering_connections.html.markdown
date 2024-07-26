@@ -50,7 +50,7 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC Peering Connection will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
 All of the argument attributes except `filter` are also exported as result attributes.
 
@@ -59,6 +59,6 @@ All of the argument attributes except `filter` are also exported as result attri
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

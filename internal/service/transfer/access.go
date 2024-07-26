@@ -1,44 +1,54 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transfer
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceAccess() *schema.Resource {
+// @SDKResource("aws_transfer_access", name="Access")
+func resourceAccess() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAccessCreate,
-		Read:   resourceAccessRead,
-		Update: resourceAccessUpdate,
-		Delete: resourceAccessDelete,
+		CreateWithoutTimeout: resourceAccessCreate,
+		ReadWithoutTimeout:   resourceAccessRead,
+		UpdateWithoutTimeout: resourceAccessUpdate,
+		DeleteWithoutTimeout: resourceAccessDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"external_id": {
+			names.AttrExternalID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
 			},
-
 			"home_directory": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-
 			"home_directory_mappings": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -50,7 +60,7 @@ func ResourceAccess() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -58,25 +68,23 @@ func ResourceAccess() *schema.Resource {
 					},
 				},
 			},
-
 			"home_directory_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      transfer.HomeDirectoryTypePath,
-				ValidateFunc: validation.StringInSlice(transfer.HomeDirectoryType_Values(), false),
-			},
-
-			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateFunc:     verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Default:          awstypes.HomeDirectoryTypePath,
+				ValidateDiagFunc: enum.Validate[awstypes.HomeDirectoryType](),
+			},
+			names.AttrPolicy: {
+				Type:                  schema.TypeString,
+				Optional:              true,
+				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
 			},
-
 			"posix_profile": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -87,27 +95,25 @@ func ResourceAccess() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"uid": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
 						"secondary_gids": {
 							Type:     schema.TypeSet,
 							Elem:     &schema.Schema{Type: schema.TypeInt},
 							Optional: true,
 						},
+						"uid": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
 					},
 				},
 			},
-
-			"role": {
+			names.AttrRole: {
 				Type: schema.TypeString,
 				// Although Role is required in the API it is not currently returned on Read.
 				// Required:     true,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"server_id": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -118,12 +124,13 @@ func ResourceAccess() *schema.Resource {
 	}
 }
 
-func resourceAccessCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	externalID := d.Get("external_id").(string)
+	externalID := d.Get(names.AttrExternalID).(string)
 	serverID := d.Get("server_id").(string)
-	id := AccessCreateResourceID(serverID, externalID)
+	id := accessCreateResourceID(serverID, externalID)
 	input := &transfer.CreateAccessInput{
 		ExternalId: aws.String(externalID),
 		ServerId:   aws.String(serverID),
@@ -134,97 +141,90 @@ func resourceAccessCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("home_directory_mappings"); ok {
-		input.HomeDirectoryMappings = expandHomeDirectoryMappings(v.([]interface{}))
+		input.HomeDirectoryMappings = expandHomeDirectoryMapEntries(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("home_directory_type"); ok {
-		input.HomeDirectoryType = aws.String(v.(string))
+		input.HomeDirectoryType = awstypes.HomeDirectoryType(v.(string))
 	}
 
-	if v, ok := d.GetOk("policy"); ok {
+	if v, ok := d.GetOk(names.AttrPolicy); ok {
 		policy, err := structure.NormalizeJsonString(v.(string))
-
 		if err != nil {
-			return fmt.Errorf("policy (%s) is invalid JSON: %w", v.(string), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input.Policy = aws.String(policy)
 	}
 
 	if v, ok := d.GetOk("posix_profile"); ok {
-		input.PosixProfile = expandUserPOSIXUser(v.([]interface{}))
+		input.PosixProfile = expandPOSIXProfile(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("role"); ok {
+	if v, ok := d.GetOk(names.AttrRole); ok {
 		input.Role = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Transfer Access: %s", input)
-	_, err := conn.CreateAccess(input)
+	_, err := conn.CreateAccess(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Transfer Access (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Transfer Access (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourceAccessRead(d, meta)
+	return append(diags, resourceAccessRead(ctx, d, meta)...)
 }
 
-func resourceAccessRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	serverID, externalID, err := AccessParseResourceID(d.Id())
-
+	serverID, externalID, err := accessParseResourceID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing Transfer Access ID: %w", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	access, err := FindAccessByServerIDAndExternalID(conn, serverID, externalID)
+	access, err := findAccessByTwoPartKey(ctx, conn, serverID, externalID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transfer Access (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Transfer Access (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Transfer Access (%s): %s", d.Id(), err)
 	}
 
-	d.Set("external_id", access.ExternalId)
+	d.Set(names.AttrExternalID, access.ExternalId)
 	d.Set("home_directory", access.HomeDirectory)
-	if err := d.Set("home_directory_mappings", flattenHomeDirectoryMappings(access.HomeDirectoryMappings)); err != nil {
-		return fmt.Errorf("error setting home_directory_mappings: %w", err)
+	if err := d.Set("home_directory_mappings", flattenHomeDirectoryMapEntries(access.HomeDirectoryMappings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting home_directory_mappings: %s", err)
 	}
 	d.Set("home_directory_type", access.HomeDirectoryType)
-
-	if err := d.Set("posix_profile", flattenUserPOSIXUser(access.PosixProfile)); err != nil {
-		return fmt.Errorf("error setting posix_profile: %w", err)
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(access.Policy))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	d.Set(names.AttrPolicy, policyToSet)
+	if err := d.Set("posix_profile", flattenPOSIXProfile(access.PosixProfile)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting posix_profile: %s", err)
 	}
 	// Role is currently not returned via the API.
 	// d.Set("role", access.Role)
-
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(access.Policy))
-
-	if err != nil {
-		return err
-	}
-
-	d.Set("policy", policyToSet)
-
 	d.Set("server_id", serverID)
 
-	return nil
+	return diags
 }
 
-func resourceAccessUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	serverID, externalID, err := AccessParseResourceID(d.Id())
-
+	serverID, externalID, err := accessParseResourceID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing Transfer Access ID: %w", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &transfer.UpdateAccessInput{
@@ -237,63 +237,106 @@ func resourceAccessUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("home_directory_mappings") {
-		input.HomeDirectoryMappings = expandHomeDirectoryMappings(d.Get("home_directory_mappings").([]interface{}))
+		input.HomeDirectoryMappings = expandHomeDirectoryMapEntries(d.Get("home_directory_mappings").([]interface{}))
 	}
 
 	if d.HasChange("home_directory_type") {
-		input.HomeDirectoryType = aws.String(d.Get("home_directory_type").(string))
+		input.HomeDirectoryType = awstypes.HomeDirectoryType(d.Get("home_directory_type").(string))
 	}
 
-	if d.HasChange("policy") {
-		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
+	if d.HasChange(names.AttrPolicy) {
+		policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 		if err != nil {
-			return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input.Policy = aws.String(policy)
 	}
 
 	if d.HasChange("posix_profile") {
-		input.PosixProfile = expandUserPOSIXUser(d.Get("posix_profile").([]interface{}))
+		input.PosixProfile = expandPOSIXProfile(d.Get("posix_profile").([]interface{}))
 	}
 
-	if d.HasChange("role") {
-		input.Role = aws.String(d.Get("role").(string))
+	if d.HasChange(names.AttrRole) {
+		input.Role = aws.String(d.Get(names.AttrRole).(string))
 	}
 
-	log.Printf("[DEBUG] Updating Transfer Access: %s", input)
-	_, err = conn.UpdateAccess(input)
+	_, err = conn.UpdateAccess(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Transfer Access (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Transfer Access (%s): %s", d.Id(), err)
 	}
 
-	return resourceAccessRead(d, meta)
+	return append(diags, resourceAccessRead(ctx, d, meta)...)
 }
 
-func resourceAccessDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+func resourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	serverID, externalID, err := AccessParseResourceID(d.Id())
-
+	serverID, externalID, err := accessParseResourceID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing Transfer Access ID: %w", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer Access: %s", d.Id())
-	_, err = conn.DeleteAccess(&transfer.DeleteAccessInput{
+	_, err = conn.DeleteAccess(ctx, &transfer.DeleteAccessInput{
 		ExternalId: aws.String(externalID),
 		ServerId:   aws.String(serverID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Transfer Access (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Transfer Access (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+const accessResourceIDSeparator = "/"
+
+func accessCreateResourceID(serverID, externalID string) string {
+	parts := []string{serverID, externalID}
+	id := strings.Join(parts, accessResourceIDSeparator)
+
+	return id
+}
+
+func accessParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, accessResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected SERVERID%[2]sEXTERNALID", id, accessResourceIDSeparator)
+}
+
+func findAccessByTwoPartKey(ctx context.Context, conn *transfer.Client, serverID, externalID string) (*awstypes.DescribedAccess, error) {
+	input := &transfer.DescribeAccessInput{
+		ExternalId: aws.String(externalID),
+		ServerId:   aws.String(serverID),
+	}
+
+	output, err := conn.DescribeAccess(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Access == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Access, nil
 }

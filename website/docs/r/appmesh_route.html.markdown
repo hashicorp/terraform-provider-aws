@@ -137,7 +137,7 @@ resource "aws_appmesh_route" "serviceb" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name to use for the route. Must be between 1 and 255 characters in length.
 * `mesh_name` - (Required) Name of the service mesh in which to create the route. Must be between 1 and 255 characters in length.
@@ -193,6 +193,7 @@ The `grpc_route`'s `match` object supports the following:
 * `metadata` - (Optional) Data to match from the gRPC request.
 * `method_name` - (Optional) Method name to match from the request. If you specify a name, you must also specify a `service_name`.
 * `service_name` - (Optional) Fully qualified domain name for the service to match from the request.
+* `port`- (Optional) The port number to match from the request.
 
 The `metadata` object supports the following:
 
@@ -204,6 +205,7 @@ The `metadata`'s `match` object supports the following:
 
 * `exact` - (Optional) Value sent by the client must match the specified value exactly. Must be between 1 and 255 characters in length.
 * `prefix` - (Optional) Value sent by the client must begin with the specified characters. Must be between 1 and 255 characters in length.
+* `port`- (Optional) The port number to match from the request.
 * `range`- (Optional) Object that specifies the range of numbers that the value sent by the client must be included in.
 * `regex` - (Optional) Value sent by the client must include the specified characters. Must be between 1 and 255 characters in length.
 * `suffix` - (Optional) Value sent by the client must end with the specified characters. Must be between 1 and 255 characters in length.
@@ -230,11 +232,28 @@ The `idle` and `per_request` objects support the following:
 
 The `http2_route` and `http_route`'s `match` object supports the following:
 
-* `prefix` - (Required) Path with which to match requests.
+* `prefix` - (Optional) Path with which to match requests.
 This parameter must always start with /, which by itself matches all requests to the virtual router service name.
+* `port`- (Optional) The port number to match from the request.
 * `header` - (Optional) Client request headers to match on.
 * `method` - (Optional) Client request header method to match on. Valid values: `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `CONNECT`, `OPTIONS`, `TRACE`, `PATCH`.
+* `path` - (Optional) Client request path to match on.
+* `query_parameter` - (Optional) Client request query parameters to match on.
 * `scheme` - (Optional) Client request header scheme to match on. Valid values: `http`, `https`.
+
+The `match`'s `path` object supports the following:
+
+* `exact` - (Optional) The exact path to match on.
+* `regex` - (Optional) The regex used to match the path.
+
+The `match`'s `query_parameter` object supports the following:
+
+* `name` - (Required) Name for the query parameter that will be matched on.
+* `match` - (Optional) The query parameter to match on.
+
+The `query_parameter`'s `match` object supports the following:
+
+* `exact` - (Optional) The exact query parameter to match on.
 
 The `http2_route` and `http_route`'s `retry_policy` object supports the following:
 
@@ -265,6 +284,7 @@ The `weighted_target` object supports the following:
 
 * `virtual_node` - (Required) Virtual node to associate with the weighted target. Must be between 1 and 255 characters in length.
 * `weight` - (Required) Relative weight of the weighted target. An integer between 0 and 100.
+* `port` - (Optional) The targeted port of the weighted object.
 
 The `header` object supports the following:
 
@@ -276,6 +296,7 @@ The `header`'s `match` object supports the following:
 
 * `exact` - (Optional) Header value sent by the client must match the specified value exactly.
 * `prefix` - (Optional) Header value sent by the client must begin with the specified characters.
+* `port`- (Optional) The port number to match from the request.
 * `range`- (Optional) Object that specifies the range of numbers that the header value sent by the client must be included in.
 * `regex` - (Optional) Header value sent by the client must include the specified characters.
 * `suffix` - (Optional) Header value sent by the client must end with the specified characters.
@@ -285,9 +306,9 @@ The `range` object supports the following:
 * `end` - (Required) End of the range.
 * `start` - (Requited) Start of the range.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the route.
 * `arn` - ARN of the route.
@@ -298,11 +319,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-App Mesh virtual routes can be imported using `mesh_name` and `virtual_router_name` together with the route's `name`,
-e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Mesh virtual routes using `mesh_name` and `virtual_router_name` together with the route's `name`. For example:
 
+```terraform
+import {
+  to = aws_appmesh_route.serviceb
+  id = "simpleapp/serviceB/serviceB-route"
+}
 ```
-$ terraform import aws_appmesh_route.serviceb simpleapp/serviceB/serviceB-route
+
+Using `terraform import`, import App Mesh virtual routes using `mesh_name` and `virtual_router_name` together with the route's `name`. For example:
+
+```console
+% terraform import aws_appmesh_route.serviceb simpleapp/serviceB/serviceB-route
 ```
 
 [1]: /docs/providers/aws/index.html

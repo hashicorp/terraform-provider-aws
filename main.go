@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package main
 
 import (
@@ -13,7 +16,7 @@ func main() {
 	debugFlag := flag.Bool("debug", false, "Start provider in debug mode.")
 	flag.Parse()
 
-	serverFactory, err := provider.ProtoV5ProviderServerFactory(context.Background())
+	serverFactory, _, err := provider.ProtoV5ProviderServerFactory(context.Background())
 
 	if err != nil {
 		log.Fatal(err)

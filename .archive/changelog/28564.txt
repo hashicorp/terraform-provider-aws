@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_s3control_storage_lens_configuration: Add `advanced_cost_optimization_metrics`, `advanced_data_protection_metrics`, and `detailed_status_code_metrics` arguments to the `storage_lens_configuration.account_level` and `storage_lens_configuration.account_level.bucket_level` configuration blocks
+```
+
+```release-note:enhancement
+resource/aws_s3_access_point: Add `bucket_account_id` argument
+```

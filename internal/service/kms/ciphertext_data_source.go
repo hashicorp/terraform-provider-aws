@@ -1,67 +1,72 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
 import (
-	"encoding/base64"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceCiphertext() *schema.Resource {
+// @SDKDataSource("aws_kms_ciphertext", name="Ciphertext")
+func dataSourceCiphertext() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCiphertextRead,
+		ReadWithoutTimeout: dataSourceCiphertextRead,
 
 		Schema: map[string]*schema.Schema{
-			"plaintext": {
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
-			},
-
-			"key_id": {
+			"ciphertext_blob": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
-
 			"context": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
-			"ciphertext_blob": {
+			names.AttrKeyID: {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
+			},
+			"plaintext": {
+				Type:      schema.TypeString,
+				Required:  true,
+				Sensitive: true,
 			},
 		},
 	}
 }
 
-func dataSourceCiphertextRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+func dataSourceCiphertextRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	req := &kms.EncryptInput{
-		KeyId:     aws.String(d.Get("key_id").(string)),
+	keyID := d.Get(names.AttrKeyID).(string)
+	input := &kms.EncryptInput{
+		KeyId:     aws.String(keyID),
 		Plaintext: []byte(d.Get("plaintext").(string)),
 	}
 
-	if ec := d.Get("context"); ec != nil {
-		req.EncryptionContext = flex.ExpandStringMap(ec.(map[string]interface{}))
+	if v, ok := d.GetOk("context"); ok && len(v.(map[string]interface{})) > 0 {
+		input.EncryptionContext = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] KMS encrypt for key: %s", d.Get("key_id").(string))
-	resp, err := conn.Encrypt(req)
+	output, err := conn.Encrypt(ctx, input)
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "encrypting with KMS Key (%s): %s", keyID, err)
 	}
 
-	d.SetId(aws.StringValue(resp.KeyId))
+	d.SetId(aws.ToString(output.KeyId))
+	d.Set("ciphertext_blob", itypes.Base64Encode(output.CiphertextBlob))
 
-	d.Set("ciphertext_blob", base64.StdEncoding.EncodeToString(resp.CiphertextBlob))
-
-	return nil
+	return diags
 }

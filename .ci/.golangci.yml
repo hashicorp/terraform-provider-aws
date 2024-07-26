@@ -8,7 +8,4 @@ linters:
     - gofmt
 
 run:
-  timeout: 10m
-  go: 1.18
-  skip-dirs:
-    - .ci/providerlint/vendor
+  timeout: 30m

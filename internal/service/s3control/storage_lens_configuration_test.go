@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control_test
 
 import (
@@ -5,45 +8,51 @@ import (
 	"fmt"
 	"testing"
 
-	s3controlv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
-	"github.com/aws/aws-sdk-go/service/s3control"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccS3ControlStorageLensConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_storage_lens_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy,
+		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStorageLensConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3", fmt.Sprintf("storage-lens/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.activity_metrics.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.aws_org.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.include.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3", fmt.Sprintf("storage-lens/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.activity_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_cost_optimization_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_data_protection_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_cost_optimization_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_data_protection_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.detailed_status_code_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.detailed_status_code_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.aws_org.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.include.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -56,20 +65,21 @@ func TestAccS3ControlStorageLensConfiguration_basic(t *testing.T) {
 }
 
 func TestAccS3ControlStorageLensConfiguration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_storage_lens_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy,
+		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStorageLensConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceStorageLensConfiguration(), resourceName),
+					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceStorageLensConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -78,21 +88,22 @@ func TestAccS3ControlStorageLensConfiguration_disappears(t *testing.T) {
 }
 
 func TestAccS3ControlStorageLensConfiguration_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_storage_lens_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy,
+		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStorageLensConfigurationConfig_tags1(rName, "key1", "value1"),
+				Config: testAccStorageLensConfigurationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -101,20 +112,20 @@ func TestAccS3ControlStorageLensConfiguration_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccStorageLensConfigurationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccStorageLensConfigurationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccStorageLensConfigurationConfig_tags1(rName, "key2", "value2"),
+				Config: testAccStorageLensConfigurationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -122,52 +133,59 @@ func TestAccS3ControlStorageLensConfiguration_tags(t *testing.T) {
 }
 
 func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_storage_lens_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy,
+		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStorageLensConfigurationConfig_allAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3", fmt.Sprintf("storage-lens/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.activity_metrics.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.activity_metrics.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.0.storage_metrics.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.0.storage_metrics.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.0.storage_metrics.0.selection_criteria.#", "1"),
+					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3", fmt.Sprintf("storage-lens/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.activity_metrics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.activity_metrics.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_cost_optimization_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_data_protection_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_cost_optimization_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_data_protection_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.detailed_status_code_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.0.storage_metrics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.0.storage_metrics.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.0.storage_metrics.0.selection_criteria.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.0.storage_metrics.0.selection_criteria.0.delimiter", ","),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.0.storage_metrics.0.selection_criteria.0.max_depth", "3"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.0.storage_metrics.0.selection_criteria.0.max_depth", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.0.storage_metrics.0.selection_criteria.0.min_storage_bytes_percentage", "49.5"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.aws_org.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.cloud_watch_metrics.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.cloud_watch_metrics.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.detailed_status_code_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.aws_org.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.cloud_watch_metrics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.cloud_watch_metrics.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.#", acctest.Ct1),
 					acctest.CheckResourceAttrAccountID(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.account_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.arn"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.encryption.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.encryption.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.format", "CSV"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.output_schema_version", "V_1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.prefix", "p1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.0.buckets.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.0.regions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.include.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.0.buckets.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.0.regions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.include.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -178,92 +196,180 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 			{
 				Config: testAccStorageLensConfigurationConfig_allAttributesUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3", fmt.Sprintf("storage-lens/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.activity_metrics.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.activity_metrics.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.aws_org.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.cloud_watch_metrics.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.cloud_watch_metrics.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.#", "1"),
+					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3", fmt.Sprintf("storage-lens/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.activity_metrics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.activity_metrics.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_cost_optimization_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_data_protection_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_cost_optimization_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_data_protection_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.detailed_status_code_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.detailed_status_code_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.aws_org.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.cloud_watch_metrics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.cloud_watch_metrics.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.#", acctest.Ct1),
 					acctest.CheckResourceAttrAccountID(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.account_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.arn"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.encryption.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.encryption.0.sse_kms.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.encryption.0.sse_s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.encryption.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.encryption.0.sse_kms.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.encryption.0.sse_s3.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.format", "Parquet"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.output_schema_version", "V_1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.include.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.include.0.buckets.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.include.0.regions.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.include.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.include.0.buckets.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.include.0.regions.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckStorageLensConfigurationDestroy(s *terraform.State) error {
-	conn := s3controlv2.NewFromConfig(*acctest.Provider.Meta().(*conns.AWSClient).Config)
+func TestAccS3ControlStorageLensConfiguration_advancedMetrics(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3control_storage_lens_configuration.test"
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_s3control_object_lambda_access_point" {
-			continue
-		}
-
-		accountID, configID, err := tfs3control.StorageLensConfigurationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfs3control.FindStorageLensConfigurationByAccountIDAndConfigID(context.Background(), conn, accountID, configID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("S3 Storage Lens Configuration %s still exists", rs.Primary.ID)
-	}
-
-	return nil
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStorageLensConfigurationConfig_advancedMetrics(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3", fmt.Sprintf("storage-lens/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.activity_metrics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.activity_metrics.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_cost_optimization_metrics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_cost_optimization_metrics.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_data_protection_metrics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_data_protection_metrics.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_cost_optimization_metrics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_cost_optimization_metrics.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_data_protection_metrics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_data_protection_metrics.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.detailed_status_code_metrics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.detailed_status_code_metrics.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.detailed_status_code_metrics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.detailed_status_code_metrics.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.aws_org.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.cloud_watch_metrics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.cloud_watch_metrics.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.include.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccStorageLensConfigurationConfig_freeMetrics(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3", fmt.Sprintf("storage-lens/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.activity_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_cost_optimization_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.advanced_data_protection_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_cost_optimization_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.advanced_data_protection_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.detailed_status_code_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.detailed_status_code_metrics.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.aws_org.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.cloud_watch_metrics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.cloud_watch_metrics.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.include.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+				),
+			},
+		},
+	})
 }
 
-func testAccCheckStorageLensConfigurationExists(n string) resource.TestCheckFunc {
+func testAccCheckStorageLensConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_s3control_object_lambda_access_point" {
+				continue
+			}
+
+			accountID, configID, err := tfs3control.StorageLensConfigurationParseResourceID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			_, err = tfs3control.FindStorageLensConfigurationByAccountIDAndConfigID(ctx, conn, accountID, configID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("S3 Storage Lens Configuration %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckStorageLensConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 Storage Lens Configuration ID is set")
-		}
-
 		accountID, configID, err := tfs3control.StorageLensConfigurationParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
 
-		conn := s3controlv2.NewFromConfig(*acctest.Provider.Meta().(*conns.AWSClient).Config)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
 
-		_, err = tfs3control.FindStorageLensConfigurationByAccountIDAndConfigID(context.Background(), conn, accountID, configID)
+		_, err = tfs3control.FindStorageLensConfigurationByAccountIDAndConfigID(ctx, conn, accountID, configID)
 
 		return err
 	}
@@ -433,6 +539,82 @@ resource "aws_s3control_storage_lens_configuration" "test" {
 
     include {
       buckets = [aws_s3_bucket.test[1].arn]
+    }
+  }
+}
+`, rName)
+}
+
+func testAccStorageLensConfigurationConfig_advancedMetrics(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3control_storage_lens_configuration" "test" {
+  config_id = %[1]q
+
+  storage_lens_configuration {
+    enabled = true
+
+    account_level {
+      activity_metrics {
+        enabled = true
+      }
+
+      advanced_cost_optimization_metrics {
+        enabled = true
+      }
+
+      advanced_data_protection_metrics {
+        enabled = true
+      }
+
+      detailed_status_code_metrics {
+        enabled = true
+      }
+
+      bucket_level {
+        activity_metrics {
+          enabled = true
+        }
+
+        advanced_cost_optimization_metrics {
+          enabled = true
+        }
+
+        advanced_data_protection_metrics {
+          enabled = true
+        }
+
+        detailed_status_code_metrics {
+          enabled = true
+        }
+      }
+    }
+
+    data_export {
+      cloud_watch_metrics {
+        enabled = false
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccStorageLensConfigurationConfig_freeMetrics(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3control_storage_lens_configuration" "test" {
+  config_id = %[1]q
+
+  storage_lens_configuration {
+    enabled = true
+
+    account_level {
+      bucket_level {}
+    }
+
+    data_export {
+      cloud_watch_metrics {
+        enabled = false
+      }
     }
   }
 }

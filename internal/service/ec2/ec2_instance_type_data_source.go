@@ -1,17 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceInstanceType() *schema.Resource {
+// @SDKDataSource("aws_ec2_instance_type", name="Instance Type")
+func dataSourceInstanceType() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInstanceTypeRead,
+		ReadWithoutTimeout: dataSourceInstanceTypeRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -115,7 +123,7 @@ func DataSourceInstanceType() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -143,7 +151,7 @@ func DataSourceInstanceType() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -171,7 +179,7 @@ func DataSourceInstanceType() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -187,11 +195,11 @@ func DataSourceInstanceType() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"size": {
+						names.AttrSize: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -202,7 +210,7 @@ func DataSourceInstanceType() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -215,6 +223,10 @@ func DataSourceInstanceType() *schema.Resource {
 				Computed: true,
 			},
 			"maximum_ipv6_addresses_per_interface": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"maximum_network_cards": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -285,16 +297,17 @@ func DataSourceInstanceType() *schema.Resource {
 	}
 }
 
-func dataSourceInstanceTypeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	v, err := FindInstanceTypeByName(conn, d.Get("instance_type").(string))
+	v, err := findInstanceTypeByName(ctx, conn, d.Get(names.AttrInstanceType).(string))
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Instance Type", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Instance Type", err))
 	}
 
-	d.SetId(aws.StringValue(v.InstanceType))
+	d.SetId(string(v.InstanceType))
 	d.Set("auto_recovery_supported", v.AutoRecoverySupported)
 	d.Set("bare_metal", v.BareMetal)
 	d.Set("burstable_performance_supported", v.BurstablePerformanceSupported)
@@ -321,10 +334,10 @@ func dataSourceInstanceTypeRead(d *schema.ResourceData, meta interface{}) error 
 		fpgaList := make([]interface{}, len(v.FpgaInfo.Fpgas))
 		for i, fpg := range v.FpgaInfo.Fpgas {
 			fpga := map[string]interface{}{
-				"count":        aws.Int64Value(fpg.Count),
-				"manufacturer": aws.StringValue(fpg.Manufacturer),
-				"memory_size":  aws.Int64Value(fpg.MemoryInfo.SizeInMiB),
-				"name":         aws.StringValue(fpg.Name),
+				"count":        aws.ToInt32(fpg.Count),
+				"manufacturer": aws.ToString(fpg.Manufacturer),
+				"memory_size":  aws.ToInt32(fpg.MemoryInfo.SizeInMiB),
+				names.AttrName: aws.ToString(fpg.Name),
 			}
 			fpgaList[i] = fpga
 		}
@@ -336,10 +349,10 @@ func dataSourceInstanceTypeRead(d *schema.ResourceData, meta interface{}) error 
 		gpuList := make([]interface{}, len(v.GpuInfo.Gpus))
 		for i, gp := range v.GpuInfo.Gpus {
 			gpu := map[string]interface{}{
-				"count":        aws.Int64Value(gp.Count),
-				"manufacturer": aws.StringValue(gp.Manufacturer),
-				"memory_size":  aws.Int64Value(gp.MemoryInfo.SizeInMiB),
-				"name":         aws.StringValue(gp.Name),
+				"count":        aws.ToInt32(gp.Count),
+				"manufacturer": aws.ToString(gp.Manufacturer),
+				"memory_size":  aws.ToInt32(gp.MemoryInfo.SizeInMiB),
+				names.AttrName: aws.ToString(gp.Name),
 			}
 			gpuList[i] = gpu
 		}
@@ -352,9 +365,9 @@ func dataSourceInstanceTypeRead(d *schema.ResourceData, meta interface{}) error 
 		acceleratorList := make([]interface{}, len(v.InferenceAcceleratorInfo.Accelerators))
 		for i, accl := range v.InferenceAcceleratorInfo.Accelerators {
 			accelerator := map[string]interface{}{
-				"count":        aws.Int64Value(accl.Count),
-				"manufacturer": aws.StringValue(accl.Manufacturer),
-				"name":         aws.StringValue(accl.Name),
+				"count":        aws.ToInt32(accl.Count),
+				"manufacturer": aws.ToString(accl.Manufacturer),
+				names.AttrName: aws.ToString(accl.Name),
 			}
 			acceleratorList[i] = accelerator
 		}
@@ -365,9 +378,9 @@ func dataSourceInstanceTypeRead(d *schema.ResourceData, meta interface{}) error 
 			diskList := make([]interface{}, len(v.InstanceStorageInfo.Disks))
 			for i, dk := range v.InstanceStorageInfo.Disks {
 				disk := map[string]interface{}{
-					"count": aws.Int64Value(dk.Count),
-					"size":  aws.Int64Value(dk.SizeInGB),
-					"type":  aws.StringValue(dk.Type),
+					"count":        aws.ToInt32(dk.Count),
+					names.AttrSize: aws.ToInt64(dk.SizeInGB),
+					names.AttrType: dk.Type,
 				}
 				diskList[i] = disk
 			}
@@ -376,10 +389,11 @@ func dataSourceInstanceTypeRead(d *schema.ResourceData, meta interface{}) error 
 		d.Set("total_instance_storage", v.InstanceStorageInfo.TotalSizeInGB)
 	}
 	d.Set("instance_storage_supported", v.InstanceStorageSupported)
-	d.Set("instance_type", v.InstanceType)
+	d.Set(names.AttrInstanceType, v.InstanceType)
 	d.Set("ipv6_supported", v.NetworkInfo.Ipv6Supported)
 	d.Set("maximum_ipv4_addresses_per_interface", v.NetworkInfo.Ipv4AddressesPerInterface)
 	d.Set("maximum_ipv6_addresses_per_interface", v.NetworkInfo.Ipv6AddressesPerInterface)
+	d.Set("maximum_network_cards", v.NetworkInfo.MaximumNetworkCards)
 	d.Set("maximum_network_interfaces", v.NetworkInfo.MaximumNetworkInterfaces)
 	d.Set("memory_size", v.MemoryInfo.SizeInMiB)
 	d.Set("network_performance", v.NetworkInfo.NetworkPerformance)
@@ -392,5 +406,5 @@ func dataSourceInstanceTypeRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("valid_cores", v.VCpuInfo.ValidCores)
 	d.Set("valid_threads_per_core", v.VCpuInfo.ValidThreadsPerCore)
 
-	return nil
+	return diags
 }

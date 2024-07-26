@@ -1,26 +1,53 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
+	"context"
 	"os"
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestExpandEndpoints(t *testing.T) {
+func TestProvider(t *testing.T) {
+	t.Parallel()
+
+	p, err := New(context.Background())
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = p.InternalValidate()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestExpandEndpoints(t *testing.T) { //nolint:paralleltest
 	oldEnv := stashEnv()
 	defer popEnv(oldEnv)
 
+	var expectedDiags diag.Diagnostics
+
+	ctx := context.Background()
 	endpoints := make(map[string]interface{})
 	for _, serviceKey := range names.Aliases() {
 		endpoints[serviceKey] = ""
 	}
 	endpoints["sts"] = "https://sts.fake.test"
 
-	results, err := expandEndpoints([]interface{}{endpoints})
-	if err != nil {
-		t.Fatalf("Unexpected error: %s", err)
+	results, diags := expandEndpoints(ctx, []interface{}{endpoints})
+	if diff := cmp.Diff(diags, expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
+		t.Errorf("unexpected diagnostics difference: %s", diff)
 	}
 
 	if len(results) != 1 {
@@ -32,11 +59,13 @@ func TestExpandEndpoints(t *testing.T) {
 	}
 }
 
-func TestEndpointMultipleKeys(t *testing.T) {
+func TestEndpointMultipleKeys(t *testing.T) { //nolint:paralleltest
+	ctx := context.Background()
 	testcases := []struct {
 		endpoints        map[string]string
 		expectedService  string
 		expectedEndpoint string
+		expectedDiags    diag.Diagnostics
 	}{
 		{
 			endpoints: map[string]string{
@@ -59,6 +88,11 @@ func TestEndpointMultipleKeys(t *testing.T) {
 			},
 			expectedService:  names.Transcribe,
 			expectedEndpoint: "https://transcribe.fake.test",
+			expectedDiags: diag.Diagnostics{ConflictingEndpointsWarningDiag(
+				cty.GetAttrPath("endpoints").IndexInt(0),
+				"transcribe",
+				"transcribeservice",
+			)},
 		},
 	}
 
@@ -74,9 +108,9 @@ func TestEndpointMultipleKeys(t *testing.T) {
 			endpoints[k] = v
 		}
 
-		results, err := expandEndpoints([]interface{}{endpoints})
-		if err != nil {
-			t.Fatalf("Unexpected error: %s", err)
+		results, diags := expandEndpoints(ctx, []interface{}{endpoints})
+		if diff := cmp.Diff(diags, testcase.expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
+			t.Errorf("unexpected diagnostics difference: %s", diff)
 		}
 
 		if a, e := len(results), 1; a != e {
@@ -89,13 +123,23 @@ func TestEndpointMultipleKeys(t *testing.T) {
 	}
 }
 
-func TestEndpointEnvVarPrecedence(t *testing.T) {
+func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
+	ctx := context.Background()
 	testcases := []struct {
 		endpoints        map[string]string
 		envvars          map[string]string
 		expectedService  string
 		expectedEndpoint string
+		expectedDiags    diag.Diagnostics
 	}{
+		{
+			endpoints: map[string]string{},
+			envvars: map[string]string{
+				"AWS_ENDPOINT_URL_STS": "https://sts.fake.test",
+			},
+			expectedService:  names.STS,
+			expectedEndpoint: "https://sts.fake.test",
+		},
 		{
 			endpoints: map[string]string{},
 			envvars: map[string]string{
@@ -103,6 +147,9 @@ func TestEndpointEnvVarPrecedence(t *testing.T) {
 			},
 			expectedService:  names.STS,
 			expectedEndpoint: "https://sts.fake.test",
+			expectedDiags: diag.Diagnostics{
+				DeprecatedEnvVarDiag("TF_AWS_STS_ENDPOINT", "AWS_ENDPOINT_URL_STS"),
+			},
 		},
 		{
 			endpoints: map[string]string{},
@@ -111,6 +158,9 @@ func TestEndpointEnvVarPrecedence(t *testing.T) {
 			},
 			expectedService:  names.STS,
 			expectedEndpoint: "https://sts-deprecated.fake.test",
+			expectedDiags: diag.Diagnostics{
+				DeprecatedEnvVarDiag("AWS_STS_ENDPOINT", "AWS_ENDPOINT_URL_STS"),
+			},
 		},
 		{
 			endpoints: map[string]string{},
@@ -120,6 +170,9 @@ func TestEndpointEnvVarPrecedence(t *testing.T) {
 			},
 			expectedService:  names.STS,
 			expectedEndpoint: "https://sts.fake.test",
+			expectedDiags: diag.Diagnostics{
+				DeprecatedEnvVarDiag("TF_AWS_STS_ENDPOINT", "AWS_ENDPOINT_URL_STS"),
+			},
 		},
 		{
 			endpoints: map[string]string{
@@ -149,9 +202,9 @@ func TestEndpointEnvVarPrecedence(t *testing.T) {
 			endpoints[k] = v
 		}
 
-		results, err := expandEndpoints([]interface{}{endpoints})
-		if err != nil {
-			t.Fatalf("Unexpected error: %s", err)
+		results, diags := expandEndpoints(ctx, []interface{}{endpoints})
+		if diff := cmp.Diff(diags, testcase.expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
+			t.Errorf("unexpected diagnostics difference: %s", diff)
 		}
 
 		if a, e := len(results), 1; a != e {

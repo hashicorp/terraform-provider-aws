@@ -30,13 +30,13 @@ The following arguments are required:
 * `vpn_gateway_id` - The id of the `aws_vpn_gateway` to propagate routes from.
 * `route_table_id` - The id of the `aws_route_table` to propagate routes into.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `2m`)
 - `delete` - (Default `2m`)

@@ -1,30 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCSecurityGroupsDataSource_tag(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_security_groups.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupsDataSourceConfig_tag(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "3"),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "3"),
-					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", acctest.Ct3),
 				),
 			},
 		},
@@ -32,20 +36,21 @@ func TestAccVPCSecurityGroupsDataSource_tag(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_security_groups.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", acctest.Ct1),
 				),
 			},
 		},
@@ -53,20 +58,21 @@ func TestAccVPCSecurityGroupsDataSource_filter(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupsDataSource_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_security_groups.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupsDataSourceConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", acctest.Ct0),
 				),
 			},
 		},

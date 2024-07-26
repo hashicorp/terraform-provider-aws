@@ -1,26 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build generate
 // +build generate
 
 package main
 
 import (
-	"bytes"
 	_ "embed"
 	"flag"
 	"fmt"
-	"go/format"
 	"log"
 	"os"
-	"text/template"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
 
 var (
-	createTagsFunc = flag.String("CreateTagsFunc", "CreateTags", "createTagsFunc")
-	getTagFunc     = flag.String("GetTagFunc", "GetTag", "getTagFunc")
+	getTagFunc     = flag.String("GetTagFunc", "findTag", "getTagFunc")
 	idAttribName   = flag.String("IDAttribName", "resource_arn", "idAttribName")
-	updateTagsFunc = flag.String("UpdateTagsFunc", "UpdateTags", "updateTagsFunc")
+	updateTagsFunc = flag.String("UpdateTagsFunc", "updateTags", "updateTagsFunc")
 )
 
 func usage() {
@@ -31,92 +32,68 @@ func usage() {
 }
 
 type TemplateData struct {
-	AWSService      string
-	AWSServiceUpper string
-	ServicePackage  string
+	AWSServiceUpper      string
+	ProviderResourceName string
+	ServicePackage       string
 
-	CreateTagsFunc string
 	GetTagFunc     string
 	IDAttribName   string
 	UpdateTagsFunc string
 }
 
 func main() {
+	const (
+		resourceFilename     = `tag_gen.go`
+		resourceTestFilename = `tag_gen_test.go`
+	)
+	g := common.NewGenerator()
+
 	log.SetFlags(0)
 	flag.Usage = usage
 	flag.Parse()
 
 	servicePackage := os.Getenv("GOPACKAGE")
-	awsService, err := names.AWSGoV1Package(servicePackage)
-
-	if err != nil {
-		log.Fatalf("encountered: %s", err)
-	}
-
 	u, err := names.ProviderNameUpper(servicePackage)
-
 	if err != nil {
-		log.Fatalf("encountered: %s", err)
+		g.Fatalf("encountered: %s", err)
 	}
+
+	resourceName := fmt.Sprintf("aws_%s_tag", servicePackage)
+
+	ian := *idAttribName
+	ian = namesgen.ConstOrQuote(ian)
 
 	templateData := TemplateData{
-		AWSService:      awsService,
-		AWSServiceUpper: u,
-		ServicePackage:  servicePackage,
+		AWSServiceUpper:      u,
+		ProviderResourceName: resourceName,
+		ServicePackage:       servicePackage,
 
-		CreateTagsFunc: *createTagsFunc,
 		GetTagFunc:     *getTagFunc,
-		IDAttribName:   *idAttribName,
+		IDAttribName:   ian,
 		UpdateTagsFunc: *updateTagsFunc,
 	}
 
-	resourceFilename := "tag_gen.go"
-	resourceTestFilename := "tag_gen_test.go"
+	g.Infof("Generating internal/service/%s/%s", servicePackage, resourceFilename)
+	d := g.NewGoFileDestination(resourceFilename)
 
-	if err := generateTemplateFile(resourceFilename, resourceTemplateBody, templateData); err != nil {
-		log.Fatal(err)
+	if err := d.WriteTemplate("taggen", resourceTemplateBody, templateData); err != nil {
+		g.Fatalf("generating file (%s): %s", resourceFilename, err)
 	}
 
-	if err := generateTemplateFile(resourceTestFilename, resourceTestTemplateBody, templateData); err != nil {
-		log.Fatal(err)
-	}
-}
-
-func generateTemplateFile(filename string, templateBody string, templateData interface{}) error {
-	tmpl, err := template.New(filename).Parse(templateBody)
-
-	if err != nil {
-		return fmt.Errorf("error parsing template: %w", err)
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", resourceFilename, err)
 	}
 
-	var buffer bytes.Buffer
-	err = tmpl.Execute(&buffer, templateData)
+	g.Infof("Generating internal/service/%s/%s", servicePackage, resourceTestFilename)
+	d = g.NewGoFileDestination(resourceTestFilename)
 
-	if err != nil {
-		return fmt.Errorf("error executing template: %w", err)
+	if err := d.WriteTemplate("taggen", resourceTestTemplateBody, templateData); err != nil {
+		g.Fatalf("generating file (%s): %s", resourceTestFilename, err)
 	}
 
-	generatedFileContents, err := format.Source(buffer.Bytes())
-
-	if err != nil {
-		return fmt.Errorf("error formatting generated file: %w", err)
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", resourceTestFilename, err)
 	}
-
-	f, err := os.Create(filename)
-
-	if err != nil {
-		return fmt.Errorf("error creating file (%s): %w", filename, err)
-	}
-
-	defer f.Close()
-
-	_, err = f.Write(generatedFileContents)
-
-	if err != nil {
-		return fmt.Errorf("error writing to file (%s): %w", filename, err)
-	}
-
-	return nil
 }
 
 //go:embed resource.tmpl

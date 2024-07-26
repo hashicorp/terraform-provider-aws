@@ -82,9 +82,9 @@ Comments serve as program documentation and come in two forms:
 
 - _Inline comments_ start with the `/*` sequence and end with the `*/`
   sequence, and may have any characters within except the ending sequence.
-  An inline comments is considered equivalent to a whitespace sequence.
+  An inline comment is considered equivalent to a whitespace sequence.
 
-Comments and whitespace cannot begin within within other comments, or within
+Comments and whitespace cannot begin within other comments, or within
 template literals except inside an interpolation sequence or template directive.
 
 ### Identifiers
@@ -268,10 +268,10 @@ collection value.
 ```ebnf
 CollectionValue = tuple | object;
 tuple = "[" (
-    (Expression ("," Expression)* ","?)?
+    (Expression (("," | Newline) Expression)* ","?)?
 ) "]";
 object = "{" (
-    (objectelem ("," objectelem)* ","?)?
+    (objectelem (( "," | Newline) objectelem)* ","?)?
 ) "}";
 objectelem = (Identifier | Expression) ("=" | ":") Expression;
 ```
@@ -635,7 +635,7 @@ binaryOp = ExprTerm binaryOperator ExprTerm;
 binaryOperator = compareOperator | arithmeticOperator | logicOperator;
 compareOperator = "==" | "!=" | "<" | ">" | "<=" | ">=";
 arithmeticOperator = "+" | "-" | "*" | "/" | "%";
-logicOperator = "&&" | "||" | "!";
+logicOperator = "&&" | "||";
 ```
 
 The unary operators have the highest precedence.
@@ -668,7 +668,7 @@ a == b  equal
 a != b  not equal
 ```
 
-Two values are equal if the are of identical types and their values are
+Two values are equal if they are of identical types and their values are
 equal as defined in the HCL syntax-agnostic information model. The equality
 operators are commutative and opposite, such that `(a == b) == !(a != b)`
 and `(a == b) == (b == a)` for all values `a` and `b`.

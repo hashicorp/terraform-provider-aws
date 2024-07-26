@@ -1,23 +1,30 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lexmodels
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -26,15 +33,16 @@ const (
 	intentDeleteTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_lex_intent")
 func ResourceIntent() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceIntentCreate,
-		Read:   resourceIntentRead,
-		Update: resourceIntentUpdate,
-		Delete: resourceIntentDelete,
+		CreateWithoutTimeout: resourceIntentCreate,
+		ReadWithoutTimeout:   resourceIntentRead,
+		UpdateWithoutTimeout: resourceIntentUpdate,
+		DeleteWithoutTimeout: resourceIntentDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -44,7 +52,7 @@ func ResourceIntent() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,11 +81,11 @@ func ResourceIntent() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 200),
@@ -128,7 +136,7 @@ func ResourceIntent() *schema.Resource {
 							MaxItems: 1,
 							Elem:     codeHookResource,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(lexmodelbuildingservice.FulfillmentActivityType_Values(), false),
@@ -136,17 +144,17 @@ func ResourceIntent() *schema.Resource {
 					},
 				},
 			},
-			"last_updated_date": {
+			names.AttrLastUpdatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
 				),
 			},
 			"parent_intent_signature": {
@@ -178,21 +186,21 @@ func ResourceIntent() *schema.Resource {
 				MaxItems: 100,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"description": {
+						names.AttrDescription: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "",
 							ValidateFunc: validation.StringLenBetween(0, 200),
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 100),
-								validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
 							),
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      0,
@@ -223,7 +231,7 @@ func ResourceIntent() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 100),
-								validation.StringMatch(regexp.MustCompile(`^((AMAZON\.)_?|[A-Za-z]_?)+`), ""),
+								validation.StringMatch(regexache.MustCompile(`^((AMAZON\.)_?|[A-Za-z]_?)+`), ""),
 							),
 						},
 						"slot_type_version": {
@@ -231,7 +239,7 @@ func ResourceIntent() *schema.Resource {
 							Optional: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 64),
-								validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),
+								validation.StringMatch(regexache.MustCompile(`\$LATEST|[0-9]+`), ""),
 							),
 						},
 						"value_elicitation_prompt": {
@@ -244,7 +252,7 @@ func ResourceIntent() *schema.Resource {
 					},
 				},
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -256,14 +264,14 @@ func ResourceIntent() *schema.Resource {
 func updateComputedAttributesOnIntentCreateVersion(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	createVersion := d.Get("create_version").(bool)
 	if createVersion && hasIntentConfigChanges(d) {
-		d.SetNewComputed("version")
+		d.SetNewComputed(names.AttrVersion)
 	}
 	return nil
 }
 
-func hasIntentConfigChanges(d verify.ResourceDiffer) bool {
+func hasIntentConfigChanges(d sdkv2.ResourceDiffer) bool {
 	for _, key := range []string{
-		"description",
+		names.AttrDescription,
 		"conclusion_statement",
 		"confirmation_prompt",
 		"dialog_code_hook",
@@ -281,13 +289,14 @@ func hasIntentConfigChanges(d verify.ResourceDiffer) bool {
 	return false
 }
 
-func resourceIntentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
-	name := d.Get("name").(string)
+func resourceIntentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
+	name := d.Get(names.AttrName).(string)
 
 	input := &lexmodelbuildingservice.PutIntentInput{
 		CreateVersion: aws.Bool(d.Get("create_version").(bool)),
-		Description:   aws.String(d.Get("description").(string)),
+		Description:   aws.String(d.Get(names.AttrDescription).(string)),
 		Name:          aws.String(name),
 	}
 
@@ -327,47 +336,48 @@ func resourceIntentCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Slots = expandSlots(v.(*schema.Set).List())
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		output, err := conn.PutIntent(input)
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+		output, err := conn.PutIntentWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
 			input.Checksum = output.Checksum
-			return resource.RetryableError(fmt.Errorf("%q intent still creating, another operation is pending: %s", d.Id(), err))
+			return retry.RetryableError(fmt.Errorf("%q intent still creating, another operation is pending: %s", d.Id(), err))
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
 	if tfresource.TimedOut(err) { // nosemgrep:ci.helper-schema-TimeoutError-check-doesnt-return-output
-		_, err = conn.PutIntent(input)
+		_, err = conn.PutIntentWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating intent %s: %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating intent %s: %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceIntentRead(d, meta)
+	return append(diags, resourceIntentRead(ctx, d, meta)...)
 }
 
-func resourceIntentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+func resourceIntentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
-	resp, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
+	resp, err := conn.GetIntentWithContext(ctx, &lexmodelbuildingservice.GetIntentInput{
 		Name:    aws.String(d.Id()),
 		Version: aws.String(IntentVersionLatest),
 	})
 	if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Intent (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error getting intent %s: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting intent %s: %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -377,21 +387,21 @@ func resourceIntentRead(d *schema.ResourceData, meta interface{}) error {
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("intent:%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 
 	d.Set("checksum", resp.Checksum)
-	d.Set("created_date", resp.CreatedDate.Format(time.RFC3339))
-	d.Set("description", resp.Description)
-	d.Set("last_updated_date", resp.LastUpdatedDate.Format(time.RFC3339))
-	d.Set("name", resp.Name)
+	d.Set(names.AttrCreatedDate, resp.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrDescription, resp.Description)
+	d.Set(names.AttrLastUpdatedDate, resp.LastUpdatedDate.Format(time.RFC3339))
+	d.Set(names.AttrName, resp.Name)
 
-	version, err := FindLatestIntentVersionByName(conn, d.Id())
+	version, err := FindLatestIntentVersionByName(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading Lex Intent (%s) latest version: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Lex Intent (%s) latest version: %s", d.Id(), err)
 	}
 
-	d.Set("version", version)
+	d.Set(names.AttrVersion, version)
 
 	if resp.ConclusionStatement != nil {
 		d.Set("conclusion_statement", flattenStatement(resp.ConclusionStatement))
@@ -413,32 +423,29 @@ func resourceIntentRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("fulfillment_activity", flattenFulfilmentActivity(resp.FulfillmentActivity))
 	}
 
-	if resp.ParentIntentSignature != nil {
-		d.Set("parent_intent_signature", resp.ParentIntentSignature)
-	}
+	d.Set("parent_intent_signature", resp.ParentIntentSignature)
 
 	if resp.RejectionStatement != nil {
 		d.Set("rejection_statement", flattenStatement(resp.RejectionStatement))
 	}
 
-	if resp.SampleUtterances != nil {
-		d.Set("sample_utterances", resp.SampleUtterances)
-	}
+	d.Set("sample_utterances", resp.SampleUtterances)
 
 	if resp.Slots != nil {
 		d.Set("slot", flattenSlots(resp.Slots))
 	}
 
-	return nil
+	return diags
 }
 
-func resourceIntentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+func resourceIntentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	input := &lexmodelbuildingservice.PutIntentInput{
 		Checksum:      aws.String(d.Get("checksum").(string)),
 		CreateVersion: aws.Bool(d.Get("create_version").(bool)),
-		Description:   aws.String(d.Get("description").(string)),
+		Description:   aws.String(d.Get(names.AttrDescription).(string)),
 		Name:          aws.String(d.Id()),
 	}
 
@@ -478,61 +485,64 @@ func resourceIntentUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.Slots = expandSlots(v.(*schema.Set).List())
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
-		_, err := conn.PutIntent(input)
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
+		_, err := conn.PutIntentWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
-			return resource.RetryableError(fmt.Errorf("%q: intent still updating", d.Id()))
+			return retry.RetryableError(fmt.Errorf("%q: intent still updating", d.Id()))
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.PutIntent(input)
+		_, err = conn.PutIntentWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error updating intent %s: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating intent %s: %s", d.Id(), err)
 	}
 
-	return resourceIntentRead(d, meta)
+	return append(diags, resourceIntentRead(ctx, d, meta)...)
 }
 
-func resourceIntentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+func resourceIntentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	input := &lexmodelbuildingservice.DeleteIntentInput{
 		Name: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteIntent(input)
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
+		_, err := conn.DeleteIntentWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
-			return resource.RetryableError(fmt.Errorf("%q: there is a pending operation, intent still deleting", d.Id()))
+			return retry.RetryableError(fmt.Errorf("%q: there is a pending operation, intent still deleting", d.Id()))
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteIntent(input)
+		_, err = conn.DeleteIntentWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting intent %s: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Lex Model Intent (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitIntentDeleted(conn, d.Id())
+	if _, err := waitIntentDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Lex Model Intent (%s): waiting for completion: %s", d.Id(), err)
+	}
 
-	return err
+	return diags
 }
 
 var codeHookResource = &schema.Resource{
@@ -542,7 +552,7 @@ var codeHookResource = &schema.Resource{
 			Required:     true,
 			ValidateFunc: validation.StringLenBetween(1, 5),
 		},
-		"uri": {
+		names.AttrURI: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ValidateFunc: verify.ValidARN,
@@ -552,12 +562,12 @@ var codeHookResource = &schema.Resource{
 
 var messageResource = &schema.Resource{
 	Schema: map[string]*schema.Schema{
-		"content": {
+		names.AttrContent: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringLenBetween(1, 1000),
 		},
-		"content_type": {
+		names.AttrContentType: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringInSlice(lexmodelbuildingservice.ContentType_Values(), false),
@@ -577,7 +587,7 @@ var promptResource = &schema.Resource{
 			Required:     true,
 			ValidateFunc: validation.IntBetween(1, 5),
 		},
-		"message": {
+		names.AttrMessage: {
 			Type:     schema.TypeSet,
 			Required: true,
 			MinItems: 1,
@@ -594,7 +604,7 @@ var promptResource = &schema.Resource{
 
 var statementResource = &schema.Resource{
 	Schema: map[string]*schema.Schema{
-		"message": {
+		names.AttrMessage: {
 			Type:     schema.TypeSet,
 			Required: true,
 			MinItems: 1,
@@ -613,7 +623,7 @@ func flattenCodeHook(hook *lexmodelbuildingservice.CodeHook) (flattened []map[st
 	return []map[string]interface{}{
 		{
 			"message_version": aws.StringValue(hook.MessageVersion),
-			"uri":             aws.StringValue(hook.Uri),
+			names.AttrURI:     aws.StringValue(hook.Uri),
 		},
 	}
 }
@@ -623,7 +633,7 @@ func expandCodeHook(rawObject interface{}) (hook *lexmodelbuildingservice.CodeHo
 
 	return &lexmodelbuildingservice.CodeHook{
 		MessageVersion: aws.String(m["message_version"].(string)),
-		Uri:            aws.String(m["uri"].(string)),
+		Uri:            aws.String(m[names.AttrURI].(string)),
 	}
 }
 
@@ -648,7 +658,7 @@ func expandFollowUpPrompt(rawObject interface{}) (followUp *lexmodelbuildingserv
 func flattenFulfilmentActivity(activity *lexmodelbuildingservice.FulfillmentActivity) (flattened []map[string]interface{}) {
 	flattened = []map[string]interface{}{
 		{
-			"type": aws.StringValue(activity.Type),
+			names.AttrType: aws.StringValue(activity.Type),
 		},
 	}
 
@@ -663,7 +673,7 @@ func expandFulfilmentActivity(rawObject interface{}) (activity *lexmodelbuilding
 	m := rawObject.([]interface{})[0].(map[string]interface{})
 
 	activity = &lexmodelbuildingservice.FulfillmentActivity{}
-	activity.Type = aws.String(m["type"].(string))
+	activity.Type = aws.String(m[names.AttrType].(string))
 
 	if v, ok := m["code_hook"]; ok && len(v.([]interface{})) != 0 {
 		activity.CodeHook = expandCodeHook(v)
@@ -675,9 +685,9 @@ func expandFulfilmentActivity(rawObject interface{}) (activity *lexmodelbuilding
 func flattenMessages(messages []*lexmodelbuildingservice.Message) (flattenedMessages []map[string]interface{}) {
 	for _, message := range messages {
 		flattenedMessages = append(flattenedMessages, map[string]interface{}{
-			"content":      aws.StringValue(message.Content),
-			"content_type": aws.StringValue(message.ContentType),
-			"group_number": aws.Int64Value(message.GroupNumber),
+			names.AttrContent:     aws.StringValue(message.Content),
+			names.AttrContentType: aws.StringValue(message.ContentType),
+			"group_number":        aws.Int64Value(message.GroupNumber),
 		})
 	}
 
@@ -697,8 +707,8 @@ func expandMessages(rawValues []interface{}) []*lexmodelbuildingservice.Message 
 		}
 
 		message := &lexmodelbuildingservice.Message{
-			Content:     aws.String(value["content"].(string)),
-			ContentType: aws.String(value["content_type"].(string)),
+			Content:     aws.String(value[names.AttrContent].(string)),
+			ContentType: aws.String(value[names.AttrContentType].(string)),
 		}
 
 		if v, ok := value["group_number"]; ok && v != 0 {
@@ -714,8 +724,8 @@ func expandMessages(rawValues []interface{}) []*lexmodelbuildingservice.Message 
 func flattenPrompt(prompt *lexmodelbuildingservice.Prompt) (flattened []map[string]interface{}) {
 	flattened = []map[string]interface{}{
 		{
-			"max_attempts": aws.Int64Value(prompt.MaxAttempts),
-			"message":      flattenMessages(prompt.Messages),
+			"max_attempts":    aws.Int64Value(prompt.MaxAttempts),
+			names.AttrMessage: flattenMessages(prompt.Messages),
 		},
 	}
 
@@ -731,7 +741,7 @@ func expandPrompt(rawObject interface{}) (prompt *lexmodelbuildingservice.Prompt
 
 	prompt = &lexmodelbuildingservice.Prompt{}
 	prompt.MaxAttempts = aws.Int64(int64(m["max_attempts"].(int)))
-	prompt.Messages = expandMessages(m["message"].(*schema.Set).List())
+	prompt.Messages = expandMessages(m[names.AttrMessage].(*schema.Set).List())
 
 	if v, ok := m["response_card"]; ok && v != "" {
 		prompt.ResponseCard = aws.String(v.(string))
@@ -743,14 +753,14 @@ func expandPrompt(rawObject interface{}) (prompt *lexmodelbuildingservice.Prompt
 func flattenSlots(slots []*lexmodelbuildingservice.Slot) (flattenedSlots []map[string]interface{}) {
 	for _, slot := range slots {
 		flattenedSlot := map[string]interface{}{
-			"name":            aws.StringValue(slot.Name),
-			"priority":        aws.Int64Value(slot.Priority),
-			"slot_constraint": aws.StringValue(slot.SlotConstraint),
-			"slot_type":       aws.StringValue(slot.SlotType),
+			names.AttrName:     aws.StringValue(slot.Name),
+			names.AttrPriority: aws.Int64Value(slot.Priority),
+			"slot_constraint":  aws.StringValue(slot.SlotConstraint),
+			"slot_type":        aws.StringValue(slot.SlotType),
 		}
 
 		if slot.Description != nil {
-			flattenedSlot["description"] = aws.StringValue(slot.Description)
+			flattenedSlot[names.AttrDescription] = aws.StringValue(slot.Description)
 		}
 
 		if slot.ResponseCard != nil {
@@ -788,13 +798,13 @@ func expandSlots(rawValues []interface{}) []*lexmodelbuildingservice.Slot {
 		}
 
 		slot := &lexmodelbuildingservice.Slot{
-			Name:           aws.String(value["name"].(string)),
-			Priority:       aws.Int64(int64(value["priority"].(int))),
+			Name:           aws.String(value[names.AttrName].(string)),
+			Priority:       aws.Int64(int64(value[names.AttrPriority].(int))),
 			SlotConstraint: aws.String(value["slot_constraint"].(string)),
 			SlotType:       aws.String(value["slot_type"].(string)),
 		}
 
-		if v, ok := value["description"]; ok && v != "" {
+		if v, ok := value[names.AttrDescription]; ok && v != "" {
 			slot.Description = aws.String(v.(string))
 		}
 
@@ -827,7 +837,7 @@ func expandSlots(rawValues []interface{}) []*lexmodelbuildingservice.Slot {
 func flattenStatement(statement *lexmodelbuildingservice.Statement) (flattened []map[string]interface{}) {
 	flattened = []map[string]interface{}{
 		{
-			"message": flattenMessages(statement.Messages),
+			names.AttrMessage: flattenMessages(statement.Messages),
 		},
 	}
 
@@ -842,7 +852,7 @@ func expandStatement(rawObject interface{}) (statement *lexmodelbuildingservice.
 	m := rawObject.([]interface{})[0].(map[string]interface{})
 
 	statement = &lexmodelbuildingservice.Statement{}
-	statement.Messages = expandMessages(m["message"].(*schema.Set).List())
+	statement.Messages = expandMessages(m[names.AttrMessage].(*schema.Set).List())
 
 	if v, ok := m["response_card"]; ok && v != "" {
 		statement.ResponseCard = aws.String(v.(string))

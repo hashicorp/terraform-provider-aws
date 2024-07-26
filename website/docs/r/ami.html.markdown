@@ -38,7 +38,7 @@ resource "aws_ami" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Region-unique name for the AMI.
 * `boot_mode` - (Optional) Boot mode of the AMI. For more information, see [Boot modes](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-boot.html) in the Amazon Elastic Compute Cloud User Guide.
@@ -88,9 +88,6 @@ Nested `ebs_block_device` blocks have the following structure:
   If `snapshot_id` is set and `volume_size` is omitted then the volume will have the same size
   as the selected snapshot.
 * `volume_type` - (Optional) Type of EBS volume to create. Can be `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1` (Default: `standard`).
-* `kms_key_id` - (Optional) Full ARN of the AWS Key Management Service (AWS KMS) CMK to use when encrypting the snapshots of
-an image during a copy operation. This parameter is only required if you want to use a non-default CMK;
-if this parameter is not specified, the default CMK for EBS is used
 * `outpost_arn` - (Optional) ARN of the Outpost on which the snapshot is stored.
 
 ~> **Note:** You can specify `encrypted` or `snapshot_id` but not both.
@@ -101,9 +98,9 @@ Nested `ephemeral_block_device` blocks have the following structure:
 * `virtual_name` - (Required) Name for the ephemeral device, of the form "ephemeralN" where
   *N* is a volume number starting from zero.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the AMI.
 * `id` - ID of the created AMI.
@@ -114,14 +111,13 @@ In addition to all arguments above, the following attributes are exported:
 * `image_owner_alias` - AWS account alias (for example, amazon, self) or the AWS account ID of the AMI owner.
 * `image_type` - Type of image.
 * `hypervisor` - Hypervisor type of the image.
-* `owner_id` - AWS account ID of the image owner.
 * `platform` - This value is set to windows for Windows AMIs; otherwise, it is blank.
 * `public` - Whether the image has public launch permissions.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `40m`)
 * `update` - (Default `40m`)
@@ -129,8 +125,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_ami` can be imported using the ID of the AMI, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ami` using the ID of the AMI. For example:
 
+```terraform
+import {
+  to = aws_ami.example
+  id = "ami-12345678"
+}
 ```
-$ terraform import aws_ami.example ami-12345678
+
+Using `terraform import`, import `aws_ami` using the ID of the AMI. For example:
+
+```console
+% terraform import aws_ami.example ami-12345678
 ```

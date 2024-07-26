@@ -1,10 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package workspaces
 
 import (
+	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 const (
@@ -30,117 +36,117 @@ const (
 	WorkspaceTerminatedTimeout = 10 * time.Minute
 )
 
-func WaitDirectoryRegistered(conn *workspaces.WorkSpaces, directoryID string) (*workspaces.WorkspaceDirectory, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{workspaces.WorkspaceDirectoryStateRegistering},
-		Target:  []string{workspaces.WorkspaceDirectoryStateRegistered},
-		Refresh: StatusDirectoryState(conn, directoryID),
+func WaitDirectoryRegistered(ctx context.Context, conn *workspaces.Client, directoryID string) (*types.WorkspaceDirectory, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.WorkspaceDirectoryStateRegistering),
+		Target:  enum.Slice(types.WorkspaceDirectoryStateRegistered),
+		Refresh: StatusDirectoryState(ctx, conn, directoryID),
 		Timeout: DirectoryRegisteredTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*workspaces.WorkspaceDirectory); ok {
+	if v, ok := outputRaw.(*types.WorkspaceDirectory); ok {
 		return v, err
 	}
 
 	return nil, err
 }
 
-func WaitDirectoryDeregistered(conn *workspaces.WorkSpaces, directoryID string) (*workspaces.WorkspaceDirectory, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			workspaces.WorkspaceDirectoryStateRegistering,
-			workspaces.WorkspaceDirectoryStateRegistered,
-			workspaces.WorkspaceDirectoryStateDeregistering,
-		},
+func WaitDirectoryDeregistered(ctx context.Context, conn *workspaces.Client, directoryID string) (*types.WorkspaceDirectory, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			types.WorkspaceDirectoryStateRegistering,
+			types.WorkspaceDirectoryStateRegistered,
+			types.WorkspaceDirectoryStateDeregistering,
+		),
 		Target:  []string{},
-		Refresh: StatusDirectoryState(conn, directoryID),
+		Refresh: StatusDirectoryState(ctx, conn, directoryID),
 		Timeout: DirectoryDeregisteredTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*workspaces.WorkspaceDirectory); ok {
+	if v, ok := outputRaw.(*types.WorkspaceDirectory); ok {
 		return v, err
 	}
 
 	return nil, err
 }
 
-func WaitWorkspaceAvailable(conn *workspaces.WorkSpaces, workspaceID string, timeout time.Duration) (*workspaces.Workspace, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			workspaces.WorkspaceStatePending,
-			workspaces.WorkspaceStateStarting,
-		},
-		Target:  []string{workspaces.WorkspaceStateAvailable},
-		Refresh: StatusWorkspaceState(conn, workspaceID),
+func WaitWorkspaceAvailable(ctx context.Context, conn *workspaces.Client, workspaceID string, timeout time.Duration) (*types.Workspace, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			types.WorkspaceStatePending,
+			types.WorkspaceStateStarting,
+		),
+		Target:  enum.Slice(types.WorkspaceStateAvailable),
+		Refresh: StatusWorkspaceState(ctx, conn, workspaceID),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*workspaces.Workspace); ok {
+	if v, ok := outputRaw.(*types.Workspace); ok {
 		return v, err
 	}
 
 	return nil, err
 }
 
-func WaitWorkspaceTerminated(conn *workspaces.WorkSpaces, workspaceID string, timeout time.Duration) (*workspaces.Workspace, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			workspaces.WorkspaceStatePending,
-			workspaces.WorkspaceStateAvailable,
-			workspaces.WorkspaceStateImpaired,
-			workspaces.WorkspaceStateUnhealthy,
-			workspaces.WorkspaceStateRebooting,
-			workspaces.WorkspaceStateStarting,
-			workspaces.WorkspaceStateRebuilding,
-			workspaces.WorkspaceStateRestoring,
-			workspaces.WorkspaceStateMaintenance,
-			workspaces.WorkspaceStateAdminMaintenance,
-			workspaces.WorkspaceStateSuspended,
-			workspaces.WorkspaceStateUpdating,
-			workspaces.WorkspaceStateStopping,
-			workspaces.WorkspaceStateStopped,
-			workspaces.WorkspaceStateTerminating,
-			workspaces.WorkspaceStateError,
-		},
-		Target:  []string{workspaces.WorkspaceStateTerminated},
-		Refresh: StatusWorkspaceState(conn, workspaceID),
+func WaitWorkspaceTerminated(ctx context.Context, conn *workspaces.Client, workspaceID string, timeout time.Duration) (*types.Workspace, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			types.WorkspaceStatePending,
+			types.WorkspaceStateAvailable,
+			types.WorkspaceStateImpaired,
+			types.WorkspaceStateUnhealthy,
+			types.WorkspaceStateRebooting,
+			types.WorkspaceStateStarting,
+			types.WorkspaceStateRebuilding,
+			types.WorkspaceStateRestoring,
+			types.WorkspaceStateMaintenance,
+			types.WorkspaceStateAdminMaintenance,
+			types.WorkspaceStateSuspended,
+			types.WorkspaceStateUpdating,
+			types.WorkspaceStateStopping,
+			types.WorkspaceStateStopped,
+			types.WorkspaceStateTerminating,
+			types.WorkspaceStateError,
+		),
+		Target:  enum.Slice(types.WorkspaceStateTerminated),
+		Refresh: StatusWorkspaceState(ctx, conn, workspaceID),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*workspaces.Workspace); ok {
+	if v, ok := outputRaw.(*types.Workspace); ok {
 		return v, err
 	}
 
 	return nil, err
 }
 
-func WaitWorkspaceUpdated(conn *workspaces.WorkSpaces, workspaceID string, timeout time.Duration) (*workspaces.Workspace, error) {
+func WaitWorkspaceUpdated(ctx context.Context, conn *workspaces.Client, workspaceID string, timeout time.Duration) (*types.Workspace, error) {
 	// OperationInProgressException: The properties of this WorkSpace are currently under modification. Please try again in a moment.
 	// AWS Workspaces service doesn't change instance status to "Updating" during property modification. Respective AWS Support feature request has been created. Meanwhile, artificial delay is placed here as a workaround.
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			workspaces.WorkspaceStateUpdating,
-		},
-		Target: []string{
-			workspaces.WorkspaceStateAvailable,
-			workspaces.WorkspaceStateStopped,
-		},
-		Refresh: StatusWorkspaceState(conn, workspaceID),
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			types.WorkspaceStateUpdating,
+		),
+		Target: enum.Slice(
+			types.WorkspaceStateAvailable,
+			types.WorkspaceStateStopped,
+		),
+		Refresh: StatusWorkspaceState(ctx, conn, workspaceID),
 		Delay:   WorkspaceUpdatingDelay,
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*workspaces.Workspace); ok {
+	if v, ok := outputRaw.(*types.Workspace); ok {
 		return v, err
 	}
 

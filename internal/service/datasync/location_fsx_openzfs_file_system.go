@@ -1,31 +1,44 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/datasync"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceLocationFSxOpenZFSFileSystem() *schema.Resource {
+// @SDKResource("aws_datasync_location_fsx_openzfs_file_system", name="Location FSx for OpenZFS File System")
+// @Tags(identifierAttribute="id")
+func resourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceLocationFSxOpenZFSFileSystemCreate,
-		Read:   resourceLocationFSxOpenZFSFileSystemRead,
-		Update: resourceLocationFSxOpenZFSFileSystemUpdate,
-		Delete: resourceLocationFSxOpenZFSFileSystemDelete,
+		CreateWithoutTimeout: resourceLocationFSxOpenZFSFileSystemCreate,
+		ReadWithoutTimeout:   resourceLocationFSxOpenZFSFileSystemRead,
+		UpdateWithoutTimeout: resourceLocationFSxOpenZFSFileSystemUpdate,
+		DeleteWithoutTimeout: resourceLocationFSxOpenZFSFileSystemDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "#")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected DataSyncLocationArn#FsxArn", d.Id())
@@ -42,7 +55,11 @@ func ResourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,7 +69,7 @@ func ResourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -73,12 +90,12 @@ func ResourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"version": {
-													Type:         schema.TypeString,
-													Default:      datasync.NfsVersionAutomatic,
-													Optional:     true,
-													ForceNew:     true,
-													ValidateFunc: validation.StringInSlice(datasync.NfsVersion_Values(), false),
+												names.AttrVersion: {
+													Type:             schema.TypeString,
+													Default:          awstypes.NfsVersionAutomatic,
+													Optional:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.NfsVersion](),
 												},
 											},
 										},
@@ -107,13 +124,9 @@ func ResourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 4096),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"uri": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creation_time": {
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrURI: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -123,176 +136,116 @@ func ResourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 	}
 }
 
-func resourceLocationFSxOpenZFSFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	fsxArn := d.Get("fsx_filesystem_arn").(string)
+func resourceLocationFSxOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	input := &datasync.CreateLocationFsxOpenZfsInput{
-		FsxFilesystemArn:  aws.String(fsxArn),
-		Protocol:          expandProtocol(d.Get("protocol").([]interface{})),
-		SecurityGroupArns: flex.ExpandStringSet(d.Get("security_group_arns").(*schema.Set)),
-		Tags:              Tags(tags.IgnoreAWS()),
+		FsxFilesystemArn:  aws.String(d.Get("fsx_filesystem_arn").(string)),
+		Protocol:          expandProtocol(d.Get(names.AttrProtocol).([]interface{})),
+		SecurityGroupArns: flex.ExpandStringValueSet(d.Get("security_group_arns").(*schema.Set)),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("subdirectory"); ok {
 		input.Subdirectory = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating DataSync Location Fsx OpenZfs File System: %#v", input)
-	output, err := conn.CreateLocationFsxOpenZfs(input)
+	output, err := conn.CreateLocationFsxOpenZfs(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating DataSync Location Fsx OpenZfs File System: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating DataSync Location FSx for OpenZFS File System: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.LocationArn))
+	d.SetId(aws.ToString(output.LocationArn))
 
-	return resourceLocationFSxOpenZFSFileSystemRead(d, meta)
+	return append(diags, resourceLocationFSxOpenZFSFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceLocationFSxOpenZFSFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceLocationFSxOpenZFSFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	output, err := FindFSxOpenZFSLocationByARN(conn, d.Id())
+	output, err := findLocationFSxOpenZFSByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] DataSync Location Fsx OpenZfs (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] DataSync Location FSx for OpenZFS File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Location Fsx OpenZfs (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DataSync Location FSx for OpenZFS File System (%s): %s", d.Id(), err)
 	}
 
-	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
-
+	uri := aws.ToString(output.LocationUri)
+	subdirectory, err := subdirectoryFromLocationURI(uri)
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("arn", output.LocationArn)
+	d.Set(names.AttrARN, output.LocationArn)
+	d.Set(names.AttrCreationTime, output.CreationTime.Format(time.RFC3339))
+	d.Set("fsx_filesystem_arn", d.Get("fsx_filesystem_arn"))
+	if err := d.Set(names.AttrProtocol, flattenProtocol(output.Protocol)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting protocol: %s", err)
+	}
+	d.Set("security_group_arns", output.SecurityGroupArns)
 	d.Set("subdirectory", subdirectory)
-	d.Set("uri", output.LocationUri)
+	d.Set(names.AttrURI, uri)
 
-	if err := d.Set("security_group_arns", flex.FlattenStringSet(output.SecurityGroupArns)); err != nil {
-		return fmt.Errorf("error setting security_group_arns: %w", err)
-	}
-
-	if err := d.Set("creation_time", output.CreationTime.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("error setting creation_time: %w", err)
-	}
-
-	if err := d.Set("protocol", flattenProtocol(output.Protocol)); err != nil {
-		return fmt.Errorf("error setting protocol: %w", err)
-	}
-
-	tags, err := ListTags(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for DataSync Location Fsx OpenZfs (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceLocationFSxOpenZFSFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceLocationFSxOpenZFSFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	// Tags only.
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating DataSync Location Fsx OpenZfs File System (%s) tags: %w", d.Id(), err)
+	return append(diags, resourceLocationFSxOpenZFSFileSystemRead(ctx, d, meta)...)
+}
+
+func resourceLocationFSxOpenZFSFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
+
+	log.Printf("[DEBUG] Deleting DataSync Location FSx for OpenZFS File System: %s", d.Id())
+	_, err := conn.DeleteLocation(ctx, &datasync.DeleteLocationInput{
+		LocationArn: aws.String(d.Id()),
+	})
+
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting DataSync Location FSx for OpenZFS File System (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findLocationFSxOpenZFSByARN(ctx context.Context, conn *datasync.Client, arn string) (*datasync.DescribeLocationFsxOpenZfsOutput, error) {
+	input := &datasync.DescribeLocationFsxOpenZfsInput{
+		LocationArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeLocationFsxOpenZfs(ctx, input)
+
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
 
-	return resourceLocationFSxOpenZFSFileSystemRead(d, meta)
-}
-
-func resourceLocationFSxOpenZFSFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
-
-	input := &datasync.DeleteLocationInput{
-		LocationArn: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting DataSync Location Fsx OpenZfs File System: %#v", input)
-	_, err := conn.DeleteLocation(input)
-
-	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
-		return nil
-	}
-
 	if err != nil {
-		return fmt.Errorf("error deleting DataSync Location Fsx OpenZfs (%s): %w", d.Id(), err)
+		return nil, err
 	}
 
-	return nil
-}
-
-func expandProtocol(l []interface{}) *datasync.FsxProtocol {
-	if len(l) == 0 || l[0] == nil {
-		return nil
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	m := l[0].(map[string]interface{})
-
-	Protocol := &datasync.FsxProtocol{
-		NFS: expandNFS(m["nfs"].([]interface{})),
-	}
-
-	return Protocol
-}
-
-func flattenProtocol(protocol *datasync.FsxProtocol) []interface{} {
-	if protocol == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"nfs": flattenNFS(protocol.NFS),
-	}
-
-	return []interface{}{m}
-}
-
-func expandNFS(l []interface{}) *datasync.FsxProtocolNfs {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	Protocol := &datasync.FsxProtocolNfs{
-		MountOptions: expandNFSMountOptions(m["mount_options"].([]interface{})),
-	}
-
-	return Protocol
-}
-
-func flattenNFS(nfs *datasync.FsxProtocolNfs) []interface{} {
-	if nfs == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"mount_options": flattenNFSMountOptions(nfs.MountOptions),
-	}
-
-	return []interface{}{m}
+	return output, nil
 }

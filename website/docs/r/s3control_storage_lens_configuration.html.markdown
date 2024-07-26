@@ -60,7 +60,7 @@ resource "aws_s3control_storage_lens_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Optional) The AWS account ID for the S3 Storage Lens configuration. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `config_id` - (Required) The ID of the S3 Storage Lens configuration.
@@ -83,7 +83,10 @@ The `storage_lens_configuration` block supports the following:
 The `account_level` block supports the following:
 
 * `activity_metrics` (Optional) S3 Storage Lens activity metrics. See [Activity Metrics](#activity-metrics) below for more details.
+* `advanced_cost_optimization_metrics` (Optional) Advanced cost-optimization metrics for S3 Storage Lens. See [Advanced Cost-Optimization Metrics](#advanced-cost-optimization-metrics) below for more details.
+* `advanced_data_protection_metrics` (Optional) Advanced data-protection metrics for S3 Storage Lens. See [Advanced Data-Protection Metrics](#advanced-data-protection-metrics) below for more details.
 * `bucket_level` (Required) S3 Storage Lens bucket-level configuration. See [Bucket Level](#bucket-level) below for more details.
+* `detailed_status_code_metrics` (Optional) Detailed status code metrics for S3 Storage Lens. See [Detailed Status Code Metrics](#detailed-status-code-metrics) below for more details.
 
 ### Activity Metrics
 
@@ -91,11 +94,32 @@ The `activity_metrics` block supports the following:
 
 * `enabled` (Optional) Whether the activity metrics are enabled.
 
+### Advanced Cost-Optimization Metrics
+
+The `advanced_cost_optimization_metrics` block supports the following:
+
+* `enabled` (Optional) Whether advanced cost-optimization metrics are enabled.
+
+### Advanced Data-Protection Metrics
+
+The `advanced_data_protection_metrics` block supports the following:
+
+* `enabled` (Optional) Whether advanced data-protection metrics are enabled.
+
+### Detailed Status Code Metrics
+
+The `detailed_status_code_metrics` block supports the following:
+
+* `enabled` (Optional) Whether detailed status code metrics are enabled.
+
 ### Bucket Level
 
 The `bucket_level` block supports the following:
 
 * `activity_metrics` (Optional) S3 Storage Lens activity metrics. See [Activity Metrics](#activity-metrics) above for more details.
+* `advanced_cost_optimization_metrics` (Optional) Advanced cost-optimization metrics for S3 Storage Lens. See [Advanced Cost-Optimization Metrics](#advanced-cost-optimization-metrics) above for more details.
+* `advanced_data_protection_metrics` (Optional) Advanced data-protection metrics for S3 Storage Lens. See [Advanced Data-Protection Metrics](#advanced-data-protection-metrics) above for more details.
+* `detailed_status_code_metrics` (Optional) Detailed status code metrics for S3 Storage Lens. See [Detailed Status Code Metrics](#detailed-status-code-metrics) above for more details.
 * `prefix_level` (Optional) Prefix-level metrics for S3 Storage Lens. See [Prefix Level](#prefix-level) below for more details.
 
 ### Prefix Level
@@ -176,17 +200,26 @@ The `include` block supports the following:
 * `buckets` (Optional) List of S3 bucket ARNs.
 * `regions` (Optional) List of AWS Regions.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the S3 Storage Lens configuration.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-S3 Storage Lens configurations can be imported using the `account_id` and `config_id`, separated by a colon (`:`), e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Storage Lens configurations using the `account_id` and `config_id`, separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_s3control_storage_lens_configuration.example
+  id = "123456789012:example-1"
+}
 ```
-$ terraform import aws_s3control_storage_lens_configuration.example 123456789012:example-1
+
+Using `terraform import`, import S3 Storage Lens configurations using the `account_id` and `config_id`, separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_s3control_storage_lens_configuration.example 123456789012:example-1
 ```

@@ -1,23 +1,32 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager
 
 import (
-	"fmt"
-	"log"
+	"context"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceSecretVersion() *schema.Resource {
+// @SDKDataSource("aws_secretsmanager_secret_version", name="Secret Version")
+func dataSourceSecretVersion() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSecretVersionRead,
+		ReadWithoutTimeout: dataSourceSecretVersionRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -25,12 +34,12 @@ func DataSourceSecretVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"secret_string": {
+			"secret_binary": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"secret_binary": {
+			"secret_string": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -43,7 +52,7 @@ func DataSourceSecretVersion() *schema.Resource {
 			"version_stage": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "AWSCURRENT",
+				Default:  secretVersionStageCurrent,
 			},
 			"version_stages": {
 				Type:     schema.TypeSet,
@@ -54,11 +63,12 @@ func DataSourceSecretVersion() *schema.Resource {
 	}
 }
 
-func dataSourceSecretVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+func dataSourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
+
 	secretID := d.Get("secret_id").(string)
 	var version string
-
 	input := &secretsmanager.GetSecretValueInput{
 		SecretId: aws.String(secretID),
 	}
@@ -67,34 +77,27 @@ func dataSourceSecretVersionRead(d *schema.ResourceData, meta interface{}) error
 		versionID := v.(string)
 		input.VersionId = aws.String(versionID)
 		version = versionID
-	} else {
-		versionStage := d.Get("version_stage").(string)
+	} else if v, ok := d.GetOk("version_stage"); ok {
+		versionStage := v.(string)
 		input.VersionStage = aws.String(versionStage)
 		version = versionStage
 	}
 
-	log.Printf("[DEBUG] Reading Secrets Manager Secret Version: %s", input)
-	output, err := conn.GetSecretValue(input)
+	id := secretVersionCreateResourceID(secretID, version)
+	output, err := findSecretVersion(ctx, conn, input)
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
-			return fmt.Errorf("Secrets Manager Secret %q Version %q not found", secretID, version)
-		}
-		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "You can’t perform this operation on the secret because it was deleted") {
-			return fmt.Errorf("Secrets Manager Secret %q Version %q not found", secretID, version)
-		}
-		return fmt.Errorf("error reading Secrets Manager Secret Version: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s|%s", secretID, version))
+	d.SetId(id)
+	d.Set(names.AttrARN, output.ARN)
+	d.Set(names.AttrCreatedDate, aws.String(output.CreatedDate.Format(time.RFC3339)))
 	d.Set("secret_id", secretID)
+	d.Set("secret_binary", string(output.SecretBinary))
 	d.Set("secret_string", output.SecretString)
 	d.Set("version_id", output.VersionId)
-	d.Set("secret_binary", string(output.SecretBinary))
-	d.Set("arn", output.ARN)
+	d.Set("version_stages", output.VersionStages)
 
-	if err := d.Set("version_stages", flex.FlattenStringList(output.VersionStages)); err != nil {
-		return fmt.Errorf("error setting version_stages: %w", err)
-	}
-
-	return nil
+	return diags
 }

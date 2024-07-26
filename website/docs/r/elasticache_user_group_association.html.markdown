@@ -54,14 +54,23 @@ The following arguments are required:
 * `user_group_id` - (Required) ID of the user group.
 * `user_id` - (Required) ID of the user to associated with the user group.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-ElastiCache user group associations can be imported using the `user_group_id` and `user_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ElastiCache user group associations using the `user_group_id` and `user_id`. For example:
 
+```terraform
+import {
+  to = aws_elasticache_user_group_association.example
+  id = "userGoupId1,userId"
+}
 ```
-$ terraform import aws_elasticache_user_group_association.example userGoupId1,userId
+
+Using `terraform import`, import ElastiCache user group associations using the `user_group_id` and `user_id`. For example:
+
+```console
+% terraform import aws_elasticache_user_group_association.example userGoupId1,userId
 ```

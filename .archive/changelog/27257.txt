@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_appstream_stack: Fix panic with `application_settings`.
+```
+
+```release-note:enhancement
+resource/aws_appstream_stack: Add validation for `application_settings`.
+```

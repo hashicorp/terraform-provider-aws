@@ -1,32 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftserverless
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceUsageLimit() *schema.Resource {
+// @SDKResource("aws_redshiftserverless_usage_limit", name="Usage Limit")
+func resourceUsageLimit() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUsageLimitCreate,
-		Read:   resourceUsageLimitRead,
-		Update: resourceUsageLimitUpdate,
-		Delete: resourceUsageLimitDelete,
+		CreateWithoutTimeout: resourceUsageLimitCreate,
+		ReadWithoutTimeout:   resourceUsageLimitRead,
+		UpdateWithoutTimeout: resourceUsageLimitUpdate,
+		DeleteWithoutTimeout: resourceUsageLimitDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,7 +54,7 @@ func ResourceUsageLimit() *schema.Resource {
 				Default:      redshiftserverless.UsageLimitPeriodMonthly,
 				ValidateFunc: validation.StringInSlice(redshiftserverless.UsageLimitPeriod_Values(), false),
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -62,12 +69,13 @@ func ResourceUsageLimit() *schema.Resource {
 	}
 }
 
-func resourceUsageLimitCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func resourceUsageLimitCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	input := redshiftserverless.CreateUsageLimitInput{
 		Amount:      aws.Int64(int64(d.Get("amount").(int))),
-		ResourceArn: aws.String(d.Get("resource_arn").(string)),
+		ResourceArn: aws.String(d.Get(names.AttrResourceARN).(string)),
 		UsageType:   aws.String(d.Get("usage_type").(string)),
 	}
 
@@ -79,43 +87,45 @@ func resourceUsageLimitCreate(d *schema.ResourceData, meta interface{}) error {
 		input.BreachAction = aws.String(v.(string))
 	}
 
-	out, err := conn.CreateUsageLimit(&input)
+	out, err := conn.CreateUsageLimitWithContext(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Redshift Serverless Usage Limit : %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Serverless Usage Limit : %s", err)
 	}
 
 	d.SetId(aws.StringValue(out.UsageLimit.UsageLimitId))
 
-	return resourceUsageLimitRead(d, meta)
+	return append(diags, resourceUsageLimitRead(ctx, d, meta)...)
 }
 
-func resourceUsageLimitRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
-	out, err := FindUsageLimitByName(conn, d.Id())
+	out, err := findUsageLimitByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless UsageLimit (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Redshift Serverless Usage Limit (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Serverless Usage Limit (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", out.UsageLimitArn)
+	d.Set(names.AttrARN, out.UsageLimitArn)
 	d.Set("breach_action", out.BreachAction)
 	d.Set("period", out.Period)
 	d.Set("usage_type", out.UsageType)
-	d.Set("resource_arn", out.ResourceArn)
+	d.Set(names.AttrResourceARN, out.ResourceArn)
 	d.Set("amount", out.Amount)
 
-	return nil
+	return diags
 }
 
-func resourceUsageLimitUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func resourceUsageLimitUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	input := &redshiftserverless.UpdateUsageLimitInput{
 		UsageLimitId: aws.String(d.Id()),
@@ -129,29 +139,30 @@ func resourceUsageLimitUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.BreachAction = aws.String(d.Get("breach_action").(string))
 	}
 
-	_, err := conn.UpdateUsageLimit(input)
+	_, err := conn.UpdateUsageLimitWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error updating Redshift Serverless Usage Limit (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Redshift Serverless Usage Limit (%s): %s", d.Id(), err)
 	}
 
-	return resourceUsageLimitRead(d, meta)
+	return append(diags, resourceUsageLimitRead(ctx, d, meta)...)
 }
 
-func resourceUsageLimitDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func resourceUsageLimitDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Usage Limit: %s", d.Id())
-	_, err := conn.DeleteUsageLimit(&redshiftserverless.DeleteUsageLimitInput{
+	_, err := conn.DeleteUsageLimitWithContext(ctx, &redshiftserverless.DeleteUsageLimitInput{
 		UsageLimitId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Redshift Serverless Usage Limit (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift Serverless Usage Limit (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

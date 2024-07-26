@@ -1,29 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloud9
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloud9"
+	"github.com/aws/aws-sdk-go-v2/service/cloud9/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceEnvironmentMembership() *schema.Resource {
+// @SDKResource("aws_cloud9_environment_membership", name="Environment Membership")
+func resourceEnvironmentMembership() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEnvironmentMembershipCreate,
-		Read:   resourceEnvironmentMembershipRead,
-		Update: resourceEnvironmentMembershipUpdate,
-		Delete: resourceEnvironmentMembershipDelete,
+		CreateWithoutTimeout: resourceEnvironmentMembershipCreate,
+		ReadWithoutTimeout:   resourceEnvironmentMembershipRead,
+		UpdateWithoutTimeout: resourceEnvironmentMembershipUpdate,
+		DeleteWithoutTimeout: resourceEnvironmentMembershipDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -32,10 +42,10 @@ func ResourceEnvironmentMembership() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"permissions": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(cloud9.Permissions_Values(), false),
+			names.AttrPermissions: {
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[types.Permissions](),
 			},
 			"user_arn": {
 				Type:         schema.TypeString,
@@ -51,101 +61,150 @@ func ResourceEnvironmentMembership() *schema.Resource {
 	}
 }
 
-func resourceEnvironmentMembershipCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Cloud9Conn
+func resourceEnvironmentMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
-	envId := d.Get("environment_id").(string)
-	userArn := d.Get("user_arn").(string)
+	envID := d.Get("environment_id").(string)
+	userARN := d.Get("user_arn").(string)
+	id := environmentMembershipCreateResourceID(envID, userARN)
 	input := &cloud9.CreateEnvironmentMembershipInput{
-		EnvironmentId: aws.String(envId),
-		Permissions:   aws.String(d.Get("permissions").(string)),
-		UserArn:       aws.String(userArn),
+		EnvironmentId: aws.String(envID),
+		Permissions:   types.MemberPermissions(d.Get(names.AttrPermissions).(string)),
+		UserArn:       aws.String(userARN),
 	}
 
-	_, err := conn.CreateEnvironmentMembership(input)
+	_, err := conn.CreateEnvironmentMembership(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Cloud9 Environment Membership: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Cloud9 Environment Membership (%s): %s", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s#%s", envId, userArn))
+	d.SetId(id)
 
-	return resourceEnvironmentMembershipRead(d, meta)
+	return append(diags, resourceEnvironmentMembershipRead(ctx, d, meta)...)
 }
 
-func resourceEnvironmentMembershipRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Cloud9Conn
+func resourceEnvironmentMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
-	envId, userArn, err := DecodeEnviornmentMemberId(d.Id())
+	envID, userARN, err := environmentMembershipParseResourceID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	env, err := FindEnvironmentMembershipByID(conn, envId, userArn)
+	env, err := findEnvironmentMembershipByTwoPartKey(ctx, conn, envID, userARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Cloud9 EC2 Environment (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Cloud9 Environment Membership (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Cloud9 EC2 Environment (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Cloud9 Environment Membership (%s): %s", d.Id(), err)
 	}
 
 	d.Set("environment_id", env.EnvironmentId)
+	d.Set(names.AttrPermissions, env.Permissions)
 	d.Set("user_arn", env.UserArn)
 	d.Set("user_id", env.UserId)
-	d.Set("permissions", env.Permissions)
 
-	return nil
+	return diags
 }
 
-func resourceEnvironmentMembershipUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Cloud9Conn
+func resourceEnvironmentMembershipUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
+
+	envID, userARN, err := environmentMembershipParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	input := cloud9.UpdateEnvironmentMembershipInput{
-		EnvironmentId: aws.String(d.Get("environment_id").(string)),
-		Permissions:   aws.String(d.Get("permissions").(string)),
-		UserArn:       aws.String(d.Get("user_arn").(string)),
+		EnvironmentId: aws.String(envID),
+		Permissions:   types.MemberPermissions(d.Get(names.AttrPermissions).(string)),
+		UserArn:       aws.String(userARN),
 	}
 
-	log.Printf("[INFO] Updating Cloud9 Environment Membership: %#v", input)
-	_, err := conn.UpdateEnvironmentMembership(&input)
+	_, err = conn.UpdateEnvironmentMembership(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Cloud9 Environment Membership (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Cloud9 Environment Membership (%s): %s", d.Id(), err)
 	}
 
-	return resourceEnvironmentMembershipRead(d, meta)
+	return append(diags, resourceEnvironmentMembershipRead(ctx, d, meta)...)
 }
 
-func resourceEnvironmentMembershipDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Cloud9Conn
+func resourceEnvironmentMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
-	_, err := conn.DeleteEnvironmentMembership(&cloud9.DeleteEnvironmentMembershipInput{
-		EnvironmentId: aws.String(d.Get("environment_id").(string)),
-		UserArn:       aws.String(d.Get("user_arn").(string)),
+	envID, userARN, err := environmentMembershipParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	log.Printf("[INFO] Deleting Cloud9 Environment Membership: %s", d.Id())
+	_, err = conn.DeleteEnvironmentMembership(ctx, &cloud9.DeleteEnvironmentMembershipInput{
+		EnvironmentId: aws.String(envID),
+		UserArn:       aws.String(userARN),
 	})
 
-	if tfawserr.ErrCodeEquals(err, cloud9.ErrCodeNotFoundException) {
-		return nil
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Cloud9 EC2 Environment (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Cloud9 Environment Membership (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func DecodeEnviornmentMemberId(id string) (string, string, error) {
-	idParts := strings.Split(id, "#")
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected ENVIRONMENT-ID#USER-ARN", id)
-	}
-	envId := idParts[0]
-	userArn := idParts[1]
+const environmentMembershipResourceIDSeparator = "#"
 
-	return envId, userArn, nil
+func environmentMembershipCreateResourceID(envID, userARN string) string {
+	parts := []string{envID, userARN}
+	id := strings.Join(parts, environmentMembershipResourceIDSeparator)
+
+	return id
+}
+
+func environmentMembershipParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, environmentMembershipResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected ENVIRONMENTID%[2]sUSERARN", id, environmentMembershipResourceIDSeparator)
+}
+
+func findEnvironmentMembershipByTwoPartKey(ctx context.Context, conn *cloud9.Client, envID, userARN string) (*types.EnvironmentMember, error) {
+	input := &cloud9.DescribeEnvironmentMembershipsInput{
+		EnvironmentId: aws.String(envID),
+		UserArn:       aws.String(userARN),
+	}
+
+	output, err := conn.DescribeEnvironmentMemberships(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return tfresource.AssertSingleValueResult(output.Memberships)
 }

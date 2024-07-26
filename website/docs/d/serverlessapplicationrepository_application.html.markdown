@@ -30,7 +30,9 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "example" {
 * `application_id` - (Required) ARN of the application.
 * `semantic_version` - (Optional) Requested version of the application. By default, retrieves the latest version.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `application_id` - ARN of the application.
 * `name` - Name of the application.

@@ -1,35 +1,44 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sagemaker_model", name="Model")
+// @Tags(identifierAttribute="arn")
 func ResourceModel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceModelCreate,
-		Read:   resourceModelRead,
-		Update: resourceModelUpdate,
-		Delete: resourceModelDelete,
+		CreateWithoutTimeout: resourceModelCreate,
+		ReadWithoutTimeout:   resourceModelRead,
+		UpdateWithoutTimeout: resourceModelUpdate,
+		DeleteWithoutTimeout: resourceModelDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,7 +53,7 @@ func ResourceModel() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validName,
 						},
-						"environment": {
+						names.AttrEnvironment: {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							ForceNew:     true,
@@ -53,7 +62,7 @@ func ResourceModel() *schema.Resource {
 						},
 						"image": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validImage,
 						},
@@ -87,7 +96,7 @@ func ResourceModel() *schema.Resource {
 								},
 							},
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -100,6 +109,48 @@ func ResourceModel() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validModelDataURL,
 						},
+						"model_package_name": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"model_data_source": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"s3_data_source": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"s3_uri": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validModelDataURL,
+												},
+												"s3_data_type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.S3ModelDataType_Values(), false),
+												},
+												"compression_type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.ModelCompressionType_Values(), false),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -108,7 +159,7 @@ func ResourceModel() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"execution_role_arn": {
+			names.AttrExecutionRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -122,7 +173,7 @@ func ResourceModel() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"mode": {
+						names.AttrMode: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(sagemaker.InferenceExecutionMode_Values(), false),
@@ -130,7 +181,7 @@ func ResourceModel() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -149,7 +200,7 @@ func ResourceModel() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validName,
 						},
-						"environment": {
+						names.AttrEnvironment: {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							ForceNew:     true,
@@ -158,7 +209,7 @@ func ResourceModel() *schema.Resource {
 						},
 						"image": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validImage,
 						},
@@ -192,7 +243,7 @@ func ResourceModel() *schema.Resource {
 								},
 							},
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -205,25 +256,67 @@ func ResourceModel() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validModelDataURL,
 						},
+						"model_package_name": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"model_data_source": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"s3_data_source": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"s3_uri": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validModelDataURL,
+												},
+												"s3_data_type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.S3ModelDataType_Values(), false),
+												},
+												"compression_type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.ModelCompressionType_Values(), false),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"vpc_config": {
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"subnets": {
+						names.AttrSubnets: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MaxItems: 16,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MaxItems: 5,
@@ -238,20 +331,20 @@ func ResourceModel() *schema.Resource {
 	}
 }
 
-func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	var name string
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		name = v.(string)
 	} else {
-		name = resource.UniqueId()
+		name = id.UniqueId()
 	}
 
 	createOpts := &sagemaker.CreateModelInput{
 		ModelName: aws.String(name),
+		Tags:      getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("primary_container"); ok {
@@ -262,15 +355,11 @@ func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
 		createOpts.Containers = expandContainers(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("execution_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
 		createOpts.ExecutionRoleArn = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		createOpts.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	if v, ok := d.GetOk("vpc_config"); ok {
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok {
 		createOpts.VpcConfig = expandVPCConfigRequest(v.([]interface{}))
 	}
 
@@ -283,16 +372,16 @@ func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] SageMaker model create config: %#v", *createOpts)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
-		return conn.CreateModel(createOpts)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+		return conn.CreateModelWithContext(ctx, createOpts)
 	}, "ValidationException")
 
 	if err != nil {
-		return fmt.Errorf("creating SageMaker model: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker model: %s", err)
 	}
 	d.SetId(name)
 
-	return resourceModelRead(d, meta)
+	return append(diags, resourceModelRead(ctx, d, meta)...)
 }
 
 func expandVPCConfigRequest(l []interface{}) *sagemaker.VpcConfig {
@@ -303,69 +392,52 @@ func expandVPCConfigRequest(l []interface{}) *sagemaker.VpcConfig {
 	m := l[0].(map[string]interface{})
 
 	return &sagemaker.VpcConfig{
-		SecurityGroupIds: flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
-		Subnets:          flex.ExpandStringSet(m["subnets"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
+		Subnets:          flex.ExpandStringSet(m[names.AttrSubnets].(*schema.Set)),
 	}
 }
 
-func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	request := &sagemaker.DescribeModelInput{
 		ModelName: aws.String(d.Id()),
 	}
 
-	model, err := conn.DescribeModel(request)
+	model, err := conn.DescribeModelWithContext(ctx, request)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, "ValidationException") {
 			log.Printf("[INFO] unable to find the sagemaker model resource and therefore it is removed from the state: %s", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("reading SageMaker model %s: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker model %s: %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(model.ModelArn)
-	d.Set("arn", arn)
-	d.Set("name", model.ModelName)
-	d.Set("execution_role_arn", model.ExecutionRoleArn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrName, model.ModelName)
+	d.Set(names.AttrExecutionRoleARN, model.ExecutionRoleArn)
 	d.Set("enable_network_isolation", model.EnableNetworkIsolation)
 
 	if err := d.Set("primary_container", flattenContainer(model.PrimaryContainer)); err != nil {
-		return fmt.Errorf("setting primary_container: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting primary_container: %s", err)
 	}
 
 	if err := d.Set("container", flattenContainers(model.Containers)); err != nil {
-		return fmt.Errorf("setting container: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting container: %s", err)
 	}
 
-	if err := d.Set("vpc_config", flattenVPCConfigResponse(model.VpcConfig)); err != nil {
-		return fmt.Errorf("setting vpc_config: %w", err)
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(model.VpcConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
 	if err := d.Set("inference_execution_config", flattenModelInferenceExecutionConfig(model.InferenceExecutionConfig)); err != nil {
-		return fmt.Errorf("setting inference_execution_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting inference_execution_config: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
-	if err != nil {
-		return fmt.Errorf("listing tags for SageMaker Model (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
 func flattenVPCConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[string]interface{} {
@@ -374,61 +446,58 @@ func flattenVPCConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[string]inter
 	}
 
 	m := map[string]interface{}{
-		"security_group_ids": flex.FlattenStringSet(vpcConfig.SecurityGroupIds),
-		"subnets":            flex.FlattenStringSet(vpcConfig.Subnets),
+		names.AttrSecurityGroupIDs: flex.FlattenStringSet(vpcConfig.SecurityGroupIds),
+		names.AttrSubnets:          flex.FlattenStringSet(vpcConfig.Subnets),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func resourceModelUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	// Tags only.
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating SageMaker Model (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return resourceModelRead(d, meta)
+	return append(diags, resourceModelRead(ctx, d, meta)...)
 }
 
-func resourceModelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	deleteOpts := &sagemaker.DeleteModelInput{
 		ModelName: aws.String(d.Id()),
 	}
 	log.Printf("[INFO] Deleting SageMaker model: %s", d.Id())
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteModel(deleteOpts)
+	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
+		_, err := conn.DeleteModelWithContext(ctx, deleteOpts)
 		if err == nil {
 			return nil
 		}
 
 		if tfawserr.ErrCodeEquals(err, "ResourceNotFound") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
-		return resource.NonRetryableError(err)
+		return retry.NonRetryableError(err)
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteModel(deleteOpts)
+		_, err = conn.DeleteModelWithContext(ctx, deleteOpts)
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting sagemaker model: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting sagemaker model: %s", err)
 	}
-	return nil
+	return diags
 }
 
 func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {
-	container := sagemaker.ContainerDefinition{
-		Image: aws.String(m["image"].(string)),
+	container := sagemaker.ContainerDefinition{}
+
+	if v, ok := m["image"]; ok && v.(string) != "" {
+		container.Image = aws.String(v.(string))
 	}
 
-	if v, ok := m["mode"]; ok && v.(string) != "" {
+	if v, ok := m[names.AttrMode]; ok && v.(string) != "" {
 		container.Mode = aws.String(v.(string))
 	}
 
@@ -438,7 +507,13 @@ func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {
 	if v, ok := m["model_data_url"]; ok && v.(string) != "" {
 		container.ModelDataUrl = aws.String(v.(string))
 	}
-	if v, ok := m["environment"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := m["model_package_name"]; ok && v.(string) != "" {
+		container.ModelPackageName = aws.String(v.(string))
+	}
+	if v, ok := m["model_data_source"]; ok {
+		container.ModelDataSource = expandModelDataSource(v.([]interface{}))
+	}
+	if v, ok := m[names.AttrEnvironment].(map[string]interface{}); ok && len(v) > 0 {
 		container.Environment = flex.ExpandStringMap(v)
 	}
 
@@ -447,6 +522,44 @@ func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {
 	}
 
 	return &container
+}
+
+func expandModelDataSource(l []interface{}) *sagemaker.ModelDataSource {
+	if len(l) == 0 {
+		return nil
+	}
+
+	modelDataSource := sagemaker.ModelDataSource{}
+
+	m := l[0].(map[string]interface{})
+
+	if v, ok := m["s3_data_source"]; ok {
+		modelDataSource.S3DataSource = expandS3ModelDataSource(v.([]interface{}))
+	}
+
+	return &modelDataSource
+}
+
+func expandS3ModelDataSource(l []interface{}) *sagemaker.S3ModelDataSource {
+	if len(l) == 0 {
+		return nil
+	}
+
+	s3ModelDataSource := sagemaker.S3ModelDataSource{}
+
+	m := l[0].(map[string]interface{})
+
+	if v, ok := m["s3_uri"]; ok && v.(string) != "" {
+		s3ModelDataSource.S3Uri = aws.String(v.(string))
+	}
+	if v, ok := m["s3_data_type"]; ok && v.(string) != "" {
+		s3ModelDataSource.S3DataType = aws.String(v.(string))
+	}
+	if v, ok := m["compression_type"]; ok && v.(string) != "" {
+		s3ModelDataSource.CompressionType = aws.String(v.(string))
+	}
+
+	return &s3ModelDataSource
 }
 
 func expandModelImageConfig(l []interface{}) *sagemaker.ImageConfig {
@@ -498,10 +611,12 @@ func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 
 	cfg := make(map[string]interface{})
 
-	cfg["image"] = aws.StringValue(container.Image)
+	if container.Image != nil {
+		cfg["image"] = aws.StringValue(container.Image)
+	}
 
 	if container.Mode != nil {
-		cfg["mode"] = aws.StringValue(container.Mode)
+		cfg[names.AttrMode] = aws.StringValue(container.Mode)
 	}
 
 	if container.ContainerHostname != nil {
@@ -510,12 +625,52 @@ func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 	if container.ModelDataUrl != nil {
 		cfg["model_data_url"] = aws.StringValue(container.ModelDataUrl)
 	}
+	if container.ModelDataSource != nil {
+		cfg["model_data_source"] = flattenModelDataSource(container.ModelDataSource)
+	}
+	if container.ModelPackageName != nil {
+		cfg["model_package_name"] = aws.StringValue(container.ModelPackageName)
+	}
 	if container.Environment != nil {
-		cfg["environment"] = aws.StringValueMap(container.Environment)
+		cfg[names.AttrEnvironment] = aws.StringValueMap(container.Environment)
 	}
 
 	if container.ImageConfig != nil {
 		cfg["image_config"] = flattenImageConfig(container.ImageConfig)
+	}
+
+	return []interface{}{cfg}
+}
+
+func flattenModelDataSource(modelDataSource *sagemaker.ModelDataSource) []interface{} {
+	if modelDataSource == nil {
+		return []interface{}{}
+	}
+
+	cfg := make(map[string]interface{})
+
+	if modelDataSource.S3DataSource != nil {
+		cfg["s3_data_source"] = flattenS3ModelDataSource(modelDataSource.S3DataSource)
+	}
+
+	return []interface{}{cfg}
+}
+
+func flattenS3ModelDataSource(s3ModelDataSource *sagemaker.S3ModelDataSource) []interface{} {
+	if s3ModelDataSource == nil {
+		return []interface{}{}
+	}
+
+	cfg := make(map[string]interface{})
+
+	if s3ModelDataSource.S3Uri != nil {
+		cfg["s3_uri"] = aws.StringValue(s3ModelDataSource.S3Uri)
+	}
+	if s3ModelDataSource.S3DataType != nil {
+		cfg["s3_data_type"] = aws.StringValue(s3ModelDataSource.S3DataType)
+	}
+	if s3ModelDataSource.CompressionType != nil {
+		cfg["compression_type"] = aws.StringValue(s3ModelDataSource.CompressionType)
 	}
 
 	return []interface{}{cfg}
@@ -567,7 +722,7 @@ func expandModelInferenceExecutionConfig(l []interface{}) *sagemaker.InferenceEx
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.InferenceExecutionConfig{
-		Mode: aws.String(m["mode"].(string)),
+		Mode: aws.String(m[names.AttrMode].(string)),
 	}
 
 	return config
@@ -580,7 +735,7 @@ func flattenModelInferenceExecutionConfig(config *sagemaker.InferenceExecutionCo
 
 	cfg := make(map[string]interface{})
 
-	cfg["mode"] = aws.StringValue(config.Mode)
+	cfg[names.AttrMode] = aws.StringValue(config.Mode)
 
 	return []interface{}{cfg}
 }

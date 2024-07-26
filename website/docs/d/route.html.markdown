@@ -57,12 +57,12 @@ The following arguments are optional:
 * `transit_gateway_id` - (Optional) EC2 Transit Gateway ID of the Route belonging to the Route Table.
 * `vpc_peering_connection_id` - (Optional) VPC Peering Connection ID of the Route belonging to the Route Table.
 
-## Attributes Reference
+## Attribute Reference
 
 All of the argument attributes are also exported as result attributes when there is data available. For example, the `vpc_peering_connection_id` field will be empty when the route is attached to a Network Interface.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

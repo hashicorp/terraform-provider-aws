@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package names
 
 const (
@@ -12,16 +15,19 @@ const (
 	ColProviderNameUpper       = 8
 	ColGoV1ClientTypeName      = 9
 	ColSkipClientGenerate      = 10
-	ColSDKVersion              = 11
-	ColResourcePrefixActual    = 12
-	ColResourcePrefixCorrect   = 13
-	ColFilePrefix              = 14
-	ColDocPrefix               = 15
-	ColHumanFriendly           = 16
-	ColBrand                   = 17
-	ColExclude                 = 18
-	ColAllowedSubcategory      = 19
-	ColDeprecatedEnvVar        = 20
-	ColEnvVar                  = 21
-	ColNote                    = 22
+	ColClientSDKV1             = 11
+	ColClientSDKV2             = 12
+	ColResourcePrefixActual    = 13
+	ColResourcePrefixCorrect   = 14
+	ColFilePrefix              = 15
+	ColDocPrefix               = 16
+	ColHumanFriendly           = 17
+	ColBrand                   = 18
+	ColExclude                 = 19 // If set, the service is completely ignored
+	ColNotImplemented          = 20 // If set, the service will be included in, e.g. labels, but not have a service client
+	ColEndpointOnly            = 21 // If set, the service is included in list of endpoints
+	ColAllowedSubcategory      = 22
+	ColDeprecatedEnvVar        = 23 // Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services
+	ColTfAwsEnvVar             = 24 // `TF_AWS_<service>_ENDPOINT` envvar defined for some services
+	ColNote                    = 25
 )

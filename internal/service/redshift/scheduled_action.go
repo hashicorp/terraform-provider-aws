@@ -1,32 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceScheduledAction() *schema.Resource {
+// @SDKResource("aws_redshift_scheduled_action", name="Scheduled Action")
+func resourceScheduledAction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceScheduledActionCreate,
-		Read:   resourceScheduledActionRead,
-		Update: resourceScheduledActionUpdate,
-		Delete: resourceScheduledActionDelete,
+		CreateWithoutTimeout: resourceScheduledActionCreate,
+		ReadWithoutTimeout:   resourceScheduledActionRead,
+		UpdateWithoutTimeout: resourceScheduledActionUpdate,
+		DeleteWithoutTimeout: resourceScheduledActionDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -44,16 +52,17 @@ func ResourceScheduledAction() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]{1,63}$`), ""),
+			},
+			names.AttrSchedule: {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
-			"schedule": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"start_time": {
+			names.AttrStartTime: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.IsRFC3339Time,
@@ -70,7 +79,7 @@ func ResourceScheduledAction() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cluster_identifier": {
+									names.AttrClusterIdentifier: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -93,7 +102,7 @@ func ResourceScheduledAction() *schema.Resource {
 										Optional: true,
 										Default:  false,
 									},
-									"cluster_identifier": {
+									names.AttrClusterIdentifier: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -123,7 +132,7 @@ func ResourceScheduledAction() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cluster_identifier": {
+									names.AttrClusterIdentifier: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -142,19 +151,20 @@ func ResourceScheduledAction() *schema.Resource {
 	}
 }
 
-func resourceScheduledActionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &redshift.CreateScheduledActionInput{
 		Enable:              aws.Bool(d.Get("enable").(bool)),
 		IamRole:             aws.String(d.Get("iam_role").(string)),
-		Schedule:            aws.String(d.Get("schedule").(string)),
+		Schedule:            aws.String(d.Get(names.AttrSchedule).(string)),
 		ScheduledActionName: aws.String(name),
 		TargetAction:        expandScheduledActionType(d.Get("target_action").([]interface{})[0].(map[string]interface{})),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.ScheduledActionDescription = aws.String(v.(string))
 	}
 
@@ -164,17 +174,16 @@ func resourceScheduledActionCreate(d *schema.ResourceData, meta interface{}) err
 		input.EndTime = aws.Time(t)
 	}
 
-	if v, ok := d.GetOk("start_time"); ok {
+	if v, ok := d.GetOk(names.AttrStartTime); ok {
 		t, _ := time.Parse(time.RFC3339, v.(string))
 
 		input.StartTime = aws.Time(t)
 	}
 
 	log.Printf("[DEBUG] Creating Redshift Scheduled Action: %s", input)
-	outputRaw, err := tfresource.RetryWhen(
-		propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return conn.CreateScheduledAction(input)
+			return conn.CreateScheduledActionWithContext(ctx, input)
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "The IAM role must delegate access to Amazon Redshift scheduler") {
@@ -186,30 +195,31 @@ func resourceScheduledActionCreate(d *schema.ResourceData, meta interface{}) err
 	)
 
 	if err != nil {
-		return fmt.Errorf("creating Redshift Scheduled Action (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Scheduled Action (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*redshift.CreateScheduledActionOutput).ScheduledActionName))
 
-	return resourceScheduledActionRead(d, meta)
+	return append(diags, resourceScheduledActionRead(ctx, d, meta)...)
 }
 
-func resourceScheduledActionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	scheduledAction, err := FindScheduledActionByName(conn, d.Id())
+	scheduledAction, err := findScheduledActionByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Scheduled Action (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Redshift Scheduled Action (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Scheduled Action (%s): %s", d.Id(), err)
 	}
 
-	d.Set("description", scheduledAction.ScheduledActionDescription)
+	d.Set(names.AttrDescription, scheduledAction.ScheduledActionDescription)
 	if aws.StringValue(scheduledAction.State) == redshift.ScheduledActionStateActive {
 		d.Set("enable", true)
 	} else {
@@ -221,34 +231,35 @@ func resourceScheduledActionRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("end_time", nil)
 	}
 	d.Set("iam_role", scheduledAction.IamRole)
-	d.Set("name", scheduledAction.ScheduledActionName)
-	d.Set("schedule", scheduledAction.Schedule)
+	d.Set(names.AttrName, scheduledAction.ScheduledActionName)
+	d.Set(names.AttrSchedule, scheduledAction.Schedule)
 	if scheduledAction.StartTime != nil {
-		d.Set("start_time", aws.TimeValue(scheduledAction.StartTime).Format(time.RFC3339))
+		d.Set(names.AttrStartTime, aws.TimeValue(scheduledAction.StartTime).Format(time.RFC3339))
 	} else {
-		d.Set("start_time", nil)
+		d.Set(names.AttrStartTime, nil)
 	}
 
 	if scheduledAction.TargetAction != nil {
 		if err := d.Set("target_action", []interface{}{flattenScheduledActionType(scheduledAction.TargetAction)}); err != nil {
-			return fmt.Errorf("setting target_action: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting target_action: %s", err)
 		}
 	} else {
 		d.Set("target_action", nil)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceScheduledActionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceScheduledActionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	input := &redshift.ModifyScheduledActionInput{
-		ScheduledActionName: aws.String(d.Get("name").(string)),
+		ScheduledActionName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if d.HasChange("description") {
-		input.ScheduledActionDescription = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		input.ScheduledActionDescription = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
 	if d.HasChange("enable") {
@@ -265,11 +276,11 @@ func resourceScheduledActionUpdate(d *schema.ResourceData, meta interface{}) err
 		input.IamRole = aws.String(d.Get("iam_role").(string))
 	}
 
-	if d.HasChange("schedule") {
-		input.Schedule = aws.String(d.Get("schedule").(string))
+	if d.HasChange(names.AttrSchedule) {
+		input.Schedule = aws.String(d.Get(names.AttrSchedule).(string))
 	}
 
-	if hasChange, v := d.HasChange("start_time"), d.Get("start_time").(string); hasChange && v != "" {
+	if hasChange, v := d.HasChange(names.AttrStartTime), d.Get(names.AttrStartTime).(string); hasChange && v != "" {
 		t, _ := time.Parse(time.RFC3339, v)
 
 		input.StartTime = aws.Time(t)
@@ -280,32 +291,33 @@ func resourceScheduledActionUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[DEBUG] Updating Redshift Scheduled Action: %s", input)
-	_, err := conn.ModifyScheduledAction(input)
+	_, err := conn.ModifyScheduledActionWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("updating Redshift Scheduled Action (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Redshift Scheduled Action (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceScheduledActionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceScheduledActionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Scheduled Action: %s", d.Id())
-	_, err := conn.DeleteScheduledAction(&redshift.DeleteScheduledActionInput{
+	_, err := conn.DeleteScheduledActionWithContext(ctx, &redshift.DeleteScheduledActionInput{
 		ScheduledActionName: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeScheduledActionNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Redshift Scheduled Action (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift Scheduled Action (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandScheduledActionType(tfMap map[string]interface{}) *redshift.ScheduledActionType {
@@ -337,7 +349,7 @@ func expandPauseClusterMessage(tfMap map[string]interface{}) *redshift.PauseClus
 
 	apiObject := &redshift.PauseClusterMessage{}
 
-	if v, ok := tfMap["cluster_identifier"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrClusterIdentifier].(string); ok && v != "" {
 		apiObject.ClusterIdentifier = aws.String(v)
 	}
 
@@ -355,7 +367,7 @@ func expandResizeClusterMessage(tfMap map[string]interface{}) *redshift.ResizeCl
 		apiObject.Classic = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["cluster_identifier"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrClusterIdentifier].(string); ok && v != "" {
 		apiObject.ClusterIdentifier = aws.String(v)
 	}
 
@@ -381,7 +393,7 @@ func expandResumeClusterMessage(tfMap map[string]interface{}) *redshift.ResumeCl
 
 	apiObject := &redshift.ResumeClusterMessage{}
 
-	if v, ok := tfMap["cluster_identifier"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrClusterIdentifier].(string); ok && v != "" {
 		apiObject.ClusterIdentifier = aws.String(v)
 	}
 
@@ -418,7 +430,7 @@ func flattenPauseClusterMessage(apiObject *redshift.PauseClusterMessage) map[str
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ClusterIdentifier; v != nil {
-		tfMap["cluster_identifier"] = aws.StringValue(v)
+		tfMap[names.AttrClusterIdentifier] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -436,7 +448,7 @@ func flattenResizeClusterMessage(apiObject *redshift.ResizeClusterMessage) map[s
 	}
 
 	if v := apiObject.ClusterIdentifier; v != nil {
-		tfMap["cluster_identifier"] = aws.StringValue(v)
+		tfMap[names.AttrClusterIdentifier] = aws.StringValue(v)
 	}
 
 	if v := apiObject.ClusterType; v != nil {
@@ -462,7 +474,7 @@ func flattenResumeClusterMessage(apiObject *redshift.ResumeClusterMessage) map[s
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ClusterIdentifier; v != nil {
-		tfMap["cluster_identifier"] = aws.StringValue(v)
+		tfMap[names.AttrClusterIdentifier] = aws.StringValue(v)
 	}
 
 	return tfMap

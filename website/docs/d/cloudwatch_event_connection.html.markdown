@@ -6,7 +6,7 @@ description: |-
   Provides an EventBridge connection data source.
 ---
 
-# Data source: aws_cloudwatch_event_connection
+# Data Source: aws_cloudwatch_event_connection
 
 Use this data source to retrieve information about an EventBridge connection.
 
@@ -24,9 +24,9 @@ data "aws_cloudwatch_event_connection" "test" {
 
 * `name` - Name of the connection.
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `name` - Name of the connection.
 

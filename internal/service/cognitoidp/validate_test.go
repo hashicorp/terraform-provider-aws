@@ -1,11 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidUserGroupName(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"foo",
 		"7346241598935552",
@@ -18,7 +25,7 @@ func TestValidUserGroupName(t *testing.T) {
 	}
 
 	for _, s := range validValues {
-		_, errors := validUserGroupName(s, "name")
+		_, errors := validUserGroupName(s, names.AttrName)
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid Cognito User Pool Group Name: %v", s, errors)
 		}
@@ -30,7 +37,7 @@ func TestValidUserGroupName(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		_, errors := validUserGroupName(s, "name")
+		_, errors := validUserGroupName(s, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid Cognito User Pool Group Name: %v", s, errors)
 		}
@@ -38,12 +45,15 @@ func TestValidUserGroupName(t *testing.T) {
 }
 
 func TestValidUserPoolEmailVerificationMessage(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"{####}",
 		"Foo {####}",
 		"{####} Bar",
 		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\"'(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
 		"{####}" + strings.Repeat("W", 19994), // = 20000
+		"{####}" + strings.Repeat("あ", 19994), // = 20000, UTF-8 (2 bytes/char)
 	}
 
 	for _, s := range validValues {
@@ -55,8 +65,10 @@ func TestValidUserPoolEmailVerificationMessage(t *testing.T) {
 
 	invalidValues := []string{
 		"Foo",
+		"あいうえお",
 		"{###}",
 		"{####}" + strings.Repeat("W", 19995), // > 20000
+		"{####}" + strings.Repeat("あ", 19995), // > 20000, UTF-8 (2 bytes/char)
 	}
 
 	for _, s := range invalidValues {
@@ -68,11 +80,14 @@ func TestValidUserPoolEmailVerificationMessage(t *testing.T) {
 }
 
 func TestValidUserPoolEmailVerificationSubject(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"FooBar",
 		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\" '(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
 		"Foo Bar", // special whitespace character
 		strings.Repeat("W", 140),
+		strings.Repeat("あ", 140), // UTF-8 (2 bytes/char)
 	}
 
 	for _, s := range validValues {
@@ -83,8 +98,8 @@ func TestValidUserPoolEmailVerificationSubject(t *testing.T) {
 	}
 
 	invalidValues := []string{
-		"Foo",
-		strings.Repeat("W", 141),
+		strings.Repeat("W", 141), // > 140
+		strings.Repeat("あ", 141), // UTF-8 (2 bytes/char)
 	}
 
 	for _, s := range invalidValues {
@@ -96,13 +111,15 @@ func TestValidUserPoolEmailVerificationSubject(t *testing.T) {
 }
 
 func TestValidUserPoolID(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"eu-west-1_Foo123",         //lintignore:AWSAT003
 		"ap-southeast-2_BaRBaz987", //lintignore:AWSAT003
 	}
 
 	for _, s := range validValues {
-		_, errors := validUserPoolID(s, "user_pool_id")
+		_, errors := validUserPoolID(s, names.AttrUserPoolID)
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid Cognito User Pool Id: %v", s, errors)
 		}
@@ -116,7 +133,7 @@ func TestValidUserPoolID(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		_, errors := validUserPoolID(s, "user_pool_id")
+		_, errors := validUserPoolID(s, names.AttrUserPoolID)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid Cognito User Pool Id: %v", s, errors)
 		}
@@ -124,12 +141,15 @@ func TestValidUserPoolID(t *testing.T) {
 }
 
 func TestValidUserPoolSMSAuthenticationMessage(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"{####}",
 		"Foo {####}",
 		"{####} Bar",
 		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\"'(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
 		"{####}" + strings.Repeat("W", 134), // = 140
+		"{####}" + strings.Repeat("あ", 134), // = 140, UTF-8 (2 bytes/char)
 	}
 
 	for _, s := range validValues {
@@ -141,7 +161,9 @@ func TestValidUserPoolSMSAuthenticationMessage(t *testing.T) {
 
 	invalidValues := []string{
 		"Foo",
-		"{####}" + strings.Repeat("W", 135),
+		"あいうえお",
+		"{####}" + strings.Repeat("W", 135), // > 140
+		"{####}" + strings.Repeat("あ", 135), // > 140, UTF-8 (2 bytes/char)
 	}
 
 	for _, s := range invalidValues {
@@ -153,12 +175,15 @@ func TestValidUserPoolSMSAuthenticationMessage(t *testing.T) {
 }
 
 func TestValidUserPoolSMSVerificationMessage(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"{####}",
 		"Foo {####}",
 		"{####} Bar",
 		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\"'(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
 		"{####}" + strings.Repeat("W", 134), // = 140
+		"{####}" + strings.Repeat("あ", 134), // = 140, UTF-8 (2 bytes/char)
 	}
 
 	for _, s := range validValues {
@@ -170,7 +195,9 @@ func TestValidUserPoolSMSVerificationMessage(t *testing.T) {
 
 	invalidValues := []string{
 		"Foo",
-		"{####}" + strings.Repeat("W", 135),
+		"あいうえお",
+		"{####}" + strings.Repeat("W", 135), // > 140
+		"{####}" + strings.Repeat("あ", 135), // > 140, UTF-8 (2 bytes/char)
 	}
 
 	for _, s := range invalidValues {

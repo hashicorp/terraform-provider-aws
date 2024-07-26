@@ -1,6 +1,7 @@
 package stdlib
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/zclconf/go-cty/cty"
@@ -18,6 +19,7 @@ import (
 // a tuple.
 func MakeToFunc(wantTy cty.Type) function.Function {
 	return function.New(&function.Spec{
+		Description: fmt.Sprintf("Converts the given value to %s, or raises an error if that conversion is impossible.", wantTy.FriendlyName()),
 		Params: []function.Parameter{
 			{
 				Name: "v",
@@ -28,8 +30,9 @@ func MakeToFunc(wantTy cty.Type) function.Function {
 				// messages to be more appropriate for an explicit type
 				// conversion, whereas the cty function system produces
 				// messages aimed at _implicit_ type conversions.
-				Type:      cty.DynamicPseudoType,
-				AllowNull: true,
+				Type:             cty.DynamicPseudoType,
+				AllowNull:        true,
+				AllowDynamicType: true,
 			},
 		},
 		Type: func(args []cty.Value) (cty.Type, error) {
@@ -84,4 +87,37 @@ func MakeToFunc(wantTy cty.Type) function.Function {
 			return ret, nil
 		},
 	})
+}
+
+// AssertNotNullFunc is a function which does nothing except return an error
+// if the argument given to it is null.
+//
+// This could be useful in some cases where the automatic refinment of
+// nullability isn't precise enough, because the result is guaranteed to not
+// be null and can therefore allow downstream comparisons to null to return
+// a known value even if the value is otherwise unknown.
+var AssertNotNullFunc = function.New(&function.Spec{
+	Description: "Returns the given value varbatim if it is non-null, or raises an error if it's null.",
+	Params: []function.Parameter{
+		{
+			Name: "v",
+			Type: cty.DynamicPseudoType,
+			// NOTE: We intentionally don't set AllowNull here, and so
+			// the function system will automatically reject a null argument
+			// for us before calling Impl.
+		},
+	},
+	Type: func(args []cty.Value) (cty.Type, error) {
+		return args[0].Type(), nil
+	},
+	RefineResult: refineNonNull,
+	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
+		// Our argument doesn't set AllowNull: true, so we're guaranteed to
+		// have a non-null value in args[0].
+		return args[0], nil
+	},
+})
+
+func AssertNotNull(v cty.Value) (cty.Value, error) {
+	return AssertNotNullFunc.Call([]cty.Value{v})
 }

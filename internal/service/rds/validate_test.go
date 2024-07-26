@@ -1,20 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"strings"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidEventSubscriptionName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"valid-name",
 		"valid02-name",
 		"Valid-Name1",
 	}
 	for _, v := range validNames {
-		_, errors := validEventSubscriptionName(v, "name")
+		_, errors := validEventSubscriptionName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid RDS Event Subscription Name: %q", v, errors)
 		}
@@ -33,7 +39,7 @@ func TestValidEventSubscriptionName(t *testing.T) {
 		strings.Repeat("W", 256),
 	}
 	for _, v := range invalidNames {
-		_, errors := validEventSubscriptionName(v, "name")
+		_, errors := validEventSubscriptionName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid RDS Event Subscription Name", v)
 		}
@@ -41,6 +47,8 @@ func TestValidEventSubscriptionName(t *testing.T) {
 }
 
 func TestValidOptionGroupName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -77,6 +85,8 @@ func TestValidOptionGroupName(t *testing.T) {
 }
 
 func TestValidOptionGroupNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -109,10 +119,16 @@ func TestValidOptionGroupNamePrefix(t *testing.T) {
 }
 
 func TestValidParamGroupName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
 	}{
+		{
+			Value:    "default.postgres9.6",
+			ErrCount: 0,
+		},
 		{
 			Value:    "tEsting123",
 			ErrCount: 1,
@@ -153,6 +169,8 @@ func TestValidParamGroupName(t *testing.T) {
 }
 
 func TestValidSubnetGroupName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -185,6 +203,8 @@ func TestValidSubnetGroupName(t *testing.T) {
 }
 
 func TestValidSubnetGroupNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
