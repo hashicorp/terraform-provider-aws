@@ -119,7 +119,7 @@ func testAccCheckIdentityNotificationTopicExists(ctx context.Context, n string) 
 		}
 
 		_, exists := response.NotificationAttributes[identity]
-		if exists {
+		if !exists {
 			return fmt.Errorf("SES Identity Notification Topic %s not found in AWS", identity)
 		}
 
