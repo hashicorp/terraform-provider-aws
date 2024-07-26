@@ -12,6 +12,7 @@ import (
 	pluralize "github.com/gertd/go-pluralize"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -28,7 +29,7 @@ const (
 
 // autoFlexer is the interface implemented by an auto-flattener or expander.
 type autoFlexer interface {
-	convert(context.Context, reflect.Value, reflect.Value) diag.Diagnostics
+	convert(context.Context, path.Path, reflect.Value, path.Path, reflect.Value) diag.Diagnostics
 	getOptions() AutoFlexOptions
 }
 
@@ -105,7 +106,7 @@ var (
 )
 
 // autoFlexConvertStruct traverses struct `from` calling `flexer` for each exported field.
-func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFlexer) diag.Diagnostics {
+func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, targetPath path.Path, to any, flexer autoFlexer) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	valFrom, valTo, d := autoFlexValues(ctx, from, to)
@@ -187,7 +188,7 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 			logAttrKeyTargetFieldname: toFieldName,
 		})
 
-		diags.Append(flexer.convert(ctx, valFrom.Field(i), toFieldVal)...)
+		diags.Append(flexer.convert(ctx, sourcePath, valFrom.Field(i), targetPath, toFieldVal)...)
 		if diags.HasError() {
 			diags.AddError("AutoFlEx", fmt.Sprintf("convert (%s)", fieldName))
 			return diags

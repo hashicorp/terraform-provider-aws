@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -81,6 +82,9 @@ func (expander autoExpander) getOptions() AutoFlexOptions {
 func autoExpandConvert(ctx context.Context, from, to any, flexer autoFlexer) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	sourcePath := path.Empty()
+	targetPath := path.Empty()
+
 	valFrom, valTo, d := autoFlexValues(ctx, from, to)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -92,18 +96,18 @@ func autoExpandConvert(ctx context.Context, from, to any, flexer autoFlexer) dia
 		if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct &&
 			!typFrom.Implements(reflect.TypeFor[basetypes.ListValuable]()) &&
 			!typFrom.Implements(reflect.TypeFor[basetypes.SetValuable]()) {
-			diags.Append(autoFlexConvertStruct(ctx, from, to, flexer)...)
+			diags.Append(autoFlexConvertStruct(ctx, sourcePath, from, targetPath, to, flexer)...)
 			return diags
 		}
 	}
 
 	// Anything else.
-	diags.Append(flexer.convert(ctx, valFrom, valTo)...)
+	diags.Append(flexer.convert(ctx, sourcePath, valFrom, targetPath, valTo)...)
 	return diags
 }
 
 // convert converts a single Plugin Framework value to its AWS API equivalent.
-func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, valFrom reflect.Value, targetPath path.Path, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if valFrom.Kind() == reflect.Invalid {
@@ -157,11 +161,11 @@ func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.V
 
 	// Aggregate types.
 	case basetypes.ObjectValuable:
-		diags.Append(expander.object(ctx, vFrom, vTo)...)
+		diags.Append(expander.object(ctx, sourcePath, vFrom, targetPath, vTo)...)
 		return diags
 
 	case basetypes.ListValuable:
-		diags.Append(expander.list(ctx, vFrom, vTo)...)
+		diags.Append(expander.list(ctx, sourcePath, vFrom, targetPath, vTo)...)
 		return diags
 
 	case basetypes.MapValuable:
@@ -169,7 +173,7 @@ func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.V
 		return diags
 
 	case basetypes.SetValuable:
-		diags.Append(expander.set(ctx, vFrom, vTo)...)
+		diags.Append(expander.set(ctx, sourcePath, vFrom, targetPath, vTo)...)
 		return diags
 	}
 
@@ -388,7 +392,7 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 }
 
 // string copies a Plugin Framework Object(ish) value to a compatible AWS API value.
-func (expander autoExpander) object(ctx context.Context, vFrom basetypes.ObjectValuable, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) object(ctx context.Context, sourcePath path.Path, vFrom basetypes.ObjectValuable, targetPath path.Path, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	_, d := vFrom.ToObjectValue(ctx)
@@ -403,7 +407,7 @@ func (expander autoExpander) object(ctx context.Context, vFrom basetypes.ObjectV
 		// types.Object -> struct.
 		//
 		if vFrom, ok := vFrom.(fwtypes.NestedObjectValue); ok {
-			diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tTo, vTo)...)
+			diags.Append(expander.nestedObjectToStruct(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
 			return diags
 		}
 
@@ -414,7 +418,7 @@ func (expander autoExpander) object(ctx context.Context, vFrom basetypes.ObjectV
 			// types.Object --> *struct
 			//
 			if vFrom, ok := vFrom.(fwtypes.NestedObjectValue); ok {
-				diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tElem, vTo)...)
+				diags.Append(expander.nestedObjectToStruct(ctx, sourcePath, vFrom, targetPath, tElem, vTo)...)
 				return diags
 			}
 		}
@@ -424,7 +428,7 @@ func (expander autoExpander) object(ctx context.Context, vFrom basetypes.ObjectV
 		// types.Object -> interface.
 		//
 		if vFrom, ok := vFrom.(fwtypes.NestedObjectValue); ok {
-			diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tTo, vTo)...)
+			diags.Append(expander.nestedObjectToStruct(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
 			return diags
 		}
 	}
@@ -438,7 +442,7 @@ func (expander autoExpander) object(ctx context.Context, vFrom basetypes.ObjectV
 }
 
 // list copies a Plugin Framework List(ish) value to a compatible AWS API value.
-func (expander autoExpander) list(ctx context.Context, vFrom basetypes.ListValuable, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) list(ctx context.Context, sourcePath path.Path, vFrom basetypes.ListValuable, targetPath path.Path, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToListValue(ctx)
@@ -458,7 +462,7 @@ func (expander autoExpander) list(ctx context.Context, vFrom basetypes.ListValua
 
 	case basetypes.ObjectTypable:
 		if vFrom, ok := vFrom.(fwtypes.NestedObjectCollectionValue); ok {
-			diags.Append(expander.nestedObjectCollection(ctx, vFrom, vTo)...)
+			diags.Append(expander.nestedObjectCollection(ctx, sourcePath, vFrom, targetPath, vTo)...)
 			return diags
 		}
 	}
@@ -702,7 +706,7 @@ func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.Ma
 }
 
 // set copies a Plugin Framework Set(ish) value to a compatible AWS API value.
-func (expander autoExpander) set(ctx context.Context, vFrom basetypes.SetValuable, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) set(ctx context.Context, sourcePath path.Path, vFrom basetypes.SetValuable, targetPath path.Path, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToSetValue(ctx)
@@ -722,7 +726,7 @@ func (expander autoExpander) set(ctx context.Context, vFrom basetypes.SetValuabl
 
 	case basetypes.ObjectTypable:
 		if vFrom, ok := vFrom.(fwtypes.NestedObjectCollectionValue); ok {
-			diags.Append(expander.nestedObjectCollection(ctx, vFrom, vTo)...)
+			diags.Append(expander.nestedObjectCollection(ctx, sourcePath, vFrom, targetPath, vTo)...)
 			return diags
 		}
 	}
@@ -736,12 +740,12 @@ func (expander autoExpander) set(ctx context.Context, vFrom basetypes.SetValuabl
 }
 
 // nestedObjectCollection copies a Plugin Framework NestedObjectCollectionValue value to a compatible AWS API value.
-func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom fwtypes.NestedObjectCollectionValue, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourcePath path.Path, vFrom fwtypes.NestedObjectCollectionValue, targetPath path.Path, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := vTo.Type(); vTo.Kind() {
 	case reflect.Struct:
-		diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tTo, vTo)...)
+		diags.Append(expander.nestedObjectToStruct(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
 		return diags
 
 	case reflect.Ptr:
@@ -750,7 +754,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 			//
 			// types.List(OfObject) -> *struct.
 			//
-			diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tElem, vTo)...)
+			diags.Append(expander.nestedObjectToStruct(ctx, sourcePath, vFrom, targetPath, tElem, vTo)...)
 			return diags
 		}
 
@@ -758,7 +762,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 		//
 		// types.List(OfObject) -> interface.
 		//
-		diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tTo, vTo)...)
+		diags.Append(expander.nestedObjectToStruct(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
 		return diags
 
 	case reflect.Map:
@@ -767,14 +771,14 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 			//
 			// types.List(OfObject) -> map[string]struct
 			//
-			diags.Append(expander.nestedKeyObjectToMap(ctx, vFrom, tElem, vTo)...)
+			diags.Append(expander.nestedKeyObjectToMap(ctx, sourcePath, vFrom, targetPath, tElem, vTo)...)
 			return diags
 
 		case reflect.Ptr:
 			//
 			// types.List(OfObject) -> map[string]*struct
 			//
-			diags.Append(expander.nestedKeyObjectToMap(ctx, vFrom, tElem, vTo)...)
+			diags.Append(expander.nestedKeyObjectToMap(ctx, sourcePath, vFrom, targetPath, tElem, vTo)...)
 			return diags
 		}
 
@@ -784,7 +788,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 			//
 			// types.List(OfObject) -> []struct
 			//
-			diags.Append(expander.nestedObjectToSlice(ctx, vFrom, tTo, tElem, vTo)...)
+			diags.Append(expander.nestedObjectToSlice(ctx, sourcePath, vFrom, targetPath, tTo, tElem, vTo)...)
 			return diags
 
 		case reflect.Ptr:
@@ -793,7 +797,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 				//
 				// types.List(OfObject) -> []*struct.
 				//
-				diags.Append(expander.nestedObjectToSlice(ctx, vFrom, tTo, tElem, vTo)...)
+				diags.Append(expander.nestedObjectToSlice(ctx, sourcePath, vFrom, targetPath, tTo, tElem, vTo)...)
 				return diags
 			}
 
@@ -801,7 +805,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 			//
 			// types.List(OfObject) -> []interface.
 			//
-			diags.Append(expander.nestedObjectToSlice(ctx, vFrom, tTo, tElem, vTo)...)
+			diags.Append(expander.nestedObjectToSlice(ctx, sourcePath, vFrom, targetPath, tTo, tElem, vTo)...)
 			return diags
 		}
 	}
@@ -811,7 +815,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 }
 
 // nestedObjectToStruct copies a Plugin Framework NestedObjectValue to a compatible AWS API (*)struct value.
-func (expander autoExpander) nestedObjectToStruct(ctx context.Context, vFrom fwtypes.NestedObjectValue, tStruct reflect.Type, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) nestedObjectToStruct(ctx context.Context, sourcePath path.Path, vFrom fwtypes.NestedObjectValue, targetPath path.Path, tStruct reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Get the nested Object as a pointer.
@@ -824,7 +828,7 @@ func (expander autoExpander) nestedObjectToStruct(ctx context.Context, vFrom fwt
 	// Create a new target structure and walk its fields.
 	to := reflect.New(tStruct)
 	if !reflect.ValueOf(from).IsNil() {
-		diags.Append(autoFlexConvertStruct(ctx, from, to.Interface(), expander)...)
+		diags.Append(autoFlexConvertStruct(ctx, sourcePath, from, targetPath, to.Interface(), expander)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -843,7 +847,7 @@ func (expander autoExpander) nestedObjectToStruct(ctx context.Context, vFrom fwt
 }
 
 // nestedObjectToSlice copies a Plugin Framework NestedObjectCollectionValue to a compatible AWS API [](*)struct value.
-func (expander autoExpander) nestedObjectToSlice(ctx context.Context, vFrom fwtypes.NestedObjectCollectionValue, tSlice, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) nestedObjectToSlice(ctx context.Context, sourcePath path.Path, vFrom fwtypes.NestedObjectCollectionValue, targetPath path.Path, tSlice, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Get the nested Objects as a slice.
@@ -860,7 +864,7 @@ func (expander autoExpander) nestedObjectToSlice(ctx context.Context, vFrom fwty
 	for i := 0; i < n; i++ {
 		// Create a new target structure and walk its fields.
 		target := reflect.New(tElem)
-		diags.Append(autoFlexConvertStruct(ctx, f.Index(i).Interface(), target.Interface(), expander)...)
+		diags.Append(autoFlexConvertStruct(ctx, sourcePath, f.Index(i).Interface(), targetPath, target.Interface(), expander)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -881,7 +885,7 @@ func (expander autoExpander) nestedObjectToSlice(ctx context.Context, vFrom fwty
 }
 
 // nestedKeyObjectToMap copies a Plugin Framework NestedObjectCollectionValue to a compatible AWS API map[string]struct value.
-func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, vFrom fwtypes.NestedObjectCollectionValue, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, sourcePath path.Path, vFrom fwtypes.NestedObjectCollectionValue, targetPath path.Path, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Get the nested Objects as a slice.
@@ -901,7 +905,7 @@ func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, vFrom fwt
 	for i := 0; i < f.Len(); i++ {
 		// Create a new target structure and walk its fields.
 		target := reflect.New(tElem)
-		diags.Append(autoFlexConvertStruct(ctx, f.Index(i).Interface(), target.Interface(), expander)...)
+		diags.Append(autoFlexConvertStruct(ctx, sourcePath, f.Index(i).Interface(), targetPath, target.Interface(), expander)...)
 		if diags.HasError() {
 			return diags
 		}
