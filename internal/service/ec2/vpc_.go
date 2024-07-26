@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -34,7 +34,18 @@ import (
 const (
 	vpcCIDRMaxIPv4Netmask = 28
 	vpcCIDRMinIPv4Netmask = 16
-	vpcCIDRMaxIPv6Netmask = 56
+	vpcCIDRMaxIPv6Netmask = 60
+	vpcCIDRMinIPv6Netmask = 44
+)
+
+var (
+	vpcCIDRValidIPv6Netmasks = tfslices.Range(vpcCIDRMinIPv6Netmask, vpcCIDRMaxIPv6Netmask+1, 4)
+	validVPCIPv6CIDRBlock    = validation.All(
+		verify.ValidIPv6CIDRNetworkAddress,
+		validation.Any(tfslices.ApplyToAll(vpcCIDRValidIPv6Netmasks, func(v int) schema.SchemaValidateFunc {
+			return validation.IsCIDRNetwork(v, v)
+		})...),
+	)
 )
 
 // @SDKResource("aws_vpc", name="VPC")
@@ -140,9 +151,7 @@ func resourceVPC() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"ipv6_netmask_length", "assign_generated_ipv6_cidr_block"},
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
-				ValidateFunc: validation.All(
-					verify.ValidIPv6CIDRNetworkAddress,
-					validation.IsCIDRNetwork(vpcCIDRMaxIPv6Netmask, vpcCIDRMaxIPv6Netmask)),
+				ValidateFunc:  validVPCIPv6CIDRBlock,
 			},
 			"ipv6_cidr_block_network_border_group": {
 				Type:         schema.TypeString,
@@ -158,7 +167,7 @@ func resourceVPC() *schema.Resource {
 			"ipv6_netmask_length": {
 				Type:          schema.TypeInt,
 				Optional:      true,
-				ValidateFunc:  validation.IntInSlice([]int{vpcCIDRMaxIPv6Netmask}),
+				ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
 				ConflictsWith: []string{"ipv6_cidr_block"},
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 			},
@@ -729,7 +738,7 @@ func findIPAMPoolAllocationsForVPC(ctx context.Context, conn *ec2.Client, poolID
 		return nil, err
 	}
 
-	output = slices.Filter(output, func(v types.IpamPoolAllocation) bool {
+	output = tfslices.Filter(output, func(v types.IpamPoolAllocation) bool {
 		return string(v.ResourceType) == string(types.IpamPoolAllocationResourceTypeVpc) && aws.ToString(v.ResourceId) == vpcID
 	})
 
