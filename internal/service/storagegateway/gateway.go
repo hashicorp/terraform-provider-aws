@@ -591,8 +591,12 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// We allow Terraform to passthrough the configuration value into the state
 	d.Set("tape_drive_type", d.Get("tape_drive_type").(string))
 	d.Set(names.AttrCloudWatchLogGroupARN, output.CloudWatchLogGroupARN)
-	d.Set("smb_security_strategy", smbSettingsOutput.SMBSecurityStrategy)
-	d.Set("smb_file_share_visibility", smbSettingsOutput.FileSharesVisible)
+
+	if smbSettingsOutput != nil {
+		d.Set("smb_security_strategy", smbSettingsOutput.SMBSecurityStrategy)
+		d.Set("smb_file_share_visibility", smbSettingsOutput.FileSharesVisible)
+	}
+
 	d.Set("ec2_instance_id", output.Ec2InstanceId)
 	d.Set(names.AttrEndpointType, output.EndpointType)
 	d.Set("host_environment", output.HostEnvironment)
