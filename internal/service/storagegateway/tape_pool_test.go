@@ -9,8 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +23,7 @@ import (
 
 func TestAccStorageGatewayTapePool_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var TapePool storagegateway.PoolInfo
+	var TapePool awstypes.PoolInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_tape_pool.test"
 
@@ -54,7 +55,7 @@ func TestAccStorageGatewayTapePool_basic(t *testing.T) {
 
 func TestAccStorageGatewayTapePool_retention(t *testing.T) {
 	ctx := acctest.Context(t)
-	var TapePool storagegateway.PoolInfo
+	var TapePool awstypes.PoolInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_tape_pool.test"
 
@@ -86,7 +87,7 @@ func TestAccStorageGatewayTapePool_retention(t *testing.T) {
 
 func TestAccStorageGatewayTapePool_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var TapePool storagegateway.PoolInfo
+	var TapePool awstypes.PoolInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_tape_pool.test"
 
@@ -132,7 +133,7 @@ func TestAccStorageGatewayTapePool_tags(t *testing.T) {
 
 func TestAccStorageGatewayTapePool_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var storedIscsiVolume storagegateway.PoolInfo
+	var storedIscsiVolume awstypes.PoolInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_tape_pool.test"
 
@@ -154,30 +155,30 @@ func TestAccStorageGatewayTapePool_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTapePoolExists(ctx context.Context, resourceName string, TapePool *storagegateway.PoolInfo) resource.TestCheckFunc {
+func testAccCheckTapePoolExists(ctx context.Context, resourceName string, TapePool *awstypes.PoolInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
 
 		input := &storagegateway.ListTapePoolsInput{
-			PoolARNs: []*string{aws.String(rs.Primary.ID)},
+			PoolARNs: []string{rs.Primary.ID},
 		}
 
-		output, err := conn.ListTapePoolsWithContext(ctx, input)
+		output, err := conn.ListTapePools(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error reading Storage Gateway Tape Pool: %s", err)
 		}
 
-		if output == nil || len(output.PoolInfos) == 0 || output.PoolInfos[0] == nil || aws.StringValue(output.PoolInfos[0].PoolARN) != rs.Primary.ID {
+		if output == nil || len(output.PoolInfos) == 0 || aws.ToString(output.PoolInfos[0].PoolARN) != rs.Primary.ID {
 			return fmt.Errorf("Storage Gateway Tape Pool %q not found", rs.Primary.ID)
 		}
 
-		*TapePool = *output.PoolInfos[0]
+		*TapePool = output.PoolInfos[0]
 
 		return nil
 	}
@@ -185,7 +186,7 @@ func testAccCheckTapePoolExists(ctx context.Context, resourceName string, TapePo
 
 func testAccCheckTapePoolDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_storagegateway_tape_pool" {
@@ -193,10 +194,10 @@ func testAccCheckTapePoolDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			input := &storagegateway.ListTapePoolsInput{
-				PoolARNs: []*string{aws.String(rs.Primary.ID)},
+				PoolARNs: []string{rs.Primary.ID},
 			}
 
-			output, err := conn.ListTapePoolsWithContext(ctx, input)
+			output, err := conn.ListTapePools(ctx, input)
 
 			if err != nil {
 				return err

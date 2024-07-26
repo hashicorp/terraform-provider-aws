@@ -7,12 +7,14 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -44,17 +46,17 @@ func resourceTapePool() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			names.AttrStorageClass: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(storagegateway.TapeStorageClass_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.TapeStorageClass](),
 			},
 			"retention_lock_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      storagegateway.RetentionLockTypeNone,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(storagegateway.RetentionLockType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.RetentionLockTypeNone,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.RetentionLockType](),
 			},
 			"retention_lock_time_in_days": {
 				Type:         schema.TypeInt,
@@ -73,43 +75,43 @@ func resourceTapePool() *schema.Resource {
 
 func resourceTapePoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
 	input := &storagegateway.CreateTapePoolInput{
 		PoolName:                aws.String(d.Get("pool_name").(string)),
-		StorageClass:            aws.String(d.Get(names.AttrStorageClass).(string)),
-		RetentionLockType:       aws.String(d.Get("retention_lock_type").(string)),
-		RetentionLockTimeInDays: aws.Int64(int64(d.Get("retention_lock_time_in_days").(int))),
+		StorageClass:            awstypes.TapeStorageClass(d.Get(names.AttrStorageClass).(string)),
+		RetentionLockType:       awstypes.RetentionLockType(d.Get("retention_lock_type").(string)),
+		RetentionLockTimeInDays: aws.Int32(int32(d.Get("retention_lock_time_in_days").(int))),
 		Tags:                    getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Creating Storage Gateway Tape Pool: %s", input)
-	output, err := conn.CreateTapePoolWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating Storage Gateway Tape Pool: %#v", input)
+	output, err := conn.CreateTapePool(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Storage Gateway Tape Pool: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.PoolARN))
+	d.SetId(aws.ToString(output.PoolARN))
 
 	return append(diags, resourceTapePoolRead(ctx, d, meta)...)
 }
 
 func resourceTapePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
 	input := &storagegateway.ListTapePoolsInput{
-		PoolARNs: []*string{aws.String(d.Id())},
+		PoolARNs: []string{d.Id()},
 	}
 
-	log.Printf("[DEBUG] Reading Storage Gateway Tape Pool: %s", input)
-	output, err := conn.ListTapePoolsWithContext(ctx, input)
+	log.Printf("[DEBUG] Reading Storage Gateway Tape Pool: %#v", input)
+	output, err := conn.ListTapePools(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing Storage Gateway Tape Pools: %s", err)
 	}
 
-	if output == nil || len(output.PoolInfos) == 0 || output.PoolInfos[0] == nil || aws.StringValue(output.PoolInfos[0].PoolARN) != d.Id() {
+	if output == nil || len(output.PoolInfos) == 0 || aws.ToString(output.PoolInfos[0].PoolARN) != d.Id() {
 		log.Printf("[WARN] Storage Gateway Tape Pool %q not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -117,7 +119,7 @@ func resourceTapePoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	pool := output.PoolInfos[0]
 
-	poolArn := aws.StringValue(pool.PoolARN)
+	poolArn := aws.ToString(pool.PoolARN)
 	d.Set(names.AttrARN, poolArn)
 	d.Set("pool_name", pool.PoolName)
 	d.Set("retention_lock_time_in_days", pool.RetentionLockTimeInDays)
@@ -137,14 +139,14 @@ func resourceTapePoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceTapePoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
 	input := &storagegateway.DeleteTapePoolInput{
 		PoolARN: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting Storage Gateway Tape Pool: %s", input)
-	_, err := conn.DeleteTapePoolWithContext(ctx, input)
+	log.Printf("[DEBUG] Deleting Storage Gateway Tape Pool: %#v", input)
+	_, err := conn.DeleteTapePool(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Storage Gateway Tape Pool %q: %s", d.Id(), err)
 	}
