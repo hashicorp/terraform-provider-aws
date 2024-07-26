@@ -200,6 +200,41 @@ func TestAccQuickSightDashboard_dashboardSpecificConfig(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightDashboard_pieChartVisualArcThickness(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var dashboard quicksight.Dashboard
+	resourceName := "aws_quicksight_dashboard.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDashboardDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDashboardConfig_PieChartVisualArcThickness(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.sheets.0.visuals.0.pie_chart_visual.0.chart_configuration.0.donut_options.0.arc_options.0.arc_thickness", quicksight.ArcThicknessWhole),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"parameters"},
+			},
+		},
+	})
+}
+
 func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
@@ -567,6 +602,58 @@ resource "aws_quicksight_dashboard" "test" {
                     aggregation_function = "COUNT"
                   }
                 }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, rId, rName))
+}
+
+func testAccDashboardConfig_PieChartVisualArcThickness(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccDashboardConfigBase(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_dashboard" "test" {
+  dashboard_id        = %[1]q
+  name                = %[2]q
+  version_description = "test"
+  definition {
+    data_set_identifiers_declarations {
+      data_set_arn = aws_quicksight_data_set.test.arn
+      identifier   = "1"
+    }
+    sheets {
+      title    = "Test"
+      sheet_id = "Test1"
+      visuals {
+        pie_chart_visual {
+          visual_id = "PieChart"
+          title {
+            format_text {
+              plain_text = "Pie Chart Test"
+            }
+          }
+          chart_configuration {
+            category_label_options {
+              sort_icon_visibility = "HIDDEN"
+              visibility           = "HIDDEN"
+            }
+            data_labels {
+              category_label_visibility = "VISIBLE"
+              label_color               = null
+              label_content             = null
+              measure_label_visibility  = "VISIBLE"
+              overlap                   = "DISABLE_OVERLAP"
+              position                  = null
+              visibility                = "VISIBLE"
+            }
+            donut_options {
+              arc_options {
+                arc_thickness = "WHOLE"
               }
             }
           }

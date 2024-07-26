@@ -46,7 +46,7 @@ func pieChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"arc_thickness": stringSchema(false, validation.StringInSlice(quicksight.ArcThicknessOptions_Values(), false)),
+													"arc_thickness": stringSchema(false, validation.StringInSlice(quicksight.ArcThickness_Values(), false)),
 												},
 											},
 										},
