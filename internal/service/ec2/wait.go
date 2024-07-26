@@ -2965,10 +2965,11 @@ func waitVPCIPv6CIDRBlockAssociationDeleted(ctx context.Context, conn *ec2.Clien
 
 func waitVPCPeeringConnectionActive(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcPeeringConnection, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.VpcPeeringConnectionStateReasonCodeInitiatingRequest, awstypes.VpcPeeringConnectionStateReasonCodeProvisioning),
-		Target:  enum.Slice(awstypes.VpcPeeringConnectionStateReasonCodeActive, awstypes.VpcPeeringConnectionStateReasonCodePendingAcceptance),
-		Refresh: statusVPCPeeringConnectionActive(ctx, conn, id),
-		Timeout: timeout,
+		Pending:                   enum.Slice(awstypes.VpcPeeringConnectionStateReasonCodeInitiatingRequest, awstypes.VpcPeeringConnectionStateReasonCodeProvisioning),
+		Target:                    enum.Slice(awstypes.VpcPeeringConnectionStateReasonCodeActive, awstypes.VpcPeeringConnectionStateReasonCodePendingAcceptance),
+		Refresh:                   statusVPCPeeringConnectionActive(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

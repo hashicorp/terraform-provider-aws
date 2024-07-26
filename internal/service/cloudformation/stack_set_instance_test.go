@@ -38,7 +38,7 @@ func TestAccCloudFormationStackSetInstance_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackSetInstanceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackSetInstanceExists(ctx, resourceName, &stackInstance1),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "call_as", "SELF"),
@@ -310,9 +310,45 @@ func TestAccCloudFormationStackSetInstance_operationPreferences(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackSetInstanceConfig_operationPreferences(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.concurrency_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFormationStackSetInstance_concurrencyMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackInstanceSummaries []awstypes.StackInstanceSummary
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckStackSet(ctx, t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/stacksets.cloudformation.amazonaws.com")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetInstanceForOrganizationalUnitDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetInstanceConfig_concurrencyMode(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.concurrency_mode", "SOFT_FAILURE_TOLERANCE"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", acctest.Ct10),
@@ -853,6 +889,26 @@ resource "aws_cloudformation_stack_set_instance" "test" {
   operation_preferences {
     failure_tolerance_count = 1
     max_concurrent_count    = 10
+  }
+
+  deployment_targets {
+    organizational_unit_ids = [data.aws_organizations_organization.test.roots[0].id]
+  }
+
+  stack_set_name = aws_cloudformation_stack_set.test.name
+}
+`)
+}
+
+func testAccStackSetInstanceConfig_concurrencyMode(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName), `
+resource "aws_cloudformation_stack_set_instance" "test" {
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+
+  operation_preferences {
+    failure_tolerance_count = 1
+    max_concurrent_count    = 10
+    concurrency_mode        = "SOFT_FAILURE_TOLERANCE"
   }
 
   deployment_targets {

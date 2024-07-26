@@ -1530,17 +1530,21 @@ func findVPCCIDRBlockAssociationByID(ctx context.Context, conn *ec2.Client, id s
 		return nil, nil, err
 	}
 
-	for _, association := range vpc.CidrBlockAssociationSet {
-		if aws.ToString(association.AssociationId) == id {
-			if state := association.CidrBlockState.State; state == awstypes.VpcCidrBlockStateCodeDisassociated {
-				return nil, nil, &retry.NotFoundError{Message: string(state)}
-			}
+	association, err := tfresource.AssertSingleValueResult(tfslices.Filter(vpc.CidrBlockAssociationSet, func(v awstypes.VpcCidrBlockAssociation) bool {
+		return aws.ToString(v.AssociationId) == id
+	}))
 
-			return &association, vpc, nil
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if state := association.CidrBlockState.State; state == awstypes.VpcCidrBlockStateCodeDisassociated {
+		return nil, nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
-	return nil, nil, &retry.NotFoundError{}
+	return association, vpc, nil
 }
 
 func findVPCIPv6CIDRBlockAssociationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcIpv6CidrBlockAssociation, *awstypes.Vpc, error) {
