@@ -187,6 +187,12 @@ func resourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrCreatedDate, vr.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrLastUpdatedDate, vr.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vr.MeshName)
+	d.Set("mesh_owner", vr.Metadata.MeshOwner)
+	d.Set(names.AttrName, vr.VirtualRouterName)
+	d.Set(names.AttrResourceOwner, vr.Metadata.ResourceOwner)
+	if err := d.Set("spec", flattenVirtualRouterSpec(vr.Spec)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
+	}
 
 	return diags
 }

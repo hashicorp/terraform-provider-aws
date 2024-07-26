@@ -195,11 +195,9 @@ func expandGRPCRoute(vGrpcRoute []interface{}) *awstypes.GrpcRoute {
 				if vPort, ok := mWeightedTarget[names.AttrPort].(int); ok && vPort > 0 {
 					weightedTarget.Port = aws.Int32(int32(vPort))
 				}
-
 				if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
 					weightedTarget.VirtualNode = aws.String(vVirtualNode)
 				}
-
 				if vWeight, ok := mWeightedTarget[names.AttrWeight].(int); ok {
 					weightedTarget.Weight = int32(vWeight)
 				}
@@ -225,12 +223,11 @@ func expandGRPCRoute(vGrpcRoute []interface{}) *awstypes.GrpcRoute {
 			if vMethodName, ok := mGrpcRouteMatch["method_name"].(string); ok && vMethodName != "" {
 				grpcRouteMatch.MethodName = aws.String(vMethodName)
 			}
-			if vServiceName, ok := mGrpcRouteMatch[names.AttrServiceName].(string); ok && vServiceName != "" {
-				grpcRouteMatch.ServiceName = aws.String(vServiceName)
-			}
-
 			if vPort, ok := mGrpcRouteMatch[names.AttrPort].(int); ok && vPort > 0 {
 				grpcRouteMatch.Port = aws.Int32(int32(vPort))
+			}
+			if vServiceName, ok := mGrpcRouteMatch[names.AttrServiceName].(string); ok && vServiceName != "" {
+				grpcRouteMatch.ServiceName = aws.String(vServiceName)
 			}
 
 			if vGrpcRouteMetadatas, ok := mGrpcRouteMatch["metadata"].(*schema.Set); ok && vGrpcRouteMetadatas.Len() > 0 {
@@ -639,11 +636,9 @@ func expandTCPRoute(vTcpRoute []interface{}) *awstypes.TcpRoute {
 				if vPort, ok := mWeightedTarget[names.AttrPort].(int); ok && vPort > 0 {
 					weightedTarget.Port = aws.Int32(int32(vPort))
 				}
-
 				if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
 					weightedTarget.VirtualNode = aws.String(vVirtualNode)
 				}
-
 				if vWeight, ok := mWeightedTarget[names.AttrWeight].(int); ok {
 					weightedTarget.Weight = int32(vWeight)
 				}
@@ -887,19 +882,19 @@ func expandVirtualNodeSpec(vSpec []interface{}) *awstypes.VirtualNodeSpec {
 			if vTimeout, ok := mListener[names.AttrTimeout].([]interface{}); ok && len(vTimeout) > 0 && vTimeout[0] != nil {
 				mTimeout := vTimeout[0].(map[string]interface{})
 
-				if vGrpcTimeout, ok := mTimeout["grpc"].([]interface{}); ok {
+				if vGrpcTimeout, ok := mTimeout["grpc"].([]interface{}); ok && len(vGrpcTimeout) > 0 && vGrpcTimeout[0] != nil {
 					listener.Timeout = &awstypes.ListenerTimeoutMemberGrpc{Value: *expandGRPCTimeout(vGrpcTimeout)}
 				}
 
-				if vHttpTimeout, ok := mTimeout["http"].([]interface{}); ok {
+				if vHttpTimeout, ok := mTimeout["http"].([]interface{}); ok && len(vHttpTimeout) > 0 && vHttpTimeout[0] != nil {
 					listener.Timeout = &awstypes.ListenerTimeoutMemberHttp{Value: *expandHTTPTimeout(vHttpTimeout)}
 				}
 
-				if vHttp2Timeout, ok := mTimeout["http2"].([]interface{}); ok {
+				if vHttp2Timeout, ok := mTimeout["http2"].([]interface{}); ok && len(vHttp2Timeout) > 0 && vHttp2Timeout[0] != nil {
 					listener.Timeout = &awstypes.ListenerTimeoutMemberHttp2{Value: *expandHTTPTimeout(vHttp2Timeout)}
 				}
 
-				if vTcpTimeout, ok := mTimeout["tcp"].([]interface{}); ok {
+				if vTcpTimeout, ok := mTimeout["tcp"].([]interface{}); ok && len(vTcpTimeout) > 0 && vTcpTimeout[0] != nil {
 					listener.Timeout = &awstypes.ListenerTimeoutMemberTcp{Value: *expandTCPTimeout(vTcpTimeout)}
 				}
 			}
@@ -1341,9 +1336,9 @@ func flattenGRPCRoute(grpcRoute *awstypes.GrpcRoute) []interface{} {
 
 			for _, weightedTarget := range weightedTargets {
 				mWeightedTarget := map[string]interface{}{
+					names.AttrPort:   aws.ToInt32(weightedTarget.Port),
 					"virtual_node":   aws.ToString(weightedTarget.VirtualNode),
 					names.AttrWeight: weightedTarget.Weight,
-					names.AttrPort:   aws.ToInt32(weightedTarget.Port),
 				}
 
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
@@ -1395,8 +1390,8 @@ func flattenGRPCRoute(grpcRoute *awstypes.GrpcRoute) []interface{} {
 			map[string]interface{}{
 				"metadata":            vGrpcRouteMetadatas,
 				"method_name":         aws.ToString(grpcRouteMatch.MethodName),
-				names.AttrServiceName: aws.ToString(grpcRouteMatch.ServiceName),
 				names.AttrPort:        aws.ToInt32(grpcRouteMatch.Port),
+				names.AttrServiceName: aws.ToString(grpcRouteMatch.ServiceName),
 			},
 		}
 	}
@@ -1444,9 +1439,9 @@ func flattenHTTPRoute(httpRoute *awstypes.HttpRoute) []interface{} {
 
 			for _, weightedTarget := range weightedTargets {
 				mWeightedTarget := map[string]interface{}{
+					names.AttrPort:   aws.ToInt32(weightedTarget.Port),
 					"virtual_node":   aws.ToString(weightedTarget.VirtualNode),
 					names.AttrWeight: weightedTarget.Weight,
-					names.AttrPort:   aws.ToInt32(weightedTarget.Port),
 				}
 
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
@@ -1620,9 +1615,9 @@ func flattenTCPRoute(tcpRoute *awstypes.TcpRoute) []interface{} {
 
 			for _, weightedTarget := range weightedTargets {
 				mWeightedTarget := map[string]interface{}{
+					names.AttrPort:   aws.ToInt32(weightedTarget.Port),
 					"virtual_node":   aws.ToString(weightedTarget.VirtualNode),
 					names.AttrWeight: weightedTarget.Weight,
-					names.AttrPort:   aws.ToInt32(weightedTarget.Port),
 				}
 
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
