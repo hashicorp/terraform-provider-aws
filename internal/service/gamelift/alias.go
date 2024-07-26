@@ -54,7 +54,7 @@ func ResourceAlias() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"message": {
+						names.AttrMessage: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -175,7 +175,7 @@ func expandRoutingStrategy(cfg []interface{}) *gamelift.RoutingStrategy {
 	if v, ok := strategy["fleet_id"].(string); ok && len(v) > 0 {
 		out.FleetId = aws.String(v)
 	}
-	if v, ok := strategy["message"].(string); ok && len(v) > 0 {
+	if v, ok := strategy[names.AttrMessage].(string); ok && len(v) > 0 {
 		out.Message = aws.String(v)
 	}
 
@@ -192,7 +192,7 @@ func flattenRoutingStrategy(rs *gamelift.RoutingStrategy) []interface{} {
 		m["fleet_id"] = aws.StringValue(rs.FleetId)
 	}
 	if rs.Message != nil {
-		m["message"] = aws.StringValue(rs.Message)
+		m[names.AttrMessage] = aws.StringValue(rs.Message)
 	}
 	m[names.AttrType] = aws.StringValue(rs.Type)
 

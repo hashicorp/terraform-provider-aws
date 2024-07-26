@@ -24,7 +24,7 @@ func DataSourceInstances() *schema.Resource {
 		ReadWithoutTimeout: dataSourceInstancesRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": namevaluesfilters.Schema(),
+			names.AttrFilter: namevaluesfilters.Schema(),
 			"instance_arns": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -46,7 +46,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	input := &rds.DescribeDBInstancesInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).RDSFilters()
 	}
 

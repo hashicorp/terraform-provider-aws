@@ -103,7 +103,7 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 	needsPreConditions := false
 	input := &rds_sdkv2.ModifyDBInstanceInput{
 		ApplyImmediately:     aws.Bool(true),
-		DBInstanceIdentifier: aws.String(d.Get("identifier").(string)),
+		DBInstanceIdentifier: aws.String(d.Get(names.AttrIdentifier).(string)),
 	}
 
 	// Backups must be enabled for Blue/Green Deployments. Enable them first.
@@ -113,9 +113,9 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 		input.BackupRetentionPeriod = aws.Int32(int32(d.Get("backup_retention_period").(int)))
 	}
 
-	if d.HasChange("deletion_protection") {
+	if d.HasChange(names.AttrDeletionProtection) {
 		needsPreConditions = true
-		input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+		input.DeletionProtection = aws.Bool(d.Get(names.AttrDeletionProtection).(bool))
 	}
 
 	if needsPreConditions {
@@ -129,15 +129,15 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 
 func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds_sdkv2.CreateBlueGreenDeploymentInput {
 	input := &rds_sdkv2.CreateBlueGreenDeploymentInput{
-		BlueGreenDeploymentName: aws.String(d.Get("identifier").(string)),
+		BlueGreenDeploymentName: aws.String(d.Get(names.AttrIdentifier).(string)),
 		Source:                  aws.String(d.Get(names.AttrARN).(string)),
 	}
 
 	if d.HasChange(names.AttrEngineVersion) {
 		input.TargetEngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 	}
-	if d.HasChange("parameter_group_name") {
-		input.TargetDBParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
+	if d.HasChange(names.AttrParameterGroupName) {
+		input.TargetDBParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
 	}
 
 	return input

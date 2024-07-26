@@ -132,7 +132,7 @@ func expandAlternateIdentifier(tfMap map[string]interface{}) types.AlternateIden
 		return nil
 	}
 
-	if v, ok := tfMap["external_id"]; ok && len(v.([]interface{})) > 0 {
+	if v, ok := tfMap[names.AttrExternalID]; ok && len(v.([]interface{})) > 0 {
 		return &types.AlternateIdentifierMemberExternalId{
 			Value: *expandExternalId(v.([]interface{})[0].(map[string]interface{})),
 		}
@@ -233,7 +233,7 @@ func expandExternalId(tfMap map[string]interface{}) *types.ExternalId {
 		a.Id = aws.String(v)
 	}
 
-	if v, ok := tfMap["issuer"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIssuer].(string); ok && v != "" {
 		a.Issuer = aws.String(v)
 	}
 
@@ -252,7 +252,7 @@ func flattenExternalId(apiObject *types.ExternalId) map[string]interface{} {
 	}
 
 	if v := apiObject.Issuer; v != nil {
-		m["issuer"] = aws.ToString(v)
+		m[names.AttrIssuer] = aws.ToString(v)
 	}
 
 	return m

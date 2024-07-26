@@ -92,7 +92,7 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 						"must be up to 128 letters (uppercase and lowercase), numbers, underscores and dashes, and must start with an alphanumeric"),
 				},
 			},
-			"priority": schema.Int64Attribute{
+			names.AttrPriority: schema.Int64Attribute{
 				Required: true,
 			},
 			"scheduling_policy_arn": schema.StringAttribute{

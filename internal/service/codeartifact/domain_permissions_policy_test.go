@@ -35,9 +35,9 @@ func testAccDomainPermissionsPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_codeartifact_domain.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "domain", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile("codeartifact:CreateRepository")),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", "owner"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", names.AttrOwner),
 				),
 			},
 			{
@@ -50,10 +50,10 @@ func testAccDomainPermissionsPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_codeartifact_domain.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "domain", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile("codeartifact:CreateRepository")),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile("codeartifact:ListRepositoriesInDomain")),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", "owner"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", names.AttrOwner),
 				),
 			},
 		},
@@ -76,10 +76,10 @@ func testAccDomainPermissionsPolicy_ignoreEquivalent(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_codeartifact_domain.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "domain", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile("codeartifact:CreateRepository")),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile("codeartifact:ListRepositoriesInDomain")),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", "owner"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", names.AttrOwner),
 				),
 			},
 			{
@@ -106,9 +106,9 @@ func testAccDomainPermissionsPolicy_owner(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_codeartifact_domain.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "domain", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile("codeartifact:CreateRepository")),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", "owner"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", names.AttrOwner),
 				),
 			},
 			{
@@ -175,7 +175,7 @@ func testAccCheckDomainPermissionsExists(ctx context.Context, n string) resource
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactClient(ctx)
 
-		_, err := tfcodeartifact.FindDomainPermissionsPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_owner"], rs.Primary.Attributes["domain"])
+		_, err := tfcodeartifact.FindDomainPermissionsPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_owner"], rs.Primary.Attributes[names.AttrDomain])
 
 		return err
 	}
@@ -190,7 +190,7 @@ func testAccCheckDomainPermissionsDestroy(ctx context.Context) resource.TestChec
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactClient(ctx)
 
-			_, err := tfcodeartifact.FindDomainPermissionsPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_owner"], rs.Primary.Attributes["domain"])
+			_, err := tfcodeartifact.FindDomainPermissionsPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_owner"], rs.Primary.Attributes[names.AttrDomain])
 
 			if tfresource.NotFound(err) {
 				continue

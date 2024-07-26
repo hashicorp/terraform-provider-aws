@@ -15,10 +15,10 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -43,7 +43,7 @@ func settingSchema() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"namespace": {
+			names.AttrNamespace: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -199,7 +199,7 @@ func ResourceEnvironment() *schema.Resource {
 				Default:      environmentTierWebServer,
 				ValidateFunc: validation.StringInSlice(environmentTier_Values(), false),
 			},
-			"triggers": {
+			names.AttrTriggers: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -376,7 +376,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("solution_stack_name", env.SolutionStackName)
 	d.Set("tier", env.Tier.Name)
-	if err := d.Set("triggers", flattenTriggers(resources.EnvironmentResources.Triggers)); err != nil {
+	if err := d.Set(names.AttrTriggers, flattenTriggers(resources.EnvironmentResources.Triggers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting triggers: %s", err)
 	}
 	d.Set("version_label", env.VersionLabel)
@@ -386,7 +386,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 		m := map[string]interface{}{}
 
 		if optionSetting.Namespace != nil {
-			m["namespace"] = aws.ToString(optionSetting.Namespace)
+			m[names.AttrNamespace] = aws.ToString(optionSetting.Namespace)
 		}
 
 		if optionSetting.OptionName != nil {
@@ -400,7 +400,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 		if value := aws.ToString(optionSetting.Value); value != "" {
 			switch aws.ToString(optionSetting.OptionName) {
 			case "SecurityGroups":
-				m[names.AttrValue] = dropGeneratedSecurityGroup(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), value)
+				m[names.AttrValue] = dropGeneratedSecurityGroup(ctx, meta.(*conns.AWSClient).EC2Client(ctx), value)
 			case "Subnets", "ELBSubnets":
 				m[names.AttrValue] = sortValues(value)
 			default:
@@ -784,7 +784,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *elasticbeanstalk.Client, 
 // as they become overridden from within the template
 func optionSettingValueHash(v interface{}) int {
 	rd := v.(map[string]interface{})
-	namespace := rd["namespace"].(string)
+	namespace := rd[names.AttrNamespace].(string)
 	optionName := rd[names.AttrName].(string)
 	var resourceName string
 	if v, ok := rd["resource"].(string); ok {
@@ -799,7 +799,7 @@ func optionSettingValueHash(v interface{}) int {
 
 func optionSettingKeyHash(v interface{}) int {
 	rd := v.(map[string]interface{})
-	namespace := rd["namespace"].(string)
+	namespace := rd[names.AttrNamespace].(string)
 	optionName := rd[names.AttrName].(string)
 	var resourceName string
 	if v, ok := rd["resource"].(string); ok {
@@ -822,7 +822,7 @@ func extractOptionSettings(s *schema.Set) []awstypes.ConfigurationOptionSetting 
 	if s != nil {
 		for _, setting := range s.List() {
 			optionSetting := awstypes.ConfigurationOptionSetting{
-				Namespace:  aws.String(setting.(map[string]interface{})["namespace"].(string)),
+				Namespace:  aws.String(setting.(map[string]interface{})[names.AttrNamespace].(string)),
 				OptionName: aws.String(setting.(map[string]interface{})[names.AttrName].(string)),
 				Value:      aws.String(setting.(map[string]interface{})[names.AttrValue].(string)),
 			}
@@ -838,9 +838,9 @@ func extractOptionSettings(s *schema.Set) []awstypes.ConfigurationOptionSetting 
 	return settings
 }
 
-func dropGeneratedSecurityGroup(ctx context.Context, conn *ec2.EC2, settingValue string) string {
+func dropGeneratedSecurityGroup(ctx context.Context, conn *ec2.Client, settingValue string) string {
 	input := &ec2.DescribeSecurityGroupsInput{
-		GroupIds: aws.StringSlice(strings.Split(settingValue, ",")),
+		GroupIds: strings.Split(settingValue, ","),
 	}
 
 	securityGroup, err := tfec2.FindSecurityGroups(ctx, conn, input)

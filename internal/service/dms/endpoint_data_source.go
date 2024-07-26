@@ -6,7 +6,7 @@ package dms
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -15,13 +15,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_dms_endpoint")
-func DataSourceEndpoint() *schema.Resource {
+// @SDKDataSource("aws_dms_endpoint", name="Endpoint")
+func dataSourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEndpointRead,
 
 		Schema: map[string]*schema.Schema{
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,7 +61,7 @@ func DataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"endpoint_type": {
+			names.AttrEndpointType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -190,7 +190,7 @@ func DataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"stream_arn": {
+						names.AttrStreamARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -233,7 +233,7 @@ func DataSourceEndpoint() *schema.Resource {
 					},
 				},
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -561,7 +561,7 @@ func DataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"username": {
+			names.AttrUsername: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -572,34 +572,35 @@ func DataSourceEndpoint() *schema.Resource {
 
 func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	endptID := d.Get("endpoint_id").(string)
-	out, err := FindEndpointByID(ctx, conn, endptID)
+	out, err := findEndpointByID(ctx, conn, endptID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DMS Endpoint (%s): %s", endptID, err)
 	}
 
-	d.SetId(aws.StringValue(out.EndpointIdentifier))
+	d.SetId(aws.ToString(out.EndpointIdentifier))
 	d.Set("endpoint_id", out.EndpointIdentifier)
-	arn := aws.StringValue(out.EndpointArn)
+	arn := aws.ToString(out.EndpointArn)
 	d.Set("endpoint_arn", arn)
-	d.Set("endpoint_type", out.EndpointType)
+	d.Set(names.AttrEndpointType, out.EndpointType)
 	d.Set(names.AttrDatabaseName, out.DatabaseName)
 	d.Set("engine_name", out.EngineName)
 	d.Set(names.AttrPort, out.Port)
 	d.Set("server_name", out.ServerName)
 	d.Set("ssl_mode", out.SslMode)
-	d.Set("username", out.Username)
+	d.Set(names.AttrUsername, out.Username)
 
 	if err := resourceEndpointSetState(d, out); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	tags, err := listTags(ctx, conn, arn)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Endpoint (%s): %s", arn, err)
 	}

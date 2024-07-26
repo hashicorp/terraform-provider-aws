@@ -52,9 +52,9 @@ func ResourceAgent() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"private_link_endpoint", "ip_address"},
+				ConflictsWith: []string{"private_link_endpoint", names.AttrIPAddress},
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -86,7 +86,7 @@ func ResourceAgent() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_endpoint_id": {
+			names.AttrVPCEndpointID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -102,7 +102,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	activationKey := d.Get("activation_key").(string)
-	agentIpAddress := d.Get("ip_address").(string)
+	agentIpAddress := d.Get(names.AttrIPAddress).(string)
 
 	// Perform one time fetch of activation key from gateway IP address.
 	if activationKey == "" {
@@ -196,7 +196,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.SubnetArns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("vpc_endpoint_id"); ok {
+	if v, ok := d.GetOk(names.AttrVPCEndpointID); ok {
 		input.VpcEndpointId = aws.String(v.(string))
 	}
 
@@ -241,12 +241,12 @@ func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("private_link_endpoint", plc.PrivateLinkEndpoint)
 		d.Set("security_group_arns", flex.FlattenStringValueList(plc.SecurityGroupArns))
 		d.Set("subnet_arns", flex.FlattenStringValueList(plc.SubnetArns))
-		d.Set("vpc_endpoint_id", plc.VpcEndpointId)
+		d.Set(names.AttrVPCEndpointID, plc.VpcEndpointId)
 	} else {
 		d.Set("private_link_endpoint", "")
 		d.Set("security_group_arns", nil)
 		d.Set("subnet_arns", nil)
-		d.Set("vpc_endpoint_id", "")
+		d.Set(names.AttrVPCEndpointID, "")
 	}
 
 	return diags

@@ -48,7 +48,7 @@ func ResourceIPGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"source": {
+						names.AttrSource: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.IsCIDR,
@@ -202,7 +202,7 @@ func expandIPGroupRules(rules []interface{}) []types.IpRuleItem {
 		r := rule.(map[string]interface{})
 
 		result = append(result, types.IpRuleItem{
-			IpRule:   aws.String(r["source"].(string)),
+			IpRule:   aws.String(r[names.AttrSource].(string)),
 			RuleDesc: aws.String(r[names.AttrDescription].(string)),
 		})
 	}
@@ -215,7 +215,7 @@ func flattenIPGroupRules(rules []types.IpRuleItem) []map[string]interface{} {
 		r := map[string]interface{}{}
 
 		if v := rule.IpRule; v != nil {
-			r["source"] = aws.ToString(v)
+			r[names.AttrSource] = aws.ToString(v)
 		}
 
 		if v := rule.RuleDesc; v != nil {

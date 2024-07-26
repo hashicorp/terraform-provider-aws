@@ -36,7 +36,7 @@ func resourceResponseHeadersPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -129,7 +129,7 @@ func resourceResponseHeadersPolicy() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"header": {
+									names.AttrHeader: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -168,7 +168,7 @@ func resourceResponseHeadersPolicy() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"header": {
+									names.AttrHeader: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -337,7 +337,7 @@ func resourceResponseHeadersPolicyCreate(ctx context.Context, d *schema.Resource
 		Name: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 
@@ -393,7 +393,7 @@ func resourceResponseHeadersPolicyRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	apiObject := output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig
-	d.Set("comment", apiObject.Comment)
+	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.CorsConfig != nil {
 		if err := d.Set("cors_config", []interface{}{flattenResponseHeadersPolicyCorsConfig(apiObject.CorsConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting cors_config: %s", err)
@@ -447,7 +447,7 @@ func resourceResponseHeadersPolicyUpdate(ctx context.Context, d *schema.Resource
 		Name: aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 
@@ -759,7 +759,7 @@ func expandResponseHeadersPolicyCustomHeader(tfMap map[string]interface{}) *awst
 
 	apiObject := &awstypes.ResponseHeadersPolicyCustomHeader{}
 
-	if v, ok := tfMap["header"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrHeader].(string); ok && v != "" {
 		apiObject.Header = aws.String(v)
 	}
 
@@ -822,7 +822,7 @@ func flattenResponseHeadersPolicyCustomHeader(apiObject *awstypes.ResponseHeader
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Header; v != nil {
-		tfMap["header"] = aws.ToString(v)
+		tfMap[names.AttrHeader] = aws.ToString(v)
 	}
 
 	if v := apiObject.Override; v != nil {
@@ -879,7 +879,7 @@ func expandResponseHeadersPolicyRemoveHeader(tfMap map[string]interface{}) *awst
 
 	apiObject := &awstypes.ResponseHeadersPolicyRemoveHeader{}
 
-	if v, ok := tfMap["header"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrHeader].(string); ok && v != "" {
 		apiObject.Header = aws.String(v)
 	}
 
@@ -934,7 +934,7 @@ func flattenResponseHeadersPolicyRemoveHeader(apiObject *awstypes.ResponseHeader
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Header; v != nil {
-		tfMap["header"] = aws.ToString(v)
+		tfMap[names.AttrHeader] = aws.ToString(v)
 	}
 
 	return tfMap

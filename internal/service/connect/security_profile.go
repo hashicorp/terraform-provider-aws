@@ -59,7 +59,7 @@ func ResourceSecurityProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"permissions": {
+			names.AttrPermissions: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 500,
@@ -95,7 +95,7 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("permissions"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrPermissions); ok && v.(*schema.Set).Len() > 0 {
 		input.Permissions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -160,7 +160,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if permissions != nil {
-		d.Set("permissions", flex.FlattenStringSet(permissions))
+		d.Set(names.AttrPermissions, flex.FlattenStringSet(permissions))
 	}
 
 	setTagsOut(ctx, resp.SecurityProfile.Tags)
@@ -188,8 +188,8 @@ func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 		input.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
-	if d.HasChange("permissions") {
-		input.Permissions = flex.ExpandStringSet(d.Get("permissions").(*schema.Set))
+	if d.HasChange(names.AttrPermissions) {
+		input.Permissions = flex.ExpandStringSet(d.Get(names.AttrPermissions).(*schema.Set))
 	}
 
 	_, err = conn.UpdateSecurityProfileWithContext(ctx, input)

@@ -149,7 +149,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
-			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Severity: baseSeverityToSDKSeverity(d.Severity()),
 			Summary:  d.Summary(),
 			Detail:   d.Detail(),
 		})
@@ -173,7 +173,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
-			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Severity: baseSeverityToSDKSeverity(d.Severity()),
 			Summary:  fmt.Sprintf("creating AWS SDK v1 session: %s", d.Summary()),
 			Detail:   d.Detail(),
 		})
@@ -187,7 +187,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	accountID, partition, awsDiags := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
-			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Severity: baseSeverityToSDKSeverity(d.Severity()),
 			Summary:  fmt.Sprintf("Retrieving AWS account details: %s", d.Summary()),
 			Detail:   d.Detail(),
 		})
@@ -231,7 +231,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	return client, diags
 }
 
-func baseSeverityToSdkSeverity(s basediag.Severity) diag.Severity {
+func baseSeverityToSDKSeverity(s basediag.Severity) diag.Severity {
 	switch s {
 	case basediag.SeverityWarning:
 		return diag.Warning

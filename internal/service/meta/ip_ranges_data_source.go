@@ -71,7 +71,7 @@ func (d *dataSourceIPRanges) Schema(ctx context.Context, req datasource.SchemaRe
 			"sync_token": schema.Int64Attribute{
 				Computed: true,
 			},
-			"url": schema.StringAttribute{
+			names.AttrURL: schema.StringAttribute{
 				Optional: true,
 			},
 		},

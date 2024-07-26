@@ -43,13 +43,13 @@ func resourceReplicationConfiguration() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"rule": {
+						names.AttrRule: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 10,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"destination": {
+									names.AttrDestination: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 25,
@@ -75,7 +75,7 @@ func resourceReplicationConfiguration() *schema.Resource {
 										MaxItems: 100,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"filter": {
+												names.AttrFilter: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -183,7 +183,7 @@ func expandReplicationConfigurationReplicationConfiguration(data []interface{}) 
 
 	ec := data[0].(map[string]interface{})
 	config := &types.ReplicationConfiguration{
-		Rules: expandReplicationConfigurationReplicationConfigurationRules(ec["rule"].([]interface{})),
+		Rules: expandReplicationConfigurationReplicationConfigurationRules(ec[names.AttrRule].([]interface{})),
 	}
 	return config
 }
@@ -194,7 +194,7 @@ func flattenReplicationConfigurationReplicationConfiguration(ec *types.Replicati
 	}
 
 	config := map[string]interface{}{
-		"rule": flattenReplicationConfigurationReplicationConfigurationRules(ec.Rules),
+		names.AttrRule: flattenReplicationConfigurationReplicationConfigurationRules(ec.Rules),
 	}
 
 	return []map[string]interface{}{
@@ -212,7 +212,7 @@ func expandReplicationConfigurationReplicationConfigurationRules(data []interfac
 	for _, rule := range data {
 		ec := rule.(map[string]interface{})
 		config := types.ReplicationRule{
-			Destinations:      expandReplicationConfigurationReplicationConfigurationRulesDestinations(ec["destination"].([]interface{})),
+			Destinations:      expandReplicationConfigurationReplicationConfigurationRulesDestinations(ec[names.AttrDestination].([]interface{})),
 			RepositoryFilters: expandReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(ec["repository_filter"].([]interface{})),
 		}
 
@@ -230,8 +230,8 @@ func flattenReplicationConfigurationReplicationConfigurationRules(ec []types.Rep
 
 	for _, apiObject := range ec {
 		tfMap := map[string]interface{}{
-			"destination":       flattenReplicationConfigurationReplicationConfigurationRulesDestinations(apiObject.Destinations),
-			"repository_filter": flattenReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(apiObject.RepositoryFilters),
+			names.AttrDestination: flattenReplicationConfigurationReplicationConfigurationRulesDestinations(apiObject.Destinations),
+			"repository_filter":   flattenReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(apiObject.RepositoryFilters),
 		}
 
 		tfList = append(tfList, tfMap)
@@ -288,7 +288,7 @@ func expandReplicationConfigurationReplicationConfigurationRulesRepositoryFilter
 	for _, filter := range data {
 		ec := filter.(map[string]interface{})
 		config := types.RepositoryFilter{
-			Filter:     aws.String(ec["filter"].(string)),
+			Filter:     aws.String(ec[names.AttrFilter].(string)),
 			FilterType: types.RepositoryFilterType((ec["filter_type"].(string))),
 		}
 
@@ -306,8 +306,8 @@ func flattenReplicationConfigurationReplicationConfigurationRulesRepositoryFilte
 
 	for _, apiObject := range ec {
 		tfMap := map[string]interface{}{
-			"filter":      aws.ToString(apiObject.Filter),
-			"filter_type": apiObject.FilterType,
+			names.AttrFilter: aws.ToString(apiObject.Filter),
+			"filter_type":    apiObject.FilterType,
 		}
 
 		tfList = append(tfList, tfMap)

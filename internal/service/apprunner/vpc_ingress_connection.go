@@ -52,7 +52,7 @@ func resourceVPCIngressConnection() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"vpc_endpoint_id": {
+						names.AttrVPCEndpointID: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -274,7 +274,7 @@ func expandIngressVPCConfiguration(l []interface{}) *types.IngressVpcConfigurati
 		configuration.VpcId = aws.String(v)
 	}
 
-	if v, ok := m["vpc_endpoint_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrVPCEndpointID].(string); ok && v != "" {
 		configuration.VpcEndpointId = aws.String(v)
 	}
 
@@ -287,8 +287,8 @@ func flattenIngressVPCConfiguration(ingressVpcConfiguration *types.IngressVpcCon
 	}
 
 	m := map[string]interface{}{
-		names.AttrVPCID:   aws.ToString(ingressVpcConfiguration.VpcId),
-		"vpc_endpoint_id": aws.ToString(ingressVpcConfiguration.VpcEndpointId),
+		names.AttrVPCID:         aws.ToString(ingressVpcConfiguration.VpcId),
+		names.AttrVPCEndpointID: aws.ToString(ingressVpcConfiguration.VpcEndpointId),
 	}
 
 	return []interface{}{m}

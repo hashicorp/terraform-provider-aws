@@ -35,11 +35,11 @@ func TestAccIoTTopicRuleDestination_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleDestinationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", regexache.MustCompile(`ruledestination/vpc/.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_configuration.0.role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.security_groups.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.security_groups.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.subnet_ids.#", acctest.Ct2),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_configuration.0.vpc_id"),
 				),
 			},
@@ -94,7 +94,7 @@ func TestAccIoTTopicRuleDestination_enabled(t *testing.T) {
 				Config: testAccTopicRuleDestinationConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleDestinationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
@@ -106,14 +106,14 @@ func TestAccIoTTopicRuleDestination_enabled(t *testing.T) {
 				Config: testAccTopicRuleDestinationConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleDestinationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccTopicRuleDestinationConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleDestinationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			// Delete everything but the IAM Role assumed by the IoT service.
@@ -126,7 +126,7 @@ func TestAccIoTTopicRuleDestination_enabled(t *testing.T) {
 
 func testAccCheckTopicRuleDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_topic_rule_destination" {
@@ -161,7 +161,7 @@ func testAccCheckTopicRuleDestinationExists(ctx context.Context, n string) resou
 			return fmt.Errorf("No IoT Topic Rule Destination ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		_, err := tfiot.FindTopicRuleDestinationByARN(ctx, conn, rs.Primary.ID)
 

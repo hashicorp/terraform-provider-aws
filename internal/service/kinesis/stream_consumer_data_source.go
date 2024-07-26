@@ -45,7 +45,7 @@ func dataSourceStreamConsumer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"stream_arn": {
+			names.AttrStreamARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -58,7 +58,7 @@ func dataSourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
-	streamARN := d.Get("stream_arn").(string)
+	streamARN := d.Get(names.AttrStreamARN).(string)
 	input := &kinesis.ListStreamConsumersInput{
 		StreamARN: aws.String(streamARN),
 	}
@@ -84,7 +84,7 @@ func dataSourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("creation_timestamp", aws.ToTime(consumer.ConsumerCreationTimestamp).Format(time.RFC3339))
 	d.Set(names.AttrName, consumer.ConsumerName)
 	d.Set(names.AttrStatus, consumer.ConsumerStatus)
-	d.Set("stream_arn", streamARN)
+	d.Set(names.AttrStreamARN, streamARN)
 
 	return diags
 }

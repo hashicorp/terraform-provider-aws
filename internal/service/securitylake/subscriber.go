@@ -102,7 +102,7 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"source": schema.SetNestedBlock{
+			names.AttrSource: schema.SetNestedBlock{
 				Validators: []validator.Set{
 					setvalidator.IsRequired(),
 					setvalidator.SizeAtLeast(1),
@@ -131,7 +131,7 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"attributes": schema.ListAttribute{
+									names.AttrAttributes: schema.ListAttribute{
 										Computed:   true,
 										CustomType: fwtypes.NewListNestedObjectTypeOf[subscriberCustomLogSourceAttributesModel](ctx),
 										ElementType: types.ObjectType{
@@ -150,8 +150,8 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 										CustomType: fwtypes.NewListNestedObjectTypeOf[subscriberCustomLogSourceProviderModel](ctx),
 										ElementType: types.ObjectType{
 											AttrTypes: map[string]attr.Type{
-												"location":        types.StringType,
-												names.AttrRoleARN: types.StringType,
+												names.AttrLocation: types.StringType,
+												names.AttrRoleARN:  types.StringType,
 											},
 										},
 										PlanModifiers: []planmodifier.List{
@@ -180,10 +180,10 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"external_id": schema.StringAttribute{
+						names.AttrExternalID: schema.StringAttribute{
 							Required: true,
 						},
-						"principal": schema.StringAttribute{
+						names.AttrPrincipal: schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -640,10 +640,10 @@ func flattenSubscriberLogSourceResourceModel(ctx context.Context, awsLogApiObjec
 		provider, d := flattenSubscriberCustomLogSourceProviderModel(ctx, customLogApiObject.Provider)
 		diags.Append(d...)
 		obj = map[string]attr.Value{
-			"attributes":     attributes,
-			"provider":       provider,
-			"source_name":    fwflex.StringToFramework(ctx, customLogApiObject.SourceName),
-			"source_version": fwflex.StringToFramework(ctx, customLogApiObject.SourceVersion),
+			names.AttrAttributes: attributes,
+			"provider":           provider,
+			"source_name":        fwflex.StringToFramework(ctx, customLogApiObject.SourceName),
+			"source_version":     fwflex.StringToFramework(ctx, customLogApiObject.SourceVersion),
 		}
 		objVal, d = types.ObjectValue(subscriberCustomLogSourceResourceModelAttrTypes, obj)
 		diags.Append(d...)
@@ -687,8 +687,8 @@ func flattenSubscriberCustomLogSourceProviderModel(ctx context.Context, apiObjec
 	}
 
 	obj := map[string]attr.Value{
-		"location":        fwflex.StringToFramework(ctx, apiObject.Location),
-		names.AttrRoleARN: fwflex.StringToFramework(ctx, apiObject.RoleArn),
+		names.AttrLocation: fwflex.StringToFramework(ctx, apiObject.Location),
+		names.AttrRoleARN:  fwflex.StringToFramework(ctx, apiObject.RoleArn),
 	}
 
 	objVal, d := types.ObjectValue(subscriberCustomLogSourceProviderModelAttrTypes, obj)
@@ -708,15 +708,15 @@ var (
 	}
 
 	subscriberCustomLogSourceProviderModelAttrTypes = map[string]attr.Type{
-		"location":        types.StringType,
-		names.AttrRoleARN: types.StringType,
+		names.AttrLocation: types.StringType,
+		names.AttrRoleARN:  types.StringType,
 	}
 
 	subscriberCustomLogSourceResourceModelAttrTypes = map[string]attr.Type{
-		"source_name":    types.StringType,
-		"source_version": types.StringType,
-		"attributes":     types.ListType{ElemType: types.ObjectType{AttrTypes: subscriberCustomLogSourceAttributesModelAttrTypes}},
-		"provider":       types.ListType{ElemType: types.ObjectType{AttrTypes: subscriberCustomLogSourceProviderModelAttrTypes}},
+		"source_name":        types.StringType,
+		"source_version":     types.StringType,
+		names.AttrAttributes: types.ListType{ElemType: types.ObjectType{AttrTypes: subscriberCustomLogSourceAttributesModelAttrTypes}},
+		"provider":           types.ListType{ElemType: types.ObjectType{AttrTypes: subscriberCustomLogSourceProviderModelAttrTypes}},
 	}
 
 	subscriberLogSourceResourceModelAttrTypes = map[string]attr.Type{

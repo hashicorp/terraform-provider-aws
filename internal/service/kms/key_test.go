@@ -13,9 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
@@ -40,9 +45,12 @@ func TestAccKMSKey_basic(t *testing.T) {
 					testAccCheckKeyExists(ctx, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "customer_master_key_spec", "SYMMETRIC_DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "ENCRYPT_DECRYPT"),
-					resource.TestCheckResourceAttr(resourceName, "multi_region", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "multi_region", acctest.CtFalse),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -101,7 +109,7 @@ func TestAccKMSKey_multiRegion(t *testing.T) {
 				Config: testAccKeyConfig_multiRegion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "multi_region", "true"),
+					resource.TestCheckResourceAttr(resourceName, "multi_region", acctest.CtTrue),
 				),
 			},
 			{
@@ -218,7 +226,7 @@ func TestAccKMSKey_Policy_bypass(t *testing.T) {
 				Config: testAccKeyConfig_policyBypass(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtTrue),
 				),
 			},
 			{
@@ -247,14 +255,14 @@ func TestAccKMSKey_Policy_bypassUpdate(t *testing.T) {
 				Config: testAccKeyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccKeyConfig_policyBypass(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtTrue),
 				),
 			},
 		},
@@ -428,8 +436,8 @@ func TestAccKMSKey_isEnabled(t *testing.T) {
 				Config: testAccKeyConfig_enabledRotation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key1),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 				),
 			},
 			{
@@ -442,16 +450,16 @@ func TestAccKMSKey_isEnabled(t *testing.T) {
 				Config: testAccKeyConfig_disabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key2),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccKeyConfig_enabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key3),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 				),
 			},
 		},
@@ -474,8 +482,8 @@ func TestAccKMSKey_rotation(t *testing.T) {
 				Config: testAccKeyConfig_enabledRotation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key1),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 				),
 			},
 			{
@@ -488,8 +496,8 @@ func TestAccKMSKey_rotation(t *testing.T) {
 				Config: testAccKeyConfig_enabledRotationPeriod(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key2),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "rotation_period_in_days", "91"),
 				),
 			},
@@ -497,8 +505,8 @@ func TestAccKMSKey_rotation(t *testing.T) {
 				Config: testAccKeyConfig_enabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key3),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "rotation_period_in_days", "91"),
 				),
 			},
@@ -506,138 +514,180 @@ func TestAccKMSKey_rotation(t *testing.T) {
 	})
 }
 
-func TestAccKMSKey_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var key awstypes.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_kms_key.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKeyConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
-			},
-			{
-				Config: testAccKeyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccKeyConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccKeyConfig_tags0(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
-			},
-		},
-	})
-}
-
 // https://github.com/hashicorp/terraform-provider-aws/issues/26174.
-func TestAccKMSKey_ignoreTags(t *testing.T) {
+func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 	ctx := acctest.Context(t)
 	var key awstypes.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
+		CheckDestroy: testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyConfig_ignoreTags(rName, "key1", "value1", "key2", "value2"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Key/tags_ignore/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
+					}),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
+					}),
+					"ignore_tag_keys": config.SetVariable(
+						config.StringVariable("ignkey1"),
+					),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1),
+						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+					})),
+					expectFullTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1),
+						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1),
+							acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
+							acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						})),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			// Add an ignored tag.
 			{
-				Config: testAccKeyConfig_ignoreTags(rName, "key1", "value1", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyAddTag(ctx, &key, "ignkey1", "ignvalue1"),
-				),
+				PreConfig: func() {
+					testAccKeyAddTag(ctx, t, aws.ToString(key.KeyId), "ignkey1", "ignvalue1")
+				},
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Key/tags_ignore/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
+					}),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
+					}),
+					"ignore_tag_keys": config.SetVariable(
+						config.StringVariable("ignkey1"),
+					),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1),
+						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+					})),
+					expectFullTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1),
+						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						"ignkey1":              knownvalue.StringExact("ignvalue1"),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
+			// Modify tags
 			{
-				Config: testAccKeyConfig_ignoreTags(rName, "key1", "value1updated", "key3", "value3"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Key/tags_ignore/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
+					}),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
+						"key3":         config.StringVariable("value3"),
+					}),
+					"ignore_tag_keys": config.SetVariable(
+						config.StringVariable("ignkey1"),
+					),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key3", "value3"),
 				),
-			},
-		},
-	})
-}
-
-// https://github.com/hashicorp/terraform-provider-aws/issues/33219.
-func TestAccKMSKey_updateTagsEmptyValue(t *testing.T) {
-	ctx := acctest.Context(t)
-	var key awstypes.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_kms_key.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKeyConfig_tags2(rName, "key1", "value1", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccKeyConfig_tags2(rName, "key1", "value1", "key2", ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						"key3":         knownvalue.StringExact("value3"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1Updated),
+						"key3":                 knownvalue.StringExact("value3"),
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+					})),
+					expectFullTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1Updated),
+						"key3":                 knownvalue.StringExact("value3"),
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						"ignkey1":              knownvalue.StringExact("ignvalue1"),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+							"key3":         knownvalue.StringExact("value3"),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1Updated),
+							"key3":                 knownvalue.StringExact("value3"),
+							acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						})),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -712,7 +762,7 @@ func testAccCheckKeyExists(ctx context.Context, name string, key *awstypes.KeyMe
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
 
-		outputRaw, err := tfresource.RetryWhenNotFound(ctx, tfkms.KMSPropagationTimeout, func() (interface{}, error) {
+		outputRaw, err := tfresource.RetryWhenNotFound(ctx, tfkms.PropagationTimeout, func() (interface{}, error) {
 			return tfkms.FindKeyByID(ctx, conn, rs.Primary.ID)
 		})
 
@@ -726,21 +776,23 @@ func testAccCheckKeyExists(ctx context.Context, name string, key *awstypes.KeyMe
 	}
 }
 
-func testAccCheckKeyAddTag(ctx context.Context, key *awstypes.KeyMetadata, tagKey, tagValue string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
+func testAccKeyAddTag(ctx context.Context, t *testing.T, identifier, key, value string) {
+	t.Helper()
 
-		input := &kms.TagResourceInput{
-			KeyId: key.KeyId,
-			Tags: []awstypes.Tag{{
-				TagKey:   aws.String(tagKey),
-				TagValue: aws.String(tagValue),
-			}},
-		}
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
 
-		_, err := conn.TagResource(ctx, input)
+	input := &kms.TagResourceInput{
+		KeyId: aws.String(identifier),
+		Tags: []awstypes.Tag{{
+			TagKey:   aws.String(key),
+			TagValue: aws.String(value),
+		}},
+	}
 
-		return err
+	_, err := conn.TagResource(ctx, input)
+
+	if err != nil {
+		t.Fatalf("adding tag: %s", err)
 	}
 }
 
@@ -1206,64 +1258,224 @@ resource "aws_kms_key" "test" {
 `, rName)
 }
 
-func testAccKeyConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
+// The following tests will eventually be generated
 
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
+func TestAccKMSKey_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.KeyMetadata
+	resourceName := "aws_kms_key.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
+		CheckDestroy: testAccCheckKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Key/tags_ignore/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
+					}),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
+					}),
+					"ignore_tag_keys": config.SetVariable(
+						config.StringVariable(acctest.CtProviderKey1),
+					),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+					expectFullTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Key/tags_ignore/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtProviderKey1: config.StringVariable("providervalue1updated"),
+					}),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
+					}),
+					"ignore_tag_keys": config.SetVariable(
+						config.StringVariable(acctest.CtProviderKey1),
+					),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+					expectFullTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
 }
 
-func testAccKeyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
+func TestAccKMSKey_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.KeyMetadata
+	resourceName := "aws_kms_key.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccKeyConfig_tags0(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-`, rName)
-}
-
-func testAccKeyConfig_ignoreTags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	// lintignore:AT004
-	return fmt.Sprintf(`
-provider "aws" {
-  default_tags {
-    tags = {
-      "defkey1" = "defvalue1"
-    }
-  }
-  ignore_tags {
-    keys = ["ignkey1"]
-  }
-}
-
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
+		CheckDestroy: testAccCheckKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Key/tags_ignore/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
+					}),
+					"ignore_tag_keys": config.SetVariable(
+						config.StringVariable(acctest.CtResourceKey1),
+					),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					expectFullTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Key/tags_ignore/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
+					}),
+					"ignore_tag_keys": config.SetVariable(
+						config.StringVariable(acctest.CtResourceKey1),
+					),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					expectFullTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }

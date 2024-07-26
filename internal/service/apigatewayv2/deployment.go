@@ -53,7 +53,7 @@ func resourceDeployment() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-			"triggers": {
+			names.AttrTriggers: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,

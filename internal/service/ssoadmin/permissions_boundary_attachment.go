@@ -74,7 +74,7 @@ func ResourcePermissionsBoundaryAttachment() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(0, 128),
 									},
-									"path": {
+									names.AttrPath: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "/",

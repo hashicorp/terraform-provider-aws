@@ -17,9 +17,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/ratelimit"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
-	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -139,12 +138,12 @@ func ResourceDocumentClassifier() *schema.Resource {
 					},
 				},
 			},
-			"language_code": {
+			names.AttrLanguageCode: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.SyntaxLanguageCode](),
 			},
-			"mode": {
+			names.AttrMode: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.DocumentClassifierMode](),
@@ -213,7 +212,7 @@ func ResourceDocumentClassifier() *schema.Resource {
 				DiffSuppressFunc: tfkms.DiffSuppressKey,
 				ValidateFunc:     tfkms.ValidateKey,
 			},
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -224,7 +223,7 @@ func ResourceDocumentClassifier() *schema.Resource {
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnets": {
+						names.AttrSubnets: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -255,7 +254,7 @@ func ResourceDocumentClassifier() *schema.Resource {
 				return nil
 			},
 			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
-				mode := types.DocumentClassifierMode(diff.Get("mode").(string))
+				mode := types.DocumentClassifierMode(diff.Get(names.AttrMode).(string))
 
 				if mode == types.DocumentClassifierModeMultiClass {
 					config := diff.GetRawConfig()
@@ -311,8 +310,8 @@ func resourceDocumentClassifierRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set(names.AttrARN, out.DocumentClassifierArn)
 	d.Set("data_access_role_arn", out.DataAccessRoleArn)
-	d.Set("language_code", out.LanguageCode)
-	d.Set("mode", out.Mode)
+	d.Set(names.AttrLanguageCode, out.LanguageCode)
+	d.Set(names.AttrMode, out.Mode)
 	d.Set("model_kms_key_id", out.ModelKmsKeyId)
 	d.Set("version_name", out.VersionName)
 	d.Set("version_name_prefix", create.NamePrefixFromName(aws.ToString(out.VersionName)))
@@ -333,7 +332,7 @@ func resourceDocumentClassifierRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "setting output_data_config: %s", err)
 	}
 
-	if err := d.Set("vpc_config", flattenVPCConfig(out.VpcConfig)); err != nil {
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfig(out.VpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
@@ -422,9 +421,9 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 			}
 
 			ec2Conn := meta.(*conns.AWSClient).EC2Client(ctx)
-			networkInterfaces, err := tfec2.FindNetworkInterfacesV2(ctx, ec2Conn, &ec2_sdkv2.DescribeNetworkInterfacesInput{
+			networkInterfaces, err := tfec2.FindNetworkInterfaces(ctx, ec2Conn, &ec2.DescribeNetworkInterfacesInput{
 				Filters: []ec2types.Filter{
-					tfec2.NewFilterV2("tag:"+documentClassifierTagKey, []string{aws.ToString(v.DocumentClassifierArn)}),
+					tfec2.NewFilter("tag:"+documentClassifierTagKey, []string{aws.ToString(v.DocumentClassifierArn)}),
 				},
 			})
 			if err != nil {
@@ -470,12 +469,12 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 	in := &comprehend.CreateDocumentClassifierInput{
 		DataAccessRoleArn:      aws.String(d.Get("data_access_role_arn").(string)),
 		InputDataConfig:        expandDocumentClassifierInputDataConfig(d),
-		LanguageCode:           types.LanguageCode(d.Get("language_code").(string)),
+		LanguageCode:           types.LanguageCode(d.Get(names.AttrLanguageCode).(string)),
 		DocumentClassifierName: aws.String(d.Get(names.AttrName).(string)),
-		Mode:                   types.DocumentClassifierMode(d.Get("mode").(string)),
+		Mode:                   types.DocumentClassifierMode(d.Get(names.AttrMode).(string)),
 		OutputDataConfig:       expandDocumentClassifierOutputDataConfig(d.Get("output_data_config").([]interface{})),
 		VersionName:            versionName,
-		VpcConfig:              expandVPCConfig(d.Get("vpc_config").([]interface{})),
+		VpcConfig:              expandVPCConfig(d.Get(names.AttrVPCConfig).([]interface{})),
 		ClientRequestToken:     aws.String(id.UniqueId()),
 		Tags:                   getTagsIn(ctx),
 	}
@@ -549,7 +548,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 
 	if in.VpcConfig != nil {
 		g.Go(func() error {
-			ec2Conn := awsClient.EC2Conn(ctx)
+			ec2Conn := awsClient.EC2Client(ctx)
 			enis, err := findNetworkInterfaces(waitCtx, ec2Conn, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets)
 			if err != nil {
 				diags = sdkdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, err)
@@ -572,9 +571,9 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 
 			modelVPCENILock.Unlock()
 
-			_, err = ec2Conn.CreateTagsWithContext(waitCtx, &ec2.CreateTagsInput{
-				Resources: []*string{newENI.NetworkInterfaceId},
-				Tags: []*ec2.Tag{
+			_, err = ec2Conn.CreateTags(waitCtx, &ec2.CreateTagsInput{ // nosemgrep:ci.semgrep.migrate.aws-api-context
+				Resources: []string{aws.ToString(newENI.NetworkInterfaceId)},
+				Tags: []ec2types.Tag{
 					{
 						Key:   aws.String(documentClassifierTagKey),
 						Value: aws.String(d.Id()),

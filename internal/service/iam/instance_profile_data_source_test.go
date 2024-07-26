@@ -30,7 +30,7 @@ func TestAccIAMInstanceProfileDataSource_basic(t *testing.T) {
 				Config: testAccInstanceProfileDataSourceConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "path", "/testpath/"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrPath, "/testpath/"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "role_id", roleResourceName, "unique_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "role_name", rName1),

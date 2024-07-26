@@ -89,7 +89,7 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"format": schema.StringAttribute{
+				names.AttrFormat: schema.StringAttribute{
 					Required:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.FormatOption](),
 					PlanModifiers: []planmodifier.String{
@@ -115,7 +115,7 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[s3Destination](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"s3_bucket": schema.StringAttribute{
+				names.AttrS3Bucket: schema.StringAttribute{
 					Required: true,
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),

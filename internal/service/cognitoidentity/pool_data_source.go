@@ -43,11 +43,11 @@ func dataSourcePool() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"client_id": {
+						names.AttrClientID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"provider_name": {
+						names.AttrProviderName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

@@ -51,7 +51,7 @@ func DataSourceUser() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -65,7 +65,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	userName := d.Get("user_name").(string)
+	userName := d.Get(names.AttrUserName).(string)
 
 	user, err := FindUserByName(ctx, conn, userName)
 
@@ -90,7 +90,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("minimum_engine_version", user.MinimumEngineVersion)
-	d.Set("user_name", user.Name)
+	d.Set(names.AttrUserName, user.Name)
 
 	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 

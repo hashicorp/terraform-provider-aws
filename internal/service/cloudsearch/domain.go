@@ -89,7 +89,7 @@ func resourceDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"default_value": {
+						names.AttrDefaultValue: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -794,7 +794,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			SortEnabled:   aws.Bool(sortEnabled),
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
 		}
 
@@ -812,7 +812,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			SearchEnabled: aws.Bool(searchEnabled),
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
 		}
 
@@ -831,7 +831,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			SortEnabled:   aws.Bool(sortEnabled),
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			v, err := strconv.ParseFloat(v, 64)
 
 			if err != nil {
@@ -855,7 +855,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			SearchEnabled: aws.Bool(searchEnabled),
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			v, err := strconv.ParseFloat(v, 64)
 
 			if err != nil {
@@ -880,7 +880,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			SortEnabled:   aws.Bool(sortEnabled),
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			v, err := strconv.Atoi(v)
 
 			if err != nil {
@@ -904,7 +904,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			SearchEnabled: aws.Bool(searchEnabled),
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			v, err := strconv.Atoi(v)
 
 			if err != nil {
@@ -929,7 +929,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			SortEnabled:   aws.Bool(sortEnabled),
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
 		}
 
@@ -948,7 +948,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			SortEnabled:   aws.Bool(sortEnabled),
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
 		}
 
@@ -966,7 +966,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			SearchEnabled: aws.Bool(searchEnabled),
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
 		}
 
@@ -988,7 +988,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			options.AnalysisScheme = aws.String(analysisScheme)
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
 		}
 
@@ -1009,7 +1009,7 @@ func expandIndexField(tfMap map[string]interface{}) (*types.IndexField, bool, er
 			options.AnalysisScheme = aws.String(analysisScheme)
 		}
 
-		if v, ok := tfMap["default_value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
 		}
 
@@ -1055,7 +1055,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = aws.ToString(v)
+			tfMap[names.AttrDefaultValue] = aws.ToString(v)
 		}
 
 		if v := options.FacetEnabled; v != nil {
@@ -1089,7 +1089,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = aws.ToString(v)
+			tfMap[names.AttrDefaultValue] = aws.ToString(v)
 		}
 
 		if v := options.FacetEnabled; v != nil {
@@ -1120,7 +1120,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = flex.Float64ToStringValue(v)
+			tfMap[names.AttrDefaultValue] = flex.Float64ToStringValue(v)
 		}
 
 		if v := options.FacetEnabled; v != nil {
@@ -1154,7 +1154,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = flex.Float64ToStringValue(v)
+			tfMap[names.AttrDefaultValue] = flex.Float64ToStringValue(v)
 		}
 
 		if v := options.FacetEnabled; v != nil {
@@ -1185,7 +1185,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = flex.Int64ToStringValue(v)
+			tfMap[names.AttrDefaultValue] = flex.Int64ToStringValue(v)
 		}
 
 		if v := options.FacetEnabled; v != nil {
@@ -1219,7 +1219,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = flex.Int64ToStringValue(v)
+			tfMap[names.AttrDefaultValue] = flex.Int64ToStringValue(v)
 		}
 
 		if v := options.FacetEnabled; v != nil {
@@ -1250,7 +1250,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = aws.ToString(v)
+			tfMap[names.AttrDefaultValue] = aws.ToString(v)
 		}
 
 		if v := options.FacetEnabled; v != nil {
@@ -1284,7 +1284,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = aws.ToString(v)
+			tfMap[names.AttrDefaultValue] = aws.ToString(v)
 		}
 
 		if v := options.FacetEnabled; v != nil {
@@ -1318,7 +1318,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = aws.ToString(v)
+			tfMap[names.AttrDefaultValue] = aws.ToString(v)
 		}
 
 		if v := options.FacetEnabled; v != nil {
@@ -1353,7 +1353,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = aws.ToString(v)
+			tfMap[names.AttrDefaultValue] = aws.ToString(v)
 		}
 
 		if v := options.HighlightEnabled; v != nil {
@@ -1387,7 +1387,7 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 		}
 
 		if v := options.DefaultValue; v != nil {
-			tfMap["default_value"] = aws.ToString(v)
+			tfMap[names.AttrDefaultValue] = aws.ToString(v)
 		}
 
 		if v := options.HighlightEnabled; v != nil {

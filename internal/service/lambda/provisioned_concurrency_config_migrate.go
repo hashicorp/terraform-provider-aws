@@ -33,7 +33,7 @@ func resourceProvisionedConcurrencyConfigV0() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,

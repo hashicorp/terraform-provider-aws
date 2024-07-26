@@ -80,13 +80,13 @@ func ResourceSite() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 256),
@@ -125,7 +125,7 @@ func resourceSiteCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrLocation); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Location = expandLocation(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -167,11 +167,11 @@ func resourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set(names.AttrDescription, site.Description)
 	d.Set("global_network_id", site.GlobalNetworkId)
 	if site.Location != nil {
-		if err := d.Set("location", []interface{}{flattenLocation(site.Location)}); err != nil {
+		if err := d.Set(names.AttrLocation, []interface{}{flattenLocation(site.Location)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting location: %s", err)
 		}
 	} else {
-		d.Set("location", nil)
+		d.Set(names.AttrLocation, nil)
 	}
 
 	setTagsOut(ctx, site.Tags)
@@ -192,7 +192,7 @@ func resourceSiteUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			SiteId:          aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk(names.AttrLocation); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.Location = expandLocation(v.([]interface{})[0].(map[string]interface{}))
 		}
 
@@ -401,7 +401,7 @@ func expandLocation(tfMap map[string]interface{}) *networkmanager.Location {
 
 	apiObject := &networkmanager.Location{}
 
-	if v, ok := tfMap["address"].(string); ok {
+	if v, ok := tfMap[names.AttrAddress].(string); ok {
 		apiObject.Address = aws.String(v)
 	}
 
@@ -424,7 +424,7 @@ func flattenLocation(apiObject *networkmanager.Location) map[string]interface{} 
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Address; v != nil {
-		tfMap["address"] = aws.StringValue(v)
+		tfMap[names.AttrAddress] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Latitude; v != nil {

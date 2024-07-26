@@ -4,6 +4,7 @@
 package fsx_test
 
 import (
+	"fmt"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -38,7 +39,7 @@ func TestAccFSxONTAPStorageVirtualMachineDataSource_Id(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subtype", resourceName, "subtype"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "uuid", resourceName, "uuid"),
 				),
 			},
@@ -72,7 +73,7 @@ func TestAccFSxONTAPStorageVirtualMachineDataSource_Filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subtype", resourceName, "subtype"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "uuid", resourceName, "uuid"),
 				),
 			},
@@ -81,15 +82,33 @@ func TestAccFSxONTAPStorageVirtualMachineDataSource_Filter(t *testing.T) {
 }
 
 func testAccONTAPStorageVirtualMachineDataSourceConfig_Id(rName string) string {
-	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_storage_virtual_machine" "test" {
+  file_system_id = aws_fsx_ontap_file_system.test.id
+  name           = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 data "aws_fsx_ontap_storage_virtual_machine" "test" {
   id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
-`)
+`, rName))
 }
 
 func testAccONTAPStorageVirtualMachineDataSourceConfig_Filter(rName string) string {
-	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_storage_virtual_machine" "test" {
+  file_system_id = aws_fsx_ontap_file_system.test.id
+  name           = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 data "aws_fsx_ontap_storage_virtual_machine" "test" {
   filter {
     name   = "file-system-id"
@@ -98,5 +117,5 @@ data "aws_fsx_ontap_storage_virtual_machine" "test" {
 
   depends_on = [aws_fsx_ontap_storage_virtual_machine.test]
 }
-`)
+`, rName))
 }

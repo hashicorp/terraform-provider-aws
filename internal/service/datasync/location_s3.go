@@ -100,7 +100,7 @@ func resourceLocationS3() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"uri": {
+			names.AttrURI: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -197,7 +197,7 @@ func resourceLocationS3Read(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.Set("s3_storage_class", output.S3StorageClass)
 	d.Set("subdirectory", subdirectory)
-	d.Set("uri", uri)
+	d.Set(names.AttrURI, uri)
 
 	return diags
 }

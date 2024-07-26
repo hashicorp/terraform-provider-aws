@@ -55,7 +55,7 @@ func ResourceExtension() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.ActionPoint](),
 						},
-						"action": {
+						names.AttrAction: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
@@ -73,7 +73,7 @@ func ResourceExtension() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"uri": {
+									names.AttrURI: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -88,7 +88,7 @@ func ResourceExtension() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"parameter": {
+			names.AttrParameter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -140,7 +140,7 @@ func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta i
 		in.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrParameter); ok && v.(*schema.Set).Len() > 0 {
 		in.Parameters = expandExtensionParameters(v.(*schema.Set).List())
 	}
 
@@ -179,7 +179,7 @@ func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrARN, out.Arn)
 	d.Set("action_point", flattenExtensionActionPoints(out.Actions))
 	d.Set(names.AttrDescription, out.Description)
-	d.Set("parameter", flattenExtensionParameters(out.Parameters))
+	d.Set(names.AttrParameter, flattenExtensionParameters(out.Parameters))
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrVersion, out.VersionNumber)
 
@@ -206,8 +206,8 @@ func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		requestUpdate = true
 	}
 
-	if d.HasChange("parameter") {
-		in.Parameters = expandExtensionParameters(d.Get("parameter").(*schema.Set).List())
+	if d.HasChange(names.AttrParameter) {
+		in.Parameters = expandExtensionParameters(d.Get(names.AttrParameter).(*schema.Set).List())
 		requestUpdate = true
 	}
 
@@ -259,7 +259,7 @@ func expandExtensionActions(actionsListRaw interface{}) []awstypes.Action {
 			Description: aws.String(actionMap[names.AttrDescription].(string)),
 			Name:        aws.String(actionMap[names.AttrName].(string)),
 			RoleArn:     aws.String(actionMap[names.AttrRoleARN].(string)),
-			Uri:         aws.String(actionMap["uri"].(string)),
+			Uri:         aws.String(actionMap[names.AttrURI].(string)),
 		}
 
 		actions = append(actions, action)
@@ -276,7 +276,7 @@ func expandExtensionActionPoints(actionsPointListRaw []interface{}) map[string][
 	actionsMap := make(map[string][]awstypes.Action)
 	for _, actionPointRaw := range actionsPointListRaw {
 		actionPointMap := actionPointRaw.(map[string]interface{})
-		actionsMap[actionPointMap["point"].(string)] = expandExtensionActions(actionPointMap["action"])
+		actionsMap[actionPointMap["point"].(string)] = expandExtensionActions(actionPointMap[names.AttrAction])
 	}
 
 	return actionsMap
@@ -313,7 +313,7 @@ func flattenExtensionActions(actions []awstypes.Action) []interface{} {
 			names.AttrName:        aws.ToString(action.Name),
 			names.AttrDescription: aws.ToString(action.Description),
 			names.AttrRoleARN:     aws.ToString(action.RoleArn),
-			"uri":                 aws.ToString(action.Uri),
+			names.AttrURI:         aws.ToString(action.Uri),
 		}
 		rawActions = append(rawActions, rawAction)
 	}
@@ -328,8 +328,8 @@ func flattenExtensionActionPoints(actionPointsMap map[string][]awstypes.Action) 
 	var rawActionPoints []interface{}
 	for actionPoint, actions := range actionPointsMap {
 		rawActionPoint := map[string]interface{}{
-			"point":  actionPoint,
-			"action": flattenExtensionActions(actions),
+			"point":          actionPoint,
+			names.AttrAction: flattenExtensionActions(actions),
 		}
 		rawActionPoints = append(rawActionPoints, rawActionPoint)
 	}

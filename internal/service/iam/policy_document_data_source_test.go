@@ -26,7 +26,7 @@ func TestAccIAMPolicyDocumentDataSource_basic(t *testing.T) {
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", names.AttrJSON,
 						testAccPolicyDocumentExpectedJSON(),
 					),
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "minified_json",
@@ -50,7 +50,7 @@ func TestAccIAMPolicyDocumentDataSource_singleConditionValue(t *testing.T) {
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_singleConditionValue,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "json", testAccPolicyDocumentConfig_SingleConditionValue_ExpectedJSON),
+					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, names.AttrJSON, testAccPolicyDocumentConfig_SingleConditionValue_ExpectedJSON),
 				),
 			},
 		},
@@ -69,7 +69,7 @@ func TestAccIAMPolicyDocumentDataSource_multipleConditionKeys(t *testing.T) {
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_multipleConditionKeys,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "json", testAccPolicyDocumentConfig_multipleConditionKeys_ExpectedJSON),
+					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, names.AttrJSON, testAccPolicyDocumentConfig_multipleConditionKeys_ExpectedJSON),
 				),
 			},
 		},
@@ -88,7 +88,7 @@ func TestAccIAMPolicyDocumentDataSource_duplicateConditionKeys(t *testing.T) {
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_duplicateConditionKeys,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "json", testAccPolicyDocumentConfig_duplicateConditionKeys_ExpectedJSON),
+					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, names.AttrJSON, testAccPolicyDocumentConfig_duplicateConditionKeys_ExpectedJSON),
 				),
 			},
 		},
@@ -105,7 +105,7 @@ func TestAccIAMPolicyDocumentDataSource_conditionWithBoolValue(t *testing.T) {
 			{
 				Config: testAccPolicyDocumentConfig_conditionWithBoolValue,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrEquivalentJSON("data.aws_iam_policy_document.test", "json",
+					acctest.CheckResourceAttrEquivalentJSON("data.aws_iam_policy_document.test", names.AttrJSON,
 						testAccPolicyDocumentConditionWithBoolValueExpectedJSON(),
 					),
 				),
@@ -127,7 +127,7 @@ func TestAccIAMPolicyDocumentDataSource_source(t *testing.T) {
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_deprecated,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source", "json",
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source", names.AttrJSON,
 						testAccPolicyDocumentSourceExpectedJSON(),
 					),
 				),
@@ -135,7 +135,7 @@ func TestAccIAMPolicyDocumentDataSource_source(t *testing.T) {
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_blankDeprecated,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source_blank", "json",
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source_blank", names.AttrJSON,
 						testAccPolicyDocumentSourceBlankExpectedJSON,
 					),
 				),
@@ -154,7 +154,7 @@ func TestAccIAMPolicyDocumentDataSource_sourceList(t *testing.T) {
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_list,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source_list", "json",
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source_list", names.AttrJSON,
 						testAccPolicyDocumentSourceListExpectedJSON,
 					),
 				),
@@ -173,7 +173,7 @@ func TestAccIAMPolicyDocumentDataSource_sourceConflicting(t *testing.T) {
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_conflictingDeprecated,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source_conflicting", "json",
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source_conflicting", names.AttrJSON,
 						testAccPolicyDocumentSourceConflictingExpectedJSON,
 					),
 				),
@@ -207,7 +207,7 @@ func TestAccIAMPolicyDocumentDataSource_override(t *testing.T) {
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_overrideDeprecated,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_override", "json",
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_override", names.AttrJSON,
 						testAccPolicyDocumentOverrideExpectedJSON,
 					),
 				),
@@ -226,7 +226,7 @@ func TestAccIAMPolicyDocumentDataSource_overrideList(t *testing.T) {
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_overrideList,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_override_list", "json",
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_override_list", names.AttrJSON,
 						testAccPolicyDocumentOverrideListExpectedJSON,
 					),
 				),
@@ -245,7 +245,7 @@ func TestAccIAMPolicyDocumentDataSource_noStatementMerge(t *testing.T) {
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_noStatementMergeDeprecated,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_policy_document.yak_politik", "json",
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.yak_politik", names.AttrJSON,
 						testAccPolicyDocumentNoStatementMergeExpectedJSON,
 					),
 				),
@@ -264,7 +264,7 @@ func TestAccIAMPolicyDocumentDataSource_noStatementOverride(t *testing.T) {
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_noStatementOverrideDeprecated,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_policy_document.yak_politik", "json",
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.yak_politik", names.AttrJSON,
 						testAccPolicyDocumentNoStatementOverrideExpectedJSON,
 					),
 				),
@@ -287,7 +287,7 @@ func TestAccIAMPolicyDocumentDataSource_duplicateSid(t *testing.T) {
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_duplicateBlankSid,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", names.AttrJSON,
 						testAccPolicyDocumentDuplicateBlankSidExpectedJSON,
 					),
 				),
@@ -310,7 +310,7 @@ func TestAccIAMPolicyDocumentDataSource_sourcePolicyValidJSON(t *testing.T) {
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_emptyString,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", names.AttrJSON,
 						testAccPolicyDocumentExpectedJSONNoStatement,
 					),
 				),
@@ -333,7 +333,7 @@ func TestAccIAMPolicyDocumentDataSource_overridePolicyDocumentValidJSON(t *testi
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_overridePolicyDocument_emptyString,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", names.AttrJSON,
 						testAccPolicyDocumentExpectedJSONNoStatement,
 					),
 				),
@@ -358,7 +358,7 @@ func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_stringAndS
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_statementPrincipalIdentifiersStringAndSlice,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "json", testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersStringAndSlice()),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrJSON, testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersStringAndSlice()),
 				),
 			},
 		},
@@ -378,7 +378,7 @@ func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePr
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_statementPrincipalIdentifiersMultiplePrincipals,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "json", testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrincipals()),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrJSON, testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrincipals()),
 				),
 			},
 		},
@@ -397,7 +397,7 @@ func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePr
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_statementPrincipalIdentifiersMultiplePrincipals,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "json", testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrincipalsGov()),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrJSON, testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrincipalsGov()),
 				),
 			},
 		},
@@ -434,7 +434,7 @@ func TestAccIAMPolicyDocumentDataSource_version20081017(t *testing.T) {
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_version20081017,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json", testAccPolicyDocumentVersion20081017ExpectedJSONDataSourceConfig),
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", names.AttrJSON, testAccPolicyDocumentVersion20081017ExpectedJSONDataSourceConfig),
 				),
 			},
 		},

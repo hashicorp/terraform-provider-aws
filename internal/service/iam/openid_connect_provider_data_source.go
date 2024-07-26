@@ -23,6 +23,7 @@ import (
 )
 
 // @SDKDataSource("aws_iam_openid_connect_provider", name="OIDC Provider")
+// @Tags
 func dataSourceOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOpenIDConnectProviderRead,
@@ -33,7 +34,7 @@ func dataSourceOpenIDConnectProvider() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{names.AttrARN, "url"},
+				ExactlyOneOf: []string{names.AttrARN, names.AttrURL},
 			},
 			"client_id_list": {
 				Type:     schema.TypeList,
@@ -46,13 +47,13 @@ func dataSourceOpenIDConnectProvider() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"url": {
+			names.AttrURL: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
 				ValidateFunc:     validOpenIDURL,
 				DiffSuppressFunc: suppressOpenIDURL,
-				ExactlyOneOf:     []string{names.AttrARN, "url"},
+				ExactlyOneOf:     []string{names.AttrARN, names.AttrURL},
 			},
 		},
 	}
@@ -62,13 +63,12 @@ func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &iam.GetOpenIDConnectProviderInput{}
 
 	if v, ok := d.GetOk(names.AttrARN); ok {
 		input.OpenIDConnectProviderArn = aws.String(v.(string))
-	} else if v, ok := d.GetOk("url"); ok {
+	} else if v, ok := d.GetOk(names.AttrURL); ok {
 		url := v.(string)
 
 		oidcpEntry, err := dataSourceGetOpenIDConnectProviderByURL(ctx, conn, url)
@@ -90,13 +90,11 @@ func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.Resource
 
 	d.SetId(aws.ToString(input.OpenIDConnectProviderArn))
 	d.Set(names.AttrARN, input.OpenIDConnectProviderArn)
-	d.Set("url", resp.Url)
+	d.Set(names.AttrURL, resp.Url)
 	d.Set("client_id_list", flex.FlattenStringValueList(resp.ClientIDList))
 	d.Set("thumbprint_list", flex.FlattenStringValueList(resp.ThumbprintList))
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, resp.Tags)
 
 	return diags
 }

@@ -45,13 +45,13 @@ func testAccDomainAssociation_basic(t *testing.T) {
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
-					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", "false"),
-					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
-						"branch_name": rName,
-						"prefix":      "",
+						"branch_name":    rName,
+						names.AttrPrefix: "",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_verification", "false"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_verification", acctest.CtFalse),
 				),
 			},
 			{
@@ -118,13 +118,13 @@ func testAccDomainAssociation_update(t *testing.T) {
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
-					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", "false"),
-					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
-						"branch_name": rName,
-						"prefix":      "",
+						"branch_name":    rName,
+						names.AttrPrefix: "",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_verification", "true"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_verification", acctest.CtTrue),
 				),
 			},
 			{
@@ -139,18 +139,57 @@ func testAccDomainAssociation_update(t *testing.T) {
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
-					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", "true"),
-					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
-						"branch_name": rName,
-						"prefix":      "",
+						"branch_name":    rName,
+						names.AttrPrefix: "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
-						"branch_name": fmt.Sprintf("%s-2", rName),
-						"prefix":      "www",
+						"branch_name":    fmt.Sprintf("%s-2", rName),
+						names.AttrPrefix: "www",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_verification", "true"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_verification", acctest.CtTrue),
 				),
+			},
+		},
+	})
+}
+
+func testAccDomainAssociation_certificateSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	key := "AMPLIFY_DOMAIN_NAME"
+	domainName := os.Getenv(key)
+	if domainName == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	var domain types.DomainAssociation
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_amplify_domain_association.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainAssociationConfig_certificateSettings(rName, domainName, false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.0.type", "AMPLIFY_MANAGED"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate_settings.0.certificate_verification_dns_record"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_verification"},
 			},
 		},
 	})
@@ -257,6 +296,36 @@ resource "aws_amplify_domain_association" "test" {
   sub_domain {
     branch_name = aws_amplify_branch.test2.branch_name
     prefix      = "www"
+  }
+
+  enable_auto_sub_domain = %[3]t
+  wait_for_verification  = %[4]t
+}
+`, rName, domainName, enableAutoSubDomain, waitForVerification)
+}
+
+func testAccDomainAssociationConfig_certificateSettings(rName, domainName string, enableAutoSubDomain bool, waitForVerification bool) string {
+	return fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+}
+
+resource "aws_amplify_branch" "test" {
+  app_id      = aws_amplify_app.test.id
+  branch_name = %[1]q
+}
+
+resource "aws_amplify_domain_association" "test" {
+  app_id      = aws_amplify_app.test.id
+  domain_name = %[2]q
+
+  sub_domain {
+    branch_name = aws_amplify_branch.test.branch_name
+    prefix      = ""
+  }
+
+  certificate_settings {
+    type = "AMPLIFY_MANAGED"
   }
 
   enable_auto_sub_domain = %[3]t

@@ -132,11 +132,11 @@ func resourceCustomActionType() *schema.Resource {
 					},
 				},
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"provider_name": {
+			names.AttrProviderName: {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
@@ -188,7 +188,7 @@ func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
 
 	category := d.Get("category").(string)
-	provider := d.Get("provider_name").(string)
+	provider := d.Get(names.AttrProviderName).(string)
 	version := d.Get(names.AttrVersion).(string)
 	id := CustomActionTypeCreateResourceID(category, provider, version)
 	input := &codepipeline.CreateCustomActionTypeInput{
@@ -272,8 +272,8 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 	} else {
 		d.Set("output_artifact_details", nil)
 	}
-	d.Set("owner", actionType.Id.Owner)
-	d.Set("provider_name", actionType.Id.Provider)
+	d.Set(names.AttrOwner, actionType.Id.Owner)
+	d.Set(names.AttrProviderName, actionType.Id.Provider)
 	if actionType.Settings != nil &&
 		// Service can return empty ({}) Settings.
 		(actionType.Settings.EntityUrlTemplate != nil || actionType.Settings.ExecutionUrlTemplate != nil || actionType.Settings.RevisionUrlTemplate != nil || actionType.Settings.ThirdPartyConfigurationUrl != nil) {

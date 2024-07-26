@@ -28,7 +28,7 @@ func resourcePatchGroupV0() *schema.Resource {
 	}
 }
 
-func PatchGroupStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func patchGroupStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if rawState == nil {
 		rawState = map[string]interface{}{}
 	}

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cloudfront_origin_access_identities", name="Origin Access Identities")
@@ -32,7 +33,7 @@ func dataSourceOriginAccessIdentities() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -88,7 +89,7 @@ func dataSourceOriginAccessIdentitiesRead(ctx context.Context, d *schema.Resourc
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 	d.Set("iam_arns", iamARNs)
-	d.Set("ids", ids)
+	d.Set(names.AttrIDs, ids)
 	d.Set("s3_canonical_user_ids", s3CanonicalUserIDs)
 
 	return diags

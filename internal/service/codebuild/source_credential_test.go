@@ -55,7 +55,7 @@ func TestAccCodeBuildSourceCredential_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"token", "user_name"},
+				ImportStateVerifyIgnore: []string{"token", names.AttrUserName},
 			},
 		},
 	})
@@ -78,7 +78,7 @@ func TestAccCodeBuildSourceCredential_basicAuth(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceCredentialExists(ctx, resourceName, &sourceCredentialsInfo),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codebuild", regexache.MustCompile(`token/bitbucket`)),
-					resource.TestCheckResourceAttr(resourceName, "user_name", "user1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "user1"),
 					resource.TestCheckResourceAttr(resourceName, "server_type", "BITBUCKET"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "BASIC_AUTH"),
 				),
@@ -87,14 +87,14 @@ func TestAccCodeBuildSourceCredential_basicAuth(t *testing.T) {
 				Config: testAccSourceCredentialConfig_basicAuth(token, "user2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceCredentialExists(ctx, resourceName, &sourceCredentialsInfo),
-					resource.TestCheckResourceAttr(resourceName, "user_name", "user2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "user2"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"token", "user_name"},
+				ImportStateVerifyIgnore: []string{"token", names.AttrUserName},
 			},
 		},
 	})

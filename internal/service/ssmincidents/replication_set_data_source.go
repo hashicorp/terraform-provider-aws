@@ -41,7 +41,7 @@ func DataSourceReplicationSet() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status_message": {
+						names.AttrStatusMessage: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -75,12 +75,13 @@ const (
 )
 
 func dataSourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	arn, err := getReplicationSetARN(ctx, client)
 
 	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionReading, ResNameReplicationSet, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionReading, ResNameReplicationSet, d.Id(), err)
 	}
 
 	d.SetId(arn)
@@ -88,7 +89,7 @@ func dataSourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, m
 	replicationSet, err := FindReplicationSetByID(ctx, client, d.Id())
 
 	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionReading, ResNameReplicationSet, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionReading, ResNameReplicationSet, d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, replicationSet.Arn)
@@ -98,21 +99,21 @@ func dataSourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrStatus, replicationSet.Status)
 
 	if err := d.Set(names.AttrRegion, flattenRegions(replicationSet.RegionMap)); err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, ResNameReplicationSet, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionSetting, ResNameReplicationSet, d.Id(), err)
 	}
 
 	tags, err := listTags(ctx, client, d.Id())
 
 	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionReading, DSNameReplicationSet, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionReading, DSNameReplicationSet, d.Id(), err)
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	//lintignore:AWSR002
 	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, DSNameReplicationSet, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionSetting, DSNameReplicationSet, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

@@ -72,7 +72,7 @@ func (r *resourcePolicyStore) Schema(ctx context.Context, request resource.Schem
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"mode": schema.StringAttribute{
+						names.AttrMode: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.ValidationMode](),
 							Required:   true,
 						},

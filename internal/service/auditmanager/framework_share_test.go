@@ -137,7 +137,7 @@ func TestAccAuditManagerFrameworkShare_optional(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "destination_account", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "framework_id", "aws_auditmanager_framework.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "comment", "text"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "text"),
 				),
 			},
 			{
@@ -162,7 +162,7 @@ func TestAccAuditManagerFrameworkShare_optional(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "destination_account", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "framework_id", "aws_auditmanager_framework.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "comment", "text-updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "text-updated"),
 				),
 			},
 		},

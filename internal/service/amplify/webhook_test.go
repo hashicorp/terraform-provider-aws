@@ -39,7 +39,7 @@ func testAccWebhook_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/webhooks/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "branch_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestMatchResourceAttr(resourceName, "url", regexache.MustCompile(fmt.Sprintf(`^https://webhooks.amplify.%s.%s/.+$`, acctest.Region(), acctest.PartitionDNSSuffix()))),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURL, regexache.MustCompile(fmt.Sprintf(`^https://webhooks.amplify.%s.%s/.+$`, acctest.Region(), acctest.PartitionDNSSuffix()))),
 				),
 			},
 			{

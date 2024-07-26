@@ -74,7 +74,7 @@ func resourceProxyTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"target_arn": {
+			names.AttrTargetARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -165,7 +165,7 @@ func resourceProxyTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrEndpoint, dbProxyTarget.Endpoint)
 	d.Set(names.AttrPort, dbProxyTarget.Port)
 	d.Set("rds_resource_id", dbProxyTarget.RdsResourceId)
-	d.Set("target_arn", dbProxyTarget.TargetArn)
+	d.Set(names.AttrTargetARN, dbProxyTarget.TargetArn)
 	d.Set("target_group_name", targetGroupName)
 	d.Set("tracked_cluster_id", dbProxyTarget.TrackedClusterId)
 	d.Set(names.AttrType, dbProxyTarget.Type)

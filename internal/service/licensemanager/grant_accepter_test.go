@@ -50,7 +50,7 @@ func testAccGrantAccepter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "license_arn", licenseARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, resourceGrantName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "parent_arn", resourceGrantName, "parent_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", resourceGrantName, "principal"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, resourceGrantName, names.AttrPrincipal),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 				),

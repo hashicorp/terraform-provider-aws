@@ -30,7 +30,7 @@ func TestAccServiceCatalogConstraintDataSource_basic(t *testing.T) {
 					testAccCheckConstraintExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "accept_language", dataSourceName, "accept_language"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(resourceName, "owner", dataSourceName, "owner"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrOwner, dataSourceName, names.AttrOwner),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrParameters, dataSourceName, names.AttrParameters),
 					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", dataSourceName, "portfolio_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", dataSourceName, "product_id"),

@@ -85,7 +85,7 @@ func resourceRemediationConfiguration() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(1, 25),
 			},
-			"parameter": {
+			names.AttrParameter: {
 				Type:     schema.TypeList,
 				MaxItems: 25,
 				Optional: true,
@@ -113,7 +113,7 @@ func resourceRemediationConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -161,11 +161,11 @@ func resourceRemediationConfigurationPut(ctx context.Context, d *schema.Resource
 		remediationConfiguration.MaximumAutomaticAttempts = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("parameter"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrParameter); ok && len(v.([]interface{})) > 0 {
 		remediationConfiguration.Parameters = expandRemediationParameterValues(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("resource_type"); ok {
+	if v, ok := d.GetOk(names.AttrResourceType); ok {
 		remediationConfiguration.ResourceType = aws.String(v.(string))
 	}
 
@@ -223,10 +223,10 @@ func resourceRemediationConfigurationRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "setting execution_controls: %s", err)
 	}
 	d.Set("maximum_automatic_attempts", remediationConfiguration.MaximumAutomaticAttempts)
-	if err := d.Set("parameter", flattenRemediationParameterValues(remediationConfiguration.Parameters)); err != nil {
+	if err := d.Set(names.AttrParameter, flattenRemediationParameterValues(remediationConfiguration.Parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
-	d.Set("resource_type", remediationConfiguration.ResourceType)
+	d.Set(names.AttrResourceType, remediationConfiguration.ResourceType)
 	d.Set("retry_attempt_seconds", remediationConfiguration.RetryAttemptSeconds)
 	d.Set("target_id", remediationConfiguration.TargetId)
 	d.Set("target_type", remediationConfiguration.TargetType)
@@ -243,7 +243,7 @@ func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.Resou
 		ConfigRuleName: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("resource_type"); ok {
+	if v, ok := d.GetOk(names.AttrResourceType); ok {
 		input.ResourceType = aws.String(v.(string))
 	}
 

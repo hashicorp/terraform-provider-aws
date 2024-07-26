@@ -45,7 +45,7 @@ func (r *resourceAccountRegistration) Schema(ctx context.Context, req resource.S
 			"deregister_on_destroy": schema.BoolAttribute{
 				Optional: true,
 			},
-			"kms_key": schema.StringAttribute{
+			names.AttrKMSKey: schema.StringAttribute{
 				Optional: true,
 			},
 			names.AttrID: framework.IDAttribute(),

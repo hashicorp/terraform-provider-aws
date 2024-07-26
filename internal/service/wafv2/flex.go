@@ -4,6 +4,8 @@
 package wafv2
 
 import (
+	"strings"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/aws/aws-sdk-go/service/wafv2"
@@ -31,10 +33,10 @@ func expandRules(l []interface{}) []awstypes.Rule {
 
 func expandRule(m map[string]interface{}) awstypes.Rule {
 	rule := awstypes.Rule{
-		Action:           expandRuleAction(m["action"].([]interface{})),
+		Action:           expandRuleAction(m[names.AttrAction].([]interface{})),
 		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
 		Name:             aws.String(m[names.AttrName].(string)),
-		Priority:         int32(m["priority"].(int)),
+		Priority:         int32(m[names.AttrPriority].(int)),
 		Statement:        expandRuleGroupRootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandVisibilityConfig(m["visibility_config"].([]interface{})),
 	}
@@ -115,11 +117,14 @@ func expandAssociationConfig(l []interface{}) *awstypes.AssociationConfig {
 		m = inner[0].(map[string]interface{})
 		if len(m) > 0 {
 			configuration.RequestBody = make(map[string]awstypes.RequestBodyAssociatedResourceTypeConfig)
-		}
-
-		if v, ok := m["cloudfront"]; ok {
-			inner = v.([]interface{})
-			configuration.RequestBody[wafv2.AssociatedResourceTypeCloudfront] = expandRequestBodyConfigItem(inner)
+			for _, resourceType := range wafv2.AssociatedResourceType_Values() {
+				if v, ok := m[strings.ToLower(resourceType)]; ok {
+					m := v.([]interface{})
+					if len(m) > 0 {
+						configuration.RequestBody[resourceType] = expandRequestBodyConfigItem(m)
+					}
+				}
+			}
 		}
 	}
 
@@ -319,8 +324,8 @@ func expandCustomResponseBodies(m []interface{}) map[string]awstypes.CustomRespo
 		vm := v.(map[string]interface{})
 		key := vm[names.AttrKey].(string)
 		customResponseBodies[key] = awstypes.CustomResponseBody{
-			Content:     aws.String(vm["content"].(string)),
-			ContentType: awstypes.ResponseContentType(vm["content_type"].(string)),
+			Content:     aws.String(vm[names.AttrContent].(string)),
+			ContentType: awstypes.ResponseContentType(vm[names.AttrContentType].(string)),
 		}
 	}
 
@@ -402,7 +407,7 @@ func expandVisibilityConfig(l []interface{}) *awstypes.VisibilityConfig {
 		configuration.CloudWatchMetricsEnabled = v.(bool)
 	}
 
-	if v, ok := m["metric_name"]; ok && len(v.(string)) > 0 {
+	if v, ok := m[names.AttrMetricName]; ok && len(v.(string)) > 0 {
 		configuration.MetricName = aws.String(v.(string))
 	}
 
@@ -769,7 +774,7 @@ func expandTextTransformations(l []interface{}) []awstypes.TextTransformation {
 
 func expandTextTransformation(m map[string]interface{}) awstypes.TextTransformation {
 	return awstypes.TextTransformation{
-		Priority: int32(m["priority"].(int)),
+		Priority: int32(m[names.AttrPriority].(int)),
 		Type:     awstypes.TextTransformationType(m[names.AttrType].(string)),
 	}
 }
@@ -819,7 +824,7 @@ func expandLabelMatchStatement(l []interface{}) *awstypes.LabelMatchStatement {
 
 	statement := &awstypes.LabelMatchStatement{
 		Key:   aws.String(m[names.AttrKey].(string)),
-		Scope: awstypes.LabelMatchScope(m["scope"].(string)),
+		Scope: awstypes.LabelMatchScope(m[names.AttrScope].(string)),
 	}
 
 	return statement
@@ -894,7 +899,7 @@ func expandSizeConstraintStatement(l []interface{}) *awstypes.SizeConstraintStat
 	return &awstypes.SizeConstraintStatement{
 		ComparisonOperator:  awstypes.ComparisonOperator(m["comparison_operator"].(string)),
 		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]interface{})),
-		Size:                int64(m["size"].(int)),
+		Size:                int64(m[names.AttrSize].(int)),
 		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
 	}
 }
@@ -908,6 +913,7 @@ func expandSQLiMatchStatement(l []interface{}) *awstypes.SqliMatchStatement {
 
 	return &awstypes.SqliMatchStatement{
 		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]interface{})),
+		SensitivityLevel:    awstypes.SensitivityLevel(m["sensitivity_level"].(string)),
 		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
 	}
 }
@@ -993,11 +999,11 @@ func expandWebACLRules(l []interface{}) []awstypes.Rule {
 
 func expandWebACLRule(m map[string]interface{}) awstypes.Rule {
 	rule := awstypes.Rule{
-		Action:           expandRuleAction(m["action"].([]interface{})),
+		Action:           expandRuleAction(m[names.AttrAction].([]interface{})),
 		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
 		Name:             aws.String(m[names.AttrName].(string)),
 		OverrideAction:   expandOverrideAction(m["override_action"].([]interface{})),
-		Priority:         int32(m["priority"].(int)),
+		Priority:         int32(m[names.AttrPriority].(int)),
 		Statement:        expandWebACLRootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandVisibilityConfig(m["visibility_config"].([]interface{})),
 	}
@@ -1219,7 +1225,7 @@ func expandEmailField(tfList []interface{}) *awstypes.EmailField {
 
 	m := tfList[0].(map[string]interface{})
 	out := awstypes.EmailField{
-		Identifier: aws.String(m["identifier"].(string)),
+		Identifier: aws.String(m[names.AttrIdentifier].(string)),
 	}
 
 	return &out
@@ -1232,7 +1238,7 @@ func expandPasswordField(tfList []interface{}) *awstypes.PasswordField {
 
 	m := tfList[0].(map[string]interface{})
 	out := awstypes.PasswordField{
-		Identifier: aws.String(m["identifier"].(string)),
+		Identifier: aws.String(m[names.AttrIdentifier].(string)),
 	}
 
 	return &out
@@ -1263,7 +1269,7 @@ func expandUsernameField(tfList []interface{}) *awstypes.UsernameField {
 
 	m := tfList[0].(map[string]interface{})
 	out := awstypes.UsernameField{
-		Identifier: aws.String(m["identifier"].(string)),
+		Identifier: aws.String(m[names.AttrIdentifier].(string)),
 	}
 
 	return &out
@@ -1276,7 +1282,8 @@ func expandManagedRulesBotControlRuleSet(tfList []interface{}) *awstypes.AWSMana
 
 	m := tfList[0].(map[string]interface{})
 	out := awstypes.AWSManagedRulesBotControlRuleSet{
-		InspectionLevel: awstypes.InspectionLevel(m["inspection_level"].(string)),
+		EnableMachineLearning: aws.Bool(m["enable_machine_learning"].(bool)),
+		InspectionLevel:       awstypes.InspectionLevel(m["inspection_level"].(string)),
 	}
 
 	return &out
@@ -1372,13 +1379,13 @@ func expandResponseInspection(tfList []interface{}) *awstypes.ResponseInspection
 	if v, ok := m["body_contains"].([]interface{}); ok && len(v) > 0 {
 		out.BodyContains = expandBodyContains(v)
 	}
-	if v, ok := m["header"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrHeader].([]interface{}); ok && len(v) > 0 {
 		out.Header = expandHeader(v)
 	}
-	if v, ok := m["json"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrJSON].([]interface{}); ok && len(v) > 0 {
 		out.Json = expandResponseInspectionJSON(v)
 	}
-	if v, ok := m["status_code"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrStatusCode].([]interface{}); ok && len(v) > 0 {
 		out.StatusCode = expandStatusCode(v)
 	}
 
@@ -1423,7 +1430,7 @@ func expandResponseInspectionJSON(tfList []interface{}) *awstypes.ResponseInspec
 	m := tfList[0].(map[string]interface{})
 	out := awstypes.ResponseInspectionJson{
 		FailureValues: flex.ExpandStringValueSet(m["failure_values"].(*schema.Set)),
-		Identifier:    aws.String(m["identifier"].(string)),
+		Identifier:    aws.String(m[names.AttrIdentifier].(string)),
 		SuccessValues: flex.ExpandStringValueSet(m["success_values"].(*schema.Set)),
 	}
 
@@ -1474,7 +1481,7 @@ func expandRateLimitLabelNamespace(l []interface{}) *awstypes.RateLimitLabelName
 	}
 	m := l[0].(map[string]interface{})
 	return &awstypes.RateLimitLabelNamespace{
-		Namespace: aws.String(m["namespace"].(string)),
+		Namespace: aws.String(m[names.AttrNamespace].(string)),
 	}
 }
 
@@ -1527,7 +1534,7 @@ func expandRateBasedStatementCustomKeys(l []interface{}) []awstypes.RateBasedSta
 		if v, ok := m["http_method"]; ok && len(v.([]interface{})) > 0 {
 			r.HTTPMethod = &awstypes.RateLimitHTTPMethod{}
 		}
-		if v, ok := m["header"]; ok {
+		if v, ok := m[names.AttrHeader]; ok {
 			r.Header = expandRateLimitHeader(v.([]interface{}))
 		}
 		if v, ok := m["ip"]; ok && len(v.([]interface{})) > 0 {
@@ -1638,10 +1645,10 @@ func flattenRules(r []awstypes.Rule) interface{} {
 	out := make([]map[string]interface{}, len(r))
 	for i, rule := range r {
 		m := make(map[string]interface{})
-		m["action"] = flattenRuleAction(rule.Action)
+		m[names.AttrAction] = flattenRuleAction(rule.Action)
 		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		m[names.AttrName] = aws.ToString(rule.Name)
-		m["priority"] = rule.Priority
+		m[names.AttrPriority] = rule.Priority
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
 		m["statement"] = flattenRuleGroupRootStatement(rule.Statement)
 		m["visibility_config"] = flattenVisibilityConfig(rule.VisibilityConfig)
@@ -1765,13 +1772,18 @@ func flattenAssociationConfig(config *awstypes.AssociationConfig) interface{} {
 		return associationConfig
 	}
 
-	cloudfrontRequestBodyConfig := config.RequestBody[wafv2.AssociatedResourceTypeCloudfront]
+	requestBodyConfig := map[string]interface{}{}
+	for _, resourceType := range wafv2.AssociatedResourceType_Values() {
+		if requestBodyAssociatedResourceTypeConfig, ok := config.RequestBody[resourceType]; ok {
+			requestBodyConfig[strings.ToLower(resourceType)] = []map[string]interface{}{{
+				"default_size_inspection_limit": requestBodyAssociatedResourceTypeConfig.DefaultSizeInspectionLimit,
+			}}
+		}
+	}
 	associationConfig = append(associationConfig, map[string]interface{}{
-		"request_body": []map[string]interface{}{{
-			"cloudfront": []map[string]interface{}{{
-				"default_size_inspection_limit": string(cloudfrontRequestBodyConfig.DefaultSizeInspectionLimit),
-			}},
-		}},
+		"request_body": []map[string]interface{}{
+			requestBodyConfig,
+		},
 	})
 
 	return associationConfig
@@ -1813,9 +1825,9 @@ func flattenCustomResponseBodies(b map[string]awstypes.CustomResponseBody) inter
 	i := 0
 	for key, body := range b {
 		out[i] = map[string]interface{}{
-			names.AttrKey:  key,
-			"content":      aws.ToString(body.Content),
-			"content_type": string(body.ContentType),
+			names.AttrKey:         key,
+			names.AttrContent:     aws.ToString(body.Content),
+			names.AttrContentType: body.ContentType,
 		}
 		i += 1
 	}
@@ -1987,7 +1999,7 @@ func flattenByteMatchStatement(b *awstypes.ByteMatchStatement) interface{} {
 
 	m := map[string]interface{}{
 		"field_to_match":        flattenFieldToMatch(b.FieldToMatch),
-		"positional_constraint": string(b.PositionalConstraint),
+		"positional_constraint": b.PositionalConstraint,
 		"search_string":         string(b.SearchString),
 		"text_transformation":   flattenTextTransformations(b.TextTransformations),
 	}
@@ -2059,7 +2071,7 @@ func flattenForwardedIPConfig(f *awstypes.ForwardedIPConfig) interface{} {
 	}
 
 	m := map[string]interface{}{
-		"fallback_behavior": string(f.FallbackBehavior),
+		"fallback_behavior": f.FallbackBehavior,
 		"header_name":       aws.ToString(f.HeaderName),
 	}
 
@@ -2072,9 +2084,9 @@ func flattenIPSetForwardedIPConfig(i *awstypes.IPSetForwardedIPConfig) interface
 	}
 
 	m := map[string]interface{}{
-		"fallback_behavior": string(i.FallbackBehavior),
+		"fallback_behavior": i.FallbackBehavior,
 		"header_name":       aws.ToString(i.HeaderName),
-		"position":          string(i.Position),
+		"position":          i.Position,
 	}
 
 	return []interface{}{m}
@@ -2086,8 +2098,8 @@ func flattenCookies(c *awstypes.Cookies) interface{} {
 	}
 
 	m := map[string]interface{}{
-		"match_scope":       string(c.MatchScope),
-		"oversize_handling": string(c.OversizeHandling),
+		"match_scope":       c.MatchScope,
+		"oversize_handling": c.OversizeHandling,
 		"match_pattern":     flattenCookiesMatchPattern(c.MatchPattern),
 	}
 
@@ -2117,7 +2129,7 @@ func flattenJA3Fingerprint(j *awstypes.JA3Fingerprint) interface{} {
 	}
 
 	m := map[string]interface{}{
-		"fallback_behavior": string(j.FallbackBehavior),
+		"fallback_behavior": j.FallbackBehavior,
 	}
 
 	return []interface{}{m}
@@ -2129,10 +2141,10 @@ func flattenJSONBody(b *awstypes.JsonBody) interface{} {
 	}
 
 	m := map[string]interface{}{
-		"invalid_fallback_behavior": string(b.InvalidFallbackBehavior),
+		"invalid_fallback_behavior": b.InvalidFallbackBehavior,
 		"match_pattern":             flattenJSONMatchPattern(b.MatchPattern),
-		"match_scope":               string(b.MatchScope),
-		"oversize_handling":         string(b.OversizeHandling),
+		"match_scope":               b.MatchScope,
+		"oversize_handling":         b.OversizeHandling,
 	}
 
 	return []interface{}{m}
@@ -2144,7 +2156,7 @@ func flattenBody(b *awstypes.Body) interface{} {
 	}
 
 	m := map[string]interface{}{
-		"oversize_handling": string(b.OversizeHandling),
+		"oversize_handling": b.OversizeHandling,
 	}
 
 	return []interface{}{m}
@@ -2156,7 +2168,7 @@ func flattenJSONMatchPattern(p *awstypes.JsonMatchPattern) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"included_paths": flex.FlattenStringValueList(p.IncludedPaths),
+		"included_paths": p.IncludedPaths,
 	}
 
 	if p.All != nil {
@@ -2194,8 +2206,8 @@ func flattenTextTransformations(l []awstypes.TextTransformation) []interface{} {
 	out := make([]interface{}, len(l))
 	for i, t := range l {
 		m := make(map[string]interface{})
-		m["priority"] = t.Priority
-		m[names.AttrType] = string(t.Type)
+		m[names.AttrPriority] = t.Priority
+		m[names.AttrType] = t.Type
 		out[i] = m
 	}
 	return out
@@ -2220,19 +2232,11 @@ func flattenGeoMatchStatement(g *awstypes.GeoMatchStatement) interface{} {
 	}
 
 	m := map[string]interface{}{
-		"country_codes":       flattenCountryCodes(g.CountryCodes),
+		"country_codes":       g.CountryCodes,
 		"forwarded_ip_config": flattenForwardedIPConfig(g.ForwardedIPConfig),
 	}
 
 	return []interface{}{m}
-}
-
-func flattenCountryCodes(list []awstypes.CountryCode) []interface{} {
-	result := make([]interface{}, 0, len(list))
-	for _, v := range list {
-		result = append(result, string(v))
-	}
-	return result
 }
 
 func flattenLabelMatchStatement(l *awstypes.LabelMatchStatement) interface{} {
@@ -2241,8 +2245,8 @@ func flattenLabelMatchStatement(l *awstypes.LabelMatchStatement) interface{} {
 	}
 
 	m := map[string]interface{}{
-		names.AttrKey: aws.ToString(l.Key),
-		"scope":       string(l.Scope),
+		names.AttrKey:   aws.ToString(l.Key),
+		names.AttrScope: l.Scope,
 	}
 
 	return []interface{}{m}
@@ -2306,9 +2310,9 @@ func flattenSizeConstraintStatement(s *awstypes.SizeConstraintStatement) interfa
 	}
 
 	m := map[string]interface{}{
-		"comparison_operator": string(s.ComparisonOperator),
+		"comparison_operator": s.ComparisonOperator,
 		"field_to_match":      flattenFieldToMatch(s.FieldToMatch),
-		"size":                s.Size,
+		names.AttrSize:        s.Size,
 		"text_transformation": flattenTextTransformations(s.TextTransformations),
 	}
 
@@ -2322,6 +2326,7 @@ func flattenSQLiMatchStatement(s *awstypes.SqliMatchStatement) interface{} {
 
 	m := map[string]interface{}{
 		"field_to_match":      flattenFieldToMatch(s.FieldToMatch),
+		"sensitivity_level":   s.SensitivityLevel,
 		"text_transformation": flattenTextTransformations(s.TextTransformations),
 	}
 
@@ -2348,7 +2353,7 @@ func flattenVisibilityConfig(config *awstypes.VisibilityConfig) interface{} {
 
 	m := map[string]interface{}{
 		"cloudwatch_metrics_enabled": aws.Bool(config.CloudWatchMetricsEnabled),
-		"metric_name":                aws.ToString(config.MetricName),
+		names.AttrMetricName:         aws.ToString(config.MetricName),
 		"sampled_requests_enabled":   aws.Bool(config.SampledRequestsEnabled),
 	}
 
@@ -2361,7 +2366,7 @@ func flattenHeaderOrder(s *awstypes.HeaderOrder) interface{} {
 	}
 
 	m := map[string]interface{}{
-		"oversize_handling": string(s.OversizeHandling),
+		"oversize_handling": s.OversizeHandling,
 	}
 
 	return []interface{}{m}
@@ -2373,9 +2378,9 @@ func flattenHeaders(s *awstypes.Headers) interface{} {
 	}
 
 	m := map[string]interface{}{
-		"match_scope":       string(s.MatchScope),
+		"match_scope":       s.MatchScope,
 		"match_pattern":     flattenHeaderMatchPattern(s.MatchPattern),
-		"oversize_handling": string(s.OversizeHandling),
+		"oversize_handling": s.OversizeHandling,
 	}
 
 	return []interface{}{m}
@@ -2393,11 +2398,11 @@ func flattenHeaderMatchPattern(s *awstypes.HeaderMatchPattern) interface{} {
 	}
 
 	if s.ExcludedHeaders != nil {
-		m["excluded_headers"] = flex.FlattenStringValueList(s.ExcludedHeaders)
+		m["excluded_headers"] = s.ExcludedHeaders
 	}
 
 	if s.IncludedHeaders != nil {
-		m["included_headers"] = flex.FlattenStringValueList(s.IncludedHeaders)
+		m["included_headers"] = s.IncludedHeaders
 	}
 
 	return []interface{}{m}
@@ -2485,11 +2490,11 @@ func flattenWebACLRules(r []awstypes.Rule) interface{} {
 	out := make([]map[string]interface{}, len(r))
 	for i, rule := range r {
 		m := make(map[string]interface{})
-		m["action"] = flattenRuleAction(rule.Action)
+		m[names.AttrAction] = flattenRuleAction(rule.Action)
 		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		m["override_action"] = flattenOverrideAction(rule.OverrideAction)
 		m[names.AttrName] = aws.ToString(rule.Name)
-		m["priority"] = rule.Priority
+		m[names.AttrPriority] = rule.Priority
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
 		m["statement"] = flattenWebACLRootStatement(rule.Statement)
 		m["visibility_config"] = flattenVisibilityConfig(rule.VisibilityConfig)
@@ -2591,7 +2596,7 @@ func flattenManagedRuleGroupConfigs(c []awstypes.ManagedRuleGroupConfig) []inter
 			m["login_path"] = aws.ToString(config.LoginPath)
 		}
 
-		m["payload_type"] = string(config.PayloadType)
+		m["payload_type"] = config.PayloadType
 
 		if config.PasswordField != nil {
 			m["password_field"] = flattenPasswordField(config.PasswordField)
@@ -2629,7 +2634,7 @@ func flattenEmailField(apiObject *awstypes.EmailField) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"identifier": aws.ToString(apiObject.Identifier),
+		names.AttrIdentifier: aws.ToString(apiObject.Identifier),
 	}
 
 	return []interface{}{m}
@@ -2641,7 +2646,7 @@ func flattenPasswordField(apiObject *awstypes.PasswordField) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"identifier": aws.ToString(apiObject.Identifier),
+		names.AttrIdentifier: aws.ToString(apiObject.Identifier),
 	}
 
 	return []interface{}{m}
@@ -2670,7 +2675,7 @@ func flattenUsernameField(apiObject *awstypes.UsernameField) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"identifier": aws.ToString(apiObject.Identifier),
+		names.AttrIdentifier: aws.ToString(apiObject.Identifier),
 	}
 
 	return []interface{}{m}
@@ -2682,7 +2687,8 @@ func flattenManagedRulesBotControlRuleSet(apiObject *awstypes.AWSManagedRulesBot
 	}
 
 	m := map[string]interface{}{
-		"inspection_level": string(apiObject.InspectionLevel),
+		"enable_machine_learning": aws.ToBool(apiObject.EnableMachineLearning),
+		"inspection_level":        apiObject.InspectionLevel,
 	}
 
 	return []interface{}{m}
@@ -2736,7 +2742,7 @@ func flattenRequestInspectionACFP(apiObject *awstypes.RequestInspectionACFP) []i
 		"address_fields":      flattenAddressFields(apiObject.AddressFields),
 		"email_field":         flattenEmailField(apiObject.EmailField),
 		"password_field":      flattenPasswordField(apiObject.PasswordField),
-		"payload_type":        string(apiObject.PayloadType),
+		"payload_type":        apiObject.PayloadType,
 		"phone_number_fields": flattenPhoneNumberFields(apiObject.PhoneNumberFields),
 		"username_field":      flattenUsernameField(apiObject.UsernameField),
 	}
@@ -2751,7 +2757,7 @@ func flattenRequestInspection(apiObject *awstypes.RequestInspection) []interface
 
 	m := map[string]interface{}{
 		"password_field": flattenPasswordField(apiObject.PasswordField),
-		"payload_type":   string(apiObject.PayloadType),
+		"payload_type":   apiObject.PayloadType,
 		"username_field": flattenUsernameField(apiObject.UsernameField),
 	}
 
@@ -2768,13 +2774,13 @@ func flattenResponseInspection(apiObject *awstypes.ResponseInspection) []interfa
 		m["body_contains"] = flattenBodyContains(apiObject.BodyContains)
 	}
 	if apiObject.Header != nil {
-		m["header"] = flattenHeader(apiObject.Header)
+		m[names.AttrHeader] = flattenHeader(apiObject.Header)
 	}
 	if apiObject.Json != nil {
-		m["json"] = flattenResponseInspectionJSON(apiObject.Json)
+		m[names.AttrJSON] = flattenResponseInspectionJSON(apiObject.Json)
 	}
 	if apiObject.StatusCode != nil {
-		m["status_code"] = flattenStatusCode(apiObject.StatusCode)
+		m[names.AttrStatusCode] = flattenStatusCode(apiObject.StatusCode)
 	}
 
 	return []interface{}{m}
@@ -2786,8 +2792,8 @@ func flattenBodyContains(apiObject *awstypes.ResponseInspectionBodyContains) []i
 	}
 
 	m := map[string]interface{}{
-		"failure_strings": flex.FlattenStringValueSet(apiObject.FailureStrings),
-		"success_strings": flex.FlattenStringValueSet(apiObject.SuccessStrings),
+		"failure_strings": apiObject.FailureStrings,
+		"success_strings": apiObject.SuccessStrings,
 	}
 
 	return []interface{}{m}
@@ -2799,8 +2805,8 @@ func flattenHeader(apiObject *awstypes.ResponseInspectionHeader) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"failure_values": flex.FlattenStringValueSet(apiObject.FailureValues),
-		"success_values": flex.FlattenStringValueSet(apiObject.SuccessValues),
+		"failure_values": apiObject.FailureValues,
+		"success_values": apiObject.SuccessValues,
 	}
 
 	return []interface{}{m}
@@ -2812,9 +2818,9 @@ func flattenResponseInspectionJSON(apiObject *awstypes.ResponseInspectionJson) [
 	}
 
 	m := map[string]interface{}{
-		"failure_values": flex.FlattenStringValueSet(apiObject.FailureValues),
-		"identifier":     aws.ToString(apiObject.Identifier),
-		"success_values": flex.FlattenStringValueSet(apiObject.SuccessValues),
+		"failure_values":     apiObject.FailureValues,
+		names.AttrIdentifier: aws.ToString(apiObject.Identifier),
+		"success_values":     apiObject.SuccessValues,
 	}
 
 	return []interface{}{m}
@@ -2863,7 +2869,7 @@ func flattenRateLimitLabelNamespace(apiObject *awstypes.RateLimitLabelNamespace)
 	}
 	return []interface{}{
 		map[string]interface{}{
-			"namespace": aws.ToString(apiObject.Namespace),
+			names.AttrNamespace: aws.ToString(apiObject.Namespace),
 		},
 	}
 }
@@ -2925,7 +2931,7 @@ func flattenRateBasedStatementCustomKeys(apiObject []awstypes.RateBasedStatement
 			}
 		}
 		if o.Header != nil {
-			tfMap["header"] = flattenRateLimitHeader(o.Header)
+			tfMap[names.AttrHeader] = flattenRateLimitHeader(o.Header)
 		}
 		if o.IP != nil {
 			tfMap["ip"] = []interface{}{
@@ -2955,7 +2961,7 @@ func flattenRateBasedStatement(apiObject *awstypes.RateBasedStatement) interface
 	}
 
 	tfMap := map[string]interface{}{
-		"aggregate_key_type":    string(apiObject.AggregateKeyType),
+		"aggregate_key_type":    apiObject.AggregateKeyType,
 		"evaluation_window_sec": apiObject.EvaluationWindowSec,
 	}
 

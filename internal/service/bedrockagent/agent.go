@@ -118,7 +118,7 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(40, 1200),
+					stringvalidator.LengthBetween(40, 4000),
 				},
 			},
 			"prompt_override_configuration": schema.ListAttribute{ // proto5 Optional+Computed nested block.
@@ -139,6 +139,14 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				Default:  booldefault.StaticBool(true),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"skip_resource_in_use_check": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
 				},
@@ -344,7 +352,8 @@ func (r *agentResource) Delete(ctx context.Context, request resource.DeleteReque
 
 	agentID := data.ID.ValueString()
 	_, err := conn.DeleteAgent(ctx, &bedrockagent.DeleteAgentInput{
-		AgentId: fwflex.StringFromFramework(ctx, data.AgentID),
+		AgentId:                fwflex.StringFromFramework(ctx, data.AgentID),
+		SkipResourceInUseCheck: fwflex.BoolValueFromFramework(ctx, data.SkipResourceInUseCheck),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -544,6 +553,7 @@ type agentResourceModel struct {
 	Instruction                 types.String                                                      `tfsdk:"instruction"`
 	PrepareAgent                types.Bool                                                        `tfsdk:"prepare_agent"`
 	PromptOverrideConfiguration fwtypes.ListNestedObjectValueOf[promptOverrideConfigurationModel] `tfsdk:"prompt_override_configuration"`
+	SkipResourceInUseCheck      types.Bool                                                        `tfsdk:"skip_resource_in_use_check"`
 	Tags                        types.Map                                                         `tfsdk:"tags"`
 	TagsAll                     types.Map                                                         `tfsdk:"tags_all"`
 	Timeouts                    timeouts.Value                                                    `tfsdk:"timeouts"`

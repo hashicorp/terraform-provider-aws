@@ -64,7 +64,7 @@ func resourceHSM() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -107,7 +107,7 @@ func resourceHSMCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	if v, ok := d.GetOk("ip_address"); ok {
+	if v, ok := d.GetOk(names.AttrIPAddress); ok {
 		input.IpAddress = aws.String(v.(string))
 	}
 
@@ -152,7 +152,7 @@ func resourceHSMRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("hsm_eni_id", hsm.EniId)
 	d.Set("hsm_id", hsm.HsmId)
 	d.Set("hsm_state", hsm.State)
-	d.Set("ip_address", hsm.EniIp)
+	d.Set(names.AttrIPAddress, hsm.EniIp)
 	d.Set(names.AttrSubnetID, hsm.SubnetId)
 
 	return diags

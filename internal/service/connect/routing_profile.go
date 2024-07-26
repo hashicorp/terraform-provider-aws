@@ -102,7 +102,7 @@ func ResourceRoutingProfile() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IntBetween(0, 9999),
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(1, 99),
@@ -445,7 +445,7 @@ func expandRoutingProfileQueueConfigs(queueConfigs []interface{}) []*connect.Rou
 		data := queueConfig.(map[string]interface{})
 		queueConfigExpanded := &connect.RoutingProfileQueueConfig{
 			Delay:    aws.Int64(int64(data["delay"].(int))),
-			Priority: aws.Int64(int64(data["priority"].(int))),
+			Priority: aws.Int64(int64(data[names.AttrPriority].(int))),
 		}
 
 		qr := connect.RoutingProfileQueueReference{
@@ -500,12 +500,12 @@ func getRoutingProfileQueueConfigs(ctx context.Context, conn *connect.Connect, i
 			}
 
 			values := map[string]interface{}{
-				"channel":    aws.StringValue(qc.Channel),
-				"delay":      aws.Int64Value(qc.Delay),
-				"priority":   aws.Int64Value(qc.Priority),
-				"queue_arn":  aws.StringValue(qc.QueueArn),
-				"queue_id":   aws.StringValue(qc.QueueId),
-				"queue_name": aws.StringValue(qc.QueueName),
+				"channel":          aws.StringValue(qc.Channel),
+				"delay":            aws.Int64Value(qc.Delay),
+				names.AttrPriority: aws.Int64Value(qc.Priority),
+				"queue_arn":        aws.StringValue(qc.QueueArn),
+				"queue_id":         aws.StringValue(qc.QueueId),
+				"queue_name":       aws.StringValue(qc.QueueName),
 			}
 
 			queueConfigsList = append(queueConfigsList, values)

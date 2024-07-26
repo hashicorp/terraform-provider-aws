@@ -67,7 +67,7 @@ func (r *resourceSnapshotCopy) Schema(ctx context.Context, req resource.SchemaRe
 					int64planmodifier.UseStateForUnknown(),
 				},
 			},
-			"retention_period": schema.Int64Attribute{
+			names.AttrRetentionPeriod: schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{

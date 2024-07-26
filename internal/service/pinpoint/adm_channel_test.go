@@ -65,20 +65,20 @@ func TestAccPinpointADMChannel_basic(t *testing.T) {
 				Config: testAccADMChannelConfig_basic(config),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckADMChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"client_id", "client_secret"},
+				ImportStateVerifyIgnore: []string{names.AttrClientID, names.AttrClientSecret},
 			},
 			{
 				Config: testAccADMChannelConfig_basic(config),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckADMChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 		},

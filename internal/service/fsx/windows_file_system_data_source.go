@@ -6,7 +6,7 @@ package fsx
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -81,18 +81,18 @@ func dataSourceWindowsFileSystem() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -138,7 +138,7 @@ func dataSourceWindowsFileSystem() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -168,7 +168,7 @@ func dataSourceWindowsFileSystem() *schema.Resource {
 
 func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	id := d.Get(names.AttrID).(string)
 	filesystem, err := findWindowsFileSystemByID(ctx, conn, id)
@@ -179,9 +179,9 @@ func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData
 
 	windowsConfig := filesystem.WindowsConfiguration
 
-	d.SetId(aws.StringValue(filesystem.FileSystemId))
+	d.SetId(aws.ToString(filesystem.FileSystemId))
 	d.Set("active_directory_id", windowsConfig.ActiveDirectoryId)
-	d.Set("aliases", aws.StringValueSlice(expandAliasValues(windowsConfig.Aliases)))
+	d.Set("aliases", expandAliasValues(windowsConfig.Aliases))
 	d.Set(names.AttrARN, filesystem.ResourceARN)
 	if err := d.Set("audit_log_configuration", flattenWindowsAuditLogConfiguration(windowsConfig.AuditLogConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting audit_log_configuration: %s", err)
@@ -193,16 +193,16 @@ func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData
 	if err := d.Set("disk_iops_configuration", flattenWindowsDiskIopsConfiguration(windowsConfig.DiskIopsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
 	}
-	d.Set("dns_name", filesystem.DNSName)
+	d.Set(names.AttrDNSName, filesystem.DNSName)
 	d.Set(names.AttrID, filesystem.FileSystemId)
 	d.Set(names.AttrKMSKeyID, filesystem.KmsKeyId)
-	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
+	d.Set("network_interface_ids", filesystem.NetworkInterfaceIds)
 	d.Set(names.AttrOwnerID, filesystem.OwnerId)
 	d.Set("preferred_file_server_ip", windowsConfig.PreferredFileServerIp)
 	d.Set("preferred_subnet_id", windowsConfig.PreferredSubnetId)
 	d.Set("storage_capacity", filesystem.StorageCapacity)
-	d.Set("storage_type", filesystem.StorageType)
-	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(filesystem.SubnetIds))
+	d.Set(names.AttrStorageType, filesystem.StorageType)
+	d.Set(names.AttrSubnetIDs, filesystem.SubnetIds)
 	d.Set("throughput_capacity", windowsConfig.ThroughputCapacity)
 	d.Set(names.AttrVPCID, filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", windowsConfig.WeeklyMaintenanceStartTime)

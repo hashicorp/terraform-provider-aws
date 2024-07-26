@@ -57,7 +57,7 @@ func resourceConfigRule() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"mode": {
+						names.AttrMode: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
@@ -86,7 +86,7 @@ func resourceConfigRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"scope": {
+			names.AttrScope: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -120,7 +120,7 @@ func resourceConfigRule() *schema.Resource {
 					},
 				},
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
@@ -153,7 +153,7 @@ func resourceConfigRule() *schema.Resource {
 								},
 							},
 						},
-						"owner": {
+						names.AttrOwner: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.Owner](),
@@ -226,11 +226,11 @@ func resourceConfigRulePut(ctx context.Context, d *schema.ResourceData, meta int
 			configRule.MaximumExecutionFrequency = types.MaximumExecutionFrequency(v.(string))
 		}
 
-		if v, ok := d.GetOk("scope"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk(names.AttrScope); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			configRule.Scope = expandScope(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk(names.AttrSource); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			configRule.Source = expandSource(v.([]interface{})[0].(map[string]interface{}))
 		}
 
@@ -281,7 +281,7 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrName, rule.ConfigRuleName)
 	d.Set("rule_id", rule.ConfigRuleId)
 	if rule.Scope != nil {
-		if err := d.Set("scope", flattenScope(rule.Scope)); err != nil {
+		if err := d.Set(names.AttrScope, flattenScope(rule.Scope)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting scope: %s", err)
 		}
 	}
@@ -291,7 +291,7 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 			rule.Source.CustomPolicyDetails.PolicyText = aws.String(v.(string))
 		}
 	}
-	if err := d.Set("source", flattenSource(rule.Source)); err != nil {
+	if err := d.Set(names.AttrSource, flattenSource(rule.Source)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting source: %s", err)
 	}
 
@@ -425,7 +425,7 @@ func expandEvaluationModeConfigurations(tfList []interface{}) []types.Evaluation
 
 		apiObject := types.EvaluationModeConfiguration{}
 
-		if v, ok := tfMap["mode"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrMode].(string); ok && v != "" {
 			apiObject.Mode = types.EvaluationMode(v)
 		}
 
@@ -467,7 +467,7 @@ func expandSource(tfMap map[string]interface{}) *types.Source {
 	}
 
 	apiObject := &types.Source{
-		Owner: types.Owner(tfMap["owner"].(string)),
+		Owner: types.Owner(tfMap[names.AttrOwner].(string)),
 	}
 
 	if v, ok := tfMap["custom_policy_details"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -541,7 +541,7 @@ func flattenEvaluationModeConfigurations(apiObjects []types.EvaluationModeConfig
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
-			"mode": apiObject.Mode,
+			names.AttrMode: apiObject.Mode,
 		}
 
 		tfList = append(tfList, tfMap)
@@ -582,7 +582,7 @@ func flattenSource(apiObject *types.Source) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"owner":             apiObject.Owner,
+		names.AttrOwner:     apiObject.Owner,
 		"source_identifier": aws.ToString(apiObject.SourceIdentifier),
 	}
 

@@ -52,7 +52,7 @@ func DataSourceLink() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"provider_name": {
+			names.AttrProviderName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,7 +95,7 @@ func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrDescription, link.Description)
 	d.Set("global_network_id", link.GlobalNetworkId)
 	d.Set("link_id", link.LinkId)
-	d.Set("provider_name", link.Provider)
+	d.Set(names.AttrProviderName, link.Provider)
 	d.Set("site_id", link.SiteId)
 	d.Set(names.AttrType, link.Type)
 

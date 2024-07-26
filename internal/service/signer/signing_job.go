@@ -37,7 +37,7 @@ func ResourceSigningJob() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -72,7 +72,7 @@ func ResourceSigningJob() *schema.Resource {
 					},
 				},
 			},
-			"destination": {
+			names.AttrDestination: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -91,7 +91,7 @@ func ResourceSigningJob() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -196,7 +196,7 @@ func ResourceSigningJob() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -208,8 +208,8 @@ func resourceSigningJobCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 	profileName := d.Get("profile_name")
-	source := d.Get("source").([]interface{})
-	destination := d.Get("destination").([]interface{})
+	source := d.Get(names.AttrSource).([]interface{})
+	destination := d.Get(names.AttrDestination).([]interface{})
 
 	startSigningJobInput := &signer.StartSigningJobInput{
 		ProfileName: aws.String(profileName.(string)),
@@ -320,7 +320,7 @@ func resourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job signed object: %s", err)
 	}
 
-	if err := d.Set("source", flattenSigningJobSource(describeSigningJobOutput.Source)); err != nil {
+	if err := d.Set(names.AttrSource, flattenSigningJobSource(describeSigningJobOutput.Source)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job source: %s", err)
 	}
 
@@ -328,7 +328,7 @@ func resourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job status: %s", err)
 	}
 
-	if err := d.Set("status_reason", describeSigningJobOutput.StatusReason); err != nil {
+	if err := d.Set(names.AttrStatusReason, describeSigningJobOutput.StatusReason); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job status reason: %s", err)
 	}
 
@@ -469,8 +469,8 @@ func expandSigningJobS3Destination(tfList []interface{}) *types.S3Destination {
 		s3Destination.BucketName = aws.String(tfMap[names.AttrBucket].(string))
 	}
 
-	if _, ok := tfMap["prefix"]; ok {
-		s3Destination.Prefix = aws.String(tfMap["prefix"].(string))
+	if _, ok := tfMap[names.AttrPrefix]; ok {
+		s3Destination.Prefix = aws.String(tfMap[names.AttrPrefix].(string))
 	}
 
 	return s3Destination

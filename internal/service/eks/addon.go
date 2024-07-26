@@ -71,7 +71,7 @@ func resourceAddon() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -131,7 +131,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	addonName := d.Get("addon_name").(string)
-	clusterName := d.Get("cluster_name").(string)
+	clusterName := d.Get(names.AttrClusterName).(string)
 	id := AddonCreateResourceID(clusterName, addonName)
 	input := &eks.CreateAddonInput{
 		AddonName:          aws.String(addonName),
@@ -222,7 +222,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("addon_name", addon.AddonName)
 	d.Set("addon_version", addon.AddonVersion)
 	d.Set(names.AttrARN, addon.AddonArn)
-	d.Set("cluster_name", addon.ClusterName)
+	d.Set(names.AttrClusterName, addon.ClusterName)
 	d.Set("configuration_values", addon.ConfigurationValues)
 	d.Set(names.AttrCreatedAt, aws.ToTime(addon.CreatedAt).Format(time.RFC3339))
 	d.Set("modified_at", aws.ToTime(addon.ModifiedAt).Format(time.RFC3339))

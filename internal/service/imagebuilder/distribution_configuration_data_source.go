@@ -130,7 +130,7 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"repository_name": {
+												names.AttrRepositoryName: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -157,7 +157,7 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
-									"launch_template": {
+									names.AttrLaunchTemplate: {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Elem: &schema.Resource{

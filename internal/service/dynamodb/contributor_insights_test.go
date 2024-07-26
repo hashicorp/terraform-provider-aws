@@ -36,7 +36,7 @@ func TestAccDynamoDBContributorInsights_basic(t *testing.T) {
 				Config: testAccContributorInsightsConfig_basic(rName, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContributorInsightsExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
 				),
 			},
 			{

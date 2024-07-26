@@ -45,7 +45,7 @@ func ResourceVoiceConnectorGroup() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 256),
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(1, 99),
@@ -97,7 +97,7 @@ func resourceVoiceConnectorGroupRead(ctx context.Context, d *schema.ResourceData
 		resp, err = findVoiceConnectorGroupByID(ctx, conn, d.Id())
 	}
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.NotFoundException](err) {
 		log.Printf("[WARN] Chime Voice conector group %s not found", d.Id())
 		d.SetId("")
 		return diags
@@ -147,6 +147,12 @@ func resourceVoiceConnectorGroupDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	if v, ok := d.GetOk("connector"); ok && v.(*schema.Set).Len() > 0 {
+		// Exit before attempting connector updates if the group does not exist
+		_, err := findVoiceConnectorGroupByID(ctx, conn, d.Id())
+		if errs.IsA[*awstypes.NotFoundException](err) {
+			return diags
+		}
+
 		if err := resourceVoiceConnectorGroupUpdate(ctx, d, meta); err != nil {
 			return err
 		}
@@ -174,7 +180,7 @@ func expandVoiceConnectorItems(data []interface{}) []awstypes.VoiceConnectorItem
 		item := rItem.(map[string]interface{})
 		connectorsItems = append(connectorsItems, awstypes.VoiceConnectorItem{
 			VoiceConnectorId: aws.String(item["voice_connector_id"].(string)),
-			Priority:         aws.Int32(int32(item["priority"].(int))),
+			Priority:         aws.Int32(int32(item[names.AttrPriority].(int))),
 		})
 	}
 
@@ -186,7 +192,7 @@ func flattenVoiceConnectorItems(connectors []awstypes.VoiceConnectorItem) []inte
 
 	for _, c := range connectors {
 		rawC := map[string]interface{}{
-			"priority":           c.Priority,
+			names.AttrPriority:   c.Priority,
 			"voice_connector_id": aws.ToString(c.VoiceConnectorId),
 		}
 		rawConnectors = append(rawConnectors, rawC)

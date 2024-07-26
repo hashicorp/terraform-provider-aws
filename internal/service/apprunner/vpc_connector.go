@@ -54,7 +54,7 @@ func resourceVPCConnector() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnets": {
+			names.AttrSubnets: {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
@@ -86,7 +86,7 @@ func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, met
 	name := d.Get("vpc_connector_name").(string)
 	input := &apprunner.CreateVpcConnectorInput{
 		SecurityGroups:   flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
-		Subnets:          flex.ExpandStringValueSet(d.Get("subnets").(*schema.Set)),
+		Subnets:          flex.ExpandStringValueSet(d.Get(names.AttrSubnets).(*schema.Set)),
 		Tags:             getTagsIn(ctx),
 		VpcConnectorName: aws.String(name),
 	}
@@ -126,7 +126,7 @@ func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrARN, vpcConnector.VpcConnectorArn)
 	d.Set(names.AttrSecurityGroups, vpcConnector.SecurityGroups)
 	d.Set(names.AttrStatus, vpcConnector.Status)
-	d.Set("subnets", vpcConnector.Subnets)
+	d.Set(names.AttrSubnets, vpcConnector.Subnets)
 	d.Set("vpc_connector_name", vpcConnector.VpcConnectorName)
 	d.Set("vpc_connector_revision", vpcConnector.VpcConnectorRevision)
 

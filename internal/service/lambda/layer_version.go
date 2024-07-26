@@ -45,6 +45,10 @@ func resourceLayerVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"code_sha256": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"compatible_architectures": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -79,7 +83,7 @@ func resourceLayerVersion() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_object_version"},
+				ConflictsWith: []string{names.AttrS3Bucket, "s3_key", "s3_object_version"},
 			},
 			"layer_arn": {
 				Type:     schema.TypeString,
@@ -96,7 +100,7 @@ func resourceLayerVersion() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
-			"s3_bucket": {
+			names.AttrS3Bucket: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
@@ -122,7 +126,7 @@ func resourceLayerVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Default:  false,
 				ForceNew: true,
@@ -152,7 +156,7 @@ func resourceLayerVersionCreate(ctx context.Context, d *schema.ResourceData, met
 
 	layerName := d.Get("layer_name").(string)
 	filename, hasFilename := d.GetOk("filename")
-	s3Bucket, bucketOk := d.GetOk("s3_bucket")
+	s3Bucket, bucketOk := d.GetOk(names.AttrS3Bucket)
 	s3Key, keyOk := d.GetOk("s3_key")
 	s3ObjectVersion, versionOk := d.GetOk("s3_object_version")
 
@@ -234,6 +238,7 @@ func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set(names.AttrARN, output.LayerVersionArn)
+	d.Set("code_sha256", output.Content.CodeSha256)
 	d.Set("compatible_architectures", output.CompatibleArchitectures)
 	d.Set("compatible_runtimes", output.CompatibleRuntimes)
 	d.Set(names.AttrCreatedDate, output.CreatedDate)
@@ -243,7 +248,7 @@ func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("license_info", output.LicenseInfo)
 	d.Set("signing_job_arn", output.Content.SigningJobArn)
 	d.Set("signing_profile_version_arn", output.Content.SigningProfileVersionArn)
-	d.Set("source_code_hash", output.Content.CodeSha256)
+	d.Set("source_code_hash", d.Get("source_code_hash"))
 	d.Set("source_code_size", output.Content.CodeSize)
 	d.Set(names.AttrVersion, strconv.FormatInt(versionNumber, 10))
 
@@ -254,7 +259,7 @@ func resourceLayerVersionDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	if d.Get("skip_destroy").(bool) {
+	if d.Get(names.AttrSkipDestroy).(bool) {
 		log.Printf("[DEBUG] Retaining Lambda Layer Version %q", d.Id())
 		return diags
 	}

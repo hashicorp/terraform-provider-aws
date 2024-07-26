@@ -31,6 +31,9 @@ import (
 
 // @SDKResource("aws_kms_replica_external_key", name="Replica External Key")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kms/types;awstypes;awstypes.KeyMetadata")
+// @Testing(importIgnore="deletion_window_in_days;bypass_policy_lockout_safety_check;key_material_base64")
+// @Testing(altRegionProvider=true)
 func resourceReplicaExternalKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicaExternalKeyCreate,
@@ -74,7 +77,7 @@ func resourceReplicaExternalKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"key_id": {
+			names.AttrKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -238,7 +241,7 @@ func resourceReplicaExternalKeyRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrDescription, key.metadata.Description)
 	d.Set(names.AttrEnabled, key.metadata.Enabled)
 	d.Set("expiration_model", key.metadata.ExpirationModel)
-	d.Set("key_id", key.metadata.KeyId)
+	d.Set(names.AttrKeyID, key.metadata.KeyId)
 	d.Set("key_state", key.metadata.KeyState)
 	d.Set("key_usage", key.metadata.KeyUsage)
 

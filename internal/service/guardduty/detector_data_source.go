@@ -61,7 +61,7 @@ func DataSourceDetector() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"service_role_arn": {
+			names.AttrServiceRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,7 +104,7 @@ func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("features", nil)
 	}
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
-	d.Set("service_role_arn", gdo.ServiceRole)
+	d.Set(names.AttrServiceRoleARN, gdo.ServiceRole)
 	d.Set(names.AttrStatus, gdo.Status)
 
 	return diags

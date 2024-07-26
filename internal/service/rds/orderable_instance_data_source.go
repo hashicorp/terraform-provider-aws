@@ -35,7 +35,7 @@ func DataSourceOrderableInstance() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -121,7 +121,7 @@ func DataSourceOrderableInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -226,7 +226,7 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 		input.DBInstanceClass = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine"); ok {
+	if v, ok := d.GetOk(names.AttrEngine); ok {
 		input.Engine = aws.String(v.(string))
 	}
 
@@ -256,7 +256,7 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 				}
 			}
 
-			if v, ok := d.GetOk("storage_type"); ok {
+			if v, ok := d.GetOk(names.AttrStorageType); ok {
 				if aws.StringValue(instanceOption.StorageType) != v.(string) {
 					continue
 				}
@@ -473,7 +473,7 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 		availabilityZones = append(availabilityZones, aws.StringValue(v.Name))
 	}
 	d.Set(names.AttrAvailabilityZones, availabilityZones)
-	d.Set("engine", found.Engine)
+	d.Set(names.AttrEngine, found.Engine)
 	d.Set(names.AttrEngineVersion, found.EngineVersion)
 	d.Set("instance_class", found.DBInstanceClass)
 	d.Set("license_model", found.LicenseModel)
@@ -486,7 +486,7 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 	d.Set("multi_az_capable", found.MultiAZCapable)
 	d.Set("outpost_capable", found.OutpostCapable)
 	d.Set("read_replica_capable", found.ReadReplicaCapable)
-	d.Set("storage_type", found.StorageType)
+	d.Set(names.AttrStorageType, found.StorageType)
 	d.Set("supported_engine_modes", aws.StringValueSlice(found.SupportedEngineModes))
 	d.Set("supported_network_types", aws.StringValueSlice(found.SupportedNetworkTypes))
 	d.Set("supports_clusters", found.SupportsClusters)

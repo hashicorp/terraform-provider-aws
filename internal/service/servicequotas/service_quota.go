@@ -42,7 +42,7 @@ func ResourceServiceQuota() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"default_value": {
+			names.AttrDefaultValue: {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
@@ -78,7 +78,7 @@ func ResourceServiceQuota() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
 				),
 			},
-			"service_name": {
+			names.AttrServiceName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -111,7 +111,7 @@ func ResourceServiceQuota() *schema.Resource {
 								},
 							},
 						},
-						"metric_name": {
+						names.AttrMetricName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -202,11 +202,11 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.Set("adjustable", defaultQuota.Adjustable)
 	d.Set(names.AttrARN, defaultQuota.QuotaArn)
-	d.Set("default_value", defaultQuota.Value)
+	d.Set(names.AttrDefaultValue, defaultQuota.Value)
 	d.Set("quota_code", defaultQuota.QuotaCode)
 	d.Set("quota_name", defaultQuota.QuotaName)
 	d.Set("service_code", defaultQuota.ServiceCode)
-	d.Set("service_name", defaultQuota.ServiceName)
+	d.Set(names.AttrServiceName, defaultQuota.ServiceName)
 	d.Set(names.AttrValue, defaultQuota.Value)
 
 	if err := d.Set("usage_metric", flattenUsageMetric(defaultQuota.UsageMetric)); err != nil {

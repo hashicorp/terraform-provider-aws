@@ -51,7 +51,7 @@ func (d *dataSourceSearch) Schema(ctx context.Context, req datasource.SchemaRequ
 				CustomType: fwtypes.NewListNestedObjectTypeOf[countData](ctx),
 				Computed:   true,
 			},
-			"resources": schema.ListAttribute{
+			names.AttrResources: schema.ListAttribute{
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[resourcesData](ctx),
 				ElementType: fwtypes.NewObjectTypeOf[resourcesData](ctx),
 				Computed:    true,

@@ -49,14 +49,14 @@ func ResourceResourceLFTags() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"database": {
+			names.AttrDatabase: {
 				Type:     schema.TypeList,
 				Computed: true,
 				ForceNew: true,
 				MaxItems: 1,
 				Optional: true,
 				ExactlyOneOf: []string{
-					"database",
+					names.AttrDatabase,
 					"table",
 					"table_with_columns",
 				},
@@ -112,7 +112,7 @@ func ResourceResourceLFTags() *schema.Resource {
 				MaxItems: 1,
 				Optional: true,
 				ExactlyOneOf: []string{
-					"database",
+					names.AttrDatabase,
 					"table",
 					"table_with_columns",
 				},
@@ -160,7 +160,7 @@ func ResourceResourceLFTags() *schema.Resource {
 				MaxItems: 1,
 				Optional: true,
 				ExactlyOneOf: []string{
-					"database",
+					names.AttrDatabase,
 					"table",
 					"table_with_columns",
 				},
@@ -384,7 +384,7 @@ func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, m
 
 func lfTagsTagger(d *schema.ResourceData) (tagger, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		return &databaseTagger{}, diags
 	} else if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		return &tableTagger{}, diags
@@ -410,7 +410,7 @@ type tagger interface {
 type databaseTagger struct{}
 
 func (t *databaseTagger) ExpandResource(d *schema.ResourceData) *awstypes.Resource {
-	v := d.Get("database").([]any)[0].(map[string]any)
+	v := d.Get(names.AttrDatabase).([]any)[0].(map[string]any)
 	return &awstypes.Resource{
 		Database: ExpandDatabaseResource(v),
 	}

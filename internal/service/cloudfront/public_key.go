@@ -41,7 +41,7 @@ func resourcePublicKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -96,7 +96,7 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.PublicKeyConfig.CallerReference = aws.String(id.UniqueId())
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		input.PublicKeyConfig.Comment = aws.String(v.(string))
 	}
 
@@ -129,7 +129,7 @@ func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	publicKeyConfig := output.PublicKey.PublicKeyConfig
 	d.Set("caller_reference", publicKeyConfig.CallerReference)
-	d.Set("comment", publicKeyConfig.Comment)
+	d.Set(names.AttrComment, publicKeyConfig.Comment)
 	d.Set("encoded_key", publicKeyConfig.EncodedKey)
 	d.Set("etag", output.ETag)
 	d.Set(names.AttrName, publicKeyConfig.Name)
@@ -157,7 +157,7 @@ func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		input.PublicKeyConfig.CallerReference = aws.String(id.UniqueId())
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		input.PublicKeyConfig.Comment = aws.String(v.(string))
 	}
 

@@ -45,7 +45,7 @@ func dataSourceSecrets() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"key_id": {
+						names.AttrKeyID: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -103,7 +103,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 			input.GrantTokens = flex.ExpandStringValueList(v)
 		}
 
-		if v, ok := tfMap["key_id"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrKeyID].(string); ok && v != "" {
 			input.KeyId = aws.String(v)
 		}
 

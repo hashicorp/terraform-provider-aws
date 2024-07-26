@@ -27,7 +27,7 @@ func TestAccSFNStateMachineDataSource_basic(t *testing.T) {
 				Config: testAccStateMachineDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataSourceName, "creation_date"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreationDate, dataSourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrPair(resourceName, "definition", dataSourceName, "definition"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, dataSourceName, names.AttrRoleARN),

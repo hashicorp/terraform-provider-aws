@@ -34,9 +34,9 @@ func TestAccIoTThingType_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingTypeExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "deprecated", "false"),
+					resource.TestCheckResourceAttr(resourceName, "deprecated", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -86,9 +86,9 @@ func TestAccIoTThingType_full(t *testing.T) {
 				Config: testAccThingTypeConfig_full(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingTypeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "deprecated", "true"),
+					resource.TestCheckResourceAttr(resourceName, "deprecated", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "properties.0.description", "MyDescription"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.searchable_attributes.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "properties.0.searchable_attributes.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemAttr(resourceName, "properties.0.searchable_attributes.*", "foo"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "properties.0.searchable_attributes.*", "bar"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "properties.0.searchable_attributes.*", "baz"),
@@ -103,7 +103,7 @@ func TestAccIoTThingType_full(t *testing.T) {
 				Config: testAccThingTypeConfig_full(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingTypeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "deprecated", "false"),
+					resource.TestCheckResourceAttr(resourceName, "deprecated", acctest.CtFalse),
 				),
 			},
 		},
@@ -122,11 +122,11 @@ func TestAccIoTThingType_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckThingTypeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccThingTypeConfig_tags1(rName, "key1", "value1"),
+				Config: testAccThingTypeConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingTypeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -135,20 +135,20 @@ func TestAccIoTThingType_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccThingTypeConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccThingTypeConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingTypeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccThingTypeConfig_tags1(rName, "key2", "value2"),
+				Config: testAccThingTypeConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingTypeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -162,7 +162,7 @@ func testAccCheckThingTypeExists(ctx context.Context, n string) resource.TestChe
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		_, err := tfiot.FindThingTypeByName(ctx, conn, rs.Primary.ID)
 
@@ -172,7 +172,7 @@ func testAccCheckThingTypeExists(ctx context.Context, n string) resource.TestChe
 
 func testAccCheckThingTypeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_thing_type" {

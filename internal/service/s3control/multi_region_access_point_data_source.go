@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -29,7 +30,7 @@ func dataSourceMultiRegionAccessPoint() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -102,6 +103,7 @@ func dataSourceMultiRegionAccessPoint() *schema.Resource {
 }
 
 func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
@@ -113,7 +115,7 @@ func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.Re
 	accessPoint, err := findMultiRegionAccessPointByTwoPartKey(ctx, conn, accountID, name)
 
 	if err != nil {
-		return diag.Errorf("reading S3 Multi Region Access Point (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Multi Region Access Point (%s): %s", name, err)
 	}
 
 	d.SetId(MultiRegionAccessPointCreateResourceID(accountID, name))
@@ -126,7 +128,7 @@ func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.Re
 		Resource:  fmt.Sprintf("accesspoint/%s", alias),
 	}.String()
 	d.Set(names.AttrAccountID, accountID)
-	d.Set("alias", alias)
+	d.Set(names.AttrAlias, alias)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrCreatedAt, aws.ToTime(accessPoint.CreatedAt).Format(time.RFC3339))
 	// https://docs.aws.amazon.com/AmazonS3/latest/userguide//MultiRegionAccessPointRequests.html#MultiRegionAccessPointHostnames.
@@ -136,5 +138,5 @@ func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.Re
 	d.Set("regions", flattenRegionReports(accessPoint.Regions))
 	d.Set(names.AttrStatus, accessPoint.Status)
 
-	return nil
+	return diags
 }

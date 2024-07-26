@@ -175,11 +175,11 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"s3_key_prefix": {
+			names.AttrS3KeyPrefix: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -280,7 +280,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("node_type", rsc.NodeType)
 	d.Set("number_of_nodes", rsc.NumberOfNodes)
 	d.Set(names.AttrPreferredMaintenanceWindow, rsc.PreferredMaintenanceWindow)
-	d.Set("publicly_accessible", rsc.PubliclyAccessible)
+	d.Set(names.AttrPubliclyAccessible, rsc.PubliclyAccessible)
 	d.Set(names.AttrVPCID, rsc.VpcId)
 	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(rsc.VpcSecurityGroups, func(v *redshift.VpcSecurityGroupMembership) string {
 		return aws.StringValue(v.VpcSecurityGroupId)
@@ -301,7 +301,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set("enable_logging", loggingStatus.LoggingEnabled)
 		d.Set("log_destination_type", loggingStatus.LogDestinationType)
 		d.Set("log_exports", aws.StringValueSlice(loggingStatus.LogExports))
-		d.Set("s3_key_prefix", loggingStatus.S3KeyPrefix)
+		d.Set(names.AttrS3KeyPrefix, loggingStatus.S3KeyPrefix)
 	}
 
 	return diags

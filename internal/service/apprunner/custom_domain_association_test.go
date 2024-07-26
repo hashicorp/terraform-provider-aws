@@ -35,10 +35,10 @@ func TestAccAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 				Config: testAccCustomDomainAssociationConfig_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDomainAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "certificate_validation_records.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_validation_records.#", acctest.Ct3),
 					resource.TestCheckResourceAttrSet(resourceName, "dns_target"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
-					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "pending_certificate_dns_validation"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_arn", serviceResourceName, names.AttrARN),
 				),

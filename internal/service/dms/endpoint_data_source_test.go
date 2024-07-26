@@ -30,7 +30,7 @@ func TestAccDMSEndpointDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint_id", resourceName, "endpoint_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint_type", resourceName, "endpoint_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEndpointType, resourceName, names.AttrEndpointType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine_name", resourceName, "engine_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPort, resourceName, names.AttrPort),
 					resource.TestCheckResourceAttrPair(dataSourceName, "server_name", resourceName, "server_name"),

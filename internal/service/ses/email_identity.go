@@ -34,7 +34,7 @@ func ResourceEmailIdentity() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"email": {
+			names.AttrEmail: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,7 +50,7 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	email := d.Get("email").(string)
+	email := d.Get(names.AttrEmail).(string)
 	email = strings.TrimSuffix(email, ".")
 
 	createOpts := &ses.VerifyEmailIdentityInput{
@@ -72,7 +72,7 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	email := d.Id()
-	d.Set("email", email)
+	d.Set(names.AttrEmail, email)
 
 	readOpts := &ses.GetIdentityVerificationAttributesInput{
 		Identities: []*string{
@@ -107,7 +107,7 @@ func resourceEmailIdentityDelete(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	email := d.Get("email").(string)
+	email := d.Get(names.AttrEmail).(string)
 
 	deleteOpts := &ses.DeleteIdentityInput{
 		Identity: aws.String(email),

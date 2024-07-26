@@ -43,7 +43,7 @@ func resourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"group_name": {
+			names.AttrGroupName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -81,7 +81,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
-	name := d.Get("group_name").(string)
+	name := d.Get(names.AttrGroupName).(string)
 	input := &xray.CreateGroupInput{
 		GroupName:        aws.String(name),
 		FilterExpression: aws.String(d.Get("filter_expression").(string)),
@@ -121,7 +121,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set(names.AttrARN, group.GroupARN)
 	d.Set("filter_expression", group.FilterExpression)
-	d.Set("group_name", group.GroupName)
+	d.Set(names.AttrGroupName, group.GroupName)
 	if err := d.Set("insights_configuration", flattenInsightsConfig(group.InsightsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting insights_configuration: %s", err)
 	}
@@ -162,6 +162,10 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	_, err := conn.DeleteGroup(ctx, &xray.DeleteGroupInput{
 		GroupARN: aws.String(d.Id()),
 	})
+
+	if errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "Group not found") {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting XRay Group (%s): %s", d.Id(), err)

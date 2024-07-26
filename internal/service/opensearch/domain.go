@@ -96,6 +96,9 @@ func ResourceDomain() *schema.Resource {
 
 				return false
 			}),
+			customdiff.ForceNewIfChange(names.AttrIPAddressType, func(_ context.Context, old, new, meta interface{}) bool {
+				return (old.(string) == opensearchservice.IPAddressTypeDualstack) && old.(string) != new.(string)
+			}),
 			verify.SetTagsDiff,
 		),
 
@@ -189,13 +192,13 @@ func ResourceDomain() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"duration": {
+									names.AttrDuration: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"unit": {
+												names.AttrUnit: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(opensearchservice.TimeUnit_Values(), false),
@@ -266,7 +269,7 @@ func ResourceDomain() *schema.Resource {
 							Optional:         true,
 							DiffSuppressFunc: suppressComputedDedicatedMaster,
 						},
-						"instance_count": {
+						names.AttrInstanceCount: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  1,
@@ -338,7 +341,7 @@ func ResourceDomain() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"user_pool_id": {
+						names.AttrUserPoolID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -409,22 +412,22 @@ func ResourceDomain() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"throughput": {
+						names.AttrThroughput: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validation.IntAtLeast(125),
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -463,6 +466,12 @@ func ResourceDomain() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			names.AttrIPAddressType: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(opensearchservice.IPAddressType_Values(), false),
+			},
 			"kibana_endpoint": {
 				Type:       schema.TypeString,
 				Computed:   true,
@@ -473,7 +482,7 @@ func ResourceDomain() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_log_group_arn": {
+						names.AttrCloudWatchLogGroupARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -643,6 +652,10 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
+		input.IPAddressType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("access_policies"); ok {
@@ -849,6 +862,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("domain_id", ds.DomainId)
 	d.Set(names.AttrDomainName, ds.DomainName)
 	d.Set(names.AttrEngineVersion, ds.EngineVersion)
+	d.Set(names.AttrIPAddressType, ds.IPAddressType)
 
 	if err := d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ebs_options: %s", err)
@@ -978,6 +992,10 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if d.HasChange("domain_endpoint_options") {
 			input.DomainEndpointOptions = expandDomainEndpointOptions(d.Get("domain_endpoint_options").([]interface{}))
+		}
+
+		if d.HasChange(names.AttrIPAddressType) {
+			input.IPAddressType = aws.String(d.Get(names.AttrIPAddressType).(string))
 		}
 
 		if d.HasChanges("ebs_options", "cluster_config") {
@@ -1244,7 +1262,7 @@ func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterCon
 		}
 	}
 
-	if v, ok := m["instance_count"]; ok {
+	if v, ok := m[names.AttrInstanceCount]; ok {
 		config.InstanceCount = aws.Int64(int64(v.(int)))
 	}
 
@@ -1336,7 +1354,7 @@ func flattenClusterConfig(c *opensearchservice.ClusterConfig) []map[string]inter
 		m["dedicated_master_type"] = aws.StringValue(c.DedicatedMasterType)
 	}
 	if c.InstanceCount != nil {
-		m["instance_count"] = aws.Int64Value(c.InstanceCount)
+		m[names.AttrInstanceCount] = aws.Int64Value(c.InstanceCount)
 	}
 	if c.InstanceType != nil {
 		m[names.AttrInstanceType] = aws.StringValue(c.InstanceType)

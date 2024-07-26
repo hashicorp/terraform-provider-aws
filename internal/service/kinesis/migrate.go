@@ -25,7 +25,7 @@ func resourceStreamResourceV0() *schema.Resource {
 				Required: true,
 			},
 
-			"retention_period": {
+			names.AttrRetentionPeriod: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  24,

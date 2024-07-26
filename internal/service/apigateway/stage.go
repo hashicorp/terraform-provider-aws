@@ -30,6 +30,8 @@ import (
 
 // @SDKResource("aws_api_gateway_stage", name="Stage")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetStageOutput", serialize=true)
+// @Testing(importStateIdFunc=testAccStageImportStateIdFunc)
 func resourceStage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStageCreate,
@@ -59,12 +61,12 @@ func resourceStage() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"destination_arn": {
+						names.AttrDestinationARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"format": {
+						names.AttrFormat: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -553,8 +555,8 @@ func flattenAccessLogSettings(accessLogSettings *types.AccessLogSettings) []map[
 	result := make([]map[string]interface{}, 0, 1)
 	if accessLogSettings != nil {
 		result = append(result, map[string]interface{}{
-			"destination_arn": aws.ToString(accessLogSettings.DestinationArn),
-			"format":          aws.ToString(accessLogSettings.Format),
+			names.AttrDestinationARN: aws.ToString(accessLogSettings.DestinationArn),
+			names.AttrFormat:         aws.ToString(accessLogSettings.Format),
 		})
 	}
 	return result

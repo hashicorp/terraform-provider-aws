@@ -37,7 +37,7 @@ func TestAccWAFV2WebACLDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(datasourceName, "scope", resourceName, "scope"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrScope, resourceName, names.AttrScope),
 				),
 			},
 		},

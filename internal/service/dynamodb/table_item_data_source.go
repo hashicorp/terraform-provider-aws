@@ -43,7 +43,7 @@ func dataSourceTableItem() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"table_name": {
+			names.AttrTableName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -55,7 +55,7 @@ func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
-	tableName := d.Get("table_name").(string)
+	tableName := d.Get(names.AttrTableName).(string)
 	key, err := expandTableItemAttributes(d.Get(names.AttrKey).(string))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -85,7 +85,7 @@ func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.SetId(id)
 	d.Set("expression_attribute_names", input.ExpressionAttributeNames)
 	d.Set("projection_expression", input.ProjectionExpression)
-	d.Set("table_name", tableName)
+	d.Set(names.AttrTableName, tableName)
 
 	itemAttrs, err := flattenTableItemAttributes(item)
 

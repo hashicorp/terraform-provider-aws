@@ -26,7 +26,10 @@ import (
 )
 
 // @SDKResource("aws_cloudwatch_log_group", name="Log Group")
-// @Tags
+// @Tags(identifierAttribute="arn")
+// @Testing(destroyTakesT=true)
+// @Testing(existsTakesT=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.LogGroup")
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
@@ -76,7 +79,7 @@ func resourceGroup() *schema.Resource {
 				Default:      0,
 				ValidateFunc: validation.IntInSlice([]int{0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653}),
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
@@ -155,15 +158,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lg.LogGroupName)))
 	d.Set("retention_in_days", lg.RetentionInDays)
 	// Support in-place update of non-refreshable attribute.
-	d.Set("skip_destroy", d.Get("skip_destroy"))
-
-	tags, err := listLogGroupTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for CloudWatch Logs Log Group (%s): %s", d.Id(), err)
-	}
-
-	setTagsOut(ctx, Tags(tags))
+	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
 
 	return diags
 }
@@ -219,21 +214,13 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange(names.AttrTagsAll) {
-		o, n := d.GetChange(names.AttrTagsAll)
-
-		if err := updateLogGroupTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CloudWatch Logs Log Group (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
 func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining CloudWatch Logs Log Group: %s", d.Id())
 		return diags
 	}

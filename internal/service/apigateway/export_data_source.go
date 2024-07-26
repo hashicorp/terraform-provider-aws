@@ -32,7 +32,7 @@ func dataSourceExport() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -93,7 +93,7 @@ func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(id)
 	d.Set("body", string(export.Body))
 	d.Set("content_disposition", export.ContentDisposition)
-	d.Set("content_type", export.ContentType)
+	d.Set(names.AttrContentType, export.ContentType)
 
 	return diags
 }

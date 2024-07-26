@@ -38,7 +38,7 @@ func TestAccIAMGroup_basic(t *testing.T) {
 					// arn:${Partition}:iam::${Account}:group/${GroupNameWithPath}
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
 					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
 				),
 			},
@@ -126,7 +126,7 @@ func TestAccIAMGroup_path(t *testing.T) {
 					testAccCheckGroupExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("group/path1/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "path", "/path1/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/path1/"),
 				),
 			},
 			{
@@ -140,7 +140,7 @@ func TestAccIAMGroup_path(t *testing.T) {
 					testAccCheckGroupExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("group/path2/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "path", "/path2/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/path2/"),
 				),
 			},
 		},

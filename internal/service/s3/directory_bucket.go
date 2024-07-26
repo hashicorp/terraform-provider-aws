@@ -37,7 +37,7 @@ func isDirectoryBucket(bucket string) bool {
 	return bucketNameTypeFor(bucket) == bucketNameTypeDirectoryBucket
 }
 
-// @FrameworkResource(name="Directory Bucket")
+// @FrameworkResource("aws_s3_directory_bucket", name="Directory Bucket")
 func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directoryBucketResource{}
 
@@ -79,7 +79,7 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"force_destroy": schema.BoolAttribute{
+			names.AttrForceDestroy: schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
@@ -96,7 +96,7 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"location": schema.ListNestedBlock{
+			names.AttrLocation: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[locationInfoModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{

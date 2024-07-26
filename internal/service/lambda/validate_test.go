@@ -52,7 +52,7 @@ func TestValidPermissionAction(t *testing.T) {
 		"*",
 	}
 	for _, v := range validNames {
-		_, errors := validPermissionAction()(v, "action")
+		_, errors := validPermissionAction()(v, names.AttrAction)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid Lambda permission action: %q", v, errors)
 		}
@@ -65,7 +65,7 @@ func TestValidPermissionAction(t *testing.T) {
 		"lambda:Invoke*",
 	}
 	for _, v := range invalidNames {
-		_, errors := validPermissionAction()(v, "action")
+		_, errors := validPermissionAction()(v, names.AttrAction)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Lambda permission action", v)
 		}

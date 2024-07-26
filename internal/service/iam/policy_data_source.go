@@ -20,6 +20,7 @@ import (
 )
 
 // @SDKDataSource("aws_iam_policy", name="Policy")
+// @Tags
 func dataSourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePolicyRead,
@@ -46,7 +47,7 @@ func dataSourcePolicy() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{names.AttrARN},
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,7 +72,6 @@ func dataSourcePolicy() *schema.Resource {
 func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	arn := d.Get(names.AttrARN).(string)
 	name := d.Get(names.AttrName).(string)
@@ -105,12 +105,10 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("attachment_count", policy.AttachmentCount)
 	d.Set(names.AttrDescription, policy.Description)
 	d.Set(names.AttrName, policy.PolicyName)
-	d.Set("path", policy.Path)
+	d.Set(names.AttrPath, policy.Path)
 	d.Set("policy_id", policy.PolicyId)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, policy.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, policy.Tags)
 
 	outputRaw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
 		func() (interface{}, error) {

@@ -66,7 +66,7 @@ func resourceStack() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"iam_role_arn": {
+			names.AttrIAMRoleARN: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -159,7 +159,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("disable_rollback"); ok {
 		input.DisableRollback = aws.Bool(v.(bool))
 	}
-	if v, ok := d.GetOk("iam_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrIAMRoleARN); ok {
 		input.RoleARN = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("notification_arns"); ok {
@@ -257,7 +257,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 			d.Set("disable_rollback", false)
 		}
 	}
-	d.Set("iam_role_arn", stack.RoleARN)
+	d.Set(names.AttrIAMRoleARN, stack.RoleARN)
 	d.Set(names.AttrName, stack.StackName)
 	if len(stack.NotificationARNs) > 0 {
 		d.Set("notification_arns", stack.NotificationARNs)
@@ -290,8 +290,8 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("capabilities"); ok {
 		input.Capabilities = flex.ExpandStringyValueSet[awstypes.Capability](v.(*schema.Set))
 	}
-	if d.HasChange("iam_role_arn") {
-		input.RoleARN = aws.String(d.Get("iam_role_arn").(string))
+	if d.HasChange(names.AttrIAMRoleARN) {
+		input.RoleARN = aws.String(d.Get(names.AttrIAMRoleARN).(string))
 	}
 	if d.HasChange("notification_arns") {
 		input.NotificationARNs = flex.ExpandStringValueSet(d.Get("notification_arns").(*schema.Set))

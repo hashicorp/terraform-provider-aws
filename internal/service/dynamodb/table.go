@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -91,7 +92,7 @@ func resourceTable() *schema.Resource {
 			},
 			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				if diff.Id() != "" && diff.HasChange("stream_enabled") {
-					if err := diff.SetNewComputed("stream_arn"); err != nil {
+					if err := diff.SetNewComputed(names.AttrStreamARN); err != nil {
 						return fmt.Errorf("setting stream_arn to computed: %s", err)
 					}
 				}
@@ -116,6 +117,7 @@ func resourceTable() *schema.Resource {
 				// https://github.com/hashicorp/terraform-provider-aws/issues/25214
 				return old.(string) != new.(string) && new.(string) != ""
 			}),
+			validateTTLCustomDiff,
 			verify.SetTagsDiff,
 		),
 
@@ -282,7 +284,7 @@ func resourceTable() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"propagate_tags": {
+						names.AttrPropagateTags: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -292,7 +294,7 @@ func resourceTable() *schema.Resource {
 							Required: true,
 							// update is equivalent of force a new *replica*, not table
 						},
-						"stream_arn": {
+						names.AttrStreamARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -408,7 +410,7 @@ func resourceTable() *schema.Resource {
 					},
 				},
 			},
-			"stream_arn": {
+			names.AttrStreamARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -450,7 +452,7 @@ func resourceTable() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"attribute_name": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						names.AttrEnabled: {
 							Type:     schema.TypeBool,
@@ -813,7 +815,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("stream_view_type", d.Get("stream_view_type").(string))
 	}
 
-	d.Set("stream_arn", table.LatestStreamArn)
+	d.Set(names.AttrStreamARN, table.LatestStreamArn)
 	d.Set("stream_label", table.LatestStreamLabel)
 
 	sse := flattenTableServerSideEncryption(table.SSEDescription)
@@ -1343,7 +1345,7 @@ func updateReplicaTags(ctx context.Context, conn *dynamodb.Client, rn string, re
 			continue
 		}
 
-		if v, ok := tfMap["propagate_tags"].(bool); ok && v {
+		if v, ok := tfMap[names.AttrPropagateTags].(bool); ok && v {
 			optFn := func(o *dynamodb.Options) {
 				o.Region = region
 			}
@@ -1818,7 +1820,7 @@ func enrichReplicas(ctx context.Context, conn *dynamodb.Client, arn, tableName s
 			continue
 		}
 
-		tfMap["stream_arn"] = aws.ToString(table.LatestStreamArn)
+		tfMap[names.AttrStreamARN] = aws.ToString(table.LatestStreamArn)
 		tfMap["stream_label"] = aws.ToString(table.LatestStreamLabel)
 
 		if table.SSEDescription != nil {
@@ -1850,12 +1852,12 @@ func addReplicaTagPropagates(configReplicas *schema.Set, replicas []interface{})
 				continue
 			}
 
-			if v, ok := configReplica["propagate_tags"].(bool); ok && v {
+			if v, ok := configReplica[names.AttrPropagateTags].(bool); ok && v {
 				prop = true
 				break
 			}
 		}
-		replica["propagate_tags"] = prop
+		replica[names.AttrPropagateTags] = prop
 		replicas[i] = replica
 	}
 
@@ -2388,4 +2390,65 @@ func validateProvisionedThroughputField(diff *schema.ResourceDiff, key string) e
 		}
 	}
 	return nil
+}
+
+func validateTTLCustomDiff(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	var diags diag.Diagnostics
+
+	configRaw := d.GetRawConfig()
+	if !configRaw.IsKnown() || configRaw.IsNull() {
+		return nil
+	}
+
+	ttlPath := cty.GetAttrPath("ttl")
+	ttl := configRaw.GetAttr("ttl")
+	if ttl.IsKnown() && !ttl.IsNull() {
+		if ttl.LengthInt() == 1 {
+			idx := cty.NumberIntVal(0)
+			ttl := ttl.Index(idx)
+			ttlPath := ttlPath.Index(idx)
+			ttlPlantimeValidate(ttlPath, ttl, &diags)
+		}
+	}
+
+	return sdkdiag.DiagnosticsError(diags)
+}
+
+func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostics) {
+	attribute := ttl.GetAttr("attribute_name")
+	if !attribute.IsKnown() {
+		return
+	}
+
+	enabled := ttl.GetAttr(names.AttrEnabled)
+	if !enabled.IsKnown() {
+		return
+	}
+	if enabled.IsNull() {
+		return
+	}
+
+	if enabled.True() {
+		if attribute.IsNull() {
+			*diags = append(*diags, errs.NewAttributeRequiredWhenError(
+				ttlPath.GetAttr("attribute_name"),
+				ttlPath.GetAttr(names.AttrEnabled),
+				"true",
+			))
+		} else if attribute.AsString() == "" {
+			*diags = append(*diags, errs.NewInvalidValueAttributeErrorf(
+				ttlPath.GetAttr("attribute_name"),
+				"Attribute %q cannot have an empty value",
+				errs.PathString(ttlPath.GetAttr("attribute_name")),
+			))
+		}
+	} else {
+		if !(attribute.IsNull() || attribute.AsString() == "") {
+			*diags = append(*diags, errs.NewAttributeConflictsWhenError(
+				ttlPath.GetAttr("attribute_name"),
+				ttlPath.GetAttr(names.AttrEnabled),
+				"false",
+			))
+		}
+	}
 }

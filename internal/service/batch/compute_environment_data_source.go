@@ -16,7 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_batch_compute_environment")
+// @SDKDataSource("aws_batch_compute_environment", name="Compute Environment")
+// @Tags
 func DataSourceComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceComputeEnvironmentRead,
@@ -37,7 +38,7 @@ func DataSourceComputeEnvironment() *schema.Resource {
 				Computed: true,
 			},
 
-			"service_role": {
+			names.AttrServiceRole: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +55,7 @@ func DataSourceComputeEnvironment() *schema.Resource {
 				Computed: true,
 			},
 
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -86,7 +87,6 @@ func DataSourceComputeEnvironment() *schema.Resource {
 func dataSourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &batch.DescribeComputeEnvironmentsInput{
 		ComputeEnvironments: []*string{aws.String(d.Get("compute_environment_name").(string))},
@@ -108,19 +108,17 @@ func dataSourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceDat
 	d.Set(names.AttrARN, computeEnvironment.ComputeEnvironmentArn)
 	d.Set("compute_environment_name", computeEnvironment.ComputeEnvironmentName)
 	d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)
-	d.Set("service_role", computeEnvironment.ServiceRole)
+	d.Set(names.AttrServiceRole, computeEnvironment.ServiceRole)
 	d.Set(names.AttrType, computeEnvironment.Type)
 	d.Set(names.AttrStatus, computeEnvironment.Status)
-	d.Set("status_reason", computeEnvironment.StatusReason)
+	d.Set(names.AttrStatusReason, computeEnvironment.StatusReason)
 	d.Set(names.AttrState, computeEnvironment.State)
 
 	if err := d.Set("update_policy", flattenComputeEnvironmentUpdatePolicy(computeEnvironment.UpdatePolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting update_policy: %s", err)
 	}
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, computeEnvironment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, computeEnvironment.Tags)
 
 	return diags
 }

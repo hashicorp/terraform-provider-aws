@@ -51,7 +51,7 @@ func resourceSigningCertificate() *schema.Resource {
 				Default:          awstypes.StatusTypeActive,
 				ValidateDiagFunc: enum.Validate[awstypes.StatusType](),
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -66,7 +66,7 @@ func resourceSigningCertificateCreate(ctx context.Context, d *schema.ResourceDat
 
 	createOpts := &iam.UploadSigningCertificateInput{
 		CertificateBody: aws.String(d.Get("certificate_body").(string)),
-		UserName:        aws.String(d.Get("user_name").(string)),
+		UserName:        aws.String(d.Get(names.AttrUserName).(string)),
 	}
 
 	resp, err := conn.UploadSigningCertificate(ctx, createOpts)
@@ -81,7 +81,7 @@ func resourceSigningCertificateCreate(ctx context.Context, d *schema.ResourceDat
 	if v, ok := d.GetOk(names.AttrStatus); ok && v.(string) != string(awstypes.StatusTypeActive) {
 		updateInput := &iam.UpdateSigningCertificateInput{
 			CertificateId: certId,
-			UserName:      aws.String(d.Get("user_name").(string)),
+			UserName:      aws.String(d.Get(names.AttrUserName).(string)),
 			Status:        awstypes.StatusType(v.(string)),
 		}
 
@@ -121,7 +121,7 @@ func resourceSigningCertificateRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("certificate_body", resp.CertificateBody)
 	d.Set("certificate_id", resp.CertificateId)
-	d.Set("user_name", resp.UserName)
+	d.Set(names.AttrUserName, resp.UserName)
 	d.Set(names.AttrStatus, resp.Status)
 
 	return diags

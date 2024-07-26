@@ -72,11 +72,11 @@ func expandIdentityProviders(s *schema.Set) []awstypes.CognitoIdentityProvider {
 
 		ip := awstypes.CognitoIdentityProvider{}
 
-		if sv, ok := s["client_id"].(string); ok {
+		if sv, ok := s[names.AttrClientID].(string); ok {
 			ip.ClientId = aws.String(sv)
 		}
 
-		if sv, ok := s["provider_name"].(string); ok {
+		if sv, ok := s[names.AttrProviderName].(string); ok {
 			ip.ProviderName = aws.String(sv)
 		}
 
@@ -151,11 +151,11 @@ func flattenIdentityProviders(ips []awstypes.CognitoIdentityProvider) []map[stri
 		ip := make(map[string]interface{})
 
 		if v.ClientId != nil {
-			ip["client_id"] = aws.ToString(v.ClientId)
+			ip[names.AttrClientID] = aws.ToString(v.ClientId)
 		}
 
 		if v.ProviderName != nil {
-			ip["provider_name"] = aws.ToString(v.ProviderName)
+			ip[names.AttrProviderName] = aws.ToString(v.ProviderName)
 		}
 
 		if v.ServerSideTokenCheck != nil {

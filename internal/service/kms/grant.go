@@ -48,7 +48,7 @@ func resourceGrant() *schema.Resource {
 				}
 
 				d.SetId(grantCreateResourceID(keyID, grantID))
-				d.Set("key_id", keyID)
+				d.Set(names.AttrKeyID, keyID)
 				d.Set("grant_id", grantID)
 
 				return []*schema.ResourceData{d}, nil
@@ -91,8 +91,9 @@ func resourceGrant() *schema.Resource {
 				Computed: true,
 			},
 			"grant_token": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"grantee_principal": {
 				Type:     schema.TypeString,
@@ -103,7 +104,7 @@ func resourceGrant() *schema.Resource {
 					verify.ValidServicePrincipal,
 				),
 			},
-			"key_id": {
+			names.AttrKeyID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -146,7 +147,7 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	keyID := d.Get("key_id").(string)
+	keyID := d.Get(names.AttrKeyID).(string)
 	input := &kms.CreateGrantInput{
 		GranteePrincipal: aws.String(d.Get("grantee_principal").(string)),
 		KeyId:            aws.String(keyID),
@@ -176,7 +177,7 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	// Error Codes: https://docs.aws.amazon.com/sdk-for-go/api/service/kms/#KMS.CreateGrant
 	// Under some circumstances a newly created IAM Role doesn't show up and causes
 	// an InvalidArnException to be thrown.
-	outputRaw, err := tfresource.RetryWhenIsOneOf3[*awstypes.DependencyTimeoutException, *awstypes.KMSInternalException, *awstypes.InvalidArnException](ctx, kmsPropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsOneOf3[*awstypes.DependencyTimeoutException, *awstypes.KMSInternalException, *awstypes.InvalidArnException](ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.CreateGrant(ctx, input)
 	})
 
@@ -201,7 +202,7 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	grant, err := findGrantByTwoPartKeyWithRetry(ctx, conn, keyID, grantID, kmsPropagationTimeout)
+	grant, err := findGrantByTwoPartKeyWithRetry(ctx, conn, keyID, grantID, propagationTimeout)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] KMS Grant (%s) not found, removing from state", d.Id())
@@ -222,7 +223,7 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if grant.GranteePrincipal != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("grantee_principal", grant.GranteePrincipal)
 	}
-	d.Set("key_id", keyID)
+	d.Set(names.AttrKeyID, keyID)
 	if aws.ToString(grant.Name) != "" {
 		d.Set(names.AttrName, grant.Name)
 	}
@@ -265,7 +266,7 @@ func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "deleting KMS Grant (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, kmsPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return findGrantByTwoPartKey(ctx, conn, keyID, grantID)
 	})
 

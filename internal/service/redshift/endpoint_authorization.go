@@ -54,7 +54,7 @@ func resourceEndpointAuthorization() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"force_delete": {
+			names.AttrForceDelete: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -184,7 +184,7 @@ func resourceEndpointAuthorizationDelete(ctx context.Context, d *schema.Resource
 	input := &redshift.RevokeEndpointAccessInput{
 		Account:           aws.String(account),
 		ClusterIdentifier: aws.String(clusterId),
-		Force:             aws.Bool(d.Get("force_delete").(bool)),
+		Force:             aws.Bool(d.Get(names.AttrForceDelete).(bool)),
 	}
 
 	_, err = conn.RevokeEndpointAccessWithContext(ctx, input)

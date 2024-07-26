@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
@@ -36,6 +37,10 @@ func resourceAuthorizer() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAuthorizerImport,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -91,7 +96,7 @@ func resourceAuthorizer() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"issuer": {
+						names.AttrIssuer: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -258,9 +263,11 @@ func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Authorizer: %s", d.Id())
-	_, err := conn.DeleteAuthorizer(ctx, &apigatewayv2.DeleteAuthorizerInput{
-		ApiId:        aws.String(d.Get("api_id").(string)),
-		AuthorizerId: aws.String(d.Id()),
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteAuthorizer(ctx, &apigatewayv2.DeleteAuthorizerInput{
+			ApiId:        aws.String(d.Get("api_id").(string)),
+			AuthorizerId: aws.String(d.Id()),
+		})
 	})
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
@@ -327,7 +334,7 @@ func expandJWTConfiguration(vConfiguration []interface{}) *awstypes.JWTConfigura
 	if vAudience, ok := mConfiguration["audience"].(*schema.Set); ok && vAudience.Len() > 0 {
 		configuration.Audience = flex.ExpandStringValueSet(vAudience)
 	}
-	if vIssuer, ok := mConfiguration["issuer"].(string); ok && vIssuer != "" {
+	if vIssuer, ok := mConfiguration[names.AttrIssuer].(string); ok && vIssuer != "" {
 		configuration.Issuer = aws.String(vIssuer)
 	}
 
@@ -340,7 +347,7 @@ func flattenJWTConfiguration(configuration *awstypes.JWTConfiguration) []interfa
 	}
 
 	return []interface{}{map[string]interface{}{
-		"audience": flex.FlattenStringValueSet(configuration.Audience),
-		"issuer":   aws.ToString(configuration.Issuer),
+		"audience":       flex.FlattenStringValueSet(configuration.Audience),
+		names.AttrIssuer: aws.ToString(configuration.Issuer),
 	}}
 }

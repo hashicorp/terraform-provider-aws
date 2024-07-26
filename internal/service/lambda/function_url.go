@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lambda_function_url", name="Function URL")
@@ -86,7 +87,7 @@ func resourceFunctionURL() *schema.Resource {
 					},
 				},
 			},
-			"function_arn": {
+			names.AttrFunctionARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -206,7 +207,7 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("cors", nil)
 	}
-	d.Set("function_arn", output.FunctionArn)
+	d.Set(names.AttrFunctionARN, output.FunctionArn)
 	d.Set("function_name", name)
 	d.Set("function_url", functionURL)
 	d.Set("invoke_mode", output.InvokeMode)

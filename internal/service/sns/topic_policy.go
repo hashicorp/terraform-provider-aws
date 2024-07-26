@@ -41,7 +41,7 @@ func resourceTopicPolicy() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,28 +61,30 @@ func resourceTopicPolicy() *schema.Resource {
 }
 
 func resourceTopicPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
-		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get(names.AttrPolicy).(string), err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get(names.AttrPolicy).(string), err)
 	}
 
 	arn := d.Get(names.AttrARN).(string)
 	err = putTopicPolicy(ctx, conn, arn, policy)
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if d.IsNewResource() {
 		d.SetId(arn)
 	}
 
-	return resourceTopicPolicyRead(ctx, d, meta)
+	return append(diags, resourceTopicPolicyRead(ctx, d, meta)...)
 }
 
 func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	attributes, err := findTopicAttributesWithValidAWSPrincipalsByARN(ctx, conn, d.Id())
@@ -100,24 +102,24 @@ func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SNS Topic Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading SNS Topic Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SNS Topic Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, attributes[topicAttributeNameTopicARN])
-	d.Set("owner", attributes[topicAttributeNameOwner])
+	d.Set(names.AttrOwner, attributes[topicAttributeNameOwner])
 
 	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set(names.AttrPolicy, policyToSet)
 
-	return nil
+	return diags
 }
 
 func resourceTopicPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -127,7 +129,7 @@ func resourceTopicPolicyDelete(ctx context.Context, d *schema.ResourceData, meta
 	// It is impossible to delete a policy or set to empty
 	// (confirmed by AWS Support representative)
 	// so we instead set it back to the default one.
-	err := putTopicPolicy(ctx, conn, d.Id(), defaultTopicPolicy(d.Id(), d.Get("owner").(string)))
+	err := putTopicPolicy(ctx, conn, d.Id(), defaultTopicPolicy(d.Id(), d.Get(names.AttrOwner).(string)))
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

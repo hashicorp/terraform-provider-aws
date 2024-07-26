@@ -32,6 +32,8 @@ import (
 
 // @SDKResource("aws_kms_key", name="Key")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kms/types;awstypes;awstypes.KeyMetadata")
+// @Testing(importIgnore="deletion_window_in_days;bypass_policy_lockout_safety_check")
 func resourceKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyCreate,
@@ -93,7 +95,7 @@ func resourceKey() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"key_id": {
+			names.AttrKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -252,7 +254,7 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set(names.AttrDescription, key.metadata.Description)
 	d.Set("enable_key_rotation", key.rotation)
 	d.Set("is_enabled", key.metadata.Enabled)
-	d.Set("key_id", key.metadata.KeyId)
+	d.Set(names.AttrKeyID, key.metadata.KeyId)
 	d.Set("key_usage", key.metadata.KeyUsage)
 	d.Set("multi_region", key.metadata.MultiRegion)
 	d.Set("rotation_period_in_days", key.rotationPeriodInDays)
@@ -363,7 +365,7 @@ type kmsKeyInfo struct {
 
 func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResource bool) (*kmsKeyInfo, error) {
 	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, kmsPropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		var err error
 		var key kmsKeyInfo
 
@@ -563,7 +565,7 @@ func updateKeyEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, k
 		return nil, err
 	}
 
-	if _, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, kmsPropagationTimeout, updateFunc); err != nil {
+	if _, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, updateFunc); err != nil {
 		return fmt.Errorf("%s %s (%s): %w", action, resourceTypeName, keyID, err)
 	}
 
@@ -596,7 +598,7 @@ func updateKeyPolicy(ctx context.Context, conn *kms.Client, resourceTypeName, ke
 		return nil, err
 	}
 
-	if _, err := tfresource.RetryWhenIsOneOf2[*awstypes.NotFoundException, *awstypes.MalformedPolicyDocumentException](ctx, kmsPropagationTimeout, updateFunc); err != nil {
+	if _, err := tfresource.RetryWhenIsOneOf2[*awstypes.NotFoundException, *awstypes.MalformedPolicyDocumentException](ctx, propagationTimeout, updateFunc); err != nil {
 		return fmt.Errorf("updating %s (%s) policy: %w", resourceTypeName, keyID, err)
 	}
 

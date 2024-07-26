@@ -46,7 +46,7 @@ func dataSourceIPSet() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"scope": {
+				names.AttrScope: {
 					Type:             schema.TypeString,
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.Scope](),
@@ -63,7 +63,7 @@ func dataSourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	var foundIpSet awstypes.IPSetSummary
 	input := &wafv2.ListIPSetsInput{
-		Scope: awstypes.Scope(d.Get("scope").(string)),
+		Scope: awstypes.Scope(d.Get(names.AttrScope).(string)),
 		Limit: aws.Int32(100),
 	}
 
@@ -97,7 +97,7 @@ func dataSourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	resp, err := conn.GetIPSet(ctx, &wafv2.GetIPSetInput{
 		Id:    foundIpSet.Id,
 		Name:  foundIpSet.Name,
-		Scope: awstypes.Scope(d.Get("scope").(string)),
+		Scope: awstypes.Scope(d.Get(names.AttrScope).(string)),
 	})
 
 	if err != nil {

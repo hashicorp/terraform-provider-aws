@@ -83,6 +83,7 @@ Custom Log Source Resource support the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Data Lake.
+* `id` - The Subscriber ID of the subscriber.
 * `s3_bucket_arn` - The ARN for the Amazon Security Lake Amazon S3 bucket.
 * `resource_share_arn` - The Amazon Resource Name (ARN) which uniquely defines the AWS RAM resource share. Before accepting the RAM resource share invitation, you can view details related to the RAM resource share.
 * `role_arn` - The Amazon Resource Name (ARN) specifying the role of the subscriber.
@@ -131,4 +132,4 @@ Using `terraform import`, import Security Lake subscriber using the subscriber I
 % terraform import aws_securitylake_subscriber.example 9f3bfe79-d543-474d-a93c-f3846805d208
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5813978e35963aea6fb3b8ec154f74263bc770a1e3f555c9cbc4b62ceabd04ac -->
+<!-- cache-key: cdktf-0.20.1 input-adae7fb43bec9bf95f06899477ef90c1e3a86066153b0c369bea3746f16d0e49 -->

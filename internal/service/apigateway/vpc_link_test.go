@@ -37,7 +37,7 @@ func TestAccAPIGatewayVPCLink_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/vpclinks/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
-					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_arns.#", acctest.Ct1),
 				),
 			},
 			{
@@ -52,52 +52,7 @@ func TestAccAPIGatewayVPCLink_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/vpclinks/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test update"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAPIGatewayVPCLink_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_vpc_link.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCLinkDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCLinkConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccVPCLinkConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccVPCLinkConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "target_arns.#", acctest.Ct1),
 				),
 			},
 		},
@@ -187,31 +142,4 @@ resource "aws_api_gateway_vpc_link" "test" {
   target_arns = [aws_lb.test.arn]
 }
 `, rName, description))
-}
-
-func testAccVPCLinkConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccVPCLinkConfig_base(rName), fmt.Sprintf(`
-resource "aws_api_gateway_vpc_link" "test" {
-  name        = %[1]q
-  target_arns = [aws_lb.test.arn]
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccVPCLinkConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccVPCLinkConfig_base(rName), fmt.Sprintf(`
-resource "aws_api_gateway_vpc_link" "test" {
-  name        = %[1]q
-  target_arns = [aws_lb.test.arn]
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

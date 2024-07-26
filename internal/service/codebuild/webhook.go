@@ -48,7 +48,7 @@ func resourceWebhook() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -83,12 +83,34 @@ func resourceWebhook() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"scope_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrName: {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						names.AttrDomain: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						names.AttrScope: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.WebhookScopeType](),
+						},
+					},
+				},
+			},
 			"secret": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -115,6 +137,10 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("filter_group"); ok && v.(*schema.Set).Len() > 0 {
 		input.FilterGroups = expandWebhookFilterGroups(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("scope_configuration"); ok && len(v.([]interface{})) > 0 {
+		input.ScopeConfiguration = expandScopeConfiguration(v.([]interface{}))
 	}
 
 	output, err := conn.CreateWebhook(ctx, input)
@@ -148,11 +174,16 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("build_type", webhook.BuildType)
 	d.Set("branch_filter", webhook.BranchFilter)
-	d.Set("filter_group", flattenWebhookFilterGroups(webhook.FilterGroups))
+	if err := d.Set("filter_group", flattenWebhookFilterGroups(webhook.FilterGroups)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting filter_group: %s", err)
+	}
 	d.Set("payload_url", webhook.PayloadUrl)
 	d.Set("project_name", d.Id())
+	if err := d.Set("scope_configuration", flattenScopeConfiguration(webhook.ScopeConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting scope_configuration: %s", err)
+	}
 	d.Set("secret", d.Get("secret").(string))
-	d.Set("url", webhook.Url)
+	d.Set(names.AttrURL, webhook.Url)
 
 	return diags
 }
@@ -235,7 +266,7 @@ func expandWebhookFilterGroups(tfList []interface{}) [][]types.WebhookFilter {
 			continue
 		}
 
-		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 			apiObjects = append(apiObjects, expandWebhookFilters(v))
 		}
 	}
@@ -290,6 +321,25 @@ func expandWebhookFilter(tfMap map[string]interface{}) *types.WebhookFilter {
 	return apiObject
 }
 
+func expandScopeConfiguration(tfList []interface{}) *types.ScopeConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	apiObject := &types.ScopeConfiguration{
+		Name:  aws.String(tfMap[names.AttrName].(string)),
+		Scope: types.WebhookScopeType(tfMap[names.AttrScope].(string)),
+	}
+
+	if v, ok := tfMap[names.AttrDomain].(string); ok && v != "" {
+		apiObject.Domain = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func flattenWebhookFilterGroups(apiObjects [][]types.WebhookFilter) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
@@ -299,7 +349,7 @@ func flattenWebhookFilterGroups(apiObjects [][]types.WebhookFilter) []interface{
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
-			"filter": flattenWebhookFilters(apiObject),
+			names.AttrFilter: flattenWebhookFilters(apiObject),
 		}
 		tfList = append(tfList, tfMap)
 	}
@@ -335,4 +385,21 @@ func flattenWebhookFilter(apiObject types.WebhookFilter) map[string]interface{} 
 	}
 
 	return tfMap
+}
+
+func flattenScopeConfiguration(apiObject *types.ScopeConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		names.AttrName:  apiObject.Name,
+		names.AttrScope: apiObject.Scope,
+	}
+
+	if apiObject.Domain != nil {
+		tfMap[names.AttrDomain] = apiObject.Domain
+	}
+
+	return []interface{}{tfMap}
 }

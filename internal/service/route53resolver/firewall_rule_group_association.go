@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -58,7 +59,7 @@ func ResourceFirewallRuleGroupAssociation() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validResolverName,
 			},
-			"priority": {
+			names.AttrPriority: {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
@@ -76,6 +77,7 @@ func ResourceFirewallRuleGroupAssociation() *schema.Resource {
 }
 
 func resourceFirewallRuleGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -83,7 +85,7 @@ func resourceFirewallRuleGroupAssociationCreate(ctx context.Context, d *schema.R
 		CreatorRequestId:    aws.String(id.PrefixedUniqueId("tf-r53-rslvr-frgassoc-")),
 		FirewallRuleGroupId: aws.String(d.Get("firewall_rule_group_id").(string)),
 		Name:                aws.String(name),
-		Priority:            aws.Int64(int64(d.Get("priority").(int))),
+		Priority:            aws.Int64(int64(d.Get(names.AttrPriority).(int))),
 		Tags:                getTagsIn(ctx),
 		VpcId:               aws.String(d.Get(names.AttrVPCID).(string)),
 	}
@@ -95,19 +97,20 @@ func resourceFirewallRuleGroupAssociationCreate(ctx context.Context, d *schema.R
 	output, err := conn.AssociateFirewallRuleGroupWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Route53 Resolver Firewall Rule Group Association (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Resolver Firewall Rule Group Association (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.FirewallRuleGroupAssociation.Id))
 
 	if _, err := waitFirewallRuleGroupAssociationCreated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Route53 Resolver Firewall Rule Group Association (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Firewall Rule Group Association (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceFirewallRuleGroupAssociationRead(ctx, d, meta)
+	return append(diags, resourceFirewallRuleGroupAssociationRead(ctx, d, meta)...)
 }
 
 func resourceFirewallRuleGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	ruleGroupAssociation, err := FindFirewallRuleGroupAssociationByID(ctx, conn, d.Id())
@@ -115,11 +118,11 @@ func resourceFirewallRuleGroupAssociationRead(ctx context.Context, d *schema.Res
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Firewall Rule Group Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Firewall Rule Group Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Firewall Rule Group Association (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(ruleGroupAssociation.Arn)
@@ -127,20 +130,21 @@ func resourceFirewallRuleGroupAssociationRead(ctx context.Context, d *schema.Res
 	d.Set(names.AttrName, ruleGroupAssociation.Name)
 	d.Set("firewall_rule_group_id", ruleGroupAssociation.FirewallRuleGroupId)
 	d.Set("mutation_protection", ruleGroupAssociation.MutationProtection)
-	d.Set("priority", ruleGroupAssociation.Priority)
+	d.Set(names.AttrPriority, ruleGroupAssociation.Priority)
 	d.Set(names.AttrVPCID, ruleGroupAssociation.VpcId)
 
-	return nil
+	return diags
 }
 
 func resourceFirewallRuleGroupAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
-	if d.HasChanges(names.AttrName, "mutation_protection", "priority") {
+	if d.HasChanges(names.AttrName, "mutation_protection", names.AttrPriority) {
 		input := &route53resolver.UpdateFirewallRuleGroupAssociationInput{
 			FirewallRuleGroupAssociationId: aws.String(d.Id()),
 			Name:                           aws.String(d.Get(names.AttrName).(string)),
-			Priority:                       aws.Int64(int64(d.Get("priority").(int))),
+			Priority:                       aws.Int64(int64(d.Get(names.AttrPriority).(int))),
 		}
 
 		if v, ok := d.GetOk("mutation_protection"); ok {
@@ -150,18 +154,19 @@ func resourceFirewallRuleGroupAssociationUpdate(ctx context.Context, d *schema.R
 		_, err := conn.UpdateFirewallRuleGroupAssociationWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Route53 Resolver Firewall Rule Group Association (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Route53 Resolver Firewall Rule Group Association (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitFirewallRuleGroupAssociationUpdated(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("waiting for Route53 Resolver Firewall Rule Group Association (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Firewall Rule Group Association (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceFirewallRuleGroupAssociationRead(ctx, d, meta)
+	return append(diags, resourceFirewallRuleGroupAssociationRead(ctx, d, meta)...)
 }
 
 func resourceFirewallRuleGroupAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Rule Group Association: %s", d.Id())
@@ -170,18 +175,18 @@ func resourceFirewallRuleGroupAssociationDelete(ctx context.Context, d *schema.R
 	})
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Route53 Resolver Firewall Rule Group Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 Resolver Firewall Rule Group Association (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitFirewallRuleGroupAssociationDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Route53 Resolver Firewall Rule Group Association (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Firewall Rule Group Association (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindFirewallRuleGroupAssociationByID(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.FirewallRuleGroupAssociation, error) {

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -44,7 +45,7 @@ func ResourceDataSet() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"aws_account_id": {
+				names.AttrAWSAccountID: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
@@ -198,21 +199,21 @@ func ResourceDataSet() *schema.Resource {
 						},
 					},
 				},
-				"permissions": {
+				names.AttrPermissions: {
 					Type:     schema.TypeSet,
 					Optional: true,
 					MinItems: 1,
 					MaxItems: 64,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"actions": {
+							names.AttrActions: {
 								Type:     schema.TypeSet,
 								Required: true,
 								MinItems: 1,
 								MaxItems: 20,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"principal": {
+							names.AttrPrincipal: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 256),
@@ -242,7 +243,7 @@ func ResourceDataSet() *schema.Resource {
 								Optional:     true,
 								ValidateFunc: validation.StringInSlice(quicksight.RowLevelPermissionFormatVersion_Values(), false),
 							},
-							"namespace": {
+							names.AttrNamespace: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(0, 64),
@@ -332,7 +333,7 @@ func ResourceDataSet() *schema.Resource {
 																	Type:     schema.TypeString,
 																	Required: true,
 																},
-																"size": {
+																names.AttrSize: {
 																	Type:     schema.TypeInt,
 																	Required: true,
 																},
@@ -374,7 +375,7 @@ func ResourceDataSet() *schema.Resource {
 func logicalTableMapSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"alias": {
+			names.AttrAlias: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
@@ -399,7 +400,7 @@ func logicalTableMapSchema() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									"format": {
+									names.AttrFormat: {
 										Type:         schema.TypeString,
 										Computed:     true,
 										Optional:     true,
@@ -437,7 +438,7 @@ func logicalTableMapSchema() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 128),
 												},
-												"expression": {
+												names.AttrExpression: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 4096),
@@ -577,7 +578,7 @@ func logicalTableMapSchema() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -753,7 +754,7 @@ func physicalTableMapSchema() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 64),
 						},
-						"schema": {
+						names.AttrSchema: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -809,7 +810,7 @@ func physicalTableMapSchema() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 1),
 									},
-									"format": {
+									names.AttrFormat: {
 										Type:         schema.TypeString,
 										Computed:     true,
 										Optional:     true,
@@ -838,10 +839,11 @@ func physicalTableMapSchema() *schema.Resource {
 }
 
 func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("aws_account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountId = v.(string)
 	}
 	dataSetID := d.Get("data_set_id").(string)
@@ -877,7 +879,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.LogicalTableMap = expandDataSetLogicalTableMap(v.(*schema.Set))
 	}
 
-	if v, ok := d.Get("permissions").(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := d.Get(names.AttrPermissions).(*schema.Set); ok && v.Len() > 0 {
 		input.Permissions = expandResourcePermissions(v.List())
 	}
 
@@ -891,7 +893,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	_, err := conn.CreateDataSetWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("creating QuickSight Data Set: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating QuickSight Data Set: %s", err)
 	}
 
 	if v, ok := d.GetOk("refresh_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -903,19 +905,20 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		_, err := conn.PutDataSetRefreshPropertiesWithContext(ctx, input)
 		if err != nil {
-			return diag.Errorf("putting QuickSight Data Set Refresh Properties: %s", err)
+			return sdkdiag.AppendErrorf(diags, "putting QuickSight Data Set Refresh Properties: %s", err)
 		}
 	}
 
-	return resourceDataSetRead(ctx, d, meta)
+	return append(diags, resourceDataSetRead(ctx, d, meta)...)
 }
 
 func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	descOpts := &quicksight.DescribeDataSetInput{
@@ -928,59 +931,59 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] QuickSight Data Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("describing QuickSight Data Set (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing QuickSight Data Set (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.DataSet == nil {
-		return diag.Errorf("describing QuickSight Data Set (%s): empty output", d.Id())
+		return sdkdiag.AppendErrorf(diags, "describing QuickSight Data Set (%s): empty output", d.Id())
 	}
 
 	dataSet := output.DataSet
 
 	d.Set(names.AttrARN, dataSet.Arn)
-	d.Set("aws_account_id", awsAccountId)
+	d.Set(names.AttrAWSAccountID, awsAccountId)
 	d.Set("data_set_id", dataSet.DataSetId)
 	d.Set(names.AttrName, dataSet.Name)
 	d.Set("import_mode", dataSet.ImportMode)
 
 	if err := d.Set("column_groups", flattenColumnGroups(dataSet.ColumnGroups)); err != nil {
-		return diag.Errorf("setting column_groups: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting column_groups: %s", err)
 	}
 
 	if err := d.Set("column_level_permission_rules", flattenColumnLevelPermissionRules(dataSet.ColumnLevelPermissionRules)); err != nil {
-		return diag.Errorf("setting column_level_permission_rules: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting column_level_permission_rules: %s", err)
 	}
 
 	if err := d.Set("data_set_usage_configuration", flattenDataSetUsageConfiguration(dataSet.DataSetUsageConfiguration)); err != nil {
-		return diag.Errorf("setting data_set_usage_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting data_set_usage_configuration: %s", err)
 	}
 
 	if err := d.Set("field_folders", flattenFieldFolders(dataSet.FieldFolders)); err != nil {
-		return diag.Errorf("setting field_folders: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting field_folders: %s", err)
 	}
 
 	if err := d.Set("logical_table_map", flattenLogicalTableMap(dataSet.LogicalTableMap, logicalTableMapSchema())); err != nil {
-		return diag.Errorf("setting logical_table_map: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting logical_table_map: %s", err)
 	}
 
 	if err := d.Set("output_columns", flattenOutputColumns(dataSet.OutputColumns)); err != nil {
-		return diag.Errorf("setting output_columns: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting output_columns: %s", err)
 	}
 
 	if err := d.Set("physical_table_map", flattenPhysicalTableMap(dataSet.PhysicalTableMap, physicalTableMapSchema())); err != nil {
-		return diag.Errorf("setting physical_table_map: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting physical_table_map: %s", err)
 	}
 
 	if err := d.Set("row_level_permission_data_set", flattenRowLevelPermissionDataSet(dataSet.RowLevelPermissionDataSet)); err != nil {
-		return diag.Errorf("setting row_level_permission_data_set: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting row_level_permission_data_set: %s", err)
 	}
 
 	if err := d.Set("row_level_permission_tag_configuration", flattenRowLevelPermissionTagConfiguration(dataSet.RowLevelPermissionTagConfiguration)); err != nil {
-		return diag.Errorf("setting row_level_permission_tag_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting row_level_permission_tag_configuration: %s", err)
 	}
 
 	permsResp, err := conn.DescribeDataSetPermissionsWithContext(ctx, &quicksight.DescribeDataSetPermissionsInput{
@@ -989,11 +992,11 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return diag.Errorf("describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
-		return diag.Errorf("setting permissions: %s", err)
+	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting permissions: %s", err)
 	}
 
 	propsResp, err := conn.DescribeDataSetRefreshPropertiesWithContext(ctx, &quicksight.DescribeDataSetRefreshPropertiesInput{
@@ -1002,25 +1005,26 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil && !(tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, quicksight.ErrCodeInvalidParameterValueException, "not a SPICE dataset")) {
-		return diag.Errorf("describing refresh properties (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing refresh properties (%s): %s", d.Id(), err)
 	}
 
 	if err == nil {
 		if err := d.Set("refresh_properties", flattenRefreshProperties(propsResp.DataSetRefreshProperties)); err != nil {
-			return diag.Errorf("setting refresh properties: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting refresh properties: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
-	if d.HasChangesExcept("permissions", names.AttrTags, names.AttrTagsAll, "refresh_properties") {
+	if d.HasChangesExcept(names.AttrPermissions, names.AttrTags, names.AttrTagsAll, "refresh_properties") {
 		awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		params := &quicksight.UpdateDataSetInput{
@@ -1047,17 +1051,17 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		_, err = conn.UpdateDataSetWithContext(ctx, params)
 		if err != nil {
-			return diag.Errorf("updating QuickSight Data Set (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating QuickSight Data Set (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("permissions") {
+	if d.HasChange(names.AttrPermissions) {
 		awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		oraw, nraw := d.GetChange("permissions")
+		oraw, nraw := d.GetChange(names.AttrPermissions)
 		o := oraw.(*schema.Set)
 		n := nraw.(*schema.Set)
 
@@ -1079,14 +1083,14 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		_, err = conn.UpdateDataSetPermissionsWithContext(ctx, params)
 
 		if err != nil {
-			return diag.Errorf("updating QuickSight Data Set (%s) permissions: %s", dataSetId, err)
+			return sdkdiag.AppendErrorf(diags, "updating QuickSight Data Set (%s) permissions: %s", dataSetId, err)
 		}
 	}
 
 	if d.HasChange("refresh_properties") {
 		awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		oldraw, newraw := d.GetChange("refresh_properties")
@@ -1098,7 +1102,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				DataSetId:    aws.String(dataSetId),
 			})
 			if err != nil {
-				return diag.Errorf("deleting QuickSight Data Set Refresh Properties (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "deleting QuickSight Data Set Refresh Properties (%s): %s", d.Id(), err)
 			}
 		} else {
 			_, err = conn.PutDataSetRefreshPropertiesWithContext(ctx, &quicksight.PutDataSetRefreshPropertiesInput{
@@ -1107,21 +1111,22 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				DataSetRefreshProperties: expandDataSetRefreshProperties(d.Get("refresh_properties").([]interface{})),
 			})
 			if err != nil {
-				return diag.Errorf("updating QuickSight Data Set Refresh Properties (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "updating QuickSight Data Set Refresh Properties (%s): %s", d.Id(), err)
 			}
 		}
 	}
 
-	return resourceDataSetRead(ctx, d, meta)
+	return append(diags, resourceDataSetRead(ctx, d, meta)...)
 }
 
 func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	log.Printf("[INFO] Deleting QuickSight Data Set %s", d.Id())
 	awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	deleteOpts := &quicksight.DeleteDataSetInput{
@@ -1132,14 +1137,14 @@ func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta int
 	_, err = conn.DeleteDataSetWithContext(ctx, deleteOpts)
 
 	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting QuickSight Data Set (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting QuickSight Data Set (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandDataSetColumnGroups(tfList []interface{}) []*quicksight.ColumnGroup {
@@ -1291,10 +1296,10 @@ func expandDataSetLogicalTableMap(tfSet *schema.Set) map[string]*quicksight.Logi
 		logicalTable := &quicksight.LogicalTable{}
 		logicalTableMapID := vMap["logical_table_map_id"].(string)
 
-		if v, ok := vMap["alias"].(string); ok {
+		if v, ok := vMap[names.AttrAlias].(string); ok {
 			logicalTable.Alias = aws.String(v)
 		}
-		if v, ok := vMap["source"].([]interface{}); ok {
+		if v, ok := vMap[names.AttrSource].([]interface{}); ok {
 			logicalTable.Source = expandDataSetLogicalTableSource(v[0].(map[string]interface{}))
 		}
 		if v, ok := vMap["data_transforms"].([]interface{}); ok {
@@ -1437,7 +1442,7 @@ func expandDataSetCastColumnTypeOperation(tfList []interface{}) *quicksight.Cast
 	if v, ok := tfMap["new_column_type"].(string); ok {
 		castColumnTypeOperation.NewColumnType = aws.String(v)
 	}
-	if v, ok := tfMap["format"].(string); ok {
+	if v, ok := tfMap[names.AttrFormat].(string); ok {
 		castColumnTypeOperation.Format = aws.String(v)
 	}
 
@@ -1496,7 +1501,7 @@ func expandDataSetCalculatedColumn(tfMap map[string]interface{}) *quicksight.Cal
 	if v, ok := tfMap["column_name"].(string); ok {
 		calculatedColumn.ColumnName = aws.String(v)
 	}
-	if v, ok := tfMap["expression"].(string); ok {
+	if v, ok := tfMap[names.AttrExpression].(string); ok {
 		calculatedColumn.Expression = aws.String(v)
 	}
 
@@ -1760,7 +1765,7 @@ func expandDataSetRelationalTable(tfMap map[string]interface{}) *quicksight.Rela
 	if v, ok := tfMap[names.AttrName].(string); ok {
 		relationalTable.Name = aws.String(v)
 	}
-	if v, ok := tfMap["schema"].(string); ok {
+	if v, ok := tfMap[names.AttrSchema].(string); ok {
 		relationalTable.Schema = aws.String(v)
 	}
 
@@ -1798,7 +1803,7 @@ func expandDataSetUploadSettings(tfMap map[string]interface{}) *quicksight.Uploa
 	if v, ok := tfMap["delimiter"].(string); ok {
 		uploadSettings.Delimiter = aws.String(v)
 	}
-	if v, ok := tfMap["format"].(string); ok {
+	if v, ok := tfMap[names.AttrFormat].(string); ok {
 		uploadSettings.Format = aws.String(v)
 	}
 	if v, ok := tfMap["start_from_row"].(int); ok {
@@ -1830,7 +1835,7 @@ func expandDataSetRowLevelPermissionDataSet(tfList []interface{}) *quicksight.Ro
 	if v, ok := tfMap["format_version"].(string); ok {
 		rowLevelPermission.FormatVersion = aws.String(v)
 	}
-	if v, ok := tfMap["namespace"].(string); ok {
+	if v, ok := tfMap[names.AttrNamespace].(string); ok {
 		rowLevelPermission.Namespace = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrStatus].(string); ok {
@@ -1921,7 +1926,7 @@ func expandLookbackWindow(tfList []interface{}) *quicksight.LookbackWindow {
 	if v, ok := tfMap["column_name"].(string); ok {
 		window.ColumnName = aws.String(v)
 	}
-	if v, ok := tfMap["size"].(int); ok {
+	if v, ok := tfMap[names.AttrSize].(int); ok {
 		window.Size = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["size_unit"].(string); ok {
@@ -2142,13 +2147,13 @@ func flattenLogicalTableMap(apiObject map[string]*quicksight.LogicalTable, resou
 			"logical_table_map_id": key,
 		}
 		if table.Alias != nil {
-			tfMap["alias"] = aws.StringValue(table.Alias)
+			tfMap[names.AttrAlias] = aws.StringValue(table.Alias)
 		}
 		if table.DataTransforms != nil {
 			tfMap["data_transforms"] = flattenDataTransforms(table.DataTransforms)
 		}
 		if table.Source != nil {
-			tfMap["source"] = flattenLogicalTableSource(table.Source)
+			tfMap[names.AttrSource] = flattenLogicalTableSource(table.Source)
 		}
 		tfList = append(tfList, tfMap)
 	}
@@ -2205,7 +2210,7 @@ func flattenCastColumnTypeOperation(apiObject *quicksight.CastColumnTypeOperatio
 		tfMap["column_name"] = aws.StringValue(apiObject.ColumnName)
 	}
 	if apiObject.Format != nil {
-		tfMap["format"] = aws.StringValue(apiObject.Format)
+		tfMap[names.AttrFormat] = aws.StringValue(apiObject.Format)
 	}
 	if apiObject.NewColumnType != nil {
 		tfMap["new_column_type"] = aws.StringValue(apiObject.NewColumnType)
@@ -2246,7 +2251,7 @@ func flattenCalculatedColumns(apiObject []*quicksight.CalculatedColumn) interfac
 			tfMap["column_name"] = aws.StringValue(column.ColumnName)
 		}
 		if column.Expression != nil {
-			tfMap["expression"] = aws.StringValue(column.Expression)
+			tfMap[names.AttrExpression] = aws.StringValue(column.Expression)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -2517,7 +2522,7 @@ func flattenRelationalTable(apiObject *quicksight.RelationalTable) []interface{}
 		tfMap[names.AttrName] = aws.StringValue(apiObject.Name)
 	}
 	if apiObject.Schema != nil {
-		tfMap["schema"] = aws.StringValue(apiObject.Schema)
+		tfMap[names.AttrSchema] = aws.StringValue(apiObject.Schema)
 	}
 
 	return []interface{}{tfMap}
@@ -2556,7 +2561,7 @@ func flattenUploadSettings(apiObject *quicksight.UploadSettings) []interface{} {
 		tfMap["delimiter"] = aws.StringValue(apiObject.Delimiter)
 	}
 	if apiObject.Format != nil {
-		tfMap["format"] = aws.StringValue(apiObject.Format)
+		tfMap[names.AttrFormat] = aws.StringValue(apiObject.Format)
 	}
 	if apiObject.StartFromRow != nil {
 		tfMap["start_from_row"] = int(aws.Int64Value(apiObject.StartFromRow))
@@ -2581,7 +2586,7 @@ func flattenRowLevelPermissionDataSet(apiObject *quicksight.RowLevelPermissionDa
 		tfMap["format_version"] = aws.StringValue(apiObject.FormatVersion)
 	}
 	if apiObject.Namespace != nil {
-		tfMap["namespace"] = aws.StringValue(apiObject.Namespace)
+		tfMap[names.AttrNamespace] = aws.StringValue(apiObject.Namespace)
 	}
 	if apiObject.PermissionPolicy != nil {
 		tfMap["permission_policy"] = aws.StringValue(apiObject.PermissionPolicy)
@@ -2658,7 +2663,7 @@ func flattenLookbackWindow(apiObject *quicksight.LookbackWindow) interface{} {
 		tfMap["column_name"] = aws.StringValue(apiObject.ColumnName)
 	}
 	if apiObject.Size != nil {
-		tfMap["size"] = aws.Int64Value(apiObject.Size)
+		tfMap[names.AttrSize] = aws.Int64Value(apiObject.Size)
 	}
 	if apiObject.SizeUnit != nil {
 		tfMap["size_unit"] = aws.StringValue(apiObject.SizeUnit)

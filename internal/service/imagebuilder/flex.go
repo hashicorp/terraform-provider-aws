@@ -64,7 +64,7 @@ func flattenWorkflowConfiguration(apiObject *imagebuilder.WorkflowConfiguration)
 	}
 
 	if v := apiObject.Parameters; v != nil {
-		tfMap["parameter"] = flattenWorkflowParameters(v)
+		tfMap[names.AttrParameter] = flattenWorkflowParameters(v)
 	}
 
 	if v := apiObject.WorkflowArn; v != nil {
@@ -153,7 +153,7 @@ func expandWorkflowConfiguration(tfMap map[string]interface{}) *imagebuilder.Wor
 		apiObject.ParallelGroup = aws.String(v)
 	}
 
-	if v, ok := tfMap["parameter"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrParameter].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Parameters = expandWorkflowParameters(v.List())
 	}
 

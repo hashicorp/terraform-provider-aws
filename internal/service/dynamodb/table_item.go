@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dynamodb_table_item", name="Table Item")
@@ -50,7 +51,7 @@ func resourceTableItem() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
-			"table_name": {
+			names.AttrTableName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -76,7 +77,7 @@ func resourceTableItemCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	tableName := d.Get("table_name").(string)
+	tableName := d.Get(names.AttrTableName).(string)
 	hashKey := d.Get("hash_key").(string)
 	input := &dynamodb.PutItemInput{
 		// Explode if item exists. We didn't create it.
@@ -101,7 +102,7 @@ func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
-	tableName := d.Get("table_name").(string)
+	tableName := d.Get(names.AttrTableName).(string)
 	hashKey := d.Get("hash_key").(string)
 	rangeKey := d.Get("range_key").(string)
 	attributes, err := expandTableItemAttributes(d.Get("item").(string))
@@ -139,7 +140,7 @@ func resourceTableItemUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
 	if d.HasChange("item") {
-		tableName := d.Get("table_name").(string)
+		tableName := d.Get(names.AttrTableName).(string)
 		hashKey := d.Get("hash_key").(string)
 		rangeKey := d.Get("range_key").(string)
 
@@ -228,7 +229,7 @@ func resourceTableItemDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 	_, err = conn.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		Key:       queryKey,
-		TableName: aws.String(d.Get("table_name").(string)),
+		TableName: aws.String(d.Get(names.AttrTableName).(string)),
 	})
 
 	if err != nil {

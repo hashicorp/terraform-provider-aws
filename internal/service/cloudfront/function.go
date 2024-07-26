@@ -44,7 +44,7 @@ func resourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -95,7 +95,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &cloudfront.CreateFunctionInput{
 		FunctionCode: []byte(d.Get("code").(string)),
 		FunctionConfig: &awstypes.FunctionConfig{
-			Comment: aws.String(d.Get("comment").(string)),
+			Comment: aws.String(d.Get(names.AttrComment).(string)),
 			Runtime: awstypes.FunctionRuntime(d.Get("runtime").(string)),
 		},
 		Name: aws.String(functionName),
@@ -146,7 +146,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set(names.AttrARN, outputDF.FunctionSummary.FunctionMetadata.FunctionARN)
-	d.Set("comment", outputDF.FunctionSummary.FunctionConfig.Comment)
+	d.Set(names.AttrComment, outputDF.FunctionSummary.FunctionConfig.Comment)
 	d.Set("etag", outputDF.ETag)
 	if err := d.Set("key_value_store_associations", flattenKeyValueStoreAssociations(outputDF.FunctionSummary.FunctionConfig.KeyValueStoreAssociations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting key_value_store_associations: %s", err)
@@ -184,11 +184,11 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 	etag := d.Get("etag").(string)
 
-	if d.HasChanges("code", "comment", "key_value_store_associations", "runtime") {
+	if d.HasChanges("code", names.AttrComment, "key_value_store_associations", "runtime") {
 		input := &cloudfront.UpdateFunctionInput{
 			FunctionCode: []byte(d.Get("code").(string)),
 			FunctionConfig: &awstypes.FunctionConfig{
-				Comment: aws.String(d.Get("comment").(string)),
+				Comment: aws.String(d.Get(names.AttrComment).(string)),
 				Runtime: awstypes.FunctionRuntime(d.Get("runtime").(string)),
 			},
 			IfMatch: aws.String(etag),

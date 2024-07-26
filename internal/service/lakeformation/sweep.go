@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -44,8 +45,8 @@ func sweepPermissions(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 		for _, v := range page.PrincipalResourcePermissions {
 			d := r.Data(nil)
 
-			d.Set("principal", v.Principal.DataLakePrincipalIdentifier)
-			d.Set("permissions", flattenResourcePermissions([]types.PrincipalResourcePermissions{v}))
+			d.Set(names.AttrPrincipal, v.Principal.DataLakePrincipalIdentifier)
+			d.Set(names.AttrPermissions, flattenResourcePermissions([]types.PrincipalResourcePermissions{v}))
 			d.Set("permissions_with_grant_option", flattenGrantPermissions([]types.PrincipalResourcePermissions{v}))
 
 			d.Set("catalog_resource", v.Resource.Catalog != nil)
@@ -55,7 +56,7 @@ func sweepPermissions(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 			}
 
 			if v.Resource.Database != nil {
-				d.Set("database", []any{flattenDatabaseResource(v.Resource.Database)})
+				d.Set(names.AttrDatabase, []any{flattenDatabaseResource(v.Resource.Database)})
 			}
 
 			if v.Resource.DataCellsFilter != nil {

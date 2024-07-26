@@ -28,7 +28,8 @@ import (
 
 // @SDKResource("aws_ebs_snapshot", name="EBS Snapshot")
 // @Tags(identifierAttribute="id")
-func ResourceEBSSnapshot() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceEBSSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSSnapshotCreate,
 		ReadWithoutTimeout:   resourceEBSSnapshotRead,
@@ -90,7 +91,7 @@ func ResourceEBSSnapshot() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice(enum.Slice(append(awstypes.TargetStorageTier.Values(""), TargetStorageTierStandard)...), false),
+				ValidateFunc: validation.StringInSlice(enum.Slice(append(awstypes.TargetStorageTier.Values(""), targetStorageTierStandard)...), false),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -103,7 +104,7 @@ func ResourceEBSSnapshot() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"volume_size": {
+			names.AttrVolumeSize: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -117,7 +118,7 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	volumeID := d.Get("volume_id").(string)
 	input := &ec2.CreateSnapshotInput{
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeSnapshot),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSnapshot),
 		VolumeId:          aws.String(volumeID),
 	}
 
@@ -176,7 +177,7 @@ func resourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	snapshot, err := FindSnapshotByID(ctx, conn, d.Id())
+	snapshot, err := findSnapshotByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EBS Snapshot %s not found, removing from state", d.Id())
@@ -204,9 +205,9 @@ func resourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrOwnerID, snapshot.OwnerId)
 	d.Set("storage_tier", snapshot.StorageTier)
 	d.Set("volume_id", snapshot.VolumeId)
-	d.Set("volume_size", snapshot.VolumeSize)
+	d.Set(names.AttrVolumeSize, snapshot.VolumeSize)
 
-	setTagsOutV2(ctx, snapshot.Tags)
+	setTagsOut(ctx, snapshot.Tags)
 
 	return diags
 }

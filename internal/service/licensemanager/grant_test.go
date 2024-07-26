@@ -37,17 +37,17 @@ func TestAccLicenseManagerGrant_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"grant": {
-			"basic":        testAccGrant_basic,
-			"disappears":   testAccGrant_disappears,
-			names.AttrName: testAccGrant_name,
+			acctest.CtBasic:      testAccGrant_basic,
+			acctest.CtDisappears: testAccGrant_disappears,
+			acctest.CtName:       testAccGrant_name,
 		},
 		"grant_accepter": {
-			"basic":      testAccGrantAccepter_basic,
-			"disappears": testAccGrantAccepter_disappears,
+			acctest.CtBasic:      testAccGrantAccepter_basic,
+			acctest.CtDisappears: testAccGrantAccepter_disappears,
 		},
 		"grant_data_source": {
-			"basic": testAccGrantsDataSource_basic,
-			"empty": testAccGrantsDataSource_noMatch,
+			acctest.CtBasic: testAccGrantsDataSource_basic,
+			"empty":         testAccGrantsDataSource_noMatch,
 		},
 	}
 
@@ -81,9 +81,9 @@ func testAccGrant_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "license_arn", licenseARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "parent_arn"),
-					resource.TestCheckResourceAttr(resourceName, "principal", principal),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, principal),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "PENDING_ACCEPT"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 				),
 			},
 			{

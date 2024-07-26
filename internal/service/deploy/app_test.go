@@ -40,9 +40,9 @@ func TestAccDeployApp_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codedeploy", fmt.Sprintf(`application:%s`, rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "linked_to_github", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					resource.TestCheckResourceAttr(resourceName, "linked_to_github", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
 				),
 			},
 			// Import by ID
@@ -198,11 +198,11 @@ func TestAccDeployApp_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppConfig_tags1(rName, "key1", "value1"),
+				Config: testAccAppConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -211,20 +211,20 @@ func TestAccDeployApp_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAppConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccAppConfig_tags1(rName, "key2", "value2"),
+				Config: testAccAppConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

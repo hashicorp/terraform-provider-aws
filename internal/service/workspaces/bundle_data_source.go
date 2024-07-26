@@ -26,14 +26,14 @@ func DataSourceBundle() *schema.Resource {
 			"bundle_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"owner", names.AttrName},
+				ConflictsWith: []string{names.AttrOwner, names.AttrName},
 			},
 			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"bundle_id"},
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"bundle_id"},
@@ -111,7 +111,7 @@ func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, 
 		id := name
 		input := &workspaces.DescribeWorkspaceBundlesInput{}
 
-		if owner, ok := d.GetOk("owner"); ok {
+		if owner, ok := d.GetOk(names.AttrOwner); ok {
 			id = fmt.Sprintf("%s:%s", owner, id)
 			input.Owner = aws.String(owner.(string))
 		}
@@ -145,7 +145,7 @@ func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("bundle_id", bundle.BundleId)
 	d.Set(names.AttrDescription, bundle.Description)
 	d.Set(names.AttrName, bundle.Name)
-	d.Set("owner", bundle.Owner)
+	d.Set(names.AttrOwner, bundle.Owner)
 
 	computeType := make([]map[string]interface{}, 1)
 	if bundle.ComputeType != nil {

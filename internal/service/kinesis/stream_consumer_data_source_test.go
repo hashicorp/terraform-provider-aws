@@ -30,7 +30,7 @@ func TestAccKinesisStreamConsumerDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "stream_arn", streamName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStreamARN, streamName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creation_timestamp"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
 				),
@@ -56,7 +56,7 @@ func TestAccKinesisStreamConsumerDataSource_name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "stream_arn", streamName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStreamARN, streamName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creation_timestamp"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
 				),
@@ -82,7 +82,7 @@ func TestAccKinesisStreamConsumerDataSource_arn(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "stream_arn", streamName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStreamARN, streamName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creation_timestamp"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
 				),

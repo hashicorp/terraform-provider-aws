@@ -96,7 +96,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 					},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"default_value": schema.StringAttribute{
+							names.AttrDefaultValue: schema.StringAttribute{
 								Required: true,
 								Validators: []validator.String{
 									stringvalidator.LengthBetween(1, 202),
@@ -194,7 +194,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		CustomType: fwtypes.NewListNestedObjectTypeOf[MessageGroup](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"message": schema.ListNestedBlock{
+				names.AttrMessage: schema.ListNestedBlock{
 					Validators: []validator.List{
 						listvalidator.SizeBetween(1, 1),
 					},

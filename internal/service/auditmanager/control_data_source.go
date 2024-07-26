@@ -86,7 +86,7 @@ func (d *dataSourceControl) Schema(ctx context.Context, req datasource.SchemaReq
 						"source_set_up_option": schema.StringAttribute{
 							Computed: true,
 						},
-						"source_type": schema.StringAttribute{
+						names.AttrSourceType: schema.StringAttribute{
 							Computed: true,
 						},
 						"troubleshooting_text": schema.StringAttribute{

@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,7 +25,7 @@ import (
 
 func testAccTransitGatewayPolicyTable_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var transitGatewayPolicyTable1 ec2.TransitGatewayPolicyTable
+	var transitGatewayPolicyTable1 awstypes.TransitGatewayPolicyTable
 	resourceName := "aws_ec2_transit_gateway_policy_table.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -46,7 +46,7 @@ func testAccTransitGatewayPolicyTable_basic(t *testing.T, semaphore tfsync.Semap
 					testAccCheckTransitGatewayPolicyTableExists(ctx, resourceName, &transitGatewayPolicyTable1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`transit-gateway-policy-table/tgw-ptb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "available"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
 				),
 			},
@@ -61,7 +61,7 @@ func testAccTransitGatewayPolicyTable_basic(t *testing.T, semaphore tfsync.Semap
 
 func testAccTransitGatewayPolicyTable_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var transitGatewayPolicyTable1 ec2.TransitGatewayPolicyTable
+	var transitGatewayPolicyTable1 awstypes.TransitGatewayPolicyTable
 	resourceName := "aws_ec2_transit_gateway_policy_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -89,8 +89,8 @@ func testAccTransitGatewayPolicyTable_disappears(t *testing.T, semaphore tfsync.
 
 func testAccTransitGatewayPolicyTable_disappears_TransitGateway(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var transitGateway1 ec2.TransitGateway
-	var transitGatewayPolicyTable1 ec2.TransitGatewayPolicyTable
+	var transitGateway1 awstypes.TransitGateway
+	var transitGatewayPolicyTable1 awstypes.TransitGatewayPolicyTable
 	resourceName := "aws_ec2_transit_gateway_policy_table.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -120,7 +120,7 @@ func testAccTransitGatewayPolicyTable_disappears_TransitGateway(t *testing.T, se
 
 func testAccTransitGatewayPolicyTable_tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var transitGatewayPolicyTable1, transitGatewayPolicyTable2, transitGatewayPolicyTable3 ec2.TransitGatewayPolicyTable
+	var transitGatewayPolicyTable1, transitGatewayPolicyTable2, transitGatewayPolicyTable3 awstypes.TransitGatewayPolicyTable
 	resourceName := "aws_ec2_transit_gateway_policy_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -135,11 +135,11 @@ func testAccTransitGatewayPolicyTable_tags(t *testing.T, semaphore tfsync.Semaph
 		CheckDestroy:             testAccCheckTransitGatewayPolicyTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayPolicyTableConfig_tags1(rName, "key1", "value1"),
+				Config: testAccTransitGatewayPolicyTableConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPolicyTableExists(ctx, resourceName, &transitGatewayPolicyTable1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -148,29 +148,29 @@ func testAccTransitGatewayPolicyTable_tags(t *testing.T, semaphore tfsync.Semaph
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayPolicyTableConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTransitGatewayPolicyTableConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPolicyTableExists(ctx, resourceName, &transitGatewayPolicyTable2),
 					testAccCheckTransitGatewayPolicyTableNotRecreated(&transitGatewayPolicyTable1, &transitGatewayPolicyTable2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccTransitGatewayPolicyTableConfig_tags1(rName, "key2", "value2"),
+				Config: testAccTransitGatewayPolicyTableConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPolicyTableExists(ctx, resourceName, &transitGatewayPolicyTable3),
 					testAccCheckTransitGatewayPolicyTableNotRecreated(&transitGatewayPolicyTable2, &transitGatewayPolicyTable3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckTransitGatewayPolicyTableExists(ctx context.Context, n string, v *ec2.TransitGatewayPolicyTable) resource.TestCheckFunc {
+func testAccCheckTransitGatewayPolicyTableExists(ctx context.Context, n string, v *awstypes.TransitGatewayPolicyTable) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -181,7 +181,7 @@ func testAccCheckTransitGatewayPolicyTableExists(ctx context.Context, n string, 
 			return fmt.Errorf("No EC2 Transit Gateway Policy Table ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindTransitGatewayPolicyTableByID(ctx, conn, rs.Primary.ID)
 
@@ -197,7 +197,7 @@ func testAccCheckTransitGatewayPolicyTableExists(ctx context.Context, n string, 
 
 func testAccCheckTransitGatewayPolicyTableDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_transit_gateway_policy_table" {
@@ -221,9 +221,9 @@ func testAccCheckTransitGatewayPolicyTableDestroy(ctx context.Context) resource.
 	}
 }
 
-func testAccCheckTransitGatewayPolicyTableNotRecreated(i, j *ec2.TransitGatewayPolicyTable) resource.TestCheckFunc {
+func testAccCheckTransitGatewayPolicyTableNotRecreated(i, j *awstypes.TransitGatewayPolicyTable) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.TransitGatewayPolicyTableId) != aws.StringValue(j.TransitGatewayPolicyTableId) {
+		if aws.ToString(i.TransitGatewayPolicyTableId) != aws.ToString(j.TransitGatewayPolicyTableId) {
 			return errors.New("EC2 Transit Gateway Policy Table was recreated")
 		}
 

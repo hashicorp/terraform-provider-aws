@@ -36,7 +36,7 @@ func DataSourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,7 +44,7 @@ func DataSourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,7 +52,7 @@ func DataSourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"provider_name": {
+			names.AttrProviderName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,11 +109,11 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrARN, arn)
 	d.Set("aws_device", connection.AwsDeviceV2)
 	d.Set("bandwidth", connection.Bandwidth)
-	d.Set("location", connection.Location)
+	d.Set(names.AttrLocation, connection.Location)
 	d.Set(names.AttrName, connection.ConnectionName)
-	d.Set("owner_account_id", connection.OwnerAccount)
+	d.Set(names.AttrOwnerAccountID, connection.OwnerAccount)
 	d.Set("partner_name", connection.PartnerName)
-	d.Set("provider_name", connection.ProviderName)
+	d.Set(names.AttrProviderName, connection.ProviderName)
 	d.Set("vlan_id", connection.Vlan)
 
 	tags, err := listTags(ctx, conn, arn)

@@ -30,7 +30,7 @@ import (
 
 // @SDKResource("aws_servicecatalog_provisioned_product", name="Provisioned Product")
 // @Tags
-// @Testing(tagsTest=config-only, existsType="github.com/aws/aws-sdk-go/service/servicecatalog;servicecatalog.ProvisionedProductDetail",importIgnore="accept_language;ignore_errors;provisioning_artifact_name;provisioning_parameters;retain_physical_resources", skipEmptyTags=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/servicecatalog;servicecatalog.ProvisionedProductDetail",importIgnore="accept_language;ignore_errors;provisioning_artifact_name;provisioning_parameters;retain_physical_resources", skipEmptyTags=true, noRemoveTags=true)
 func ResourceProvisionedProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisionedProductCreate,
@@ -65,7 +65,7 @@ func ResourceProvisionedProduct() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -250,7 +250,7 @@ func ResourceProvisionedProduct() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_message": {
+			names.AttrStatusMessage: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -420,9 +420,9 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("cloudwatch_dashboard_names", aws.StringValueSlice(flattenCloudWatchDashboards(output.CloudWatchDashboards)))
 
 	if detail.CreatedTime != nil {
-		d.Set("created_time", detail.CreatedTime.Format(time.RFC3339))
+		d.Set(names.AttrCreatedTime, detail.CreatedTime.Format(time.RFC3339))
 	} else {
-		d.Set("created_time", nil)
+		d.Set(names.AttrCreatedTime, nil)
 	}
 
 	d.Set("last_provisioning_record_id", detail.LastProvisioningRecordId)
@@ -433,7 +433,7 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("product_id", detail.ProductId)
 	d.Set("provisioning_artifact_id", detail.ProvisioningArtifactId)
 	d.Set(names.AttrStatus, detail.Status)
-	d.Set("status_message", detail.StatusMessage)
+	d.Set(names.AttrStatusMessage, detail.StatusMessage)
 	d.Set(names.AttrType, detail.Type)
 
 	// Previously, we waited for the record to only return a target state of 'SUCCEEDED' or 'AVAILABLE'

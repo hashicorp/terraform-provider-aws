@@ -56,7 +56,7 @@ func ResourceProject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -66,7 +66,7 @@ func ResourceProject() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_logs": {
+						names.AttrCloudWatchLogs: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -103,7 +103,7 @@ func ResourceProject() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^[0-9a-z][0-9a-z-]*[0-9a-z]$`), "must be a valid Bucket name"),
 										),
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ValidateFunc: validation.All(
@@ -130,7 +130,7 @@ func ResourceProject() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"last_updated_time": {
+			names.AttrLastUpdatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -217,11 +217,11 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("active_experiment_count", project.ActiveExperimentCount)
 	d.Set("active_launch_count", project.ActiveLaunchCount)
 	d.Set(names.AttrARN, project.Arn)
-	d.Set("created_time", aws.ToTime(project.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, aws.ToTime(project.CreatedTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, project.Description)
 	d.Set("experiment_count", project.ExperimentCount)
 	d.Set("feature_count", project.FeatureCount)
-	d.Set("last_updated_time", aws.ToTime(project.LastUpdatedTime).Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedTime, aws.ToTime(project.LastUpdatedTime).Format(time.RFC3339))
 	d.Set("launch_count", project.LaunchCount)
 	d.Set(names.AttrName, project.Name)
 	d.Set(names.AttrStatus, project.Status)
@@ -269,7 +269,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		// You can't specify both cloudWatchLogs and s3Destination in the same operation.
-		if v, ok := tfMap["cloudwatch_logs"]; ok && len(v.([]interface{})) > 0 {
+		if v, ok := tfMap[names.AttrCloudWatchLogs]; ok && len(v.([]interface{})) > 0 {
 			input.CloudWatchLogs = expandCloudWatchLogs(v.([]interface{}))
 		}
 
@@ -328,7 +328,7 @@ func expandDataDelivery(dataDelivery []interface{}) *awstypes.ProjectDataDeliver
 
 	result := &awstypes.ProjectDataDeliveryConfig{}
 
-	if v, ok := tfMap["cloudwatch_logs"]; ok && len(v.([]interface{})) > 0 {
+	if v, ok := tfMap[names.AttrCloudWatchLogs]; ok && len(v.([]interface{})) > 0 {
 		result.CloudWatchLogs = expandCloudWatchLogs(v.([]interface{}))
 	}
 
@@ -374,7 +374,7 @@ func expandS3Destination(s3Destination []interface{}) *awstypes.S3DestinationCon
 		result.Bucket = aws.String(v)
 	}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		result.Prefix = aws.String(v)
 	}
 
@@ -389,7 +389,7 @@ func flattenDataDelivery(dataDelivery *awstypes.ProjectDataDelivery) []interface
 	values := map[string]interface{}{}
 
 	if dataDelivery.CloudWatchLogs != nil {
-		values["cloudwatch_logs"] = flattenCloudWatchLogs(dataDelivery.CloudWatchLogs)
+		values[names.AttrCloudWatchLogs] = flattenCloudWatchLogs(dataDelivery.CloudWatchLogs)
 	}
 
 	if dataDelivery.S3Destination != nil {
@@ -425,7 +425,7 @@ func flattenS3Destination(s3Destination *awstypes.S3Destination) []interface{} {
 	}
 
 	if s3Destination.Prefix != nil {
-		values["prefix"] = aws.ToString(s3Destination.Prefix)
+		values[names.AttrPrefix] = aws.ToString(s3Destination.Prefix)
 	}
 
 	return []interface{}{values}

@@ -77,7 +77,7 @@ func resourceServiceLinkedRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -172,7 +172,7 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("custom_suffix", customSuffix)
 	d.Set(names.AttrDescription, role.Description)
 	d.Set(names.AttrName, role.RoleName)
-	d.Set("path", role.Path)
+	d.Set(names.AttrPath, role.Path)
 	d.Set("unique_id", role.RoleId)
 
 	setTagsOut(ctx, role.Tags)

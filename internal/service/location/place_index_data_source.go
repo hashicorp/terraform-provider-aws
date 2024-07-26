@@ -23,7 +23,7 @@ func DataSourcePlaceIndex() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePlaceIndexRead,
 		Schema: map[string]*schema.Schema{
-			"create_time": {
+			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -86,7 +86,7 @@ func dataSourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(aws.StringValue(output.IndexName))
-	d.Set("create_time", aws.TimeValue(output.CreateTime).Format(time.RFC3339))
+	d.Set(names.AttrCreateTime, aws.TimeValue(output.CreateTime).Format(time.RFC3339))
 	d.Set("data_source", output.DataSource)
 
 	if output.DataSourceConfiguration != nil {

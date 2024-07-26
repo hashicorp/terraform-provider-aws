@@ -1,15 +1,14 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package ssm_test
+package ssm
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -31,11 +30,11 @@ func testResourcePatchGroupStateDataV1() map[string]interface{} {
 }
 
 func TestPatchGroupStateUpgradeV0(t *testing.T) {
-	ctx := acctest.Context(t)
+	ctx := context.Background()
 	t.Parallel()
 
 	expected := testResourcePatchGroupStateDataV1()
-	actual, err := tfssm.PatchGroupStateUpgradeV0(ctx, testResourcePatchGroupStateDataV0(), nil)
+	actual, err := patchGroupStateUpgradeV0(ctx, testResourcePatchGroupStateDataV0(), nil)
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)
 	}

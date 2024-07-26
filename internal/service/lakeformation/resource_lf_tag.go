@@ -70,7 +70,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 			names.AttrID:        framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			"database": schema.ListNestedBlock{
+			names.AttrDatabase: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[Database](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
@@ -510,7 +510,7 @@ func (r *resourceResourceLFTag) Delete(ctx context.Context, req resource.DeleteR
 func (r *resourceResourceLFTag) ConfigValidators(_ context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot("database"),
+			path.MatchRoot(names.AttrDatabase),
 			path.MatchRoot("table"),
 			path.MatchRoot("table_with_columns"),
 		),

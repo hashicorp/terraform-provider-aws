@@ -55,7 +55,7 @@ func ResourceResourceSet() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"resources": {
+			names.AttrResources: {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
@@ -158,7 +158,7 @@ func resourceResourceSetCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &route53recoveryreadiness.CreateResourceSetInput{
 		ResourceSetName: aws.String(name),
 		ResourceSetType: aws.String(d.Get("resource_set_type").(string)),
-		Resources:       expandResourceSetResources(d.Get("resources").([]interface{})),
+		Resources:       expandResourceSetResources(d.Get(names.AttrResources).([]interface{})),
 	}
 
 	output, err := conn.CreateResourceSetWithContext(ctx, input)
@@ -199,7 +199,7 @@ func resourceResourceSetRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrARN, resp.ResourceSetArn)
 	d.Set("resource_set_name", resp.ResourceSetName)
 	d.Set("resource_set_type", resp.ResourceSetType)
-	if err := d.Set("resources", flattenResourceSetResources(resp.Resources)); err != nil {
+	if err := d.Set(names.AttrResources, flattenResourceSetResources(resp.Resources)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
 	}
 
@@ -214,7 +214,7 @@ func resourceResourceSetUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input := &route53recoveryreadiness.UpdateResourceSetInput{
 			ResourceSetName: aws.String(d.Id()),
 			ResourceSetType: aws.String(d.Get("resource_set_type").(string)),
-			Resources:       expandResourceSetResources(d.Get("resources").([]interface{})),
+			Resources:       expandResourceSetResources(d.Get(names.AttrResources).([]interface{})),
 		}
 
 		_, err := conn.UpdateResourceSetWithContext(ctx, input)

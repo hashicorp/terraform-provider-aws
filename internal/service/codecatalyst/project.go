@@ -51,7 +51,7 @@ func ResourceProject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -73,18 +73,18 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 
 	in := &codecatalyst.CreateProjectInput{
-		DisplayName: aws.String(d.Get("display_name").(string)),
+		DisplayName: aws.String(d.Get(names.AttrDisplayName).(string)),
 		SpaceName:   aws.String(d.Get("space_name").(string)),
 		Description: aws.String(d.Get(names.AttrDescription).(string)),
 	}
 
 	out, err := conn.CreateProject(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameProject, d.Get("display_name").(string), err)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameProject, d.Get(names.AttrDisplayName).(string), err)
 	}
 
 	if out == nil || out.Name == nil {
-		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameProject, d.Get("display_name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameProject, d.Get(names.AttrDisplayName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Name))
@@ -125,7 +125,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	update := false
 
 	in := &codecatalyst.UpdateProjectInput{
-		Name:        aws.String(d.Get("display_name").(string)),
+		Name:        aws.String(d.Get(names.AttrDisplayName).(string)),
 		SpaceName:   aws.String(d.Get("space_name").(string)),
 		Description: aws.String(d.Get(names.AttrDescription).(string)),
 	}

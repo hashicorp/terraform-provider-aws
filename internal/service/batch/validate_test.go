@@ -42,7 +42,7 @@ func TestValidPrefix(t *testing.T) {
 		strings.Repeat("W", 102), // <= 102
 	}
 	for _, v := range validPrefixes {
-		_, errors := validPrefix(v, "prefix")
+		_, errors := validPrefix(v, names.AttrPrefix)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid Batch prefix: %q", v, errors)
 		}
@@ -53,7 +53,7 @@ func TestValidPrefix(t *testing.T) {
 		strings.Repeat("W", 103), // >= 103
 	}
 	for _, v := range invalidPrefixes {
-		_, errors := validPrefix(v, "prefix")
+		_, errors := validPrefix(v, names.AttrPrefix)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be a invalid Batch prefix: %q", v, errors)
 		}

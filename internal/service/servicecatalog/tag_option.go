@@ -48,7 +48,7 @@ func ResourceTagOption() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,7 +139,7 @@ func resourceTagOptionRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set("active", output.Active)
 	d.Set(names.AttrKey, output.Key)
-	d.Set("owner", output.Owner)
+	d.Set(names.AttrOwner, output.Owner)
 	d.Set(names.AttrValue, output.Value)
 
 	return diags

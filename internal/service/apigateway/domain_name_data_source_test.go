@@ -30,7 +30,7 @@ func TestAccAPIGatewayDomainNameDataSource_basic(t *testing.T) {
 				Config: testAccDomainNameDataSourceConfig_regionalCertificateARN(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", dataSourceName, "certificate_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, dataSourceName, names.AttrCertificateARN),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_name", dataSourceName, "certificate_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_upload_date", dataSourceName, "certificate_upload_date"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudfront_domain_name", dataSourceName, "cloudfront_domain_name"),
@@ -42,7 +42,7 @@ func TestAccAPIGatewayDomainNameDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "regional_domain_name", dataSourceName, "regional_domain_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "regional_zone_id", dataSourceName, "regional_zone_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_policy", dataSourceName, "security_policy"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

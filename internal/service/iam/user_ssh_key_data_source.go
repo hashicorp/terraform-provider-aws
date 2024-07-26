@@ -31,7 +31,7 @@ func dataSourceUserSSHKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"public_key": {
+			names.AttrPublicKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,7 +43,7 @@ func dataSourceUserSSHKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"username": {
+			names.AttrUsername: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -57,7 +57,7 @@ func dataSourceUserSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	encoding := d.Get("encoding").(string)
 	sshPublicKeyId := d.Get("ssh_public_key_id").(string)
-	username := d.Get("username").(string)
+	username := d.Get(names.AttrUsername).(string)
 
 	request := &iam.GetSSHPublicKeyInput{
 		Encoding:       awstypes.EncodingType(encoding),
@@ -78,7 +78,7 @@ func dataSourceUserSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.ToString(publicKey.SSHPublicKeyId))
 	d.Set("fingerprint", publicKey.Fingerprint)
-	d.Set("public_key", publicKeyBody)
+	d.Set(names.AttrPublicKey, publicKeyBody)
 	d.Set(names.AttrStatus, publicKey.Status)
 
 	return diags

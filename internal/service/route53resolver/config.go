@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -41,7 +42,7 @@ func ResourceConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -51,30 +52,32 @@ func ResourceConfig() *schema.Resource {
 }
 
 func resourceConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	autodefinedReverseFlag := d.Get("autodefined_reverse_flag").(string)
 	input := &route53resolver.UpdateResolverConfigInput{
 		AutodefinedReverseFlag: aws.String(autodefinedReverseFlag),
-		ResourceId:             aws.String(d.Get("resource_id").(string)),
+		ResourceId:             aws.String(d.Get(names.AttrResourceID).(string)),
 	}
 
 	output, err := conn.UpdateResolverConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Route53 Resolver Config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Resolver Config: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.ResolverConfig.Id))
 
 	if _, err = waitAutodefinedReverseUpdated(ctx, conn, d.Id(), autodefinedReverseFlag); err != nil {
-		return diag.Errorf("waiting for Route53 Resolver Config (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Config (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceConfigRead(ctx, d, meta)
+	return append(diags, resourceConfigRead(ctx, d, meta)...)
 }
 
 func resourceConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	resolverConfig, err := FindResolverConfigByID(ctx, conn, d.Id())
@@ -82,11 +85,11 @@ func resourceConfigRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Config (%s): %s", d.Id(), err)
 	}
 
 	var autodefinedReverseFlag string
@@ -97,31 +100,32 @@ func resourceConfigRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("autodefined_reverse_flag", autodefinedReverseFlag)
 	d.Set(names.AttrOwnerID, resolverConfig.OwnerId)
-	d.Set("resource_id", resolverConfig.ResourceId)
+	d.Set(names.AttrResourceID, resolverConfig.ResourceId)
 
-	return nil
+	return diags
 }
 
 func resourceConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	autodefinedReverseFlag := d.Get("autodefined_reverse_flag").(string)
 	input := &route53resolver.UpdateResolverConfigInput{
 		AutodefinedReverseFlag: aws.String(autodefinedReverseFlag),
-		ResourceId:             aws.String(d.Get("resource_id").(string)),
+		ResourceId:             aws.String(d.Get(names.AttrResourceID).(string)),
 	}
 
 	_, err := conn.UpdateResolverConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating Route53 Resolver Config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating Route53 Resolver Config: %s", err)
 	}
 
 	if _, err = waitAutodefinedReverseUpdated(ctx, conn, d.Id(), autodefinedReverseFlag); err != nil {
-		return diag.Errorf("waiting for Route53 Resolver Config (%s) update: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Config (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceConfigRead(ctx, d, meta)
+	return append(diags, resourceConfigRead(ctx, d, meta)...)
 }
 
 func FindResolverConfigByID(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverConfig, error) {

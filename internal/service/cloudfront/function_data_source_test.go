@@ -30,7 +30,7 @@ func TestAccCloudFrontFunctionDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "code", resourceName, "code"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "comment", resourceName, "comment"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrComment, resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "last_modified_time"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),

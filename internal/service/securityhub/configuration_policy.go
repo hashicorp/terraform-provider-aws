@@ -224,7 +224,7 @@ func resourceConfigurationPolicy() *schema.Resource {
 											Optional: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"parameter": {
+													names.AttrParameter: {
 														Type:     schema.TypeSet,
 														Required: true,
 														MinItems: 1,
@@ -489,7 +489,7 @@ func expandSecurityControlCustomParameter(tfMap map[string]interface{}) types.Se
 		apiObject.SecurityControlId = aws.String(v)
 	}
 
-	if v, ok := tfMap["parameter"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrParameter].(*schema.Set); ok && v.Len() > 0 {
 		for _, tfMapRaw := range v.List() {
 			tfMap, ok := tfMapRaw.(map[string]interface{})
 			if !ok {
@@ -693,7 +693,7 @@ func flattenSecurityControlCustomParameter(apiObject types.SecurityControlCustom
 		tfList = append(tfList, tfMap)
 	}
 
-	tfMap["parameter"] = tfList
+	tfMap[names.AttrParameter] = tfList
 
 	return tfMap
 }

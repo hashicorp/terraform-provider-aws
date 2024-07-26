@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_kms_ciphertext", name="Ciphertext")
@@ -35,7 +36,7 @@ func resourceCiphertext() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"key_id": {
+			names.AttrKeyID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -54,9 +55,9 @@ func resourceCiphertextCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	keyID := d.Get("key_id").(string)
+	keyID := d.Get(names.AttrKeyID).(string)
 	input := &kms.EncryptInput{
-		KeyId:     aws.String(d.Get("key_id").(string)),
+		KeyId:     aws.String(d.Get(names.AttrKeyID).(string)),
 		Plaintext: []byte(d.Get("plaintext").(string)),
 	}
 

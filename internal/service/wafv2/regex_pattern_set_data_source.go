@@ -48,7 +48,7 @@ func dataSourceRegexPatternSet() *schema.Resource {
 						},
 					},
 				},
-				"scope": {
+				names.AttrScope: {
 					Type:             schema.TypeString,
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.Scope](),
@@ -65,7 +65,7 @@ func dataSourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, 
 
 	var foundRegexPatternSet awstypes.RegexPatternSetSummary
 	input := &wafv2.ListRegexPatternSetsInput{
-		Scope: awstypes.Scope(d.Get("scope").(string)),
+		Scope: awstypes.Scope(d.Get(names.AttrScope).(string)),
 		Limit: aws.Int32(100),
 	}
 
@@ -99,7 +99,7 @@ func dataSourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, 
 	resp, err := conn.GetRegexPatternSet(ctx, &wafv2.GetRegexPatternSetInput{
 		Id:    foundRegexPatternSet.Id,
 		Name:  foundRegexPatternSet.Name,
-		Scope: awstypes.Scope(d.Get("scope").(string)),
+		Scope: awstypes.Scope(d.Get(names.AttrScope).(string)),
 	})
 
 	if err != nil {

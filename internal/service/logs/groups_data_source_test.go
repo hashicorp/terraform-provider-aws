@@ -28,10 +28,10 @@ func TestAccLogsGroupsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccGroupsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "arns.*", resource1Name, names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "arns.*", resource2Name, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "log_group_names.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_group_names.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "log_group_names.*", resource1Name, names.AttrName),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "log_group_names.*", resource2Name, names.AttrName),
 				),

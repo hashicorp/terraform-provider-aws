@@ -31,6 +31,7 @@ import (
 
 // @SDKResource("aws_apigatewayv2_api", name="API")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigatewayv2;apigatewayv2.GetApiOutput")
 func resourceAPI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAPICreate,
@@ -153,7 +154,7 @@ func resourceAPI() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"target": {
+			names.AttrTarget: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -208,7 +209,7 @@ func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.RouteSelectionExpression = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("target"); ok {
+	if v, ok := d.GetOk(names.AttrTarget); ok {
 		input.Target = aws.String(v.(string))
 	}
 

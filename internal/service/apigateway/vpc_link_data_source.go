@@ -42,7 +42,7 @@ func dataSourceVPCLink() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_message": {
+			names.AttrStatusMessage: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -75,7 +75,7 @@ func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrDescription, match.Description)
 	d.Set(names.AttrName, match.Name)
 	d.Set(names.AttrStatus, match.Status)
-	d.Set("status_message", match.StatusMessage)
+	d.Set(names.AttrStatusMessage, match.StatusMessage)
 	d.Set("target_arns", match.TargetArns)
 
 	setTagsOut(ctx, match.Tags)

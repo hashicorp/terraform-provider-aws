@@ -71,12 +71,12 @@ func DataSourceDomain() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"duration": {
+									names.AttrDuration: {
 										Type:     schema.TypeList,
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"unit": {
+												names.AttrUnit: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -130,7 +130,7 @@ func DataSourceDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"instance_count": {
+						names.AttrInstanceCount: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -186,7 +186,7 @@ func DataSourceDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"user_pool_id": {
+						names.AttrUserPoolID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -218,19 +218,19 @@ func DataSourceDomain() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"throughput": {
+						names.AttrThroughput: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -270,7 +270,7 @@ func DataSourceDomain() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_log_group_arn": {
+						names.AttrCloudWatchLogGroupARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

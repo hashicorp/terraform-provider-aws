@@ -35,7 +35,7 @@ func dataSourceAddon() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validClusterName,
@@ -68,7 +68,7 @@ func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta inter
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	addonName := d.Get("addon_name").(string)
-	clusterName := d.Get("cluster_name").(string)
+	clusterName := d.Get(names.AttrClusterName).(string)
 	id := AddonCreateResourceID(clusterName, addonName)
 
 	addon, err := findAddonByTwoPartKey(ctx, conn, clusterName, addonName)

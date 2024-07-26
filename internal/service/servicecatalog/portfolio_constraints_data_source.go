@@ -45,7 +45,7 @@ func DataSourcePortfolioConstraints() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"owner": {
+						names.AttrOwner: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -125,7 +125,7 @@ func flattenConstraintDetail(apiObject *servicecatalog.ConstraintDetail) map[str
 	}
 
 	if v := apiObject.Owner; v != nil {
-		tfMap["owner"] = aws.StringValue(v)
+		tfMap[names.AttrOwner] = aws.StringValue(v)
 	}
 
 	if v := apiObject.PortfolioId; v != nil {

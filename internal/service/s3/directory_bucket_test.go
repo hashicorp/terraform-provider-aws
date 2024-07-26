@@ -36,7 +36,7 @@ func TestAccS3DirectoryBucket_basic(t *testing.T) {
 					testAccCheckDirectoryBucketExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "s3express", regexache.MustCompile(fmt.Sprintf(`bucket/%s--.*-x-s3`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "data_redundancy", "SingleAvailabilityZone"),
-					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "location.0.name"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "AvailabilityZone"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "Directory"),
@@ -46,7 +46,7 @@ func TestAccS3DirectoryBucket_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})

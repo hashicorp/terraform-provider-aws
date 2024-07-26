@@ -70,13 +70,13 @@ func resourceInstanceProfile() *schema.Resource {
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validResourceName(instanceProfileNamePrefixMaxLen),
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "/",
 				ForceNew: true,
 			},
-			"role": {
+			names.AttrRole: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -99,7 +99,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &iam.CreateInstanceProfileInput{
 		InstanceProfileName: aws.String(name),
-		Path:                aws.String(d.Get("path").(string)),
+		Path:                aws.String(d.Get(names.AttrPath).(string)),
 		Tags:                getTagsIn(ctx),
 	}
 
@@ -127,7 +127,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "waiting for IAM Instance Profile (%s) create: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("role"); ok {
+	if v, ok := d.GetOk(names.AttrRole); ok {
 		err := instanceProfileAddRole(ctx, conn, d.Id(), v.(string))
 
 		if err != nil {
@@ -189,13 +189,13 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("create_date", instanceProfile.CreateDate.Format(time.RFC3339))
 	d.Set(names.AttrName, instanceProfile.InstanceProfileName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(instanceProfile.InstanceProfileName)))
-	d.Set("path", instanceProfile.Path)
+	d.Set(names.AttrPath, instanceProfile.Path)
 
-	if d.Get("role") != "" {
-		d.Set("role", nil)
+	if d.Get(names.AttrRole) != "" {
+		d.Set(names.AttrRole, nil)
 	}
 	if len(instanceProfile.Roles) > 0 {
-		d.Set("role", instanceProfile.Roles[0].RoleName) //there will only be 1 role returned
+		d.Set(names.AttrRole, instanceProfile.Roles[0].RoleName) //there will only be 1 role returned
 	}
 
 	d.Set("unique_id", instanceProfile.InstanceProfileId)
@@ -209,8 +209,8 @@ func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if d.HasChange("role") {
-		o, n := d.GetChange("role")
+	if d.HasChange(names.AttrRole) {
+		o, n := d.GetChange(names.AttrRole)
 
 		if o := o.(string); o != "" {
 			err := instanceProfileRemoveRole(ctx, conn, d.Id(), o)
@@ -236,7 +236,7 @@ func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if v, ok := d.GetOk("role"); ok {
+	if v, ok := d.GetOk(names.AttrRole); ok {
 		err := instanceProfileRemoveRole(ctx, conn, d.Id(), v.(string))
 
 		if err != nil {

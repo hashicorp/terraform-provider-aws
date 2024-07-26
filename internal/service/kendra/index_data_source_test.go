@@ -56,7 +56,7 @@ func TestAccKendraIndexDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "user_token_configurations.0.json_token_type_configuration.#", resourceName, "user_token_configurations.0.json_token_type_configuration.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "user_token_configurations.0.json_token_type_configuration.0.group_attribute_field", resourceName, "user_token_configurations.0.json_token_type_configuration.0.group_attribute_field"),
 					resource.TestCheckResourceAttrPair(datasourceName, "user_token_configurations.0.json_token_type_configuration.0.user_name_attribute_field", resourceName, "user_token_configurations.0.json_token_type_configuration.0.user_name_attribute_field"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Key1", resourceName, "tags.Key1"),
 				),
 			},

@@ -83,7 +83,7 @@ func ResourceStream() *schema.Resource {
 				Optional: true,
 			},
 
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -169,7 +169,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrKMSKeyID, resp.StreamInfo.KmsKeyId)
 	d.Set("media_type", resp.StreamInfo.MediaType)
 	d.Set(names.AttrARN, resp.StreamInfo.StreamARN)
-	if err := d.Set("creation_time", resp.StreamInfo.CreationTime.Format(time.RFC3339)); err != nil {
+	if err := d.Set(names.AttrCreationTime, resp.StreamInfo.CreationTime.Format(time.RFC3339)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
 	}
 	d.Set(names.AttrVersion, resp.StreamInfo.Version)

@@ -40,9 +40,9 @@ func TestAccAPIGatewayV2APIMapping_serial(t *testing.T) {
 	})
 
 	testCases := map[string]func(t *testing.T, rName string, certificateArn *string){
-		"basic":         testAccAPIMapping_basic,
-		"disappears":    testAccAPIMapping_disappears,
-		"ApiMappingKey": testAccAPIMapping_key,
+		acctest.CtBasic:      testAccAPIMapping_basic,
+		acctest.CtDisappears: testAccAPIMapping_disappears,
+		"ApiMappingKey":      testAccAPIMapping_key,
 	}
 	for name, tc := range testCases { //nolint:paralleltest
 		tc := tc
@@ -91,7 +91,7 @@ func testAccAPIMapping_basic(t *testing.T, rName string, certificateARN *string)
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIMappingExists(ctx, resourceName, &domainName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, domainNameResourceName, names.AttrDomainName),
-					resource.TestCheckResourceAttrPair(resourceName, "stage", stageResourceName, names.AttrName)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrStage, stageResourceName, names.AttrName)),
 			},
 			{
 				ResourceName:      resourceName,
@@ -147,7 +147,7 @@ func testAccAPIMapping_key(t *testing.T, rName string, certificateARN *string) {
 					testAccCheckAPIMappingExists(ctx, resourceName, &domainName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_mapping_key", "$context.domainName"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, domainNameResourceName, names.AttrDomainName),
-					resource.TestCheckResourceAttrPair(resourceName, "stage", stageResourceName, names.AttrName)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrStage, stageResourceName, names.AttrName)),
 			},
 			{
 				Config: testAccAPIMappingConfig_key(rName, *certificateARN, "$context.apiId"),
@@ -155,7 +155,7 @@ func testAccAPIMapping_key(t *testing.T, rName string, certificateARN *string) {
 					testAccCheckAPIMappingExists(ctx, resourceName, &domainName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_mapping_key", "$context.apiId"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, domainNameResourceName, names.AttrDomainName),
-					resource.TestCheckResourceAttrPair(resourceName, "stage", stageResourceName, names.AttrName)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrStage, stageResourceName, names.AttrName)),
 			},
 			{
 				ResourceName:      resourceName,

@@ -28,7 +28,7 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  engineNeptune,
@@ -87,7 +87,7 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -130,7 +130,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 		input.DBInstanceClass = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine"); ok {
+	if v, ok := d.GetOk(names.AttrEngine); ok {
 		input.Engine = aws.String(v.(string))
 	}
 
@@ -179,7 +179,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrAvailabilityZones, tfslices.ApplyToAll(orderableDBInstance.AvailabilityZones, func(v *neptune.AvailabilityZone) string {
 		return aws.StringValue(v.Name)
 	}))
-	d.Set("engine", orderableDBInstance.Engine)
+	d.Set(names.AttrEngine, orderableDBInstance.Engine)
 	d.Set(names.AttrEngineVersion, orderableDBInstance.EngineVersion)
 	d.Set("license_model", orderableDBInstance.LicenseModel)
 	d.Set("max_iops_per_db_instance", orderableDBInstance.MaxIopsPerDbInstance)
@@ -191,7 +191,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("multi_az_capable", orderableDBInstance.MultiAZCapable)
 	d.Set("instance_class", orderableDBInstance.DBInstanceClass)
 	d.Set("read_replica_capable", orderableDBInstance.ReadReplicaCapable)
-	d.Set("storage_type", orderableDBInstance.StorageType)
+	d.Set(names.AttrStorageType, orderableDBInstance.StorageType)
 	d.Set("supports_enhanced_monitoring", orderableDBInstance.SupportsEnhancedMonitoring)
 	d.Set("supports_iam_database_authentication", orderableDBInstance.SupportsIAMDatabaseAuthentication)
 	d.Set("supports_iops", orderableDBInstance.SupportsIops)

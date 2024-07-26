@@ -155,6 +155,26 @@ func resourceApplication() *schema.Resource {
 					},
 				},
 			},
+			"interactive_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"livy_endpoint_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+						"studio_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"maximum_capacity": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -185,7 +205,7 @@ func resourceApplication() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
-			"network_configuration": {
+			names.AttrNetworkConfiguration: {
 				Type:             schema.TypeList,
 				Optional:         true,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
@@ -258,11 +278,15 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.InitialCapacity = expandInitialCapacity(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("interactive_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.InteractiveConfiguration = expandInteractiveConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("maximum_capacity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.MaximumCapacity = expandMaximumCapacity(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("network_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -319,11 +343,15 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting initial_capacity: %s", err)
 	}
 
+	if err := d.Set("interactive_configuration", []interface{}{flattenInteractiveConfiguration(application.InteractiveConfiguration)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting interactive_configuration: %s", err)
+	}
+
 	if err := d.Set("maximum_capacity", []interface{}{flattenMaximumCapacity(application.MaximumCapacity)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting maximum_capacity: %s", err)
 	}
 
-	if err := d.Set("network_configuration", []interface{}{flattenNetworkConfiguration(application.NetworkConfiguration)}); err != nil {
+	if err := d.Set(names.AttrNetworkConfiguration, []interface{}{flattenNetworkConfiguration(application.NetworkConfiguration)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
@@ -362,11 +390,15 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.InitialCapacity = expandInitialCapacity(v.(*schema.Set))
 		}
 
+		if v, ok := d.GetOk("interactive_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.InteractiveConfiguration = expandInteractiveConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		}
+
 		if v, ok := d.GetOk("maximum_capacity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.MaximumCapacity = expandMaximumCapacity(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("network_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		}
 
@@ -568,6 +600,42 @@ func flattenAutoStopConfig(apiObject *types.AutoStopConfig) map[string]interface
 
 	if v := apiObject.IdleTimeoutMinutes; v != nil {
 		tfMap["idle_timeout_minutes"] = aws.ToInt32(v)
+	}
+
+	return tfMap
+}
+
+func expandInteractiveConfiguration(tfMap map[string]interface{}) *types.InteractiveConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.InteractiveConfiguration{}
+
+	if v, ok := tfMap["livy_endpoint_enabled"].(bool); ok {
+		apiObject.LivyEndpointEnabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["studio_enabled"].(bool); ok {
+		apiObject.StudioEnabled = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func flattenInteractiveConfiguration(apiObject *types.InteractiveConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.LivyEndpointEnabled; v != nil {
+		tfMap["livy_endpoint_enabled"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.StudioEnabled; v != nil {
+		tfMap["studio_enabled"] = aws.ToBool(v)
 	}
 
 	return tfMap

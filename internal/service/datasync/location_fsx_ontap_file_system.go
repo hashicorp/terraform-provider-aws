@@ -59,7 +59,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -110,7 +110,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 							ExactlyOneOf: []string{"protocol.0.nfs", "protocol.0.smb"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"domain": {
+									names.AttrDomain: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -138,7 +138,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 											},
 										},
 									},
-									"password": {
+									names.AttrPassword: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
@@ -183,7 +183,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"uri": {
+			names.AttrURI: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -242,7 +242,7 @@ func resourceLocationFSxONTAPFileSystemRead(ctx context.Context, d *schema.Resou
 	}
 
 	d.Set(names.AttrARN, output.LocationArn)
-	d.Set("creation_time", output.CreationTime.Format(time.RFC3339))
+	d.Set(names.AttrCreationTime, output.CreationTime.Format(time.RFC3339))
 	d.Set("fsx_filesystem_arn", output.FsxFilesystemArn)
 	// SMB Password is not returned from the API.
 	if output.Protocol != nil && output.Protocol.SMB != nil && aws.ToString(output.Protocol.SMB.Password) == "" {
@@ -256,7 +256,7 @@ func resourceLocationFSxONTAPFileSystemRead(ctx context.Context, d *schema.Resou
 	d.Set("security_group_arns", output.SecurityGroupArns)
 	d.Set("storage_virtual_machine_arn", output.StorageVirtualMachineArn)
 	d.Set("subdirectory", subdirectory)
-	d.Set("uri", uri)
+	d.Set(names.AttrURI, uri)
 
 	return diags
 }

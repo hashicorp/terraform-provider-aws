@@ -34,7 +34,7 @@ func TestAccS3ControlMultiRegionAccessPointDataSource_basic(t *testing.T) {
 				Config: testAccMultiRegionAccessPointDataSourceConfig_basic(bucket1Name, bucket2Name, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceName, names.AttrAccountID),
-					resource.TestCheckResourceAttrPair(resourceName, "alias", dataSourceName, "alias"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAlias, dataSourceName, names.AttrAlias),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, dataSourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttrPair(resourceName, "details.0.name", dataSourceName, names.AttrName),

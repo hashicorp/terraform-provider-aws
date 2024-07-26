@@ -154,7 +154,7 @@ func resourceDeploymentGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"action": {
+									names.AttrAction: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.GreenFleetProvisioningAction](),
@@ -168,7 +168,7 @@ func resourceDeploymentGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"action": {
+									names.AttrAction: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.InstanceAction](),
@@ -281,12 +281,12 @@ func resourceDeploymentGroup() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cluster_name": {
+						names.AttrClusterName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.NoZeroValues,
 						},
-						"service_name": {
+						names.AttrServiceName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.NoZeroValues,
@@ -413,7 +413,7 @@ func resourceDeploymentGroup() *schema.Resource {
 				Default:          types.OutdatedInstancesStrategyUpdate,
 				ValidateDiagFunc: enum.Validate[types.OutdatedInstancesStrategy](),
 			},
-			"service_role_arn": {
+			names.AttrServiceRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -457,7 +457,7 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 
 	applicationName := d.Get("app_name").(string)
 	deploymentGroupName := d.Get("deployment_group_name").(string)
-	serviceRoleArn := d.Get("service_role_arn").(string)
+	serviceRoleArn := d.Get(names.AttrServiceRoleARN).(string)
 	input := &codedeploy.CreateDeploymentGroupInput{
 		ApplicationName:     aws.String(applicationName),
 		DeploymentGroupName: aws.String(deploymentGroupName),
@@ -605,7 +605,7 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "setting on_premises_instance_tag_filter: %s", err)
 	}
 	d.Set("outdated_instances_strategy", group.OutdatedInstancesStrategy)
-	d.Set("service_role_arn", group.ServiceRoleArn)
+	d.Set(names.AttrServiceRoleARN, group.ServiceRoleArn)
 	if err := d.Set("trigger_configuration", flattenTriggerConfigs(group.TriggerConfigurations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting trigger_configuration: %s", err)
 	}
@@ -620,7 +620,7 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		// required fields
 		applicationName := d.Get("app_name").(string)
-		serviceRoleArn := d.Get("service_role_arn").(string)
+		serviceRoleArn := d.Get(names.AttrServiceRoleARN).(string)
 
 		input := codedeploy.UpdateDeploymentGroupInput{
 			ApplicationName: aws.String(applicationName),
@@ -905,8 +905,8 @@ func expandECSServices(l []interface{}) []types.ECSService {
 		m := mRaw.(map[string]interface{})
 
 		ecsService := types.ECSService{
-			ClusterName: aws.String(m["cluster_name"].(string)),
-			ServiceName: aws.String(m["service_name"].(string)),
+			ClusterName: aws.String(m[names.AttrClusterName].(string)),
+			ServiceName: aws.String(m[names.AttrServiceName].(string)),
 		}
 
 		ecsServices = append(ecsServices, ecsService)
@@ -1064,7 +1064,7 @@ func expandBlueGreenDeploymentConfiguration(list []interface{}) *types.BlueGreen
 			m := a[0].(map[string]interface{})
 
 			greenFleetProvisioningOption := &types.GreenFleetProvisioningOption{}
-			if v, ok := m["action"]; ok {
+			if v, ok := m[names.AttrAction]; ok {
 				greenFleetProvisioningOption.Action = types.GreenFleetProvisioningAction(v.(string))
 			}
 			blueGreenDeploymentConfig.GreenFleetProvisioningOption = greenFleetProvisioningOption
@@ -1078,7 +1078,7 @@ func expandBlueGreenDeploymentConfiguration(list []interface{}) *types.BlueGreen
 			m := a[0].(map[string]interface{})
 
 			blueInstanceTerminationOption := &types.BlueInstanceTerminationOption{}
-			if v, ok := m["action"]; ok {
+			if v, ok := m[names.AttrAction]; ok {
 				blueInstanceTerminationOption.Action = types.InstanceAction(v.(string))
 			}
 			if v, ok := m["termination_wait_time_in_minutes"]; ok {
@@ -1202,8 +1202,8 @@ func flattenECSServices(ecsServices []types.ECSService) []interface{} {
 
 	for _, ecsService := range ecsServices {
 		m := map[string]interface{}{
-			"cluster_name": aws.ToString(ecsService.ClusterName),
-			"service_name": aws.ToString(ecsService.ServiceName),
+			names.AttrClusterName: aws.ToString(ecsService.ClusterName),
+			names.AttrServiceName: aws.ToString(ecsService.ServiceName),
 		}
 
 		l = append(l, m)
@@ -1326,7 +1326,7 @@ func flattenBlueGreenDeploymentConfiguration(config *types.BlueGreenDeploymentCo
 		greenFleetProvisioningOption := make(map[string]interface{})
 
 		if v := string(config.GreenFleetProvisioningOption.Action); v != "" {
-			greenFleetProvisioningOption["action"] = v
+			greenFleetProvisioningOption[names.AttrAction] = v
 		}
 
 		m["green_fleet_provisioning_option"] = append(b, greenFleetProvisioningOption)
@@ -1337,7 +1337,7 @@ func flattenBlueGreenDeploymentConfiguration(config *types.BlueGreenDeploymentCo
 		blueInstanceTerminationOption := make(map[string]interface{})
 
 		if v := string(config.TerminateBlueInstancesOnDeploymentSuccess.Action); v != "" {
-			blueInstanceTerminationOption["action"] = v
+			blueInstanceTerminationOption[names.AttrAction] = v
 		}
 		if v := config.TerminateBlueInstancesOnDeploymentSuccess.TerminationWaitTimeInMinutes; v != 0 {
 			blueInstanceTerminationOption["termination_wait_time_in_minutes"] = v

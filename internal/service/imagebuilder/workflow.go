@@ -50,7 +50,7 @@ func ResourceWorkflow() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"data", "uri"},
+				ExactlyOneOf: []string{"data", names.AttrURI},
 				ValidateFunc: validation.StringLenBetween(1, 16000),
 			},
 			"date_created": {
@@ -75,7 +75,7 @@ func ResourceWorkflow() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,11 +87,11 @@ func ResourceWorkflow() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(imagebuilder.WorkflowType_Values(), false),
 			},
-			"uri": {
+			names.AttrURI: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"data", "uri"},
+				ExactlyOneOf: []string{"data", names.AttrURI},
 			},
 			names.AttrVersion: {
 				Type:         schema.TypeString,
@@ -133,7 +133,7 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("uri"); ok {
+	if v, ok := d.GetOk(names.AttrURI); ok {
 		input.Uri = aws.String(v.(string))
 	}
 
@@ -181,7 +181,7 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrDescription, workflow.Description)
 	d.Set(names.AttrName, workflow.Name)
 	d.Set(names.AttrKMSKeyID, workflow.KmsKeyId)
-	d.Set("owner", workflow.Owner)
+	d.Set(names.AttrOwner, workflow.Owner)
 
 	setTagsOut(ctx, workflow.Tags)
 

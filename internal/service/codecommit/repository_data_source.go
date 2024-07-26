@@ -41,7 +41,7 @@ func dataSourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"repository_name": {
+			names.AttrRepositoryName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
@@ -54,7 +54,7 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
-	name := d.Get("repository_name").(string)
+	name := d.Get(names.AttrRepositoryName).(string)
 	repository, err := findRepositoryByName(ctx, conn, name)
 
 	if err != nil {
@@ -67,7 +67,7 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("clone_url_ssh", repository.CloneUrlSsh)
 	d.Set(names.AttrKMSKeyID, repository.KmsKeyId)
 	d.Set("repository_id", repository.RepositoryId)
-	d.Set("repository_name", repository.RepositoryName)
+	d.Set(names.AttrRepositoryName, repository.RepositoryName)
 
 	return diags
 }

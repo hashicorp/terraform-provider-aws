@@ -82,7 +82,7 @@ func resourceReportGroup() *schema.Resource {
 										Default:          types.ReportPackagingTypeNone,
 										ValidateDiagFunc: enum.Validate[types.ReportPackagingType](),
 									},
-									"path": {
+									names.AttrPath: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -339,7 +339,7 @@ func expandReportGroupS3ReportExportConfig(tfList []interface{}) *types.S3Report
 		apiObject.Packaging = types.ReportPackagingType(v.(string))
 	}
 
-	if v, ok := tfMap["path"]; ok {
+	if v, ok := tfMap[names.AttrPath]; ok {
 		apiObject.Path = aws.String(v.(string))
 	}
 
@@ -368,7 +368,7 @@ func flattenReportGroupS3ReportExportConfig(apiObject *types.S3ReportExportConfi
 	}
 
 	if v := apiObject.Path; v != nil {
-		tfMap["path"] = aws.ToString(v)
+		tfMap[names.AttrPath] = aws.ToString(v)
 	}
 
 	return []map[string]interface{}{tfMap}

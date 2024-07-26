@@ -76,7 +76,7 @@ func ResourceGrant() *schema.Resource {
 				Computed:    true,
 				Description: "Parent ARN.",
 			},
-			"principal": {
+			names.AttrPrincipal: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -108,7 +108,7 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		GrantName:         aws.String(d.Get(names.AttrName).(string)),
 		HomeRegion:        aws.String(meta.(*conns.AWSClient).Region),
 		LicenseArn:        aws.String(d.Get("license_arn").(string)),
-		Principals:        aws.StringSlice([]string{d.Get("principal").(string)}),
+		Principals:        aws.StringSlice([]string{d.Get(names.AttrPrincipal).(string)}),
 	}
 
 	out, err := conn.CreateGrantWithContext(ctx, in)
@@ -145,7 +145,7 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("license_arn", out.LicenseArn)
 	d.Set(names.AttrName, out.GrantName)
 	d.Set("parent_arn", out.ParentArn)
-	d.Set("principal", out.GranteePrincipalArn)
+	d.Set(names.AttrPrincipal, out.GranteePrincipalArn)
 	d.Set(names.AttrStatus, out.GrantStatus)
 	d.Set(names.AttrVersion, out.Version)
 

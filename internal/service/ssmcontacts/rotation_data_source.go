@@ -55,7 +55,7 @@ func (d *dataSourceRotation) Schema(ctx context.Context, request datasource.Sche
 				ElementType: fwtypes.NewObjectTypeOf[dsRecurrenceData](ctx),
 				Computed:    true,
 			},
-			"start_time": schema.StringAttribute{
+			names.AttrStartTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
