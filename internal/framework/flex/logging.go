@@ -35,6 +35,12 @@ func fullTypeName(t reflect.Type) string {
 	if t.Kind() == reflect.Pointer {
 		return "*" + fullTypeName(t.Elem())
 	}
+	if t.Kind() == reflect.Slice {
+		return "[]" + fullTypeName(t.Elem())
+	}
+	if t.Kind() == reflect.Map {
+		return "map[" + fullTypeName(t.Key()) + "]" + fullTypeName(t.Elem())
+	}
 	if path := t.PkgPath(); path != "" {
 		return fmt.Sprintf("%s.%s", path, t.Name())
 	}

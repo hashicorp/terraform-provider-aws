@@ -5,9 +5,118 @@ package flex
 
 import (
 	"reflect"
+	"testing"
 
 	"github.com/hashicorp/go-hclog"
 )
+
+func TestFullTypeName_nil(t *testing.T) {
+	expected := "<nil>"
+	result := fullTypeName(nil)
+
+	if result != expected {
+		t.Fatalf("expected %q, got %q", expected, result)
+	}
+}
+
+func TestFullTypeName_primitive(t *testing.T) {
+	expected := "string"
+	result := fullTypeName(reflect.TypeFor[string]())
+
+	if result != expected {
+		t.Fatalf("expected %q, got %q", expected, result)
+	}
+}
+
+func TestFullTypeName_type(t *testing.T) {
+	expected := "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.TestFlex00"
+	result := fullTypeName(reflect.TypeFor[TestFlex00]())
+
+	if result != expected {
+		t.Fatalf("expected %q, got %q", expected, result)
+	}
+}
+
+func TestFullTypeName_pointerToPrimitive(t *testing.T) {
+	expected := "*string"
+	result := fullTypeName(reflect.TypeFor[*string]())
+
+	if result != expected {
+		t.Fatalf("expected %q, got %q", expected, result)
+	}
+}
+
+func TestFullTypeName_pointerToType(t *testing.T) {
+	expected := "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.TestFlex00"
+	result := fullTypeName(reflect.TypeFor[*TestFlex00]())
+
+	if result != expected {
+		t.Fatalf("expected %q, got %q", expected, result)
+	}
+}
+
+func TestFullTypeName_sliceOfPrimitive(t *testing.T) {
+	expected := "[]string"
+	result := fullTypeName(reflect.TypeFor[[]string]())
+
+	if result != expected {
+		t.Fatalf("expected %q, got %q", expected, result)
+	}
+}
+
+func TestFullTypeName_sliceOfType(t *testing.T) {
+	expected := "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.TestFlex00"
+	result := fullTypeName(reflect.TypeFor[[]TestFlex00]())
+
+	if result != expected {
+		t.Fatalf("expected %q, got %q", expected, result)
+	}
+}
+
+func TestFullTypeName_sliceOfPointerToPrimitive(t *testing.T) {
+	expected := "[]*string"
+	result := fullTypeName(reflect.TypeFor[[]*string]())
+
+	if result != expected {
+		t.Fatalf("expected %q, got %q", expected, result)
+	}
+}
+
+func TestFullTypeName_sliceOfPointerToType(t *testing.T) {
+	expected := "[]*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.TestFlex00"
+	result := fullTypeName(reflect.TypeFor[[]*TestFlex00]())
+
+	if result != expected {
+		t.Fatalf("expected %q, got %q", expected, result)
+	}
+}
+
+func TestFullTypeName_mapPrimitiveKeyPrimitiveValue(t *testing.T) {
+	expected := "map[string]string"
+	result := fullTypeName(reflect.TypeFor[map[string]string]())
+
+	if result != expected {
+		t.Fatalf("expected %q, got %q", expected, result)
+	}
+}
+
+func TestFullTypeName_mapTypedKeyPrimitiveValue(t *testing.T) {
+	expected := "map[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.TestEnum]string"
+	result := fullTypeName(reflect.TypeFor[map[TestEnum]string]())
+
+	if result != expected {
+		t.Fatalf("expected %q, got %q", expected, result)
+	}
+}
+
+func TestFullTypeName_mapPrimitiveKeyTypedValue(t *testing.T) {
+	expected := "map[string]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.TestEnum"
+	result := fullTypeName(reflect.TypeFor[map[string]TestEnum]())
+
+	if result != expected {
+		t.Fatalf("expected %q, got %q", expected, result)
+	}
+}
 
 const (
 	logModule = "provider." + subsystemName
