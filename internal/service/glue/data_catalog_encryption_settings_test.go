@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +24,7 @@ func testAccDataCatalogEncryptionSettings_basic(t *testing.T) {
 
 	ctx := acctest.Context(t)
 
-	var settings glue.DataCatalogEncryptionSettings
+	var settings awstypes.DataCatalogEncryptionSettings
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_data_catalog_encryption_settings.test"
@@ -101,7 +102,7 @@ func testAccDataCatalogEncryptionSettings_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckDataCatalogEncryptionSettingsExists(ctx context.Context, resourceName string, v *glue.DataCatalogEncryptionSettings) resource.TestCheckFunc {
+func testAccCheckDataCatalogEncryptionSettingsExists(ctx context.Context, resourceName string, v *awstypes.DataCatalogEncryptionSettings) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -112,9 +113,9 @@ func testAccCheckDataCatalogEncryptionSettingsExists(ctx context.Context, resour
 			return fmt.Errorf("No Glue Data Catalog Encryption Settings ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
-		output, err := conn.GetDataCatalogEncryptionSettingsWithContext(ctx, &glue.GetDataCatalogEncryptionSettingsInput{
+		output, err := conn.GetDataCatalogEncryptionSettings(ctx, &glue.GetDataCatalogEncryptionSettingsInput{
 			CatalogId: aws.String(rs.Primary.ID),
 		})
 

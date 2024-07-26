@@ -27,6 +27,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -40,7 +41,7 @@ const (
 // @SDKResource("aws_rds_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
-func ResourceCluster() *schema.Resource {
+func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
 		ReadWithoutTimeout:   resourceClusterRead,
@@ -116,6 +117,7 @@ func ResourceCluster() *schema.Resource {
 			"ca_certificate_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"ca_certificate_valid_till": {
 				Type:     schema.TypeString,
@@ -478,6 +480,12 @@ func ResourceCluster() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  clusterScalingConfiguration_DefaultMinCapacity,
+						},
+						"seconds_before_timeout": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      300,
+							ValidateFunc: validation.IntBetween(60, 600),
 						},
 						"seconds_until_auto_pause": {
 							Type:         schema.TypeInt,
@@ -864,6 +872,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &rds.RestoreDBClusterToPointInTimeInput{
+			CopyTagsToSnapshot:        aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier:       aws.String(identifier),
 			DeletionProtection:        aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			SourceDBClusterIdentifier: aws.String(tfMap["source_cluster_identifier"].(string)),
@@ -1174,7 +1183,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), true, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -1333,8 +1342,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		"replication_source_identifier",
 		"skip_final_snapshot",
 		names.AttrTags, names.AttrTagsAll) {
+		applyImmediately := d.Get(names.AttrApplyImmediately).(bool)
 		input := &rds.ModifyDBClusterInput{
-			ApplyImmediately:    aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
+			ApplyImmediately:    aws.Bool(applyImmediately),
 			DBClusterIdentifier: aws.String(d.Id()),
 		}
 
@@ -1509,7 +1519,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), applyImmediately, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -1636,7 +1646,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 						return false, fmt.Errorf("modifying RDS Cluster (%s) DeletionProtection=false: %s", d.Id(), err)
 					}
 
-					if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+					if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), false, d.Timeout(schema.TimeoutDelete)); err != nil {
 						return false, fmt.Errorf("waiting for RDS Cluster (%s) update: %s", d.Id(), err)
 					}
 				}
@@ -1785,7 +1795,7 @@ func findDBClusters(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClu
 	return output, nil
 }
 
-func statusDBCluster(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
+func statusDBCluster(ctx context.Context, conn *rds.RDS, id string, waitNoPendingModifiedValues bool) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDBClusterByID(ctx, conn, id)
 
@@ -1797,23 +1807,29 @@ func statusDBCluster(ctx context.Context, conn *rds.RDS, id string) retry.StateR
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		status := aws.StringValue(output.Status)
+
+		if status == clusterStatusAvailable && waitNoPendingModifiedValues && !itypes.IsZero(output.PendingModifiedValues) {
+			status = clusterStatusAvailableWithPendingModifiedValues
+		}
+
+		return output, status, nil
 	}
 }
 
 func waitDBClusterCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			ClusterStatusBackingUp,
-			ClusterStatusCreating,
-			ClusterStatusMigrating,
-			ClusterStatusModifying,
-			ClusterStatusPreparingDataMigration,
-			ClusterStatusRebooting,
-			ClusterStatusResettingMasterCredentials,
+			clusterStatusBackingUp,
+			clusterStatusCreating,
+			clusterStatusMigrating,
+			clusterStatusModifying,
+			clusterStatusPreparingDataMigration,
+			clusterStatusRebooting,
+			clusterStatusResettingMasterCredentials,
 		},
-		Target:     []string{ClusterStatusAvailable},
-		Refresh:    statusDBCluster(ctx, conn, id),
+		Target:     []string{clusterStatusAvailable},
+		Refresh:    statusDBCluster(ctx, conn, id, false),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -1828,19 +1844,24 @@ func waitDBClusterCreated(ctx context.Context, conn *rds.RDS, id string, timeout
 	return nil, err
 }
 
-func waitDBClusterUpdated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) { //nolint:unparam
+func waitDBClusterUpdated(ctx context.Context, conn *rds.RDS, id string, waitNoPendingModifiedValues bool, timeout time.Duration) (*rds.DBCluster, error) { //nolint:unparam
+	pendingStatuses := []string{
+		clusterStatusBackingUp,
+		clusterStatusConfiguringIAMDatabaseAuth,
+		clusterStatusModifying,
+		clusterStatusRenaming,
+		clusterStatusResettingMasterCredentials,
+		clusterStatusScalingCompute,
+		clusterStatusUpgrading,
+	}
+	if waitNoPendingModifiedValues {
+		pendingStatuses = append(pendingStatuses, clusterStatusAvailableWithPendingModifiedValues)
+	}
+
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			ClusterStatusBackingUp,
-			ClusterStatusConfiguringIAMDatabaseAuth,
-			ClusterStatusModifying,
-			ClusterStatusRenaming,
-			ClusterStatusResettingMasterCredentials,
-			ClusterStatusScalingCompute,
-			ClusterStatusUpgrading,
-		},
-		Target:     []string{ClusterStatusAvailable},
-		Refresh:    statusDBCluster(ctx, conn, id),
+		Pending:    pendingStatuses,
+		Target:     []string{clusterStatusAvailable},
+		Refresh:    statusDBCluster(ctx, conn, id, waitNoPendingModifiedValues),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -1858,15 +1879,15 @@ func waitDBClusterUpdated(ctx context.Context, conn *rds.RDS, id string, timeout
 func waitDBClusterDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			ClusterStatusAvailable,
-			ClusterStatusBackingUp,
-			ClusterStatusDeleting,
-			ClusterStatusModifying,
-			ClusterStatusPromoting,
-			ClusterStatusScalingCompute,
+			clusterStatusAvailable,
+			clusterStatusBackingUp,
+			clusterStatusDeleting,
+			clusterStatusModifying,
+			clusterStatusPromoting,
+			clusterStatusScalingCompute,
 		},
 		Target:     []string{},
-		Refresh:    statusDBCluster(ctx, conn, id),
+		Refresh:    statusDBCluster(ctx, conn, id, false),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -1879,4 +1900,132 @@ func waitDBClusterDeleted(ctx context.Context, conn *rds.RDS, id string, timeout
 	}
 
 	return nil, err
+}
+
+func expandScalingConfiguration(tfMap map[string]interface{}) *rds.ScalingConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &rds.ScalingConfiguration{}
+
+	if v, ok := tfMap["auto_pause"].(bool); ok {
+		apiObject.AutoPause = aws.Bool(v)
+	}
+
+	if v, ok := tfMap[names.AttrMaxCapacity].(int); ok {
+		apiObject.MaxCapacity = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["min_capacity"].(int); ok {
+		apiObject.MinCapacity = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["seconds_before_timeout"].(int); ok {
+		apiObject.SecondsBeforeTimeout = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["seconds_until_auto_pause"].(int); ok {
+		apiObject.SecondsUntilAutoPause = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["timeout_action"].(string); ok && v != "" {
+		apiObject.TimeoutAction = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenScalingConfigurationInfo(apiObject *rds.ScalingConfigurationInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AutoPause; v != nil {
+		tfMap["auto_pause"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.MaxCapacity; v != nil {
+		tfMap[names.AttrMaxCapacity] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.MaxCapacity; v != nil {
+		tfMap[names.AttrMaxCapacity] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.MinCapacity; v != nil {
+		tfMap["min_capacity"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.SecondsBeforeTimeout; v != nil {
+		tfMap["seconds_before_timeout"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.SecondsUntilAutoPause; v != nil {
+		tfMap["seconds_until_auto_pause"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.TimeoutAction; v != nil {
+		tfMap["timeout_action"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func expandServerlessV2ScalingConfiguration(tfMap map[string]interface{}) *rds.ServerlessV2ScalingConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &rds.ServerlessV2ScalingConfiguration{}
+
+	if v, ok := tfMap[names.AttrMaxCapacity].(float64); ok && v != 0.0 {
+		apiObject.MaxCapacity = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["min_capacity"].(float64); ok && v != 0.0 {
+		apiObject.MinCapacity = aws.Float64(v)
+	}
+
+	return apiObject
+}
+
+func flattenServerlessV2ScalingConfigurationInfo(apiObject *rds.ServerlessV2ScalingConfigurationInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.MaxCapacity; v != nil {
+		tfMap[names.AttrMaxCapacity] = aws.Float64Value(v)
+	}
+
+	if v := apiObject.MinCapacity; v != nil {
+		tfMap["min_capacity"] = aws.Float64Value(v)
+	}
+
+	return tfMap
+}
+
+// TODO Move back to 'flex.go' once migrate to AWS SDK for Go v2.
+func flattenManagedMasterUserSecret(apiObject *rds.MasterUserSecret) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if v := apiObject.KmsKeyId; v != nil {
+		tfMap[names.AttrKMSKeyID] = aws.StringValue(v)
+	}
+	if v := apiObject.SecretArn; v != nil {
+		tfMap["secret_arn"] = aws.StringValue(v)
+	}
+	if v := apiObject.SecretStatus; v != nil {
+		tfMap["secret_status"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }

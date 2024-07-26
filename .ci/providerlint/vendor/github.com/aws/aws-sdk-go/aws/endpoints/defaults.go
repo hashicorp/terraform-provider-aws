@@ -40001,16 +40001,12 @@ var awsusgovPartition = partition{
 			Endpoints: serviceEndpoints{
 				endpointKey{
 					Region: "us-gov-east-1",
-				}: endpoint{
-					Hostname:  "autoscaling-plans.us-gov-east-1.amazonaws.com",
-					Protocols: []string{"http", "https"},
-				},
+				}: endpoint{},
 				endpointKey{
 					Region:  "us-gov-east-1",
 					Variant: fipsVariant,
 				}: endpoint{
-					Hostname:  "autoscaling-plans.us-gov-east-1.amazonaws.com",
-					Protocols: []string{"http", "https"},
+					Hostname: "autoscaling-plans.us-gov-east-1.amazonaws.com",
 				},
 				endpointKey{
 					Region: "us-gov-east-1-fips",
@@ -40022,16 +40018,12 @@ var awsusgovPartition = partition{
 				},
 				endpointKey{
 					Region: "us-gov-west-1",
-				}: endpoint{
-					Hostname:  "autoscaling-plans.us-gov-west-1.amazonaws.com",
-					Protocols: []string{"http", "https"},
-				},
+				}: endpoint{},
 				endpointKey{
 					Region:  "us-gov-west-1",
 					Variant: fipsVariant,
 				}: endpoint{
-					Hostname:  "autoscaling-plans.us-gov-west-1.amazonaws.com",
-					Protocols: []string{"http", "https"},
+					Hostname: "autoscaling-plans.us-gov-west-1.amazonaws.com",
 				},
 				endpointKey{
 					Region: "us-gov-west-1-fips",
@@ -46420,6 +46412,9 @@ var awsisoPartition = partition{
 				endpointKey{
 					Region: "us-iso-east-1",
 				}: endpoint{},
+				endpointKey{
+					Region: "us-iso-west-1",
+				}: endpoint{},
 			},
 		},
 		"appconfig": service{
@@ -47727,6 +47722,13 @@ var awsisobPartition = partition{
 			},
 		},
 		"api.sagemaker": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-isob-east-1",
+				}: endpoint{},
+			},
+		},
+		"apigateway": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
 					Region: "us-isob-east-1",

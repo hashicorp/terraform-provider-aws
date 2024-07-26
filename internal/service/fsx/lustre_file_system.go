@@ -334,10 +334,9 @@ func resourceLustreFileSystemStorageCapacityCustomizeDiff(_ context.Context, d *
 func resourceLustreFileSystemMetadataConfigCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
 	//metadata_configuration is only supported when deployment_type is persistent2
 	if v, ok := d.GetOk("metadata_configuration"); ok {
-		if len(v.([]any)) > 0 {
-			deploymentType := d.Get("deployment_type").(string)
-			if deploymentType != string(awstypes.LustreDeploymentTypePersistent2) {
-				return fmt.Errorf("metadata_configuration can only be set when deployment type is " + string(awstypes.LustreDeploymentTypePersistent2))
+		if len(v.([]interface{})) > 0 {
+			if deploymentType := awstypes.LustreDeploymentType(d.Get("deployment_type").(string)); deploymentType != awstypes.LustreDeploymentTypePersistent2 {
+				return fmt.Errorf("metadata_configuration can only be set when deployment type is %s", awstypes.LustreDeploymentTypePersistent2)
 			}
 		}
 	}
@@ -345,7 +344,7 @@ func resourceLustreFileSystemMetadataConfigCustomizeDiff(_ context.Context, d *s
 	// we want to force a new resource if the new Iops is less than the old one
 	if d.HasChange("metadata_configuration") {
 		if v, ok := d.GetOk("metadata_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			if mode := d.Get("metadata_configuration.0.mode"); mode == awstypes.MetadataConfigurationModeUserProvisioned {
+			if mode := awstypes.MetadataConfigurationMode(d.Get("metadata_configuration.0.mode").(string)); mode == awstypes.MetadataConfigurationModeUserProvisioned {
 				o, n := d.GetChange("metadata_configuration")
 
 				oldV := o.([]interface{})

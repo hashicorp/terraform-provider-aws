@@ -442,6 +442,9 @@ func expandOperationPreferences(tfMap map[string]interface{}) *awstypes.StackSet
 	if v, ok := tfMap["max_concurrent_percentage"].(int); ok {
 		apiObject.MaxConcurrentPercentage = aws.Int32(int32(v))
 	}
+	if v, ok := tfMap["concurrency_mode"].(string); ok && v != "" {
+		apiObject.ConcurrencyMode = awstypes.ConcurrencyMode(v)
+	}
 	if v, ok := tfMap["region_concurrency_type"].(string); ok && v != "" {
 		apiObject.RegionConcurrencyType = awstypes.RegionConcurrencyType(v)
 	}
