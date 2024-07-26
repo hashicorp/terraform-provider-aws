@@ -108,7 +108,7 @@ func resourceCacheRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	output, err := conn.DescribeCache(ctx, input)
 	if err != nil {
-		if IsErrGatewayNotFound(err) {
+		if isErrGatewayNotFound(err) {
 			log.Printf("[WARN] Storage Gateway Cache (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
