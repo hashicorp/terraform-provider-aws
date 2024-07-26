@@ -26,7 +26,7 @@ output "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `bucket` - (Required) Bucket name.
 

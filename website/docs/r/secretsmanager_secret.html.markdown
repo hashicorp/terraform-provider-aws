@@ -22,7 +22,7 @@ resource "aws_secretsmanager_secret" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Description of the secret.
 * `kms_key_id` - (Optional) ARN or Id of the AWS KMS key to be used to encrypt the secret values in the versions stored in this secret. If you need to reference a CMK in a different account, you can use only the key ARN. If you don't specify this value, then Secrets Manager defaults to using the AWS account's default KMS key (the one named `aws/secretsmanager`). If the default KMS key with that name doesn't yet exist, then AWS Secrets Manager creates it for you automatically the first time.
@@ -56,8 +56,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_secretsmanager_secret` can be imported by using the secret Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_secretsmanager_secret` using the secret Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_secretsmanager_secret.example
+  id = "arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456"
+}
 ```
-$ terraform import aws_secretsmanager_secret.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456
+
+Using `terraform import`, import `aws_secretsmanager_secret` using the secret Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_secretsmanager_secret.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456
 ```

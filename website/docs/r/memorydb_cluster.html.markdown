@@ -91,8 +91,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Use the `name` to import a cluster. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a cluster using the `name`. For example:
 
+```terraform
+import {
+  to = aws_memorydb_cluster.example
+  id = "my-cluster"
+}
 ```
-$ terraform import aws_memorydb_cluster.example my-cluster
+
+Using `terraform import`, import a cluster using the `name`. For example:
+
+```console
+% terraform import aws_memorydb_cluster.example my-cluster
 ```

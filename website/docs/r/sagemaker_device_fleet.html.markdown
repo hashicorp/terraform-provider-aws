@@ -27,7 +27,7 @@ resource "aws_sagemaker_device_fleet" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `device_fleet_name` - (Required) The name of the Device Fleet (must be unique).
 * `role_arn` - (Required) The Amazon Resource Name (ARN) that has access to AWS Internet of Things (IoT).
@@ -51,8 +51,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker Device Fleets can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Device Fleets using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_device_fleet.example
+  id = "my-fleet"
+}
 ```
-$ terraform import aws_sagemaker_device_fleet.example my-fleet
+
+Using `terraform import`, import SageMaker Device Fleets using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_device_fleet.example my-fleet
 ```

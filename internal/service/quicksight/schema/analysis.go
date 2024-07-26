@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func AnalysisDefinitionSchema() *schema.Schema {
@@ -25,19 +26,7 @@ func AnalysisDefinitionSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"data_set_identifiers_declarations": dataSetIdentifierDeclarationsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetIdentifierDeclaration.html
 				"analysis_defaults":                 analysisDefaultSchema(),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AnalysisDefaults.html
-				"calculated_fields": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
-					Type:     schema.TypeList,
-					MinItems: 1,
-					MaxItems: 500,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
-							"expression":          stringSchema(true, validation.StringLenBetween(1, 4096)),
-							"name":                stringSchema(true, validation.StringLenBetween(1, 128)),
-						},
-					},
-				},
+				"calculated_fields":                 calculatedFieldsSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
 				"column_configurations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnConfiguration.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -45,9 +34,9 @@ func AnalysisDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							"role":                 stringSchema(false, validation.StringInSlice(quicksight.ColumnRole_Values(), false)),
+							names.AttrRole:         stringSchema(false, validation.StringInSlice(quicksight.ColumnRole_Values(), false)),
 						},
 					},
 				},
@@ -62,12 +51,12 @@ func AnalysisDefinitionSchema() *schema.Schema {
 							"filter_group_id":     idSchema(),
 							"filters":             filtersSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Filter.html
 							"scope_configuration": filterScopeConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
-							"status":              stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
+							names.AttrStatus:      stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
 						},
 					},
 				},
 				"parameter_declarations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterDeclaration.html
-					Type:     schema.TypeList,
+					Type:     schema.TypeSet,
 					MinItems: 1,
 					MaxItems: 200,
 					Optional: true,
@@ -88,16 +77,16 @@ func AnalysisDefinitionSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"sheet_id": idSchema(),
-							"content_type": {
+							names.AttrContentType: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								Computed:     true,
 								ValidateFunc: validation.StringInSlice(quicksight.SheetContentType_Values(), false),
 							},
-							"description":           stringSchema(false, validation.StringLenBetween(1, 1024)),
+							names.AttrDescription:   stringSchema(false, validation.StringLenBetween(1, 1024)),
 							"filter_controls":       filterControlsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
 							"layouts":               layoutSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
-							"name":                  stringSchema(false, validation.StringLenBetween(1, 2048)),
+							names.AttrName:          stringSchema(false, validation.StringLenBetween(1, 2048)),
 							"parameter_controls":    parameterControlsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterControl.html
 							"sheet_control_layouts": sheetControlLayoutsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 							"text_boxes": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetTextBox.html
@@ -108,7 +97,7 @@ func AnalysisDefinitionSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"sheet_text_box_id": idSchema(),
-										"content":           stringSchema(false, validation.StringLenBetween(1, 150000)),
+										names.AttrContent:   stringSchema(false, validation.StringLenBetween(1, 150000)),
 									},
 								},
 							},
@@ -139,7 +128,7 @@ func AnalysisSourceEntitySchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"arn": {
+							names.AttrARN: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: verify.ValidARN,
@@ -178,7 +167,7 @@ func expandAnalysisSourceTemplate(tfMap map[string]interface{}) *quicksight.Anal
 	}
 
 	sourceTemplate := &quicksight.AnalysisSourceTemplate{}
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		sourceTemplate.Arn = aws.String(v)
 	}
 	if v, ok := tfMap["data_set_references"].([]interface{}); ok && len(v) > 0 {
@@ -203,8 +192,8 @@ func ExpandAnalysisDefinition(tfList []interface{}) *quicksight.AnalysisDefiniti
 	if v, ok := tfMap["analysis_defaults"].([]interface{}); ok && len(v) > 0 {
 		definition.AnalysisDefaults = expandAnalysisDefaults(v)
 	}
-	if v, ok := tfMap["calculated_fields"].([]interface{}); ok && len(v) > 0 {
-		definition.CalculatedFields = expandCalculatedFields(v)
+	if v, ok := tfMap["calculated_fields"].(*schema.Set); ok && v.Len() > 0 {
+		definition.CalculatedFields = expandCalculatedFields(v.List())
 	}
 	if v, ok := tfMap["column_configurations"].([]interface{}); ok && len(v) > 0 {
 		definition.ColumnConfigurations = expandColumnConfigurations(v)
@@ -215,8 +204,8 @@ func ExpandAnalysisDefinition(tfList []interface{}) *quicksight.AnalysisDefiniti
 	if v, ok := tfMap["filter_groups"].([]interface{}); ok && len(v) > 0 {
 		definition.FilterGroups = expandFilterGroups(v)
 	}
-	if v, ok := tfMap["parameter_declarations"].([]interface{}); ok && len(v) > 0 {
-		definition.ParameterDeclarations = expandParameterDeclarations(v)
+	if v, ok := tfMap["parameter_declarations"].(*schema.Set); ok && v.Len() > 0 {
+		definition.ParameterDeclarations = expandParameterDeclarations(v.List())
 	}
 	if v, ok := tfMap["sheets"].([]interface{}); ok && len(v) > 0 {
 		definition.Sheets = expandSheetDefinitions(v)

@@ -50,7 +50,7 @@ resource "aws_athena_named_query" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Plain language name for the query. Maximum length of 128.
 * `workgroup` - (Optional) Workgroup to which the query belongs. Defaults to `primary`
@@ -66,8 +66,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Athena Named Query can be imported using the query ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Athena Named Query using the query ID. For example:
 
+```terraform
+import {
+  to = aws_athena_named_query.example
+  id = "0123456789"
+}
 ```
-$ terraform import aws_athena_named_query.example 0123456789
+
+Using `terraform import`, import Athena Named Query using the query ID. For example:
+
+```console
+% terraform import aws_athena_named_query.example 0123456789
 ```

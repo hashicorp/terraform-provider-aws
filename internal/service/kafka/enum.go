@@ -4,20 +4,22 @@
 package kafka
 
 const (
-	ClusterOperationStatePending          = "PENDING"
-	ClusterOperationStateUpdateComplete   = "UPDATE_COMPLETE"
-	ClusterOperationStateUpdateFailed     = "UPDATE_FAILED"
-	ClusterOperationStateUpdateInProgress = "UPDATE_IN_PROGRESS"
+	clusterOperationStatePending          = "PENDING"
+	clusterOperationStateUpdateComplete   = "UPDATE_COMPLETE"
+	clusterOperationStateUpdateFailed     = "UPDATE_FAILED"
+	clusterOperationStateUpdateInProgress = "UPDATE_IN_PROGRESS"
 )
+
+type publicAccessType string
 
 const (
-	PublicAccessTypeDisabled            = "DISABLED"
-	PublicAccessTypeServiceProvidedEIPs = "SERVICE_PROVIDED_EIPS"
+	publicAccessTypeDisabled            publicAccessType = "DISABLED"
+	publicAccessTypeServiceProvidedEIPs publicAccessType = "SERVICE_PROVIDED_EIPS"
 )
 
-func PublicAccessType_Values() []string {
-	return []string{
-		PublicAccessTypeDisabled,
-		PublicAccessTypeServiceProvidedEIPs,
+func (publicAccessType) Values() []publicAccessType {
+	return []publicAccessType{
+		publicAccessTypeDisabled,
+		publicAccessTypeServiceProvidedEIPs,
 	}
 }

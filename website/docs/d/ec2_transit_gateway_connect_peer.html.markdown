@@ -33,7 +33,7 @@ data "aws_ec2_transit_gateway_connect_peer" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `transit_gateway_connect_peer_id` - (Optional) Identifier of the EC2 Transit Gateway Connect Peer.

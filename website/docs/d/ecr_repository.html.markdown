@@ -20,7 +20,7 @@ data "aws_ecr_repository" "service" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the ECR Repository.
 * `registry_id` - (Optional) Registry ID where the repository was created.

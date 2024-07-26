@@ -84,13 +84,23 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `5m`)
+- `read` - (Default `5m`)
 - `update` - (Default `5m`)
 - `delete` - (Default `5m`)
 
 ## Import
 
-ElastiCache users can be imported using the `user_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ElastiCache users using the `user_id`. For example:
 
+```terraform
+import {
+  to = aws_elasticache_user.my_user
+  id = "userId1"
+}
 ```
-$ terraform import aws_elasticache_user.my_user userId1
+
+Using `terraform import`, import ElastiCache users using the `user_id`. For example:
+
+```console
+% terraform import aws_elasticache_user.my_user userId1
 ```

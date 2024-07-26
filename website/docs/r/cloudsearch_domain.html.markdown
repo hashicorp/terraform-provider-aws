@@ -47,7 +47,7 @@ resource "aws_cloudsearch_domain" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `endpoint_options` - (Optional) Domain endpoint options. Documented below.
 * `index_field` - (Optional) The index fields for documents added to the domain. Documented below.
@@ -104,8 +104,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudSearch Domains can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudSearch Domains using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudsearch_domain.example
+  id = "example-domain"
+}
 ```
-$ terraform import aws_cloudsearch_domain.example example-domain
+
+Using `terraform import`, import CloudSearch Domains using the `name`. For example:
+
+```console
+% terraform import aws_cloudsearch_domain.example example-domain
 ```

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -37,29 +38,27 @@ func ResourceFilter() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrAction: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(guardduty.FilterAction_Values(), false),
+			},
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			names.AttrDescription: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
 			"detector_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 64),
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"finding_criteria": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -72,21 +71,15 @@ func ResourceFilter() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"field": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
 									"equals": {
 										Type:     schema.TypeList,
 										Optional: true,
 										MinItems: 1,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"not_equals": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+									names.AttrField: {
+										Type:     schema.TypeString,
+										Required: true,
 									},
 									"greater_than": {
 										Type:         schema.TypeString,
@@ -108,24 +101,34 @@ func ResourceFilter() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: verify.ValidStringDateOrPositiveInt,
 									},
+									"not_equals": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
 								},
 							},
 						},
 					},
 				},
 			},
-			"action": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					guardduty.FilterActionNoop,
-					guardduty.FilterActionArchive,
-				}, false),
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(3, 64),
+					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_.-]+$`),
+						"only alphanumeric characters, hyphens, underscores, and periods are allowed"),
+				),
 			},
 			"rank": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -137,10 +140,10 @@ func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	input := guardduty.CreateFilterInput{
-		Action:      aws.String(d.Get("action").(string)),
-		Description: aws.String(d.Get("description").(string)),
+		Action:      aws.String(d.Get(names.AttrAction).(string)),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
 		DetectorId:  aws.String(d.Get("detector_id").(string)),
-		Name:        aws.String(d.Get("name").(string)),
+		Name:        aws.String(d.Get(names.AttrName).(string)),
 		Rank:        aws.Int64(int64(d.Get("rank").(int))),
 		Tags:        getTagsIn(ctx),
 	}
@@ -177,7 +180,7 @@ func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	} else {
 		detectorID = d.Get("detector_id").(string)
-		name = d.Get("name").(string)
+		name = d.Get(names.AttrName).(string)
 	}
 
 	input := guardduty.GetFilterInput{
@@ -204,16 +207,16 @@ func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interf
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("detector/%s/filter/%s", detectorID, name),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	err = d.Set("finding_criteria", flattenFindingCriteria(filter.FindingCriteria))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "Setting GuardDuty Filter FindingCriteria failed: %s", err)
 	}
 
-	d.Set("action", filter.Action)
-	d.Set("description", filter.Description)
-	d.Set("name", filter.Name)
+	d.Set(names.AttrAction, filter.Action)
+	d.Set(names.AttrDescription, filter.Description)
+	d.Set(names.AttrName, filter.Name)
 	d.Set("detector_id", detectorID)
 	d.Set("rank", filter.Rank)
 
@@ -228,12 +231,12 @@ func resourceFilterUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
-	if d.HasChanges("action", "description", "finding_criteria", "rank") {
+	if d.HasChanges(names.AttrAction, names.AttrDescription, "finding_criteria", "rank") {
 		input := guardduty.UpdateFilterInput{
-			Action:      aws.String(d.Get("action").(string)),
-			Description: aws.String(d.Get("description").(string)),
+			Action:      aws.String(d.Get(names.AttrAction).(string)),
+			Description: aws.String(d.Get(names.AttrDescription).(string)),
 			DetectorId:  aws.String(d.Get("detector_id").(string)),
-			FilterName:  aws.String(d.Get("name").(string)),
+			FilterName:  aws.String(d.Get(names.AttrName).(string)),
 			Rank:        aws.Int64(int64(d.Get("rank").(int))),
 		}
 
@@ -257,7 +260,7 @@ func resourceFilterDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	detectorId := d.Get("detector_id").(string)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	input := guardduty.DeleteFilterInput{
 		FilterName: aws.String(name),
@@ -297,7 +300,7 @@ func expandFindingCriteria(raw []interface{}) (*guardduty.FindingCriteria, error
 	criteria := map[string]*guardduty.Condition{}
 	for _, criterion := range inputFindingCriteria {
 		typedCriterion := criterion.(map[string]interface{})
-		field := typedCriterion["field"].(string)
+		field := typedCriterion[names.AttrField].(string)
 
 		condition := guardduty.Condition{}
 		if x, ok := typedCriterion["equals"]; ok {
@@ -379,7 +382,7 @@ func flattenFindingCriteria(findingCriteriaRemote *guardduty.FindingCriteria) []
 
 	for field, conditions := range findingCriteriaRemote.Criterion {
 		criterion := map[string]interface{}{
-			"field": field,
+			names.AttrField: field,
 		}
 		if len(conditions.Equals) > 0 {
 			criterion["equals"] = aws.StringValueSlice(conditions.Equals)

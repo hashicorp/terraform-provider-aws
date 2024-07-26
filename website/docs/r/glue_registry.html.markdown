@@ -20,7 +20,7 @@ resource "aws_glue_registry" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `registry_name` – (Required) The Name of the registry.
 * `description` – (Optional) A description of the registry.
@@ -36,8 +36,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Glue Registries can be imported using `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Registries using `arn`. For example:
 
+```terraform
+import {
+  to = aws_glue_registry.example
+  id = "arn:aws:glue:us-west-2:123456789012:registry/example"
+}
 ```
-$ terraform import aws_glue_registry.example arn:aws:glue:us-west-2:123456789012:registry/example
+
+Using `terraform import`, import Glue Registries using `arn`. For example:
+
+```console
+% terraform import aws_glue_registry.example arn:aws:glue:us-west-2:123456789012:registry/example
 ```

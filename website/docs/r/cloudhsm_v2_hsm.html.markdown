@@ -27,7 +27,7 @@ resource "aws_cloudhsm_v2_hsm" "cloudhsm_v2_hsm" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 ~> **NOTE:** Either `subnet_id` or `availability_zone` must be specified.
 
@@ -40,14 +40,27 @@ The following arguments are supported:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `availability_zone` - Name of the Availability Zone the HSM instance is located in.
+* `cluster_id` - ID of Cloud HSM v2 cluster.
+* `hsm_eni_id` - The id of the ENI interface allocated for HSM module.
 * `hsm_id` - The id of the HSM module.
 * `hsm_state` - The state of the HSM module.
-* `hsm_eni_id` - The id of the ENI interface allocated for HSM module.
+* `ip_address` - The IP address of the HSM Module.
+* `subnet_id` -  The ID of subnet in which HSM is located
 
 ## Import
 
-HSM modules can be imported using their HSM ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import HSM modules using their HSM ID. For example:
 
+```terraform
+import {
+  to = aws_cloudhsm_v2_hsm.bar
+  id = "hsm-quo8dahtaca"
+}
 ```
-$ terraform import aws_cloudhsm_v2_hsm.bar hsm-quo8dahtaca
+
+Using `terraform import`, import HSM modules using their HSM ID. For example:
+
+```console
+% terraform import aws_cloudhsm_v2_hsm.bar hsm-quo8dahtaca
 ```

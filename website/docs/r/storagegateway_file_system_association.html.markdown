@@ -80,7 +80,7 @@ resource "aws_storagegateway_file_system_association" "fsx" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `gateway_arn` - (Required) The Amazon Resource Name (ARN) of the gateway.
 * `location_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon FSx file system to associate with the FSx File Gateway.
@@ -106,8 +106,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_storagegateway_file_system_association` can be imported by using the FSx file system association Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_storagegateway_file_system_association` using the FSx file system association Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_storagegateway_file_system_association.example
+  id = "arn:aws:storagegateway:us-east-1:123456789012:fs-association/fsa-0DA347732FDB40125"
+}
 ```
-$ terraform import aws_storagegateway_file_system_association.example arn:aws:storagegateway:us-east-1:123456789012:fs-association/fsa-0DA347732FDB40125
+
+Using `terraform import`, import `aws_storagegateway_file_system_association` using the FSx file system association Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_storagegateway_file_system_association.example arn:aws:storagegateway:us-east-1:123456789012:fs-association/fsa-0DA347732FDB40125
 ```

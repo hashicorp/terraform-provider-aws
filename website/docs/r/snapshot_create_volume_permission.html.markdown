@@ -30,7 +30,7 @@ resource "aws_ebs_snapshot" "example_snapshot" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `snapshot_id` - (Required) A snapshot ID
 * `account_id` - (Required) An AWS Account ID to add create volume permissions. The AWS Account cannot be the snapshot's owner

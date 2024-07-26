@@ -21,7 +21,7 @@ data "aws_opensearchserverless_security_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the policy
 * `type` - (Required) Type of security policy. One of `encryption` or `network`.

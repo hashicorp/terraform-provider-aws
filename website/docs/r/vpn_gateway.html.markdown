@@ -24,7 +24,7 @@ resource "aws_vpn_gateway" "vpn_gw" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_id` - (Optional) The VPC ID to create in.
 * `availability_zone` - (Optional) The Availability Zone for the virtual private gateway.
@@ -41,8 +41,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPN Gateways can be imported using the `vpn gateway id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPN Gateways using the VPN gateway `id`. For example:
 
+```terraform
+import {
+  to = aws_vpn_gateway.testvpngateway
+  id = "vgw-9a4cacf3"
+}
 ```
-$ terraform import aws_vpn_gateway.testvpngateway vgw-9a4cacf3
+
+Using `terraform import`, import VPN Gateways using the VPN gateway `id`. For example:
+
+```console
+% terraform import aws_vpn_gateway.testvpngateway vgw-9a4cacf3
 ```

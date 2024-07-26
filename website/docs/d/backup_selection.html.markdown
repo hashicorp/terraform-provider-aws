@@ -21,7 +21,7 @@ data "aws_backup_selection" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `plan_id` - (Required) Backup plan ID associated with the selection of resources.
 * `selection_id` - (Required) Backup selection ID.

@@ -39,7 +39,7 @@ resource "aws_db_proxy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The identifier for the proxy. This name must be unique for all proxies owned by your AWS account in the specified AWS Region. An identifier must begin with a letter and must contain only ASCII letters, digits, and hyphens; it can't end with a hyphen or contain two consecutive hyphens.
 * `auth` - (Required) Configuration block(s) with authorization mechanisms to connect to the associated instances or clusters. Described below.
@@ -80,8 +80,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DB proxies can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB proxies using the `name`. For example:
 
+```terraform
+import {
+  to = aws_db_proxy.example
+  id = "example"
+}
 ```
-$ terraform import aws_db_proxy.example example
+
+Using `terraform import`, import DB proxies using the `name`. For example:
+
+```console
+% terraform import aws_db_proxy.example example
 ```

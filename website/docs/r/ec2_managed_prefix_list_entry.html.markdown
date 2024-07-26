@@ -42,7 +42,7 @@ This resource supports the following arguments:
 
 * `cidr` - (Required) CIDR block of this entry.
 * `description` - (Optional) Description of this entry. Please note that due to API limitations, updating only the description of an entry will require recreating the entry.
-* `prefix_list_id` - (Required) CIDR block of this entry.
+* `prefix_list_id` - (Required) The ID of the prefix list.
 
 ## Attribute Reference
 
@@ -52,8 +52,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-To import Prefix List Entries, use the `prefix_list_id` and `cidr`. Separate them with a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import prefix list entries using `prefix_list_id` and `cidr` separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_ec2_managed_prefix_list_entry.default
+  id = "pl-0570a1d2d725c16be,10.0.3.0/24"
+}
 ```
-$ terraform import aws_ec2_managed_prefix_list_entry.default pl-0570a1d2d725c16be,10.0.3.0/24
+
+Using `terraform import`, import prefix list entries using `prefix_list_id` and `cidr` separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_ec2_managed_prefix_list_entry.default pl-0570a1d2d725c16be,10.0.3.0/24
 ```

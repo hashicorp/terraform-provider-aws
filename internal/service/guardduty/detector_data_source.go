@@ -7,11 +7,11 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_guardduty_detector")
@@ -20,20 +20,52 @@ func DataSourceDetector() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDetectorRead,
 
 		Schema: map[string]*schema.Schema{
-			"id": {
+			"features": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"additional_configuration": {
+							Computed: true,
+							Type:     schema.TypeList,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrName: {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									names.AttrStatus: {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						names.AttrName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"finding_publishing_frequency": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"status": {
+			names.AttrServiceRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"service_role_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"finding_publishing_frequency": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,43 +77,35 @@ func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
-	detectorId := d.Get("id").(string)
+	detectorID := d.Get(names.AttrID).(string)
 
-	if detectorId == "" {
-		input := &guardduty.ListDetectorsInput{}
+	if detectorID == "" {
+		output, err := FindDetector(ctx, conn)
 
-		resp, err := conn.ListDetectorsWithContext(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing GuardDuty Detectors: %s", err)
+			return sdkdiag.AppendErrorf(diags, "reading this account's single GuardDuty Detector: %s", err)
 		}
 
-		if resp == nil || len(resp.DetectorIds) == 0 {
-			return sdkdiag.AppendErrorf(diags, "no GuardDuty Detectors found")
-		}
-		if len(resp.DetectorIds) > 1 {
-			return sdkdiag.AppendErrorf(diags, "multiple GuardDuty Detectors found; please use the `id` argument to look up a single detector")
-		}
-
-		detectorId = aws.StringValue(resp.DetectorIds[0])
+		detectorID = aws.StringValue(output)
 	}
 
-	getInput := &guardduty.GetDetectorInput{
-		DetectorId: aws.String(detectorId),
-	}
+	gdo, err := FindDetectorByID(ctx, conn, detectorID)
 
-	getResp, err := conn.GetDetectorWithContext(ctx, getInput)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Detector (%s): %s", detectorId, err)
+		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Detector (%s): %s", detectorID, err)
 	}
 
-	if getResp == nil {
-		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Detector (%s): empty result", detectorId)
+	d.SetId(detectorID)
+	if gdo.Features != nil {
+		if err := d.Set("features", flattenDetectorFeatureConfigurationResults(gdo.Features)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting features: %s", err)
+		}
+	} else {
+		d.Set("features", nil)
 	}
-
-	d.SetId(detectorId)
-	d.Set("status", getResp.Status)
-	d.Set("service_role_arn", getResp.ServiceRole)
-	d.Set("finding_publishing_frequency", getResp.FindingPublishingFrequency)
+	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
+	d.Set(names.AttrServiceRoleARN, gdo.ServiceRole)
+	d.Set(names.AttrStatus, gdo.Status)
 
 	return diags
 }

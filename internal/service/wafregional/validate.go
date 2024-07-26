@@ -6,12 +6,13 @@ package wafregional
 import (
 	"fmt"
 	"reflect"
-	"regexp"
+
+	"github.com/YakDriver/regexache"
 )
 
 func validMetricName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[0-9A-Za-z]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9A-Za-z]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"Only alphanumeric characters allowed in %q: %q",
 			k, value))

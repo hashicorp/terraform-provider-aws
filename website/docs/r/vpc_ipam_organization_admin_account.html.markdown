@@ -32,7 +32,7 @@ provider "aws" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `delegated_admin_account_id` - (Required)
 
@@ -48,8 +48,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IPAMs can be imported using the `delegate account id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IPAMs using the delegate account `id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_ipam_organization_admin_account.example
+  id = "12345678901"
+}
 ```
-$ terraform import aws_vpc_ipam_organization_admin_account.example 12345678901
+
+Using `terraform import`, import IPAMs using the delegate account `id`. For example:
+
+```console
+% terraform import aws_vpc_ipam_organization_admin_account.example 12345678901
 ```

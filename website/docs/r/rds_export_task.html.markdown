@@ -160,8 +160,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-A RDS (Relational Database) Export Task can be imported using the `export_task_identifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a RDS (Relational Database) Export Task using the `export_task_identifier`. For example:
 
+```terraform
+import {
+  to = aws_rds_export_task.example
+  id = "example"
+}
 ```
-$ terraform import aws_rds_export_task.example example
+
+Using `terraform import`, import a RDS (Relational Database) Export Task using the `export_task_identifier`. For example:
+
+```console
+% terraform import aws_rds_export_task.example example
 ```

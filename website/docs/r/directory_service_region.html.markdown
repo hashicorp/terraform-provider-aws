@@ -119,7 +119,7 @@ resource "aws_directory_service_region" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `desired_number_of_domain_controllers` - (Optional) The number of domain controllers desired in the replicated directory. Minimum value of `2`.
 * `directory_id` - (Required) The identifier of the directory to which you want to add Region replication.
@@ -148,8 +148,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Replicated Regions can be imported using directory ID,Region name e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Replicated Regions using directory ID,Region name. For example:
 
+```terraform
+import {
+  to = aws_directory_service_region.example
+  id = "d-9267651497,us-east-2"
+}
 ```
-$ terraform import aws_directory_service_region.example d-9267651497,us-east-2
+
+Using `terraform import`, import Replicated Regions using directory ID,Region name. For example:
+
+```console
+% terraform import aws_directory_service_region.example d-9267651497,us-east-2
 ```

@@ -23,7 +23,7 @@ resource "aws_qldb_ledger" "sample-ledger" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `deletion_protection` - (Optional) The deletion protection for the QLDB Ledger instance. By default it is `true`. To delete this resource via Terraform, this value must be configured to `false` and applied first before attempting deletion.
 * `kms_key` - (Optional) The key in AWS Key Management Service (AWS KMS) to use for encryption of data at rest in the ledger. For more information, see the [AWS documentation](https://docs.aws.amazon.com/qldb/latest/developerguide/encryption-at-rest.html). Valid values are `"AWS_OWNED_KMS_KEY"` to use an AWS KMS key that is owned and managed by AWS on your behalf, or the ARN of a valid symmetric customer managed KMS key.
@@ -48,8 +48,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-QLDB Ledgers can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import QLDB Ledgers using the `name`. For example:
 
+```terraform
+import {
+  to = aws_qldb_ledger.sample-ledger
+  id = "sample-ledger"
+}
 ```
-$ terraform import aws_qldb_ledger.sample-ledger sample-ledger
+
+Using `terraform import`, import QLDB Ledgers using the `name`. For example:
+
+```console
+% terraform import aws_qldb_ledger.sample-ledger sample-ledger
 ```

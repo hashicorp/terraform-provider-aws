@@ -10,6 +10,8 @@ description: |-
 
 Provides a AWS Transfer User resource. Managing SSH keys can be accomplished with the [`aws_transfer_ssh_key` resource](/docs/providers/aws/r/transfer_ssh_key.html).
 
+~> **NOTE:** We suggest using [`jsonencode()`](https://developer.hashicorp.com/terraform/language/functions/jsonencode) or [`aws_iam_policy_document`](/docs/providers/aws/d/iam_policy_document.html) when assigning a value to `policy`. They seamlessly translate Terraform language into JSON, enabling you to maintain consistency within your configuration without the need for context switches. Also, you can sidestep potential complications arising from formatting discrepancies, whitespace inconsistencies, and other nuances inherent to JSON.
+
 ## Example Usage
 
 ```terraform
@@ -69,7 +71,7 @@ resource "aws_transfer_user" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `server_id` - (Required) The Server ID of the Transfer Server (e.g., `s-12345678`)
 * `user_name` - (Required) The name used for log in to your SFTP server.
@@ -116,8 +118,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Transfer Users can be imported using the `server_id` and `user_name` separated by `/`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transfer Users using the `server_id` and `user_name` separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_transfer_user.bar
+  id = "s-12345678/test-username"
+}
 ```
-$ terraform import aws_transfer_user.bar s-12345678/test-username
+
+Using `terraform import`, import Transfer Users using the `server_id` and `user_name` separated by `/`. For example:
+
+```console
+% terraform import aws_transfer_user.bar s-12345678/test-username
 ```

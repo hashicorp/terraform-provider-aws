@@ -12,18 +12,20 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_guardduty_organization_configuration")
+// @SDKResource("aws_guardduty_organization_configuration", name="Organization Configuration")
 func ResourceOrganizationConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceOrganizationConfigurationUpdate,
+		CreateWithoutTimeout: resourceOrganizationConfigurationPut,
 		ReadWithoutTimeout:   resourceOrganizationConfigurationRead,
-		UpdateWithoutTimeout: resourceOrganizationConfigurationUpdate,
+		UpdateWithoutTimeout: resourceOrganizationConfigurationPut,
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
@@ -38,7 +40,6 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 				ExactlyOneOf: []string{"auto_enable", "auto_enable_organization_members"},
 				Deprecated:   "Use auto_enable_organization_members instead",
 			},
-
 			"auto_enable_organization_members": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -46,7 +47,6 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 				ExactlyOneOf: []string{"auto_enable", "auto_enable_organization_members"},
 				ValidateFunc: validation.StringInSlice(guardduty.AutoEnableMembers_Values(), false),
 			},
-
 			"datasources": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -54,20 +54,6 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"s3_logs": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"auto_enable": {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
-								},
-							},
-						},
 						"kubernetes": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -123,10 +109,23 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"s3_logs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"auto_enable": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
-
 			"detector_id": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -166,12 +165,11 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 	}
 }
 
-func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	detectorID := d.Get("detector_id").(string)
-
 	input := &guardduty.UpdateOrganizationConfigurationInput{
 		AutoEnableOrganizationMembers: aws.String(d.Get("auto_enable_organization_members").(string)),
 		DetectorId:                    aws.String(detectorID),
@@ -181,13 +179,20 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 		input.DataSources = expandOrganizationDataSourceConfigurations(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	// We have seen occasional acceptance test failures when updating multiple features on the same detector concurrently,
+	// so use a mutex to ensure that multiple features being updated concurrently don't trample on each other.
+	conns.GlobalMutexKV.Lock(detectorID)
+	defer conns.GlobalMutexKV.Unlock(detectorID)
+
 	_, err := conn.UpdateOrganizationConfigurationWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating GuardDuty Organization Configuration (%s): %s", detectorID, err)
 	}
 
-	d.SetId(detectorID)
+	if d.IsNewResource() {
+		d.SetId(detectorID)
+	}
 
 	return append(diags, resourceOrganizationConfigurationRead(ctx, d, meta)...)
 }
@@ -196,13 +201,9 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
-	input := &guardduty.DescribeOrganizationConfigurationInput{
-		DetectorId: aws.String(d.Id()),
-	}
+	output, err := FindOrganizationConfigurationByID(ctx, conn, d.Id())
 
-	output, err := conn.DescribeOrganizationConfigurationWithContext(ctx, input)
-
-	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] GuardDuty Organization Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -218,7 +219,6 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 
 	d.Set("auto_enable", output.AutoEnable)
 	d.Set("auto_enable_organization_members", output.AutoEnableOrganizationMembers)
-
 	if output.DataSources != nil {
 		if err := d.Set("datasources", []interface{}{flattenOrganizationDataSourceConfigurationsResult(output.DataSources)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting datasources: %s", err)
@@ -226,7 +226,6 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 	} else {
 		d.Set("datasources", nil)
 	}
-
 	d.Set("detector_id", d.Id())
 
 	return diags
@@ -239,16 +238,16 @@ func expandOrganizationDataSourceConfigurations(tfMap map[string]interface{}) *g
 
 	apiObject := &guardduty.OrganizationDataSourceConfigurations{}
 
-	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 {
-		apiObject.S3Logs = expandOrganizationS3LogsConfiguration(v[0].(map[string]interface{}))
-	}
-
 	if v, ok := tfMap["kubernetes"].([]interface{}); ok && len(v) > 0 {
 		apiObject.Kubernetes = expandOrganizationKubernetesConfiguration(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["malware_protection"].([]interface{}); ok && len(v) > 0 {
 		apiObject.MalwareProtection = expandOrganizationMalwareProtectionConfiguration(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 {
+		apiObject.S3Logs = expandOrganizationS3LogsConfiguration(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
@@ -304,11 +303,11 @@ func expandOrganizationMalwareProtectionConfiguration(tfMap map[string]interface
 	}
 
 	return &guardduty.OrganizationMalwareProtectionConfiguration{
-		ScanEc2InstanceWithFindings: expandOrganizationScanEC2InstanceWithFindingsConfiguration(m),
+		ScanEc2InstanceWithFindings: expandOrganizationScanEc2InstanceWithFindings(m),
 	}
 }
 
-func expandOrganizationScanEC2InstanceWithFindingsConfiguration(tfMap map[string]interface{}) *guardduty.OrganizationScanEc2InstanceWithFindings {
+func expandOrganizationScanEc2InstanceWithFindings(tfMap map[string]interface{}) *guardduty.OrganizationScanEc2InstanceWithFindings { // nosemgrep:ci.caps3-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -324,11 +323,11 @@ func expandOrganizationScanEC2InstanceWithFindingsConfiguration(tfMap map[string
 	}
 
 	return &guardduty.OrganizationScanEc2InstanceWithFindings{
-		EbsVolumes: expandOrganizationEBSVolumesConfiguration(m),
+		EbsVolumes: expandOrganizationEbsVolumes(m),
 	}
 }
 
-func expandOrganizationEBSVolumesConfiguration(tfMap map[string]interface{}) *guardduty.OrganizationEbsVolumes {
+func expandOrganizationEbsVolumes(tfMap map[string]interface{}) *guardduty.OrganizationEbsVolumes { // nosemgrep:ci.caps3-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -397,13 +396,13 @@ func flattenOrganizationKubernetesConfigurationResult(apiObject *guardduty.Organ
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AuditLogs; v != nil {
-		tfMap["audit_logs"] = []interface{}{flattenOrganizationKubernetesAuditLogsConfiguration(v)}
+		tfMap["audit_logs"] = []interface{}{flattenOrganizationKubernetesAuditLogsConfigurationResult(v)}
 	}
 
 	return tfMap
 }
 
-func flattenOrganizationKubernetesAuditLogsConfiguration(apiObject *guardduty.OrganizationKubernetesAuditLogsConfigurationResult) map[string]interface{} {
+func flattenOrganizationKubernetesAuditLogsConfigurationResult(apiObject *guardduty.OrganizationKubernetesAuditLogsConfigurationResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -425,13 +424,13 @@ func flattenOrganizationMalwareProtectionConfigurationResult(apiObject *guarddut
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ScanEc2InstanceWithFindings; v != nil {
-		tfMap["scan_ec2_instance_with_findings"] = []interface{}{flattenOrganizationMalwareProtectionScanEC2InstanceWithFindingsResult(v)}
+		tfMap["scan_ec2_instance_with_findings"] = []interface{}{flattenOrganizationScanEc2InstanceWithFindingsResult(v)}
 	}
 
 	return tfMap
 }
 
-func flattenOrganizationMalwareProtectionScanEC2InstanceWithFindingsResult(apiObject *guardduty.OrganizationScanEc2InstanceWithFindingsResult) map[string]interface{} {
+func flattenOrganizationScanEc2InstanceWithFindingsResult(apiObject *guardduty.OrganizationScanEc2InstanceWithFindingsResult) map[string]interface{} { // nosemgrep:ci.caps3-in-func-name
 	if apiObject == nil {
 		return nil
 	}
@@ -439,13 +438,13 @@ func flattenOrganizationMalwareProtectionScanEC2InstanceWithFindingsResult(apiOb
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.EbsVolumes; v != nil {
-		tfMap["ebs_volumes"] = []interface{}{flattenOrganizationMalwareProtectionEBSVolumesResult(v)}
+		tfMap["ebs_volumes"] = []interface{}{flattenOrganizationEbsVolumesResult(v)}
 	}
 
 	return tfMap
 }
 
-func flattenOrganizationMalwareProtectionEBSVolumesResult(apiObject *guardduty.OrganizationEbsVolumesResult) map[string]interface{} {
+func flattenOrganizationEbsVolumesResult(apiObject *guardduty.OrganizationEbsVolumesResult) map[string]interface{} { // nosemgrep:ci.caps3-in-func-name
 	if apiObject == nil {
 		return nil
 	}
@@ -457,4 +456,29 @@ func flattenOrganizationMalwareProtectionEBSVolumesResult(apiObject *guardduty.O
 	}
 
 	return tfMap
+}
+
+func FindOrganizationConfigurationByID(ctx context.Context, conn *guardduty.GuardDuty, id string) (*guardduty.DescribeOrganizationConfigurationOutput, error) {
+	input := &guardduty.DescribeOrganizationConfigurationInput{
+		DetectorId: aws.String(id),
+	}
+
+	output, err := conn.DescribeOrganizationConfigurationWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

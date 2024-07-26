@@ -54,7 +54,7 @@ resource "aws_apigatewayv2_route" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) API identifier.
 * `route_key` - (Required) Route key for the route. For HTTP APIs, the route key can be either `$default`, or a combination of an HTTP method and resource path, for example, `GET /pets`.
@@ -85,10 +85,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_apigatewayv2_route` can be imported by using the API identifier and route identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_route` using the API identifier and route identifier. For example:
 
+```terraform
+import {
+  to = aws_apigatewayv2_route.example
+  id = "aabbccddee/1122334"
+}
 ```
-$ terraform import aws_apigatewayv2_route.example aabbccddee/1122334
+
+Using `terraform import`, import `aws_apigatewayv2_route` using the API identifier and route identifier. For example:
+
+```console
+% terraform import aws_apigatewayv2_route.example aabbccddee/1122334
 ```
 
 -> **Note:** The API Gateway managed route created as part of [_quick_create_](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-basic-concept.html#apigateway-definition-quick-create) cannot be imported.

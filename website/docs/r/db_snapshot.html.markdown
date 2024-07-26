@@ -35,7 +35,7 @@ resource "aws_db_snapshot" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `db_instance_identifier` - (Required) The DB Instance Identifier from which to take the snapshot.
 * `db_snapshot_identifier` - (Required) The Identifier for the snapshot.
@@ -71,8 +71,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_db_snapshot` can be imported by using the snapshot identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_db_snapshot` using the snapshot identifier. For example:
 
+```terraform
+import {
+  to = aws_db_snapshot.example
+  id = "my-snapshot"
+}
 ```
-$ terraform import aws_db_snapshot.example my-snapshot
+
+Using `terraform import`, import `aws_db_snapshot` using the snapshot identifier. For example:
+
+```console
+% terraform import aws_db_snapshot.example my-snapshot
 ```

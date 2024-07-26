@@ -29,14 +29,14 @@ resource "aws_efs_backup_policy" "policy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `file_system_id` - (Required) The ID of the EFS file system.
 * `backup_policy` - (Required) A backup_policy object (documented below).
 
 ### Backup Policy Arguments
 
-For **backup_policy** the following attributes are supported:
+`backup_policy` supports the following arguments:
 
 * `status` - (Required) A status of the backup policy. Valid values: `ENABLED`, `DISABLED`.
 
@@ -48,8 +48,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-The EFS backup policies can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the EFS backup policies using the `id`. For example:
 
+```terraform
+import {
+  to = aws_efs_backup_policy.example
+  id = "fs-6fa144c6"
+}
 ```
-$ terraform import aws_efs_backup_policy.example fs-6fa144c6
+
+Using `terraform import`, import the EFS backup policies using the `id`. For example:
+
+```console
+% terraform import aws_efs_backup_policy.example fs-6fa144c6
 ```

@@ -50,8 +50,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_location_route_calculator` can be imported using the route calculator name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_location_route_calculator` using the route calculator name. For example:
 
+```terraform
+import {
+  to = aws_location_route_calculator.example
+  id = "example"
+}
 ```
-$ terraform import aws_location_route_calculator.example example
+
+Using `terraform import`, import `aws_location_route_calculator` using the route calculator name. For example:
+
+```console
+% terraform import aws_location_route_calculator.example example
 ```

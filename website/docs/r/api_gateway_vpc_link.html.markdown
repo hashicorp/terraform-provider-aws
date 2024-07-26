@@ -35,7 +35,7 @@ resource "aws_api_gateway_vpc_link" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name used to label and identify the VPC link.
 * `description` - (Optional) Description of the VPC link.
@@ -51,8 +51,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-API Gateway VPC Link can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway VPC Link using the `id`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_vpc_link.example
+  id = "12345abcde"
+}
 ```
-$ terraform import aws_api_gateway_vpc_link.example 12345abcde
+
+Using `terraform import`, import API Gateway VPC Link using the `id`. For example:
+
+```console
+% terraform import aws_api_gateway_vpc_link.example 12345abcde
 ```

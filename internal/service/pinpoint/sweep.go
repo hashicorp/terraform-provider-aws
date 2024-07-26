@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package pinpoint
 
 import (
@@ -14,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_pinpoint_app", &resource.Sweeper{
 		Name: "aws_pinpoint_app",
 		F:    sweepApps,
@@ -36,7 +34,7 @@ func sweepApps(region string) error {
 	for {
 		output, err := conn.GetAppsWithContext(ctx, input)
 		if err != nil {
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				log.Printf("[WARN] Skipping Pinpoint app sweep for %s: %s", region, err)
 				return nil
 			}

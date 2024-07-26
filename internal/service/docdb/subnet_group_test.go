@@ -6,44 +6,45 @@ package docdb_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdocdb "github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDocDBSubnetGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBSubnetGroup
-
-	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
+	var v awstypes.DBSubnetGroup
+	resourceName := "aws_docdb_subnet_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetGroupConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetGroupExists(ctx, "aws_docdb_subnet_group.foo", &v),
-					resource.TestCheckResourceAttr(
-						"aws_docdb_subnet_group.foo", "name", rName),
-					resource.TestCheckResourceAttr(
-						"aws_docdb_subnet_group.foo", "description", "Managed by Terraform"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
-				ResourceName:      "aws_docdb_subnet_group.foo",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -53,21 +54,21 @@ func TestAccDocDBSubnetGroup_basic(t *testing.T) {
 
 func TestAccDocDBSubnetGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBSubnetGroup
-
-	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
+	var v awstypes.DBSubnetGroup
+	resourceName := "aws_docdb_subnet_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetGroupExists(ctx, "aws_docdb_subnet_group.foo", &v),
-					testAccCheckSubnetGroupDisappears(ctx, &v),
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdocdb.ResourceSubnetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -75,52 +76,57 @@ func TestAccDocDBSubnetGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccDocDBSubnetGroup_namePrefix(t *testing.T) {
+func TestAccDocDBSubnetGroup_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBSubnetGroup
+	var v awstypes.DBSubnetGroup
+	resourceName := "aws_docdb_subnet_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetGroupConfig_namePrefix(),
+				Config: testAccSubnetGroupConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetGroupExists(ctx, "aws_docdb_subnet_group.test", &v),
-					resource.TestMatchResourceAttr(
-						"aws_docdb_subnet_group.test", "name", regexp.MustCompile("^tf_test-")),
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
-				ResourceName:            "aws_docdb_subnet_group.test",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccDocDBSubnetGroup_generatedName(t *testing.T) {
+func TestAccDocDBSubnetGroup_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBSubnetGroup
+	var v awstypes.DBSubnetGroup
+	resourceName := "aws_docdb_subnet_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetGroupConfig_generatedName(),
+				Config: testAccSubnetGroupConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetGroupExists(ctx, "aws_docdb_subnet_group.test", &v),
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
-				ResourceName:      "aws_docdb_subnet_group.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -130,37 +136,115 @@ func TestAccDocDBSubnetGroup_generatedName(t *testing.T) {
 
 func TestAccDocDBSubnetGroup_updateDescription(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBSubnetGroup
-
-	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
+	var v awstypes.DBSubnetGroup
+	resourceName := "aws_docdb_subnet_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetGroupConfig_basic(rName),
+				Config: testAccSubnetGroupConfig_description(rName, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetGroupExists(ctx, "aws_docdb_subnet_group.foo", &v),
-					resource.TestCheckResourceAttr(
-						"aws_docdb_subnet_group.foo", "description", "Managed by Terraform"),
-				),
-			},
-
-			{
-				Config: testAccSubnetGroupConfig_updatedDescription(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetGroupExists(ctx, "aws_docdb_subnet_group.foo", &v),
-					resource.TestCheckResourceAttr(
-						"aws_docdb_subnet_group.foo", "description", "foo description updated"),
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc1"),
 				),
 			},
 			{
-				ResourceName:      "aws_docdb_subnet_group.foo",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSubnetGroupConfig_description(rName, "desc2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDocDBSubnetGroup_updateSubnets(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DBSubnetGroup
+	resourceName := "aws_docdb_subnet_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetGroupConfig_3subnets(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct3),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSubnetGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDocDBSubnetGroup_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DBSubnetGroup
+	resourceName := "aws_docdb_subnet_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSubnetGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccSubnetGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
 			},
 		},
 	})
@@ -168,228 +252,119 @@ func TestAccDocDBSubnetGroup_updateDescription(t *testing.T) {
 
 func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_docdb_subnet_group" {
 				continue
 			}
 
-			// Try to find the resource
-			resp, err := conn.DescribeDBSubnetGroupsWithContext(ctx, &docdb.DescribeDBSubnetGroupsInput{DBSubnetGroupName: aws.String(rs.Primary.ID)})
+			_, err := tfdocdb.FindDBSubnetGroupByName(ctx, conn, rs.Primary.ID)
 
-			if err == nil {
-				if len(resp.DBSubnetGroups) != 0 &&
-					aws.StringValue(resp.DBSubnetGroups[0].DBSubnetGroupName) == rs.Primary.ID {
-					return fmt.Errorf("DocumentDB Subnet Group %s still exists", rs.Primary.ID)
-				}
+			if tfresource.NotFound(err) {
+				continue
 			}
 
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
-					return nil
-				}
 				return err
 			}
+
+			return fmt.Errorf("DocumentDB Subnet Group %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckSubnetGroupDisappears(ctx context.Context, group *docdb.DBSubnetGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
-
-		params := &docdb.DeleteDBSubnetGroupInput{
-			DBSubnetGroupName: group.DBSubnetGroupName,
-		}
-
-		_, err := conn.DeleteDBSubnetGroupWithContext(ctx, params)
-		if err != nil {
-			return err
-		}
-
-		return tfdocdb.WaitForSubnetGroupDeletion(ctx, conn, *group.DBSubnetGroupName)
-	}
-}
-
-func testAccCheckSubnetGroupExists(ctx context.Context, n string, v *docdb.DBSubnetGroup) resource.TestCheckFunc {
+func testAccCheckSubnetGroupExists(ctx context.Context, n string, v *awstypes.DBSubnetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
-		resp, err := conn.DescribeDBSubnetGroupsWithContext(ctx, &docdb.DescribeDBSubnetGroupsInput{DBSubnetGroupName: aws.String(rs.Primary.ID)})
+		output, err := tfdocdb.FindDBSubnetGroupByName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if len(resp.DBSubnetGroups) == 0 {
-			return fmt.Errorf("DbSubnetGroup not found")
-		}
 
-		*v = *resp.DBSubnetGroups[0]
+		*v = *output
 
 		return nil
 	}
 }
 
 func testAccSubnetGroupConfig_basic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-docdb-subnet-group"
-  }
-}
-
-resource "aws_subnet" "foo" {
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.foo.id
-
-  tags = {
-    Name = "tf-acc-docdb-subnet-group-1"
-  }
-}
-
-resource "aws_subnet" "bar" {
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id            = aws_vpc.foo.id
-
-  tags = {
-    Name = "tf-acc-docdb-subnet-group-2"
-  }
-}
-
-resource "aws_docdb_subnet_group" "foo" {
-  name       = "%s"
-  subnet_ids = [aws_subnet.foo.id, aws_subnet.bar.id]
-
-  tags = {
-    Name = "tf-docdb-subnet-group-test"
-  }
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_docdb_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
 `, rName))
 }
 
-func testAccSubnetGroupConfig_updatedDescription(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-docdb-subnet-group"
-  }
+func testAccSubnetGroupConfig_nameGenerated(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), `
+resource "aws_docdb_subnet_group" "test" {
+  subnet_ids = aws_subnet.test[*].id
+}
+`)
 }
 
-resource "aws_subnet" "foo" {
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.foo.id
-
-  tags = {
-    Name = "tf-acc-docdb-subnet-group-1"
-  }
+func testAccSubnetGroupConfig_namePrefix(rName, namePrefix string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_docdb_subnet_group" "test" {
+  name_prefix = %[1]q
+  subnet_ids  = aws_subnet.test[*].id
+}
+`, namePrefix))
 }
 
-resource "aws_subnet" "bar" {
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id            = aws_vpc.foo.id
-
-  tags = {
-    Name = "tf-acc-docdb-subnet-group-2"
-  }
+func testAccSubnetGroupConfig_description(rName, description string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_docdb_subnet_group" "test" {
+  name        = %[1]q
+  description = %[2]q
+  subnet_ids  = aws_subnet.test[*].id
+}
+`, rName, description))
 }
 
-resource "aws_docdb_subnet_group" "foo" {
-  name        = "%s"
-  description = "foo description updated"
-  subnet_ids  = [aws_subnet.foo.id, aws_subnet.bar.id]
-
-  tags = {
-    Name = "tf-docdb-subnet-group-test"
-  }
+func testAccSubnetGroupConfig_3subnets(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
+resource "aws_docdb_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
 `, rName))
 }
 
-func testAccSubnetGroupConfig_namePrefix() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-docdb-subnet-group-name-prefix"
-  }
-}
-
-resource "aws_subnet" "a" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-docdb-subnet-group-name-prefix-a"
-  }
-}
-
-resource "aws_subnet" "b" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = "tf-acc-docdb-subnet-group-name-prefix-b"
-  }
-}
-
+func testAccSubnetGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_docdb_subnet_group" "test" {
-  name_prefix = "tf_test-"
-  subnet_ids  = [aws_subnet.a.id, aws_subnet.b.id]
-}`)
-}
-
-func testAccSubnetGroupConfig_generatedName() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 
   tags = {
-    Name = "terraform-testacc-docdb-subnet-group-generated-name"
+    %[2]q = %[3]q
   }
 }
-
-resource "aws_subnet" "a" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-docdb-subnet-group-generated-name-a"
-  }
+`, rName, tagKey1, tagValue1))
 }
 
-resource "aws_subnet" "b" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = "tf-acc-docdb-subnet-group-generated-name-a"
-  }
-}
-
+func testAccSubnetGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_docdb_subnet_group" "test" {
-  subnet_ids = [aws_subnet.a.id, aws_subnet.b.id]
-}`)
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

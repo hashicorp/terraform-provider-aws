@@ -58,7 +58,7 @@ resource "aws_evidently_segment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional, Forces new resource) Specifies the description of the segment.
 * `name` - (Required, Forces new resource) A name for the segment.
@@ -79,8 +79,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudWatch Evidently Segment can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Evidently Segment using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_evidently_segment.example
+  id = "arn:aws:evidently:us-west-2:123456789012:segment/example"
+}
 ```
-$ terraform import aws_evidently_segment.example arn:aws:evidently:us-west-2:123456789012:segment/example
+
+Using `terraform import`, import CloudWatch Evidently Segment using the `arn`. For example:
+
+```console
+% terraform import aws_evidently_segment.example arn:aws:evidently:us-west-2:123456789012:segment/example
 ```

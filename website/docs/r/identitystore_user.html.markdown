@@ -109,8 +109,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-An Identity Store User can be imported using the combination `identity_store_id/user_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an Identity Store User using the combination `identity_store_id/user_id`. For example:
 
+```terraform
+import {
+  to = aws_identitystore_user.example
+  id = "d-9c6705e95c/065212b4-9061-703b-5876-13a517ae2a7c"
+}
 ```
-$ terraform import aws_identitystore_user.example d-9c6705e95c/065212b4-9061-703b-5876-13a517ae2a7c
+
+Using `terraform import`, import an Identity Store User using the combination `identity_store_id/user_id`. For example:
+
+```console
+% terraform import aws_identitystore_user.example d-9c6705e95c/065212b4-9061-703b-5876-13a517ae2a7c
 ```

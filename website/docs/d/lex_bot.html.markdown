@@ -21,7 +21,7 @@ data "aws_lex_bot" "order_flowers_bot" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the bot. The name is case sensitive.
 * `version` - (Optional) Version or alias of the bot.

@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"net/url"
 	"reflect"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/go-cty/cty"
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -177,7 +177,7 @@ func (tags KeyValueTags) IgnoreServerlessApplicationRepository() KeyValueTags {
 	return result
 }
 
-// IgnoreAWS returns non-system tag keys.
+// IgnoreSystem returns non-system tag keys.
 // The ignored keys vary on the specified service.
 func (tags KeyValueTags) IgnoreSystem(serviceName string) KeyValueTags {
 	switch serviceName {
@@ -277,48 +277,6 @@ func (tags KeyValueTags) Keys() []string {
 
 	for k := range tags {
 		result = append(result, k)
-	}
-
-	return result
-}
-
-// ListofMap returns a list of flattened tags.
-// Compatible with setting Terraform state for strongly typed configuration blocks.
-func (tags KeyValueTags) ListofMap() []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(tags))
-
-	for k, v := range tags {
-		m := map[string]interface{}{
-			"key":   k,
-			"value": "",
-		}
-
-		if v == nil {
-			result = append(result, m)
-			continue
-		}
-
-		if v.Value != nil {
-			m["value"] = *v.Value
-		}
-
-		for k, v := range v.AdditionalBoolFields {
-			m[ToSnakeCase(k)] = false
-
-			if v != nil {
-				m[ToSnakeCase(k)] = *v
-			}
-		}
-
-		for k, v := range v.AdditionalStringFields {
-			m[ToSnakeCase(k)] = ""
-
-			if v != nil {
-				m[ToSnakeCase(k)] = *v
-			}
-		}
-
-		result = append(result, m)
 	}
 
 	return result
@@ -644,7 +602,7 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 
 		return kvtm
 	case types.Map:
-		return New(ctx, flex.ExpandFrameworkStringValueMap(ctx, value))
+		return New(ctx, flex.ExpandFrameworkStringMap(ctx, value))
 	default:
 		return make(KeyValueTags)
 	}
@@ -668,7 +626,7 @@ type TagData struct {
 }
 
 func (td *TagData) ValueString() string {
-	if td.Value == nil {
+	if td == nil || td.Value == nil {
 		return ""
 	}
 
@@ -874,8 +832,8 @@ func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, default
 // For example, AWS Go SDK field names are in PascalCase,
 // while Terraform schema attribute names are in snake_case.
 func ToSnakeCase(str string) string {
-	result := regexp.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
-	result = regexp.MustCompile("([a-z0-9])([A-Z])").ReplaceAllString(result, "${1}_${2}")
+	result := regexache.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
+	result = regexache.MustCompile("([0-9a-z])([A-Z])").ReplaceAllString(result, "${1}_${2}")
 	return strings.ToLower(result)
 }
 

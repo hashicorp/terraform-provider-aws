@@ -64,7 +64,7 @@ resource "aws_iam_role_policy_attachment" "organization" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the configuration aggregator.
 * `account_aggregation_source` - (Optional) The account(s) to aggregate config data from as documented below.
@@ -100,8 +100,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Configuration Aggregators can be imported using the name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Configuration Aggregators using the name. For example:
 
+```terraform
+import {
+  to = aws_config_configuration_aggregator.example
+  id = "foo"
+}
 ```
-$ terraform import aws_config_configuration_aggregator.example foo
+
+Using `terraform import`, import Configuration Aggregators using the name. For example:
+
+```console
+% terraform import aws_config_configuration_aggregator.example foo
 ```

@@ -125,7 +125,7 @@ EOF
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `definition` - (Required) The [Amazon States Language](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html) definition of the state machine.
 * `logging_configuration` - (Optional) Defines what execution history events are logged and where they are logged. The `logging_configuration` parameter is only valid when `type` is set to `EXPRESS`. Defaults to `OFF`. For more information see [Logging Express Workflows](https://docs.aws.amazon.com/step-functions/latest/dg/cw-logs.html) and [Log Levels](https://docs.aws.amazon.com/step-functions/latest/dg/cloudwatch-log-level.html) in the AWS Step Functions User Guide.
@@ -154,6 +154,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ARN of the state machine.
 * `arn` - The ARN of the state machine.
 * `creation_date` - The date the state machine was created.
+* `state_machine_version_arn` - The ARN of the state machine version.
 * `status` - The current status of the state machine. Either `ACTIVE` or `DELETING`.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
@@ -167,8 +168,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-State Machines can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import State Machines using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_sfn_state_machine.foo
+  id = "arn:aws:states:eu-west-1:123456789098:stateMachine:bar"
+}
 ```
-$ terraform import aws_sfn_state_machine.foo arn:aws:states:eu-west-1:123456789098:stateMachine:bar
+
+Using `terraform import`, import State Machines using the `arn`. For example:
+
+```console
+% terraform import aws_sfn_state_machine.foo arn:aws:states:eu-west-1:123456789098:stateMachine:bar
 ```

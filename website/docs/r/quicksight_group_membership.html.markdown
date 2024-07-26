@@ -21,7 +21,7 @@ resource "aws_quicksight_group_membership" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `group_name` - (Required) The name of the group in which the member will be added.
 * `member_name` - (Required) The name of the member to add to the group.
@@ -34,8 +34,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-QuickSight Group membership can be imported using the AWS account ID, namespace, group name and member name separated by `/`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import QuickSight Group membership using the AWS account ID, namespace, group name and member name separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_quicksight_group_membership.example
+  id = "123456789123/default/all-access-users/john_smith"
+}
 ```
-$ terraform import aws_quicksight_group_membership.example 123456789123/default/all-access-users/john_smith
+
+Using `terraform import`, import QuickSight Group membership using the AWS account ID, namespace, group name and member name separated by `/`. For example:
+
+```console
+% terraform import aws_quicksight_group_membership.example 123456789123/default/all-access-users/john_smith
 ```

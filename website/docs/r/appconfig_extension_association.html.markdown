@@ -61,7 +61,7 @@ resource "aws_appconfig_extension_association" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `extension_arn` - (Required) The ARN of the extension defined in the association.
 * `resource_arn` - (Optional) The ARN of the application, configuration profile, or environment to associate with the extension.
@@ -77,8 +77,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AppConfig Extension Associations can be imported using their extension association ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppConfig Extension Associations using their extension association ID. For example:
 
+```terraform
+import {
+  to = aws_appconfig_extension_association.example
+  id = "71rxuzt"
+}
 ```
-$ terraform import aws_appconfig_extension_association.example 71rxuzt
+
+Using `terraform import`, import AppConfig Extension Associations using their extension association ID. For example:
+
+```console
+% terraform import aws_appconfig_extension_association.example 71rxuzt
 ```

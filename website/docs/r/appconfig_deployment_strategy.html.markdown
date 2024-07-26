@@ -30,7 +30,7 @@ resource "aws_appconfig_deployment_strategy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `deployment_duration_in_minutes` - (Required) Total amount of time for a deployment to last. Minimum value of 0, maximum value of 1440.
 * `growth_factor` - (Required) Percentage of targets to receive a deployed configuration during each interval. Minimum value of 1.0, maximum value of 100.0.
@@ -51,8 +51,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AppConfig Deployment Strategies can be imported by using their deployment strategy ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppConfig Deployment Strategies using their deployment strategy ID. For example:
 
+```terraform
+import {
+  to = aws_appconfig_deployment_strategy.example
+  id = "11xxxxx"
+}
 ```
-$ terraform import aws_appconfig_deployment_strategy.example 11xxxxx
+
+Using `terraform import`, import AppConfig Deployment Strategies using their deployment strategy ID. For example:
+
+```console
+% terraform import aws_appconfig_deployment_strategy.example 11xxxxx
 ```

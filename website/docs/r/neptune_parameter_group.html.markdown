@@ -26,9 +26,10 @@ resource "aws_neptune_parameter_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `name` - (Required, Forces new resource) The name of the Neptune parameter group.
+* `name` - (Optional, Forces new resource) The name of the Neptune parameter group.
+* `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `family` - (Required) The family of the Neptune parameter group.
 * `description` - (Optional) The description of the Neptune parameter group. Defaults to "Managed by Terraform".
 * `parameter` - (Optional) A list of Neptune parameters to apply.
@@ -50,8 +51,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Neptune Parameter Groups can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Neptune Parameter Groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_neptune_parameter_group.some_pg
+  id = "some-pg"
+}
 ```
-$ terraform import aws_neptune_parameter_group.some_pg some-pg
+
+Using `terraform import`, import Neptune Parameter Groups using the `name`. For example:
+
+```console
+% terraform import aws_neptune_parameter_group.some_pg some-pg
 ```

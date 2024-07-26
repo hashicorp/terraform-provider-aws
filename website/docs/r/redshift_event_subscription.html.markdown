@@ -48,7 +48,7 @@ resource "aws_redshift_event_subscription" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Redshift event subscription.
 * `sns_topic_arn` - (Required) The ARN of the SNS topic to send events to.
@@ -70,8 +70,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Event Subscriptions can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Event Subscriptions using the `name`. For example:
 
+```terraform
+import {
+  to = aws_redshift_event_subscription.default
+  id = "redshift-event-sub"
+}
 ```
-$ terraform import aws_redshift_event_subscription.default redshift-event-sub
+
+Using `terraform import`, import Redshift Event Subscriptions using the `name`. For example:
+
+```console
+% terraform import aws_redshift_event_subscription.default redshift-event-sub
 ```

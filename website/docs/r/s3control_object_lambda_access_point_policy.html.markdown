@@ -59,7 +59,7 @@ resource "aws_s3control_object_lambda_access_point_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Optional) The AWS account ID for the account that owns the Object Lambda Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `name` - (Required) The name of the Object Lambda Access Point.
@@ -74,8 +74,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Object Lambda Access Point policies can be imported using the `account_id` and `name`, separated by a colon (`:`), e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Object Lambda Access Point policies using the `account_id` and `name`, separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_s3control_object_lambda_access_point_policy.example
+  id = "123456789012:example"
+}
 ```
-$ terraform import aws_s3control_object_lambda_access_point_policy.example 123456789012:example
+
+Using `terraform import`, import Object Lambda Access Point policies using the `account_id` and `name`, separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_s3control_object_lambda_access_point_policy.example 123456789012:example
 ```

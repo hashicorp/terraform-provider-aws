@@ -7,10 +7,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -49,9 +50,9 @@ func ResourceDomain() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIf("engine_version", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
-				newVersion := d.Get("engine_version").(string)
-				domainName := d.Get("domain_name").(string)
+			customdiff.ForceNewIf(names.AttrEngineVersion, func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				newVersion := d.Get(names.AttrEngineVersion).(string)
+				domainName := d.Get(names.AttrDomainName).(string)
 
 				conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 				resp, err := conn.GetCompatibleVersionsWithContext(ctx, &opensearchservice.GetCompatibleVersionsInput{
@@ -77,7 +78,7 @@ func ResourceDomain() *schema.Resource {
 					return true
 				}
 
-				return !inPlaceEncryptionEnableVersion(d.Get("engine_version").(string))
+				return !inPlaceEncryptionEnableVersion(d.Get(names.AttrEngineVersion).(string))
 			}),
 			customdiff.ForceNewIf("node_to_node_encryption.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				o, n := d.GetChange("node_to_node_encryption.0.enabled")
@@ -85,7 +86,7 @@ func ResourceDomain() *schema.Resource {
 					return true
 				}
 
-				return !inPlaceEncryptionEnableVersion(d.Get("engine_version").(string))
+				return !inPlaceEncryptionEnableVersion(d.Get(names.AttrEngineVersion).(string))
 			}),
 			customdiff.ForceNewIf("advanced_security_options.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				o, n := d.GetChange("advanced_security_options.0.enabled")
@@ -94,6 +95,9 @@ func ResourceDomain() *schema.Resource {
 				}
 
 				return false
+			}),
+			customdiff.ForceNewIfChange(names.AttrIPAddressType, func(_ context.Context, old, new, meta interface{}) bool {
+				return (old.(string) == opensearchservice.IPAddressTypeDualstack) && old.(string) != new.(string)
 			}),
 			verify.SetTagsDiff,
 		),
@@ -128,7 +132,7 @@ func ResourceDomain() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -163,7 +167,7 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -182,25 +186,24 @@ func ResourceDomain() *schema.Resource {
 						"maintenance_schedule": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cron_expression_for_recurrence": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"duration": {
+									names.AttrDuration: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"unit": {
+												names.AttrUnit: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(opensearchservice.TimeUnit_Values(), false),
 												},
-												"value": {
+												names.AttrValue: {
 													Type:     schema.TypeInt,
 													Required: true,
 												},
@@ -221,6 +224,11 @@ func ResourceDomain() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice(opensearchservice.RollbackOnDisable_Values(), false),
 						},
+						"use_off_peak_window": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -238,7 +246,7 @@ func ResourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Computed: true,
@@ -249,7 +257,7 @@ func ResourceDomain() *schema.Resource {
 						"dedicated_master_count": {
 							Type:             schema.TypeInt,
 							Optional:         true,
-							DiffSuppressFunc: isDedicatedMasterDisabled,
+							DiffSuppressFunc: suppressComputedDedicatedMaster,
 						},
 						"dedicated_master_enabled": {
 							Type:     schema.TypeBool,
@@ -259,17 +267,21 @@ func ResourceDomain() *schema.Resource {
 						"dedicated_master_type": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							DiffSuppressFunc: isDedicatedMasterDisabled,
+							DiffSuppressFunc: suppressComputedDedicatedMaster,
 						},
-						"instance_count": {
+						names.AttrInstanceCount: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  1,
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  opensearchservice.OpenSearchPartitionInstanceTypeM3MediumSearch,
+						},
+						"multi_az_with_standby_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 						"warm_count": {
 							Type:         schema.TypeInt,
@@ -315,7 +327,7 @@ func ResourceDomain() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -324,12 +336,12 @@ func ResourceDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"role_arn": {
+						names.AttrRoleARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"user_pool_id": {
+						names.AttrUserPoolID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -381,11 +393,11 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-z][0-9a-z\-]{2,27}$`),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-z][0-9a-z\-]{2,27}$`),
 					"must start with a lowercase alphabet and be at least 3 and no more than 28 characters long."+
 						" Valid characters are a-z (lowercase letters), 0-9, and - (hyphen)."),
 			},
@@ -400,22 +412,22 @@ func ResourceDomain() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"throughput": {
+						names.AttrThroughput: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validation.IntAtLeast(125),
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -431,11 +443,11 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
@@ -445,14 +457,20 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+			names.AttrIPAddressType: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(opensearchservice.IPAddressType_Values(), false),
 			},
 			"kibana_endpoint": {
 				Type:       schema.TypeString,
@@ -464,12 +482,12 @@ func ResourceDomain() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_log_group_arn": {
+						names.AttrCloudWatchLogGroupARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -489,7 +507,7 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -503,7 +521,7 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
@@ -555,6 +573,22 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
+			"software_update_options": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				Computed:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auto_software_update_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_options": {
@@ -564,25 +598,25 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zones": {
+						names.AttrAvailabilityZones: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -595,7 +629,7 @@ func ResourceDomain() *schema.Resource {
 
 func resourceDomainImport(ctx context.Context,
 	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.Set("domain_name", d.Id())
+	d.Set(names.AttrDomainName, d.Id())
 	return []*schema.ResourceData{d}, nil
 }
 
@@ -606,18 +640,22 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	// The API doesn't check for duplicate names
 	// so w/out this check Create would act as upsert
 	// and might cause duplicate domain to appear in state
-	resp, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
+	resp, err := FindDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 	if err == nil {
 		return sdkdiag.AppendErrorf(diags, "OpenSearch Domain %q already exists", aws.StringValue(resp.DomainName))
 	}
 
 	input := &opensearchservice.CreateDomainInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 		TagList:    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
+		input.IPAddressType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("access_policies"); ok {
@@ -702,6 +740,10 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
+	if v, ok := d.GetOk("software_update_options"); ok {
+		input.SoftwareUpdateOptions = expandSoftwareUpdateOptions(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("vpc_options"); ok {
 		options := v.([]interface{})
 		if options[0] == nil {
@@ -735,71 +777,40 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	// IAM Roles can take some time to propagate if set in AccessPolicies and created in the same terraform
-	var out *opensearchservice.CreateDomainOutput
-	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		var err error
-		out, err = conn.CreateDomainWithContext(ctx, input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidTypeException", "Error setting policy") {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "enable a service-linked role to give Amazon ES permissions") {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Domain is still being deleted") {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Amazon OpenSearch Service must be allowed to use the passed role") {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "The passed role has not propagated yet") {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Authentication error") {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Unauthorized Operation: OpenSearch Service must be authorised to describe") {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "The passed role must authorize Amazon OpenSearch Service to describe") {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.CreateDomainWithContext(ctx, input)
-	}
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
+		return conn.CreateDomainWithContext(ctx, input)
+	},
+		domainErrorRetryable)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating OpenSearch Domain: %s", err)
 	}
+	out := outputRaw.(*opensearchservice.CreateDomainOutput)
 
 	d.SetId(aws.StringValue(out.DomainStatus.ARN))
 
 	log.Printf("[DEBUG] Waiting for OpenSearch Domain %q to be created", d.Id())
-	if err := WaitForDomainCreation(ctx, conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := WaitForDomainCreation(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Domain (%s) to be created: %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] OpenSearch Domain %q created", d.Id())
 
 	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]interface{})) > 0 {
-		log.Printf("[DEBUG] Modifying config for OpenSearch Domain %q", d.Id())
-
 		input := &opensearchservice.UpdateDomainConfigInput{
-			DomainName: aws.String(d.Get("domain_name").(string)),
+			DomainName:      aws.String(d.Get(names.AttrDomainName).(string)),
+			AutoTuneOptions: expandAutoTuneOptions(v.([]interface{})[0].(map[string]interface{})),
 		}
 
-		input.AutoTuneOptions = expandAutoTuneOptions(v.([]interface{})[0].(map[string]interface{}))
-
+		log.Printf("[DEBUG] Updating OpenSearch Domain config: %s", input)
 		_, err = conn.UpdateDomainConfigWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying config for OpenSearch Domain: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain config: %s", err)
 		}
 
-		log.Printf("[DEBUG] Config for OpenSearch Domain %q modified", d.Id())
+		if err := waitForDomainUpdate(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Domain (%s) update: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
@@ -809,7 +820,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	ds, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
+	ds, err := FindDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Domain (%s) not found, removing from state", d.Id())
@@ -822,7 +833,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	outDescribeDomainConfig, err := conn.DescribeDomainConfigWithContext(ctx, &opensearchservice.DescribeDomainConfigInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 	})
 
 	if err != nil {
@@ -841,16 +852,17 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("access_policies", policies)
 	}
 
-	options := advancedOptionsIgnoreDefault(d.Get("advanced_options").(map[string]interface{}), flex.PointersMapToStringList(ds.AdvancedOptions))
+	options := advancedOptionsIgnoreDefault(d.Get("advanced_options").(map[string]interface{}), flex.FlattenStringMap(ds.AdvancedOptions))
 	if err = d.Set("advanced_options", options); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_options %v: %s", options, err)
 	}
 
 	d.SetId(aws.StringValue(ds.ARN))
-	d.Set("arn", ds.ARN)
+	d.Set(names.AttrARN, ds.ARN)
 	d.Set("domain_id", ds.DomainId)
-	d.Set("domain_name", ds.DomainName)
-	d.Set("engine_version", ds.EngineVersion)
+	d.Set(names.AttrDomainName, ds.DomainName)
+	d.Set(names.AttrEngineVersion, ds.EngineVersion)
+	d.Set(names.AttrIPAddressType, ds.IPAddressType)
 
 	if err := d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ebs_options: %s", err)
@@ -895,13 +907,17 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting snapshot_options: %s", err)
 	}
 
+	if err := d.Set("software_update_options", flattenSoftwareUpdateOptions(ds.SoftwareUpdateOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting software_update_options: %s", err)
+	}
+
 	if ds.VPCOptions != nil {
-		if err := d.Set("vpc_options", flattenVPCDerivedInfo(ds.VPCOptions)); err != nil {
+		if err := d.Set("vpc_options", []interface{}{flattenVPCDerivedInfo(ds.VPCOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
 		}
 
-		endpoints := flex.PointersMapToStringList(ds.Endpoints)
-		d.Set("endpoint", endpoints["vpc"])
+		endpoints := flex.FlattenStringMap(ds.Endpoints)
+		d.Set(names.AttrEndpoint, endpoints["vpc"])
 		d.Set("dashboard_endpoint", getDashboardEndpoint(d))
 		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
@@ -909,7 +925,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	} else {
 		if ds.Endpoint != nil {
-			d.Set("endpoint", ds.Endpoint)
+			d.Set(names.AttrEndpoint, ds.Endpoint)
 			d.Set("dashboard_endpoint", getDashboardEndpoint(d))
 			d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		}
@@ -941,16 +957,20 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := opensearchservice.UpdateDomainConfigInput{
-			DomainName: aws.String(d.Get("domain_name").(string)),
+			DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 		}
 
 		if d.HasChange("access_policies") {
 			o, n := d.GetChange("access_policies")
 
 			if equivalent, err := awspolicy.PoliciesAreEquivalent(o.(string), n.(string)); err != nil || !equivalent {
-				input.AccessPolicies = aws.String(d.Get("access_policies").(string))
+				policy, err := structure.NormalizeJsonString(n.(string))
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
+				}
+				input.AccessPolicies = aws.String(policy)
 			}
 		}
 
@@ -974,6 +994,10 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.DomainEndpointOptions = expandDomainEndpointOptions(d.Get("domain_endpoint_options").([]interface{}))
 		}
 
+		if d.HasChange(names.AttrIPAddressType) {
+			input.IPAddressType = aws.String(d.Get(names.AttrIPAddressType).(string))
+		}
+
 		if d.HasChanges("ebs_options", "cluster_config") {
 			options := d.Get("ebs_options").([]interface{})
 
@@ -990,10 +1014,10 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 					input.ClusterConfig = expandClusterConfig(m)
 
 					// Work around "ValidationException: Your domain's Elasticsearch version does not support cold storage options. Upgrade to Elasticsearch 7.9 or later.".
-					if engineType, version, err := ParseEngineVersion(d.Get("engine_version").(string)); err == nil {
+					if engineType, version, err := ParseEngineVersion(d.Get(names.AttrEngineVersion).(string)); err == nil {
 						switch engineType {
 						case opensearchservice.EngineTypeElasticsearch:
-							if verify.SemVerLessThan(version, "7.9") {
+							if semver.LessThan(version, "7.9") {
 								input.ClusterConfig.ColdStorageOptions = nil
 							}
 						case opensearchservice.EngineTypeOpenSearch:
@@ -1053,25 +1077,32 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}
 
+		if d.HasChange("software_update_options") {
+			input.SoftwareUpdateOptions = expandSoftwareUpdateOptions(d.Get("software_update_options").([]interface{}))
+		}
+
 		if d.HasChange("vpc_options") {
 			options := d.Get("vpc_options").([]interface{})
 			s := options[0].(map[string]interface{})
 			input.VPCOptions = expandVPCOptions(s)
 		}
 
-		_, err := conn.UpdateDomainConfigWithContext(ctx, &input)
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
+			return conn.UpdateDomainConfigWithContext(ctx, &input)
+		},
+			domainErrorRetryable)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): %s", d.Id(), err)
 		}
 
-		if err := waitForDomainUpdate(ctx, conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := waitForDomainUpdate(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): waiting for completion: %s", d.Id(), err)
 		}
 
-		if d.HasChange("engine_version") {
+		if d.HasChange(names.AttrEngineVersion) {
 			upgradeInput := opensearchservice.UpgradeDomainInput{
-				DomainName:    aws.String(d.Get("domain_name").(string)),
-				TargetVersion: aws.String(d.Get("engine_version").(string)),
+				DomainName:    aws.String(d.Get(names.AttrDomainName).(string)),
+				TargetVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
 			}
 
 			_, err := conn.UpgradeDomainWithContext(ctx, &upgradeInput)
@@ -1079,7 +1110,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): upgrading: %s", d.Id(), err)
 			}
 
-			if _, err := waitUpgradeSucceeded(ctx, conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := waitUpgradeSucceeded(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): upgrading: waiting for completion: %s", d.Id(), err)
 			}
 		}
@@ -1091,7 +1122,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 
 	log.Printf("[DEBUG] Deleting OpenSearch Domain: %q", domainName)
 	_, err := conn.DeleteDomainWithContext(ctx, &opensearchservice.DeleteDomainInput{
@@ -1105,11 +1136,36 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Waiting for OpenSearch Domain %q to be deleted", domainName)
-	if err := waitForDomainDelete(ctx, conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitForDomainDelete(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting OpenSearch Domain (%s): waiting for completion: %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func FindDomainByName(ctx context.Context, conn *opensearchservice.OpenSearchService, name string) (*opensearchservice.DomainStatus, error) {
+	input := &opensearchservice.DescribeDomainInput{
+		DomainName: aws.String(name),
+	}
+
+	output, err := conn.DescribeDomainWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, opensearchservice.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DomainStatus == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DomainStatus, nil
 }
 
 // inPlaceEncryptionEnableVersion returns true if, based on version, encryption
@@ -1118,7 +1174,7 @@ func inPlaceEncryptionEnableVersion(version string) bool {
 	if engineType, version, err := ParseEngineVersion(version); err == nil {
 		switch engineType {
 		case opensearchservice.EngineTypeElasticsearch:
-			if verify.SemVerGreaterThanOrEqual(version, "6.7") {
+			if semver.GreaterThanOrEqual(version, "6.7") {
 				return true
 			}
 		case opensearchservice.EngineTypeOpenSearch:
@@ -1138,14 +1194,14 @@ func suppressEquivalentKMSKeyIDs(k, old, new string, d *schema.ResourceData) boo
 }
 
 func getDashboardEndpoint(d *schema.ResourceData) string {
-	return d.Get("endpoint").(string) + "/_dashboards"
+	return d.Get(names.AttrEndpoint).(string) + "/_dashboards"
 }
 
 func getKibanaEndpoint(d *schema.ResourceData) string {
-	return d.Get("endpoint").(string) + "/_plugin/kibana/"
+	return d.Get(names.AttrEndpoint).(string) + "/_plugin/kibana/"
 }
 
-func isDedicatedMasterDisabled(k, old, new string, d *schema.ResourceData) bool {
+func suppressComputedDedicatedMaster(k, old, new string, d *schema.ResourceData) bool {
 	v, ok := d.GetOk("cluster_config")
 	if ok {
 		clusterConfig := v.([]interface{})[0].(map[string]interface{})
@@ -1166,7 +1222,7 @@ func isCustomEndpointDisabled(k, old, new string, d *schema.ResourceData) bool {
 func expandNodeToNodeEncryptionOptions(s map[string]interface{}) *opensearchservice.NodeToNodeEncryptionOptions {
 	options := opensearchservice.NodeToNodeEncryptionOptions{}
 
-	if v, ok := s["enabled"]; ok {
+	if v, ok := s[names.AttrEnabled]; ok {
 		options.Enabled = aws.Bool(v.(bool))
 	}
 	return &options
@@ -1179,7 +1235,7 @@ func flattenNodeToNodeEncryptionOptions(o *opensearchservice.NodeToNodeEncryptio
 
 	m := map[string]interface{}{}
 	if o.Enabled != nil {
-		m["enabled"] = aws.BoolValue(o.Enabled)
+		m[names.AttrEnabled] = aws.BoolValue(o.Enabled)
 	}
 
 	return []map[string]interface{}{m}
@@ -1187,6 +1243,10 @@ func flattenNodeToNodeEncryptionOptions(o *opensearchservice.NodeToNodeEncryptio
 
 func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterConfig {
 	config := opensearchservice.ClusterConfig{}
+
+	if v, ok := m["cold_storage_options"]; ok {
+		config.ColdStorageOptions = expandColdStorageOptions(v.([]interface{}))
+	}
 
 	if v, ok := m["dedicated_master_enabled"]; ok {
 		isEnabled := v.(bool)
@@ -1202,26 +1262,16 @@ func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterCon
 		}
 	}
 
-	if v, ok := m["instance_count"]; ok {
+	if v, ok := m[names.AttrInstanceCount]; ok {
 		config.InstanceCount = aws.Int64(int64(v.(int)))
 	}
-	if v, ok := m["instance_type"]; ok {
+
+	if v, ok := m[names.AttrInstanceType]; ok {
 		config.InstanceType = aws.String(v.(string))
 	}
 
-	if v, ok := m["zone_awareness_enabled"]; ok {
-		isEnabled := v.(bool)
-		config.ZoneAwarenessEnabled = aws.Bool(isEnabled)
-
-		if isEnabled {
-			if v, ok := m["zone_awareness_config"]; ok {
-				config.ZoneAwarenessConfig = expandZoneAwarenessConfig(v.([]interface{}))
-			}
-		}
-	}
-
-	if v, ok := m["cold_storage_options"]; ok {
-		config.ColdStorageOptions = expandColdStorageOptions(v.([]interface{}))
+	if v, ok := m["multi_az_with_standby_enabled"]; ok {
+		config.MultiAZWithStandbyEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := m["warm_enabled"]; ok {
@@ -1235,6 +1285,17 @@ func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterCon
 
 			if v, ok := m["warm_type"]; ok {
 				config.WarmType = aws.String(v.(string))
+			}
+		}
+	}
+
+	if v, ok := m["zone_awareness_enabled"]; ok {
+		isEnabled := v.(bool)
+		config.ZoneAwarenessEnabled = aws.Bool(isEnabled)
+
+		if isEnabled {
+			if v, ok := m["zone_awareness_config"]; ok {
+				config.ZoneAwarenessConfig = expandZoneAwarenessConfig(v.([]interface{}))
 			}
 		}
 	}
@@ -1267,7 +1328,7 @@ func expandColdStorageOptions(l []interface{}) *opensearchservice.ColdStorageOpt
 
 	ColdStorageOptions := &opensearchservice.ColdStorageOptions{}
 
-	if v, ok := m["enabled"]; ok {
+	if v, ok := m[names.AttrEnabled]; ok {
 		ColdStorageOptions.Enabled = aws.Bool(v.(bool))
 	}
 
@@ -1293,10 +1354,13 @@ func flattenClusterConfig(c *opensearchservice.ClusterConfig) []map[string]inter
 		m["dedicated_master_type"] = aws.StringValue(c.DedicatedMasterType)
 	}
 	if c.InstanceCount != nil {
-		m["instance_count"] = aws.Int64Value(c.InstanceCount)
+		m[names.AttrInstanceCount] = aws.Int64Value(c.InstanceCount)
 	}
 	if c.InstanceType != nil {
-		m["instance_type"] = aws.StringValue(c.InstanceType)
+		m[names.AttrInstanceType] = aws.StringValue(c.InstanceType)
+	}
+	if c.MultiAZWithStandbyEnabled != nil {
+		m["multi_az_with_standby_enabled"] = aws.BoolValue(c.MultiAZWithStandbyEnabled)
 	}
 	if c.WarmEnabled != nil {
 		m["warm_enabled"] = aws.BoolValue(c.WarmEnabled)
@@ -1329,7 +1393,7 @@ func flattenColdStorageOptions(coldStorageOptions *opensearchservice.ColdStorage
 	}
 
 	m := map[string]interface{}{
-		"enabled": aws.BoolValue(coldStorageOptions.Enabled),
+		names.AttrEnabled: aws.BoolValue(coldStorageOptions.Enabled),
 	}
 
 	return []interface{}{m}
@@ -1393,4 +1457,21 @@ func EBSVolumeTypePermitsThroughputInput(volumeType string) bool {
 		}
 	}
 	return false
+}
+
+func domainErrorRetryable(err error) (bool, error) {
+	switch {
+	case tfawserr.ErrMessageContains(err, "InvalidTypeException", "Error setting policy"),
+		tfawserr.ErrMessageContains(err, "ValidationException", "enable a service-linked role to give Amazon ES permissions"),
+		tfawserr.ErrMessageContains(err, "ValidationException", "Domain is still being deleted"),
+		tfawserr.ErrMessageContains(err, "ValidationException", "Amazon OpenSearch Service must be allowed to use the passed role"),
+		tfawserr.ErrMessageContains(err, "ValidationException", "The passed role has not propagated yet"),
+		tfawserr.ErrMessageContains(err, "ValidationException", "Authentication error"),
+		tfawserr.ErrMessageContains(err, "ValidationException", "Unauthorized Operation: OpenSearch Service must be authorised to describe"),
+		tfawserr.ErrMessageContains(err, "ValidationException", "The passed role must authorize Amazon OpenSearch Service to describe"):
+		return true, err
+
+	default:
+		return false, err
+	}
 }

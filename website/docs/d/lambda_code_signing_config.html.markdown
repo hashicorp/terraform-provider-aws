@@ -22,7 +22,7 @@ data "aws_lambda_code_signing_config" "existing_csc" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `arn` - (Required) ARN of the code signing configuration.
 

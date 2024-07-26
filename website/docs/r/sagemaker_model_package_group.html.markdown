@@ -22,7 +22,7 @@ resource "aws_sagemaker_model_package_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `model_package_group_name` - (Required) The name of the model group.
 * `model_package_group_description` - (Optional) A description for the model group.
@@ -38,8 +38,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker Model Package Groups can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Model Package Groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_model_package_group.test_model_package_group
+  id = "my-code-repo"
+}
 ```
-$ terraform import aws_sagemaker_model_package_group.test_model_package_group my-code-repo
+
+Using `terraform import`, import SageMaker Model Package Groups using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_model_package_group.test_model_package_group my-code-repo
 ```

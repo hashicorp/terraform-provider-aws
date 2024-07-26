@@ -27,7 +27,7 @@ resource "aws_schemas_discoverer" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `source_arn` - (Required) The ARN of the event bus to discover event schemas on.
 * `description` - (Optional) The description of the discoverer. Maximum of 256 characters.
@@ -43,8 +43,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EventBridge discoverers can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge discoverers using the `id`. For example:
+
+```terraform
+import {
+  to = aws_schemas_discoverer.test
+  id = "123"
+}
+```
+
+Using `terraform import`, import EventBridge discoverers using the `id`. For example:
 
 ```console
-$ terraform import aws_schemas_discoverer.test 123
+% terraform import aws_schemas_discoverer.test 123
 ```

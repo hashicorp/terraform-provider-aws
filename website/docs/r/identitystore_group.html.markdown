@@ -55,8 +55,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-An Identity Store Group can be imported using the combination `identity_store_id/group_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an Identity Store Group using the combination `identity_store_id/group_id`. For example:
 
+```terraform
+import {
+  to = aws_identitystore_group.example
+  id = "d-9c6705e95c/b8a1c340-8031-7071-a2fb-7dc540320c30"
+}
 ```
-$ terraform import aws_identitystore_group.example d-9c6705e95c/b8a1c340-8031-7071-a2fb-7dc540320c30
+
+Using `terraform import`, import an Identity Store Group using the combination `identity_store_id/group_id`. For example:
+
+```console
+% terraform import aws_identitystore_group.example d-9c6705e95c/b8a1c340-8031-7071-a2fb-7dc540320c30
 ```

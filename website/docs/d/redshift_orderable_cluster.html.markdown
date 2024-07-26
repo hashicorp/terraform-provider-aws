@@ -21,7 +21,7 @@ data "aws_redshift_orderable_cluster" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `cluster_type` - (Optional) Reshift Cluster typeE.g., `multi-node` or `single-node`
 * `cluster_version` - (Optional) Redshift Cluster versionE.g., `1.0`

@@ -78,7 +78,7 @@ resource "aws_service_discovery_instance" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `instance_id` - (Required, ForceNew) The ID of the service instance.
 * `service_id` - (Required, ForceNew) The ID of the service that you want to use to create the instance.
@@ -92,8 +92,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Service Discovery Instance can be imported using the service ID and instance ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Service Discovery Instance using the service ID and instance ID. For example:
 
+```terraform
+import {
+  to = aws_service_discovery_instance.example
+  id = "0123456789/i-0123"
+}
 ```
-$ terraform import aws_service_discovery_instance.example 0123456789/i-0123
+
+Using `terraform import`, import Service Discovery Instance using the service ID and instance ID. For example:
+
+```console
+% terraform import aws_service_discovery_instance.example 0123456789/i-0123
 ```

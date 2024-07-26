@@ -145,7 +145,7 @@ resource "aws_workspaces_ip_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `directory_id` - (Required) The directory identifier for registration in WorkSpaces service.
 * `subnet_ids` - (Optional) The identifiers of the subnets where the directory resides.
@@ -202,8 +202,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Workspaces directory can be imported using the directory ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Workspaces directory using the directory ID. For example:
 
+```terraform
+import {
+  to = aws_workspaces_directory.main
+  id = "d-4444444444"
+}
 ```
-$ terraform import aws_workspaces_directory.main d-4444444444
+
+Using `terraform import`, import Workspaces directory using the directory ID. For example:
+
+```console
+% terraform import aws_workspaces_directory.main d-4444444444
 ```

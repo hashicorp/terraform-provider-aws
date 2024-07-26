@@ -21,7 +21,7 @@ data "aws_waf_rule" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the WAF rule.
 

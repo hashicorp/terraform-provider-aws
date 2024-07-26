@@ -26,7 +26,7 @@ resource "aws_cloudfront_monitoring_subscription" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `distribution_id` - (Required) The ID of the distribution that you are enabling metrics for.
 * `monitoring_subscription` - (Required) A monitoring subscription. This structure contains information about whether additional CloudWatch metrics are enabled for a given CloudFront distribution.
@@ -47,8 +47,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudFront monitoring subscription can be imported using the id, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront monitoring subscription using the id. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_monitoring_subscription.example
+  id = "E3QYSUHO4VYRGB"
+}
 ```
-$ terraform import aws_cloudfront_monitoring_subscription.example E3QYSUHO4VYRGB
+
+Using `terraform import`, import CloudFront monitoring subscription using the id. For example:
+
+```console
+% terraform import aws_cloudfront_monitoring_subscription.example E3QYSUHO4VYRGB
 ```

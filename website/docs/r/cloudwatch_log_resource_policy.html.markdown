@@ -65,7 +65,7 @@ resource "aws_cloudwatch_log_resource_policy" "route53-query-logging-policy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `policy_document` - (Required) Details of the resource policy, including the identity of the principal that is enabled to put logs to this account. This is formatted as a JSON string. Maximum length of 5120 characters.
 * `policy_name` - (Required) Name of the resource policy.
@@ -78,8 +78,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudWatch log resource policies can be imported using the policy name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch log resource policies using the policy name. For example:
 
+```terraform
+import {
+  to = aws_cloudwatch_log_resource_policy.MyPolicy
+  id = "MyPolicy"
+}
 ```
-$ terraform import aws_cloudwatch_log_resource_policy.MyPolicy MyPolicy
+
+Using `terraform import`, import CloudWatch log resource policies using the policy name. For example:
+
+```console
+% terraform import aws_cloudwatch_log_resource_policy.MyPolicy MyPolicy
 ```

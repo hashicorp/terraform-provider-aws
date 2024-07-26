@@ -20,7 +20,7 @@ resource "aws_networkmanager_global_network" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Description of the Global Network.
 * `tags` - (Optional) Key-value tags for the Global Network. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -34,8 +34,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_networkmanager_global_network` can be imported using the global network ID, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_global_network` using the global network ID. For example:
 
+```terraform
+import {
+  to = aws_networkmanager_global_network.example
+  id = "global-network-0d47f6t230mz46dy4"
+}
 ```
-$ terraform import aws_networkmanager_global_network.example global-network-0d47f6t230mz46dy4
+
+Using `terraform import`, import `aws_networkmanager_global_network` using the global network ID. For example:
+
+```console
+% terraform import aws_networkmanager_global_network.example global-network-0d47f6t230mz46dy4
 ```

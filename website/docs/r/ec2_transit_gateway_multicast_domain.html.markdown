@@ -145,7 +145,7 @@ resource "aws_ec2_transit_gateway_multicast_group_member" "member2" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `transit_gateway_id` - (Required) EC2 Transit Gateway identifier. The EC2 Transit Gateway must have `multicast_support` enabled.
 * `auto_accept_shared_associations` - (Optional) Whether to automatically accept cross-account subnet associations that are associated with the EC2 Transit Gateway Multicast Domain. Valid values: `disable`, `enable`. Default value: `disable`.
@@ -171,8 +171,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_ec2_transit_gateway_multicast_domain` can be imported by using the EC2 Transit Gateway Multicast Domain identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_transit_gateway_multicast_domain` using the EC2 Transit Gateway Multicast Domain identifier. For example:
 
+```terraform
+import {
+  to = aws_ec2_transit_gateway_multicast_domain.example
+  id = "tgw-mcast-domain-12345"
+}
 ```
-terraform import aws_ec2_transit_gateway_multicast_domain.example tgw-mcast-domain-12345
+
+Using `terraform import`, import `aws_ec2_transit_gateway_multicast_domain` using the EC2 Transit Gateway Multicast Domain identifier. For example:
+
+```console
+% terraform import aws_ec2_transit_gateway_multicast_domain.example tgw-mcast-domain-12345
 ```

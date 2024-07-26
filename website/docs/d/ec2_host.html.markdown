@@ -57,6 +57,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - ID of the Dedicated Host.
 * `arn` - ARN of the Dedicated Host.
+* `asset_id` - The ID of the Outpost hardware asset on which the Dedicated Host is allocated.
 * `auto_placement` - Whether auto-placement is on or off.
 * `availability_zone` - Availability Zone of the Dedicated Host.
 * `cores` - Number of cores on the Dedicated Host.

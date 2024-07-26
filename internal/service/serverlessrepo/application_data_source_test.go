@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccServerlessRepoApplicationDataSource_basic(t *testing.T) {
@@ -20,14 +20,14 @@ func TestAccServerlessRepoApplicationDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, serverlessapplicationrepository.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServerlessRepoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationDataSourceConfig_basic(appARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationIDDataSource(datasourceName),
-					resource.TestCheckResourceAttr(datasourceName, "name", "SecretsManagerRDSPostgreSQLRotationSingleUser"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrName, "SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttrSet(datasourceName, "semantic_version"),
 					resource.TestCheckResourceAttrSet(datasourceName, "source_code_url"),
 					resource.TestCheckResourceAttrSet(datasourceName, "template_url"),
@@ -50,29 +50,29 @@ func TestAccServerlessRepoApplicationDataSource_versioned(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, serverlessapplicationrepository.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServerlessRepoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationDataSourceConfig_versioned(appARN, version1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationIDDataSource(datasourceName),
-					resource.TestCheckResourceAttr(datasourceName, "name", "SecretsManagerRDSPostgreSQLRotationSingleUser"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrName, "SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttr(datasourceName, "semantic_version", version1),
 					resource.TestCheckResourceAttrSet(datasourceName, "source_code_url"),
 					resource.TestCheckResourceAttrSet(datasourceName, "template_url"),
-					resource.TestCheckResourceAttr(datasourceName, "required_capabilities.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "required_capabilities.#", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccApplicationDataSourceConfig_versioned(appARN, version2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationIDDataSource(datasourceName),
-					resource.TestCheckResourceAttr(datasourceName, "name", "SecretsManagerRDSPostgreSQLRotationSingleUser"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrName, "SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttr(datasourceName, "semantic_version", version2),
 					resource.TestCheckResourceAttrSet(datasourceName, "source_code_url"),
 					resource.TestCheckResourceAttrSet(datasourceName, "template_url"),
-					resource.TestCheckResourceAttr(datasourceName, "required_capabilities.#", "2"),
+					resource.TestCheckResourceAttr(datasourceName, "required_capabilities.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(datasourceName, "required_capabilities.*", "CAPABILITY_IAM"),
 					resource.TestCheckTypeSetElemAttr(datasourceName, "required_capabilities.*", "CAPABILITY_RESOURCE_POLICY"),
 				),

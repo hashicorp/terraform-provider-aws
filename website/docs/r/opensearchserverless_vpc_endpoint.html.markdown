@@ -50,8 +50,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-OpenSearchServerless Vpc Endpointa can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearchServerless Vpc Endpointa using the `id`. For example:
 
+```terraform
+import {
+  to = aws_opensearchserverless_vpc_endpoint.example
+  id = "vpce-8012925589"
+}
 ```
-$ terraform import aws_opensearchserverless_vpc_endpoint.example vpce-8012925589
+
+Using `terraform import`, import OpenSearchServerless Vpc Endpointa using the `id`. For example:
+
+```console
+% terraform import aws_opensearchserverless_vpc_endpoint.example vpce-8012925589
 ```

@@ -21,7 +21,7 @@ data "aws_acmpca_certificate" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `arn` - (Required) ARN of the certificate issued by the private certificate authority.
 * `certificate_authority_arn` - (Required) ARN of the certificate authority.

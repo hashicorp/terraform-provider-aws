@@ -39,7 +39,7 @@ resource "aws_vpc_endpoint_service" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `acceptance_required` - (Required) Whether or not VPC endpoint connection requests to the service must be accepted by the service owner - `true` or `false`.
 * `allowed_principals` - (Optional) The ARNs of one or more principals allowed to discover the endpoint service.
@@ -70,8 +70,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPC Endpoint Services can be imported using the `VPC endpoint service id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Endpoint Services using the VPC endpoint service `id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_endpoint_service.foo
+  id = "vpce-svc-0f97a19d3fa8220bc"
+}
 ```
-$ terraform import aws_vpc_endpoint_service.foo vpce-svc-0f97a19d3fa8220bc
+
+Using `terraform import`, import VPC Endpoint Services using the VPC endpoint service `id`. For example:
+
+```console
+% terraform import aws_vpc_endpoint_service.foo vpce-svc-0f97a19d3fa8220bc
 ```

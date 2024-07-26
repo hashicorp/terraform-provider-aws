@@ -25,8 +25,9 @@ resource "aws_ec2_host" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `asset_id` - (Optional) The ID of the Outpost hardware asset on which to allocate the Dedicated Hosts. This parameter is supported only if you specify OutpostArn. If you are allocating the Dedicated Hosts in a Region, omit this parameter.
 * `auto_placement` - (Optional) Indicates whether the host accepts any untargeted instance launches that match its instance type configuration, or if it only accepts Host tenancy instance launches that specify its unique host ID. Valid values: `on`, `off`. Default: `on`.
 * `availability_zone` - (Required) The Availability Zone in which to allocate the Dedicated Host.
 * `host_recovery` - (Optional) Indicates whether to enable or disable host recovery for the Dedicated Host. Valid values: `on`, `off`. Default: `off`.
@@ -44,10 +45,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `owner_id` - The ID of the AWS account that owns the Dedicated Host.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `20m`)
+
 ## Import
 
-Hosts can be imported using the host `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import hosts using the host `id`. For example:
 
+```terraform
+import {
+  to = aws_ec2_host.example
+  id = "h-0385a99d0e4b20cbb"
+}
 ```
-$ terraform import aws_ec2_host.example h-0385a99d0e4b20cbb
+
+Using `terraform import`, import hosts using the host `id`. For example:
+
+```console
+% terraform import aws_ec2_host.example h-0385a99d0e4b20cbb
 ```

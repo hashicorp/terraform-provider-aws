@@ -9,32 +9,39 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
+// SuppressEquivalentPolicyDiffs returns a difference suppression function that compares
+// two JSON strings representing IAM policies and returns `true` if they are semantically equivalent.
 func SuppressEquivalentPolicyDiffs(k, old, new string, d *schema.ResourceData) bool {
-	if strings.TrimSpace(old) == "" && strings.TrimSpace(new) == "" {
+	return PolicyStringsEquivalent(old, new)
+}
+
+func PolicyStringsEquivalent(s1, s2 string) bool {
+	if strings.TrimSpace(s1) == "" && strings.TrimSpace(s2) == "" {
 		return true
 	}
 
-	if strings.TrimSpace(old) == "{}" && strings.TrimSpace(new) == "" {
+	if strings.TrimSpace(s1) == "{}" && strings.TrimSpace(s2) == "" {
 		return true
 	}
 
-	if strings.TrimSpace(old) == "" && strings.TrimSpace(new) == "{}" {
+	if strings.TrimSpace(s1) == "" && strings.TrimSpace(s2) == "{}" {
 		return true
 	}
 
-	if strings.TrimSpace(old) == "{}" && strings.TrimSpace(new) == "{}" {
+	if strings.TrimSpace(s1) == "{}" && strings.TrimSpace(s2) == "{}" {
 		return true
 	}
 
-	equivalent, err := awspolicy.PoliciesAreEquivalent(old, new)
+	equivalent, err := awspolicy.PoliciesAreEquivalent(s1, s2)
 	if err != nil {
 		return false
 	}
@@ -42,7 +49,20 @@ func SuppressEquivalentPolicyDiffs(k, old, new string, d *schema.ResourceData) b
 	return equivalent
 }
 
+// SuppressEquivalentJSONDiffs returns a difference suppression function that compares
+// two JSON strings and returns `true` if they are semantically equivalent.
 func SuppressEquivalentJSONDiffs(k, old, new string, d *schema.ResourceData) bool {
+	return JSONStringsEqual(old, new)
+}
+
+// SuppressEquivalentJSONWithEmptyDiffs returns a difference suppression function that compares
+// two JSON strings and returns `true` if they are semantically equivalent, handling empty
+// strings (`""`) and empty JSON strings (`"{}"`) as equivalent.
+// This is useful for suppressing diffs for non-IAM JSON policy documents.
+func SuppressEquivalentJSONWithEmptyDiffs(k, old, new string, d *schema.ResourceData) bool {
+	if old, new := strings.TrimSpace(old), strings.TrimSpace(new); (old == "" || old == "{}") && (new == "" || new == "{}") {
+		return true
+	}
 	return JSONStringsEqual(old, new)
 }
 
@@ -65,6 +85,9 @@ func SuppressEquivalentJSONOrYAMLDiffs(k, old, new string, d *schema.ResourceDat
 }
 
 func NormalizeJSONOrYAMLString(templateString interface{}) (string, error) {
+	if v, ok := templateString.(string); ok {
+		templateString = strings.ReplaceAll(v, "\r\n", "\n")
+	}
 	if looksLikeJSONString(templateString) {
 		return structure.NormalizeJsonString(templateString.(string))
 	}
@@ -73,7 +96,7 @@ func NormalizeJSONOrYAMLString(templateString interface{}) (string, error) {
 }
 
 func looksLikeJSONString(s interface{}) bool {
-	return regexp.MustCompile(`^\s*{`).MatchString(s.(string))
+	return regexache.MustCompile(`^\s*{`).MatchString(s.(string))
 }
 
 func JSONStringsEqual(s1, s2 string) bool {
@@ -162,7 +185,7 @@ func LegacyPolicyNormalize(policy interface{}) (string, error) {
 		return policy.(string), fmt.Errorf("legacy policy (%s) is invalid JSON: %w", policy, err)
 	}
 
-	m := regexp.MustCompile(`(?s)^(\{\n?)(.*?)(,\s*)?(  )?("Version":\s*"2012-10-17")(,)?(\n)?(.*?)(\})`)
+	m := regexache.MustCompile(`(?s)^(\{\n?)(.*?)(,\s*)?(  )?("Version":\s*"2012-10-17")(,)?(\n)?(.*?)(\})`)
 
 	n := m.ReplaceAllString(np, `$1$4$5$3$2$6$7$8$9`)
 
@@ -188,4 +211,18 @@ func LegacyPolicyToSet(exist, new string) (string, error) {
 	}
 
 	return policyToSet, nil
+}
+
+// SuppressEquivalentJSONRemovingFieldsDiffs returns a difference suppression function that compares
+// two JSON strings and returns `true` if they are equivalent once the specified fields have been removed.
+func SuppressEquivalentJSONRemovingFieldsDiffs(fields ...string) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		if !json.Valid([]byte(old)) || !json.Valid([]byte(new)) {
+			return old == new
+		}
+
+		old, new = tfjson.RemoveFields(old, fields...), tfjson.RemoveFields(new, fields...)
+
+		return JSONStringsEqual(old, new)
+	}
 }

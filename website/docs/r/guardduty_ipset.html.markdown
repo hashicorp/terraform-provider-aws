@@ -44,7 +44,7 @@ resource "aws_s3_object" "MyIPSet" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `activate` - (Required) Specifies whether GuardDuty is to start using the uploaded IPSet.
 * `detector_id` - (Required) The detector ID of the GuardDuty.
@@ -63,8 +63,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-GuardDuty IPSet can be imported using the primary GuardDuty detector ID and IPSet ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GuardDuty IPSet using the primary GuardDuty detector ID and IPSet ID. For example:
 
+```terraform
+import {
+  to = aws_guardduty_ipset.MyIPSet
+  id = "00b00fd5aecc0ab60a708659477e9617:123456789012"
+}
 ```
-$ terraform import aws_guardduty_ipset.MyIPSet 00b00fd5aecc0ab60a708659477e9617:123456789012
+
+Using `terraform import`, import GuardDuty IPSet using the primary GuardDuty detector ID and IPSet ID. For example:
+
+```console
+% terraform import aws_guardduty_ipset.MyIPSet 00b00fd5aecc0ab60a708659477e9617:123456789012
 ```

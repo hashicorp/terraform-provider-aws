@@ -51,7 +51,7 @@ resource "aws_cloudformation_stack" "network" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Stack name.
 * `template_body` - (Optional) Structure containing the template body (max size: 51,200 bytes).
@@ -90,8 +90,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Cloudformation Stacks can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudformation Stacks using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudformation_stack.stack
+  id = "networking-stack"
+}
 ```
-$ terraform import aws_cloudformation_stack.stack networking-stack
+
+Using `terraform import`, import Cloudformation Stacks using the `name`. For example:
+
+```console
+% terraform import aws_cloudformation_stack.stack networking-stack
 ```

@@ -35,7 +35,7 @@ EOT
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the stack.
 * `region` - (Required) The name of the region where the stack will exist.
@@ -83,8 +83,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-OpsWorks stacks can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpsWorks stacks using the `id`. For example:
 
+```terraform
+import {
+  to = aws_opsworks_stack.bar
+  id = "00000000-0000-0000-0000-000000000000"
+}
 ```
-$ terraform import aws_opsworks_stack.bar 00000000-0000-0000-0000-000000000000
+
+Using `terraform import`, import OpsWorks stacks using the `id`. For example:
+
+```console
+% terraform import aws_opsworks_stack.bar 00000000-0000-0000-0000-000000000000
 ```

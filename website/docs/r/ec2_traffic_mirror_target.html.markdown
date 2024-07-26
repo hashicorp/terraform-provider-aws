@@ -34,7 +34,7 @@ resource "aws_ec2_traffic_mirror_target" "gwlb" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional, Forces new) A description of the traffic mirror session.
 * `network_interface_id` - (Optional, Forces new) The network interface ID that is associated with the target.
@@ -55,8 +55,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Traffic mirror targets can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import traffic mirror targets using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ec2_traffic_mirror_target.target
+  id = "tmt-0c13a005422b86606"
+}
 ```
-$ terraform import aws_ec2_traffic_mirror_target.target tmt-0c13a005422b86606
+
+Using `terraform import`, import traffic mirror targets using the `id`. For example:
+
+```console
+% terraform import aws_ec2_traffic_mirror_target.target tmt-0c13a005422b86606
 ```

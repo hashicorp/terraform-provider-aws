@@ -29,7 +29,7 @@ resource "aws_kinesis_video_stream" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name to identify the stream. This is unique to the
 AWS account and region the Stream is created in.
@@ -59,10 +59,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Kinesis Streams can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis Streams using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_kinesis_video_stream.test_stream
+  id = "arn:aws:kinesisvideo:us-west-2:123456789012:stream/terraform-kinesis-test/1554978910975"
+}
 ```
-$ terraform import aws_kinesis_video_stream.test_stream arn:aws:kinesisvideo:us-west-2:123456789012:stream/terraform-kinesis-test/1554978910975
+
+Using `terraform import`, import Kinesis Streams using the `arn`. For example:
+
+```console
+% terraform import aws_kinesis_video_stream.test_stream arn:aws:kinesisvideo:us-west-2:123456789012:stream/terraform-kinesis-test/1554978910975
 ```
 
 [1]: https://aws.amazon.com/documentation/kinesis/

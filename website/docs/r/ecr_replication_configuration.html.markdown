@@ -79,7 +79,7 @@ resource "aws_ecr_replication_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `replication_configuration` - (Required) Replication configuration for a registry. See [Replication Configuration](#replication-configuration).
 
@@ -110,8 +110,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ECR Replication Configuration can be imported using the `registry_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Replication Configuration using the `registry_id`. For example:
 
+```terraform
+import {
+  to = aws_ecr_replication_configuration.service
+  id = "012345678912"
+}
 ```
-$ terraform import aws_ecr_replication_configuration.service 012345678912
+
+Using `terraform import`, import ECR Replication Configuration using the `registry_id`. For example:
+
+```console
+% terraform import aws_ecr_replication_configuration.service 012345678912
 ```

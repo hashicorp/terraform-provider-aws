@@ -11,54 +11,50 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io"
 	"os"
-	"reflect"
-	"regexp"
-	"sort"
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccS3BucketObject_noNameNoKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	bucketError := regexp.MustCompile(`bucket must not be empty`)
-	keyError := regexp.MustCompile(`key must not be empty`)
+	bucketError := regexache.MustCompile(`bucket must not be empty`)
+	keyError := regexache.MustCompile(`key must not be empty`)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				PreConfig:   func() {},
-				Config:      testAccBucketObjectConfig_basic("", "a key"),
+				Config:      testAccBucketObjectConfig_invalid("", "a key"),
 				ExpectError: bucketError,
 			},
 			{
 				PreConfig:   func() {},
-				Config:      testAccBucketObjectConfig_basic("a name", ""),
+				Config:      testAccBucketObjectConfig_invalid("a name", ""),
 				ExpectError: keyError,
 			},
 		},
 	})
 }
 
-func TestAccS3BucketObject_empty(t *testing.T) {
+func TestAccS3BucketObject_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
@@ -66,24 +62,50 @@ func TestAccS3BucketObject_empty(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_empty(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config:    testAccBucketObjectConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					testAccCheckBucketObjectBody(&obj, ""),
+					testAccCheckObjectBody(&obj, ""),
+					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "s3", fmt.Sprintf("%s/test-key", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
+					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "cache_control", ""),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrContent),
+					resource.TestCheckNoResourceAttr(resourceName, "content_base64"),
+					resource.TestCheckResourceAttr(resourceName, "content_disposition", ""),
+					resource.TestCheckResourceAttr(resourceName, "content_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "content_language", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "application/octet-stream"),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, "test-key"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrKMSKeyID),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption", "AES256"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrSource),
+					resource.TestCheckNoResourceAttr(resourceName, "source_hash"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "version_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "website_redirect", ""),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "force_destroy"},
-				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+				ImportStateVerifyIgnore: []string{"acl", names.AttrForceDestroy},
+				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -95,28 +117,28 @@ func TestAccS3BucketObject_source(t *testing.T) {
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	source := testAccBucketObjectCreateTempFile(t, "{anything will do }")
+	source := testAccObjectCreateTempFile(t, "{anything will do }")
 	defer os.Remove(source)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_source(rName, source),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					testAccCheckBucketObjectBody(&obj, "{anything will do }"),
+					testAccCheckObjectBody(&obj, "{anything will do }"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "source", "force_destroy"},
-				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+				ImportStateVerifyIgnore: []string{"acl", names.AttrSource, names.AttrForceDestroy},
+				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -130,24 +152,24 @@ func TestAccS3BucketObject_content(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_content(rName, "some_bucket_content"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					testAccCheckBucketObjectBody(&obj, "some_bucket_content"),
+					testAccCheckObjectBody(&obj, "some_bucket_content"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "content", "content_base64", "force_destroy"},
-				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+				ImportStateVerifyIgnore: []string{"acl", names.AttrContent, "content_base64", names.AttrForceDestroy},
+				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -158,21 +180,21 @@ func TestAccS3BucketObject_etagEncryption(t *testing.T) {
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	source := testAccBucketObjectCreateTempFile(t, "{anything will do }")
+	source := testAccObjectCreateTempFile(t, "{anything will do }")
 	defer os.Remove(source)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_etagEncryption(rName, source),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					testAccCheckBucketObjectBody(&obj, "{anything will do }"),
+					testAccCheckObjectBody(&obj, "{anything will do }"),
 					resource.TestCheckResourceAttr(resourceName, "etag", "7b006ff4d70f68cc65061acf2f802e6f"),
 				),
 			},
@@ -180,8 +202,8 @@ func TestAccS3BucketObject_etagEncryption(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "source", "force_destroy"},
-				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+				ImportStateVerifyIgnore: []string{"acl", names.AttrSource, names.AttrForceDestroy},
+				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -195,16 +217,16 @@ func TestAccS3BucketObject_contentBase64(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_contentBase64(rName, base64.StdEncoding.EncodeToString([]byte("some_bucket_content"))),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					testAccCheckBucketObjectBody(&obj, "some_bucket_content"),
+					testAccCheckObjectBody(&obj, "some_bucket_content"),
 				),
 			},
 		},
@@ -220,7 +242,7 @@ func TestAccS3BucketObject_sourceHashTrigger(t *testing.T) {
 	startingData := "Ebben!"
 	changingData := "Ne andrò lontana"
 
-	filename := testAccBucketObjectCreateTempFile(t, startingData)
+	filename := testAccObjectCreateTempFile(t, startingData)
 	defer os.Remove(filename)
 
 	rewriteFile := func(*terraform.State) error {
@@ -233,16 +255,16 @@ func TestAccS3BucketObject_sourceHashTrigger(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_sourceHashTrigger(rName, filename),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					testAccCheckBucketObjectBody(&obj, "Ebben!"),
+					testAccCheckObjectBody(&obj, "Ebben!"),
 					resource.TestCheckResourceAttr(resourceName, "source_hash", "7c7e02a79f28968882bb1426c8f8bfc6"),
 					rewriteFile,
 				),
@@ -251,9 +273,9 @@ func TestAccS3BucketObject_sourceHashTrigger(t *testing.T) {
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_sourceHashTrigger(rName, filename),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &updated_obj),
-					testAccCheckBucketObjectBody(&updated_obj, "Ne andrò lontana"),
+					testAccCheckObjectBody(&updated_obj, "Ne andrò lontana"),
 					resource.TestCheckResourceAttr(resourceName, "source_hash", "cffc5e20de2d21764145b1124c9b337b"),
 				),
 			},
@@ -261,8 +283,8 @@ func TestAccS3BucketObject_sourceHashTrigger(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "content", "content_base64", "force_destroy", "source", "source_hash"},
-				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+				ImportStateVerifyIgnore: []string{"acl", names.AttrContent, "content_base64", names.AttrForceDestroy, names.AttrSource, "source_hash"},
+				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -274,21 +296,21 @@ func TestAccS3BucketObject_withContentCharacteristics(t *testing.T) {
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	source := testAccBucketObjectCreateTempFile(t, "{anything will do }")
+	source := testAccObjectCreateTempFile(t, "{anything will do }")
 	defer os.Remove(source)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_contentCharacteristics(rName, source),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					testAccCheckBucketObjectBody(&obj, "{anything will do }"),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "binary/octet-stream"),
+					testAccCheckObjectBody(&obj, "{anything will do }"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "binary/octet-stream"),
 					resource.TestCheckResourceAttr(resourceName, "website_redirect", "http://google.com"),
 				),
 			},
@@ -298,7 +320,7 @@ func TestAccS3BucketObject_withContentCharacteristics(t *testing.T) {
 
 func TestAccS3BucketObject_nonVersioned(t *testing.T) {
 	ctx := acctest.Context(t)
-	sourceInitial := testAccBucketObjectCreateTempFile(t, "initial object state")
+	sourceInitial := testAccObjectCreateTempFile(t, "initial object state")
 	defer os.Remove(sourceInitial)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var originalObj s3.GetObjectOutput
@@ -306,15 +328,15 @@ func TestAccS3BucketObject_nonVersioned(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAssumeRoleARN(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_nonVersioned(rName, sourceInitial),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &originalObj),
-					testAccCheckBucketObjectBody(&originalObj, "initial object state"),
+					testAccCheckObjectBody(&originalObj, "initial object state"),
 					resource.TestCheckResourceAttr(resourceName, "version_id", ""),
 				),
 			},
@@ -322,9 +344,8 @@ func TestAccS3BucketObject_nonVersioned(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "source", "force_destroy"},
-				ImportStateId:           fmt.Sprintf("s3://%s/updateable-key", rName),
-			},
+				ImportStateVerifyIgnore: []string{"acl", names.AttrSource, names.AttrForceDestroy},
+				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName)},
 		},
 	})
 }
@@ -335,22 +356,22 @@ func TestAccS3BucketObject_updates(t *testing.T) {
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	sourceInitial := testAccBucketObjectCreateTempFile(t, "initial object state")
+	sourceInitial := testAccObjectCreateTempFile(t, "initial object state")
 	defer os.Remove(sourceInitial)
-	sourceModified := testAccBucketObjectCreateTempFile(t, "modified object")
+	sourceModified := testAccObjectCreateTempFile(t, "modified object")
 	defer os.Remove(sourceInitial)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_updateable(rName, false, sourceInitial),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &originalObj),
-					testAccCheckBucketObjectBody(&originalObj, "initial object state"),
+					testAccCheckObjectBody(&originalObj, "initial object state"),
 					resource.TestCheckResourceAttr(resourceName, "etag", "647d1d58e1011c743ec67d5e8af87b53"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
@@ -359,9 +380,9 @@ func TestAccS3BucketObject_updates(t *testing.T) {
 			},
 			{
 				Config: testAccBucketObjectConfig_updateable(rName, false, sourceModified),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &modifiedObj),
-					testAccCheckBucketObjectBody(&modifiedObj, "modified object"),
+					testAccCheckObjectBody(&modifiedObj, "modified object"),
 					resource.TestCheckResourceAttr(resourceName, "etag", "1c7fd13df1515c2a13ad9eb068931f09"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
@@ -372,9 +393,8 @@ func TestAccS3BucketObject_updates(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "source", "force_destroy"},
-				ImportStateId:           fmt.Sprintf("s3://%s/updateable-key", rName),
-			},
+				ImportStateVerifyIgnore: []string{"acl", names.AttrSource, names.AttrForceDestroy},
+				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName)},
 		},
 	})
 }
@@ -388,7 +408,7 @@ func TestAccS3BucketObject_updateSameFile(t *testing.T) {
 	startingData := "lane 8"
 	changingData := "chicane"
 
-	filename := testAccBucketObjectCreateTempFile(t, startingData)
+	filename := testAccObjectCreateTempFile(t, startingData)
 	defer os.Remove(filename)
 
 	rewriteFile := func(*terraform.State) error {
@@ -401,15 +421,15 @@ func TestAccS3BucketObject_updateSameFile(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_updateable(rName, false, filename),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &originalObj),
-					testAccCheckBucketObjectBody(&originalObj, startingData),
+					testAccCheckObjectBody(&originalObj, startingData),
 					resource.TestCheckResourceAttr(resourceName, "etag", "aa48b42f36a2652cbee40c30a5df7d25"),
 					rewriteFile,
 				),
@@ -417,9 +437,9 @@ func TestAccS3BucketObject_updateSameFile(t *testing.T) {
 			},
 			{
 				Config: testAccBucketObjectConfig_updateable(rName, false, filename),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &modifiedObj),
-					testAccCheckBucketObjectBody(&modifiedObj, changingData),
+					testAccCheckObjectBody(&modifiedObj, changingData),
 					resource.TestCheckResourceAttr(resourceName, "etag", "fafc05f8c4da0266a99154681ab86e8c"),
 				),
 			},
@@ -433,41 +453,40 @@ func TestAccS3BucketObject_updatesWithVersioning(t *testing.T) {
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	sourceInitial := testAccBucketObjectCreateTempFile(t, "initial versioned object state")
+	sourceInitial := testAccObjectCreateTempFile(t, "initial versioned object state")
 	defer os.Remove(sourceInitial)
-	sourceModified := testAccBucketObjectCreateTempFile(t, "modified versioned object")
+	sourceModified := testAccObjectCreateTempFile(t, "modified versioned object")
 	defer os.Remove(sourceInitial)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_updateable(rName, true, sourceInitial),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &originalObj),
-					testAccCheckBucketObjectBody(&originalObj, "initial versioned object state"),
+					testAccCheckObjectBody(&originalObj, "initial versioned object state"),
 					resource.TestCheckResourceAttr(resourceName, "etag", "cee4407fa91906284e2a5e5e03e86b1b"),
 				),
 			},
 			{
 				Config: testAccBucketObjectConfig_updateable(rName, true, sourceModified),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &modifiedObj),
-					testAccCheckBucketObjectBody(&modifiedObj, "modified versioned object"),
+					testAccCheckObjectBody(&modifiedObj, "modified versioned object"),
 					resource.TestCheckResourceAttr(resourceName, "etag", "00b8c73b1b50e7cc932362c7225b8e29"),
-					testAccCheckBucketObjectVersionIdDiffers(&modifiedObj, &originalObj),
+					testAccCheckObjectVersionIDDiffers(&modifiedObj, &originalObj),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "source", "force_destroy"},
-				ImportStateId:           fmt.Sprintf("s3://%s/updateable-key", rName),
-			},
+				ImportStateVerifyIgnore: []string{"acl", names.AttrSource, names.AttrForceDestroy},
+				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName)},
 		},
 	})
 }
@@ -479,33 +498,33 @@ func TestAccS3BucketObject_updatesWithVersioningViaAccessPoint(t *testing.T) {
 	resourceName := "aws_s3_bucket_object.test"
 	accessPointResourceName := "aws_s3_access_point.test"
 
-	sourceInitial := testAccBucketObjectCreateTempFile(t, "initial versioned object state")
+	sourceInitial := testAccObjectCreateTempFile(t, "initial versioned object state")
 	defer os.Remove(sourceInitial)
-	sourceModified := testAccBucketObjectCreateTempFile(t, "modified versioned object")
+	sourceModified := testAccObjectCreateTempFile(t, "modified versioned object")
 	defer os.Remove(sourceInitial)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectConfig_updateableViaAccessPoint(rName, s3.BucketVersioningStatusEnabled, sourceInitial),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccBucketObjectConfig_updateableViaAccessPoint(rName, string(types.BucketVersioningStatusEnabled), sourceInitial),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &originalObj),
-					testAccCheckBucketObjectBody(&originalObj, "initial versioned object state"),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", accessPointResourceName, "arn"),
+					testAccCheckObjectBody(&originalObj, "initial versioned object state"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, accessPointResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "etag", "cee4407fa91906284e2a5e5e03e86b1b"),
 				),
 			},
 			{
-				Config: testAccBucketObjectConfig_updateableViaAccessPoint(rName, s3.BucketVersioningStatusEnabled, sourceModified),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccBucketObjectConfig_updateableViaAccessPoint(rName, string(types.BucketVersioningStatusEnabled), sourceModified),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &modifiedObj),
-					testAccCheckBucketObjectBody(&modifiedObj, "modified versioned object"),
+					testAccCheckObjectBody(&modifiedObj, "modified versioned object"),
 					resource.TestCheckResourceAttr(resourceName, "etag", "00b8c73b1b50e7cc932362c7225b8e29"),
-					testAccCheckBucketObjectVersionIdDiffers(&modifiedObj, &originalObj),
+					testAccCheckObjectVersionIDDiffers(&modifiedObj, &originalObj),
 				),
 			},
 		},
@@ -518,30 +537,30 @@ func TestAccS3BucketObject_kms(t *testing.T) {
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	source := testAccBucketObjectCreateTempFile(t, "{anything will do }")
+	source := testAccObjectCreateTempFile(t, "{anything will do }")
 	defer os.Remove(source)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_kmsID(rName, source),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					testAccCheckBucketObjectSSE(ctx, resourceName, "aws:kms"),
-					testAccCheckBucketObjectBody(&obj, "{anything will do }"),
+					testAccCheckObjectSSE(ctx, resourceName, "aws:kms"),
+					testAccCheckObjectBody(&obj, "{anything will do }"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "source", "force_destroy"},
-				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+				ImportStateVerifyIgnore: []string{"acl", names.AttrSource, names.AttrForceDestroy},
+				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -553,30 +572,30 @@ func TestAccS3BucketObject_sse(t *testing.T) {
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	source := testAccBucketObjectCreateTempFile(t, "{anything will do }")
+	source := testAccObjectCreateTempFile(t, "{anything will do }")
 	defer os.Remove(source)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_sse(rName, source),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					testAccCheckBucketObjectSSE(ctx, resourceName, "AES256"),
-					testAccCheckBucketObjectBody(&obj, "{anything will do }"),
+					testAccCheckObjectSSE(ctx, resourceName, "AES256"),
+					testAccCheckObjectBody(&obj, "{anything will do }"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "source", "force_destroy"},
-				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+				ImportStateVerifyIgnore: []string{"acl", names.AttrSource, names.AttrForceDestroy},
+				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -590,45 +609,45 @@ func TestAccS3BucketObject_acl(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectConfig_acl(rName, "some_bucket_content", s3.BucketCannedACLPrivate, true),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccBucketObjectConfig_acl(rName, "some_bucket_content", string(types.BucketCannedACLPrivate), true),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj1),
-					testAccCheckBucketObjectBody(&obj1, "some_bucket_content"),
-					resource.TestCheckResourceAttr(resourceName, "acl", s3.BucketCannedACLPrivate),
-					testAccCheckBucketObjectACL(ctx, resourceName, []string{"FULL_CONTROL"}),
+					testAccCheckObjectBody(&obj1, "some_bucket_content"),
+					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
+					testAccCheckObjectACL(ctx, resourceName, []string{"FULL_CONTROL"}),
 				),
 			},
 			{
-				Config: testAccBucketObjectConfig_acl(rName, "some_bucket_content", s3.BucketCannedACLPublicRead, false),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccBucketObjectConfig_acl(rName, "some_bucket_content", string(types.BucketCannedACLPublicRead), false),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj2),
-					testAccCheckBucketObjectVersionIdEquals(&obj2, &obj1),
-					testAccCheckBucketObjectBody(&obj2, "some_bucket_content"),
-					resource.TestCheckResourceAttr(resourceName, "acl", s3.BucketCannedACLPublicRead),
-					testAccCheckBucketObjectACL(ctx, resourceName, []string{"FULL_CONTROL", "READ"}),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
+					testAccCheckObjectBody(&obj2, "some_bucket_content"),
+					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPublicRead)),
+					testAccCheckObjectACL(ctx, resourceName, []string{"FULL_CONTROL", "READ"}),
 				),
 			},
 			{
-				Config: testAccBucketObjectConfig_acl(rName, "changed_some_bucket_content", s3.BucketCannedACLPrivate, true),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccBucketObjectConfig_acl(rName, "changed_some_bucket_content", string(types.BucketCannedACLPrivate), true),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj3),
-					testAccCheckBucketObjectVersionIdDiffers(&obj3, &obj2),
-					testAccCheckBucketObjectBody(&obj3, "changed_some_bucket_content"),
-					resource.TestCheckResourceAttr(resourceName, "acl", s3.BucketCannedACLPrivate),
-					testAccCheckBucketObjectACL(ctx, resourceName, []string{"FULL_CONTROL"}),
+					testAccCheckObjectVersionIDDiffers(&obj3, &obj2),
+					testAccCheckObjectBody(&obj3, "changed_some_bucket_content"),
+					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
+					testAccCheckObjectACL(ctx, resourceName, []string{"FULL_CONTROL"}),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "content", "force_destroy"},
-				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+				ImportStateVerifyIgnore: []string{"acl", names.AttrContent, names.AttrForceDestroy},
+				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -642,41 +661,41 @@ func TestAccS3BucketObject_metadata(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectConfig_metadata(rName, "key1", "value1", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccBucketObjectConfig_metadata(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "metadata.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "metadata.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "metadata.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "metadata.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "metadata.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccBucketObjectConfig_metadata(rName, "key1", "value1updated", "key3", "value3"),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccBucketObjectConfig_metadata(rName, acctest.CtKey1, acctest.CtValue1Updated, "key3", "value3"),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "metadata.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "metadata.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "metadata.key1", acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, "metadata.key3", "value3"),
 				),
 			},
 			{
-				Config: testAccBucketObjectConfig_empty(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccBucketObjectConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", acctest.Ct0),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "force_destroy"},
-				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+				ImportStateVerifyIgnore: []string{"acl", names.AttrForceDestroy},
+				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -690,130 +709,57 @@ func TestAccS3BucketObject_storageClass(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_content(rName, "some_bucket_content"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "storage_class", "STANDARD"),
-					testAccCheckBucketObjectStorageClass(ctx, resourceName, "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "STANDARD"),
+					testAccCheckObjectStorageClass(ctx, resourceName, "STANDARD"),
 				),
 			},
 			{
 				Config: testAccBucketObjectConfig_storageClass(rName, "REDUCED_REDUNDANCY"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "storage_class", "REDUCED_REDUNDANCY"),
-					testAccCheckBucketObjectStorageClass(ctx, resourceName, "REDUCED_REDUNDANCY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "REDUCED_REDUNDANCY"),
+					testAccCheckObjectStorageClass(ctx, resourceName, "REDUCED_REDUNDANCY"),
 				),
 			},
 			{
 				Config: testAccBucketObjectConfig_storageClass(rName, "GLACIER"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					// Can't GetObject on an object in Glacier without restoring it.
-					resource.TestCheckResourceAttr(resourceName, "storage_class", "GLACIER"),
-					testAccCheckBucketObjectStorageClass(ctx, resourceName, "GLACIER"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "GLACIER"),
+					testAccCheckObjectStorageClass(ctx, resourceName, "GLACIER"),
 				),
 			},
 			{
 				Config: testAccBucketObjectConfig_storageClass(rName, "INTELLIGENT_TIERING"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "storage_class", "INTELLIGENT_TIERING"),
-					testAccCheckBucketObjectStorageClass(ctx, resourceName, "INTELLIGENT_TIERING"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "INTELLIGENT_TIERING"),
+					testAccCheckObjectStorageClass(ctx, resourceName, "INTELLIGENT_TIERING"),
 				),
 			},
 			{
 				Config: testAccBucketObjectConfig_storageClass(rName, "DEEP_ARCHIVE"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					// 	Can't GetObject on an object in DEEP_ARCHIVE without restoring it.
-					resource.TestCheckResourceAttr(resourceName, "storage_class", "DEEP_ARCHIVE"),
-					testAccCheckBucketObjectStorageClass(ctx, resourceName, "DEEP_ARCHIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "DEEP_ARCHIVE"),
+					testAccCheckObjectStorageClass(ctx, resourceName, "DEEP_ARCHIVE"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"content", "acl", "force_destroy"},
-				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
-			},
-		},
-	})
-}
-
-func TestAccS3BucketObject_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var obj1, obj2, obj3, obj4 s3.GetObjectOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_bucket_object.object"
-	key := "test-key"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_tags(rName, key, "stuff"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketObjectExists(ctx, resourceName, &obj1),
-					testAccCheckBucketObjectBody(&obj1, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
-				),
-			},
-			{
-				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_updatedTags(rName, key, "stuff"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketObjectExists(ctx, resourceName, &obj2),
-					testAccCheckBucketObjectVersionIdEquals(&obj2, &obj1),
-					testAccCheckBucketObjectBody(&obj2, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "B@BB"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "E:/"),
-				),
-			},
-			{
-				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_noTags(rName, key, "stuff"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketObjectExists(ctx, resourceName, &obj3),
-					testAccCheckBucketObjectVersionIdEquals(&obj3, &obj2),
-					testAccCheckBucketObjectBody(&obj3, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-			{
-				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_tags(rName, key, "changed stuff"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketObjectExists(ctx, resourceName, &obj4),
-					testAccCheckBucketObjectVersionIdDiffers(&obj4, &obj3),
-					testAccCheckBucketObjectBody(&obj4, "changed stuff"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"content", "acl", "force_destroy"},
-				ImportStateId:           fmt.Sprintf("s3://%s/%s", rName, key),
+				ImportStateVerifyIgnore: []string{names.AttrContent, "acl", names.AttrForceDestroy},
+				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -828,17 +774,17 @@ func TestAccS3BucketObject_tagsLeadingSingleSlash(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_tags(rName, key, "stuff"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj1),
-					testAccCheckBucketObjectBody(&obj1, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					testAccCheckObjectBody(&obj1, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -847,11 +793,11 @@ func TestAccS3BucketObject_tagsLeadingSingleSlash(t *testing.T) {
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_updatedTags(rName, key, "stuff"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj2),
-					testAccCheckBucketObjectVersionIdEquals(&obj2, &obj1),
-					testAccCheckBucketObjectBody(&obj2, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
+					testAccCheckObjectBody(&obj2, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "B@BB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
@@ -861,21 +807,21 @@ func TestAccS3BucketObject_tagsLeadingSingleSlash(t *testing.T) {
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_noTags(rName, key, "stuff"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj3),
-					testAccCheckBucketObjectVersionIdEquals(&obj3, &obj2),
-					testAccCheckBucketObjectBody(&obj3, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckObjectVersionIDEquals(&obj3, &obj2),
+					testAccCheckObjectBody(&obj3, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_tags(rName, key, "changed stuff"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj4),
-					testAccCheckBucketObjectVersionIdDiffers(&obj4, &obj3),
-					testAccCheckBucketObjectBody(&obj4, "changed stuff"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					testAccCheckObjectVersionIDDiffers(&obj4, &obj3),
+					testAccCheckObjectBody(&obj4, "changed stuff"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -885,9 +831,8 @@ func TestAccS3BucketObject_tagsLeadingSingleSlash(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"content", "acl", "force_destroy"},
-				ImportStateId:           fmt.Sprintf("s3://%s/%s", rName, key),
-			},
+				ImportStateVerifyIgnore: []string{names.AttrContent, "acl", names.AttrForceDestroy},
+				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName)},
 		},
 	})
 }
@@ -901,17 +846,17 @@ func TestAccS3BucketObject_tagsLeadingMultipleSlashes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_tags(rName, key, "stuff"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj1),
-					testAccCheckBucketObjectBody(&obj1, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					testAccCheckObjectBody(&obj1, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -920,11 +865,11 @@ func TestAccS3BucketObject_tagsLeadingMultipleSlashes(t *testing.T) {
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_updatedTags(rName, key, "stuff"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj2),
-					testAccCheckBucketObjectVersionIdEquals(&obj2, &obj1),
-					testAccCheckBucketObjectBody(&obj2, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
+					testAccCheckObjectBody(&obj2, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "B@BB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
@@ -934,21 +879,21 @@ func TestAccS3BucketObject_tagsLeadingMultipleSlashes(t *testing.T) {
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_noTags(rName, key, "stuff"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj3),
-					testAccCheckBucketObjectVersionIdEquals(&obj3, &obj2),
-					testAccCheckBucketObjectBody(&obj3, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckObjectVersionIDEquals(&obj3, &obj2),
+					testAccCheckObjectBody(&obj3, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_tags(rName, key, "changed stuff"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj4),
-					testAccCheckBucketObjectVersionIdDiffers(&obj4, &obj3),
-					testAccCheckBucketObjectBody(&obj4, "changed stuff"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					testAccCheckObjectVersionIDDiffers(&obj4, &obj3),
+					testAccCheckObjectBody(&obj4, "changed stuff"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -967,17 +912,17 @@ func TestAccS3BucketObject_tagsMultipleSlashes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_tags(rName, key, "stuff"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj1),
-					testAccCheckBucketObjectBody(&obj1, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					testAccCheckObjectBody(&obj1, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -986,11 +931,11 @@ func TestAccS3BucketObject_tagsMultipleSlashes(t *testing.T) {
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_updatedTags(rName, key, "stuff"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj2),
-					testAccCheckBucketObjectVersionIdEquals(&obj2, &obj1),
-					testAccCheckBucketObjectBody(&obj2, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
+					testAccCheckObjectBody(&obj2, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "B@BB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
@@ -1000,21 +945,21 @@ func TestAccS3BucketObject_tagsMultipleSlashes(t *testing.T) {
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_noTags(rName, key, "stuff"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj3),
-					testAccCheckBucketObjectVersionIdEquals(&obj3, &obj2),
-					testAccCheckBucketObjectBody(&obj3, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckObjectVersionIDEquals(&obj3, &obj2),
+					testAccCheckObjectBody(&obj3, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
 				PreConfig: func() {},
 				Config:    testAccBucketObjectConfig_tags(rName, key, "changed stuff"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj4),
-					testAccCheckBucketObjectVersionIdDiffers(&obj4, &obj3),
-					testAccCheckBucketObjectBody(&obj4, "changed stuff"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					testAccCheckObjectVersionIDDiffers(&obj4, &obj3),
+					testAccCheckObjectBody(&obj4, "changed stuff"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -1032,15 +977,15 @@ func TestAccS3BucketObject_objectLockLegalHoldStartWithNone(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_noLockLegalHold(rName, "stuff"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj1),
-					testAccCheckBucketObjectBody(&obj1, "stuff"),
+					testAccCheckObjectBody(&obj1, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
@@ -1048,10 +993,10 @@ func TestAccS3BucketObject_objectLockLegalHoldStartWithNone(t *testing.T) {
 			},
 			{
 				Config: testAccBucketObjectConfig_lockLegalHold(rName, "stuff", "ON"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj2),
-					testAccCheckBucketObjectVersionIdEquals(&obj2, &obj1),
-					testAccCheckBucketObjectBody(&obj2, "stuff"),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
+					testAccCheckObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
@@ -1060,10 +1005,10 @@ func TestAccS3BucketObject_objectLockLegalHoldStartWithNone(t *testing.T) {
 			// Remove legal hold but create a new object version to test force_destroy
 			{
 				Config: testAccBucketObjectConfig_lockLegalHold(rName, "changed stuff", "OFF"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj3),
-					testAccCheckBucketObjectVersionIdDiffers(&obj3, &obj2),
-					testAccCheckBucketObjectBody(&obj3, "changed stuff"),
+					testAccCheckObjectVersionIDDiffers(&obj3, &obj2),
+					testAccCheckObjectBody(&obj3, "changed stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
@@ -1081,15 +1026,15 @@ func TestAccS3BucketObject_objectLockLegalHoldStartWithOn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_lockLegalHold(rName, "stuff", "ON"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj1),
-					testAccCheckBucketObjectBody(&obj1, "stuff"),
+					testAccCheckObjectBody(&obj1, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
@@ -1097,10 +1042,10 @@ func TestAccS3BucketObject_objectLockLegalHoldStartWithOn(t *testing.T) {
 			},
 			{
 				Config: testAccBucketObjectConfig_lockLegalHold(rName, "stuff", "OFF"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj2),
-					testAccCheckBucketObjectVersionIdEquals(&obj2, &obj1),
-					testAccCheckBucketObjectBody(&obj2, "stuff"),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
+					testAccCheckObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
@@ -1119,15 +1064,15 @@ func TestAccS3BucketObject_objectLockRetentionStartWithNone(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_noLockRetention(rName, "stuff"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj1),
-					testAccCheckBucketObjectBody(&obj1, "stuff"),
+					testAccCheckObjectBody(&obj1, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
@@ -1135,10 +1080,10 @@ func TestAccS3BucketObject_objectLockRetentionStartWithNone(t *testing.T) {
 			},
 			{
 				Config: testAccBucketObjectConfig_lockRetention(rName, "stuff", retainUntilDate),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj2),
-					testAccCheckBucketObjectVersionIdEquals(&obj2, &obj1),
-					testAccCheckBucketObjectBody(&obj2, "stuff"),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
+					testAccCheckObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", "GOVERNANCE"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", retainUntilDate),
@@ -1147,10 +1092,10 @@ func TestAccS3BucketObject_objectLockRetentionStartWithNone(t *testing.T) {
 			// Remove retention period but create a new object version to test force_destroy
 			{
 				Config: testAccBucketObjectConfig_noLockRetention(rName, "changed stuff"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj3),
-					testAccCheckBucketObjectVersionIdDiffers(&obj3, &obj2),
-					testAccCheckBucketObjectBody(&obj3, "changed stuff"),
+					testAccCheckObjectVersionIDDiffers(&obj3, &obj2),
+					testAccCheckObjectBody(&obj3, "changed stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
@@ -1171,15 +1116,15 @@ func TestAccS3BucketObject_objectLockRetentionStartWithSet(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_lockRetention(rName, "stuff", retainUntilDate1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj1),
-					testAccCheckBucketObjectBody(&obj1, "stuff"),
+					testAccCheckObjectBody(&obj1, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", "GOVERNANCE"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", retainUntilDate1),
@@ -1187,10 +1132,10 @@ func TestAccS3BucketObject_objectLockRetentionStartWithSet(t *testing.T) {
 			},
 			{
 				Config: testAccBucketObjectConfig_lockRetention(rName, "stuff", retainUntilDate2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj2),
-					testAccCheckBucketObjectVersionIdEquals(&obj2, &obj1),
-					testAccCheckBucketObjectBody(&obj2, "stuff"),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
+					testAccCheckObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", "GOVERNANCE"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", retainUntilDate2),
@@ -1198,10 +1143,10 @@ func TestAccS3BucketObject_objectLockRetentionStartWithSet(t *testing.T) {
 			},
 			{
 				Config: testAccBucketObjectConfig_lockRetention(rName, "stuff", retainUntilDate3),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj3),
-					testAccCheckBucketObjectVersionIdEquals(&obj3, &obj2),
-					testAccCheckBucketObjectBody(&obj3, "stuff"),
+					testAccCheckObjectVersionIDEquals(&obj3, &obj2),
+					testAccCheckObjectBody(&obj3, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", "GOVERNANCE"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", retainUntilDate3),
@@ -1209,10 +1154,10 @@ func TestAccS3BucketObject_objectLockRetentionStartWithSet(t *testing.T) {
 			},
 			{
 				Config: testAccBucketObjectConfig_noLockRetention(rName, "stuff"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj4),
-					testAccCheckBucketObjectVersionIdEquals(&obj4, &obj3),
-					testAccCheckBucketObjectBody(&obj4, "stuff"),
+					testAccCheckObjectVersionIDEquals(&obj4, &obj3),
+					testAccCheckObjectBody(&obj4, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
@@ -1230,16 +1175,16 @@ func TestAccS3BucketObject_objectBucketKeyEnabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_objectKeyEnabled(rName, "stuff"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					testAccCheckBucketObjectBody(&obj, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "true"),
+					testAccCheckObjectBody(&obj, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -1254,16 +1199,16 @@ func TestAccS3BucketObject_bucketBucketKeyEnabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_bucketKeyEnabled(rName, "stuff"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					testAccCheckBucketObjectBody(&obj, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "true"),
+					testAccCheckObjectBody(&obj, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -1278,15 +1223,15 @@ func TestAccS3BucketObject_defaultBucketSSE(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectConfig_defaultSSE(rName, "stuff"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj1),
-					testAccCheckBucketObjectBody(&obj1, "stuff"),
+					testAccCheckObjectBody(&obj1, "stuff"),
 				),
 			},
 		},
@@ -1302,7 +1247,7 @@ func TestAccS3BucketObject_ignoreTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1311,12 +1256,12 @@ func TestAccS3BucketObject_ignoreTags(t *testing.T) {
 				Config: acctest.ConfigCompose(
 					acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey"),
 					testAccBucketObjectConfig_noTags(rName, key, "stuff")),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					testAccCheckBucketObjectBody(&obj, "stuff"),
-					testAccCheckBucketObjectUpdateTags(ctx, resourceName, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccCheckBucketObjectCheckTags(ctx, resourceName, map[string]string{
+					testAccCheckObjectBody(&obj, "stuff"),
+					testAccCheckObjectUpdateTags(ctx, resourceName, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					testAccCheckAllObjectTags(ctx, resourceName, map[string]string{
 						"ignorekey1": "ignorevalue1",
 					}),
 				),
@@ -1326,14 +1271,14 @@ func TestAccS3BucketObject_ignoreTags(t *testing.T) {
 				Config: acctest.ConfigCompose(
 					acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey"),
 					testAccBucketObjectConfig_tags(rName, key, "stuff")),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					testAccCheckBucketObjectBody(&obj, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					testAccCheckObjectBody(&obj, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
-					testAccCheckBucketObjectCheckTags(ctx, resourceName, map[string]string{
+					testAccCheckAllObjectTags(ctx, resourceName, map[string]string{
 						"ignorekey1": "ignorevalue1",
 						"Key1":       "A@AA",
 						"Key2":       "BBB",
@@ -1345,50 +1290,16 @@ func TestAccS3BucketObject_ignoreTags(t *testing.T) {
 	})
 }
 
-func testAccCheckBucketObjectVersionIdDiffers(first, second *s3.GetObjectOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if first.VersionId == nil {
-			return fmt.Errorf("Expected first object to have VersionId: %s", first)
-		}
-		if second.VersionId == nil {
-			return fmt.Errorf("Expected second object to have VersionId: %s", second)
-		}
-
-		if *first.VersionId == *second.VersionId {
-			return fmt.Errorf("Expected Version IDs to differ, but they are equal (%s)", *first.VersionId)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckBucketObjectVersionIdEquals(first, second *s3.GetObjectOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if first.VersionId == nil {
-			return fmt.Errorf("Expected first object to have VersionId: %s", first)
-		}
-		if second.VersionId == nil {
-			return fmt.Errorf("Expected second object to have VersionId: %s", second)
-		}
-
-		if *first.VersionId != *second.VersionId {
-			return fmt.Errorf("Expected Version IDs to be equal, but they differ (%s, %s)", *first.VersionId, *second.VersionId)
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckBucketObjectDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_bucket_object" {
 				continue
 			}
 
-			_, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], rs.Primary.Attributes["etag"])
+			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes[names.AttrBucket], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes[names.AttrKey]), rs.Primary.Attributes["etag"], rs.Primary.Attributes["checksum_algorithm"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1405,198 +1316,45 @@ func testAccCheckBucketObjectDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckBucketObjectExists(ctx context.Context, n string, obj *s3.GetObjectOutput) resource.TestCheckFunc {
+func testAccCheckBucketObjectExists(ctx context.Context, n string, v *s3.GetObjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not Found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 Object ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
 		input := &s3.GetObjectInput{
-			Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
-			Key:     aws.String(rs.Primary.Attributes["key"]),
+			Bucket:  aws.String(rs.Primary.Attributes[names.AttrBucket]),
+			Key:     aws.String(tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes[names.AttrKey])),
 			IfMatch: aws.String(rs.Primary.Attributes["etag"]),
 		}
 
-		var out *s3.GetObjectOutput
-
-		err := retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
-			var err error
-			out, err = conn.GetObjectWithContext(ctx, input)
-
-			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchKey) {
-				return retry.RetryableError(
-					fmt.Errorf("getting object %s, retrying: %w", rs.Primary.Attributes["bucket"], err),
-				)
-			}
-
-			if err != nil {
-				return retry.NonRetryableError(err)
-			}
-
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			out, err = conn.GetObjectWithContext(ctx, input)
-		}
-
-		if err != nil {
-			return fmt.Errorf("S3 Object error: %s", err)
-		}
-
-		*obj = *out
-
-		return nil
-	}
-}
-
-func testAccCheckBucketObjectBody(obj *s3.GetObjectOutput, want string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		body, err := io.ReadAll(obj.Body)
-		if err != nil {
-			return fmt.Errorf("failed to read body: %s", err)
-		}
-		obj.Body.Close()
-
-		if got := string(body); got != want {
-			return fmt.Errorf("wrong result body %q; want %q", got, want)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckBucketObjectACL(ctx context.Context, n string, expectedPerms []string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
-
-		out, err := conn.GetObjectAclWithContext(ctx, &s3.GetObjectAclInput{
-			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
-			Key:    aws.String(rs.Primary.Attributes["key"]),
-		})
-
-		if err != nil {
-			return fmt.Errorf("GetObjectAcl error: %v", err)
-		}
-
-		var perms []string
-		for _, v := range out.Grants {
-			perms = append(perms, *v.Permission)
-		}
-		sort.Strings(perms)
-
-		if !reflect.DeepEqual(perms, expectedPerms) {
-			return fmt.Errorf("Expected ACL permissions to be %v, got %v", expectedPerms, perms)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckBucketObjectStorageClass(ctx context.Context, n, expectedClass string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
-
-		out, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], "")
+		output, err := conn.GetObject(ctx, input)
 
 		if err != nil {
 			return err
 		}
 
-		// The "STANDARD" (which is also the default) storage
-		// class when set would not be included in the results.
-		storageClass := s3.StorageClassStandard
-		if out.StorageClass != nil {
-			storageClass = *out.StorageClass
-		}
-
-		if storageClass != expectedClass {
-			return fmt.Errorf("Expected Storage Class to be %v, got %v",
-				expectedClass, storageClass)
-		}
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckBucketObjectSSE(ctx context.Context, n, expectedSSE string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
-
-		out, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], "")
-
-		if err != nil {
-			return err
+func testAccBucketObjectImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not Found: %s", resourceName)
 		}
 
-		if out.ServerSideEncryption == nil {
-			return fmt.Errorf("Expected a non %v Server Side Encryption.", out.ServerSideEncryption)
-		}
-
-		sse := *out.ServerSideEncryption
-		if sse != expectedSSE {
-			return fmt.Errorf("Expected Server Side Encryption %v, got %v.",
-				expectedSSE, sse)
-		}
-
-		return nil
+		return fmt.Sprintf("s3://%s/%s", rs.Primary.Attributes[names.AttrBucket], rs.Primary.Attributes[names.AttrKey]), nil
 	}
 }
 
-func testAccBucketObjectCreateTempFile(t *testing.T, data string) string {
-	tmpFile, err := os.CreateTemp("", "tf-acc-s3-obj")
-	if err != nil {
-		t.Fatal(err)
-	}
-	filename := tmpFile.Name()
-
-	err = os.WriteFile(filename, []byte(data), 0644)
-	if err != nil {
-		os.Remove(filename)
-		t.Fatal(err)
-	}
-
-	return filename
-}
-
-func testAccCheckBucketObjectUpdateTags(ctx context.Context, n string, oldTags, newTags map[string]string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
-
-		return tfs3.ObjectUpdateTags(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], oldTags, newTags)
-	}
-}
-
-func testAccCheckBucketObjectCheckTags(ctx context.Context, n string, expectedTags map[string]string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
-
-		got, err := tfs3.ObjectListTags(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"])
-		if err != nil {
-			return err
-		}
-
-		want := tftags.New(ctx, expectedTags)
-		if !reflect.DeepEqual(want, got) {
-			return fmt.Errorf("Incorrect tags, want: %v got: %v", want, got)
-		}
-
-		return nil
-	}
-}
-
-func testAccBucketObjectConfig_basic(bucket, key string) string {
+func testAccBucketObjectConfig_invalid(bucket, key string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_object" "object" {
   bucket = %[1]q
@@ -1605,7 +1363,7 @@ resource "aws_s3_bucket_object" "object" {
 `, bucket, key)
 }
 
-func testAccBucketObjectConfig_empty(rName string) string {
+func testAccBucketObjectConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q

@@ -10,17 +10,18 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAvailabilityZonesSort(t *testing.T) {
 	t.Parallel()
 
-	azs := []*ec2.AvailabilityZone{
+	azs := []*awstypes.AvailabilityZone{
 		{
 			ZoneName: aws.String("name_YYY"),
 			ZoneId:   aws.String("id_YYY"),
@@ -39,7 +40,7 @@ func TestAvailabilityZonesSort(t *testing.T) {
 		},
 	}
 	sort.Slice(azs, func(i, j int) bool {
-		return aws.StringValue(azs[i].ZoneName) < aws.StringValue(azs[j].ZoneName)
+		return aws.ToString(azs[i].ZoneName) < aws.ToString(azs[j].ZoneName)
 	})
 
 	cases := []struct {
@@ -70,11 +71,11 @@ func TestAvailabilityZonesSort(t *testing.T) {
 	}
 	for _, tc := range cases {
 		az := azs[tc.Index]
-		if aws.StringValue(az.ZoneName) != tc.ZoneName {
-			t.Fatalf("AvailabilityZones index %d got zone name %s, expected %s", tc.Index, aws.StringValue(az.ZoneName), tc.ZoneName)
+		if aws.ToString(az.ZoneName) != tc.ZoneName {
+			t.Fatalf("AvailabilityZones index %d got zone name %s, expected %s", tc.Index, aws.ToString(az.ZoneName), tc.ZoneName)
 		}
-		if aws.StringValue(az.ZoneId) != tc.ZoneId {
-			t.Fatalf("AvailabilityZones index %d got zone ID %s, expected %s", tc.Index, aws.StringValue(az.ZoneId), tc.ZoneId)
+		if aws.ToString(az.ZoneId) != tc.ZoneId {
+			t.Fatalf("AvailabilityZones index %d got zone ID %s, expected %s", tc.Index, aws.ToString(az.ZoneId), tc.ZoneId)
 		}
 	}
 }
@@ -83,7 +84,7 @@ func TestAccEC2AvailabilityZonesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -102,7 +103,7 @@ func TestAccEC2AvailabilityZonesDataSource_allAvailabilityZones(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -121,7 +122,7 @@ func TestAccEC2AvailabilityZonesDataSource_filter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -141,7 +142,7 @@ func TestAccEC2AvailabilityZonesDataSource_excludeNames(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -161,7 +162,7 @@ func TestAccEC2AvailabilityZonesDataSource_excludeZoneIDs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -178,7 +179,7 @@ func TestAccEC2AvailabilityZonesDataSource_stateFilter(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -261,7 +262,7 @@ func testAccCheckAvailabilityZoneState(n string) resource.TestCheckFunc {
 			return fmt.Errorf("AZ resource ID not set.")
 		}
 
-		if _, ok := rs.Primary.Attributes["state"]; !ok {
+		if _, ok := rs.Primary.Attributes[names.AttrState]; !ok {
 			return fmt.Errorf("AZs state filter is missing, should be set.")
 		}
 

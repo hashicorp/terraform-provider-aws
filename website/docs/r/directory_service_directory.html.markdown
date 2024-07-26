@@ -122,7 +122,7 @@ resource "aws_subnet" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The fully qualified name for the directory, such as `corp.example.com`
 * `password` - (Required) The password for the directory administrator or connector user.
@@ -174,8 +174,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DirectoryService directories can be imported using the directory `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DirectoryService directories using the directory `id`. For example:
 
+```terraform
+import {
+  to = aws_directory_service_directory.sample
+  id = "d-926724cf57"
+}
 ```
-$ terraform import aws_directory_service_directory.sample d-926724cf57
+
+Using `terraform import`, import DirectoryService directories using the directory `id`. For example:
+
+```console
+% terraform import aws_directory_service_directory.sample d-926724cf57
 ```

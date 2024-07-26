@@ -15,7 +15,7 @@ Manages an AppStream Fleet Stack association.
 ```terraform
 resource "aws_appstream_fleet" "example" {
   name          = "NAME"
-  image_name    = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  image_name    = "Amazon-AppStream2-Sample-Image-03-11-2023"
   instance_type = "stream.standard.small"
 
   compute_capacity {
@@ -48,8 +48,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AppStream Stack Fleet Association can be imported by using the `fleet_name` and `stack_name` separated by a slash (`/`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppStream Stack Fleet Association using the `fleet_name` and `stack_name` separated by a slash (`/`). For example:
 
+```terraform
+import {
+  to = aws_appstream_fleet_stack_association.example
+  id = "fleetName/stackName"
+}
 ```
-$ terraform import aws_appstream_fleet_stack_association.example fleetName/stackName
+
+Using `terraform import`, import AppStream Stack Fleet Association using the `fleet_name` and `stack_name` separated by a slash (`/`). For example:
+
+```console
+% terraform import aws_appstream_fleet_stack_association.example fleetName/stackName
 ```

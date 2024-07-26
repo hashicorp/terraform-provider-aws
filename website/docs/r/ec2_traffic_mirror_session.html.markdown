@@ -36,7 +36,7 @@ resource "aws_ec2_traffic_mirror_session" "session" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) A description of the traffic mirror session.
 * `network_interface_id` - (Required, Forces new) ID of the source network interface. Not all network interfaces are eligible as mirror sources. On EC2 instances only nitro based instances support mirroring.
@@ -58,8 +58,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Traffic mirror sessions can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import traffic mirror sessions using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ec2_traffic_mirror_session.session
+  id = "tms-0d8aa3ca35897b82e"
+}
 ```
-$ terraform import aws_ec2_traffic_mirror_session.session tms-0d8aa3ca35897b82e
+
+Using `terraform import`, import traffic mirror sessions using the `id`. For example:
+
+```console
+% terraform import aws_ec2_traffic_mirror_session.session tms-0d8aa3ca35897b82e
 ```

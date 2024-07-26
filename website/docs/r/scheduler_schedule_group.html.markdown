@@ -50,8 +50,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Schedule groups can be imported using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import schedule groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_scheduler_schedule_group.example
+  id = "my-schedule-group"
+}
 ```
-$ terraform import aws_scheduler_schedule_group.example my-schedule-group
+
+Using `terraform import`, import schedule groups using the `name`. For example:
+
+```console
+% terraform import aws_scheduler_schedule_group.example my-schedule-group
 ```

@@ -32,7 +32,7 @@ data "aws_s3_object" "object_info" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `bucket` - (Required) Lists object keys in this S3 bucket. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
 * `prefix` - (Optional) Limits results to object keys with this prefix (Default: none)

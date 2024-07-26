@@ -29,7 +29,7 @@ resource "aws_chime_voice_connector_termination" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `voice_connector_id` - (Required) The Amazon Chime Voice Connector ID.
 * `cidr_allow_list` - (Required) The IP addresses allowed to make calls, in CIDR format.
@@ -46,8 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Chime Voice Connector Termination can be imported using the `voice_connector_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Chime Voice Connector Termination using the `voice_connector_id`. For example:
 
+```terraform
+import {
+  to = aws_chime_voice_connector_termination.default
+  id = "abcdef1ghij2klmno3pqr4"
+}
 ```
-$ terraform import aws_chime_voice_connector_termination.default abcdef1ghij2klmno3pqr4
+
+Using `terraform import`, import Chime Voice Connector Termination using the `voice_connector_id`. For example:
+
+```console
+% terraform import aws_chime_voice_connector_termination.default abcdef1ghij2klmno3pqr4
 ```

@@ -22,12 +22,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource
 func newResourceDomain(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceDomain{}
-	r.SetMigratedFromPluginSDK(true)
 
 	return r, nil
 }
@@ -46,8 +46,8 @@ func (r *resourceDomain) Metadata(_ context.Context, request resource.MetadataRe
 func (r *resourceDomain) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -142,7 +142,7 @@ func (r *resourceDomain) Delete(ctx context.Context, request resource.DeleteRequ
 	conn := r.Meta().SimpleDBConn(ctx)
 
 	tflog.Debug(ctx, "deleting SimpleDB Domain", map[string]interface{}{
-		"id": data.ID.ValueString(),
+		names.AttrID: data.ID.ValueString(),
 	})
 
 	_, err := conn.DeleteDomainWithContext(ctx, &simpledb.DeleteDomainInput{
@@ -161,8 +161,8 @@ func (r *resourceDomain) Delete(ctx context.Context, request resource.DeleteRequ
 //
 // If setting an attribute with the import identifier, it is recommended to use the ImportStatePassthroughID() call in this method.
 func (r *resourceDomain) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("id"), request.ID)...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("name"), request.ID)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrName), request.ID)...)
 }
 
 type resourceDomainData struct {

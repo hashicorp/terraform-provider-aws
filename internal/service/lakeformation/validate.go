@@ -5,8 +5,8 @@ package lakeformation
 
 import (
 	"fmt"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -30,7 +30,7 @@ func validPrincipal(v interface{}, k string) (ws []string, errors []error) {
 	errors = append(errors, errorsARN...)
 
 	pattern := `:(role|user|group|ou|organization)/`
-	if !regexp.MustCompile(pattern).MatchString(value) {
+	if !regexache.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q does not look like a user, role, group, OU, or organization: %q", k, value))
 	}
 

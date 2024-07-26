@@ -25,7 +25,7 @@ resource "aws_route53_resolver_query_log_config" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `destination_arn` - (Required) The ARN of the resource that you want Route 53 Resolver to send query logs.
 You can send query logs to an [S3 bucket](s3_bucket.html), a [CloudWatch Logs log group](cloudwatch_log_group.html), or a [Kinesis Data Firehose delivery stream](kinesis_firehose_delivery_stream.html).
@@ -46,8 +46,17 @@ Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 
 ## Import
 
- Route 53 Resolver query logging configurations can be imported using the Route 53 Resolver query logging configuration ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import  Route 53 Resolver query logging configurations using the Route 53 Resolver query logging configuration ID. For example:
 
+```terraform
+import {
+  to = aws_route53_resolver_query_log_config.example
+  id = "rqlc-92edc3b1838248bf"
+}
 ```
-$ terraform import aws_route53_resolver_query_log_config.example rqlc-92edc3b1838248bf
+
+Using `terraform import`, import  Route 53 Resolver query logging configurations using the Route 53 Resolver query logging configuration ID. For example:
+
+```console
+% terraform import aws_route53_resolver_query_log_config.example rqlc-92edc3b1838248bf
 ```

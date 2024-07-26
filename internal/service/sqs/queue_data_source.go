@@ -7,31 +7,38 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_sqs_queue")
-func DataSourceQueue() *schema.Resource {
+// @Tags(identifierAttribute="url")
+func dataSourceQueue() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQueueRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"url": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -40,48 +47,61 @@ func DataSourceQueue() *schema.Resource {
 }
 
 func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
+	urlOutput, err := findQueueURLByName(ctx, conn, name)
 
-	urlOutput, err := conn.GetQueueUrlWithContext(ctx, &sqs.GetQueueUrlInput{
-		QueueName: aws.String(name),
-	})
-
-	if err != nil || urlOutput.QueueUrl == nil {
-		return diag.Errorf("reading SQS Queue (%s) URL: %s", name, err)
-	}
-
-	queueURL := aws.StringValue(urlOutput.QueueUrl)
-
-	attributesOutput, err := conn.GetQueueAttributesWithContext(ctx, &sqs.GetQueueAttributesInput{
-		QueueUrl:       aws.String(queueURL),
-		AttributeNames: []*string{aws.String(sqs.QueueAttributeNameQueueArn)},
-	})
 	if err != nil {
-		return diag.Errorf("reading SQS Queue (%s) attributes: %s", queueURL, err)
+		return sdkdiag.AppendErrorf(diags, "reading SQS Queue (%s) URL: %s", name, err)
 	}
 
-	d.Set("arn", attributesOutput.Attributes[sqs.QueueAttributeNameQueueArn])
-	d.Set("url", queueURL)
+	queueURL := aws.ToString(urlOutput)
+	attributesOutput, err := findQueueAttributeByTwoPartKey(ctx, conn, queueURL, types.QueueAttributeNameQueueArn)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading SQS Queue (%s) ARN attribute: %s", queueURL, err)
+	}
+
 	d.SetId(queueURL)
+	d.Set(names.AttrARN, attributesOutput)
+	d.Set(names.AttrURL, queueURL)
 
-	tags, err := listTags(ctx, conn, queueURL)
-
-	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 		// Some partitions may not support tagging, giving error
 		log.Printf("[WARN] failed listing tags for SQS Queue (%s): %s", d.Id(), err)
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("listing tags for SQS Queue (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for SQS Queue (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+	return diags
+}
+
+func findQueueURLByName(ctx context.Context, conn *sqs.Client, name string) (*string, error) {
+	input := &sqs.GetQueueUrlInput{
+		QueueName: aws.String(name),
 	}
 
-	return nil
+	output, err := conn.GetQueueUrl(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeQueueDoesNotExist) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.QueueUrl == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.QueueUrl, nil
 }

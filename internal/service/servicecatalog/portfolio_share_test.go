@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccPortfolioShare_basic(t *testing.T) {
@@ -31,7 +32,7 @@ func testAccPortfolioShare_basic(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -40,12 +41,12 @@ func testAccPortfolioShare_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolioShareExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
-					resource.TestCheckResourceAttr(resourceName, "accepted", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal_id", dataSourceName, "account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", compareName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "share_principals", "false"),
-					resource.TestCheckResourceAttr(resourceName, "share_tag_options", "true"),
-					resource.TestCheckResourceAttr(resourceName, "type", servicecatalog.DescribePortfolioShareTypeAccount),
+					resource.TestCheckResourceAttr(resourceName, "accepted", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, "principal_id", dataSourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", compareName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "share_principals", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "share_tag_options", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, servicecatalog.DescribePortfolioShareTypeAccount),
 				),
 			},
 			{
@@ -61,12 +62,12 @@ func testAccPortfolioShare_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolioShareExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
-					resource.TestCheckResourceAttr(resourceName, "accepted", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal_id", dataSourceName, "account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", compareName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "share_principals", "false"),
-					resource.TestCheckResourceAttr(resourceName, "share_tag_options", "false"),
-					resource.TestCheckResourceAttr(resourceName, "type", servicecatalog.DescribePortfolioShareTypeAccount),
+					resource.TestCheckResourceAttr(resourceName, "accepted", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, "principal_id", dataSourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", compareName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "share_principals", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "share_tag_options", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, servicecatalog.DescribePortfolioShareTypeAccount),
 				),
 			},
 		},
@@ -85,7 +86,7 @@ func testAccPortfolioShare_sharePrincipals(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,7 +94,7 @@ func testAccPortfolioShare_sharePrincipals(t *testing.T) {
 				Config: testAccPortfolioShareConfig_sharePrincipals(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolioShareExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "share_principals", "true"),
+					resource.TestCheckResourceAttr(resourceName, "share_principals", acctest.CtTrue),
 				),
 			},
 			{
@@ -108,7 +109,7 @@ func testAccPortfolioShare_sharePrincipals(t *testing.T) {
 				Config: testAccPortfolioShareConfig_sharePrincipals(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolioShareExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "share_principals", "false"),
+					resource.TestCheckResourceAttr(resourceName, "share_principals", acctest.CtFalse),
 				),
 			},
 		},
@@ -128,7 +129,7 @@ func testAccPortfolioShare_organizationalUnit(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -137,11 +138,11 @@ func testAccPortfolioShare_organizationalUnit(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolioShareExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
-					resource.TestCheckResourceAttr(resourceName, "accepted", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal_id", "aws_organizations_organizational_unit.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", compareName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "share_tag_options", "true"),
-					resource.TestCheckResourceAttr(resourceName, "type", servicecatalog.DescribePortfolioShareTypeOrganizationalUnit),
+					resource.TestCheckResourceAttr(resourceName, "accepted", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "principal_id", "aws_organizations_organizational_unit.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", compareName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "share_tag_options", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, servicecatalog.DescribePortfolioShareTypeOrganizationalUnit),
 				),
 			},
 			{
@@ -167,7 +168,7 @@ func testAccPortfolioShare_disappears(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -194,7 +195,7 @@ func testAccCheckPortfolioShareDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfservicecatalog.FindPortfolioShare(ctx, conn,
 				rs.Primary.Attributes["portfolio_id"],
-				rs.Primary.Attributes["type"],
+				rs.Primary.Attributes[names.AttrType],
 				rs.Primary.Attributes["principal_id"],
 			)
 
@@ -228,7 +229,7 @@ func testAccCheckPortfolioShareExists(ctx context.Context, n string) resource.Te
 
 		_, err := tfservicecatalog.FindPortfolioShare(ctx, conn,
 			rs.Primary.Attributes["portfolio_id"],
-			rs.Primary.Attributes["type"],
+			rs.Primary.Attributes[names.AttrType],
 			rs.Primary.Attributes["principal_id"],
 		)
 

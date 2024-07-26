@@ -76,7 +76,7 @@ resource "aws_fsx_openzfs_file_system" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 Note - Only file_system_id or volume_id can be specified. file_system_id is used for Lustre and Windows, volume_id is used for ONTAP.
 
@@ -104,8 +104,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-FSx Backups can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import FSx Backups using the `id`. For example:
 
+```terraform
+import {
+  to = aws_fsx_backup.example
+  id = "fs-543ab12b1ca672f33"
+}
 ```
-$ terraform import aws_fsx_backup.example fs-543ab12b1ca672f33
+
+Using `terraform import`, import FSx Backups using the `id`. For example:
+
+```console
+% terraform import aws_fsx_backup.example fs-543ab12b1ca672f33
 ```

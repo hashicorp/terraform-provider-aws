@@ -42,7 +42,7 @@ resource "aws_ecrpublic_repository" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `repository_name` - (Required) Name of the repository.
 * `catalog_data` - (Optional) Catalog data configuration for the repository. See [below for schema](#catalog_data).
@@ -75,8 +75,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ECR Public Repositories can be imported using the `repository_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Public Repositories using the `repository_name`. For example:
 
+```terraform
+import {
+  to = aws_ecrpublic_repository.example
+  id = "example"
+}
 ```
-$ terraform import aws_ecrpublic_repository.example example
+
+Using `terraform import`, import ECR Public Repositories using the `repository_name`. For example:
+
+```console
+% terraform import aws_ecrpublic_repository.example example
 ```

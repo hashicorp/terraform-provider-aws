@@ -25,7 +25,7 @@ resource "aws_iam_service_specific_credential" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `service_name` - (Required) The name of the AWS service that is to be associated with the credentials. The service you specify here is the only service that can be accessed using these credentials.
 * `user_name` - (Required) The name of the IAM user that is to be associated with the credentials. The new service-specific credentials have the same permissions as the associated user except that they can be used only to access the specified service.
@@ -42,8 +42,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IAM Service Specific Credentials can be imported using the `service_name:user_name:service_specific_credential_id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Service Specific Credentials using the `service_name:user_name:service_specific_credential_id`. For example:
 
+```terraform
+import {
+  to = aws_iam_service_specific_credential.default
+  id = "`codecommit.amazonaws.com:example:some-id`"
+}
 ```
-$ terraform import aws_iam_service_specific_credential.default `codecommit.amazonaws.com:example:some-id`
+
+Using `terraform import`, import IAM Service Specific Credentials using the `service_name:user_name:service_specific_credential_id`. For example:
+
+```console
+% terraform import aws_iam_service_specific_credential.default `codecommit.amazonaws.com:example:some-id`
 ```

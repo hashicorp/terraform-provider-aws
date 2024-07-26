@@ -46,7 +46,7 @@ resource "aws_cloudwatch_event_endpoint" "this" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) A description of the global endpoint.
 * `event_bus` - (Required) The event buses to use. The names of the event buses must be identical in each Region. Exactly two event buses are required. Documented below.
@@ -89,8 +89,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EventBridge Global Endpoints can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge Global Endpoints using the `name`. For example:
 
-```shell
-$ terraform import aws_cloudwatch_event_endpoint.imported_endpoint example-endpoint
+```terraform
+import {
+  to = aws_cloudwatch_event_endpoint.imported_endpoint
+  id = "example-endpoint"
+}
+```
+
+Using `terraform import`, import EventBridge Global Endpoints using the `name`. For example:
+
+```console
+% terraform import aws_cloudwatch_event_endpoint.imported_endpoint example-endpoint
 ```

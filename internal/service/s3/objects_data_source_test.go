@@ -7,34 +7,30 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/s3"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccS3ObjectsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_s3_objects.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectsDataSourceConfig_resources(rInt), // NOTE: contains no data source
-				// Does not need Check
-			},
-			{
-				Config: testAccObjectsDataSourceConfig_basic(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectsExistsDataSource("data.aws_s3_objects.yesh"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", "2"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.0", "arch/navajo/north_window"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.1", "arch/navajo/sand_dune"),
+				Config: testAccObjectsDataSourceConfig_basic(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "request_charged", ""),
 				),
 			},
 		},
@@ -43,57 +39,21 @@ func TestAccS3ObjectsDataSource_basic(t *testing.T) {
 
 func TestAccS3ObjectsDataSource_basicViaAccessPoint(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_s3_objects.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectsDataSourceConfig_resourcesPlusAccessPoint(rInt), // NOTE: contains no data source
-				// Does not need Check
-			},
-			{
-				Config: testAccObjectsDataSourceConfig_basicViaAccessPoint(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectsExistsDataSource("data.aws_s3_objects.yesh"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", "2"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.0", "arch/navajo/north_window"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.1", "arch/navajo/sand_dune"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccS3ObjectsDataSource_all(t *testing.T) {
-	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
-		PreventPostDestroyRefresh: true,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccObjectsDataSourceConfig_resources(rInt), // NOTE: contains no data source
-				// Does not need Check
-			},
-			{
-				Config: testAccObjectsDataSourceConfig_all(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectsExistsDataSource("data.aws_s3_objects.yesh"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", "7"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.0", "arch/courthouse_towers/landscape"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.1", "arch/navajo/north_window"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.2", "arch/navajo/sand_dune"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.3", "arch/partition/park_avenue"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.4", "arch/rubicon"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.5", "arch/three_gossips/broken"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.6", "arch/three_gossips/turret"),
+				Config: testAccObjectsDataSourceConfig_basicViaAccessPoint(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
 		},
@@ -102,29 +62,21 @@ func TestAccS3ObjectsDataSource_all(t *testing.T) {
 
 func TestAccS3ObjectsDataSource_prefixes(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_s3_objects.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectsDataSourceConfig_resources(rInt), // NOTE: contains no data source
-				// Does not need Check
-			},
-			{
-				Config: testAccObjectsDataSourceConfig_prefixes(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectsExistsDataSource("data.aws_s3_objects.yesh"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.0", "arch/rubicon"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "common_prefixes.#", "4"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "common_prefixes.0", "arch/courthouse_towers/"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "common_prefixes.1", "arch/navajo/"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "common_prefixes.2", "arch/partition/"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "common_prefixes.3", "arch/three_gossips/"),
+				Config: testAccObjectsDataSourceConfig_prefixes(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
 		},
@@ -133,52 +85,89 @@ func TestAccS3ObjectsDataSource_prefixes(t *testing.T) {
 
 func TestAccS3ObjectsDataSource_encoded(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_s3_objects.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectsDataSourceConfig_extraResource(rInt), // NOTE: contains no data source
-				// Does not need Check
-			},
-			{
-				Config: testAccObjectsDataSourceConfig_encoded(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectsExistsDataSource("data.aws_s3_objects.yesh"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", "2"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.0", "arch/ru+b+ic+on"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.1", "arch/rubicon"),
+				Config: testAccObjectsDataSourceConfig_encoded(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.0", "prefix/a+b"),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
 		},
 	})
 }
 
-func TestAccS3ObjectsDataSource_maxKeys(t *testing.T) {
+func TestAccS3ObjectsDataSource_maxKeysSmall(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_s3_objects.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectsDataSourceConfig_resources(rInt), // NOTE: contains no data source
-				// Does not need Check
+				Config: testAccObjectsDataSourceConfig_maxKeysSmall(rName, 1, 5),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
+				),
 			},
 			{
-				Config: testAccObjectsDataSourceConfig_maxKeys(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectsExistsDataSource("data.aws_s3_objects.yesh"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", "2"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.0", "arch/courthouse_towers/landscape"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.1", "arch/navajo/north_window"),
+				Config: testAccObjectsDataSourceConfig_maxKeysSmall(rName, 2, 5),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "5"),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3ObjectsDataSource_maxKeysLarge(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_s3_objects.test"
+	var keys []string
+	for i := 0; i < 1500; i++ {
+		keys = append(keys, fmt.Sprintf("data%d", i))
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectsDataSourceConfig_maxKeysLarge(rName, 1002),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
+					testAccCheckBucketAddObjects(ctx, "aws_s3_bucket.test", keys...),
+				),
+			},
+			{
+				Config: testAccObjectsDataSourceConfig_maxKeysLarge(rName, 1002),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "1002"),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
 		},
@@ -187,24 +176,21 @@ func TestAccS3ObjectsDataSource_maxKeys(t *testing.T) {
 
 func TestAccS3ObjectsDataSource_startAfter(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_s3_objects.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectsDataSourceConfig_resources(rInt), // NOTE: contains no data source
-				// Does not need Check
-			},
-			{
-				Config: testAccObjectsDataSourceConfig_startAfter(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectsExistsDataSource("data.aws_s3_objects.yesh"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.0", "arch/three_gossips/turret"),
+				Config: testAccObjectsDataSourceConfig_startAfter(rName, 1, "prefix1/sub2/0"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
 		},
@@ -213,202 +199,227 @@ func TestAccS3ObjectsDataSource_startAfter(t *testing.T) {
 
 func TestAccS3ObjectsDataSource_fetchOwner(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_s3_objects.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectsDataSourceConfig_resources(rInt), // NOTE: contains no data source
-				// Does not need Check
-			},
-			{
-				Config: testAccObjectsDataSourceConfig_owners(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectsExistsDataSource("data.aws_s3_objects.yesh"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", "2"),
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "owners.#", "2"),
+				Config: testAccObjectsDataSourceConfig_owners(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct3),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckObjectsExistsDataSource(addr string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[addr]
-		if !ok {
-			return fmt.Errorf("Can't find S3 objects data source: %s", addr)
-		}
+func TestAccS3ObjectsDataSource_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_s3_objects.test"
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("S3 objects data source ID not set")
-		}
-
-		return nil
-	}
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectsDataSourceConfig_directoryBucket(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "request_charged", ""),
+				),
+			},
+		},
+	})
 }
 
-func testAccObjectsDataSourceConfig_resources(randInt int) string {
+func testAccObjectsDataSourceConfig_base(rName string, n int) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "objects_bucket" {
-  bucket = "tf-acc-objects-test-bucket-%d"
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
 }
 
-resource "aws_s3_object" "object1" {
-  bucket  = aws_s3_bucket.objects_bucket.id
-  key     = "arch/three_gossips/turret"
-  content = "Delicate"
+resource "aws_s3_object" "test1" {
+  count = %[2]d
+
+  bucket  = aws_s3_bucket.test.id
+  key     = "prefix1/sub1/${count.index}"
+  content = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 }
 
-resource "aws_s3_object" "object2" {
-  bucket  = aws_s3_bucket.objects_bucket.id
-  key     = "arch/three_gossips/broken"
-  content = "Dark Angel"
+resource "aws_s3_object" "test2" {
+  count = %[2]d
+
+  bucket  = aws_s3_bucket.test.id
+  key     = "prefix1/sub2/${count.index}"
+  content = "0123456789"
 }
 
-resource "aws_s3_object" "object3" {
-  bucket  = aws_s3_bucket.objects_bucket.id
-  key     = "arch/navajo/north_window"
-  content = "Balanced Rock"
+resource "aws_s3_object" "test3" {
+  count = %[2]d
+
+  bucket  = aws_s3_bucket.test.id
+  key     = "prefix2/${count.index}"
+  content = "abcdefghijklmnopqrstuvwxyz"
+}
+`, rName, n)
 }
 
-resource "aws_s3_object" "object4" {
-  bucket  = aws_s3_bucket.objects_bucket.id
-  key     = "arch/navajo/sand_dune"
-  content = "Queen Victoria Rock"
+func testAccObjectsDataSourceConfig_basic(rName string, n int) string {
+	return acctest.ConfigCompose(testAccObjectsDataSourceConfig_base(rName, n), `
+data "aws_s3_objects" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  depends_on = [aws_s3_object.test1, aws_s3_object.test2, aws_s3_object.test3]
+}
+`)
 }
 
-resource "aws_s3_object" "object5" {
-  bucket  = aws_s3_bucket.objects_bucket.id
-  key     = "arch/partition/park_avenue"
-  content = "Double-O"
-}
-
-resource "aws_s3_object" "object6" {
-  bucket  = aws_s3_bucket.objects_bucket.id
-  key     = "arch/courthouse_towers/landscape"
-  content = "Fiery Furnace"
-}
-
-resource "aws_s3_object" "object7" {
-  bucket  = aws_s3_bucket.objects_bucket.id
-  key     = "arch/rubicon"
-  content = "Devils Garden"
-}
-`, randInt)
-}
-
-func testAccObjectsDataSourceConfig_resourcesPlusAccessPoint(randInt int) string {
-	return testAccObjectsDataSourceConfig_resources(randInt) + fmt.Sprintf(`
+func testAccObjectsDataSourceConfig_basicViaAccessPoint(rName string, n int) string {
+	return acctest.ConfigCompose(testAccObjectsDataSourceConfig_base(rName, n), fmt.Sprintf(`
 resource "aws_s3_access_point" "test" {
-  bucket = aws_s3_bucket.objects_bucket.bucket
-  name   = "tf-objects-test-access-point-%[1]d"
-}
-`, randInt)
+  bucket = aws_s3_bucket.test.bucket
+  name   = "%[1]s-access-point"
 }
 
-func testAccObjectsDataSourceConfig_basic(randInt int) string {
-	return fmt.Sprintf(`
-%s
+data "aws_s3_objects" "test" {
+  bucket = aws_s3_access_point.test.arn
 
-data "aws_s3_objects" "yesh" {
-  bucket    = aws_s3_bucket.objects_bucket.id
-  prefix    = "arch/navajo/"
+  depends_on = [aws_s3_object.test1, aws_s3_object.test2, aws_s3_object.test3]
+}
+`, rName))
+}
+
+func testAccObjectsDataSourceConfig_prefixes(rName string, n int) string {
+	return acctest.ConfigCompose(testAccObjectsDataSourceConfig_base(rName, n), `
+data "aws_s3_objects" "test" {
+  bucket    = aws_s3_bucket.test.id
+  prefix    = "prefix1/"
   delimiter = "/"
+
+  depends_on = [aws_s3_object.test1, aws_s3_object.test2, aws_s3_object.test3]
 }
-`, testAccObjectsDataSourceConfig_resources(randInt))
+`)
 }
 
-func testAccObjectsDataSourceConfig_basicViaAccessPoint(randInt int) string {
-	return testAccObjectsDataSourceConfig_resourcesPlusAccessPoint(randInt) + `
-data "aws_s3_objects" "yesh" {
-  bucket    = aws_s3_access_point.test.arn
-  prefix    = "arch/navajo/"
-  delimiter = "/"
-}
-`
-}
-
-func testAccObjectsDataSourceConfig_all(randInt int) string {
+func testAccObjectsDataSourceConfig_encoded(rName string) string {
 	return fmt.Sprintf(`
-%s
-
-data "aws_s3_objects" "yesh" {
-  bucket = aws_s3_bucket.objects_bucket.id
-}
-`, testAccObjectsDataSourceConfig_resources(randInt))
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
 }
 
-func testAccObjectsDataSourceConfig_prefixes(randInt int) string {
-	return fmt.Sprintf(`
-%s
-
-data "aws_s3_objects" "yesh" {
-  bucket    = aws_s3_bucket.objects_bucket.id
-  prefix    = "arch/"
-  delimiter = "/"
-}
-`, testAccObjectsDataSourceConfig_resources(randInt))
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.id
+  key     = "prefix/a b"
+  content = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 }
 
-func testAccObjectsDataSourceConfig_extraResource(randInt int) string {
-	return fmt.Sprintf(`
-%s
-
-resource "aws_s3_object" "object8" {
-  bucket  = aws_s3_bucket.objects_bucket.id
-  key     = "arch/ru b ic on"
-  content = "Goose Island"
-}
-`, testAccObjectsDataSourceConfig_resources(randInt))
-}
-
-func testAccObjectsDataSourceConfig_encoded(randInt int) string {
-	return fmt.Sprintf(`
-%s
-
-data "aws_s3_objects" "yesh" {
-  bucket        = aws_s3_bucket.objects_bucket.id
+data "aws_s3_objects" "test" {
+  bucket        = aws_s3_bucket.test.id
   encoding_type = "url"
-  prefix        = "arch/ru"
+
+  depends_on = [aws_s3_object.test]
 }
-`, testAccObjectsDataSourceConfig_extraResource(randInt))
+`, rName)
 }
 
-func testAccObjectsDataSourceConfig_maxKeys(randInt int) string {
+func testAccObjectsDataSourceConfig_maxKeysSmall(rName string, n, maxKeys int) string {
+	return acctest.ConfigCompose(testAccObjectsDataSourceConfig_base(rName, n), fmt.Sprintf(`
+data "aws_s3_objects" "test" {
+  bucket   = aws_s3_bucket.test.id
+  max_keys = %[1]d
+
+  depends_on = [aws_s3_object.test1, aws_s3_object.test2, aws_s3_object.test3]
+}
+`, maxKeys))
+}
+
+// Objects are added to the bucket outside this configuration.
+func testAccObjectsDataSourceConfig_maxKeysLarge(rName string, maxKeys int) string {
 	return fmt.Sprintf(`
-%s
-
-data "aws_s3_objects" "yesh" {
-  bucket   = aws_s3_bucket.objects_bucket.id
-  max_keys = 2
-}
-`, testAccObjectsDataSourceConfig_resources(randInt))
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
 }
 
-func testAccObjectsDataSourceConfig_startAfter(randInt int) string {
-	return fmt.Sprintf(`
-%s
-
-data "aws_s3_objects" "yesh" {
-  bucket      = aws_s3_bucket.objects_bucket.id
-  start_after = "arch/three_gossips/broken"
+data "aws_s3_objects" "test" {
+  bucket   = aws_s3_bucket.test.id
+  max_keys = %[2]d
 }
-`, testAccObjectsDataSourceConfig_resources(randInt))
+`, rName, maxKeys)
 }
 
-func testAccObjectsDataSourceConfig_owners(randInt int) string {
-	return fmt.Sprintf(`
-%s
+func testAccObjectsDataSourceConfig_startAfter(rName string, n int, startAfter string) string {
+	return acctest.ConfigCompose(testAccObjectsDataSourceConfig_base(rName, n), fmt.Sprintf(`
+data "aws_s3_objects" "test" {
+  bucket      = aws_s3_bucket.test.id
+  start_after = %[1]q
 
-data "aws_s3_objects" "yesh" {
-  bucket      = aws_s3_bucket.objects_bucket.id
-  prefix      = "arch/three_gossips/"
+  depends_on = [aws_s3_object.test1, aws_s3_object.test2, aws_s3_object.test3]
+}
+`, startAfter))
+}
+
+func testAccObjectsDataSourceConfig_owners(rName string, n int) string {
+	return acctest.ConfigCompose(testAccObjectsDataSourceConfig_base(rName, n), `
+data "aws_s3_objects" "test" {
+  bucket      = aws_s3_bucket.test.id
   fetch_owner = true
+
+  depends_on = [aws_s3_object.test1, aws_s3_object.test2, aws_s3_object.test3]
 }
-`, testAccObjectsDataSourceConfig_resources(randInt))
+`)
+}
+
+func testAccObjectsDataSourceConfig_directoryBucket(rName string, n int) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
+}
+
+resource "aws_s3_object" "test1" {
+  count = %[1]d
+
+  bucket  = aws_s3_directory_bucket.test.bucket
+  key     = "prefix1/sub1/${count.index}"
+  content = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+}
+
+resource "aws_s3_object" "test2" {
+  count = %[1]d
+
+  bucket  = aws_s3_directory_bucket.test.bucket
+  key     = "prefix1/sub2/${count.index}"
+  content = "0123456789"
+}
+
+resource "aws_s3_object" "test3" {
+  count = %[1]d
+
+  bucket  = aws_s3_directory_bucket.test.bucket
+  key     = "prefix2/${count.index}"
+  content = "abcdefghijklmnopqrstuvwxyz"
+}
+
+data "aws_s3_objects" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+
+  depends_on = [aws_s3_object.test1, aws_s3_object.test2, aws_s3_object.test3]
+}
+`, n))
 }

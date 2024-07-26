@@ -57,8 +57,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Data Statements can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Data Statements using the `id`. For example:
 
+```terraform
+import {
+  to = aws_redshiftdata_statement.example
+  id = "example"
+}
 ```
-$ terraform import aws_redshiftdata_statement.example example
+
+Using `terraform import`, import Redshift Data Statements using the `id`. For example:
+
+```console
+% terraform import aws_redshiftdata_statement.example example
 ```

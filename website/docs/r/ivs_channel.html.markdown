@@ -50,8 +50,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IVS (Interactive Video) Channel can be imported using the ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IVS (Interactive Video) Channel using the ARN. For example:
 
+```terraform
+import {
+  to = aws_ivs_channel.example
+  id = "arn:aws:ivs:us-west-2:326937407773:channel/0Y1lcs4U7jk5"
+}
 ```
-$ terraform import aws_ivs_channel.example arn:aws:ivs:us-west-2:326937407773:channel/0Y1lcs4U7jk5
+
+Using `terraform import`, import IVS (Interactive Video) Channel using the ARN. For example:
+
+```console
+% terraform import aws_ivs_channel.example arn:aws:ivs:us-west-2:326937407773:channel/0Y1lcs4U7jk5
 ```

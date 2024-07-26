@@ -21,7 +21,7 @@ resource "aws_organizations_organizational_unit" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - The name for the organizational unit
 * `parent_id` - ID of the parent organizational unit, which may be the root
@@ -42,8 +42,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AWS Organizations Organizational Units can be imported by using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Organizations Organizational Units using the `id`. For example:
 
+```terraform
+import {
+  to = aws_organizations_organizational_unit.example
+  id = "ou-1234567"
+}
 ```
-$ terraform import aws_organizations_organizational_unit.example ou-1234567
+
+Using `terraform import`, import AWS Organizations Organizational Units using the `id`. For example:
+
+```console
+% terraform import aws_organizations_organizational_unit.example ou-1234567
 ```

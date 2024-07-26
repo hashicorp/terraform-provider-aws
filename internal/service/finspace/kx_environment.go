@@ -43,15 +43,15 @@ func ResourceKxEnvironment() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(75 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type: schema.TypeList,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -80,12 +80,12 @@ func ResourceKxEnvironment() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -93,7 +93,7 @@ func ResourceKxEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -102,12 +102,12 @@ func ResourceKxEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -119,15 +119,80 @@ func ResourceKxEnvironment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"transit_gateway_id": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 32),
+						"attachment_network_acl_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 100,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrCIDRBlock: {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.IsCIDR,
+									},
+									"icmp_type_code": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrType: {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+												"code": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+											},
+										},
+									},
+									"port_range": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"from": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IsPortNumber,
+												},
+												"to": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IsPortNumber,
+												},
+											},
+										},
+									},
+									names.AttrProtocol: {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 5),
+									},
+									"rule_action": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.RuleAction](),
+									},
+									"rule_number": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntBetween(1, 32766),
+									},
+								},
+							},
 						},
 						"routable_cidr_space": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.IsCIDR,
+						},
+						names.AttrTransitGatewayID: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 32),
 						},
 					},
 				},
@@ -146,41 +211,41 @@ func resourceKxEnvironmentCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	in := &finspace.CreateKxEnvironmentInput{
-		Name:        aws.String(d.Get("name").(string)),
+		Name:        aws.String(d.Get(names.AttrName).(string)),
 		ClientToken: aws.String(id.UniqueId()),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		in.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		in.KmsKeyId = aws.String(v.(string))
 	}
 
 	out, err := conn.CreateKxEnvironment(ctx, in)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.EnvironmentId == nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get("name").(string), errors.New("empty output"))...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.EnvironmentId))
 
 	if _, err := waitKxEnvironmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxEnvironment, d.Id(), err)
 	}
 
 	if err := updateKxEnvironmentNetwork(ctx, d, conn); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Id(), err)
 	}
 
 	// The CreateKxEnvironment API currently fails to tag the environment when the
 	// Tags field is set. Until the API is fixed, tag after creation instead.
 	if err := createTags(ctx, conn, aws.ToString(out.EnvironmentArn), getTagsIn(ctx)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Id(), err)
 	}
 
 	return append(diags, resourceKxEnvironmentRead(ctx, d, meta)...)
@@ -199,26 +264,26 @@ func resourceKxEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionReading, ResNameKxEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxEnvironment, d.Id(), err)
 	}
 
-	d.Set("id", out.EnvironmentId)
-	d.Set("arn", out.EnvironmentArn)
-	d.Set("name", out.Name)
-	d.Set("description", out.Description)
-	d.Set("kms_key_id", out.KmsKeyId)
-	d.Set("status", out.Status)
-	d.Set("availability_zones", out.AvailabilityZoneIds)
+	d.Set(names.AttrID, out.EnvironmentId)
+	d.Set(names.AttrARN, out.EnvironmentArn)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrDescription, out.Description)
+	d.Set(names.AttrKMSKeyID, out.KmsKeyId)
+	d.Set(names.AttrStatus, out.Status)
+	d.Set(names.AttrAvailabilityZones, out.AvailabilityZoneIds)
 	d.Set("infrastructure_account_id", out.DedicatedServiceAccountId)
 	d.Set("created_timestamp", out.CreationTimestamp.String())
 	d.Set("last_modified_timestamp", out.UpdateTimestamp.String())
 
 	if err := d.Set("transit_gateway_configuration", flattenTransitGatewayConfiguration(out.TransitGatewayConfiguration)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxEnvironment, d.Id(), err)
 	}
 
 	if err := d.Set("custom_dns_configuration", flattenCustomDNSConfigurations(out.CustomDNSConfiguration)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionSetting, ResNameKxEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxEnvironment, d.Id(), err)
 	}
 
 	return diags
@@ -232,26 +297,26 @@ func resourceKxEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	in := &finspace.UpdateKxEnvironmentInput{
 		EnvironmentId: aws.String(d.Id()),
-		Name:          aws.String(d.Get("name").(string)),
+		Name:          aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if d.HasChanges("description") {
-		in.Description = aws.String(d.Get("description").(string))
+	if d.HasChanges(names.AttrDescription) {
+		in.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
-	if d.HasChanges("name") || d.HasChanges("description") {
+	if d.HasChanges(names.AttrName) || d.HasChanges(names.AttrDescription) {
 		update = true
 		log.Printf("[DEBUG] Updating FinSpace KxEnvironment (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateKxEnvironment(ctx, in)
 		if err != nil {
-			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxEnvironment, d.Id(), err)...)
+			return create.AppendDiagError(diags, names.FinSpace, create.ErrActionUpdating, ResNameKxEnvironment, d.Id(), err)
 		}
 	}
 
 	if d.HasChanges("transit_gateway_configuration") || d.HasChanges("custom_dns_configuration") {
 		update = true
 		if err := updateKxEnvironmentNetwork(ctx, d, conn); err != nil {
-			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxEnvironment, d.Id(), err)...)
+			return create.AppendDiagError(diags, names.FinSpace, create.ErrActionUpdating, ResNameKxEnvironment, d.Id(), err)
 		}
 	}
 
@@ -265,11 +330,11 @@ func resourceKxEnvironmentDelete(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
-	log.Printf("[INFO] Deleting FinSpace KxEnvironment %s", d.Id())
-
+	log.Printf("[INFO] Deleting FinSpace Kx Environment: %s", d.Id())
 	_, err := conn.DeleteKxEnvironment(ctx, &finspace.DeleteKxEnvironmentInput{
 		EnvironmentId: aws.String(d.Id()),
 	})
+
 	if errs.IsA[*types.ResourceNotFoundException](err) ||
 		errs.IsAErrorMessageContains[*types.ValidationException](err, "The Environment is in DELETED state") {
 		log.Printf("[DEBUG] FinSpace KxEnvironment %s already deleted. Nothing to delete.", d.Id())
@@ -277,11 +342,11 @@ func resourceKxEnvironmentDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionDeleting, ResNameKxEnvironment, d.Id(), err)
 	}
 
 	if _, err := waitKxEnvironmentDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxEnvironment, d.Id(), err)
 	}
 
 	return diags
@@ -489,7 +554,7 @@ func expandTransitGatewayConfiguration(tfList []interface{}) *types.TransitGatew
 
 	a := &types.TransitGatewayConfiguration{}
 
-	if v, ok := tfMap["transit_gateway_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTransitGatewayID].(string); ok && v != "" {
 		a.TransitGatewayID = aws.String(v)
 	}
 
@@ -497,7 +562,85 @@ func expandTransitGatewayConfiguration(tfList []interface{}) *types.TransitGatew
 		a.RoutableCIDRSpace = aws.String(v)
 	}
 
+	if v, ok := tfMap["attachment_network_acl_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		a.AttachmentNetworkAclConfiguration = expandAttachmentNetworkACLConfigurations(v.([]interface{}))
+	}
+
 	return a
+}
+
+func expandAttachmentNetworkACLConfigurations(tfList []interface{}) []types.NetworkACLEntry {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var s []types.NetworkACLEntry
+	for _, r := range tfList {
+		m, ok := r.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		a := expandAttachmentNetworkACLConfiguration(m)
+		if a == nil {
+			continue
+		}
+
+		s = append(s, *a)
+	}
+	return s
+}
+
+func expandAttachmentNetworkACLConfiguration(tfMap map[string]interface{}) *types.NetworkACLEntry {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.NetworkACLEntry{}
+	if v, ok := tfMap["rule_number"].(int); ok && v > 0 {
+		a.RuleNumber = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
+		a.Protocol = &v
+	}
+	if v, ok := tfMap["rule_action"].(string); ok && v != "" {
+		a.RuleAction = types.RuleAction(v)
+	}
+	if v, ok := tfMap[names.AttrCIDRBlock].(string); ok && v != "" {
+		a.CidrBlock = &v
+	}
+	if v, ok := tfMap["port_range"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		a.PortRange = expandPortRange(v.([]interface{}))
+	}
+	if v, ok := tfMap["icmp_type_code"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		a.IcmpTypeCode = expandIcmpTypeCode(v.([]interface{}))
+	}
+
+	return a
+}
+
+func expandPortRange(tfList []interface{}) *types.PortRange {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap := tfList[0].(map[string]interface{})
+
+	return &types.PortRange{
+		From: int32(tfMap["from"].(int)),
+		To:   int32(tfMap["to"].(int)),
+	}
+}
+
+func expandIcmpTypeCode(tfList []interface{}) *types.IcmpTypeCode {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap := tfList[0].(map[string]interface{})
+
+	return &types.IcmpTypeCode{
+		Code: int32(tfMap["code"].(int)),
+		Type: int32(tfMap[names.AttrType].(int)),
+	}
 }
 
 func expandCustomDNSConfiguration(tfMap map[string]interface{}) *types.CustomDNSServer {
@@ -552,11 +695,77 @@ func flattenTransitGatewayConfiguration(apiObject *types.TransitGatewayConfigura
 	m := map[string]interface{}{}
 
 	if v := apiObject.TransitGatewayID; v != nil {
-		m["transit_gateway_id"] = aws.ToString(v)
+		m[names.AttrTransitGatewayID] = aws.ToString(v)
 	}
 
 	if v := apiObject.RoutableCIDRSpace; v != nil {
 		m["routable_cidr_space"] = aws.ToString(v)
+	}
+
+	if v := apiObject.AttachmentNetworkAclConfiguration; v != nil {
+		m["attachment_network_acl_configuration"] = flattenAttachmentNetworkACLConfigurations(v)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAttachmentNetworkACLConfigurations(apiObjects []types.NetworkACLEntry) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var l []interface{}
+
+	for _, apiObject := range apiObjects {
+		l = append(l, flattenAttachmentNetworkACLConfiguration(&apiObject))
+	}
+
+	return l
+}
+
+func flattenAttachmentNetworkACLConfiguration(apiObject *types.NetworkACLEntry) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		names.AttrCIDRBlock: aws.ToString(apiObject.CidrBlock),
+		names.AttrProtocol:  aws.ToString(apiObject.Protocol),
+		"rule_action":       apiObject.RuleAction,
+		"rule_number":       apiObject.RuleNumber,
+	}
+
+	if v := apiObject.PortRange; v != nil {
+		m["port_range"] = flattenPortRange(v)
+	}
+	if v := apiObject.IcmpTypeCode; v != nil {
+		m["icmp_type_code"] = flattenIcmpTypeCode(v)
+	}
+
+	return m
+}
+
+func flattenPortRange(apiObject *types.PortRange) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"from": apiObject.From,
+		"to":   apiObject.To,
+	}
+
+	return []interface{}{m}
+}
+
+func flattenIcmpTypeCode(apiObject *types.IcmpTypeCode) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		names.AttrType: apiObject.Type,
+		"code":         apiObject.Code,
 	}
 
 	return []interface{}{m}

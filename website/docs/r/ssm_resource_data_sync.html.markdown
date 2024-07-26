@@ -68,7 +68,7 @@ resource "aws_ssm_resource_data_sync" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name for the configuration.
 * `s3_destination` - (Required) Amazon S3 configuration details for the sync.
@@ -89,8 +89,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-SSM resource data sync can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM resource data sync using the `name`. For example:
 
-```sh
-$ terraform import aws_ssm_resource_data_sync.example example-name
+```terraform
+import {
+  to = aws_ssm_resource_data_sync.example
+  id = "example-name"
+}
+```
+
+Using `terraform import`, import SSM resource data sync using the `name`. For example:
+
+```console
+% terraform import aws_ssm_resource_data_sync.example example-name
 ```

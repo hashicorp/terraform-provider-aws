@@ -101,4 +101,5 @@ should only be used for informational purposes, not for resource dependencies:
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
+* `read` - (Default `15m`)
 * `delete` - (Default `20m`)

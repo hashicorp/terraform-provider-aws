@@ -47,8 +47,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Route53 Recovery Control Config Routing Control can be imported via the routing control arn, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Recovery Control Config Routing Control using the routing control arn. For example:
 
+```terraform
+import {
+  to = aws_route53recoverycontrolconfig_routing_control.mycontrol
+  id = "arn:aws:route53-recovery-control::313517334327:controlpanel/abd5fbfc052d4844a082dbf400f61da8/routingcontrol/d5d90e587870494b"
+}
 ```
-$ terraform import aws_route53recoverycontrolconfig_routing_control.mycontrol arn:aws:route53-recovery-control::313517334327:controlpanel/abd5fbfc052d4844a082dbf400f61da8/routingcontrol/d5d90e587870494b
+
+Using `terraform import`, import Route53 Recovery Control Config Routing Control using the routing control arn. For example:
+
+```console
+% terraform import aws_route53recoverycontrolconfig_routing_control.mycontrol arn:aws:route53-recovery-control::313517334327:controlpanel/abd5fbfc052d4844a082dbf400f61da8/routingcontrol/d5d90e587870494b
 ```

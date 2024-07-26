@@ -6,9 +6,9 @@ package appconfig
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/appconfig"
@@ -36,11 +36,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_appconfig_environment", name="Environment")
 // @Tags(identifierAttribute="arn")
 func newResourceEnvironment(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEnvironment{}
-	r.SetMigratedFromPluginSDK(true)
 
 	return r, nil
 }
@@ -56,25 +55,25 @@ func (r *resourceEnvironment) Metadata(_ context.Context, request resource.Metad
 func (r *resourceEnvironment) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"application_id": schema.StringAttribute{
+			names.AttrApplicationID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^[a-z0-9]{4,7}$`),
+						regexache.MustCompile(`^[0-9a-z]{4,7}$`),
 						"value must contain 4-7 lowercase letters or numbers",
 					),
 				},
 			},
-			"arn": schema.StringAttribute{
+			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				Default:  stringdefault.StaticString(""), // Needed for backwards compatibility with SDK resource
@@ -85,20 +84,20 @@ func (r *resourceEnvironment) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Computed:           true,
 				DeprecationMessage: "This attribute is unused and will be removed in a future version of the provider",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 64),
 				},
 			},
-			"state": schema.StringAttribute{
+			names.AttrState: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -157,7 +156,7 @@ func (r *resourceEnvironment) Create(ctx context.Context, request resource.Creat
 	input := &appconfig.CreateEnvironmentInput{
 		Name:          aws.String(plan.Name.ValueString()),
 		ApplicationId: aws.String(appId),
-		Tags:          aws.ToStringMap(getTagsIn(ctx)),
+		Tags:          getTagsIn(ctx),
 		Monitors:      expandMonitors(monitors),
 	}
 
@@ -283,8 +282,8 @@ func (r *resourceEnvironment) Delete(ctx context.Context, request resource.Delet
 	}
 
 	tflog.Debug(ctx, "Deleting AppConfig Environment", map[string]any{
-		"application_id": state.ApplicationID.ValueString(),
-		"environment_id": state.EnvironmentID.ValueString(),
+		names.AttrApplicationID: state.ApplicationID.ValueString(),
+		"environment_id":        state.EnvironmentID.ValueString(),
 	})
 
 	_, err := conn.DeleteEnvironment(ctx, state.deleteEnvironmentInput())
@@ -307,7 +306,7 @@ func (r *resourceEnvironment) ImportState(ctx context.Context, request resource.
 	}
 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("environment_id"), parts[0])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("application_id"), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrApplicationID), parts[1])...)
 }
 
 func (r *resourceEnvironment) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
@@ -433,8 +432,7 @@ func expandMonitors(l []monitorData) []awstypes.Monitor {
 }
 
 func flattenMonitors(ctx context.Context, apiObjects []awstypes.Monitor, diags *diag.Diagnostics) types.Set {
-	monitorDataTypes := flex.AttributeTypesMust[monitorData](ctx)
-	elemType := types.ObjectType{AttrTypes: monitorDataTypes}
+	elemType := fwtypes.NewObjectTypeOf[monitorData](ctx).ObjectType
 
 	if len(apiObjects) == 0 {
 		return types.SetValueMust(elemType, []attr.Value{})
@@ -442,7 +440,7 @@ func flattenMonitors(ctx context.Context, apiObjects []awstypes.Monitor, diags *
 
 	values := make([]attr.Value, len(apiObjects))
 	for i, o := range apiObjects {
-		values[i] = flattenMonitorData(ctx, o, diags).value(ctx, diags)
+		values[i] = flattenMonitorData(ctx, o).value(ctx)
 	}
 
 	result, d := types.SetValueFrom(ctx, elemType, values)
@@ -458,28 +456,23 @@ type monitorData struct {
 
 func (m monitorData) expand() awstypes.Monitor {
 	result := awstypes.Monitor{
-		AlarmArn: aws.String(m.AlarmARN.ValueARN().String()),
+		AlarmArn: aws.String(m.AlarmARN.ValueString()),
 	}
 
 	if !m.AlarmRoleARN.IsNull() {
-		result.AlarmRoleArn = aws.String(m.AlarmRoleARN.ValueARN().String())
+		result.AlarmRoleArn = aws.String(m.AlarmRoleARN.ValueString())
 	}
 
 	return result
 }
 
-func flattenMonitorData(ctx context.Context, apiObject awstypes.Monitor, diags *diag.Diagnostics) monitorData {
-	return monitorData{
-		AlarmARN:     flex.StringToFrameworkARN(ctx, apiObject.AlarmArn, diags),
-		AlarmRoleARN: flex.StringToFrameworkARN(ctx, apiObject.AlarmRoleArn, diags),
+func flattenMonitorData(ctx context.Context, apiObject awstypes.Monitor) *monitorData {
+	return &monitorData{
+		AlarmARN:     flex.StringToFrameworkARN(ctx, apiObject.AlarmArn),
+		AlarmRoleARN: flex.StringToFrameworkARN(ctx, apiObject.AlarmRoleArn),
 	}
 }
 
-func (m monitorData) value(ctx context.Context, diags *diag.Diagnostics) types.Object {
-	monitorDataTypes := flex.AttributeTypesMust[monitorData](ctx)
-
-	obj, d := types.ObjectValueFrom(ctx, monitorDataTypes, m)
-	diags.Append(d...)
-
-	return obj
+func (m *monitorData) value(ctx context.Context) types.Object {
+	return fwtypes.NewObjectValueOfMust[monitorData](ctx, m).ObjectValue
 }

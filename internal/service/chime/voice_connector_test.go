@@ -8,30 +8,31 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/chime"
+	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccChimeVoiceConnector_basic(t *testing.T) {
+func testAccVoiceConnector_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var voiceConnector *chime.VoiceConnector
+	var voiceConnector *awstypes.VoiceConnector
 
 	vcName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -39,9 +40,9 @@ func TestAccChimeVoiceConnector_basic(t *testing.T) {
 				Config: testAccVoiceConnectorConfig_basic(vcName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorExists(ctx, resourceName, voiceConnector),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vc-%s", vcName)),
-					resource.TestCheckResourceAttr(resourceName, "aws_region", chime.VoiceConnectorAwsRegionUsEast1),
-					resource.TestCheckResourceAttr(resourceName, "require_encryption", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vc-%s", vcName)),
+					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
+					resource.TestCheckResourceAttr(resourceName, "require_encryption", acctest.CtTrue),
 				),
 			},
 			{
@@ -53,19 +54,19 @@ func TestAccChimeVoiceConnector_basic(t *testing.T) {
 	})
 }
 
-func TestAccChimeVoiceConnector_disappears(t *testing.T) {
+func testAccVoiceConnector_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var voiceConnector *chime.VoiceConnector
+	var voiceConnector *awstypes.VoiceConnector
 
 	vcName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -81,19 +82,19 @@ func TestAccChimeVoiceConnector_disappears(t *testing.T) {
 	})
 }
 
-func TestAccChimeVoiceConnector_update(t *testing.T) {
+func testAccVoiceConnector_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var voiceConnector *chime.VoiceConnector
+	var voiceConnector *awstypes.VoiceConnector
 
 	vcName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -101,15 +102,15 @@ func TestAccChimeVoiceConnector_update(t *testing.T) {
 				Config: testAccVoiceConnectorConfig_basic(vcName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorExists(ctx, resourceName, voiceConnector),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vc-%s", vcName)),
-					resource.TestCheckResourceAttr(resourceName, "aws_region", chime.VoiceConnectorAwsRegionUsEast1),
-					resource.TestCheckResourceAttr(resourceName, "require_encryption", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vc-%s", vcName)),
+					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
+					resource.TestCheckResourceAttr(resourceName, "require_encryption", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccVoiceConnectorConfig_updated(vcName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "require_encryption", "false"),
+					resource.TestCheckResourceAttr(resourceName, "require_encryption", acctest.CtFalse),
 				),
 			},
 			{
@@ -121,31 +122,29 @@ func TestAccChimeVoiceConnector_update(t *testing.T) {
 	})
 }
 
-func TestAccChimeVoiceConnector_tags(t *testing.T) {
+func testAccVoiceConnector_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var voiceConnector *chime.VoiceConnector
+	var voiceConnector *awstypes.VoiceConnector
 
 	vcName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// Legacy chime resources are always created in us-east-1, and the ListTags operation
-			// can behave unexpectedly when configured with a different region.
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorConfig_tags1(vcName, "key1", "value1"),
+				Config: testAccVoiceConnectorConfig_tags1(vcName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorExists(ctx, resourceName, voiceConnector),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vc-%s", vcName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vc-%s", vcName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -154,22 +153,22 @@ func TestAccChimeVoiceConnector_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVoiceConnectorConfig_tags2(vcName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVoiceConnectorConfig_tags2(vcName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorExists(ctx, resourceName, voiceConnector),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vc-%s", vcName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vc-%s", vcName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVoiceConnectorConfig_tags1(vcName, "key2", "value2"),
+				Config: testAccVoiceConnectorConfig_tags1(vcName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorExists(ctx, resourceName, voiceConnector),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vc-%s", vcName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vc-%s", vcName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -221,7 +220,7 @@ resource "aws_chime_voice_connector" "test" {
 `, name, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccCheckVoiceConnectorExists(ctx context.Context, name string, vc *chime.VoiceConnector) resource.TestCheckFunc {
+func testAccCheckVoiceConnectorExists(ctx context.Context, name string, vc *awstypes.VoiceConnector) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -232,16 +231,17 @@ func testAccCheckVoiceConnectorExists(ctx context.Context, name string, vc *chim
 			return fmt.Errorf("no Chime voice connector ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn(ctx)
-		input := &chime.GetVoiceConnectorInput{
-			VoiceConnectorId: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.GetVoiceConnectorWithContext(ctx, input)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
+
+		resp, err := tfchime.FindVoiceConnectorResourceWithRetry(ctx, false, func() (*awstypes.VoiceConnector, error) {
+			return tfchime.FindVoiceConnectorByID(ctx, conn, rs.Primary.ID)
+		})
+
 		if err != nil {
 			return err
 		}
 
-		vc = resp.VoiceConnector
+		vc = resp
 
 		return nil
 	}
@@ -253,18 +253,39 @@ func testAccCheckVoiceConnectorDestroy(ctx context.Context) resource.TestCheckFu
 			if rs.Type != "aws_chime_voice_connector" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn(ctx)
-			input := &chime.GetVoiceConnectorInput{
-				VoiceConnectorId: aws.String(rs.Primary.ID),
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
+
+			_, err := tfchime.FindVoiceConnectorResourceWithRetry(ctx, false, func() (*awstypes.VoiceConnector, error) {
+				return tfchime.FindVoiceConnectorByID(ctx, conn, rs.Primary.ID)
+			})
+
+			if tfresource.NotFound(err) {
+				continue
 			}
-			resp, err := conn.GetVoiceConnectorWithContext(ctx, input)
-			if err == nil {
-				if resp.VoiceConnector != nil && aws.StringValue(resp.VoiceConnector.Name) != "" {
-					return fmt.Errorf("error Chime Voice Connector still exists")
-				}
+
+			if err != nil {
+				return err
 			}
-			return nil
+
+			return fmt.Errorf("voice connector still exists: (%s)", rs.Primary.ID)
 		}
+
 		return nil
+	}
+}
+
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
+
+	input := &chimesdkvoice.ListVoiceConnectorsInput{}
+
+	_, err := conn.ListVoiceConnectors(ctx, input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }

@@ -6,28 +6,28 @@ package guardduty_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccGuardDutyFindingIdsDataSource_basic(t *testing.T) {
+func testAccFindingIDsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_guardduty_finding_ids.test"
 	detectorDataSourceName := "data.aws_guardduty_detector.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFindingIdsDataSourceConfig_basic(),
+				Config: testAccFindingIDsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "detector_id", detectorDataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "detector_id", detectorDataSourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(dataSourceName, "has_findings"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "finding_ids.#"),
 				),
@@ -36,7 +36,7 @@ func TestAccGuardDutyFindingIdsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccFindingIdsDataSourceConfig_basic() string {
+func testAccFindingIDsDataSourceConfig_basic() string {
 	return `
 data "aws_guardduty_detector" "test" {}
 

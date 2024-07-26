@@ -20,7 +20,7 @@ resource "aws_sfn_activity" "sfn_activity" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the activity to create.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -36,8 +36,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Activities can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import activities using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_sfn_activity.foo
+  id = "arn:aws:states:eu-west-1:123456789098:activity:bar"
+}
 ```
-$ terraform import aws_sfn_activity.foo arn:aws:states:eu-west-1:123456789098:activity:bar
+
+Using `terraform import`, import activities using the `arn`. For example:
+
+```console
+% terraform import aws_sfn_activity.foo arn:aws:states:eu-west-1:123456789098:activity:bar
 ```

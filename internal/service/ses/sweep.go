@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package ses
 
 import (
@@ -19,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_ses_configuration_set", &resource.Sweeper{
 		Name: "aws_ses_configuration_set",
 		F:    sweepConfigurationSets,

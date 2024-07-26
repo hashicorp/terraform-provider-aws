@@ -294,8 +294,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Security Hub insights can be imported using the ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub insights using the ARN. For example:
 
+```terraform
+import {
+  to = aws_securityhub_insight.example
+  id = "arn:aws:securityhub:us-west-2:1234567890:insight/1234567890/custom/91299ed7-abd0-4e44-a858-d0b15e37141a"
+}
 ```
-$ terraform import aws_securityhub_insight.example arn:aws:securityhub:us-west-2:1234567890:insight/1234567890/custom/91299ed7-abd0-4e44-a858-d0b15e37141a
+
+Using `terraform import`, import Security Hub insights using the ARN. For example:
+
+```console
+% terraform import aws_securityhub_insight.example arn:aws:securityhub:us-west-2:1234567890:insight/1234567890/custom/91299ed7-abd0-4e44-a858-d0b15e37141a
 ```

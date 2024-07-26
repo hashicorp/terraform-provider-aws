@@ -43,7 +43,7 @@ resource "aws_rolesanywhere_profile" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `duration_seconds` - (Optional) The number of seconds the vended session credentials are valid for. Defaults to 3600.
 * `enabled` - (Optional) Whether or not the Profile is enabled.
@@ -64,8 +64,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_rolesanywhere_profile` can be imported using its `id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_rolesanywhere_profile` using its `id`. For example:
 
+```terraform
+import {
+  to = aws_rolesanywhere_profile.example
+  id = "db138a85-8925-4f9f-a409-08231233cacf"
+}
 ```
-$ terraform import aws_rolesanywhere_profile.example db138a85-8925-4f9f-a409-08231233cacf
+
+Using `terraform import`, import `aws_rolesanywhere_profile` using its `id`. For example:
+
+```console
+% terraform import aws_rolesanywhere_profile.example db138a85-8925-4f9f-a409-08231233cacf
 ```

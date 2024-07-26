@@ -23,6 +23,8 @@ For capturing events from services like IAM, `include_global_service_events` mus
 
 ```terraform
 resource "aws_cloudtrail" "example" {
+  depends_on = [aws_s3_bucket_policy.example]
+
   name                          = "example"
   s3_bucket_name                = aws_s3_bucket.example.id
   s3_key_prefix                 = "prefix"
@@ -77,6 +79,7 @@ data "aws_iam_policy_document" "example" {
     }
   }
 }
+
 resource "aws_s3_bucket_policy" "example" {
   bucket = aws_s3_bucket.example.id
   policy = data.aws_iam_policy_document.example.json
@@ -244,7 +247,7 @@ resource "aws_cloudtrail" "example" {
       field = "resources.ARN"
 
       #The trailing slash is intentional; do not exclude it.
-      equals = [
+      starts_with = [
         "${data.aws_s3_bucket.important-bucket-1.arn}/",
         "${data.aws_s3_bucket.important-bucket-2.arn}/"
       ]
@@ -277,7 +280,6 @@ resource "aws_cloudtrail" "example" {
     field_selector {
       field = "resources.ARN"
 
-      #The trailing slash is intentional; do not exclude it.
       equals = [
         "${data.aws_s3_bucket.important-bucket-3.arn}/important-prefix"
       ]
@@ -371,13 +373,22 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the trail.
 * `home_region` - Region in which the trail was created.
-* `id` - Name of the trail.
+* `id` - ARN of the trail.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Cloudtrails can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudtrail Trails using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_cloudtrail.sample
+  id = "arn:aws:cloudtrail:us-east-1:123456789012:trail/my-sample-trail"
+}
 ```
-$ terraform import aws_cloudtrail.sample my-sample-trail
+
+Using `terraform import`, import Cloudtrails using the `arn`. For example:
+
+```console
+% terraform import aws_cloudtrail.sample arn:aws:cloudtrail:us-east-1:123456789012:trail/my-sample-trail
 ```

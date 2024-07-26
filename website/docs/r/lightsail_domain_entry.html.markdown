@@ -30,7 +30,7 @@ resource "aws_lightsail_domain_entry" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Required) The name of the Lightsail domain in which to create the entry
 * `name` - (Required) Name of the entry record
@@ -46,8 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_lightsail_domain_entry` can be imported by using the id attribute, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_lightsail_domain_entry` using the id attribute. For example:
 
+```terraform
+import {
+  to = aws_lightsail_domain_entry.example
+  id = "www,mydomain.com,A,127.0.0.1"
+}
 ```
-$ terraform import aws_lightsail_domain_entry.example www,mydomain.com,A,127.0.0.1
+
+Using `terraform import`, import `aws_lightsail_domain_entry` using the id attribute. For example:
+
+```console
+% terraform import aws_lightsail_domain_entry.example www,mydomain.com,A,127.0.0.1
 ```

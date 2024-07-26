@@ -21,7 +21,7 @@ data "aws_redshift_cluster_credentials" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `auto_create` - (Optional)  Create a database user with the name specified for the user named in `db_user` if one does not exist.
 * `cluster_identifier` - (Required) Unique identifier of the cluster that contains the database for which your are requesting credentials.

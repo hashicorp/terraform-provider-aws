@@ -22,7 +22,7 @@ resource "aws_servicecatalog_portfolio" "portfolio" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the portfolio.
 * `description` - (Required) Description of the portfolio
@@ -47,8 +47,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Service Catalog Portfolios can be imported using the `service catalog portfolio id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Service Catalog Portfolios using the Service Catalog Portfolio `id`. For example:
 
+```terraform
+import {
+  to = aws_servicecatalog_portfolio.testfolio
+  id = "port-12344321"
+}
 ```
-$ terraform import aws_servicecatalog_portfolio.testfolio port-12344321
+
+Using `terraform import`, import Service Catalog Portfolios using the Service Catalog Portfolio `id`. For example:
+
+```console
+% terraform import aws_servicecatalog_portfolio.testfolio port-12344321
 ```

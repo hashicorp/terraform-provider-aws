@@ -38,7 +38,7 @@ resource "aws_lambda_alias" "test_lambda_alias" {
 * `function_version` - (Required) Lambda function version for which you are creating the alias. Pattern: `(\$LATEST|[0-9]+)`.
 * `routing_config` - (Optional) The Lambda alias' route configuration settings. Fields documented below
 
-For **routing_config** the following attributes are supported:
+`routing_config` supports the following arguments:
 
 * `additional_version_weights` - (Optional) A map that defines the proportion of events that should be sent to different versions of a lambda function.
 
@@ -55,8 +55,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Lambda Function Aliases can be imported using the `function_name/alias`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Function Aliases using the `function_name/alias`. For example:
 
+```terraform
+import {
+  to = aws_lambda_alias.test_lambda_alias
+  id = "my_test_lambda_function/my_alias"
+}
 ```
-$ terraform import aws_lambda_alias.test_lambda_alias my_test_lambda_function/my_alias
+
+Using `terraform import`, import Lambda Function Aliases using the `function_name/alias`. For example:
+
+```console
+% terraform import aws_lambda_alias.test_lambda_alias my_test_lambda_function/my_alias
 ```

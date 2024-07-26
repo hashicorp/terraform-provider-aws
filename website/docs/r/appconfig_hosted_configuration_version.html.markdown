@@ -81,7 +81,7 @@ resource "aws_appconfig_hosted_configuration_version" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `application_id` - (Required, Forces new resource) Application ID.
 * `configuration_profile_id` - (Required, Forces new resource) Configuration profile ID.
@@ -99,8 +99,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AppConfig Hosted Configuration Versions can be imported by using the application ID, configuration profile ID, and version number separated by a slash (`/`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppConfig Hosted Configuration Versions using the application ID, configuration profile ID, and version number separated by a slash (`/`). For example:
 
+```terraform
+import {
+  to = aws_appconfig_hosted_configuration_version.example
+  id = "71abcde/11xxxxx/2"
+}
 ```
-$ terraform import aws_appconfig_hosted_configuration_version.example 71abcde/11xxxxx/2
+
+Using `terraform import`, import AppConfig Hosted Configuration Versions using the application ID, configuration profile ID, and version number separated by a slash (`/`). For example:
+
+```console
+% terraform import aws_appconfig_hosted_configuration_version.example 71abcde/11xxxxx/2
 ```

@@ -23,7 +23,7 @@ resource "aws_redshift_partner" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Required) The Amazon Web Services account ID that owns the cluster.
 * `cluster_identifier` - (Required) The cluster identifier of the cluster that receives data from the partner.
@@ -40,8 +40,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift usage limits can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift usage limits using the `id`. For example:
 
+```terraform
+import {
+  to = aws_redshift_partner.example
+  id = "01234567910:cluster-example-id:example:example"
+}
 ```
-$ terraform import aws_redshift_partner.example 01234567910:cluster-example-id:example:example
+
+Using `terraform import`, import Redshift usage limits using the `id`. For example:
+
+```console
+% terraform import aws_redshift_partner.example 01234567910:cluster-example-id:example:example
 ```

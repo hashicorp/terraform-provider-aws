@@ -5,28 +5,25 @@ package vpclattice
 
 import (
 	"context"
-	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_vpclattice_service_network")
-func DataSourceServiceNetwork() *schema.Resource {
+// @Tags
+func dataSourceServiceNetwork() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceNetworkRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -34,11 +31,7 @@ func DataSourceServiceNetwork() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"id": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,7 +39,7 @@ func DataSourceServiceNetwork() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,72 +55,50 @@ func DataSourceServiceNetwork() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tftags.TagsSchemaComputed(), // TIP: Many, but not all, data sources have `tags` attributes.
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-const (
-	DSNameServiceNetwork = "Service Network Data Source"
-)
-
 func dataSourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	serviceNetworkID := d.Get("service_network_identifier").(string)
+	out, err := findServiceNetworkByID(ctx, conn, serviceNetworkID)
 
-	out, err := findServiceNetworkById(ctx, conn, serviceNetworkID)
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameServiceNetwork, serviceNetworkID, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.SetId(aws.ToString(out.Id))
-	d.Set("arn", out.Arn)
+	serviceNetworkARN := aws.ToString(out.Arn)
+	d.Set(names.AttrARN, serviceNetworkARN)
 	d.Set("auth_type", out.AuthType)
-	d.Set("created_at", aws.ToTime(out.CreatedAt).String())
-	d.Set("id", out.Id)
+	d.Set(names.AttrCreatedAt, aws.ToTime(out.CreatedAt).String())
 	d.Set("last_updated_at", aws.ToTime(out.LastUpdatedAt).String())
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("number_of_associated_services", out.NumberOfAssociatedServices)
 	d.Set("number_of_associated_vpcs", out.NumberOfAssociatedVPCs)
+	d.Set("service_network_identifier", out.Id)
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags, err := listTags(ctx, conn, aws.ToString(out.Arn))
-
+	// https://docs.aws.amazon.com/vpc-lattice/latest/ug/sharing.html#sharing-perms
+	// Owners and consumers can list tags and can tag/untag resources in a service network that the account created.
+	// They can't list tags and tag/untag resources in a service network that aren't created by the account.
+	parsedARN, err := arn.Parse(serviceNetworkARN)
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameServiceNetwork, serviceNetworkID, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionSetting, DSNameServiceNetwork, d.Id(), err)
-	}
+	if parsedARN.AccountID == meta.(*conns.AWSClient).AccountID {
+		tags, err := listTags(ctx, conn, serviceNetworkARN)
 
-	return nil
-}
-
-func findServiceNetworkById(ctx context.Context, conn *vpclattice.Client, service_network_identifier string) (*vpclattice.GetServiceNetworkOutput, error) {
-	in := &vpclattice.GetServiceNetworkInput{
-		ServiceNetworkIdentifier: aws.String(service_network_identifier),
-	}
-
-	out, err := conn.GetServiceNetwork(ctx, in)
-
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing tags for VPC Lattice Service Network (%s): %s", serviceNetworkARN, err)
 		}
 
-		return nil, err
+		setTagsOut(ctx, Tags(tags))
 	}
 
-	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
+	return diags
 }

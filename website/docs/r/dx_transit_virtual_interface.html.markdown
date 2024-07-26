@@ -32,7 +32,7 @@ resource "aws_dx_transit_virtual_interface" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `address_family` - (Required) The address family for the BGP peer. `ipv4 ` or `ipv6`.
 * `bgp_asn` - (Required) The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
@@ -68,8 +68,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Direct Connect transit virtual interfaces can be imported using the `vif id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Direct Connect transit virtual interfaces using the VIF `id`. For example:
 
+```terraform
+import {
+  to = aws_dx_transit_virtual_interface.test
+  id = "dxvif-33cc44dd"
+}
 ```
-$ terraform import aws_dx_transit_virtual_interface.test dxvif-33cc44dd
+
+Using `terraform import`, import Direct Connect transit virtual interfaces using the VIF `id`. For example:
+
+```console
+% terraform import aws_dx_transit_virtual_interface.test dxvif-33cc44dd
 ```

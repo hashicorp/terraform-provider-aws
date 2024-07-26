@@ -25,7 +25,7 @@ resource "aws_quicksight_user" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `email` - (Required) The email address of the user that you want to register.
 * `identity_type` - (Required) Amazon QuickSight supports several ways of managing the identity of users. This parameter accepts either  `IAM` or `QUICKSIGHT`. If `IAM` is specified, the `iam_arn` must also be specified.
@@ -44,4 +44,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Importing is currently not supported on this resource.
+You cannot import this resource.

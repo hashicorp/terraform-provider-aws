@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_sagemaker_device")
@@ -33,7 +34,7 @@ func ResourceDevice() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,7 +48,7 @@ func ResourceDevice() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
 			"device": {
@@ -56,12 +57,12 @@ func ResourceDevice() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"description": {
+						names.AttrDescription: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 40),
 						},
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -121,7 +122,7 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	arn := aws.StringValue(device.DeviceArn)
 	d.Set("device_fleet_name", device.DeviceFleetName)
 	d.Set("agent_version", device.AgentVersion)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	if err := d.Set("device", flattenDevice(device)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting device for SageMaker Device (%s): %s", d.Id(), err)
@@ -186,11 +187,11 @@ func expandDevice(l []interface{}) []*sagemaker.Device {
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.Device{
-		DeviceName: aws.String(m["device_name"].(string)),
+		DeviceName: aws.String(m[names.AttrDeviceName].(string)),
 	}
 
-	if v, ok := m["description"].(string); ok && v != "" {
-		config.Description = aws.String(m["description"].(string))
+	if v, ok := m[names.AttrDescription].(string); ok && v != "" {
+		config.Description = aws.String(m[names.AttrDescription].(string))
 	}
 
 	if v, ok := m["iot_thing_name"].(string); ok && v != "" {
@@ -206,11 +207,11 @@ func flattenDevice(config *sagemaker.DescribeDeviceOutput) []map[string]interfac
 	}
 
 	m := map[string]interface{}{
-		"device_name": aws.StringValue(config.DeviceName),
+		names.AttrDeviceName: aws.StringValue(config.DeviceName),
 	}
 
 	if config.Description != nil {
-		m["description"] = aws.StringValue(config.Description)
+		m[names.AttrDescription] = aws.StringValue(config.Description)
 	}
 
 	if config.IotThingName != nil {

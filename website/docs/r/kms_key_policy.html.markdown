@@ -40,7 +40,7 @@ resource "aws_kms_key_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `key_id` - (Required) The ID of the KMS Key to attach the policy.
 * `policy` - (Required) A valid policy JSON document. Although this is a key policy, not an IAM policy, an [`aws_iam_policy_document`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document), in the form that designates a principal, can be used. For more information about building policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
@@ -57,8 +57,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-KMS Key Policies can be imported using the `key_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import KMS Key Policies using the `key_id`. For example:
 
+```terraform
+import {
+  to = aws_kms_key_policy.a
+  id = "1234abcd-12ab-34cd-56ef-1234567890ab"
+}
 ```
-$ terraform import aws_kms_key_policy.a 1234abcd-12ab-34cd-56ef-1234567890ab
+
+Using `terraform import`, import KMS Key Policies using the `key_id`. For example:
+
+```console
+% terraform import aws_kms_key_policy.a 1234abcd-12ab-34cd-56ef-1234567890ab
 ```

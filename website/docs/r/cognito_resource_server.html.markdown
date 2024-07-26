@@ -50,10 +50,11 @@ resource "aws_cognito_resource_server" "resource" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `identifier` - (Required) An identifier for the resource server.
 * `name` - (Required) A name for the resource server.
+* `user_pool_id` - (Required) User pool the client belongs to.
 * `scope` - (Optional) A list of [Authorization Scope](#authorization-scope).
 
 ### Authorization Scope
@@ -69,8 +70,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_cognito_resource_server` can be imported using their User Pool ID and Identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_cognito_resource_server` using their User Pool ID and Identifier. For example:
 
+```terraform
+import {
+  to = aws_cognito_resource_server.example
+  id = "us-west-2_abc123|https://example.com"
+}
 ```
-$ terraform import aws_cognito_resource_server.example "us-west-2_abc123|https://example.com"
+
+Using `terraform import`, import `aws_cognito_resource_server` using their User Pool ID and Identifier. For example:
+
+```console
+% terraform import aws_cognito_resource_server.example "us-west-2_abc123|https://example.com"
 ```

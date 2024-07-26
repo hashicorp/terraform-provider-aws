@@ -62,7 +62,7 @@ resource "aws_shield_protection_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `aggregation` - (Required) Defines how AWS Shield combines resource data for the group in order to detect, mitigate, and report events.
 * `members` - (Optional) The Amazon Resource Names (ARNs) of the resources to include in the protection group. You must set this when you set `pattern` to ARBITRARY and you must not set it for any other `pattern` setting.
@@ -80,8 +80,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Shield protection group resources can be imported by specifying their protection group id.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Shield protection group resources using their protection group id. For example:
 
+```terraform
+import {
+  to = aws_shield_protection_group.example
+  id = "example"
+}
 ```
-$ terraform import aws_shield_protection_group.example example
+
+Using `terraform import`, import Shield protection group resources using their protection group id. For example:
+
+```console
+% terraform import aws_shield_protection_group.example example
 ```

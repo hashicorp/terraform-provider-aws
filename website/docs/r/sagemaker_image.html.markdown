@@ -23,7 +23,7 @@ resource "aws_sagemaker_image" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `image_name` - (Required) The name of the image. Must be unique to your account.
 * `role_arn` - (Required) The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker to perform tasks on your behalf.
@@ -41,8 +41,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker Code Images can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Code Images using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_image.test_image
+  id = "my-code-repo"
+}
 ```
-$ terraform import aws_sagemaker_image.test_image my-code-repo
+
+Using `terraform import`, import SageMaker Code Images using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_image.test_image my-code-repo
 ```

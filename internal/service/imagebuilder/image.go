@@ -6,9 +6,9 @@ package imagebuilder
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -31,19 +31,17 @@ func ResourceImage() *schema.Resource {
 		ReadWithoutTimeout:   resourceImageRead,
 		UpdateWithoutTimeout: resourceImageUpdate,
 		DeleteWithoutTimeout: resourceImageDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"date_created": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,14 +49,18 @@ func ResourceImage() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):container-recipe/[a-z0-9-_]+/\d+\.\d+\.\d+$`), "valid container recipe ARN must be provided"),
+				ValidateFunc: verify.ValidARN,
 				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
+			},
+			"date_created": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"distribution_configuration_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):distribution-configuration/[a-z0-9-_]+$`), "valid distribution configuration ARN must be provided"),
+				ValidateFunc: verify.ValidARN,
 			},
 			"enhanced_image_metadata_enabled": {
 				Type:     schema.TypeBool,
@@ -66,12 +68,54 @@ func ResourceImage() *schema.Resource {
 				ForceNew: true,
 				Default:  true,
 			},
+			"execution_role": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"image_recipe_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):image-recipe/[a-z0-9-_]+/\d+\.\d+\.\d+$`), "valid image recipe ARN must be provided"),
+				ValidateFunc: verify.ValidARN,
 				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
+			},
+			"image_scanning_configuration": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ecr_configuration": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"container_tags": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									names.AttrRepositoryName: {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"image_scanning_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
 			},
 			"image_tests_configuration": {
 				Type:     schema.TypeList,
@@ -101,9 +145,9 @@ func ResourceImage() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):infrastructure-configuration/[a-z0-9-_]+$`), "valid infrastructure configuration ARN must be provided"),
+				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -121,11 +165,11 @@ func ResourceImage() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"account_id": {
+									names.AttrAccountID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"description": {
+									names.AttrDescription: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -133,11 +177,11 @@ func ResourceImage() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"region": {
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -154,7 +198,7 @@ func ResourceImage() *schema.Resource {
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"region": {
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -170,9 +214,57 @@ func ResourceImage() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"workflow": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"on_failure": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(imagebuilder.OnWorkflowFailure_Values(), false),
+						},
+						"parallel_group": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9-_+#]{0,99}$`), "valid parallel group string must be provider"),
+						},
+						names.AttrParameter: {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrName: {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringLenBetween(1, 128),
+									},
+									names.AttrValue: {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"workflow_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
 			},
 		},
 
@@ -198,8 +290,16 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.DistributionConfigurationArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("execution_role"); ok {
+		input.ExecutionRole = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("image_recipe_arn"); ok {
 		input.ImageRecipeArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("image_scanning_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ImageScanningConfiguration = expandImageScanningConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("image_tests_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -208,6 +308,10 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("infrastructure_configuration_arn"); ok {
 		input.InfrastructureConfigurationArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("workflow"); ok && len(v.(*schema.Set).List()) > 0 {
+		input.Workflows = expandWorkflowConfigurations(v.(*schema.Set).List())
 	}
 
 	output, err := conn.CreateImageWithContext(ctx, input)
@@ -255,46 +359,48 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	image := output.Image
 
-	d.Set("arn", image.Arn)
-	d.Set("date_created", image.DateCreated)
-
+	d.Set(names.AttrARN, image.Arn)
 	if image.ContainerRecipe != nil {
 		d.Set("container_recipe_arn", image.ContainerRecipe.Arn)
 	}
-
+	d.Set("date_created", image.DateCreated)
 	if image.DistributionConfiguration != nil {
 		d.Set("distribution_configuration_arn", image.DistributionConfiguration.Arn)
 	}
-
 	d.Set("enhanced_image_metadata_enabled", image.EnhancedImageMetadataEnabled)
-
+	d.Set("execution_role", image.ExecutionRole)
 	if image.ImageRecipe != nil {
 		d.Set("image_recipe_arn", image.ImageRecipe.Arn)
 	}
-
+	if image.ImageScanningConfiguration != nil {
+		d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(image.ImageScanningConfiguration)})
+	} else {
+		d.Set("image_scanning_configuration", nil)
+	}
 	if image.ImageTestsConfiguration != nil {
 		d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(image.ImageTestsConfiguration)})
 	} else {
 		d.Set("image_tests_configuration", nil)
 	}
-
 	if image.InfrastructureConfiguration != nil {
 		d.Set("infrastructure_configuration_arn", image.InfrastructureConfiguration.Arn)
 	}
-
-	d.Set("name", image.Name)
-	d.Set("platform", image.Platform)
+	d.Set(names.AttrName, image.Name)
 	d.Set("os_version", image.OsVersion)
-
 	if image.OutputResources != nil {
 		d.Set("output_resources", []interface{}{flattenOutputResources(image.OutputResources)})
 	} else {
 		d.Set("output_resources", nil)
 	}
+	d.Set("platform", image.Platform)
+	d.Set(names.AttrVersion, image.Version)
+	if image.Workflows != nil {
+		d.Set("workflow", flattenWorkflowConfigurations(image.Workflows))
+	} else {
+		d.Set("workflow", nil)
+	}
 
 	setTagsOut(ctx, image.Tags)
-
-	d.Set("version", image.Version)
 
 	return diags
 }
@@ -354,11 +460,11 @@ func flattenAMI(apiObject *imagebuilder.Ami) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AccountId; v != nil {
-		tfMap["account_id"] = aws.StringValue(v)
+		tfMap[names.AttrAccountID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap["description"] = aws.StringValue(v)
+		tfMap[names.AttrDescription] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Image; v != nil {
@@ -366,11 +472,11 @@ func flattenAMI(apiObject *imagebuilder.Ami) map[string]interface{} {
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.StringValue(v)
+		tfMap[names.AttrRegion] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -406,7 +512,7 @@ func flattenContainer(apiObject *imagebuilder.Container) map[string]interface{} 
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.StringValue(v)
+		tfMap[names.AttrRegion] = aws.StringValue(v)
 	}
 
 	return tfMap

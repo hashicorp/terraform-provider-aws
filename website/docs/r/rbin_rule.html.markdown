@@ -89,8 +89,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-RBin Rule can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RBin Rule using the `id`. For example:
 
+```terraform
+import {
+  to = aws_rbin_rule.example
+  id = "examplerule"
+}
 ```
-$ terraform import aws_rbin_rule.example examplerule
+
+Using `terraform import`, import RBin Rule using the `id`. For example:
+
+```console
+% terraform import aws_rbin_rule.example examplerule
 ```

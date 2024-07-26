@@ -47,8 +47,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_servicecatalog_product_portfolio_association` can be imported using the accept language, portfolio ID, and product ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_servicecatalog_product_portfolio_association` using the accept language, portfolio ID, and product ID. For example:
 
+```terraform
+import {
+  to = aws_servicecatalog_product_portfolio_association.example
+  id = "en:port-68656c6c6f:prod-dnigbtea24ste"
+}
 ```
-$ terraform import aws_servicecatalog_product_portfolio_association.example en:port-68656c6c6f:prod-dnigbtea24ste
+
+Using `terraform import`, import `aws_servicecatalog_product_portfolio_association` using the accept language, portfolio ID, and product ID. For example:
+
+```console
+% terraform import aws_servicecatalog_product_portfolio_association.example en:port-68656c6c6f:prod-dnigbtea24ste
 ```

@@ -23,9 +23,11 @@ const (
 	ColDocPrefix               = 16
 	ColHumanFriendly           = 17
 	ColBrand                   = 18
-	ColExclude                 = 19
-	ColAllowedSubcategory      = 20
-	ColDeprecatedEnvVar        = 21
-	ColEnvVar                  = 22
-	ColNote                    = 23
+	ColExclude                 = 19 // If set, the service is completely ignored
+	ColNotImplemented          = 20 // If set, the service will be included in, e.g. labels, but not have a service client
+	ColEndpointOnly            = 21 // If set, the service is included in list of endpoints
+	ColAllowedSubcategory      = 22
+	ColDeprecatedEnvVar        = 23 // Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services
+	ColTfAwsEnvVar             = 24 // `TF_AWS_<service>_ENDPOINT` envvar defined for some services
+	ColNote                    = 25
 )

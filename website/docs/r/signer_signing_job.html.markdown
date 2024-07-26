@@ -94,8 +94,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Signer signing jobs can be imported using the `job_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Signer signing jobs using the `job_id`. For example:
 
+```terraform
+import {
+  to = aws_signer_signing_job.test_signer_signing_job
+  id = "9ed7e5c3-b8d4-4da0-8459-44e0b068f7ee"
+}
 ```
-$ terraform import aws_signer_signing_job.test_signer_signing_job 9ed7e5c3-b8d4-4da0-8459-44e0b068f7ee
+
+Using `terraform import`, import Signer signing jobs using the `job_id`. For example:
+
+```console
+% terraform import aws_signer_signing_job.test_signer_signing_job 9ed7e5c3-b8d4-4da0-8459-44e0b068f7ee
 ```

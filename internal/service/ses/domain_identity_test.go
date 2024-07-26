@@ -6,10 +6,10 @@ package ses_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSESDomainIdentity_basic(t *testing.T) {
@@ -25,7 +26,7 @@ func TestAccSESDomainIdentity_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -46,7 +47,7 @@ func TestAccSESDomainIdentity_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -70,13 +71,13 @@ func TestAccSESDomainIdentity_trailingPeriod(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDomainIdentityConfig_basic(domain),
-				ExpectError: regexp.MustCompile(`invalid value for domain \(cannot end with a period\)`),
+				ExpectError: regexache.MustCompile(`invalid value for domain \(cannot end with a period\)`),
 			},
 		},
 	})
@@ -172,8 +173,8 @@ func testAccCheckDomainIdentityARN(n string, domain string) resource.TestCheckFu
 			Service:   "ses",
 		}
 
-		if rs.Primary.Attributes["arn"] != expected.String() {
-			return fmt.Errorf("Incorrect ARN: expected %q, got %q", expected, rs.Primary.Attributes["arn"])
+		if rs.Primary.Attributes[names.AttrARN] != expected.String() {
+			return fmt.Errorf("Incorrect ARN: expected %q, got %q", expected, rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil

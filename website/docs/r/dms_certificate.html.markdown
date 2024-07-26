@@ -30,7 +30,7 @@ resource "aws_dms_certificate" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `certificate_id` - (Required) The certificate identifier.
 
@@ -49,8 +49,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Certificates can be imported using the `certificate_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import certificates using the `certificate_id`. For example:
 
+```terraform
+import {
+  to = aws_dms_certificate.test
+  id = "test-dms-certificate-tf"
+}
 ```
-$ terraform import aws_dms_certificate.test test-dms-certificate-tf
+
+Using `terraform import`, import certificates using the `certificate_id`. For example:
+
+```console
+% terraform import aws_dms_certificate.test test-dms-certificate-tf
 ```

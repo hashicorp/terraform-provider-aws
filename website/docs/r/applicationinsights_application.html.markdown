@@ -65,8 +65,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ApplicationInsights Applications can be imported using the `resource_group_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ApplicationInsights Applications using the `resource_group_name`. For example:
 
+```terraform
+import {
+  to = aws_applicationinsights_application.some
+  id = "some-application"
+}
 ```
-$ terraform import aws_applicationinsights_application.some some-application
+
+Using `terraform import`, import ApplicationInsights Applications using the `resource_group_name`. For example:
+
+```console
+% terraform import aws_applicationinsights_application.some some-application
 ```

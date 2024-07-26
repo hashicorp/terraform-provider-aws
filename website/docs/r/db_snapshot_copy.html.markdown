@@ -40,7 +40,7 @@ resource "aws_db_snapshot_copy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `copy_tags` - (Optional) Whether to copy existing tags. Defaults to `false`.
 * `destination_region` - (Optional) The Destination region to place snapshot copy.
@@ -67,6 +67,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `kms_key_id` - The ARN for the KMS encryption key.
 * `license_model` - License model information for the restored DB instance.
 * `option_group_name` - Provides the option group name for the DB snapshot.
+* `shared_accounts` - (Optional) List of AWS Account ids to share snapshot with, use `all` to make snaphot public.
 * `source_db_snapshot_identifier` - The DB snapshot Arn that the DB snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `source_region` - The region that the DB snapshot was created in or copied from.
 * `storage_type` - Specifies the storage type associated with DB snapshot.
@@ -81,8 +82,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_db_snapshot_copy` can be imported by using the snapshot identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_db_snapshot_copy` using the snapshot identifier. For example:
 
+```terraform
+import {
+  to = aws_db_snapshot_copy.example
+  id = "my-snapshot"
+}
 ```
-$ terraform import aws_db_snapshot_copy.example my-snapshot
+
+Using `terraform import`, import `aws_db_snapshot_copy` using the snapshot identifier. For example:
+
+```console
+% terraform import aws_db_snapshot_copy.example my-snapshot
 ```

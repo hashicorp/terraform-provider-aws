@@ -21,7 +21,7 @@ resource "aws_redshiftserverless_snapshot" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `namespace_name` - (Required) The namespace to create a snapshot for.
 * `snapshot_name` - (Required) The name of the snapshot.
@@ -42,8 +42,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Serverless Snapshots can be imported using the `snapshot_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Serverless Snapshots using the `snapshot_name`. For example:
 
+```terraform
+import {
+  to = aws_redshiftserverless_snapshot.example
+  id = "example"
+}
 ```
-$ terraform import aws_redshiftserverless_snapshot.example example
+
+Using `terraform import`, import Redshift Serverless Snapshots using the `snapshot_name`. For example:
+
+```console
+% terraform import aws_redshiftserverless_snapshot.example example
 ```

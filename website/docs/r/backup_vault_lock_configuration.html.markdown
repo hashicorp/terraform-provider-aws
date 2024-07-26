@@ -23,7 +23,7 @@ resource "aws_backup_vault_lock_configuration" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `backup_vault_name` - (Required) Name of the backup vault to add a lock configuration for.
 * `changeable_for_days` - (Optional) The number of days before the lock date. If omitted creates a vault lock in `governance` mode, otherwise it will create a vault lock in `compliance` mode.
@@ -39,8 +39,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Backup vault lock configuration can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Backup vault lock configuration using the `name`. For example:
 
+```terraform
+import {
+  to = aws_backup_vault_lock_configuration.test
+  id = "TestVault"
+}
 ```
-$ terraform import aws_backup_vault_lock_configuration.test TestVault
+
+Using `terraform import`, import Backup vault lock configuration using the `name`. For example:
+
+```console
+% terraform import aws_backup_vault_lock_configuration.test TestVault
 ```

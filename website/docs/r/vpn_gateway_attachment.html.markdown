@@ -40,7 +40,7 @@ guides for more information.
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_id` - (Required) The ID of the VPC.
 * `vpn_gateway_id` - (Required) The ID of the Virtual Private Gateway.
@@ -54,4 +54,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-This resource does not support importing.
+You cannot import this resource.

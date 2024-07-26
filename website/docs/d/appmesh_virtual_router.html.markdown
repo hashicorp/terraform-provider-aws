@@ -21,7 +21,7 @@ data "aws_appmesh_virtual_router" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the virtual router.
 * `mesh_name` - (Required) Name of the mesh in which the virtual router exists

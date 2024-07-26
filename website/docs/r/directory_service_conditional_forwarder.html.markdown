@@ -26,7 +26,7 @@ resource "aws_directory_service_conditional_forwarder" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `directory_id` - (Required) ID of directory.
 * `dns_ips` - (Required) A list of forwarder IP addresses.
@@ -38,8 +38,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Conditional forwarders can be imported using the directory id and remote_domain_name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import conditional forwarders using the directory id and remote_domain_name. For example:
 
+```terraform
+import {
+  to = aws_directory_service_conditional_forwarder.example
+  id = "d-1234567890:example.com"
+}
 ```
-$ terraform import aws_directory_service_conditional_forwarder.example d-1234567890:example.com
+
+Using `terraform import`, import conditional forwarders using the directory id and remote_domain_name. For example:
+
+```console
+% terraform import aws_directory_service_conditional_forwarder.example d-1234567890:example.com
 ```

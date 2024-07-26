@@ -20,7 +20,7 @@ data "aws_connect_user_hierarchy_structure" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 

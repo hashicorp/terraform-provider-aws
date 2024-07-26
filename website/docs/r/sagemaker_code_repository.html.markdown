@@ -50,7 +50,7 @@ resource "aws_sagemaker_code_repository" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `code_repository_name` - (Required) The name of the Code Repository (must be unique).
 * `git_config` - (Required) Specifies details about the repository. see [Git Config](#git-config) details below.
@@ -72,8 +72,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker Code Repositories can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Code Repositories using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_code_repository.test_code_repository
+  id = "my-code-repo"
+}
 ```
-$ terraform import aws_sagemaker_code_repository.test_code_repository my-code-repo
+
+Using `terraform import`, import SageMaker Code Repositories using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_code_repository.test_code_repository my-code-repo
 ```

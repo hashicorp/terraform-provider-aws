@@ -20,7 +20,7 @@ data "aws_signer_signing_profile" "production_signing_profile" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the target signing profile.
 

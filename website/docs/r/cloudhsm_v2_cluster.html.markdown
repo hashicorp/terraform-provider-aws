@@ -62,7 +62,7 @@ resource "aws_cloudhsm_v2_cluster" "cloudhsm_v2_cluster" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `source_backup_identifier` - (Optional) ID of Cloud HSM v2 cluster backup to be restored.
 * `hsm_type` - (Required) The type of HSM module in the cluster. Currently, only `hsm1.medium` is supported.
@@ -90,8 +90,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudHSM v2 Clusters can be imported using the `cluster id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudHSM v2 Clusters using the cluster `id`. For example:
 
+```terraform
+import {
+  to = aws_cloudhsm_v2_cluster.test_cluster
+  id = "cluster-aeb282a201"
+}
 ```
-$ terraform import aws_cloudhsm_v2_cluster.test_cluster cluster-aeb282a201
+
+Using `terraform import`, import CloudHSM v2 Clusters using the cluster `id`. For example:
+
+```console
+% terraform import aws_cloudhsm_v2_cluster.test_cluster cluster-aeb282a201
 ```

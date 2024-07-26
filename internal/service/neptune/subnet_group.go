@@ -37,32 +37,32 @@ func ResourceSubnetGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Managed by Terraform",
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validSubnetGroupName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validSubnetGroupNamePrefix,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
@@ -80,11 +80,11 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &neptune.CreateDBSubnetGroupInput{
 		DBSubnetGroupName:        aws.String(name),
-		DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
-		SubnetIds:                flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		DBSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
+		SubnetIds:                flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		Tags:                     getTagsIn(ctx),
 	}
 
@@ -116,15 +116,15 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	arn := aws.StringValue(subnetGroup.DBSubnetGroupArn)
-	d.Set("arn", arn)
-	d.Set("description", subnetGroup.DBSubnetGroupDescription)
-	d.Set("name", subnetGroup.DBSubnetGroupName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(subnetGroup.DBSubnetGroupName)))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, subnetGroup.DBSubnetGroupDescription)
+	d.Set(names.AttrName, subnetGroup.DBSubnetGroupName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(subnetGroup.DBSubnetGroupName)))
 	var subnetIDs []string
 	for _, v := range subnetGroup.Subnets {
 		subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetIdentifier))
 	}
-	d.Set("subnet_ids", subnetIDs)
+	d.Set(names.AttrSubnetIDs, subnetIDs)
 
 	return diags
 }
@@ -133,11 +133,11 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	if d.HasChanges("description", "subnet_ids") {
+	if d.HasChanges(names.AttrDescription, names.AttrSubnetIDs) {
 		input := &neptune.ModifyDBSubnetGroupInput{
 			DBSubnetGroupName:        aws.String(d.Id()),
-			DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
-			SubnetIds:                flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+			DBSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
+			SubnetIds:                flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		}
 
 		_, err := conn.ModifyDBSubnetGroupWithContext(ctx, input)
@@ -174,8 +174,48 @@ func FindSubnetGroupByName(ctx context.Context, conn *neptune.Neptune, name stri
 	input := &neptune.DescribeDBSubnetGroupsInput{
 		DBSubnetGroupName: aws.String(name),
 	}
+	output, err := findDBSubnetGroup(ctx, conn, input)
 
-	output, err := conn.DescribeDBSubnetGroupsWithContext(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.DBSubnetGroupName) != name {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findDBSubnetGroup(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBSubnetGroupsInput) (*neptune.DBSubnetGroup, error) {
+	output, err := findDBSubnetGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findDBSubnetGroups(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBSubnetGroupsInput) ([]*neptune.DBSubnetGroup, error) {
+	var output []*neptune.DBSubnetGroup
+
+	err := conn.DescribeDBSubnetGroupsPagesWithContext(ctx, input, func(page *neptune.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBSubnetGroups {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBSubnetGroupNotFoundFault) {
 		return nil, &retry.NotFoundError{
@@ -188,18 +228,5 @@ func FindSubnetGroupByName(ctx context.Context, conn *neptune.Neptune, name stri
 		return nil, err
 	}
 
-	if output == nil || len(output.DBSubnetGroups) == 0 || output.DBSubnetGroups[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	dbSubnetGroup := output.DBSubnetGroups[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(dbSubnetGroup.DBSubnetGroupName) != name {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return dbSubnetGroup, nil
+	return output, nil
 }

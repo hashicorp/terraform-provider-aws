@@ -23,7 +23,7 @@ resource "aws_redshift_usage_limit" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `amount` - (Required) The limit amount. If time-based, this amount is in minutes. If data-based, this amount is in terabytes (TB). The value must be a positive number.
 * `breach_action` - (Optional) The action that Amazon Redshift takes when the limit is reached. The default is `log`. Valid values are `log`, `emit-metric`, and `disable`.
@@ -43,8 +43,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift usage limits can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift usage limits using the `id`. For example:
 
+```terraform
+import {
+  to = aws_redshift_usage_limit.example
+  id = "example-id"
+}
 ```
-$ terraform import aws_redshift_usage_limit.example example-id
+
+Using `terraform import`, import Redshift usage limits using the `id`. For example:
+
+```console
+% terraform import aws_redshift_usage_limit.example example-id
 ```

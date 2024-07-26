@@ -41,7 +41,7 @@ func ResourceResourceSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +55,7 @@ func ResourceResourceSet() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"resources": {
+			names.AttrResources: {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
@@ -70,7 +70,7 @@ func ResourceResourceSet() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"domain_name": {
+									names.AttrDomainName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -98,7 +98,7 @@ func ResourceResourceSet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"arn": {
+															names.AttrARN: {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
@@ -111,7 +111,7 @@ func ResourceResourceSet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"domain_name": {
+															names.AttrDomainName: {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
@@ -135,7 +135,7 @@ func ResourceResourceSet() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"resource_arn": {
+						names.AttrResourceARN: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -158,7 +158,7 @@ func resourceResourceSetCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &route53recoveryreadiness.CreateResourceSetInput{
 		ResourceSetName: aws.String(name),
 		ResourceSetType: aws.String(d.Get("resource_set_type").(string)),
-		Resources:       expandResourceSetResources(d.Get("resources").([]interface{})),
+		Resources:       expandResourceSetResources(d.Get(names.AttrResources).([]interface{})),
 	}
 
 	output, err := conn.CreateResourceSetWithContext(ctx, input)
@@ -196,10 +196,10 @@ func resourceResourceSetRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Recovery Readiness Resource Set (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", resp.ResourceSetArn)
+	d.Set(names.AttrARN, resp.ResourceSetArn)
 	d.Set("resource_set_name", resp.ResourceSetName)
 	d.Set("resource_set_type", resp.ResourceSetType)
-	if err := d.Set("resources", flattenResourceSetResources(resp.Resources)); err != nil {
+	if err := d.Set(names.AttrResources, flattenResourceSetResources(resp.Resources)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
 	}
 
@@ -210,11 +210,11 @@ func resourceResourceSetUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &route53recoveryreadiness.UpdateResourceSetInput{
 			ResourceSetName: aws.String(d.Id()),
 			ResourceSetType: aws.String(d.Get("resource_set_type").(string)),
-			Resources:       expandResourceSetResources(d.Get("resources").([]interface{})),
+			Resources:       expandResourceSetResources(d.Get(names.AttrResources).([]interface{})),
 		}
 
 		_, err := conn.UpdateResourceSetWithContext(ctx, input)
@@ -273,7 +273,7 @@ func expandResourceSetResources(rs []interface{}) []*route53recoveryreadiness.Re
 	for _, r := range rs {
 		r := r.(map[string]interface{})
 		resource := &route53recoveryreadiness.Resource{}
-		if v, ok := r["resource_arn"]; ok && v.(string) != "" {
+		if v, ok := r[names.AttrResourceARN]; ok && v.(string) != "" {
 			resource.ResourceArn = aws.String(v.(string))
 		}
 		if v, ok := r["readiness_scopes"]; ok {
@@ -295,7 +295,7 @@ func flattenResourceSetResources(resources []*route53recoveryreadiness.Resource)
 	for _, resource := range resources {
 		r := map[string]interface{}{}
 		if v := resource.ResourceArn; v != nil {
-			r["resource_arn"] = v
+			r[names.AttrResourceARN] = v
 		}
 		if v := resource.ReadinessScopes; v != nil {
 			r["readiness_scopes"] = v
@@ -315,7 +315,7 @@ func expandResourceSetDNSTargetResource(dtrs []interface{}) *route53recoveryread
 	dtresource := &route53recoveryreadiness.DNSTargetResource{}
 	for _, dtr := range dtrs {
 		dtr := dtr.(map[string]interface{})
-		if v, ok := dtr["domain_name"]; ok && v.(string) != "" {
+		if v, ok := dtr[names.AttrDomainName]; ok && v.(string) != "" {
 			dtresource.DomainName = aws.String(v.(string))
 		}
 		if v, ok := dtr["hosted_zone_arn"]; ok {
@@ -340,7 +340,7 @@ func flattenResourceSetDNSTargetResource(dtresource *route53recoveryreadiness.DN
 	}
 
 	dtr := make(map[string]interface{})
-	dtr["domain_name"] = dtresource.DomainName
+	dtr[names.AttrDomainName] = dtresource.DomainName
 	dtr["hosted_zone_arn"] = dtresource.HostedZoneArn
 	dtr["record_set_id"] = dtresource.RecordSetId
 	dtr["record_type"] = dtresource.RecordType
@@ -385,7 +385,7 @@ func expandResourceSetNLBResource(nlbrs []interface{}) *route53recoveryreadiness
 	nlbresource := &route53recoveryreadiness.NLBResource{}
 	for _, nlbr := range nlbrs {
 		nlbr := nlbr.(map[string]interface{})
-		if v, ok := nlbr["arn"]; ok && v.(string) != "" {
+		if v, ok := nlbr[names.AttrARN]; ok && v.(string) != "" {
 			nlbresource.Arn = aws.String(v.(string))
 		}
 	}
@@ -398,7 +398,7 @@ func flattenResourceSetNLBResource(nlbresource *route53recoveryreadiness.NLBReso
 	}
 
 	nlbr := make(map[string]interface{})
-	nlbr["arn"] = nlbresource.Arn
+	nlbr[names.AttrARN] = nlbresource.Arn
 	result := []map[string]interface{}{nlbr}
 	return result
 }
@@ -407,7 +407,7 @@ func expandResourceSetR53ResourceRecord(r53rs []interface{}) *route53recoveryrea
 	r53resource := &route53recoveryreadiness.R53ResourceRecord{}
 	for _, r53r := range r53rs {
 		r53r := r53r.(map[string]interface{})
-		if v, ok := r53r["domain_name"]; ok && v.(string) != "" {
+		if v, ok := r53r[names.AttrDomainName]; ok && v.(string) != "" {
 			r53resource.DomainName = aws.String(v.(string))
 		}
 		if v, ok := r53r["record_set_id"]; ok {
@@ -423,7 +423,7 @@ func flattenResourceSetR53ResourceRecord(r53resource *route53recoveryreadiness.R
 	}
 
 	r53r := make(map[string]interface{})
-	r53r["domain_name"] = r53resource.DomainName
+	r53r[names.AttrDomainName] = r53resource.DomainName
 	r53r["record_set_id"] = r53resource.RecordSetId
 	result := []map[string]interface{}{r53r}
 	return result

@@ -159,6 +159,11 @@ func TestSubdirectoryFromLocationURI(t *testing.T) {
 			InputURI:      "object-storage://192.168.1.1/tf-acc-test-5815577519131245007/tf-acc-test-5815577519131245008/",
 			ExpectedError: true,
 		},
+		{
+			TestName:             "Azure blob URI one level",
+			InputURI:             "azure-blob://example.com/path/",
+			ExpectedSubdirectory: "/path/",
+		},
 	}
 
 	for _, testCase := range testCases {

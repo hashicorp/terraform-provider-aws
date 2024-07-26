@@ -44,8 +44,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DeviceFarm Uploads can be imported by their arn:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DeviceFarm Uploads using their ARN. For example:
 
+```terraform
+import {
+  to = aws_devicefarm_upload.example
+  id = "arn:aws:devicefarm:us-west-2:123456789012:upload:4fa784c7-ccb4-4dbf-ba4f-02198320daa1"
+}
 ```
-$ terraform import aws_devicefarm_upload.example arn:aws:devicefarm:us-west-2:123456789012:upload:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
+
+Using `terraform import`, import DeviceFarm Uploads using their ARN. For example:
+
+```console
+% terraform import aws_devicefarm_upload.example arn:aws:devicefarm:us-west-2:123456789012:upload:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```

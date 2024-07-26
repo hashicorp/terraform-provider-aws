@@ -44,6 +44,9 @@ func WaitForDomainCreation(ctx context.Context, conn *opensearchservice.OpenSear
 	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
 		var err error
 		out, err = FindDomainByName(ctx, conn, domainName)
+		if tfresource.NotFound(err) {
+			return retry.RetryableError(err)
+		}
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}
@@ -86,7 +89,7 @@ func waitForDomainUpdate(ctx context.Context, conn *opensearchservice.OpenSearch
 
 		return retry.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for changes to be processed", domainName))
-	}, tfresource.WithDelay(10*time.Minute), tfresource.WithPollInterval(10*time.Second))
+	}, tfresource.WithDelay(1*time.Minute), tfresource.WithPollInterval(10*time.Second))
 
 	if tfresource.TimedOut(err) {
 		out, err = FindDomainByName(ctx, conn, domainName)

@@ -6,6 +6,8 @@ import jetbrains.buildServer.configs.kotlin.ParameterDisplay
 import jetbrains.buildServer.configs.kotlin.buildFeatures.notifications
 import jetbrains.buildServer.configs.kotlin.buildSteps.ScriptBuildStep
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
+import jetbrains.buildServer.configs.kotlin.failureConditions.failOnText
+import jetbrains.buildServer.configs.kotlin.failureConditions.BuildFailureOnText
 import java.io.File
 
 data class ServiceSpec(
@@ -14,6 +16,8 @@ data class ServiceSpec(
     val vpcLock: Boolean = false,
     val parallelismOverride: Int? = null,
     val regionOverride: String? = null,
+    val splitPackageRealPackage: String? = null,
+    val excludePattern: String? = null,
 )
 
 data class Notifier(
@@ -22,7 +26,7 @@ data class Notifier(
 )
 
 class Service(name: String, spec: ServiceSpec) {
-    val packageName = name
+    private var packageName = name
     val spec = spec
 
     fun buildType(notifier: Notifier?): BuildType {
@@ -51,6 +55,14 @@ class Service(name: String, spec: ServiceSpec) {
                     text("env.AWS_DEFAULT_REGION", spec.regionOverride, display = ParameterDisplay.HIDDEN)
                 }
             }
+            if (spec.excludePattern != null) {
+                params {
+                    text("TEST_EXCLUDE_PATTERN", spec.excludePattern, display = ParameterDisplay.HIDDEN)
+                }
+            }
+            if (spec.splitPackageRealPackage != null) {
+                packageName = spec.splitPackageRealPackage
+            }
 
             val serviceDir = "./internal/service/$packageName"
             steps {
@@ -69,6 +81,17 @@ class Service(name: String, spec: ServiceSpec) {
                     name = "Run Acceptance Tests"
                     workingDir = serviceDir
                     scriptContent = File("./scripts/service_tests/acceptance_tests.sh").readText()
+                }
+            }
+
+            failureConditions {
+                failOnText {
+                    conditionType = BuildFailureOnText.ConditionType.REGEXP
+                    pattern = """(?i)build canceled"""
+                    failureMessage = "build canceled when agent unregistered"
+                    reverse = false
+                    stopBuildOnFailure = true
+                    reportOnlyFirstMatch = false
                 }
             }
 

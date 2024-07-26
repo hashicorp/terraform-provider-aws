@@ -42,7 +42,7 @@ resource "aws_cloudfront_field_level_encryption_config" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `comment` - (Optional) An optional comment about the Field Level Encryption Config.
 * `content_type_profile_config` - (Required) [Content Type Profile Config](#content-type-profile-config) specifies when to forward content if a content type isn't recognized and profiles to use as by default in a request if a query argument doesn't specify a profile to use.
@@ -79,8 +79,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Cloudfront Field Level Encryption Config can be imported using the `id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudfront Field Level Encryption Config using the `id`. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_field_level_encryption_config.config
+  id = "E74FTE3AEXAMPLE"
+}
 ```
-$ terraform import aws_cloudfront_field_level_encryption_config.config E74FTE3AEXAMPLE
+
+Using `terraform import`, import Cloudfront Field Level Encryption Config using the `id`. For example:
+
+```console
+% terraform import aws_cloudfront_field_level_encryption_config.config E74FTE3AEXAMPLE
 ```

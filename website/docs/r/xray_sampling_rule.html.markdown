@@ -58,8 +58,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-XRay Sampling Rules can be imported using the name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import XRay Sampling Rules using the name. For example:
 
+```terraform
+import {
+  to = aws_xray_sampling_rule.example
+  id = "example"
+}
 ```
-$ terraform import aws_xray_sampling_rule.example example
+
+Using `terraform import`, import XRay Sampling Rules using the name. For example:
+
+```console
+% terraform import aws_xray_sampling_rule.example example
 ```

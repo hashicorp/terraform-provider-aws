@@ -26,7 +26,7 @@ resource "aws_eks_identity_provider_config" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_name` – (Required) Name of the EKS Cluster.
 * `oidc` - (Required) Nested attribute containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster. Detailed below.
@@ -61,8 +61,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EKS Identity Provider Configurations can be imported using the `cluster_name` and `identity_provider_config_name` separated by a colon (`:`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS Identity Provider Configurations using the `cluster_name` and `identity_provider_config_name` separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_eks_identity_provider_config.my_identity_provider_config
+  id = "my_cluster:my_identity_provider_config"
+}
 ```
-$ terraform import aws_eks_identity_provider_config.my_identity_provider_config my_cluster:my_identity_provider_config
+
+Using `terraform import`, import EKS Identity Provider Configurations using the `cluster_name` and `identity_provider_config_name` separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_eks_identity_provider_config.my_identity_provider_config my_cluster:my_identity_provider_config
 ```

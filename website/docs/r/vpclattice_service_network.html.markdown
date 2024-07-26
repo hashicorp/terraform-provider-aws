@@ -41,8 +41,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPC Lattice Service Network can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Lattice Service Network using the `id`. For example:
 
+```terraform
+import {
+  to = aws_vpclattice_service_network.example
+  id = "sn-0158f91c1e3358dba"
+}
 ```
-$ terraform import aws_vpclattice_service_network.example sn-0158f91c1e3358dba
+
+Using `terraform import`, import VPC Lattice Service Network using the `id`. For example:
+
+```console
+% terraform import aws_vpclattice_service_network.example sn-0158f91c1e3358dba
 ```

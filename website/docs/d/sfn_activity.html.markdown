@@ -20,7 +20,7 @@ data "aws_sfn_activity" "sfn_activity" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Optional) Name that identifies the activity.
 * `arn` - (Optional) ARN that identifies the activity.

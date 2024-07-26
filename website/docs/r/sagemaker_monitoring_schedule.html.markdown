@@ -27,7 +27,7 @@ resource "aws_sagemaker_monitoring_schedule" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `monitoring_schedule_config` - (Required) The configuration object that specifies the monitoring schedule and defines the monitoring job. Fields are documented below.
 * `name` - (Optional) The name of the monitoring schedule. The name must be unique within an AWS Region within an AWS account. If omitted, Terraform will assign a random, unique name.
@@ -53,8 +53,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Monitoring schedules can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import monitoring schedules using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_monitoring_schedule.test_monitoring_schedule
+  id = "monitoring-schedule-foo"
+}
 ```
-$ terraform import aws_sagemaker_monitoring_schedule.test_monitoring_schedule monitoring-schedule-foo
+
+Using `terraform import`, import monitoring schedules using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_monitoring_schedule.test_monitoring_schedule monitoring-schedule-foo
 ```

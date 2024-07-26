@@ -5,28 +5,26 @@ package docdb
 
 import (
 	"fmt"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func validClusterIdentifier(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
 	}
-	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
+	if !regexache.MustCompile(`^[a-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"first character of %q must be a letter", k))
 	}
-	if regexp.MustCompile(`--`).MatchString(value) {
+	if regexache.MustCompile(`--`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot contain two consecutive hyphens", k))
 	}
-	if regexp.MustCompile(`-$`).MatchString(value) {
+	if regexache.MustCompile(`-$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot end with a hyphen", k))
 	}
@@ -35,46 +33,40 @@ func validClusterIdentifier(v interface{}, k string) (ws []string, errors []erro
 
 func validClusterSnapshotIdentifier(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
 	}
-	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
+	if !regexache.MustCompile(`^[a-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"first character of %q must be a letter", k))
 	}
-	if regexp.MustCompile(`--`).MatchString(value) {
+	if regexache.MustCompile(`--`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot contain two consecutive hyphens", k))
 	}
-	if regexp.MustCompile(`-$`).MatchString(value) {
+	if regexache.MustCompile(`-$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot end with a hyphen", k))
 	}
 	return
 }
 
-func validEngine() schema.SchemaValidateFunc {
-	return validation.StringInSlice([]string{
-		"docdb",
-	}, false)
-}
-
 func validIdentifier(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
 	}
-	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
+	if !regexache.MustCompile(`^[a-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"first character of %q must be a letter", k))
 	}
-	if regexp.MustCompile(`--`).MatchString(value) {
+	if regexache.MustCompile(`--`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot contain two consecutive hyphens", k))
 	}
-	if regexp.MustCompile(`-$`).MatchString(value) {
+	if regexache.MustCompile(`-$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot end with a hyphen", k))
 	}
@@ -87,15 +79,15 @@ func validIdentifier(v interface{}, k string) (ws []string, errors []error) {
 
 func validIdentifierPrefix(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
 	}
-	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
+	if !regexache.MustCompile(`^[a-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"first character of %q must be a letter", k))
 	}
-	if regexp.MustCompile(`--`).MatchString(value) {
+	if regexache.MustCompile(`--`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot contain two consecutive hyphens", k))
 	}
@@ -104,19 +96,19 @@ func validIdentifierPrefix(v interface{}, k string) (ws []string, errors []error
 
 func validParamGroupName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only lowercase alphanumeric characters and hyphens allowed in parameter group %q", k))
 	}
-	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
+	if !regexache.MustCompile(`^[a-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"first character of parameter group %q must be a letter", k))
 	}
-	if regexp.MustCompile(`--`).MatchString(value) {
+	if regexache.MustCompile(`--`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"parameter group %q cannot contain two consecutive hyphens", k))
 	}
-	if regexp.MustCompile(`-$`).MatchString(value) {
+	if regexache.MustCompile(`-$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"parameter group %q cannot end with a hyphen", k))
 	}
@@ -129,15 +121,15 @@ func validParamGroupName(v interface{}, k string) (ws []string, errors []error) 
 
 func validGlobalCusterIdentifier(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters and hyphens allowed in %q", k))
 	}
-	if !regexp.MustCompile(`^[A-Za-z]`).MatchString(value) {
+	if !regexache.MustCompile(`^[A-Za-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"first character of %q must be a letter", k))
 	}
-	if regexp.MustCompile(`--`).MatchString(value) {
+	if regexache.MustCompile(`--`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot contain two consecutive hyphens", k))
 	}
@@ -150,15 +142,15 @@ func validGlobalCusterIdentifier(v interface{}, k string) (ws []string, errors [
 
 func validParamGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only lowercase alphanumeric characters and hyphens allowed in parameter group %q", k))
 	}
-	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
+	if !regexache.MustCompile(`^[a-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"first character of parameter group %q must be a letter", k))
 	}
-	if regexp.MustCompile(`--`).MatchString(value) {
+	if regexache.MustCompile(`--`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"parameter group %q cannot contain two consecutive hyphens", k))
 	}
@@ -171,7 +163,7 @@ func validParamGroupNamePrefix(v interface{}, k string) (ws []string, errors []e
 
 func validSubnetGroupName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[ .0-9a-z-_]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9a-z_ .-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only lowercase alphanumeric characters, hyphens, underscores, periods, and spaces allowed in %q", k))
 	}
@@ -188,7 +180,7 @@ func validSubnetGroupName(v interface{}, k string) (ws []string, errors []error)
 
 func validSubnetGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[ .0-9a-z-_]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9a-z_ .-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only lowercase alphanumeric characters, hyphens, underscores, periods, and spaces allowed in %q", k))
 	}

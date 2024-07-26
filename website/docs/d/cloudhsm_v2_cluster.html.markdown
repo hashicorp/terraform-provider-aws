@@ -20,7 +20,7 @@ data "aws_cloudhsm_v2_cluster" "cluster" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `cluster_id` - (Required) ID of Cloud HSM v2 cluster.
 * `cluster_state` - (Optional) State of the cluster to be found.

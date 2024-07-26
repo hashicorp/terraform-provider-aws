@@ -36,7 +36,7 @@ resource "aws_apigatewayv2_model" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) API identifier.
 * `content_type` - (Required)  The content-type for the model, for example, `application/json`. Must be between 1 and 256 characters in length.
@@ -52,8 +52,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_apigatewayv2_model` can be imported by using the API identifier and model identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_model` using the API identifier and model identifier. For example:
 
+```terraform
+import {
+  to = aws_apigatewayv2_model.example
+  id = "aabbccddee/1122334"
+}
 ```
-$ terraform import aws_apigatewayv2_model.example aabbccddee/1122334
+
+Using `terraform import`, import `aws_apigatewayv2_model` using the API identifier and model identifier. For example:
+
+```console
+% terraform import aws_apigatewayv2_model.example aabbccddee/1122334
 ```

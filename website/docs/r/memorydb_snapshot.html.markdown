@@ -23,7 +23,7 @@ resource "aws_memorydb_snapshot" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_name` - (Required, Forces new resource) Name of the MemoryDB cluster to take a snapshot of.
 * `name` - (Optional, Forces new resource) Name of the snapshot. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
@@ -63,8 +63,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Use the `name` to import a snapshot. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a snapshot using the `name`. For example:
 
+```terraform
+import {
+  to = aws_memorydb_snapshot.example
+  id = "my-snapshot"
+}
 ```
-$ terraform import aws_memorydb_snapshot.example my-snapshot
+
+Using `terraform import`, import a snapshot using the `name`. For example:
+
+```console
+% terraform import aws_memorydb_snapshot.example my-snapshot
 ```

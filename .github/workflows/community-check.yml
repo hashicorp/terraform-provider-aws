@@ -1,13 +1,30 @@
 name: Community Check
+
 on:
   workflow_call:
+    inputs:
+      username:
+        description: The username to check the association of
+        type: string
+        required: true
+
     outputs:
       core_contributor:
+        description: Whether or not the user is a core contributor
         value: ${{ jobs.community_check.outputs.is_core_contributor }}
       maintainer:
+        description: Whether or not the user is a maintainer
         value: ${{ jobs.community_check.outputs.is_maintainer }}
       partner:
+        description: Whether or not the user is a partner
         value: ${{ jobs.community_check.outputs.is_partner }}
+
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
 jobs:
   community_check:
     name: Check community lists for username
@@ -38,11 +55,10 @@ jobs:
           echo "core_contributors_list=$CORE_CONTRIBUTORS_DECODED" >> $GITHUB_OUTPUT
           echo "maintainers_list=$MAINTAINERS_DECODED" >> $GITHUB_OUTPUT
           echo "partners_list=$PARTNERS_DECODED" >> $GITHUB_OUTPUT
+
       - name: Determine if user is in lists
         id: determination
-        env:
-          USER_LOGIN: ${{ github.event.issue.user.login || github.event.pull_request.user.login }}
         run: |
-          echo "is_core_contributor="${{ contains(fromJSON(steps.decode.outputs.core_contributors_list), env.USER_LOGIN) }} >> $GITHUB_OUTPUT
-          echo "is_maintainer="${{ contains(fromJSON(steps.decode.outputs.maintainers_list), env.USER_LOGIN) }} >> $GITHUB_OUTPUT
-          echo "is_partner="${{ contains(fromJSON(steps.decode.outputs.partners_list), env.USER_LOGIN) }} >> $GITHUB_OUTPUT
+          echo "is_core_contributor="${{ contains(fromJSON(steps.decode.outputs.core_contributors_list), inputs.username) }} >> $GITHUB_OUTPUT
+          echo "is_maintainer="${{ contains(fromJSON(steps.decode.outputs.maintainers_list), inputs.username) }} >> $GITHUB_OUTPUT
+          echo "is_partner="${{ contains(fromJSON(steps.decode.outputs.partners_list), inputs.username) }} >> $GITHUB_OUTPUT

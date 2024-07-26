@@ -26,7 +26,7 @@ resource "aws_appsync_api_key" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) ID of the associated AppSync API
 * `description` - (Optional) API key description. Defaults to "Managed by Terraform".
@@ -41,8 +41,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_appsync_api_key` can be imported using the AppSync API ID and key separated by `:`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appsync_api_key` using the AppSync API ID and key separated by `:`. For example:
 
+```terraform
+import {
+  to = aws_appsync_api_key.example
+  id = "xxxxx:yyyyy"
+}
 ```
-$ terraform import aws_appsync_api_key.example xxxxx:yyyyy
+
+Using `terraform import`, import `aws_appsync_api_key` using the AppSync API ID and key separated by `:`. For example:
+
+```console
+% terraform import aws_appsync_api_key.example xxxxx:yyyyy
 ```

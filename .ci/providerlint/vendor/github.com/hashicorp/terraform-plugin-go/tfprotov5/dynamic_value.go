@@ -4,9 +4,14 @@
 package tfprotov5
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	msgpack "github.com/vmihailenco/msgpack/v5"
+	"github.com/vmihailenco/msgpack/v5/msgpcode"
 )
 
 // ErrUnknownDynamicValueType is returned when a DynamicValue has no MsgPack or
@@ -45,6 +50,43 @@ func NewDynamicValue(t tftypes.Type, v tftypes.Value) (DynamicValue, error) {
 type DynamicValue struct {
 	MsgPack []byte
 	JSON    []byte
+}
+
+// IsNull returns true if the DynamicValue represents a null value based on the
+// underlying JSON or MessagePack data.
+func (d DynamicValue) IsNull() (bool, error) {
+	if d.JSON != nil {
+		decoder := json.NewDecoder(bytes.NewReader(d.JSON))
+		token, err := decoder.Token()
+
+		if err != nil {
+			return false, fmt.Errorf("unable to read DynamicValue JSON token: %w", err)
+		}
+
+		if token != nil {
+			return false, nil
+		}
+
+		return true, nil
+	}
+
+	if d.MsgPack != nil {
+		decoder := msgpack.NewDecoder(bytes.NewReader(d.MsgPack))
+		code, err := decoder.PeekCode()
+
+		if err != nil {
+			return false, fmt.Errorf("unable to read DynamicValue MsgPack code: %w", err)
+		}
+
+		// Extensions are considered unknown
+		if msgpcode.IsExt(code) || code != msgpcode.Nil {
+			return false, nil
+		}
+
+		return true, nil
+	}
+
+	return false, fmt.Errorf("unable to read DynamicValue: %w", ErrUnknownDynamicValueType)
 }
 
 // Unmarshal returns a `tftypes.Value` that represents the information

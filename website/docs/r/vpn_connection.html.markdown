@@ -121,7 +121,7 @@ resource "aws_vpn_connection" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `customer_gateway_id` - (Required) The ID of the customer gateway.
 * `type` - (Required) The type of VPN connection. The only type AWS supports at this time is "ipsec.1".
@@ -134,7 +134,7 @@ The following arguments are supported:
 * `local_ipv6_network_cidr` - (Optional, Default `::/0`) The IPv6 CIDR on the customer gateway (on-premises) side of the VPN connection.
 * `outside_ip_address_type` - (Optional, Default `PublicIpv4`) Indicates if a Public S2S VPN or Private S2S VPN over AWS Direct Connect. Valid values are `PublicIpv4 | PrivateIpv4`
 * `remote_ipv4_network_cidr` - (Optional, Default `0.0.0.0/0`) The IPv4 CIDR on the AWS side of the VPN connection.
-* `remote_ipv6_network_cidr` - (Optional, Default `::/0`) The IPv6 CIDR on the customer gateway (on-premises) side of the VPN connection.
+* `remote_ipv6_network_cidr` - (Optional, Default `::/0`) The IPv6 CIDR on the AWS side of the VPN connection.
 * `transport_transit_gateway_attachment_id` - (Required when outside_ip_address_type is set to `PrivateIpv4`). The attachment ID of the Transit Gateway attachment to Direct Connect Gateway. The ID is obtained through a data source only.
 * `tunnel_inside_ip_version` - (Optional, Default `ipv4`) Indicate whether the VPN tunnels process IPv4 or IPv6 traffic. Valid values are `ipv4 | ipv6`. `ipv6` Supports only EC2 Transit Gateway.
 * `tunnel1_inside_cidr` - (Optional) The CIDR block of the inside IP addresses for the first VPN tunnel. Valid value is a size /30 CIDR block from the 169.254.0.0/16 range.
@@ -238,8 +238,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPN Connections can be imported using the `vpn connection id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPN Connections using the VPN connection `id`. For example:
 
+```terraform
+import {
+  to = aws_vpn_connection.testvpnconnection
+  id = "vpn-40f41529"
+}
 ```
-$ terraform import aws_vpn_connection.testvpnconnection vpn-40f41529
+
+Using `terraform import`, import VPN Connections using the VPN connection `id`. For example:
+
+```console
+% terraform import aws_vpn_connection.testvpnconnection vpn-40f41529
 ```

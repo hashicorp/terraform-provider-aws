@@ -56,8 +56,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-App Runner VPC Ingress Connection can be imported by using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner VPC Ingress Connection using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_apprunner_vpc_ingress_connection.example
+  id = "arn:aws:apprunner:us-west-2:837424938642:vpcingressconnection/example/b379f86381d74825832c2e82080342fa"
+}
 ```
-$ terraform import aws_apprunner_vpc_ingress_connection.example "arn:aws:apprunner:us-west-2:837424938642:vpcingressconnection/example/b379f86381d74825832c2e82080342fa"
+
+Using `terraform import`, import App Runner VPC Ingress Connection using the `arn`. For example:
+
+```console
+% terraform import aws_apprunner_vpc_ingress_connection.example "arn:aws:apprunner:us-west-2:837424938642:vpcingressconnection/example/b379f86381d74825832c2e82080342fa"
 ```

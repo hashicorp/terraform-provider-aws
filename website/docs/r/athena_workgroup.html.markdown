@@ -34,7 +34,7 @@ resource "aws_athena_workgroup" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the workgroup.
 * `configuration` - (Optional) Configuration block with various settings for the workgroup. Documented below.
@@ -86,8 +86,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Athena Workgroups can be imported using their name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Athena Workgroups using their name. For example:
 
+```terraform
+import {
+  to = aws_athena_workgroup.example
+  id = "example"
+}
 ```
-$ terraform import aws_athena_workgroup.example example
+
+Using `terraform import`, import Athena Workgroups using their name. For example:
+
+```console
+% terraform import aws_athena_workgroup.example example
 ```

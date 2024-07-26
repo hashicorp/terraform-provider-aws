@@ -6,14 +6,18 @@ package rds
 import (
 	"context"
 	"log"
+	"sort"
 
+	"github.com/YakDriver/go-version"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_rds_engine_version")
@@ -31,7 +35,7 @@ func DataSourceEngineVersion() *schema.Resource {
 				Optional: true,
 			},
 
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -48,9 +52,24 @@ func DataSourceEngineVersion() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			"filter": namevaluesfilters.Schema(),
+			names.AttrFilter: namevaluesfilters.Schema(),
+
+			"has_major_target": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
+			"has_minor_target": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 
 			"include_all": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
+			"latest": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -61,14 +80,25 @@ func DataSourceEngineVersion() *schema.Resource {
 				Optional: true,
 			},
 
-			"preferred_versions": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"version"},
+			"preferred_major_targets": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
-			"status": {
+			"preferred_upgrade_targets": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
+			"preferred_versions": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -106,6 +136,11 @@ func DataSourceEngineVersion() *schema.Resource {
 				Computed: true,
 			},
 
+			"supports_limitless_database": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
 			"supports_log_exports_to_cloudwatch": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -121,6 +156,20 @@ func DataSourceEngineVersion() *schema.Resource {
 				Computed: true,
 			},
 
+			"valid_major_targets": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+				Set:      schema.HashString,
+			},
+
+			"valid_minor_targets": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+				Set:      schema.HashString,
+			},
+
 			"valid_upgrade_targets": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -128,11 +177,15 @@ func DataSourceEngineVersion() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			"version": {
-				Type:          schema.TypeString,
-				Computed:      true,
-				Optional:      true,
-				ConflictsWith: []string{"preferred_versions"},
+			names.AttrVersion: {
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+			},
+
+			"version_actual": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"version_description": {
@@ -152,32 +205,43 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		ListSupportedTimezones:     aws.Bool(true),
 	}
 
-	if v, ok := d.GetOk("engine"); ok {
+	if v, ok := d.GetOk(names.AttrEngine); ok {
 		input.Engine = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).RDSFilters()
-	}
-
-	if v, ok := d.GetOk("include_all"); ok {
-		input.IncludeAll = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("parameter_group_family"); ok {
 		input.DBParameterGroupFamily = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("include_all"); ok {
+		input.IncludeAll = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("default_only"); ok {
 		input.DefaultOnly = aws.Bool(v.(bool))
-	} else if _, ok := d.GetOk("version"); !ok {
-		if _, ok := d.GetOk("preferred_versions"); !ok {
-			input.DefaultOnly = aws.Bool(true)
-		}
+	}
+
+	// Make sure any optional arguments in the schema are in this list except for "default_only"
+	if _, ok := d.GetOk("default_only"); !ok && !criteriaSet(d, []string{
+		names.AttrFilter,
+		"has_major_target",
+		"has_minor_target",
+		"include_all",
+		"latest",
+		"preferred_major_targets",
+		"preferred_upgrade_targets",
+		"preferred_versions",
+		names.AttrVersion,
+	}) {
+		input.DefaultOnly = aws.Bool(true)
 	}
 
 	log.Printf("[DEBUG] Reading RDS engine versions: %v", input)
@@ -198,12 +262,15 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if len(engineVersions) == 0 {
-		return sdkdiag.AppendErrorf(diags, "no RDS engine versions found")
+		return sdkdiag.AppendErrorf(diags, "no RDS engine versions found: %+v", input)
 	}
 
+	prefSearch := false
+
 	// preferred versions
-	var found *rds.DBEngineVersion
 	if l := d.Get("preferred_versions").([]interface{}); len(l) > 0 {
+		var preferredVersions []*rds.DBEngineVersion
+
 		for _, elem := range l {
 			preferredVersion, ok := elem.(string)
 
@@ -213,27 +280,138 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 
 			for _, engineVersion := range engineVersions {
 				if preferredVersion == aws.StringValue(engineVersion.EngineVersion) {
-					found = engineVersion
-					break
+					preferredVersions = append(preferredVersions, engineVersion)
 				}
 			}
-
-			if found != nil {
-				break
-			}
 		}
+
+		if len(preferredVersions) == 0 {
+			return sdkdiag.AppendErrorf(diags, "no RDS engine versions match the criteria and preferred versions: %v\n%v", input, l)
+		}
+
+		prefSearch = true
+		engineVersions = preferredVersions
 	}
 
-	if found == nil && len(engineVersions) > 1 {
-		return sdkdiag.AppendErrorf(diags, "multiple RDS engine versions (%v) match the criteria", engineVersions)
+	// preferred upgrade targets
+	if l := d.Get("preferred_upgrade_targets").([]interface{}); len(l) > 0 {
+		var prefUTs []*rds.DBEngineVersion
+
+	engineVersionsLoop:
+		for _, engineVersion := range engineVersions {
+			for _, upgradeTarget := range engineVersion.ValidUpgradeTarget {
+				for _, elem := range l {
+					prefUT, ok := elem.(string)
+					if !ok {
+						continue
+					}
+
+					if prefUT == aws.StringValue(upgradeTarget.EngineVersion) {
+						prefUTs = append(prefUTs, engineVersion)
+						continue engineVersionsLoop
+					}
+				}
+			}
+		}
+
+		if len(prefUTs) == 0 {
+			return sdkdiag.AppendErrorf(diags, "no RDS engine versions match the criteria and preferred upgrade targets: %+v\n%v", input, l)
+		}
+
+		prefSearch = true
+		engineVersions = prefUTs
+	}
+
+	// preferred major targets
+	if l := d.Get("preferred_major_targets").([]interface{}); len(l) > 0 {
+		var prefMTs []*rds.DBEngineVersion
+
+	majorsLoop:
+		for _, engineVersion := range engineVersions {
+			for _, upgradeTarget := range engineVersion.ValidUpgradeTarget {
+				for _, elem := range l {
+					prefMT, ok := elem.(string)
+					if !ok {
+						continue
+					}
+
+					if prefMT == aws.StringValue(upgradeTarget.EngineVersion) && aws.BoolValue(upgradeTarget.IsMajorVersionUpgrade) {
+						prefMTs = append(prefMTs, engineVersion)
+						continue majorsLoop
+					}
+				}
+			}
+		}
+
+		if len(prefMTs) == 0 {
+			return sdkdiag.AppendErrorf(diags, "no RDS engine versions match the criteria and preferred major targets: %+v\n%v", input, l)
+		}
+
+		prefSearch = true
+		engineVersions = prefMTs
+	}
+
+	if v, ok := d.GetOk("has_minor_target"); ok && v.(bool) {
+		var wMinor []*rds.DBEngineVersion
+
+	hasMinorLoop:
+		for _, engineVersion := range engineVersions {
+			for _, upgradeTarget := range engineVersion.ValidUpgradeTarget {
+				if !aws.BoolValue(upgradeTarget.IsMajorVersionUpgrade) {
+					wMinor = append(wMinor, engineVersion)
+					continue hasMinorLoop
+				}
+			}
+		}
+
+		if len(wMinor) == 0 {
+			return sdkdiag.AppendErrorf(diags, "no RDS engine versions match the criteria and have a minor target: %+v", input)
+		}
+
+		engineVersions = wMinor
+	}
+
+	if v, ok := d.GetOk("has_major_target"); ok && v.(bool) {
+		var wMajor []*rds.DBEngineVersion
+
+	hasMajorLoop:
+		for _, engineVersion := range engineVersions {
+			for _, upgradeTarget := range engineVersion.ValidUpgradeTarget {
+				if aws.BoolValue(upgradeTarget.IsMajorVersionUpgrade) {
+					wMajor = append(wMajor, engineVersion)
+					continue hasMajorLoop
+				}
+			}
+		}
+
+		if len(wMajor) == 0 {
+			return sdkdiag.AppendErrorf(diags, "no RDS engine versions match the criteria and have a major target: %+v", input)
+		}
+
+		engineVersions = wMajor
+	}
+
+	var found *rds.DBEngineVersion
+
+	if v, ok := d.GetOk("latest"); ok && v.(bool) {
+		sortEngineVersions(engineVersions)
+		found = engineVersions[len(engineVersions)-1]
 	}
 
 	if found == nil && len(engineVersions) == 1 {
 		found = engineVersions[0]
 	}
 
+	if found == nil && len(engineVersions) > 0 && prefSearch {
+		found = engineVersions[0]
+	}
+
+	if found == nil && len(engineVersions) > 1 {
+		return sdkdiag.AppendErrorf(diags, "multiple RDS engine versions (%v) match the criteria: %+v", engineVersions, input)
+	}
+
 	if found == nil {
-		return sdkdiag.AppendErrorf(diags, "no RDS engine versions match the criteria")
+		return sdkdiag.AppendErrorf(diags, "no RDS engine versions match the criteria: %+v", input)
 	}
 
 	d.SetId(aws.StringValue(found.EngineVersion))
@@ -242,11 +420,11 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("default_character_set", found.DefaultCharacterSet.CharacterSetName)
 	}
 
-	d.Set("engine", found.Engine)
+	d.Set(names.AttrEngine, found.Engine)
 	d.Set("engine_description", found.DBEngineDescription)
 	d.Set("exportable_log_types", found.ExportableLogTypes)
 	d.Set("parameter_group_family", found.DBParameterGroupFamily)
-	d.Set("status", found.Status)
+	d.Set(names.AttrStatus, found.Status)
 
 	var characterSets []string
 	for _, cs := range found.SupportedCharacterSets {
@@ -264,18 +442,63 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("supported_timezones", timezones)
 
 	d.Set("supports_global_databases", found.SupportsGlobalDatabases)
+	d.Set("supports_limitless_database", found.SupportsLimitlessDatabase)
 	d.Set("supports_log_exports_to_cloudwatch", found.SupportsLogExportsToCloudwatchLogs)
 	d.Set("supports_parallel_query", found.SupportsParallelQuery)
 	d.Set("supports_read_replica", found.SupportsReadReplica)
 
 	var upgradeTargets []string
+	var minorTargets []string
+	var majorTargets []string
 	for _, ut := range found.ValidUpgradeTarget {
 		upgradeTargets = append(upgradeTargets, aws.StringValue(ut.EngineVersion))
+
+		if aws.BoolValue(ut.IsMajorVersionUpgrade) {
+			majorTargets = append(majorTargets, aws.StringValue(ut.EngineVersion))
+			continue
+		}
+
+		minorTargets = append(minorTargets, aws.StringValue(ut.EngineVersion))
 	}
 	d.Set("valid_upgrade_targets", upgradeTargets)
+	d.Set("valid_minor_targets", minorTargets)
+	d.Set("valid_major_targets", majorTargets)
 
-	d.Set("version", found.EngineVersion)
+	d.Set(names.AttrVersion, found.EngineVersion)
+	d.Set("version_actual", found.EngineVersion)
 	d.Set("version_description", found.DBEngineVersionDescription)
 
 	return diags
+}
+
+func sortEngineVersions(engineVersions []*rds.DBEngineVersion) {
+	if len(engineVersions) < 2 {
+		return
+	}
+
+	sort.Slice(engineVersions, func(i, j int) bool {
+		return version.LessThanWithTime(engineVersions[i].CreateTime, engineVersions[j].CreateTime, aws.StringValue(engineVersions[i].EngineVersion), aws.StringValue(engineVersions[j].EngineVersion))
+	})
+}
+
+// criteriaSet returns true if any of the given criteria are set. "set" means that, in the config,
+// a bool is set and true, a list is set and not empty, or a string is set and not empty.
+func criteriaSet(d *schema.ResourceData, args []string) bool {
+	for _, arg := range args {
+		val := d.GetRawConfig().GetAttr(arg)
+
+		switch {
+		case val.CanIterateElements():
+			if !val.IsNull() && val.IsKnown() && val.LengthInt() > 0 {
+				return true
+			}
+		case val.Equals(cty.True) == cty.True:
+			return true
+
+		case val.Type() == cty.String && !val.IsNull() && val.IsKnown():
+			return true
+		}
+	}
+
+	return false
 }

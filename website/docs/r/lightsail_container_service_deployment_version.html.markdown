@@ -55,7 +55,7 @@ resource "aws_lightsail_container_service_deployment_version" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `service_name` - (Required) The name for the container service.
 * `container` - (Required) A set of configuration blocks that describe the settings of the containers that will be launched on the container service. Maximum of 53. [Detailed below](#container).
@@ -107,8 +107,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Lightsail Container Service Deployment Version can be imported using the `service_name` and `version` separated by a slash (`/`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lightsail Container Service Deployment Version using the `service_name` and `version` separated by a slash (`/`). For example:
 
-```shell
-$ terraform import aws_lightsail_container_service_deployment_version.example container-service-1/1
+```terraform
+import {
+  to = aws_lightsail_container_service_deployment_version.example
+  id = "container-service-1/1"
+}
+```
+
+Using `terraform import`, import Lightsail Container Service Deployment Version using the `service_name` and `version` separated by a slash (`/`). For example:
+
+```console
+% terraform import aws_lightsail_container_service_deployment_version.example container-service-1/1
 ```

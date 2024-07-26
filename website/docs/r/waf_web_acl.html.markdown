@@ -86,7 +86,7 @@ resource "aws_waf_web_acl" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `default_action` - (Required) Configuration block with action that you want AWS WAF to take when a request doesn't match the criteria in any of the rules that are associated with the web ACL. Detailed below.
 * `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this web ACL.
@@ -139,8 +139,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-WAF Web ACL can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Web ACL using the `id`. For example:
 
+```terraform
+import {
+  to = aws_waf_web_acl.main
+  id = "0c8e583e-18f3-4c13-9e2a-67c4805d2f94"
+}
 ```
-$ terraform import aws_waf_web_acl.main 0c8e583e-18f3-4c13-9e2a-67c4805d2f94
+
+Using `terraform import`, import WAF Web ACL using the `id`. For example:
+
+```console
+% terraform import aws_waf_web_acl.main 0c8e583e-18f3-4c13-9e2a-67c4805d2f94
 ```

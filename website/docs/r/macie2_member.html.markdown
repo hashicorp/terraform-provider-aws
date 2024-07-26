@@ -27,7 +27,7 @@ resource "aws_macie2_member" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Required) The AWS account ID for the account.
 * `email` - (Required) The email address for the account.
@@ -50,8 +50,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_macie2_member` can be imported using the account ID of the member account, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_member` using the account ID of the member account. For example:
 
+```terraform
+import {
+  to = aws_macie2_member.example
+  id = "123456789012"
+}
 ```
-$ terraform import aws_macie2_member.example 123456789012
+
+Using `terraform import`, import `aws_macie2_member` using the account ID of the member account. For example:
+
+```console
+% terraform import aws_macie2_member.example 123456789012
 ```

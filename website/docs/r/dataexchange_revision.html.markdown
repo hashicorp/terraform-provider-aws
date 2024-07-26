@@ -35,8 +35,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DataExchange Revisions can be imported by their `data-set-id:revision-id`:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataExchange Revisions using their `data-set-id:revision-id`. For example:
 
+```terraform
+import {
+  to = aws_dataexchange_revision.example
+  id = "4fa784c7-ccb4-4dbf-ba4f-02198320daa1:4fa784c7-ccb4-4dbf-ba4f-02198320daa1"
+}
 ```
-$ terraform import aws_dataexchange_revision.example 4fa784c7-ccb4-4dbf-ba4f-02198320daa1:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
+
+Using `terraform import`, import DataExchange Revisions using their `data-set-id:revision-id`. For example:
+
+```console
+% terraform import aws_dataexchange_revision.example 4fa784c7-ccb4-4dbf-ba4f-02198320daa1:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```

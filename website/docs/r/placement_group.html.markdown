@@ -22,7 +22,7 @@ resource "aws_placement_group" "web" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the placement group.
 * `partition_count` - (Optional) The number of partitions to create in the
@@ -44,8 +44,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Placement groups can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import placement groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_placement_group.prod_pg
+  id = "production-placement-group"
+}
 ```
-$ terraform import aws_placement_group.prod_pg production-placement-group
+
+Using `terraform import`, import placement groups using the `name`. For example:
+
+```console
+% terraform import aws_placement_group.prod_pg production-placement-group
 ```

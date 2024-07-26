@@ -4,8 +4,7 @@
 package comprehend
 
 import (
-	"regexp"
-
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -32,4 +31,4 @@ var validIdentifierPrefix = validation.All(
 	validIdentifierPattern,
 )
 
-var validIdentifierPattern = validation.StringMatch(regexp.MustCompile(`^[[:alnum:]-]+$`), "must contain A-Z, a-z, 0-9, and hypen (-)")
+var validIdentifierPattern = validation.StringMatch(regexache.MustCompile(`^[[:alnum:]-]+$`), "must contain A-Z, a-z, 0-9, and hypen (-)")

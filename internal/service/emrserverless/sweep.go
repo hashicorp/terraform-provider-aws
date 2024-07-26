@@ -1,22 +1,21 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package emrserverless
 
 import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/emrserverless"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/emrserverless"
+	"github.com/aws/aws-sdk-go-v2/service/emrserverless/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_emrserverless_application", &resource.Sweeper{
 		Name: "aws_emrserverless_application",
 		F:    sweepApplications,
@@ -29,37 +28,34 @@ func sweepApplications(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EMRServerlessConn(ctx)
+	conn := client.EMRServerlessClient(ctx)
 	input := &emrserverless.ListApplicationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListApplicationsPagesWithContext(ctx, input, func(page *emrserverless.ListApplicationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := emrserverless.NewListApplicationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EMR Serverless Application sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EMR Serverless Applications (%s): %w", region, err)
 		}
 
 		for _, v := range page.Applications {
-			if aws.StringValue(v.State) == emrserverless.ApplicationStateTerminated {
+			if v.State == types.ApplicationStateTerminated {
 				continue
 			}
 
-			r := ResourceApplication()
+			r := resourceApplication()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.Id))
+			d.SetId(aws.ToString(v.Id))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EMR Serverless Application sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EMR Serverless Applications (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)

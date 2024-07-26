@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package elasticsearch
 
 import (
@@ -15,9 +12,11 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_elasticsearch_domain", &resource.Sweeper{
 		Name: "aws_elasticsearch_domain",
 		F:    sweepDomains,
@@ -41,7 +40,7 @@ func sweepDomains(region string) error {
 	// ListDomainNames has no pagination support whatsoever
 	output, err := conn.ListDomainNamesWithContext(ctx, input)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, err)
 		return errs.ErrorOrNil()
 	}
@@ -65,6 +64,11 @@ func sweepDomains(region string) error {
 
 		name := aws.StringValue(domainInfo.DomainName)
 
+		if engineType := aws.StringValue(domainInfo.EngineType); engineType != elasticsearchservice.EngineTypeElasticsearch {
+			log.Printf("[INFO] Skipping Elasticsearch Domain %s: EngineType = %s", name, engineType)
+			continue
+		}
+
 		// Elasticsearch Domains have regularly gotten stuck in a "being deleted" state
 		// e.g. Deleted and Processing are both true for days in the API
 		// Filter out domains that are Deleted already.
@@ -85,7 +89,7 @@ func sweepDomains(region string) error {
 		r := ResourceDomain()
 		d := r.Data(nil)
 		d.SetId(name)
-		d.Set("domain_name", name)
+		d.Set(names.AttrDomainName, name)
 
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
@@ -94,7 +98,7 @@ func sweepDomains(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Elasticsearch Domains for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, errs)
 		return nil
 	}

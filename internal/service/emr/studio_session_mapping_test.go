@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
@@ -26,13 +27,15 @@ func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	updatedName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	uName := os.Getenv("AWS_IDENTITY_STORE_USER_ID")
+	gName := os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckUserID(t)
+			testAccPreCheckGroupName(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStudioSessionMappingDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,8 +45,18 @@ func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
 					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, "identity_id", uName),
 					resource.TestCheckResourceAttr(resourceName, "identity_type", "USER"),
-					resource.TestCheckResourceAttrPair(resourceName, "studio_id", "aws_emr_studio.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "session_policy_arn", "aws_iam_policy.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "studio_id", "aws_emr_studio.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "session_policy_arn", "aws_iam_policy.test", names.AttrARN),
+				),
+			},
+			{
+				Config: testAccStudioSessionMappingConfig_basic2(rName, gName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
+					resource.TestCheckResourceAttr(resourceName, "identity_name", gName),
+					resource.TestCheckResourceAttr(resourceName, "identity_type", "GROUP"),
+					resource.TestCheckResourceAttrPair(resourceName, "studio_id", "aws_emr_studio.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "session_policy_arn", "aws_iam_policy.test", names.AttrARN),
 				),
 			},
 			{
@@ -57,8 +70,18 @@ func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
 					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, "identity_id", uName),
 					resource.TestCheckResourceAttr(resourceName, "identity_type", "USER"),
-					resource.TestCheckResourceAttrPair(resourceName, "studio_id", "aws_emr_studio.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "session_policy_arn", "aws_iam_policy.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "studio_id", "aws_emr_studio.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "session_policy_arn", "aws_iam_policy.test2", names.AttrARN),
+				),
+			},
+			{
+				Config: testAccStudioSessionMappingConfig_updated2(rName, gName, updatedName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
+					resource.TestCheckResourceAttr(resourceName, "identity_name", gName),
+					resource.TestCheckResourceAttr(resourceName, "identity_type", "GROUP"),
+					resource.TestCheckResourceAttrPair(resourceName, "studio_id", "aws_emr_studio.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "session_policy_arn", "aws_iam_policy.test2", names.AttrARN),
 				),
 			},
 		},
@@ -71,18 +94,29 @@ func TestAccEMRStudioSessionMapping_disappears(t *testing.T) {
 	resourceName := "aws_emr_studio_session_mapping.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	uName := os.Getenv("AWS_IDENTITY_STORE_USER_ID")
+	gName := os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckUserID(t)
+			testAccPreCheckGroupName(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStudioSessionMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioSessionMappingConfig_basic(rName, uName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudioSessionMapping(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudioSessionMapping(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccStudioSessionMappingConfig_basic2(rName, gName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudioSessionMapping(), resourceName),
@@ -103,7 +137,7 @@ func testAccCheckStudioSessionMappingExists(ctx context.Context, resourceName st
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
 
-		output, err := tfemr.FindStudioSessionMappingByID(ctx, conn, rs.Primary.ID)
+		output, err := tfemr.FindStudioSessionMappingByIDOrName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -127,7 +161,7 @@ func testAccCheckStudioSessionMappingDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			_, err := tfemr.FindStudioSessionMappingByID(ctx, conn, rs.Primary.ID)
+			_, err := tfemr.FindStudioSessionMappingByIDOrName(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -149,6 +183,13 @@ func testAccPreCheckUserID(t *testing.T) {
 	}
 }
 
+func testAccPreCheckGroupName(t *testing.T) {
+	if os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME") == "" {
+		t.Skip("AWS_IDENTITY_STORE_GROUP_NAME env var must be set for AWS Identity Store Group acceptance test. " +
+			"This is required until ListGroups API returns results without filtering by name.")
+	}
+}
+
 func testAccStudioSessionMappingConfigBase(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -166,11 +207,6 @@ resource "aws_subnet" "test" {
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_iam_role" "test" {
@@ -264,6 +300,17 @@ resource "aws_emr_studio_session_mapping" "test" {
 `, uName))
 }
 
+func testAccStudioSessionMappingConfig_basic2(rName, gName string) string {
+	return acctest.ConfigCompose(testAccStudioSessionMappingConfigBase(rName), fmt.Sprintf(`
+resource "aws_emr_studio_session_mapping" "test" {
+  studio_id          = aws_emr_studio.test.id
+  identity_type      = "GROUP"
+  identity_name      = %[1]q
+  session_policy_arn = aws_iam_policy.test.arn
+}
+`, gName))
+}
+
 func testAccStudioSessionMappingConfig_updated(rName, uName, updatedName string) string {
 	return acctest.ConfigCompose(testAccStudioSessionMappingConfigBase(rName), fmt.Sprintf(`
 resource "aws_iam_policy" "test2" {
@@ -294,4 +341,36 @@ resource "aws_emr_studio_session_mapping" "test" {
   session_policy_arn = aws_iam_policy.test2.arn
 }
 `, uName, updatedName))
+}
+
+func testAccStudioSessionMappingConfig_updated2(rName, gName, updatedName string) string {
+	return acctest.ConfigCompose(testAccStudioSessionMappingConfigBase(rName), fmt.Sprintf(`
+resource "aws_iam_policy" "test2" {
+  name   = %[2]q
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:*"
+      ],
+      "Resource": [
+        "${aws_s3_bucket.test.arn}/*",
+		"${aws_s3_bucket.test.arn}"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_emr_studio_session_mapping" "test" {
+  studio_id          = aws_emr_studio.test.id
+  identity_type      = "GROUP"
+  identity_name      = %[1]q
+  session_policy_arn = aws_iam_policy.test2.arn
+}
+`, gName, updatedName))
 }

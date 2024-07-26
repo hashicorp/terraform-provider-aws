@@ -139,8 +139,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Opsworks Instances can be imported using the `instance id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Opsworks Instances using the instance `id`. For example:
 
+```terraform
+import {
+  to = aws_opsworks_instance.my_instance
+  id = "4d6d1710-ded9-42a1-b08e-b043ad7af1e2"
+}
 ```
-$ terraform import aws_opsworks_instance.my_instance 4d6d1710-ded9-42a1-b08e-b043ad7af1e2
+
+Using `terraform import`, import Opsworks Instances using the instance `id`. For example:
+
+```console
+% terraform import aws_opsworks_instance.my_instance 4d6d1710-ded9-42a1-b08e-b043ad7af1e2
 ```

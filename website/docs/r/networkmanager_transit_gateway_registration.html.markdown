@@ -29,7 +29,7 @@ resource "aws_networkmanager_transit_gateway_registration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `global_network_id` - (Required) The ID of the Global Network to register to.
 * `transit_gateway_arn` - (Required) The ARN of the Transit Gateway to register.
@@ -40,8 +40,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-`aws_networkmanager_transit_gateway_registration` can be imported using the global network ID and transit gateway ARN, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_transit_gateway_registration` using the global network ID and transit gateway ARN. For example:
 
+```terraform
+import {
+  to = aws_networkmanager_transit_gateway_registration.example
+  id = "global-network-0d47f6t230mz46dy4,arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-123abc05e04123abc"
+}
 ```
-$ terraform import aws_networkmanager_transit_gateway_registration.example global-network-0d47f6t230mz46dy4,arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-123abc05e04123abc
+
+Using `terraform import`, import `aws_networkmanager_transit_gateway_registration` using the global network ID and transit gateway ARN. For example:
+
+```console
+% terraform import aws_networkmanager_transit_gateway_registration.example global-network-0d47f6t230mz46dy4,arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-123abc05e04123abc
 ```

@@ -1,0 +1,39 @@
+```release-note:bug
+resource/aws_lightsail_database: Prevent destroy failure when resource is already deleted outside Terraform
+```
+
+```release-note:bug
+resource/aws_lightsail_key_pair: Prevent destroy failure when resource is already deleted outside Terraform
+```
+
+```release-note:bug
+resource/aws_lightsail_lb: Prevent destroy failure when resource is already deleted outside Terraform
+```
+
+```release-note:enhancement
+resource/aws_lightsail_bucket: Add support to `ListTags` function for proper key-only tag handling
+```
+
+```release-note:enhancement
+resource/aws_lightsail_certificate: Add support to `ListTags` function for proper key-only tag handling
+```
+
+```release-note:enhancement
+resource/aws_lightsail_container_service: Add support to `ListTags` function for proper key-only tag handling
+```
+
+```release-note:enhancement
+resource/aws_lightsail_database: Add support to `ListTags` function for proper key-only tag handling
+```
+
+```release-note:enhancement
+resource/aws_lightsail_distribution: Add support to `ListTags` function for proper key-only tag handling
+```
+
+```release-note:enhancement
+resource/aws_lightsail_key_pair: Add support to `ListTags` function for proper key-only tag handling
+```
+
+```release-note:enhancement
+resource/aws_lightsail_lb: Add support to `ListTags` function for proper key-only tag handling
+```

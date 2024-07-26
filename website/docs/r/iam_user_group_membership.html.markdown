@@ -55,7 +55,7 @@ resource "aws_iam_group" "group3" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `user` - (Required) The name of the [IAM User][2] to add to groups
 * `groups` - (Required) A list of [IAM Groups][1] to add the user to
@@ -70,8 +70,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-IAM user group membership can be imported using the user name and group names separated by `/`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM user group membership using the user name and group names separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_iam_user_group_membership.example1
+  id = "user1/group1/group2"
+}
 ```
-$ terraform import aws_iam_user_group_membership.example1 user1/group1/group2
+
+Using `terraform import`, import IAM user group membership using the user name and group names separated by `/`. For example:
+
+```console
+% terraform import aws_iam_user_group_membership.example1 user1/group1/group2
 ```

@@ -20,7 +20,7 @@ resource "aws_opsworks_memcached_layer" "cache" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `stack_id` - (Required) ID of the stack the layer will belong to.
 * `name` - (Optional) A human-readable name for the layer.

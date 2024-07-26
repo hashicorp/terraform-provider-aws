@@ -8,9 +8,5 @@ import (
 )
 
 const (
-	ResNameStack = "Stack"
-)
-
-const (
 	propagationTimeout = 2 * time.Minute
 )

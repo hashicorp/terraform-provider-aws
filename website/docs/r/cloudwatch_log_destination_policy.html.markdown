@@ -49,7 +49,7 @@ resource "aws_cloudwatch_log_destination_policy" "test_destination_policy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `destination_name` - (Required) A name for the subscription filter
 * `access_policy` - (Required) The policy document. This is a JSON formatted string.
@@ -61,8 +61,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-CloudWatch Logs destination policies can be imported using the `destination_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs destination policies using the `destination_name`. For example:
 
+```terraform
+import {
+  to = aws_cloudwatch_log_destination_policy.test_destination_policy
+  id = "test_destination"
+}
 ```
-$ terraform import aws_cloudwatch_log_destination_policy.test_destination_policy test_destination
+
+Using `terraform import`, import CloudWatch Logs destination policies using the `destination_name`. For example:
+
+```console
+% terraform import aws_cloudwatch_log_destination_policy.test_destination_policy test_destination
 ```

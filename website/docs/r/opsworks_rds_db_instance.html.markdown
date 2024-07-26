@@ -26,7 +26,7 @@ resource "aws_opsworks_rds_db_instance" "my_instance" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `stack_id` - (Required) The stack to register a db instance for. Changing this will force a new resource.
 * `rds_db_instance_arn` - (Required) The db instance to register for this stack. Changing this will force a new resource.

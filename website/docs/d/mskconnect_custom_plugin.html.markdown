@@ -20,7 +20,7 @@ data "aws_mskconnect_custom_plugin" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the custom plugin.
 
@@ -32,3 +32,4 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - a summary description of the custom plugin.
 * `latest_revision` - an ID of the latest successfully created revision of the custom plugin.
 * `state` - the state of the custom plugin.
+* `tags` - A map of tags assigned to the resource.

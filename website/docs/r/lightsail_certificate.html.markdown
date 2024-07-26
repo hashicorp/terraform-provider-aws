@@ -22,7 +22,7 @@ resource "aws_lightsail_certificate" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Lightsail load balancer.
 * `domain_name` - (Required) A domain name for which the certificate should be issued.
@@ -41,8 +41,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_lightsail_certificate` can be imported using the certificate name, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_lightsail_certificate` using the certificate name. For example:
 
-```shell
-$ terraform import aws_lightsail_certificate.test CertificateName
+```terraform
+import {
+  to = aws_lightsail_certificate.test
+  id = "CertificateName"
+}
+```
+
+Using `terraform import`, import `aws_lightsail_certificate` using the certificate name. For example:
+
+```console
+% terraform import aws_lightsail_certificate.test CertificateName
 ```

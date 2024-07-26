@@ -61,8 +61,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AWS Chime SDK Voice Profile Domain can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Chime SDK Voice Profile Domain using the `id`. For example:
 
+```terraform
+import {
+  to = aws_chimesdkvoice_voice_profile_domain.example
+  id = "abcdef123456"
+}
 ```
-$ terraform import aws_chimesdkvoice_voice_profile_domain.example abcdef123456
+
+Using `terraform import`, import AWS Chime SDK Voice Profile Domain using the `id`. For example:
+
+```console
+% terraform import aws_chimesdkvoice_voice_profile_domain.example abcdef123456
 ```

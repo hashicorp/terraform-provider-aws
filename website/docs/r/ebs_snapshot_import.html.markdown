@@ -32,7 +32,7 @@ resource "aws_ebs_snapshot_import" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `client_data` - (Optional) The client-specific data. Detailed below.
 * `description` - (Optional) The description string for the import snapshot task.

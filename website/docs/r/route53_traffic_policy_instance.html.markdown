@@ -40,8 +40,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Route53 traffic policy instance can be imported using its id.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 traffic policy instance using its id. For example:
 
+```terraform
+import {
+  to = aws_route53_traffic_policy_instance.test
+  id = "df579d9a-6396-410e-ac22-e7ad60cf9e7e"
+}
 ```
-$ terraform import aws_route53_traffic_policy_instance.test df579d9a-6396-410e-ac22-e7ad60cf9e7e
+
+Using `terraform import`, import Route53 traffic policy instance using its id. For example:
+
+```console
+% terraform import aws_route53_traffic_policy_instance.test df579d9a-6396-410e-ac22-e7ad60cf9e7e
 ```

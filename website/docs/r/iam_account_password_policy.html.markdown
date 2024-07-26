@@ -29,7 +29,7 @@ resource "aws_iam_account_password_policy" "strict" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `allow_users_to_change_password` - (Optional) Whether to allow users to change their own password
 * `hard_expiry` - (Optional) Whether users are prevented from setting a new password after their password has expired (i.e., require administrator reset)
@@ -49,8 +49,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IAM Account Password Policy can be imported using the word `iam-account-password-policy`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Account Password Policy using the word `iam-account-password-policy`. For example:
 
+```terraform
+import {
+  to = aws_iam_account_password_policy.strict
+  id = "iam-account-password-policy"
+}
 ```
-$ terraform import aws_iam_account_password_policy.strict iam-account-password-policy
+
+Using `terraform import`, import IAM Account Password Policy using the word `iam-account-password-policy`. For example:
+
+```console
+% terraform import aws_iam_account_password_policy.strict iam-account-password-policy
 ```

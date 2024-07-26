@@ -39,7 +39,7 @@ func SkipSweepError(err error) bool {
 		return true
 	}
 	// Example: InvalidAction: InvalidAction: Operation (ListPlatformApplications) is not supported in this region
-	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not supported in this region") {
+	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not supported") {
 		return true
 	}
 	// Example: InvalidAction: The action DescribeTransitGatewayAttachments is not valid for this web service
@@ -72,6 +72,18 @@ func SkipSweepError(err error) bool {
 	}
 	// For example from us-west-1 EMR studio
 	if tfawserr.ErrMessageContains(err, "ValidationException", "Account is not whitelisted to use this feature") {
+		return true
+	}
+	// For example from us-gov-east-1 IoT domain configuration
+	if tfawserr.ErrMessageContains(err, "UnauthorizedException", "API is not available in") {
+		return true
+	}
+	// For example from us-gov-west-1 MemoryDB cluster
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version") {
+		return true
+	}
+	// For example from us-west-2 SageMaker device fleet
+	if tfawserr.ErrMessageContains(err, "ValidationException", "We are retiring Amazon Sagemaker Edge") {
 		return true
 	}
 

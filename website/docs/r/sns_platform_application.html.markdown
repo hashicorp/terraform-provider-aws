@@ -48,7 +48,7 @@ resource "aws_sns_platform_application" "gcm_application" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The friendly name for the SNS platform application
 * `platform` - (Required) The platform that the app is registered with. See [Platform][1] for supported platforms.
@@ -79,8 +79,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SNS platform applications can be imported using the ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SNS platform applications using the ARN. For example:
 
+```terraform
+import {
+  to = aws_sns_platform_application.gcm_application
+  id = "arn:aws:sns:us-west-2:0123456789012:app/GCM/gcm_application"
+}
 ```
-$ terraform import aws_sns_platform_application.gcm_application arn:aws:sns:us-west-2:0123456789012:app/GCM/gcm_application
+
+Using `terraform import`, import SNS platform applications using the ARN. For example:
+
+```console
+% terraform import aws_sns_platform_application.gcm_application arn:aws:sns:us-west-2:0123456789012:app/GCM/gcm_application
 ```

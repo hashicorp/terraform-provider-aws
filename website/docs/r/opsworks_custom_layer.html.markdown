@@ -22,7 +22,7 @@ resource "aws_opsworks_custom_layer" "custlayer" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A human-readable name for the layer.
 * `short_name` - (Required) A short, machine-readable name for the layer, which will be used to identify it in the Chef node JSON.
@@ -111,8 +111,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-OpsWorks Custom Layers can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpsWorks Custom Layers using the `id`. For example:
 
+```terraform
+import {
+  to = aws_opsworks_custom_layer.bar
+  id = "00000000-0000-0000-0000-000000000000"
+}
 ```
-$ terraform import aws_opsworks_custom_layer.bar 00000000-0000-0000-0000-000000000000
+
+Using `terraform import`, import OpsWorks Custom Layers using the `id`. For example:
+
+```console
+% terraform import aws_opsworks_custom_layer.bar 00000000-0000-0000-0000-000000000000
 ```

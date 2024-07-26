@@ -56,7 +56,7 @@ resource "aws_transfer_workflow" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) A textual description for the workflow.
 * `on_exception_steps` - (Optional) Specifies the steps (actions) to take if errors are encountered during execution of the workflow. See Workflow Steps below.
@@ -135,8 +135,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Transfer Workflows can be imported using the `worflow_id`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transfer Workflows using the `worflow_id`. For example:
 
+```terraform
+import {
+  to = aws_transfer_workflow.example
+  id = "example"
+}
 ```
-$ terraform import aws_transfer_workflow.example example
+
+Using `terraform import`, import Transfer Workflows using the `worflow_id`. For example:
+
+```console
+% terraform import aws_transfer_workflow.example example
 ```

@@ -41,7 +41,7 @@ resource "aws_organizations_policy_attachment" "unit" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `policy_id` - (Required) The unique identifier (ID) of the policy that you want to attach to the target.
 * `target_id` - (Required) The unique identifier (ID) of the root, organizational unit, or account number that you want to attach the policy to.
@@ -53,8 +53,21 @@ This resource exports no additional attributes.
 
 ## Import
 
-`aws_organizations_policy_attachment` can be imported by using the target ID and policy ID, e.g., with an account target
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_organizations_policy_attachment` using the target ID and policy ID. For example:
 
+With an account target:
+
+```terraform
+import {
+  to = aws_organizations_policy_attachment.account
+  id = "123456789012:p-12345678"
+}
 ```
-$ terraform import aws_organizations_policy_attachment.account 123456789012:p-12345678
+
+Using `terraform import`, import `aws_organizations_policy_attachment` using the target ID and policy ID. For example:
+
+With an account target:
+
+```console
+% terraform import aws_organizations_policy_attachment.account 123456789012:p-12345678
 ```

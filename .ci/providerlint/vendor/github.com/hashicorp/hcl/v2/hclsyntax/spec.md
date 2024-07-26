@@ -668,7 +668,7 @@ a == b  equal
 a != b  not equal
 ```
 
-Two values are equal if the are of identical types and their values are
+Two values are equal if they are of identical types and their values are
 equal as defined in the HCL syntax-agnostic information model. The equality
 operators are commutative and opposite, such that `(a == b) == !(a != b)`
 and `(a == b) == (b == a)` for all values `a` and `b`.

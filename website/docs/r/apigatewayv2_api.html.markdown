@@ -35,7 +35,7 @@ resource "aws_apigatewayv2_api" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the API. Must be less than or equal to 128 characters in length.
 * `protocol_type` - (Required) API protocol. Valid values: `HTTP`, `WEBSOCKET`.
@@ -89,8 +89,17 @@ See the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigate
 
 ## Import
 
-`aws_apigatewayv2_api` can be imported by using the API identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_api` using the API identifier. For example:
 
+```terraform
+import {
+  to = aws_apigatewayv2_api.example
+  id = "aabbccddee"
+}
 ```
-$ terraform import aws_apigatewayv2_api.example aabbccddee
+
+Using `terraform import`, import `aws_apigatewayv2_api` using the API identifier. For example:
+
+```console
+% terraform import aws_apigatewayv2_api.example aabbccddee
 ```

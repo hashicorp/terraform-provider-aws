@@ -26,7 +26,7 @@ resource "aws_sagemaker_project" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `project_name` - (Required) The name of the Project.
 * `project_description` - (Optional) A description for the project.
@@ -56,8 +56,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker Projects can be imported using the `project_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Projects using the `project_name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_project.example
+  id = "example"
+}
 ```
-$ terraform import aws_sagemaker_project.example example
+
+Using `terraform import`, import SageMaker Projects using the `project_name`. For example:
+
+```console
+% terraform import aws_sagemaker_project.example example
 ```

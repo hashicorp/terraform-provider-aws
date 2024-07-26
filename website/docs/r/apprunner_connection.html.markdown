@@ -43,8 +43,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-App Runner Connections can be imported by using the `connection_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner Connections using the `connection_name`. For example:
 
+```terraform
+import {
+  to = aws_apprunner_connection.example
+  id = "example"
+}
 ```
-$ terraform import aws_apprunner_connection.example example
+
+Using `terraform import`, import App Runner Connections using the `connection_name`. For example:
+
+```console
+% terraform import aws_apprunner_connection.example example
 ```

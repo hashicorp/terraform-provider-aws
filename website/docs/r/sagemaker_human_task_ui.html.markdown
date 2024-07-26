@@ -24,7 +24,7 @@ resource "aws_sagemaker_human_task_ui" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `human_task_ui_name` - (Required) The name of the Human Task UI.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -50,8 +50,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker Human Task UIs can be imported using the `human_task_ui_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Human Task UIs using the `human_task_ui_name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_human_task_ui.example
+  id = "example"
+}
 ```
-$ terraform import aws_sagemaker_human_task_ui.example example
+
+Using `terraform import`, import SageMaker Human Task UIs using the `human_task_ui_name`. For example:
+
+```console
+% terraform import aws_sagemaker_human_task_ui.example example
 ```

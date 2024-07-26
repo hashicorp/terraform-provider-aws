@@ -45,7 +45,7 @@ resource "aws_route53recoverycontrolconfig_safety_rule" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `control_panel_arn` - (Required) ARN of the control panel in which this safety rule will reside.
 * `name` - (Required) Name describing the safety rule.
@@ -73,8 +73,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Route53 Recovery Control Config Safety Rule can be imported via the safety rule ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Recovery Control Config Safety Rule using the safety rule ARN. For example:
 
+```terraform
+import {
+  to = aws_route53recoverycontrolconfig_safety_rule.myrule
+  id = "arn:aws:route53-recovery-control::313517334327:controlpanel/1bfba17df8684f5dab0467b71424f7e8/safetyrule/3bacc77003364c0f"
+}
 ```
-$ terraform import aws_route53recoverycontrolconfig_safety_rule.myrule arn:aws:route53-recovery-control::313517334327:controlpanel/1bfba17df8684f5dab0467b71424f7e8/safetyrule/3bacc77003364c0f
+
+Using `terraform import`, import Route53 Recovery Control Config Safety Rule using the safety rule ARN. For example:
+
+```console
+% terraform import aws_route53recoverycontrolconfig_safety_rule.myrule arn:aws:route53-recovery-control::313517334327:controlpanel/1bfba17df8684f5dab0467b71424f7e8/safetyrule/3bacc77003364c0f
 ```

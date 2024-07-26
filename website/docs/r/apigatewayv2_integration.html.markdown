@@ -104,7 +104,7 @@ resource "aws_apigatewayv2_integration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) API identifier.
 * `integration_type` - (Required) Integration type of an integration.
@@ -152,10 +152,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_apigatewayv2_integration` can be imported by using the API identifier and integration identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_integration` using the API identifier and integration identifier. For example:
 
+```terraform
+import {
+  to = aws_apigatewayv2_integration.example
+  id = "aabbccddee/1122334"
+}
 ```
-$ terraform import aws_apigatewayv2_integration.example aabbccddee/1122334
+
+Using `terraform import`, import `aws_apigatewayv2_integration` using the API identifier and integration identifier. For example:
+
+```console
+% terraform import aws_apigatewayv2_integration.example aabbccddee/1122334
 ```
 
 -> **Note:** The API Gateway managed integration created as part of [_quick_create_](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-basic-concept.html#apigateway-definition-quick-create) cannot be imported.

@@ -20,7 +20,7 @@ data "aws_ecr_pull_through_cache_rule" "ecr_public" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 - `ecr_repository_prefix` - (Required) The repository name prefix to use when caching images from the source registry.
 
@@ -29,5 +29,6 @@ The following arguments are supported:
 This data source exports the following attributes in addition to the arguments above:
 
 - `id` - The repository name prefix.
-- `upstream_registry_url` - The registry URL of the upstream public registry to use as the source.
+- `credential_arn` - ARN of the Secret which will be used to authenticate against the registry.
 - `registry_id` - The registry ID where the repository was created.
+- `upstream_registry_url` - The registry URL of the upstream public registry to use as the source.

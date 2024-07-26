@@ -66,7 +66,7 @@ resource "aws_networkfirewall_logging_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `firewall_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the Network Firewall firewall.
 
@@ -99,8 +99,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Network Firewall Logging Configurations can be imported using the `firewall_arn` e.g
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Firewall Logging Configurations using the `firewall_arn`. For example:
 
+```terraform
+import {
+  to = aws_networkfirewall_logging_configuration.example
+  id = "arn:aws:network-firewall:us-west-1:123456789012:firewall/example"
+}
 ```
-$ terraform import aws_networkfirewall_logging_configuration.example arn:aws:network-firewall:us-west-1:123456789012:firewall/example
+
+Using `terraform import`, import Network Firewall Logging Configurations using the `firewall_arn`. For example:
+
+```console
+% terraform import aws_networkfirewall_logging_configuration.example arn:aws:network-firewall:us-west-1:123456789012:firewall/example
 ```

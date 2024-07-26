@@ -161,8 +161,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-A QuickSight Template can be imported using the AWS account ID and template ID separated by a comma (`,`) e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a QuickSight Template using the AWS account ID and template ID separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_quicksight_template.example
+  id = "123456789012,example-id"
+}
 ```
-$ terraform import aws_quicksight_template.example 123456789012,example-id
+
+Using `terraform import`, import a QuickSight Template using the AWS account ID and template ID separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_quicksight_template.example 123456789012,example-id
 ```

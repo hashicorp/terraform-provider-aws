@@ -91,7 +91,7 @@ resource "aws_elb" "ourapp" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional) The name of the Server Certificate. Do not include the
   path in this value. If omitted, Terraform will assign a random, unique name.
@@ -122,12 +122,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `upload_date` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) when the server certificate was uploaded.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `delete` - (Default `15m`)
+
 ## Import
 
-IAM Server Certificates can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Server Certificates using the `name`. For example:
 
+```terraform
+import {
+  to = aws_iam_server_certificate.certificate
+  id = "example.com-certificate-until-2018"
+}
 ```
-$ terraform import aws_iam_server_certificate.certificate example.com-certificate-until-2018
+
+Using `terraform import`, import IAM Server Certificates using the `name`. For example:
+
+```console
+% terraform import aws_iam_server_certificate.certificate example.com-certificate-until-2018
 ```
 
 [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html

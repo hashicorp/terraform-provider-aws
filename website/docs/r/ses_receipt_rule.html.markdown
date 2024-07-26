@@ -36,7 +36,7 @@ resource "aws_ses_receipt_rule" "store" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the rule
 * `rule_set_name` - (Required) The name of the rule set
@@ -110,8 +110,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SES receipt rules can be imported using the ruleset name and rule name separated by `:`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SES receipt rules using the ruleset name and rule name separated by `:`. For example:
 
+```terraform
+import {
+  to = aws_ses_receipt_rule.my_rule
+  id = "my_rule_set:my_rule"
+}
 ```
-$ terraform import aws_ses_receipt_rule.my_rule my_rule_set:my_rule
+
+Using `terraform import`, import SES receipt rules using the ruleset name and rule name separated by `:`. For example:
+
+```console
+% terraform import aws_ses_receipt_rule.my_rule my_rule_set:my_rule
 ```

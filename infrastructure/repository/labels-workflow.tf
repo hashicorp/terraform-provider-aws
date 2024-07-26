@@ -3,11 +3,15 @@
 
 variable "workflow_labels" {
   default = {
-    # Stop the search. Keep these alphabetibelized.
+    # Stop the search. Keep these alphabetized.
 
     "authentication" = {
       color       = "844fba", # color:terraform (main)
       description = "Pertains to authentication; to the provider itself of otherwise."
+    },
+    "aws-sdk-go-migration" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Issues that are related to the providers migration to AWS SDK for Go v2."
     },
     "breaking-change" = {
       color       = "ec585d", # color:boundary
@@ -41,6 +45,10 @@ variable "workflow_labels" {
       color       = "844fba", # color:terraform (main)
       description = "Requests to existing resources that expand the functionality or scope."
     },
+    "engineering-initiative" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Maintainer driven proposals to improve operation, or development experience of the provider."
+    },
     "eventual-consistency" = {
       color       = "844fba", # color:terraform (main)
       description = "Pertains to eventual consistency issues."
@@ -49,6 +57,10 @@ variable "workflow_labels" {
       color       = "63d0ff", # color:packer
       description = "Introduces or discusses updates to examples."
     },
+    "external-maintainer" = {
+      color       = "63d0ff", # color:packer
+      description = "Contribution from a trusted external contributor."
+    },
     "flex" = {
       color       = "844fba", # color:terraform (main)
       description = "Pertains to FLatteners and EXpanders."
@@ -56,6 +68,10 @@ variable "workflow_labels" {
     "fips" = {
       color       = "844fba", # color:terraform (main)
       description = "Pertains to the Federal Information Processing Standard (FIPS)."
+    },
+    "function" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Pertains to provider functions."
     },
     "generators" = {
       color       = "60dea9", # color:nomad
@@ -69,6 +85,10 @@ variable "workflow_labels" {
       color       = "f4ecff", # color:terraform secondary
       description = "Pertains to changes to or issues with the various linters."
     },
+    "localstack" = {
+      color       = "6577e7", # color:localstack blue-mid
+      description = "LocalStack-specific issues and PRs."
+    },
     "needs-triage" = {
       color       = "dc477d", # color:consul
       description = "Waiting for first response or review from a maintainer."
@@ -76,6 +96,10 @@ variable "workflow_labels" {
     "new-data-source" = {
       color       = "ac72f0", # color:terraform (link on black)
       description = "Introduces a new data source."
+    },
+    "new-function" = {
+      color       = "ac72f0", # color:terraform (link on black)
+      description = "Introduces a new function."
     },
     "new-resource" = {
       color       = "8040c9", # color:terraform (link on white)
@@ -97,6 +121,10 @@ variable "workflow_labels" {
       color       = "60dea9", # color:nomad
       description = "Pertains to testing Terraform releases prior to release."
     },
+    "prioritized" = {
+      color       = "d1ebff", # color:terraform accent
+      description = "Part of the maintainer teams immediate focus. To be addressed within the current quarter.",
+    },
     "proposal" = {
       color       = "d1ebff", # color:terraform accent
       description = "Proposes new design or functionality."
@@ -116,14 +144,6 @@ variable "workflow_labels" {
     "repository" = {
       color       = "828a90", # color:stale grey
       description = "Repository modifications; GitHub Actions, developer docs, issue templates, codeowners, changelog."
-    },
-    "roadmap" = {
-      color       = "d1ebff", # color:terraform accent
-      description = "Issue mentioned on the public roadmap. To be resolved in the current quarter.",
-    },
-    "service/meta" = {
-      color       = "7b42bc", # color:terraform (logomark)
-      description = "Issues and PRs that correspond to meta data sources."
     },
     "size/XS" = {
       color       = "62d4dc", # color:lightest-darkest waypoint gradient

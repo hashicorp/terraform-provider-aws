@@ -219,7 +219,7 @@ resource "aws_api_gateway_stage" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_key_source` - (Optional) Source of the API key for requests. Valid values are `HEADER` (default) and `AUTHORIZER`. If importing an OpenAPI specification via the `body` argument, this corresponds to the [`x-amazon-apigateway-api-key-source` extension](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-swagger-extensions-api-key-source.html). If the argument value is provided and is different than the OpenAPI value, the argument value will override the OpenAPI value.
 * `binary_media_types` - (Optional) List of binary media types supported by the REST API. By default, the REST API supports only UTF-8-encoded text payloads. If importing an OpenAPI specification via the `body` argument, this corresponds to the [`x-amazon-apigateway-binary-media-types` extension](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-swagger-extensions-binary-media-types.html). If the argument value is provided and is different than the OpenAPI value, the argument value will override the OpenAPI value.
@@ -266,10 +266,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_api_gateway_rest_api` can be imported by using the REST API ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_rest_api` using the REST API ID. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_rest_api.example
+  id = "12345abcde"
+}
 ```
-$ terraform import aws_api_gateway_rest_api.example 12345abcde
+
+Using `terraform import`, import `aws_api_gateway_rest_api` using the REST API ID. For example:
+
+```console
+% terraform import aws_api_gateway_rest_api.example 12345abcde
 ```
 
 ~> **NOTE:** Resource import does not currently support the `body` attribute.

@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
@@ -36,7 +36,7 @@ func TestAccVPCLatticeAuthPolicy_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAuthPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -44,8 +44,8 @@ func TestAccVPCLatticeAuthPolicy_basic(t *testing.T) {
 				Config: testAccAuthPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthPolicyExists(ctx, resourceName, &authpolicy),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Action":"*"`)),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", "aws_vpclattice_service.test", "arn"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"Action":"*"`)),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", "aws_vpclattice_service.test", names.AttrARN),
 				),
 			},
 			{
@@ -70,7 +70,7 @@ func TestAccVPCLatticeAuthPolicy_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAuthPolicyDestroy(ctx),
 		Steps: []resource.TestStep{

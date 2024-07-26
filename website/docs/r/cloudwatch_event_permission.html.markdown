@@ -42,7 +42,7 @@ resource "aws_cloudwatch_event_permission" "OrganizationAccess" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `principal` - (Required) The 12-digit AWS account ID that you are permitting to put events to your default event bus. Specify `*` to permit any account to put events to your default event bus, optionally limited by `condition`.
 * `statement_id` - (Required) An identifier string for the external account that you are granting permissions to.
@@ -65,8 +65,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EventBridge permissions can be imported using the `event_bus_name/statement_id` (if you omit `event_bus_name`, the `default` event bus will be used), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge permissions using the `event_bus_name/statement_id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
 
-```shell
-$ terraform import aws_cloudwatch_event_permission.DevAccountAccess example-event-bus/DevAccountAccess
+```terraform
+import {
+  to = aws_cloudwatch_event_permission.DevAccountAccess
+  id = "example-event-bus/DevAccountAccess"
+}
+```
+
+Using `terraform import`, import EventBridge permissions using the `event_bus_name/statement_id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
+
+```console
+% terraform import aws_cloudwatch_event_permission.DevAccountAccess example-event-bus/DevAccountAccess
 ```

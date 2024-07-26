@@ -23,7 +23,7 @@ resource "aws_schemas_registry" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the custom event schema registry. Maximum of 64 characters consisting of lower case letters, upper case letters, 0-9, ., -, _.
 * `description` - (Optional) The description of the discoverer. Maximum of 256 characters.
@@ -38,8 +38,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EventBridge schema registries can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge schema registries using the `name`. For example:
+
+```terraform
+import {
+  to = aws_schemas_registry.test
+  id = "my_own_registry"
+}
+```
+
+Using `terraform import`, import EventBridge schema registries using the `name`. For example:
 
 ```console
-$ terraform import aws_schemas_registry.test my_own_registry
+% terraform import aws_schemas_registry.test my_own_registry
 ```

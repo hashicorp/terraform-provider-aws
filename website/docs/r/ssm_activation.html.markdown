@@ -47,7 +47,7 @@ resource "aws_ssm_activation" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional) The default name of the registered managed instance.
 * `description` - (Optional) The description of the resource that you want to register.
@@ -73,10 +73,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AWS SSM Activation can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS SSM Activation using the `id`. For example:
 
-```sh
-$ terraform import aws_ssm_activation.example e488f2f6-e686-4afb-8a04-ef6dfEXAMPLE
+```terraform
+import {
+  to = aws_ssm_activation.example
+  id = "e488f2f6-e686-4afb-8a04-ef6dfEXAMPLE"
+}
+```
+
+Using `terraform import`, import AWS SSM Activation using the `id`. For example:
+
+```console
+% terraform import aws_ssm_activation.example e488f2f6-e686-4afb-8a04-ef6dfEXAMPLE
 ```
 
 -> **Note:** The `activation_code` attribute cannot be imported.

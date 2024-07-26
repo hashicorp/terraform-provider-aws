@@ -36,8 +36,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Amazon Inspector Member Association can be imported using the `account_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Inspector Member Association using the `account_id`. For example:
 
+```terraform
+import {
+  to = aws_inspector2_member_association.example
+  id = "123456789012"
+}
 ```
-$ terraform import aws_inspector2_member_association.example 123456789012
+
+Using `terraform import`, import Amazon Inspector Member Association using the `account_id`. For example:
+
+```console
+% terraform import aws_inspector2_member_association.example 123456789012
 ```

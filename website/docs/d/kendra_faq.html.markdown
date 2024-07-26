@@ -21,7 +21,7 @@ data "aws_kendra_faq" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `faq_id` - (Required) Identifier of the FAQ.
 * `index_id` - (Required) Identifier of the index that contains the FAQ.

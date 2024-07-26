@@ -98,7 +98,7 @@ resource "aws_elasticache_replication_group" "secondary" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `automatic_failover_enabled` - (Optional) Specifies whether read-only replicas will be automatically promoted to read/write primary if the existing primary fails.
   When creating, by default the Global Replication Group inherits the automatic failover setting of the primary replication group.
@@ -151,8 +151,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ElastiCache Global Replication Groups can be imported using the `global_replication_group_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ElastiCache Global Replication Groups using the `global_replication_group_id`. For example:
 
+```terraform
+import {
+  to = aws_elasticache_global_replication_group.my_global_replication_group
+  id = "okuqm-global-replication-group-1"
+}
 ```
-$ terraform import aws_elasticache_global_replication_group.my_global_replication_group okuqm-global-replication-group-1
+
+Using `terraform import`, import ElastiCache Global Replication Groups using the `global_replication_group_id`. For example:
+
+```console
+% terraform import aws_elasticache_global_replication_group.my_global_replication_group okuqm-global-replication-group-1
 ```
