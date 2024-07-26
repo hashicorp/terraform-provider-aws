@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sagemaker_domain: Fix missing r_studio_package_manager_url
+```
