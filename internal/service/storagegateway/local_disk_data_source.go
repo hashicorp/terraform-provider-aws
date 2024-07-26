@@ -7,8 +7,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -47,14 +48,14 @@ func dataSourceLocalDisk() *schema.Resource {
 
 func dataSourceLocalDiskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
 	input := &storagegateway.ListLocalDisksInput{
 		GatewayARN: aws.String(d.Get("gateway_arn").(string)),
 	}
 
-	log.Printf("[DEBUG] Reading Storage Gateway Local Disk: %s", input)
-	output, err := conn.ListLocalDisksWithContext(ctx, input)
+	log.Printf("[DEBUG] Reading Storage Gateway Local Disk: %#v", input)
+	output, err := conn.ListLocalDisks(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Local Disk: %s", err)
 	}
@@ -63,14 +64,14 @@ func dataSourceLocalDiskRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "no results found for query, try adjusting your search criteria")
 	}
 
-	var matchingDisks []*storagegateway.Disk
+	var matchingDisks []awstypes.Disk
 
 	for _, disk := range output.Disks {
-		if v, ok := d.GetOk("disk_node"); ok && v.(string) == aws.StringValue(disk.DiskNode) {
+		if v, ok := d.GetOk("disk_node"); ok && v.(string) == aws.ToString(disk.DiskNode) {
 			matchingDisks = append(matchingDisks, disk)
 			continue
 		}
-		if v, ok := d.GetOk("disk_path"); ok && v.(string) == aws.StringValue(disk.DiskPath) {
+		if v, ok := d.GetOk("disk_path"); ok && v.(string) == aws.ToString(disk.DiskPath) {
 			matchingDisks = append(matchingDisks, disk)
 			continue
 		}
@@ -86,7 +87,7 @@ func dataSourceLocalDiskRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	disk := matchingDisks[0]
 
-	d.SetId(aws.StringValue(disk.DiskId))
+	d.SetId(aws.ToString(disk.DiskId))
 	d.Set("disk_id", disk.DiskId)
 	d.Set("disk_node", disk.DiskNode)
 	d.Set("disk_path", disk.DiskPath)
