@@ -32,14 +32,15 @@ import (
 )
 
 const (
-	vpcCIDRMaxIPv4Netmask = 28
-	vpcCIDRMinIPv4Netmask = 16
-	vpcCIDRMaxIPv6Netmask = 60
-	vpcCIDRMinIPv6Netmask = 44
+	vpcCIDRMaxIPv4Netmask  = 28
+	vpcCIDRMinIPv4Netmask  = 16
+	vpcCIDRMaxIPv6Netmask  = 60
+	vpcCIDRMinIPv6Netmask  = 44
+	vpcCIDRIPv6NetmaskStep = 4
 )
 
 var (
-	vpcCIDRValidIPv6Netmasks = tfslices.Range(vpcCIDRMinIPv6Netmask, vpcCIDRMaxIPv6Netmask+1, 4)
+	vpcCIDRValidIPv6Netmasks = tfslices.Range(vpcCIDRMinIPv6Netmask, vpcCIDRMaxIPv6Netmask+1, vpcCIDRIPv6NetmaskStep)
 	validVPCIPv6CIDRBlock    = validation.All(
 		verify.ValidIPv6CIDRNetworkAddress,
 		validation.Any(tfslices.ApplyToAll(vpcCIDRValidIPv6Netmasks, func(v int) schema.SchemaValidateFunc {
