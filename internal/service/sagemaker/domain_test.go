@@ -622,7 +622,7 @@ func testAccDomain_rStudioServerProAppSettings(t *testing.T) {
 	})
 }
 
-func TestAccDomain_rStudioServerProDomainSettings(t *testing.T) {
+func testAccDomain_rStudioServerProDomainSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeDomainOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
