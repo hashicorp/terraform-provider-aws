@@ -149,7 +149,7 @@ func resourceTapePoolDelete(ctx context.Context, d *schema.ResourceData, meta in
 	log.Printf("[DEBUG] Deleting Storage Gateway Tape Pool: %#v", input)
 	_, err := conn.DeleteTapePool(ctx, input)
 
-	if errs.IsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](err, "The specified po was not found") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](err, "The specified pool was not found") {
 		return diags
 	}
 
