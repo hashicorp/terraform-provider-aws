@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -116,7 +116,7 @@ func testAccCheckWorkingStorageExists(ctx context.Context, resourceName string) 
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
 
 		gatewayARN, diskID, err := tfstoragegateway.DecodeWorkingStorageID(rs.Primary.ID)
 		if err != nil {
@@ -127,7 +127,7 @@ func testAccCheckWorkingStorageExists(ctx context.Context, resourceName string) 
 			GatewayARN: aws.String(gatewayARN),
 		}
 
-		output, err := conn.DescribeWorkingStorageWithContext(ctx, input)
+		output, err := conn.DescribeWorkingStorage(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error reading Storage Gateway working storage: %s", err)
@@ -138,7 +138,7 @@ func testAccCheckWorkingStorageExists(ctx context.Context, resourceName string) 
 		}
 
 		for _, existingDiskID := range output.DiskIds {
-			if aws.StringValue(existingDiskID) == diskID {
+			if existingDiskID == diskID {
 				return nil
 			}
 		}

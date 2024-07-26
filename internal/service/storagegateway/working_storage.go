@@ -9,9 +9,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -48,18 +48,18 @@ func ResourceWorkingStorage() *schema.Resource {
 
 func resourceWorkingStorageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
 	diskID := d.Get("disk_id").(string)
 	gatewayARN := d.Get("gateway_arn").(string)
 
 	input := &storagegateway.AddWorkingStorageInput{
-		DiskIds:    []*string{aws.String(diskID)},
+		DiskIds:    []string{diskID},
 		GatewayARN: aws.String(gatewayARN),
 	}
 
-	log.Printf("[DEBUG] Adding Storage Gateway Working Storage: %s", input)
-	_, err := conn.AddWorkingStorageWithContext(ctx, input)
+	log.Printf("[DEBUG] Adding Storage Gateway Working Storage: %#v", input)
+	_, err := conn.AddWorkingStorage(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "adding Storage Gateway Working Storage: %s", err)
 	}
@@ -71,9 +71,9 @@ func resourceWorkingStorageCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceWorkingStorageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
-	gatewayARN, diskID, err := DecodeWorkingStorageID(d.Id())
+	gatewayARN, diskID, err := decodeWorkingStorageID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Working Storage (%s): %s", d.Id(), err)
 	}
@@ -82,9 +82,9 @@ func resourceWorkingStorageRead(ctx context.Context, d *schema.ResourceData, met
 		GatewayARN: aws.String(gatewayARN),
 	}
 
-	output, err := conn.DescribeWorkingStorageWithContext(ctx, input)
+	output, err := conn.DescribeWorkingStorage(ctx, input)
 	if err != nil {
-		if IsErrGatewayNotFound(err) {
+		if isErrGatewayNotFound(err) {
 			log.Printf("[WARN] Storage Gateway Working Storage (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -100,7 +100,7 @@ func resourceWorkingStorageRead(ctx context.Context, d *schema.ResourceData, met
 
 	found := false
 	for _, existingDiskID := range output.DiskIds {
-		if aws.StringValue(existingDiskID) == diskID {
+		if existingDiskID == diskID {
 			found = true
 			break
 		}
@@ -118,7 +118,7 @@ func resourceWorkingStorageRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func DecodeWorkingStorageID(id string) (string, string, error) {
+func decodeWorkingStorageID(id string) (string, string, error) {
 	// id = arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678:pci-0000:03:00.0-scsi-0:0:0:0
 	idFormatErr := fmt.Errorf("expected ID in form of GatewayARN:DiskId, received: %s", id)
 	gatewayARNAndDisk, err := arn.Parse(id)
