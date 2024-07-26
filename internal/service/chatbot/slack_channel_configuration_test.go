@@ -30,6 +30,7 @@ func getEnvironmentVariables(t *testing.T) (string, string) {
 	// Once it is created, export the name of the workspace in the env variable for this test
 	workspaceNameKey := "CHATBOT_SLACK_WORKSPACE_NAME"
 	workspaceName := os.Getenv(workspaceNameKey)
+
 	if workspaceName == "" {
 		t.Skipf("Environment variable %s is not set", workspaceNameKey)
 	}
@@ -78,13 +79,18 @@ func TestAccChatbotSlackChannelConfiguration_basic(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "logging_level", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
-					//Slack Channel Name need not be checked since it is not returned by the Create API if it is not passed as input.
+					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 					resource.TestCheckResourceAttr(resourceName, "sns_topic_arns.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "user_authorization_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 				ExpectNonEmptyPlan: false,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -117,8 +123,8 @@ func TestAccChatbotSlackChannelConfiguration_all(t *testing.T) {
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName, &slackchannelconfiguration),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "guardrail_policy_arns.#", acctest.Ct2),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns[0]", "iam", regexache.MustCompile("role/.+-1$")),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns[1]", "iam", regexache.MustCompile("role/.+-2$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns.0", "iam", regexache.MustCompile("policy/.+-[12]$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns.1", "iam", regexache.MustCompile("policy/.+-[12]$")),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "logging_level", "ERROR"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
@@ -131,13 +137,18 @@ func TestAccChatbotSlackChannelConfiguration_all(t *testing.T) {
 				ExpectNonEmptyPlan: false,
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccSlackChannelConfigurationConfig_allUpdated(rName, workspaceName, "INFO", slackChannelId, "terraform2", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName, &slackchannelconfiguration),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "guardrail_policy_arns.#", acctest.Ct1),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns[0]", "iam", regexache.MustCompile("role/.+-1$")),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns.0", "iam", regexache.MustCompile("policy/.+-1$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-2$")),
 					resource.TestCheckResourceAttr(resourceName, "logging_level", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_name", "terraform2"),
@@ -147,6 +158,11 @@ func TestAccChatbotSlackChannelConfiguration_all(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 				ExpectNonEmptyPlan: false,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -179,12 +195,18 @@ func TestAccChatbotSlackChannelConfiguration_guardrailPolicyArns(t *testing.T) {
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName, &slackchannelconfiguration),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "guardrail_policy_arns.#", acctest.Ct1),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns[0]", "iam", regexache.MustCompile("policy/.+-1$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns.0", "iam", regexache.MustCompile("policy/.+-1$")),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
+					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccSlackChannelConfigurationConfig_guardrailPolicyArnsUpdated(rName, workspaceName, slackChannelId),
@@ -192,13 +214,19 @@ func TestAccChatbotSlackChannelConfiguration_guardrailPolicyArns(t *testing.T) {
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName, &slackchannelconfiguration),
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "guardrail_policy_arns.#", acctest.Ct2),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns[0]", "iam", regexache.MustCompile("policy/.+-1$")),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns[1]", "iam", regexache.MustCompile("policy/.+-2$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns.0", "iam", regexache.MustCompile("policy/.+-1$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "guardrail_policy_arns.1", "iam", regexache.MustCompile("policy/.+-2$")),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
+					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -232,9 +260,15 @@ func TestAccChatbotSlackChannelConfiguration_iamRoleArn(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
+					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccSlackChannelConfigurationConfig_iamRoleArnUpdated(rName, workspaceName, slackChannelId),
@@ -243,9 +277,15 @@ func TestAccChatbotSlackChannelConfiguration_iamRoleArn(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-2$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
+					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -280,9 +320,15 @@ func TestAccChatbotSlackChannelConfiguration_loggingLevel(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "logging_level", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
+					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccSlackChannelConfigurationConfig_loggingLevel(rName, workspaceName, slackChannelId, "ERROR"),
@@ -292,9 +338,15 @@ func TestAccChatbotSlackChannelConfiguration_loggingLevel(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "logging_level", "ERROR"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
+					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -329,9 +381,15 @@ func TestAccChatbotSlackChannelConfiguration_slackChannelName(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_name", "test_chatbot_slack_channel_1"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
+					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccSlackChannelConfigurationConfig_slackChannelName(rName, workspaceName, slackChannelId, "test_chatbot_slack_channel_2"),
@@ -341,9 +399,15 @@ func TestAccChatbotSlackChannelConfiguration_slackChannelName(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_name", "test_chatbot_slack_channel_2"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
+					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -378,9 +442,15 @@ func TestAccChatbotSlackChannelConfiguration_userAuthorizationRequired(t *testin
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "user_authorization_required", "true"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
+					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccSlackChannelConfigurationConfig_userAuthorizationRequired(rName, workspaceName, slackChannelId, "false"),
@@ -390,9 +460,15 @@ func TestAccChatbotSlackChannelConfiguration_userAuthorizationRequired(t *testin
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "user_authorization_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
+					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -461,9 +537,15 @@ func TestAccChatbotSlackChannelConfiguration_snsTopicArns(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sns_topic_arns.#", acctest.Ct1),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
+					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccSlackChannelConfigurationConfig_snsTopicArnsUpdated(rName, workspaceName, slackChannelId),
@@ -473,9 +555,15 @@ func TestAccChatbotSlackChannelConfiguration_snsTopicArns(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sns_topic_arns.#", acctest.Ct2),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
+					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
 				),
 				ExpectNonEmptyPlan: false,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -510,47 +598,21 @@ func TestAccChatbotSlackChannelConfiguration_tags(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
 					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
 					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "slack_channel_name"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
-			/* 			{
-			   				ResourceName:      resourceName,
-			   				ImportState:       true,
-			   				ImportStateVerify: true,
-			   				//ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn"},
-			   			},
-			*/{
-				Config: testAccChatbotSlackChannelConfiguration_tags2(rName, workspaceName, slackChannelId, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSlackChannelConfigurationExists(ctx, resourceName, &slackchannelconfiguration),
-					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
-					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
-					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
 			{
-				Config: testAccChatbotSlackChannelConfiguration_tags1(rName, workspaceName, slackChannelId, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSlackChannelConfigurationExists(ctx, resourceName, &slackchannelconfiguration),
-					resource.TestCheckResourceAttr(resourceName, "configuration_name", rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "iam_role_arn", "iam", regexache.MustCompile("role/.+-1$")),
-					resource.TestCheckResourceAttr(resourceName, "slack_channel_id", slackChannelId),
-					resource.TestCheckResourceAttrSet(resourceName, "slack_team_id"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
 func testAccCheckSlackChannelConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
-	fmt.Println("Inside Destroy")
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ChatbotClient(ctx)
 
@@ -730,7 +792,7 @@ func testAccSlackChannelConfigurationConfig_allUpdated(rName string, workspaceNa
 	return acctest.ConfigCompose(fmt.Sprintf(testAccSlackChannelConfigurationConfig_base, rName, workspaceName), fmt.Sprintf(`
 resource "aws_chatbot_slack_channel_configuration" "test" {
   configuration_name   = %[1]q
-  guardrail_policy_arns   = [aws_iam_policy.test_guardrail_policy_2.arn]
+  guardrail_policy_arns   = [aws_iam_policy.test_guardrail_policy_1.arn]
   iam_role_arn         = aws_iam_role.test_chatbot_role_2.arn
   logging_level        = "%[2]s"
   slack_channel_id     = "%[3]s"
