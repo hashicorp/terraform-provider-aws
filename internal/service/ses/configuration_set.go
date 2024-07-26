@@ -282,7 +282,7 @@ func resourceConfigurationSetDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if _, err := conn.DeleteConfigurationSet(ctx, input); err != nil {
-		if errs.IsA[*awstypes.ConfigurationSetDoesNotExistException](err) {
+		if !errs.IsA[*awstypes.ConfigurationSetDoesNotExistException](err) {
 			return sdkdiag.AppendErrorf(diags, "deleting SES Configuration Set (%s): %s", d.Id(), err)
 		}
 	}
