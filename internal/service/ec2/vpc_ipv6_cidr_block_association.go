@@ -49,7 +49,7 @@ func ResourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					verify.ValidIPv6CIDRNetworkAddress,
-					validation.IsCIDRNetwork(VPCCIDRMinIPv6, VPCCIDRMaxIPv6)),
+					validation.IsCIDRNetwork(VPCCIDRMaxIPv6, VPCCIDRMaxIPv6)),
 			},
 			// ipam parameters are not required by the API but other usage mechanisms are not implemented yet. TODO ipv6 options:
 			// --amazon-provided-ipv6-cidr-block
@@ -63,7 +63,7 @@ func ResourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IntInSlice(VPCCIDRValidIPv6Masks),
+				ValidateFunc:  validation.IntInSlice([]int{VPCCIDRMaxIPv6}),
 				ConflictsWith: []string{"ipv6_cidr_block"},
 				// This RequiredWith setting should be applied once L57 is completed
 				// RequiredWith:  []string{"ipv6_ipam_pool_id"},
