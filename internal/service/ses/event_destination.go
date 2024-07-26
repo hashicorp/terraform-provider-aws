@@ -276,6 +276,11 @@ func resourceEventDestinationDelete(ctx context.Context, d *schema.ResourceData,
 		EventDestinationName: aws.String(d.Id()),
 	})
 
+	if errs.IsA[*awstypes.EventDestinationDoesNotExistException](err) {
+		log.Printf("[DEBUG] SES Delete Configuration Set Destination already deleted: %s", d.Id())
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SES Event Destination (%s): %s", d.Id(), err)
 	}
