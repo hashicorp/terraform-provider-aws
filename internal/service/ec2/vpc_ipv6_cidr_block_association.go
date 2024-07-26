@@ -45,6 +45,7 @@ func resourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 			"assign_generated_ipv6_cidr_block": {
 				Type:          schema.TypeBool,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"ipv6_pool", "ipv6_ipam_pool_id", "ipv6_cidr_block", "ipv6_netmask_length"},
 			},
@@ -71,6 +72,7 @@ func resourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 			"ipv6_pool": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"assign_generated_ipv6_cidr_block", "ipv6_ipam_pool_id"},
 			},
@@ -148,8 +150,12 @@ func resourceVPCIPv6CIDRBlockAssociationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC IPv6 CIDR Block Association (%s): %s", d.Id(), err)
 	}
 
+	ipv6PoolID := aws.ToString(vpcIpv6CidrBlockAssociation.Ipv6Pool)
+	isAmazonIPv6Pool := ipv6PoolID == amazonIPv6PoolID
+
+	d.Set("assign_generated_ipv6_cidr_block", isAmazonIPv6Pool)
 	d.Set("ipv6_cidr_block", vpcIpv6CidrBlockAssociation.Ipv6CidrBlock)
-	d.Set("ipv6_pool", vpcIpv6CidrBlockAssociation.Ipv6Pool)
+	d.Set("ipv6_pool", ipv6PoolID)
 	d.Set(names.AttrVPCID, vpc.VpcId)
 
 	return diags

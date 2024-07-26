@@ -36,9 +36,11 @@ func TestAccVPCIPv6CIDRBlockAssociation_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIPv6CIDRBlockAssociationConfig_amazonProvided(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, resource1Name, &associationSecondary),
 					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, resource2Name, &associationTertiary),
+					resource.TestCheckResourceAttr(resource1Name, "ipv6_pool", "Amazon"),
+					resource.TestCheckResourceAttr(resource2Name, "ipv6_pool", "Amazon"),
 				),
 			},
 			{
@@ -50,6 +52,32 @@ func TestAccVPCIPv6CIDRBlockAssociation_basic(t *testing.T) {
 				ResourceName:      resource2Name,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCIPv6CIDRBlockAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var associationSecondary, associationTertiary awstypes.VpcIpv6CidrBlockAssociation
+	resource1Name := "aws_vpc_ipv6_cidr_block_association.secondary_cidr"
+	resource2Name := "aws_vpc_ipv6_cidr_block_association.tertiary_cidr"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCIPv6CIDRBlockAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCIPv6CIDRBlockAssociationConfig_amazonProvided(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, resource1Name, &associationSecondary),
+					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, resource2Name, &associationTertiary),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCIPv6CIDRBlockAssociation(), resource1Name),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
