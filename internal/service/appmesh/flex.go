@@ -1336,9 +1336,12 @@ func flattenGRPCRoute(grpcRoute *awstypes.GrpcRoute) []interface{} {
 
 			for _, weightedTarget := range weightedTargets {
 				mWeightedTarget := map[string]interface{}{
-					names.AttrPort:   aws.ToInt32(weightedTarget.Port),
 					"virtual_node":   aws.ToString(weightedTarget.VirtualNode),
 					names.AttrWeight: weightedTarget.Weight,
+				}
+
+				if v := aws.ToInt32(weightedTarget.Port); v != 0 {
+					mWeightedTarget[names.AttrPort] = v
 				}
 
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
@@ -1361,27 +1364,29 @@ func flattenGRPCRoute(grpcRoute *awstypes.GrpcRoute) []interface{} {
 				names.AttrName: aws.ToString(grpcRouteMetadata.Name),
 			}
 
-			mMatch := map[string]interface{}{}
+			if match := grpcRouteMetadata.Match; match != nil {
+				mMatch := map[string]interface{}{}
 
-			switch v := grpcRouteMetadata.Match.(type) {
-			case *awstypes.GrpcRouteMetadataMatchMethodMemberExact:
-				mMatch["exact"] = v.Value
-			case *awstypes.GrpcRouteMetadataMatchMethodMemberPrefix:
-				mMatch[names.AttrPrefix] = v.Value
-			case *awstypes.GrpcRouteMetadataMatchMethodMemberRegex:
-				mMatch["regex"] = v.Value
-			case *awstypes.GrpcRouteMetadataMatchMethodMemberSuffix:
-				mMatch["suffix"] = v.Value
-			case *awstypes.GrpcRouteMetadataMatchMethodMemberRange:
-				mRange := map[string]interface{}{
-					"end":   aws.ToInt64(v.Value.End),
-					"start": aws.ToInt64(v.Value.Start),
+				switch v := match.(type) {
+				case *awstypes.GrpcRouteMetadataMatchMethodMemberExact:
+					mMatch["exact"] = v.Value
+				case *awstypes.GrpcRouteMetadataMatchMethodMemberPrefix:
+					mMatch[names.AttrPrefix] = v.Value
+				case *awstypes.GrpcRouteMetadataMatchMethodMemberRegex:
+					mMatch["regex"] = v.Value
+				case *awstypes.GrpcRouteMetadataMatchMethodMemberSuffix:
+					mMatch["suffix"] = v.Value
+				case *awstypes.GrpcRouteMetadataMatchMethodMemberRange:
+					mRange := map[string]interface{}{
+						"end":   aws.ToInt64(v.Value.End),
+						"start": aws.ToInt64(v.Value.Start),
+					}
+
+					mMatch["range"] = []interface{}{mRange}
 				}
 
-				mMatch["range"] = []interface{}{mRange}
+				mGrpcRouteMetadata["match"] = []interface{}{mMatch}
 			}
-
-			mGrpcRouteMetadata["match"] = []interface{}{mMatch}
 
 			vGrpcRouteMetadatas = append(vGrpcRouteMetadatas, mGrpcRouteMetadata)
 		}
@@ -1439,9 +1444,12 @@ func flattenHTTPRoute(httpRoute *awstypes.HttpRoute) []interface{} {
 
 			for _, weightedTarget := range weightedTargets {
 				mWeightedTarget := map[string]interface{}{
-					names.AttrPort:   aws.ToInt32(weightedTarget.Port),
 					"virtual_node":   aws.ToString(weightedTarget.VirtualNode),
 					names.AttrWeight: weightedTarget.Weight,
+				}
+
+				if v := aws.ToInt32(weightedTarget.Port); v != 0 {
+					mWeightedTarget[names.AttrPort] = v
 				}
 
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
@@ -1464,10 +1472,10 @@ func flattenHTTPRoute(httpRoute *awstypes.HttpRoute) []interface{} {
 				names.AttrName: aws.ToString(httpRouteHeader.Name),
 			}
 
-			mMatch := map[string]interface{}{}
-
 			if match := httpRouteHeader.Match; match != nil {
-				switch v := httpRouteHeader.Match.(type) {
+				mMatch := map[string]interface{}{}
+
+				switch v := match.(type) {
 				case *awstypes.HeaderMatchMethodMemberExact:
 					mMatch["exact"] = v.Value
 				case *awstypes.HeaderMatchMethodMemberPrefix:
@@ -1481,8 +1489,10 @@ func flattenHTTPRoute(httpRoute *awstypes.HttpRoute) []interface{} {
 						"end":   aws.ToInt64(v.Value.End),
 						"start": aws.ToInt64(v.Value.Start),
 					}
+
 					mMatch["range"] = []interface{}{mRange}
 				}
+
 				mHttpRouteHeader["match"] = []interface{}{mMatch}
 			}
 
@@ -1615,9 +1625,12 @@ func flattenTCPRoute(tcpRoute *awstypes.TcpRoute) []interface{} {
 
 			for _, weightedTarget := range weightedTargets {
 				mWeightedTarget := map[string]interface{}{
-					names.AttrPort:   aws.ToInt32(weightedTarget.Port),
 					"virtual_node":   aws.ToString(weightedTarget.VirtualNode),
 					names.AttrWeight: weightedTarget.Weight,
+				}
+
+				if v := aws.ToInt32(weightedTarget.Port); v != 0 {
+					mWeightedTarget[names.AttrPort] = v
 				}
 
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
@@ -1773,6 +1786,7 @@ func flattenVirtualNodeSpec(spec *awstypes.VirtualNodeSpec) []interface{} {
 				case *awstypes.ListenerTimeoutMemberTcp:
 					mListenerTimeout["tcp"] = flattenTCPTimeout(&v.Value)
 				}
+
 				mListener[names.AttrTimeout] = []interface{}{mListenerTimeout}
 			}
 
@@ -1967,10 +1981,10 @@ func flattenVirtualServiceSpec(spec *awstypes.VirtualServiceSpec) []interface{} 
 
 	mSpec := map[string]interface{}{}
 
-	if spec.Provider != nil {
+	if provider := spec.Provider; provider != nil {
 		mProvider := map[string]interface{}{}
 
-		switch v := spec.Provider.(type) {
+		switch v := provider.(type) {
 		case *awstypes.VirtualServiceProviderMemberVirtualNode:
 			mProvider["virtual_node"] = []interface{}{
 				map[string]interface{}{
