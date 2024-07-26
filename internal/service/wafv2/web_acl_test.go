@@ -3040,10 +3040,11 @@ func TestAccWAFV2WebACL_ruleJSON(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"rule_json"},
+				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
 			},
 		},
 	})
