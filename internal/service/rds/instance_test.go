@@ -3917,6 +3917,40 @@ func TestAccRDSInstance_MSSQL_selfManagedDomain(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_MSSQL_selfManagedDomainSingleDomainDNSIP(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := acctest.RandomDomain().String()
+	domainOu := fmt.Sprintf("OU=AWS,DC=%s,DC=%s", strings.Split(domain, ".")[0], strings.Split(domain, ".")[1])
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_mssqlSelfManagedDomainSingleDomainDNSIP(rName, domain, domainOu),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_fqdn"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_ou"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_auth_secret_arn"),
+					resource.TestCheckResourceAttr(resourceName, "domain_dns_ips.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "domain_dns_ips.0", "123.124.125.126"),
+					resource.TestCheckResourceAttr(resourceName, "domain_dns_ips.1", "123.124.125.126"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_MSSQL_selfManagedDomainSnapshotRestore(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -8019,6 +8053,30 @@ POLICY
 resource "aws_secretsmanager_secret_version" "example-2" {
   secret_id     = aws_secretsmanager_secret.example-2.id
   secret_string = jsonencode({ "CUSTOMER_MANAGED_ACTIVE_DIRECTORY_USERNAME" : "Admin", "CUSTOMER_MANAGED_ACTIVE_DIRECTORY_PASSWORD" : "avoid-plaintext-passwords" })
+}
+`, rName, domain, domainOu))
+}
+
+func testAccInstanceConfig_mssqlSelfManagedDomainSingleDomainDNSIP(rName, domain, domainOu string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_baseMSSQLSelfManagedDomain(rName),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage       = 20
+  backup_retention_period = 0
+  db_subnet_group_name    = aws_db_subnet_group.test.name
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier              = %[1]q
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  skip_final_snapshot     = true
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  vpc_security_group_ids  = [aws_security_group.test.id]
+  domain_fqdn             = %[2]q
+  domain_ou               = %[3]q
+  domain_auth_secret_arn  = aws_secretsmanager_secret_version.example.arn
+  domain_dns_ips          = ["123.124.125.126", "123.124.125.126"]
 }
 `, rName, domain, domainOu))
 }
