@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -147,6 +148,11 @@ func resourceTapePoolDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	log.Printf("[DEBUG] Deleting Storage Gateway Tape Pool: %#v", input)
 	_, err := conn.DeleteTapePool(ctx, input)
+
+	if errs.IsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](err, "The specified po was not found") {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Storage Gateway Tape Pool %q: %s", d.Id(), err)
 	}
