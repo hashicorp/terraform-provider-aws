@@ -59,7 +59,7 @@ func findLocalDiskByGatewayARNAndDiskPath(ctx context.Context, conn *storagegate
 	})
 }
 
-func FindUploadBufferDisk(ctx context.Context, conn *storagegateway.Client, gatewayARN string, diskID string) (*string, error) {
+func findUploadBufferDisk(ctx context.Context, conn *storagegateway.Client, gatewayARN string, diskID string) (*string, error) {
 	input := &storagegateway.DescribeUploadBufferInput{
 		GatewayARN: aws.String(gatewayARN),
 	}
@@ -86,7 +86,7 @@ func FindUploadBufferDisk(ctx context.Context, conn *storagegateway.Client, gate
 	return &result, err
 }
 
-func FindGatewayByARN(ctx context.Context, conn *storagegateway.Client, arn string) (*storagegateway.DescribeGatewayInformationOutput, error) {
+func findGatewayByARN(ctx context.Context, conn *storagegateway.Client, arn string) (*storagegateway.DescribeGatewayInformationOutput, error) {
 	input := &storagegateway.DescribeGatewayInformationInput{
 		GatewayARN: aws.String(arn),
 	}
@@ -111,7 +111,7 @@ func FindGatewayByARN(ctx context.Context, conn *storagegateway.Client, arn stri
 	return output, nil
 }
 
-func FindNFSFileShareByARN(ctx context.Context, conn *storagegateway.Client, arn string) (*awstypes.NFSFileShareInfo, error) {
+func findNFSFileShareByARN(ctx context.Context, conn *storagegateway.Client, arn string) (*awstypes.NFSFileShareInfo, error) {
 	input := &storagegateway.DescribeNFSFileSharesInput{
 		FileShareARNList: []string{arn},
 	}
@@ -140,7 +140,7 @@ func FindNFSFileShareByARN(ctx context.Context, conn *storagegateway.Client, arn
 	return &output.NFSFileShareInfoList[0], nil
 }
 
-func FindSMBFileShareByARN(ctx context.Context, conn *storagegateway.Client, arn string) (*awstypes.SMBFileShareInfo, error) {
+func findSMBFileShareByARN(ctx context.Context, conn *storagegateway.Client, arn string) (*awstypes.SMBFileShareInfo, error) {
 	input := &storagegateway.DescribeSMBFileSharesInput{
 		FileShareARNList: []string{arn},
 	}
@@ -169,7 +169,7 @@ func FindSMBFileShareByARN(ctx context.Context, conn *storagegateway.Client, arn
 	return &output.SMBFileShareInfoList[0], nil
 }
 
-func FindFileSystemAssociationByARN(ctx context.Context, conn *storagegateway.Client, arn string) (*awstypes.FileSystemAssociationInfo, error) {
+func findFileSystemAssociationByARN(ctx context.Context, conn *storagegateway.Client, arn string) (*awstypes.FileSystemAssociationInfo, error) {
 	input := &storagegateway.DescribeFileSystemAssociationsInput{
 		FileSystemAssociationARNList: []string{arn},
 	}
