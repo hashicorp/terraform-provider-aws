@@ -187,47 +187,6 @@ func resourceWebACL() *schema.Resource {
 	}
 }
 
-// func rulesCustomDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-// 	if !diff.GetRawState().IsNull() {
-// 		r, ok := diff.GetOk(names.AttrRule)
-// 		if !ok {
-// 			return nil
-// 		}
-
-// 		rJson, jsonOk := diff.GetOk("rule_json")
-// 		if !jsonOk {
-// 			return nil
-// 		}
-
-// 		conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
-// 		output, err := findWebACLByThreePartKey(ctx, conn, diff.Id(), diff.Get(names.AttrName).(string), diff.Get(names.AttrScope).(string))
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		ra := expandWebACLRules(r.(*schema.Set).List())
-// 		jr, err := expandWebACLRulesJSON(rJson.(string))
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		rules := filterWebACLRules(output.WebACL.Rules, ra)
-
-// 		if !reflect.DeepEqual(rules, jr) {
-// 			st, err := flattenRuleJSON(rules)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			if err := diff.SetNew("rule_json", st); err != nil {
-// 				return err
-// 			}
-// 		}
-// 	}
-
-// 	return nil
-// }
-
 func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
@@ -240,10 +199,9 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		ChallengeConfig:   expandChallengeConfig(d.Get("challenge_config").([]interface{})),
 		DefaultAction:     expandDefaultAction(d.Get(names.AttrDefaultAction).([]interface{})),
 		Name:              aws.String(name),
-		// Rules:             expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List()),
-		Scope:            awstypes.Scope(d.Get(names.AttrScope).(string)),
-		Tags:             getTagsIn(ctx),
-		VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
+		Scope:             awstypes.Scope(d.Get(names.AttrScope).(string)),
+		Tags:              getTagsIn(ctx),
+		VisibilityConfig:  expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
 	if v, ok := d.GetOk(names.AttrRule); ok {
@@ -362,21 +320,21 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			rules = append(rules, findShieldRule(output.WebACL.Rules)...)
 		}
 
-		if d.HasChange("rule_json") {
-			rules, err := expandWebACLRulesJSON(d.Get("rule_json").(string))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "expanding WAFv2 WebACL JSON rule (%s): %s", d.Id(), err)
-			}
-			if sr := findShieldRule(rules); len(sr) == 0 {
-				output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), aclName, aclScope)
+		// if d.HasChange("rule_json") {
+		// 	rules, err := expandWebACLRulesJSON(d.Get("rule_json").(string))
+		// 	if err != nil {
+		// 		return sdkdiag.AppendErrorf(diags, "expanding WAFv2 WebACL JSON rule (%s): %s", d.Id(), err)
+		// 	}
+		// 	if sr := findShieldRule(rules); len(sr) == 0 {
+		// 		output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), aclName, aclScope)
 
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
-				}
+		// 		if err != nil {
+		// 			return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
+		// 		}
 
-				rules = append(rules, findShieldRule(output.WebACL.Rules)...)
-			}
-		}
+		// 		rules = append(rules, findShieldRule(output.WebACL.Rules)...)
+		// 	}
+		// }
 
 		input := &wafv2.UpdateWebACLInput{
 			AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
