@@ -1901,3 +1901,131 @@ func waitDBClusterDeleted(ctx context.Context, conn *rds.RDS, id string, timeout
 
 	return nil, err
 }
+
+func expandScalingConfiguration(tfMap map[string]interface{}) *rds.ScalingConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &rds.ScalingConfiguration{}
+
+	if v, ok := tfMap["auto_pause"].(bool); ok {
+		apiObject.AutoPause = aws.Bool(v)
+	}
+
+	if v, ok := tfMap[names.AttrMaxCapacity].(int); ok {
+		apiObject.MaxCapacity = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["min_capacity"].(int); ok {
+		apiObject.MinCapacity = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["seconds_before_timeout"].(int); ok {
+		apiObject.SecondsBeforeTimeout = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["seconds_until_auto_pause"].(int); ok {
+		apiObject.SecondsUntilAutoPause = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["timeout_action"].(string); ok && v != "" {
+		apiObject.TimeoutAction = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenScalingConfigurationInfo(apiObject *rds.ScalingConfigurationInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AutoPause; v != nil {
+		tfMap["auto_pause"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.MaxCapacity; v != nil {
+		tfMap[names.AttrMaxCapacity] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.MaxCapacity; v != nil {
+		tfMap[names.AttrMaxCapacity] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.MinCapacity; v != nil {
+		tfMap["min_capacity"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.SecondsBeforeTimeout; v != nil {
+		tfMap["seconds_before_timeout"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.SecondsUntilAutoPause; v != nil {
+		tfMap["seconds_until_auto_pause"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.TimeoutAction; v != nil {
+		tfMap["timeout_action"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func expandServerlessV2ScalingConfiguration(tfMap map[string]interface{}) *rds.ServerlessV2ScalingConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &rds.ServerlessV2ScalingConfiguration{}
+
+	if v, ok := tfMap[names.AttrMaxCapacity].(float64); ok && v != 0.0 {
+		apiObject.MaxCapacity = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["min_capacity"].(float64); ok && v != 0.0 {
+		apiObject.MinCapacity = aws.Float64(v)
+	}
+
+	return apiObject
+}
+
+func flattenServerlessV2ScalingConfigurationInfo(apiObject *rds.ServerlessV2ScalingConfigurationInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.MaxCapacity; v != nil {
+		tfMap[names.AttrMaxCapacity] = aws.Float64Value(v)
+	}
+
+	if v := apiObject.MinCapacity; v != nil {
+		tfMap["min_capacity"] = aws.Float64Value(v)
+	}
+
+	return tfMap
+}
+
+// TODO Move back to 'flex.go' once migrate to AWS SDK for Go v2.
+func flattenManagedMasterUserSecret(apiObject *rds.MasterUserSecret) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if v := apiObject.KmsKeyId; v != nil {
+		tfMap[names.AttrKMSKeyID] = aws.StringValue(v)
+	}
+	if v := apiObject.SecretArn; v != nil {
+		tfMap["secret_arn"] = aws.StringValue(v)
+	}
+	if v := apiObject.SecretStatus; v != nil {
+		tfMap["secret_status"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}

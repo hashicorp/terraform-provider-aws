@@ -39,8 +39,9 @@ func (r *securityGroupEgressRuleResource) create(ctx context.Context, data *secu
 	conn := r.Meta().EC2Client(ctx)
 
 	input := &ec2.AuthorizeSecurityGroupEgressInput{
-		GroupId:       fwflex.StringFromFramework(ctx, data.SecurityGroupID),
-		IpPermissions: []awstypes.IpPermission{data.expandIPPermission(ctx)},
+		GroupId:           fwflex.StringFromFramework(ctx, data.SecurityGroupID),
+		IpPermissions:     []awstypes.IpPermission{data.expandIPPermission(ctx)},
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSecurityGroupRule),
 	}
 
 	output, err := conn.AuthorizeSecurityGroupEgress(ctx, input)
