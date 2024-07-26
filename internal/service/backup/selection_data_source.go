@@ -6,12 +6,13 @@ package backup
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_backup_selection")
@@ -28,15 +29,15 @@ func DataSourceSelection() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"iam_role_arn": {
+			names.AttrIAMRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resources": {
+			names.AttrResources: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -47,26 +48,24 @@ func DataSourceSelection() *schema.Resource {
 
 func dataSourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	input := &backup.GetBackupSelectionInput{
 		BackupPlanId: aws.String(d.Get("plan_id").(string)),
 		SelectionId:  aws.String(d.Get("selection_id").(string)),
 	}
 
-	resp, err := conn.GetBackupSelectionWithContext(ctx, input)
+	resp, err := conn.GetBackupSelection(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Backup Selection: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.SelectionId))
-	d.Set("iam_role_arn", resp.BackupSelection.IamRoleArn)
-	d.Set("name", resp.BackupSelection.SelectionName)
+	d.SetId(aws.ToString(resp.SelectionId))
+	d.Set(names.AttrIAMRoleARN, resp.BackupSelection.IamRoleArn)
+	d.Set(names.AttrName, resp.BackupSelection.SelectionName)
 
-	if resp.BackupSelection.Resources != nil {
-		if err := d.Set("resources", aws.StringValueSlice(resp.BackupSelection.Resources)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
-		}
+	if err := d.Set(names.AttrResources, resp.BackupSelection.Resources); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
 	}
 
 	return diags

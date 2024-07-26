@@ -103,7 +103,7 @@ can be done using the [`auto_accept`](vpc_peering_connection.html#auto_accept) a
 Connection has to be made active manually using other means. See [notes](vpc_peering_connection.html#notes) below for
 more information.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `peer_owner_id` - (Optional) The AWS account ID of the target peer VPC.
    Defaults to the account ID the [AWS provider][1] is currently connected to, so must be managed if connecting cross-account.

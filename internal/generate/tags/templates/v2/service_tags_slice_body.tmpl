@@ -1,39 +1,32 @@
 // []*SERVICE.Tag handling
 
 {{ if and ( .TagTypeIDElem ) ( .TagTypeAddBoolElem ) }}
-// ListOfMap returns a list of {{ .ServicePackage }} in flattened map.
+// listOfMap returns a list of {{ .ServicePackage }} tags in a flattened map.
 //
 // Compatible with setting Terraform state for strongly typed configuration blocks.
 //
 // This function strips tag resource identifier and type. Generally, this is
 // the desired behavior so the tag schema does not require those attributes.
-// Use (tftags.KeyValueTags).ListOfMap() for full tag information.
-func ListOfMap(tags tftags.KeyValueTags) []any {
-	var result []any
-
-	for _, key := range tags.Keys() {
-		m := map[string]any{
-			"key":                   key,
-			"value":                 aws.ToString(tags.KeyValue(key)),
-			{{ if .TagTypeAddBoolElem }}
+func listOfMap(tags tftags.KeyValueTags) []any {
+	return tfslices.ApplyToAll(tags.Keys(), func (key string) any {
+		return map[string]any{
+			names.AttrKey:                   key,
+			names.AttrValue:                 aws.ToString(tags.KeyValue(key)),
+			{{- if .TagTypeAddBoolElem }}
 			"{{ .TagTypeAddBoolElemSnake }}": aws.ToBool(tags.KeyAdditionalBoolValue(key, "{{ .TagTypeAddBoolElem }}")),
 			{{ end }}
 		}
-
-		result = append(result, m)
-	}
-
-	return result
+	})
 }
 {{- end }}
 
 {{- if .TagKeyType }}
 // TagKeys returns {{ .ServicePackage }} service tag keys.
-func TagKeys(tags tftags.KeyValueTags) []*{{ .AWSService }}.{{ .TagKeyType }} {
-	result := make([]*{{ .AWSService }}.{{ .TagKeyType }}, 0, len(tags))
+func TagKeys(tags tftags.KeyValueTags) []awstypes.{{ .TagKeyType }} {
+	result := make([]awstypes.{{ .TagKeyType }}, 0, len(tags))
 
 	for k := range tags.Map() {
-		tagKey := &{{ .AWSService }}.{{ .TagKeyType }}{
+		tagKey := awstypes.{{ .TagKeyType }}{
 			{{ .TagTypeKeyElem }}: aws.String(k),
 		}
 
@@ -129,7 +122,7 @@ func {{ .KeyValueTagsFunc }}(ctx context.Context, tags any{{ if .TagTypeIDElem }
 		{{- end }}
 
 		return tftags.New(ctx, m)
-	case []*{{ .AWSService }}.{{ .TagType2 }}:
+	case []awstypes.{{ .TagType2 }}:
 		{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
 		m := make(map[string]*tftags.TagData, len(tags))
 
@@ -164,7 +157,7 @@ func {{ .KeyValueTagsFunc }}(ctx context.Context, tags any{{ if .TagTypeIDElem }
 		return tftags.New(ctx, m)
 	{{- if .TagTypeAddBoolElem }}
 	case *schema.Set:
-		return {{ .KeyValueTagsFunc }}(tags.List(){{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
+		return {{ .KeyValueTagsFunc }}(ctx, tags.List(){{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
 	case []any:
 		result := make(map[string]*tftags.TagData)
 
@@ -175,7 +168,7 @@ func {{ .KeyValueTagsFunc }}(ctx context.Context, tags any{{ if .TagTypeIDElem }
 				continue
 			}
 
-			key, ok := tfMap["key"].(string)
+			key, ok := tfMap[names.AttrKey].(string)
 
 			if !ok {
 				continue
@@ -183,7 +176,7 @@ func {{ .KeyValueTagsFunc }}(ctx context.Context, tags any{{ if .TagTypeIDElem }
 
 			tagData := &tftags.TagData{}
 
-			if v, ok := tfMap["value"].(string); ok {
+			if v, ok := tfMap[names.AttrValue].(string); ok {
 				tagData.Value = &v
 			}
 
@@ -254,11 +247,11 @@ func {{ .SetTagsOutFunc }}(ctx context.Context, tags []awstypes.{{ .TagType }}) 
 
 {{- if ne .CreateTagsFunc "" }}
 // {{ .CreateTagsFunc }} creates {{ .ServicePackage }} service tags for new resources.
-func {{ .CreateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, tags []awstypes.{{ .TagType }}) error {
+func {{ .CreateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, tags []awstypes.{{ .TagType }}, optFns ...func(*{{ .AWSService }}.Options)) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return  {{ .UpdateTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, nil, {{ .KeyValueTagsFunc }}(ctx, tags))
+	return  {{ .UpdateTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, nil, {{ .KeyValueTagsFunc }}(ctx, tags), optFns...)
 }
 {{- end }}

@@ -5,22 +5,47 @@ package rds
 
 // Exports for use in tests only.
 var (
-	FindDBInstanceByID = findDBInstanceByIDSDKv1
+	ResourceCertificate             = resourceCertificate
+	ResourceCluster                 = resourceCluster
+	ResourceClusterEndpoint         = resourceClusterEndpoint
+	ResourceClusterParameterGroup   = resourceClusterParameterGroup
+	ResourceClusterRoleAssociation  = resourceClusterRoleAssociation
+	ResourceClusterSnapshot         = resourceClusterSnapshot
+	ResourceEventSubscription       = resourceEventSubscription
+	ResourceParameterGroup          = resourceParameterGroup
+	ResourceProxy                   = resourceProxy
+	ResourceProxyDefaultTargetGroup = resourceProxyDefaultTargetGroup
+	ResourceProxyEndpoint           = resourceProxyEndpoint
+	ResourceProxyTarget             = resourceProxyTarget
+	ResourceSnapshot                = resourceSnapshot
+	ResourceSnapshotCopy            = resourceSnapshotCopy
+	ResourceSubnetGroup             = resourceSubnetGroup
 
-	ListTags = listTags
+	FindDBClusterEndpointByID                  = findDBClusterEndpointByID
+	FindDBClusterParameterGroupByName          = findDBClusterParameterGroupByName
+	FindDBClusterRoleByTwoPartKey              = findDBClusterRoleByTwoPartKey
+	FindDBClusterSnapshotByID                  = findDBClusterSnapshotByID
+	FindDBInstanceByID                         = findDBInstanceByIDSDKv1
+	FindDBParameterGroupByName                 = findDBParameterGroupByName
+	FindDBProxyByName                          = findDBProxyByName
+	FindDBProxyEndpointByTwoPartKey            = findDBProxyEndpointByTwoPartKey
+	FindDBProxyTargetByFourPartKey             = findDBProxyTargetByFourPartKey
+	FindDBSnapshotByID                         = findDBSnapshotByID
+	FindDBSubnetGroupByName                    = findDBSubnetGroupByName
+	FindDefaultCertificate                     = findDefaultCertificate
+	FindDefaultDBProxyTargetGroupByDBProxyName = findDefaultDBProxyTargetGroupByDBProxyName
+	FindEventSubscriptionByID                  = findEventSubscriptionByID
+	ListTags                                   = listTags
+	NewBlueGreenOrchestrator                   = newBlueGreenOrchestrator
+	ParameterGroupModifyChunk                  = parameterGroupModifyChunk
+	ParseDBInstanceARN                         = parseDBInstanceARN
+	ProxyTargetParseResourceID                 = proxyTargetParseResourceID
+	WaitBlueGreenDeploymentDeleted             = waitBlueGreenDeploymentDeleted
+	WaitBlueGreenDeploymentAvailable           = waitBlueGreenDeploymentAvailable
+	WaitDBInstanceAvailable                    = waitDBInstanceAvailableSDKv2
+	WaitDBInstanceDeleted                      = waitDBInstanceDeleted
 
-	NewBlueGreenOrchestrator = newBlueGreenOrchestrator
-
-	WaitBlueGreenDeploymentDeleted   = waitBlueGreenDeploymentDeleted
-	WaitBlueGreenDeploymentAvailable = waitBlueGreenDeploymentAvailable
-
-	ParseDBInstanceARN = parseDBInstanceARN
-
-	WaitDBInstanceAvailable = waitDBInstanceAvailableSDKv2
-	WaitDBInstanceDeleted   = waitDBInstanceDeleted
-)
-
-const (
+	ErrCodeInvalidAction               = errCodeInvalidAction
 	ErrCodeInvalidParameterCombination = errCodeInvalidParameterCombination
 	ErrCodeInvalidParameterValue       = errCodeInvalidParameterValue
 )

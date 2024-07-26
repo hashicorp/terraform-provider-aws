@@ -35,7 +35,7 @@ func ResourceEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -102,12 +102,12 @@ func ResourceEndpoint() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"type": {
+															names.AttrType: {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: validation.StringInSlice(sagemaker.CapacitySizeType_Values(), false),
 															},
-															"value": {
+															names.AttrValue: {
 																Type:         schema.TypeInt,
 																Required:     true,
 																ValidateFunc: validation.IntAtLeast(1),
@@ -121,12 +121,12 @@ func ResourceEndpoint() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"type": {
+															names.AttrType: {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: validation.StringInSlice(sagemaker.CapacitySizeType_Values(), false),
 															},
-															"value": {
+															names.AttrValue: {
 																Type:         schema.TypeInt,
 																Required:     true,
 																ValidateFunc: validation.IntAtLeast(1),
@@ -134,7 +134,7 @@ func ResourceEndpoint() *schema.Resource {
 														},
 													},
 												},
-												"type": {
+												names.AttrType: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.TrafficRoutingConfigType_Values(), false),
@@ -166,12 +166,12 @@ func ResourceEndpoint() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"type": {
+												names.AttrType: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.CapacitySizeType_Values(), false),
 												},
-												"value": {
+												names.AttrValue: {
 													Type:         schema.TypeInt,
 													Required:     true,
 													ValidateFunc: validation.IntAtLeast(1),
@@ -190,12 +190,12 @@ func ResourceEndpoint() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"type": {
+												names.AttrType: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.CapacitySizeType_Values(), false),
 												},
-												"value": {
+												names.AttrValue: {
 													Type:         schema.TypeInt,
 													Required:     true,
 													ValidateFunc: validation.IntAtLeast(1),
@@ -219,7 +219,7 @@ func ResourceEndpoint() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validName,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -239,7 +239,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	var name string
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		name = v.(string)
 	} else {
 		name = id.UniqueId()
@@ -290,9 +290,9 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker Endpoint (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", endpoint.EndpointName)
+	d.Set(names.AttrName, endpoint.EndpointName)
 	d.Set("endpoint_config_name", endpoint.EndpointConfigName)
-	d.Set("arn", endpoint.EndpointArn)
+	d.Set(names.AttrARN, endpoint.EndpointArn)
 
 	if err := d.Set("deployment_config", flattenEndpointDeploymentConfig(endpoint.LastDeploymentConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting deployment_config for SageMaker Endpoint (%s): %s", d.Id(), err)
@@ -449,7 +449,7 @@ func expandEndpointDeploymentConfigTrafficRoutingConfiguration(configured []inte
 	m := configured[0].(map[string]interface{})
 
 	c := &sagemaker.TrafficRoutingConfig{
-		Type:                  aws.String(m["type"].(string)),
+		Type:                  aws.String(m[names.AttrType].(string)),
 		WaitIntervalInSeconds: aws.Int64(int64(m["wait_interval_in_seconds"].(int))),
 	}
 
@@ -470,7 +470,7 @@ func flattenEndpointDeploymentConfigTrafficRoutingConfiguration(configured *sage
 	}
 
 	cfg := map[string]interface{}{
-		"type":                     aws.StringValue(configured.Type),
+		names.AttrType:             aws.StringValue(configured.Type),
 		"wait_interval_in_seconds": aws.Int64Value(configured.WaitIntervalInSeconds),
 	}
 
@@ -493,8 +493,8 @@ func expandEndpointDeploymentCapacitySize(configured []interface{}) *sagemaker.C
 	m := configured[0].(map[string]interface{})
 
 	c := &sagemaker.CapacitySize{
-		Type:  aws.String(m["type"].(string)),
-		Value: aws.Int64(int64(m["value"].(int))),
+		Type:  aws.String(m[names.AttrType].(string)),
+		Value: aws.Int64(int64(m[names.AttrValue].(int))),
 	}
 
 	return c
@@ -506,8 +506,8 @@ func flattenEndpointDeploymentCapacitySize(configured *sagemaker.CapacitySize) [
 	}
 
 	cfg := map[string]interface{}{
-		"type":  aws.StringValue(configured.Type),
-		"value": aws.Int64Value(configured.Value),
+		names.AttrType:  aws.StringValue(configured.Type),
+		names.AttrValue: aws.Int64Value(configured.Value),
 	}
 
 	return []map[string]interface{}{cfg}

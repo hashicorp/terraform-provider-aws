@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestDecodeCacheID(t *testing.T) {
@@ -60,7 +61,7 @@ func TestDecodeCacheID(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		gatewayARN, diskID, err := tfstoragegateway.DecodeCacheID(tc.Input)
+		gatewayARN, diskID, err := tfstoragegateway.CacheParseResourceID(tc.Input)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Input, err)
 		}
@@ -84,7 +85,7 @@ func TestAccStorageGatewayCache_fileGateway(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// Storage Gateway API does not support removing caches,
 		// but we want to ensure other resources are removed.
@@ -95,7 +96,7 @@ func TestAccStorageGatewayCache_fileGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCacheExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "disk_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -115,7 +116,7 @@ func TestAccStorageGatewayCache_tapeAndVolumeGateway(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// Storage Gateway API does not support removing caches,
 		// but we want to ensure other resources are removed.
@@ -126,7 +127,7 @@ func TestAccStorageGatewayCache_tapeAndVolumeGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCacheExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "disk_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -147,7 +148,7 @@ func testAccCheckCacheExists(ctx context.Context, resourceName string) resource.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
 
-		gatewayARN, diskID, err := tfstoragegateway.DecodeCacheID(rs.Primary.ID)
+		gatewayARN, diskID, err := tfstoragegateway.CacheParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

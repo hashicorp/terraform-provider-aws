@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -39,9 +40,9 @@ func (d *customModelsDataSource) Schema(ctx context.Context, request datasource.
 				Computed:   true,
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
-						"creation_time": fwtypes.TimestampType,
-						"model_arn":     types.StringType,
-						"model_name":    types.StringType,
+						names.AttrCreationTime: timetypes.RFC3339Type{},
+						"model_arn":            types.StringType,
+						"model_name":           types.StringType,
 					},
 				},
 			},
@@ -88,7 +89,7 @@ type customModelsDataSourceModel struct {
 }
 
 type customModelSummaryModel struct {
-	CreationTime fwtypes.Timestamp `tfsdk:"creation_time"`
+	CreationTime timetypes.RFC3339 `tfsdk:"creation_time"`
 	ModelARN     types.String      `tfsdk:"model_arn"`
 	ModelName    types.String      `tfsdk:"model_name"`
 }

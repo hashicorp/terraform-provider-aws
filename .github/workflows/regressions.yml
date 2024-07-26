@@ -1,23 +1,30 @@
-name: "Regressions Slack Notifier"
+name: Handle Regressions
+permissions: {}
+
 on:
   issues:
     types:
       - labeled
-  pull_request:
+
+  pull_request_target:
     types:
       - labeled
+
 jobs:
-  slack-notification:
-    name: Slack Notifier
+  process:
+    name: Process Regression
     if: github.event.label.name == 'regression'
     runs-on: ubuntu-latest
+
+    env:
+      ISSUE_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
+
     steps:
       - name: Send Slack Notification
-        uses: slackapi/slack-github-action@e28cf165c92ffef168d23c5c9000cffc8a25e117 # v1.24.0
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # v1.26.0
         env:
+          ISSUE_TITLE: ${{ toJSON(github.event.issue.title || github.event.pull_request.title) }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          EVENT_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
-          EVENT_TITLE: ${{ toJSON(github.event.issue.title || github.event.pull_request.title) }}
         with:
           channel-id: ${{ secrets.SLACK_CHANNEL }}
           payload: |
@@ -34,8 +41,43 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ${{ toJSON(format('<{0}|{1}>', env.EVENT_URL, env.EVENT_TITLE)) }}
+                    "text": ${{ toJSON(format('<{0}|{1}>', env.ISSUE_URL, env.ISSUE_TITLE)) }}
                   }
                 }
               ]
             }
+
+      - name: Generate GitHub App Token
+        id: token
+        uses: actions/create-github-app-token@31c86eb3b33c9b601a1f60f98dcbfd1d70f379b4 # v1.10.3
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PEM }}
+
+      - name: Add prioritized Label
+        env:
+          GH_CLI_SUBCOMMAND: ${{ github.event_name == 'pull_request_target' && 'pr' || 'issue' }}
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          gh $GH_CLI_SUBCOMMAND edit "$ISSUE_URL" --add-label prioritized
+
+      - name: Move to the Top of the Team Working Board
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          PROJECT_ITEM_ID=$(gh project item-add 196 --owner "hashicorp" --url "$ISSUE_URL" --format json --jq '.id')
+
+          gh project item-edit \
+            --id "$PROJECT_ITEM_ID" \
+            --project-id "PVT_kwDOAAuecM4AF-7h" \
+            --field-id "PVTSSF_lADOAAuecM4AF-7hzgMRB34" \
+            --single-select-option-id "${{ vars.team_project_view_working_board }}"
+
+          gh api graphql \
+            -F itemId="$PROJECT_ITEM_ID" \
+            -F projectId="PVT_kwDOAAuecM4AF-7h" \
+            -f query='mutation($itemId:ID!, $projectId:ID!) {
+                        updateProjectV2ItemPosition(input:{itemId:$itemId, projectId:$projectId}) {
+                          clientMutationId
+                        }
+                      }'

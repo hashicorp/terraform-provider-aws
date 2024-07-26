@@ -11,11 +11,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+)
+
+var (
+	_ basetypes.StringTypable = (*durationType)(nil)
 )
 
 type durationType struct {
@@ -24,12 +26,6 @@ type durationType struct {
 
 var (
 	DurationType = durationType{}
-)
-
-var (
-	_ xattr.TypeWithValidate   = (*durationType)(nil)
-	_ basetypes.StringTypable  = (*durationType)(nil)
-	_ basetypes.StringValuable = (*Duration)(nil)
 )
 
 func (t durationType) Equal(o attr.Type) bool {
@@ -90,35 +86,10 @@ func (durationType) ValueType(context.Context) attr.Value {
 	return Duration{}
 }
 
-func (t durationType) Validate(ctx context.Context, in tftypes.Value, path path.Path) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if !in.IsKnown() || in.IsNull() {
-		return diags
-	}
-
-	var value string
-	err := in.As(&value)
-	if err != nil {
-		diags.AddAttributeError(
-			path,
-			"Duration Type Validation Error",
-			ProviderErrorDetailPrefix+fmt.Sprintf("Cannot convert value to string: %s", err),
-		)
-		return diags
-	}
-
-	if _, err = time.ParseDuration(value); err != nil {
-		diags.AddAttributeError(
-			path,
-			"Duration Type Validation Error",
-			fmt.Sprintf("Value %q cannot be parsed as a Duration.", value),
-		)
-		return diags
-	}
-
-	return diags
-}
+var (
+	_ basetypes.StringValuable    = (*Duration)(nil)
+	_ xattr.ValidateableAttribute = (*Duration)(nil)
+)
 
 func DurationNull() Duration {
 	return Duration{StringValue: basetypes.NewStringNull()}
@@ -128,10 +99,21 @@ func DurationUnknown() Duration {
 	return Duration{StringValue: basetypes.NewStringUnknown()}
 }
 
+// DurationValue initializes a new Duration type with the provided value
+//
+// This function does not return diagnostics, and therefore invalid duration values
+// are not handled during construction. Invalid values will be detected by the
+// ValidateAttribute method, called by the ValidateResourceConfig RPC during
+// operations like `terraform validate`, `plan`, or `apply`.
 func DurationValue(value string) Duration {
+	// swallow any Duration parsing errors here and just pass along the
+	// zero value time.Duration. Invalid values will be handled downstream
+	// by the ValidateAttribute method.
+	v, _ := time.ParseDuration(value)
+
 	return Duration{
 		StringValue: basetypes.NewStringValue(value),
-		value:       errs.Must(time.ParseDuration(value)),
+		value:       v,
 	}
 }
 
@@ -157,4 +139,20 @@ func (Duration) Type(context.Context) attr.Type {
 // ValueDuration returns the known time.Duration value. If Duration is null or unknown, returns 0.
 func (v Duration) ValueDuration() time.Duration {
 	return v.value
+}
+
+func (v Duration) ValidateAttribute(ctx context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {
+	if v.IsNull() || v.IsUnknown() {
+		return
+	}
+
+	if _, err := time.ParseDuration(v.ValueString()); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid Duration Value",
+			"The provided value cannot be parsed as a Duration.\n\n"+
+				"Path: "+req.Path.String()+"\n"+
+				"Error: "+err.Error(),
+		)
+	}
 }

@@ -66,10 +66,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `description` - The Description of the ElastiCache Subnet Group.
-* `name` - The Name of the ElastiCache Subnet Group.
-* `subnetIds` - The Subnet IDs of the ElastiCache Subnet Group.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `vpcId` - The Amazon Virtual Private Cloud identifier (VPC ID) of the cache subnet group.
 
 ## Import
 
@@ -103,4 +101,4 @@ Using `terraform import`, import ElastiCache Subnet Groups using the `name`. For
 % terraform import aws_elasticache_subnet_group.bar tf-test-cache-subnet
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d49c45c9808e5118d0af382be9e2a43a4d61bdb33e03f20e46b9f01473a0e825 -->
+<!-- cache-key: cdktf-0.20.1 input-ee752771376a04c8e2e6013e24fd99a2238163ed656cac17fe58b010c87938ca -->

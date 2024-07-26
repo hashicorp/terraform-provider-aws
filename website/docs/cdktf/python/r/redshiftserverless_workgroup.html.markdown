@@ -44,6 +44,7 @@ The following arguments are optional:
 * `base_capacity` - (Optional) The base data warehouse capacity of the workgroup in Redshift Processing Units (RPUs).
 * `config_parameter` - (Optional) An array of parameters to set for more control over a serverless database. See `Config Parameter` below.
 * `enhanced_vpc_routing` - (Optional) The value that specifies whether to turn on enhanced virtual private cloud (VPC) routing, which forces Amazon Redshift Serverless to route traffic through your VPC instead of over the internet.
+* `max_capacity` - (Optional) The maximum data-warehouse capacity Amazon Redshift Serverless uses to serve queries, specified in Redshift Processing Units (RPUs).
 * `port` - (Optional) The port number on which the cluster accepts incoming connections.
 * `publicly_accessible` - (Optional) A value that specifies whether the workgroup can be accessed from a public network.
 * `security_group_ids` - (Optional) An array of security group IDs to associate with the workgroup.
@@ -117,4 +118,4 @@ Using `terraform import`, import Redshift Serverless Workgroups using the `workg
 % terraform import aws_redshiftserverless_workgroup.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-963bdd01fd9cecab727518a71723d7e08acf50bf921e262a0012f89f1fb06b67 -->
+<!-- cache-key: cdktf-0.20.1 input-0490bb42d1dc6d3da952d03962f3546cde5f3fdcdeca4957f9c7f545905349c5 -->

@@ -8,12 +8,14 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -231,6 +233,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Optional: true,
 				Description: "session token. A session token is only required if you are\n" +
 					"using temporary security credentials.",
+			},
+			"token_bucket_rate_limiter_capacity": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The capacity of the AWS SDK's token bucket rate limiter.",
 			},
 			"use_dualstack_endpoint": {
 				Type:        schema.TypeBool,
@@ -486,6 +493,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		STSRegion:                      d.Get("sts_region").(string),
 		TerraformVersion:               terraformVersion,
 		Token:                          d.Get("token").(string),
+		TokenBucketRateLimiterCapacity: d.Get("token_bucket_rate_limiter_capacity").(int),
 		UseDualStackEndpoint:           d.Get("use_dualstack_endpoint").(bool),
 		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
 	}
@@ -571,7 +579,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.SharedConfigFiles = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).Value(); !null {
+	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).ValueBool(); !null {
 		if v {
 			config.EC2MetadataServiceEnableState = imds.ClientDisabled
 		} else {
@@ -865,17 +873,49 @@ func expandIgnoreTags(ctx context.Context, tfMap map[string]interface{}) *tftags
 func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
+	endpointsPath := cty.GetAttrPath("endpoints")
+
+	if l := len(tfList); l > 1 {
+		diags = append(diags, errs.NewAttributeWarningDiagnostic(
+			endpointsPath,
+			"Invalid Attribute Value",
+			fmt.Sprintf("Attribute %q should have at most 1 element, got %d."+
+				"\n\nThis will be an error in a future release.",
+				errs.PathString(endpointsPath), l),
+		))
+	}
+
 	endpoints := make(map[string]string)
 
-	for _, tfMapRaw := range tfList {
+	for i, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 
 		if !ok {
 			continue
 		}
 
+		elementPath := endpointsPath.IndexInt(i)
+
 		for _, endpoint := range names.Endpoints() {
 			pkg := endpoint.ProviderPackage
+
+			if len(endpoint.Aliases) > 0 {
+				count := 0
+				attrs := []string{pkg}
+				if tfMap[pkg] != "" {
+					count++
+				}
+				for _, alias := range endpoint.Aliases {
+					attrs = append(attrs, alias)
+					if tfMap[alias] != "" {
+						count++
+					}
+				}
+
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+			}
 
 			if endpoints[pkg] == "" {
 				if v := tfMap[pkg].(string); v != "" {
@@ -901,13 +941,13 @@ func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string
 		}
 
 		// We only need to handle the services with custom envvars here before we hand off to `aws-sdk-go-base`
-		tfAwsEnvVar := names.TfAwsEnvVar(pkg)
+		tfAwsEnvVar := names.TFAWSEnvVar(pkg)
 		deprecatedEnvVar := names.DeprecatedEnvVar(pkg)
 		if tfAwsEnvVar == "" && deprecatedEnvVar == "" {
 			continue
 		}
 
-		awsEnvVar := names.AwsServiceEnvVar(pkg)
+		awsEnvVar := names.AWSServiceEnvVar(pkg)
 		if awsEnvVar != "" {
 			if v := os.Getenv(awsEnvVar); v != "" {
 				endpoints[pkg] = v
@@ -939,5 +979,20 @@ func DeprecatedEnvVarDiag(envvar, replacement string) diag.Diagnostic {
 	return errs.NewWarningDiagnostic(
 		"Deprecated Environment Variable",
 		fmt.Sprintf(`The environment variable "%s" is deprecated. Use environment variable "%s" instead.`, envvar, replacement),
+	)
+}
+
+func ConflictingEndpointsWarningDiag(elementPath cty.Path, attrs ...string) diag.Diagnostic {
+	attrPaths := make([]string, len(attrs))
+	for i, attr := range attrs {
+		path := elementPath.GetAttr(attr)
+		attrPaths[i] = `"` + errs.PathString(path) + `"`
+	}
+	return errs.NewAttributeWarningDiagnostic(
+		elementPath,
+		"Invalid Attribute Combination",
+		fmt.Sprintf("Only one of the following attributes should be set: %s"+
+			"\n\nThis will be an error in a future release.",
+			strings.Join(attrPaths, ", ")),
 	)
 }

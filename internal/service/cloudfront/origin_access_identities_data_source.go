@@ -5,20 +5,20 @@ package cloudfront
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_cloudfront_origin_access_identities")
-func DataSourceOriginAccessIdentities() *schema.Resource {
+// @SDKDataSource("aws_cloudfront_origin_access_identities", name="Origin Access Identities")
+func dataSourceOriginAccessIdentities() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOriginAccessIdentitiesRead,
 
@@ -33,7 +33,7 @@ func DataSourceOriginAccessIdentities() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -49,60 +49,47 @@ func DataSourceOriginAccessIdentities() *schema.Resource {
 
 func dataSourceOriginAccessIdentitiesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	var comments []interface{}
-
+	var comments []any
 	if v, ok := d.GetOk("comments"); ok && v.(*schema.Set).Len() > 0 {
 		comments = v.(*schema.Set).List()
 	}
 
-	var output []*cloudfront.OriginAccessIdentitySummary
+	input := &cloudfront.ListCloudFrontOriginAccessIdentitiesInput{}
+	var output []awstypes.CloudFrontOriginAccessIdentitySummary
 
-	err := conn.ListCloudFrontOriginAccessIdentitiesPagesWithContext(ctx, &cloudfront.ListCloudFrontOriginAccessIdentitiesInput{}, func(page *cloudfront.ListCloudFrontOriginAccessIdentitiesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := cloudfront.NewListCloudFrontOriginAccessIdentitiesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing CloudFront Origin Access Identities: %s", err)
 		}
 
 		for _, v := range page.CloudFrontOriginAccessIdentityList.Items {
-			if v == nil {
-				continue
-			}
-
 			if len(comments) > 0 {
-				if idx := tfslices.IndexOf(comments, aws.StringValue(v.Comment)); idx == -1 {
+				if idx := tfslices.IndexOf(comments, aws.ToString(v.Comment)); idx == -1 {
 					continue
 				}
 			}
 
 			output = append(output, v)
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing CloudFront origin access identities: %s", err)
 	}
 
 	var iamARNs, ids, s3CanonicalUserIDs []string
 
 	for _, v := range output {
-		// See https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html#private-content-updating-s3-bucket-policies-principal.
-		iamARN := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition,
-			Service:   "iam",
-			AccountID: "cloudfront",
-			Resource:  fmt.Sprintf("user/CloudFront Origin Access Identity %s", *v.Id),
-		}.String()
-		iamARNs = append(iamARNs, iamARN)
-		ids = append(ids, aws.StringValue(v.Id))
-		s3CanonicalUserIDs = append(s3CanonicalUserIDs, aws.StringValue(v.S3CanonicalUserId))
+		id := aws.ToString(v.Id)
+		iamARNs = append(iamARNs, originAccessIdentityARN(meta.(*conns.AWSClient), id))
+		ids = append(ids, id)
+		s3CanonicalUserIDs = append(s3CanonicalUserIDs, aws.ToString(v.S3CanonicalUserId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 	d.Set("iam_arns", iamARNs)
-	d.Set("ids", ids)
+	d.Set(names.AttrIDs, ids)
 	d.Set("s3_canonical_user_ids", s3CanonicalUserIDs)
 
 	return diags

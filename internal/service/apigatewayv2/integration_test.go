@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAPIGatewayV2Integration_basicWebSocket(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccAPIGatewayV2Integration_basicWebSocket(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,11 +36,11 @@ func TestAccAPIGatewayV2Integration_basicWebSocket(t *testing.T) {
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", "${integration.response.statuscode}"),
 					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
@@ -47,12 +48,12 @@ func TestAccAPIGatewayV2Integration_basicWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29000"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct0),
 				),
 			},
 			{
@@ -74,7 +75,7 @@ func TestAccAPIGatewayV2Integration_basicHTTP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -82,11 +83,11 @@ func TestAccAPIGatewayV2Integration_basicHTTP(t *testing.T) {
 				Config: testAccIntegrationConfig_httpProxy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
@@ -94,12 +95,12 @@ func TestAccAPIGatewayV2Integration_basicHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", ""),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "30000"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct0),
 				),
 			},
 			{
@@ -121,7 +122,7 @@ func TestAccAPIGatewayV2Integration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -129,7 +130,7 @@ func TestAccAPIGatewayV2Integration_disappears(t *testing.T) {
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					testAccCheckIntegrationDisappears(ctx, &apiId, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceIntegration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -146,7 +147,7 @@ func TestAccAPIGatewayV2Integration_dataMappingHTTP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -154,11 +155,11 @@ func TestAccAPIGatewayV2Integration_dataMappingHTTP(t *testing.T) {
 				Config: testAccIntegrationConfig_dataMappingHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "ANY"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
@@ -166,36 +167,36 @@ func TestAccAPIGatewayV2Integration_dataMappingHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", "http://www.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", ""),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.append:header.header1", "$context.requestId"),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.remove:querystring.qs1", "''"),
-					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "response_parameters.*", map[string]string{
-						"status_code":                    "500",
-						"mappings.%":                     "2",
+						names.AttrStatusCode:             "500",
+						"mappings.%":                     acctest.Ct2,
 						"mappings.append:header.header1": "$context.requestId",
 						"mappings.overwrite:statuscode":  "403",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "response_parameters.*", map[string]string{
-						"status_code":                  "404",
-						"mappings.%":                   "1",
+						names.AttrStatusCode:           "404",
+						"mappings.%":                   acctest.Ct1,
 						"mappings.append:header.error": "$stageVariables.environmentId",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "30000"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccIntegrationConfig_dataMappingHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "ANY"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
@@ -203,20 +204,20 @@ func TestAccAPIGatewayV2Integration_dataMappingHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", "http://www.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", ""),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.append:header.header1", "$context.accountId"),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.overwrite:header.header2", "$stageVariables.environmentId"),
-					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "response_parameters.*", map[string]string{
-						"status_code":                    "500",
-						"mappings.%":                     "2",
+						names.AttrStatusCode:             "500",
+						"mappings.%":                     acctest.Ct2,
 						"mappings.append:header.header1": "$context.requestId",
 						"mappings.overwrite:statuscode":  "403",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "30000"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct0),
 				),
 			},
 			{
@@ -238,7 +239,7 @@ func TestAccAPIGatewayV2Integration_integrationTypeHTTP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -246,11 +247,11 @@ func TestAccAPIGatewayV2Integration_integrationTypeHTTP(t *testing.T) {
 				Config: testAccIntegrationConfig_typeHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", "${integration.response.statuscode}"),
 					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
@@ -258,25 +259,25 @@ func TestAccAPIGatewayV2Integration_integrationTypeHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", "http://www.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.querystring.stage", "'value1'"),
-					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.application/json", ""),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", "$request.body.name"),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "28999"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccIntegrationConfig_typeHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_BINARY"),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test HTTP updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test HTTP updated"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "POST"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", "${integration.response.statuscode}"),
 					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
@@ -284,16 +285,16 @@ func TestAccAPIGatewayV2Integration_integrationTypeHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", "http://www.example.org"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_TEMPLATES"),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.header.x-userid", "'value2'"),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.path.op", "'value3'"),
-					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.application/json", "#set($number=42)"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.application/xml", "#set($percent=$number/100)"),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", "$request.body.id"),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "51"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct0),
 				),
 			},
 			{
@@ -316,7 +317,7 @@ func TestAccAPIGatewayV2Integration_lambdaWebSocket(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -327,7 +328,7 @@ func TestAccAPIGatewayV2Integration_lambdaWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test Lambda"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test Lambda"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "POST"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", "${integration.response.body.errorMessage}"),
 					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
@@ -335,12 +336,12 @@ func TestAccAPIGatewayV2Integration_lambdaWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "integration_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29000"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct0),
 				),
 			},
 			{
@@ -363,7 +364,7 @@ func TestAccAPIGatewayV2Integration_lambdaHTTP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -374,7 +375,7 @@ func TestAccAPIGatewayV2Integration_lambdaHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test Lambda"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test Lambda"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "POST"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
@@ -382,12 +383,12 @@ func TestAccAPIGatewayV2Integration_lambdaHTTP(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "integration_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", ""),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "2.0"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "30000"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct0),
 				),
 			},
 			{
@@ -410,7 +411,7 @@ func TestAccAPIGatewayV2Integration_vpcLinkWebSocket(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -418,11 +419,11 @@ func TestAccAPIGatewayV2Integration_vpcLinkWebSocket(t *testing.T) {
 				Config: testAccIntegrationConfig_vpcLinkWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "connection_id", vpcLinkResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrConnectionID, vpcLinkResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test VPC Link"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test VPC Link"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "PUT"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
@@ -430,12 +431,12 @@ func TestAccAPIGatewayV2Integration_vpcLinkWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", "http://www.example.net"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "NEVER"),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "12345"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct0),
 				),
 			},
 			{
@@ -459,7 +460,7 @@ func TestAccAPIGatewayV2Integration_vpcLinkHTTP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -467,24 +468,24 @@ func TestAccAPIGatewayV2Integration_vpcLinkHTTP(t *testing.T) {
 				Config: testAccIntegrationConfig_vpcLinkHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "connection_id", vpcLinkResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrConnectionID, vpcLinkResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test private integration"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test private integration"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_type", "HTTP_PROXY"),
-					resource.TestCheckResourceAttrPair(resourceName, "integration_uri", lbListenerResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "integration_uri", lbListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", ""),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29001"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.0.server_name_to_verify", "www.example.com"),
 				),
 			},
@@ -498,24 +499,24 @@ func TestAccAPIGatewayV2Integration_vpcLinkHTTP(t *testing.T) {
 				Config: testAccIntegrationConfig_vpcLinkHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "connection_id", vpcLinkResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrConnectionID, vpcLinkResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test private integration updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test private integration updated"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "POST"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_subtype", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_type", "HTTP_PROXY"),
-					resource.TestCheckResourceAttrPair(resourceName, "integration_uri", lbListenerResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "integration_uri", lbListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", ""),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29001"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.0.server_name_to_verify", "www.example.org"),
 				),
 			},
@@ -541,7 +542,7 @@ func TestAccAPIGatewayV2Integration_serviceIntegration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -551,8 +552,8 @@ func TestAccAPIGatewayV2Integration_serviceIntegration(t *testing.T) {
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "credentials_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test SQS send"),
+					resource.TestCheckResourceAttrPair(resourceName, "credentials_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test SQS send"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_subtype", "SQS-SendMessage"),
@@ -560,15 +561,15 @@ func TestAccAPIGatewayV2Integration_serviceIntegration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", ""),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.MessageBody", "$request.body"),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.MessageGroupId", "$request.body.authentication_key"),
-					resource.TestCheckResourceAttrPair(resourceName, "request_parameters.QueueUrl", sqsQueue1ResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "request_parameters.QueueUrl", sqsQueue1ResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "30000"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct0),
 				),
 			},
 			{
@@ -577,8 +578,8 @@ func TestAccAPIGatewayV2Integration_serviceIntegration(t *testing.T) {
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "credentials_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test SQS send"),
+					resource.TestCheckResourceAttrPair(resourceName, "credentials_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test SQS send"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_subtype", "SQS-SendMessage"),
@@ -586,15 +587,15 @@ func TestAccAPIGatewayV2Integration_serviceIntegration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", ""),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.MessageBody", "$request.body"),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.MessageGroupId", "$request.body.authentication_key"),
-					resource.TestCheckResourceAttrPair(resourceName, "request_parameters.QueueUrl", sqsQueue2ResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "request_parameters.QueueUrl", sqsQueue2ResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "30000"),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct0),
 				),
 			},
 			{
@@ -609,68 +610,47 @@ func TestAccAPIGatewayV2Integration_serviceIntegration(t *testing.T) {
 
 func testAccCheckIntegrationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_apigatewayv2_integration" {
 				continue
 			}
 
-			_, err := conn.GetIntegrationWithContext(ctx, &apigatewayv2.GetIntegrationInput{
-				ApiId:         aws.String(rs.Primary.Attributes["api_id"]),
-				IntegrationId: aws.String(rs.Primary.ID),
-			})
-			if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+			_, err := tfapigatewayv2.FindIntegrationByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
+
 			if err != nil {
 				return err
 			}
 
-			return fmt.Errorf("API Gateway v2 integration %s still exists", rs.Primary.ID)
+			return fmt.Errorf("API Gateway v2 Integration %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckIntegrationDisappears(ctx context.Context, apiId *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
-
-		_, err := conn.DeleteIntegrationWithContext(ctx, &apigatewayv2.DeleteIntegrationInput{
-			ApiId:         apiId,
-			IntegrationId: v.IntegrationId,
-		})
-
-		return err
-	}
-}
-
-func testAccCheckIntegrationExists(ctx context.Context, n string, vApiId *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
+func testAccCheckIntegrationExists(ctx context.Context, n string, apiID *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway v2 integration ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
+		output, err := tfapigatewayv2.FindIntegrationByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.ID)
 
-		apiId := aws.String(rs.Primary.Attributes["api_id"])
-		resp, err := conn.GetIntegrationWithContext(ctx, &apigatewayv2.GetIntegrationInput{
-			ApiId:         apiId,
-			IntegrationId: aws.String(rs.Primary.ID),
-		})
 		if err != nil {
 			return err
 		}
 
-		*vApiId = *apiId
-		*v = *resp
+		*apiID = rs.Primary.Attributes["api_id"]
+		*v = *output
 
 		return nil
 	}
@@ -747,7 +727,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "index.handler"
-  runtime       = "nodejs14.x"
+  runtime       = "nodejs20.x"
 
   depends_on = [aws_iam_role_policy.test]
 }

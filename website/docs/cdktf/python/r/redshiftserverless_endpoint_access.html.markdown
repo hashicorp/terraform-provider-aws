@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 This resource supports the following arguments:
 
 * `endpoint_name` - (Required) The name of the endpoint.
+* `owner_account` - (Optional) The owner Amazon Web Services account for the Amazon Redshift Serverless workgroup.
 * `subnet_ids` - (Required) An array of VPC subnet IDs to associate with the endpoint.
 * `vpc_security_group_ids` - (Optional) An array of security group IDs to associate with the workgroup.
 * `workgroup_name` - (Required) The name of the workgroup.
@@ -90,4 +91,4 @@ Using `terraform import`, import Redshift Serverless Endpoint Access using the `
 % terraform import aws_redshiftserverless_endpoint_access.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a869e2502d87c1ead378782f8a695ae513642420fec05b7e7f019308555ddb33 -->
+<!-- cache-key: cdktf-0.20.1 input-02a646b226fa2e51fbd46daf9da9414ac21e7f0d365734c9325c86977ee9c65c -->

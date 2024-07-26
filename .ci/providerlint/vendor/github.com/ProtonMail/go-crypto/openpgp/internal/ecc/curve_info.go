@@ -4,6 +4,7 @@ package ecc
 import (
 	"bytes"
 	"crypto/elliptic"
+
 	"github.com/ProtonMail/go-crypto/bitcurves"
 	"github.com/ProtonMail/go-crypto/brainpool"
 	"github.com/ProtonMail/go-crypto/openpgp/internal/encoding"
@@ -47,7 +48,7 @@ var Curves = []CurveInfo{
 		Curve:   NewCurve25519(),
 	},
 	{
-		// X448
+		// x448
 		GenName: "Curve448",
 		Oid:     encoding.NewOID([]byte{0x2B, 0x65, 0x6F}),
 		Curve:   NewX448(),

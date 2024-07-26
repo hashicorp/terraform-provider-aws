@@ -25,7 +25,7 @@ func testAccDelegationSignerRecord_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDelegationSignerAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -54,7 +54,7 @@ func testAccDelegationSignerRecord_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDelegationSignerAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,7 +79,7 @@ func testAccCheckDelegationSignerAssociationDestroy(ctx context.Context) resourc
 				continue
 			}
 
-			_, err := tfroute53domains.FindDNSSECKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_name"], rs.Primary.Attributes["dnssec_key_id"])
+			_, err := tfroute53domains.FindDNSSECKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["dnssec_key_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -105,7 +105,7 @@ func testAccCheckDelegationSignerAssociationExists(ctx context.Context, n string
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53DomainsClient(ctx)
 
-		_, err := tfroute53domains.FindDNSSECKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_name"], rs.Primary.Attributes["dnssec_key_id"])
+		_, err := tfroute53domains.FindDNSSECKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["dnssec_key_id"])
 
 		return err
 	}
@@ -118,7 +118,7 @@ func testAccDelegationSignerAssociationImportStateIDFunc(_ context.Context, n st
 			return "", fmt.Errorf("Not found: %s", n)
 		}
 
-		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["domain_name"], rs.Primary.Attributes["dnssec_key_id"]), nil
+		return fmt.Sprintf("%s,%s", rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["dnssec_key_id"]), nil
 	}
 }
 

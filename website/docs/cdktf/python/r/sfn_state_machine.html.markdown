@@ -139,6 +139,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ARN of the state machine.
 * `arn` - The ARN of the state machine.
 * `creation_date` - The date the state machine was created.
+* `state_machine_version_arn` - The ARN of the state machine version.
 * `status` - The current status of the state machine. Either `ACTIVE` or `DELETING`.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
@@ -175,4 +176,4 @@ Using `terraform import`, import State Machines using the `arn`. For example:
 % terraform import aws_sfn_state_machine.foo arn:aws:states:eu-west-1:123456789098:stateMachine:bar
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f08ea369e176242c031d2aef1b09ffa720bc2fe422b8ec36899abd05e99d76aa -->
+<!-- cache-key: cdktf-0.20.1 input-0671383dcd1147fbb37fbbbabd2d0733dcc04eb98bb95589ba88d57ddf354c78 -->

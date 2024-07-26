@@ -16,7 +16,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/ratelimit"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -60,7 +61,7 @@ func ResourceEntityRecognizer() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -180,7 +181,7 @@ func ResourceEntityRecognizer() *schema.Resource {
 							MaxItems: 25,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -194,7 +195,7 @@ func ResourceEntityRecognizer() *schema.Resource {
 					},
 				},
 			},
-			"language_code": {
+			names.AttrLanguageCode: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.SyntaxLanguageCode](),
@@ -205,7 +206,7 @@ func ResourceEntityRecognizer() *schema.Resource {
 				DiffSuppressFunc: tfkms.DiffSuppressKey,
 				ValidateFunc:     tfkms.ValidateKey,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validModelName,
@@ -232,18 +233,18 @@ func ResourceEntityRecognizer() *schema.Resource {
 				DiffSuppressFunc: tfkms.DiffSuppressKey,
 				ValidateFunc:     tfkms.ValidateKey,
 			},
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnets": {
+						names.AttrSubnets: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -342,9 +343,9 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading Comprehend Entity Recognizer (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", out.EntityRecognizerArn)
+	d.Set(names.AttrARN, out.EntityRecognizerArn)
 	d.Set("data_access_role_arn", out.DataAccessRoleArn)
-	d.Set("language_code", out.LanguageCode)
+	d.Set(names.AttrLanguageCode, out.LanguageCode)
 	d.Set("model_kms_key_id", out.ModelKmsKeyId)
 	d.Set("version_name", out.VersionName)
 	d.Set("version_name_prefix", create.NamePrefixFromName(aws.ToString(out.VersionName)))
@@ -355,13 +356,13 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Comprehend Entity Recognizer (%s): %s", d.Id(), err)
 	}
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 
 	if err := d.Set("input_data_config", flattenEntityRecognizerInputDataConfig(out.InputDataConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting input_data_config: %s", err)
 	}
 
-	if err := d.Set("vpc_config", flattenVPCConfig(out.VpcConfig)); err != nil {
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfig(out.VpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
@@ -374,7 +375,7 @@ func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData,
 
 	var diags diag.Diagnostics
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		var versionName *string
 		if d.HasChange("version_name") {
 			versionName = aws.String(d.Get("version_name").(string))
@@ -449,10 +450,10 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 				return fmt.Errorf("waiting for version (%s) to be deleted: %s", aws.ToString(v.VersionName), err)
 			}
 
-			ec2Conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+			ec2Conn := meta.(*conns.AWSClient).EC2Client(ctx)
 			networkInterfaces, err := tfec2.FindNetworkInterfaces(ctx, ec2Conn, &ec2.DescribeNetworkInterfacesInput{
-				Filters: []*ec2.Filter{
-					tfec2.NewFilter(fmt.Sprintf("tag:%s", entityRecognizerTagKey), []string{aws.ToString(v.EntityRecognizerArn)}),
+				Filters: []ec2types.Filter{
+					tfec2.NewFilter("tag:"+entityRecognizerTagKey, []string{aws.ToString(v.EntityRecognizerArn)}),
 				},
 			})
 			if err != nil {
@@ -498,10 +499,10 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 	in := &comprehend.CreateEntityRecognizerInput{
 		DataAccessRoleArn:  aws.String(d.Get("data_access_role_arn").(string)),
 		InputDataConfig:    expandEntityRecognizerInputDataConfig(getEntityRecognizerInputDataConfig(d)),
-		LanguageCode:       types.LanguageCode(d.Get("language_code").(string)),
-		RecognizerName:     aws.String(d.Get("name").(string)),
+		LanguageCode:       types.LanguageCode(d.Get(names.AttrLanguageCode).(string)),
+		RecognizerName:     aws.String(d.Get(names.AttrName).(string)),
 		VersionName:        versionName,
-		VpcConfig:          expandVPCConfig(d.Get("vpc_config").([]interface{})),
+		VpcConfig:          expandVPCConfig(d.Get(names.AttrVPCConfig).([]interface{})),
 		ClientRequestToken: aws.String(id.UniqueId()),
 		Tags:               getTagsIn(ctx),
 	}
@@ -546,11 +547,11 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 		out, err = conn.CreateEntityRecognizer(ctx, in)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "%s Amazon Comprehend Entity Recognizer (%s): %s", action, d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "%s Amazon Comprehend Entity Recognizer (%s): %s", action, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.EntityRecognizerArn == nil {
-		return sdkdiag.AppendErrorf(diags, "%s Amazon Comprehend Entity Recognizer (%s): empty output", action, d.Get("name").(string))
+		return sdkdiag.AppendErrorf(diags, "%s Amazon Comprehend Entity Recognizer (%s): empty output", action, d.Get(names.AttrName).(string))
 	}
 
 	d.SetId(aws.ToString(out.EntityRecognizerArn))
@@ -575,7 +576,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 
 	if in.VpcConfig != nil {
 		g.Go(func() error {
-			ec2Conn := awsClient.EC2Conn(ctx)
+			ec2Conn := awsClient.EC2Client(ctx)
 			enis, err := findNetworkInterfaces(waitCtx, ec2Conn, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets)
 			if err != nil {
 				diags = sdkdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) %s: %s", d.Id(), tobe, err)
@@ -598,9 +599,9 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 
 			modelVPCENILock.Unlock()
 
-			_, err = ec2Conn.CreateTagsWithContext(waitCtx, &ec2.CreateTagsInput{
-				Resources: []*string{newENI.NetworkInterfaceId},
-				Tags: []*ec2.Tag{
+			_, err = ec2Conn.CreateTags(waitCtx, &ec2.CreateTagsInput{ // nosemgrep:ci.semgrep.migrate.aws-api-context
+				Resources: []string{aws.ToString(newENI.NetworkInterfaceId)},
+				Tags: []ec2types.Tag{
 					{
 						Key:   aws.String(entityRecognizerTagKey),
 						Value: aws.String(d.Id()),
@@ -779,7 +780,7 @@ func flattenEntityTypesListItem(apiObject *types.EntityTypesListItem) map[string
 	}
 
 	m := map[string]interface{}{
-		"type": aws.ToString(apiObject.Type),
+		names.AttrType: aws.ToString(apiObject.Type),
 	}
 
 	return m
@@ -887,7 +888,7 @@ func expandEntityTypesListItem(tfMap map[string]interface{}) *types.EntityTypesL
 
 	a := &types.EntityTypesListItem{}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		a.Type = aws.String(v)
 	}
 

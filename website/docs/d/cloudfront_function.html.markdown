@@ -37,6 +37,7 @@ This data source exports the following attributes in addition to the arguments a
 * `code` - Source code of the function
 * `comment` - Comment.
 * `etag` - ETag hash of the function
+* `key_value_store_associations` - List of `aws_cloudfront_key_value_store` ARNs associated to the function.
 * `last_modified_time` - When this resource was last modified.
 * `runtime` - Identifier of the function's runtime.
 * `status` - Status of the function. Can be `UNPUBLISHED`, `UNASSOCIATED` or `ASSOCIATED`.

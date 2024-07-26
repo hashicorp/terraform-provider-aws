@@ -8,12 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2EBSEncryptionByDefault_basic(t *testing.T) {
@@ -22,7 +23,7 @@ func TestAccEC2EBSEncryptionByDefault_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEncryptionByDefaultDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -30,7 +31,7 @@ func TestAccEC2EBSEncryptionByDefault_basic(t *testing.T) {
 				Config: testAccEBSEncryptionByDefaultConfig_basic(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSEncryptionByDefault(ctx, resourceName, false),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
@@ -42,7 +43,7 @@ func TestAccEC2EBSEncryptionByDefault_basic(t *testing.T) {
 				Config: testAccEBSEncryptionByDefaultConfig_basic(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSEncryptionByDefault(ctx, resourceName, true),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 		},
@@ -51,14 +52,14 @@ func TestAccEC2EBSEncryptionByDefault_basic(t *testing.T) {
 
 func testAccCheckEncryptionByDefaultDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		response, err := conn.GetEbsEncryptionByDefaultWithContext(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
+		response, err := conn.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
 		if err != nil {
 			return err
 		}
 
-		if aws.BoolValue(response.EbsEncryptionByDefault) != false {
+		if aws.ToBool(response.EbsEncryptionByDefault) != false {
 			return fmt.Errorf("EBS encryption by default not disabled on resource removal")
 		}
 
@@ -77,14 +78,14 @@ func testAccCheckEBSEncryptionByDefault(ctx context.Context, n string, enabled b
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		response, err := conn.GetEbsEncryptionByDefaultWithContext(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
+		response, err := conn.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
 		if err != nil {
 			return err
 		}
 
-		if aws.BoolValue(response.EbsEncryptionByDefault) != enabled {
+		if aws.ToBool(response.EbsEncryptionByDefault) != enabled {
 			return fmt.Errorf("EBS encryption by default is not in expected state (%t)", enabled)
 		}
 

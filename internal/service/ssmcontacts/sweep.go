@@ -25,10 +25,6 @@ func RegisterSweepers() {
 
 func sweepRotations(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID {
-		log.Printf("[WARN] Skipping SSMContacts Rotations sweep for region: %s", region)
-		return nil
-	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -38,28 +34,31 @@ func sweepRotations(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := ssmcontacts.NewListRotationsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
+
 		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping SSMContacts Rotations sweep for %s: %s", region, err)
 			return nil
 		}
+
 		if err != nil {
 			return fmt.Errorf("error retrieving SSMContacts Rotations: %w", err)
 		}
 
-		for _, rotation := range page.Rotations {
-			id := aws.ToString(rotation.RotationArn)
+		for _, v := range page.Rotations {
+			id := aws.ToString(v.RotationArn)
 
 			log.Printf("[INFO] Deleting SSMContacts Rotation: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceRotation, client,
-				framework.NewAttribute("id", id),
+				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
 		return fmt.Errorf("error sweeping SSMContacts Rotations for %s: %w", region, err)
 	}
 

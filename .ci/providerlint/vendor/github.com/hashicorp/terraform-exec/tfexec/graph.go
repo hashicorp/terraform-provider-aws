@@ -60,7 +60,7 @@ func (tf *Terraform) graphCmd(ctx context.Context, opts ...GraphOption) (*exec.C
 	args := []string{"graph"}
 
 	if c.plan != "" {
-		// plan was a positional arguement prior to Terraform 0.15.0. Ensure proper use by checking version.
+		// plan was a positional argument prior to Terraform 0.15.0. Ensure proper use by checking version.
 		if err := tf.compatible(ctx, tf0_15_0, nil); err == nil {
 			args = append(args, "-plan="+c.plan)
 		} else {

@@ -40,9 +40,9 @@ Creating a minimal reproduction of a bug can be a time-consuming process, but it
 
 1. **Start with a simple test case**: Start with a simple configuration that causes the bug.
 2. **Remove any extraneous configuration**: Remove as many resources, dependencies, and arguments as possible to simplify, while still maintaining [test independence](running-and-writing-acceptance-tests.md#test-configuration-independence).
-3. **Verify that the configuration still reproduces the bug**: After removing configuration, make sure that the configuration still causes the bug. If the bug no longer occurs, you may have removed too much. In this case, add back configuration until the bug reappears.
+3. **Verify that the configuration still reproduces the bug**: After removing the configuration, make sure that the configuration still causes the bug. If the bug no longer occurs, you may have removed too much. In this case, add back configuration until the bug reappears.
 
-_A minimal configuration is worth its weight in gold._ If you're only able to make it this far in the debugging process, create a new issue with your minimal configuration or add it to an existing issue. A minimal configuration is a great way to give some else a jump start in looking at the problem.
+_A minimal configuration is worth its weight in gold._ If you're only able to make it this far in the debugging process, create a new issue with your minimal configuration or add it to an existing issue. A minimal configuration is a great way to give someone else a jump start in looking at the problem.
 
 ## 3. Create A New Acceptance Test
 
@@ -63,7 +63,7 @@ func TestAccVPCFlowLog_destinationError(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFlowLogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -124,7 +124,7 @@ func TestAccVPCFlowLog_destinationError(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFlowLogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -184,7 +184,7 @@ This will make the rest of debugging a lot more straightforward.
 
 If you aren't able to figure out a bug or delving into code is not your thing, open a pull request to [contribute just the test](running-and-writing-acceptance-tests.md#writing-an-acceptance-test) that highlights the bug. This is a valuable starting point for future work!
 
-We ask that you make the test "PASS," but use code comments and a GitHub issue to explain what is wrong. With nearly 7,000 acceptance tests, there are always a certain percentage that inexplicably fail. Since we know that the new test we're adding highlights a known bug, we don't want the failure to be lost in the tally of inexplicable failures.
+We ask that you make the test "PASS," but use code comments and a GitHub issue to explain what is wrong. With nearly 7,000 acceptance tests, there is always a certain percentage that inexplicably fails. Since we know that the new test we're adding highlights a known bug, we don't want the failure to be lost in the tally of inexplicable failures.
 
 #### Failing Test Contribution Example: Errors
 
@@ -197,7 +197,7 @@ func TestAccVPCFlowLog_destinationError(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFlowLogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -233,7 +233,7 @@ func TestAccVPCFlowLog_destinationError(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFlowLogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -265,7 +265,7 @@ resource "aws_flow_log" "test" {
 
 Now that we can easily reproduce a bug with a test and we have a minimal configuration, we can look more closely at why the bug is happening.
 
-There are several approaches to looking at what is happening in the AWS provider. You might find that some bugs lend themselves to one approach while others are more easily evaluated with another. Also, you might start with one approach and then find you need to move to another, _e.g._, starting by adding a few `fmt.Printf()` statements and then moving to an IDE debugger.
+There are several approaches to looking at what is happening in the AWS provider. You might find that some bugs lend themselves to one approach while others are more easily evaluated with another. Also, you might start with one approach and then find you need to move to another, _e.g._, starting by adding a few `fmt.Printf()` statements and then move to an IDE debugger.
 
 ### Use `fmt.Printf()`
 
@@ -333,13 +333,13 @@ reached point 4, with output: {
 
 ### Use Visual Studio Code Debugging
 
-Using debugging from within VS Code provides extra benefits but also an extra challenge. The extra benefits include the ability to set break points, step over and into code, and seeing the values of variables. The extra challenge is getting your debug environment properly set up to include access to your AWS credentials and environment variables used for testing.
+Using debugging from within VS Code provides extra benefits but also an extra challenge. The extra benefits include the ability to set breakpoints, step over and into code, and see the values of variables. The extra challenge is getting your debug environment properly set up to include access to your AWS credentials and environment variables used for testing.
 
 Special thanks to Drew Mullen for [his work on debugging the AWS provider in VS Code](https://dev.to/drewmullen/vscode-terraform-provider-development-setup-debugging-6bn).
 
 #### Set up `launch.json`
 
-VS Code uses a hidden directory called `.vscode` in the root of your project for configuration files. This directory and files it contains are ignored by Git using the `.gitignore` file included with the AWS provider. This allows you to have your own local configuration without concerns that it will be uploaded to or overwritten by the AWS provider repository.
+VS Code uses a hidden directory called `.vscode` in the root of your project for configuration files. This directory and the files it contains are ignored by Git using the `.gitignore` file included with the AWS provider. This allows you to have your own local configuration without concerns that it will be uploaded to or overwritten by the AWS provider repository.
 
 As shown below, use VS Code to create two files in the `.vscode` directory: `launch.json` and `private.env`.
 
@@ -408,7 +408,7 @@ With the environment and VS Code GUI set up, you are ready to run and debug.
 
 Depending on where you suspect the problems are occurring, you can set breakpoints on the resource's Create, Read, Update, Delete, or other functions. The debugger will stop at the first breakpoint it encounters.
 
-Setting breakpoints is built into VS Code and easy. Hover to the left of a line number and you'll see a faded red dot. Click on the faded red dot to turn it into a breakpoint, as shown below.
+Setting breakpoints is built into VS Code and is easy. Hover to the left of a line number and you'll see a faded red dot. Click on the faded red dot to turn it into a breakpoint, as shown below.
 
 You can see a list of breakpoints throughout the codebase at the bottom of the Run and Debug panel, as shown below.
 

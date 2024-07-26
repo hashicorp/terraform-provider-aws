@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -18,14 +18,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	DefaultLogVersionValue = "ocsf-1.0.0-rc.2"
+	defaultVerifiedAccessLogVersion = "ocsf-1.0.0-rc.2"
 )
 
 // @SDKResource("aws_verifiedaccess_instance_logging_configuration", name="Verified Access Instance Logging Configuration")
-func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
+func resourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessInstanceLoggingConfigurationCreate,
 		ReadWithoutTimeout:   resourceVerifiedAccessInstanceLoggingConfigurationRead,
@@ -43,14 +44,14 @@ func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_logs": {
+						names.AttrCloudWatchLogs: {
 							Type:             schema.TypeList,
 							MaxItems:         1,
 							Optional:         true,
 							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Required: true,
 									},
@@ -77,7 +78,7 @@ func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Required: true,
 									},
@@ -96,7 +97,7 @@ func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -106,11 +107,11 @@ func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 										Computed:     true, // Describe API returns this value if not set
 										ValidateFunc: verify.ValidAccountID,
 									},
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Required: true,
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -162,8 +163,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationRead(ctx context.Context,
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	vaiID := d.Id()
-
-	output, err := FindVerifiedAccessInstanceLoggingConfigurationByInstanceID(ctx, conn, vaiID)
+	output, err := findVerifiedAccessInstanceLoggingConfigurationByInstanceID(ctx, conn, vaiID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Verified Access Instance Logging Configuration (%s) not found, removing from state", vaiID)
@@ -237,7 +237,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationDelete(ctx context.Contex
 		// reset log_version because ocsf-0.1 is not compatible with enabling include_trust_context
 		// without reset, if practitioners previously applied and destroyed with ocsf-0.1,
 		// ocsf-0.1 will be the new "default" value, leading to errors with include_trust_context
-		LogVersion: aws.String(DefaultLogVersionValue),
+		LogVersion: aws.String(defaultVerifiedAccessLogVersion),
 	}
 
 	uuid, err := uuid.GenerateUUID()
@@ -277,7 +277,7 @@ func expandVerifiedAccessInstanceAccessLogs(accessLogs []interface{}) *types.Ver
 
 	result := &types.VerifiedAccessLogOptions{}
 
-	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 {
 		result.CloudWatchLogs = expandVerifiedAccessLogCloudWatchLogs(v)
 	}
 
@@ -311,7 +311,7 @@ func expandVerifiedAccessLogCloudWatchLogs(cloudWatchLogs []interface{}) *types.
 	}
 
 	result := &types.VerifiedAccessLogCloudWatchLogsDestinationOptions{
-		Enabled: aws.Bool(tfMap["enabled"].(bool)),
+		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 
 	if v, ok := tfMap["log_group"].(string); ok && v != "" {
@@ -332,7 +332,7 @@ func expandVerifiedAccessLogKinesisDataFirehose(kinesisDataFirehose []interface{
 	}
 
 	result := &types.VerifiedAccessLogKinesisDataFirehoseDestinationOptions{
-		Enabled: aws.Bool(tfMap["enabled"].(bool)),
+		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 
 	if v, ok := tfMap["delivery_stream"].(string); ok && v != "" {
@@ -353,22 +353,22 @@ func expandVerifiedAccessLogS3(s3 []interface{}) *types.VerifiedAccessLogS3Desti
 	}
 
 	result := &types.VerifiedAccessLogS3DestinationOptions{
-		Enabled: aws.Bool(tfMap["enabled"].(bool)),
+		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		result.BucketName = aws.String(v)
 	}
 
 	// if enabled is true, pass bucket owner, otherwise don't pass it
 	// api error InvalidParameterCombination: The parameter AccessLogs.S3.BucketOwner cannot be used when AccessLogs.S3.Enabled is false
-	if v, ok := tfMap["enabled"].(bool); ok && v {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok && v {
 		if v, ok := tfMap["bucket_owner"].(string); ok && v != "" {
 			result.BucketOwner = aws.String(v)
 		}
 	}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		result.Prefix = aws.String(v)
 	}
 
@@ -379,7 +379,7 @@ func flattenVerifiedAccessInstanceAccessLogs(apiObject *types.VerifiedAccessLogs
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CloudWatchLogs; v != nil {
-		tfMap["cloudwatch_logs"] = flattenVerifiedAccessLogCloudWatchLogs(v)
+		tfMap[names.AttrCloudWatchLogs] = flattenVerifiedAccessLogCloudWatchLogs(v)
 	}
 
 	if v := apiObject.IncludeTrustContext; v != nil {
@@ -403,7 +403,7 @@ func flattenVerifiedAccessInstanceAccessLogs(apiObject *types.VerifiedAccessLogs
 
 func flattenVerifiedAccessLogCloudWatchLogs(apiObject *types.VerifiedAccessLogCloudWatchLogsDestination) []interface{} {
 	tfMap := map[string]interface{}{
-		"enabled": apiObject.Enabled,
+		names.AttrEnabled: apiObject.Enabled,
 	}
 
 	if v := apiObject.LogGroup; v != nil {
@@ -415,7 +415,7 @@ func flattenVerifiedAccessLogCloudWatchLogs(apiObject *types.VerifiedAccessLogCl
 
 func flattenVerifiedAccessLogKinesisDataFirehose(apiObject *types.VerifiedAccessLogKinesisDataFirehoseDestination) []interface{} {
 	tfMap := map[string]interface{}{
-		"enabled": apiObject.Enabled,
+		names.AttrEnabled: apiObject.Enabled,
 	}
 
 	if v := apiObject.DeliveryStream; v != nil {
@@ -427,11 +427,11 @@ func flattenVerifiedAccessLogKinesisDataFirehose(apiObject *types.VerifiedAccess
 
 func flattenVerifiedAccessLogS3(apiObject *types.VerifiedAccessLogS3Destination) []interface{} {
 	tfMap := map[string]interface{}{
-		"enabled": apiObject.Enabled,
+		names.AttrEnabled: apiObject.Enabled,
 	}
 
 	if v := apiObject.BucketName; v != nil {
-		tfMap["bucket_name"] = aws.ToString(v)
+		tfMap[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	if v := apiObject.BucketOwner; v != nil {
@@ -439,7 +439,7 @@ func flattenVerifiedAccessLogS3(apiObject *types.VerifiedAccessLogS3Destination)
 	}
 
 	if v := apiObject.Prefix; v != nil {
-		tfMap["prefix"] = aws.ToString(v)
+		tfMap[names.AttrPrefix] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -130,7 +131,7 @@ func sweepClusterParameterGroups(region string) error {
 				continue
 			}
 
-			r := ResourceClusterParameterGroup()
+			r := resourceClusterParameterGroup()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -180,7 +181,7 @@ func sweepClusterSnapshots(region string) error {
 		}
 
 		for _, v := range page.DBClusterSnapshots {
-			r := ResourceClusterSnapshot()
+			r := resourceClusterSnapshot()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.DBClusterSnapshotIdentifier))
 
@@ -228,16 +229,16 @@ func sweepClusters(region string) error {
 		for _, v := range page.DBClusters {
 			arn := aws.StringValue(v.DBClusterArn)
 			id := aws.StringValue(v.DBClusterIdentifier)
-			r := ResourceCluster()
+			r := resourceCluster()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set("apply_immediately", true)
-			d.Set("arn", arn)
+			d.Set(names.AttrApplyImmediately, true)
+			d.Set(names.AttrARN, arn)
 			d.Set("delete_automated_backups", true)
-			d.Set("deletion_protection", false)
+			d.Set(names.AttrDeletionProtection, false)
 			d.Set("skip_final_snapshot", true)
 
-			if engineMode := aws.StringValue(v.EngineMode); engineMode == EngineModeGlobal || engineMode == EngineModeProvisioned {
+			if engineMode := aws.StringValue(v.EngineMode); engineMode == engineModeGlobal || engineMode == engineModeProvisioned {
 				globalCluster, err := FindGlobalClusterByDBClusterARN(ctx, conn, arn)
 				if err != nil {
 					if !tfresource.NotFound(err) {
@@ -288,7 +289,7 @@ func sweepEventSubscriptions(region string) error {
 		}
 
 		for _, eventSubscription := range page.EventSubscriptionsList {
-			r := ResourceEventSubscription()
+			r := resourceEventSubscription()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(eventSubscription.CustSubscriptionId))
 
@@ -335,7 +336,7 @@ func sweepGlobalClusters(region string) error {
 			r := ResourceGlobalCluster()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.GlobalClusterIdentifier))
-			d.Set("force_destroy", true)
+			d.Set(names.AttrForceDestroy, true)
 			d.Set("global_cluster_members", flattenGlobalClusterMembers(v.GlobalClusterMembers))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -381,10 +382,10 @@ func sweepInstances(region string) error {
 			r := ResourceInstance()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.DbiResourceId))
-			d.Set("apply_immediately", true)
+			d.Set(names.AttrApplyImmediately, true)
 			d.Set("delete_automated_backups", true)
-			d.Set("deletion_protection", false)
-			d.Set("identifier", v.DBInstanceIdentifier)
+			d.Set(names.AttrDeletionProtection, false)
+			d.Set(names.AttrIdentifier, v.DBInstanceIdentifier)
 			d.Set("skip_final_snapshot", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -483,7 +484,7 @@ func sweepParameterGroups(region string) error {
 				continue
 			}
 
-			r := ResourceParameterGroup()
+			r := resourceParameterGroup()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -527,7 +528,7 @@ func sweepProxies(region string) error {
 		}
 
 		for _, v := range page.DBProxies {
-			r := ResourceProxy()
+			r := resourceProxy()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.DBProxyName))
 
@@ -577,7 +578,7 @@ func sweepSnapshots(region string) error {
 				continue
 			}
 
-			r := ResourceSnapshot()
+			r := resourceSnapshot()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -621,7 +622,7 @@ func sweepSubnetGroups(region string) error {
 		}
 
 		for _, v := range page.DBSubnetGroups {
-			r := ResourceSubnetGroup()
+			r := resourceSubnetGroup()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.DBSubnetGroupName))
 
