@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.5-proton
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.24.0
-	github.com/aws/aws-sdk-go v1.55.2
+	github.com/aws/aws-sdk-go v1.55.3
 	github.com/aws/aws-sdk-go-v2 v1.30.3
 	github.com/aws/aws-sdk-go-v2/config v1.27.27
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.27
@@ -24,9 +24,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.9.3
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.43.3
 	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.27.3
-	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.30.4
+	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.26.3
-	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.2.3
+	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.3.0
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.30.3
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.35.0
@@ -58,7 +58,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.30.3
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.15.3
-	github.com/aws/aws-sdk-go-v2/service/codecommit v1.24.3
+	github.com/aws/aws-sdk-go-v2/service/codecommit v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.22.3
 	github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.27.3
@@ -81,7 +81,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.30.3
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.40.3
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.15.0
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.21.3
 	github.com/aws/aws-sdk-go-v2/service/detective v1.29.3
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.25.2
@@ -92,16 +92,16 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.11.3
 	github.com/aws/aws-sdk-go-v2/service/drs v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.4
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.172.0
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.30.3
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.173.0
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.44.3
 	github.com/aws/aws-sdk-go-v2/service/efs v1.31.3
-	github.com/aws/aws-sdk-go-v2/service/eks v1.46.2
+	github.com/aws/aws-sdk-go-v2/service/eks v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.26.3
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.33.3
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/emr v1.42.2
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.30.4
@@ -155,7 +155,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mq v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.10.3
-	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.40.4
+	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.5.3
 	github.com/aws/aws-sdk-go-v2/service/oam v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.13.3
@@ -196,7 +196,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/ses v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.32.3
-	github.com/aws/aws-sdk-go-v2/service/sfn v1.29.3
+	github.com/aws/aws-sdk-go-v2/service/sfn v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/shield v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/signer v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/sns v1.31.3
