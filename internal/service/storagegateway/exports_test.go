@@ -15,6 +15,7 @@ var (
 	ResourceTapePool              = resourceTapePool
 	ResourceUploadBuffer          = resourceUploadBuffer
 
+	FindCacheByTwoPartKey          = findCacheByTwoPartKey
 	FindFileSystemAssociationByARN = findFileSystemAssociationByARN
 	FindGatewayByARN               = findGatewayByARN
 	FindNFSFileShareByARN          = findNFSFileShareByARN
@@ -24,6 +25,6 @@ var (
 	CacheParseResourceID                      = cacheParseResourceID
 	DecodeUploadBufferID                      = decodeUploadBufferID
 	DecodeWorkingStorageID                    = decodeWorkingStorageID
-	IsErrGatewayNotFound                      = isErrGatewayNotFound
+	IsGatewayNotFoundErr                      = isGatewayNotFoundErr
 	ParseVolumeGatewayARNAndTargetNameFromARN = parseVolumeGatewayARNAndTargetNameFromARN
 )

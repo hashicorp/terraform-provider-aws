@@ -512,7 +512,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Reading Storage Gateway SMB Settings: %#v", smbSettingsInput)
 	smbSettingsOutput, err := conn.DescribeSMBSettings(ctx, smbSettingsInput)
 	if err != nil && !errs.IsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](err, "This operation is not valid for the specified gateway") {
-		if isErrGatewayNotFound(err) {
+		if isGatewayNotFoundErr(err) {
 			log.Printf("[WARN] Storage Gateway Gateway %q not found - removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -909,15 +909,4 @@ func flattenDescribeMaintenanceStartTimeOutput(apiObject *storagegateway.Describ
 	}
 
 	return tfMap
-}
-
-// The API returns multiple responses for a missing gateway
-func isErrGatewayNotFound(err error) bool {
-	if errs.IsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](err, "The specified gateway was not found.") {
-		return true
-	}
-	if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeGatewayNotFound)) {
-		return true
-	}
-	return false
 }

@@ -14,9 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -102,38 +104,16 @@ func resourceCacheRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &storagegateway.DescribeCacheInput{
-		GatewayARN: aws.String(gatewayARN),
+	err = findCacheByTwoPartKey(ctx, conn, gatewayARN, diskID)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Storage Gateway Cache (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	output, err := conn.DescribeCache(ctx, input)
 	if err != nil {
-		if isErrGatewayNotFound(err) {
-			log.Printf("[WARN] Storage Gateway Cache (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Cache (%s): %s", d.Id(), err)
-	}
-
-	if output == nil || len(output.DiskIds) == 0 {
-		log.Printf("[WARN] Storage Gateway Cache (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	found := false
-	for _, existingDiskID := range output.DiskIds {
-		if existingDiskID == diskID {
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		log.Printf("[WARN] Storage Gateway Cache (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
 	}
 
 	d.Set("disk_id", diskID)
@@ -172,4 +152,42 @@ func cacheParseResourceID(id string) (string, string, error) {
 		Resource:  resourceParts[0],
 	}
 	return gatewayARN.String(), resourceParts[1], nil
+}
+
+func findCacheByTwoPartKey(ctx context.Context, conn *storagegateway.Client, gatewayARN, diskID string) error {
+	input := &storagegateway.DescribeCacheInput{
+		GatewayARN: aws.String(gatewayARN),
+	}
+	output, err := findCache(ctx, conn, input)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = tfresource.AssertSingleValueResult(tfslices.Filter(output.DiskIds, func(v string) bool {
+		return v == diskID
+	}))
+
+	return err
+}
+
+func findCache(ctx context.Context, conn *storagegateway.Client, input *storagegateway.DescribeCacheInput) (*storagegateway.DescribeCacheOutput, error) {
+	output, err := conn.DescribeCache(ctx, input)
+
+	if isGatewayNotFoundErr(err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, err
 }

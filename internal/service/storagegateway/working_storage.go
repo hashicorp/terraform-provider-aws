@@ -84,7 +84,7 @@ func resourceWorkingStorageRead(ctx context.Context, d *schema.ResourceData, met
 
 	output, err := conn.DescribeWorkingStorage(ctx, input)
 	if err != nil {
-		if isErrGatewayNotFound(err) {
+		if isGatewayNotFoundErr(err) {
 			log.Printf("[WARN] Storage Gateway Working Storage (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags

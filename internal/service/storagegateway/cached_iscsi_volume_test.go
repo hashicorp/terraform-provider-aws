@@ -348,7 +348,7 @@ func testAccCheckCachediSCSIVolumeDestroy(ctx context.Context) resource.TestChec
 			output, err := conn.DescribeCachediSCSIVolumes(ctx, input)
 
 			if err != nil {
-				if tfstoragegateway.IsErrGatewayNotFound(err) {
+				if tfstoragegateway.IsGatewayNotFoundErr(err) {
 					return nil
 				}
 				if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeVolumeNotFound)) {

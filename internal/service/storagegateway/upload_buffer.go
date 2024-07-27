@@ -116,7 +116,7 @@ func resourceUploadBufferRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	foundDiskID, err := findUploadBufferDisk(ctx, conn, gatewayARN, diskID)
 
-	if !d.IsNewResource() && isErrGatewayNotFound(err) {
+	if !d.IsNewResource() && isGatewayNotFoundErr(err) {
 		log.Printf("[WARN] Storage Gateway Upload Buffer (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

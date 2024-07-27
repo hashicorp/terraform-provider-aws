@@ -5,6 +5,7 @@ package storagegateway
 
 import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
@@ -31,4 +32,17 @@ func operationErrorCode(err error) string {
 	}
 
 	return ""
+}
+
+// The API returns multiple responses for a missing gateway.
+func isGatewayNotFoundErr(err error) bool {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](err, "The specified gateway was not found.") {
+		return true
+	}
+
+	if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeGatewayNotFound)) {
+		return true
+	}
+
+	return false
 }
