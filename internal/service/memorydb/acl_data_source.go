@@ -64,7 +64,7 @@ func dataSourceACLRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrARN, acl.ARN)
 	d.Set("minimum_engine_version", acl.MinimumEngineVersion)
 	d.Set(names.AttrName, acl.Name)
-	d.Set("user_names", flex.FlattenStringSet(acl.UserNames))
+	d.Set("user_names", flex.FlattenStringValueSet(acl.UserNames))
 
 	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 

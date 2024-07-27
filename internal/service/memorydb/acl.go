@@ -10,13 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -91,10 +91,10 @@ func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("user_names"); ok && v.(*schema.Set).Len() > 0 {
-		input.UserNames = flex.ExpandStringSet(v.(*schema.Set))
+		input.UserNames = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	log.Printf("[DEBUG] Creating MemoryDB ACL: %s", input)
+	log.Printf("[DEBUG] Creating MemoryDB ACL: %+v", input)
 	_, err := conn.CreateACL(ctx, input)
 
 	if err != nil {
@@ -124,7 +124,7 @@ func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		oldSet, newSet := o.(*schema.Set), n.(*schema.Set)
 
 		if toAdd := newSet.Difference(oldSet); toAdd.Len() > 0 {
-			input.UserNamesToAdd = flex.ExpandStringSet(toAdd)
+			input.UserNamesToAdd = flex.ExpandStringValueSet(toAdd)
 		}
 
 		// When a user is deleted, MemoryDB will implicitly remove it from any
@@ -141,7 +141,7 @@ func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 		initialUserNames := map[string]struct{}{}
 		for _, userName := range initialState.UserNames {
-			initialUserNames[aws.ToString(userName)] = struct{}{}
+			initialUserNames[userName] = struct{}{}
 		}
 
 		for _, v := range oldSet.Difference(newSet).List() {
@@ -149,7 +149,7 @@ func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			_, userNameStillPresent := initialUserNames[userNameToRemove]
 
 			if userNameStillPresent {
-				input.UserNamesToRemove = append(input.UserNamesToRemove, aws.String(userNameToRemove))
+				input.UserNamesToRemove = append(input.UserNamesToRemove, userNameToRemove)
 			}
 		}
 
@@ -191,7 +191,7 @@ func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("minimum_engine_version", acl.MinimumEngineVersion)
 	d.Set(names.AttrName, acl.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(acl.Name)))
-	d.Set("user_names", flex.FlattenStringSet(acl.UserNames))
+	d.Set("user_names", flex.FlattenStringValueSet(acl.UserNames))
 
 	return diags
 }
@@ -206,7 +206,7 @@ func resourceACLDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		ACLName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeACLNotFoundFault) {
+	if errs.IsA[*awstypes.ACLNotFoundFault](err) {
 		return diags
 	}
 
