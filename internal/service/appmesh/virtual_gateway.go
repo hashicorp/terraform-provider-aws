@@ -1457,8 +1457,9 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []interface{} 
 						mFormat[names.AttrJSON] = vJsons
 					case *awstypes.LoggingFormatMemberText:
 						mFormat["text"] = v.Value
-						mFile[names.AttrFormat] = []interface{}{mFormat}
 					}
+
+					mFile[names.AttrFormat] = []interface{}{mFormat}
 				}
 
 				mFile[names.AttrPath] = aws.ToString(v.Value.Path)
