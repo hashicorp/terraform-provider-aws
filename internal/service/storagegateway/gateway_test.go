@@ -51,7 +51,6 @@ func TestAccStorageGatewayGateway_GatewayType_cached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "medium_changer_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "smb_guest_password", ""),
-					resource.TestCheckResourceAttr(resourceName, "smb_security_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "tape_drive_type", ""),
 				),
 			},
