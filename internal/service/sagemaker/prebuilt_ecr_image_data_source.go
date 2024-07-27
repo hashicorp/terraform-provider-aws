@@ -17,138 +17,520 @@ import (
 )
 
 const (
+	// SageMaker Algorithm AutoGluon Training
+	RepositoryAutoGluonTraining = "autogluon-training"
+	// SageMaker Algorithm AutoGluon Inference
+	RepositoryAutoGluonInference = "autogluon-inference"
 	// SageMaker Algorithm BlazingText
-	repositoryBlazingText = "blazingtext"
+	RepositoryBlazingText = "blazingtext"
+	// SageMaker DLC Chainer
+	RepositoryChainer = "sagemaker-chainer"
+	// SageMaker Algorithm Clarify
+	RepositoryClarify = "sagemaker-clarify-processing"
+	// SageMaker Algorithm DJL DeepSpeed
+	RepositoryDJLDeepSpeed = "djl-inference"
+	// SageMaker Algorithm Data Wrangler
+	RepositoryDataWrangler = "sagemaker-data-wrangler-container"
+	// SageMaker Algorithm Debugger
+	RepositoryDebugger = "sagemaker-debugger-rules"
 	// SageMaker Algorithm DeepAR Forecasting
-	repositoryDeepARForecasting = "forecasting-deepar"
+	RepositoryDeepARForecasting = "forecasting-deepar"
 	// SageMaker Algorithm Factorization Machines
-	repositoryFactorizationMachines = "factorization-machines"
-	// SageMaker Algorithm Image Classification
-	repositoryImageClassification = "image-classification"
+	RepositoryFactorizationMachines = "factorization-machines"
+	// SageMaker Algorithm HuggingFace TensorFlow Training
+	RepositoryHuggingFaceTensorFlowTraining = "huggingface-tensorflow-training"
+	// SageMaker Algorithm HuggingFace PyTorch Training
+	RepositoryHuggingFacePyTorchTraining = "huggingface-pytorch-training"
+	// SageMaker Algorithm HuggingFace PyTorch Training NeuronX
+	RepositoryHuggingFacePyTorchTrainingNeuronX = "huggingface-pytorch-training-neuronx"
+	// SageMaker Algorithm HuggingFace PyTorch Training Compiler
+	RepositoryHuggingFacePyTorchTrainingCompiler = "huggingface-pytorch-trcomp-training"
+	// SageMaker Algorithm HuggingFace TensorFlow Training Compiler
+	RepositoryHuggingFaceTensorFlowTrainingCompiler = "huggingface-tensorflow-trcomp-training"
+	// SageMaker Algorithm HuggingFace TensorFlow Inference
+	RepositoryHuggingFaceTensorFlowInference = "huggingface-tensorflow-inference"
+	// SageMaker Algorithm HuggingFace PyTorch Inference
+	RepositoryHuggingFacePyTorchInference = "huggingface-pytorch-inference"
+	// SageMaker Algorithm HuggingFace PyTorch Inference Neuron
+	RepositoryHuggingFacePyTorchInferenceNeuron = "huggingface-pytorch-inference-neuron"
+	// SageMaker Algorithm HuggingFace PyTorch Inference NeuronX
+	RepositoryHuggingFacePyTorchInferenceNeuronX = "huggingface-pytorch-inference-neuronx"
+	// SageMaker LLM HuggingFace Pytorch TGI Inference
+	RepositoryHuggingFacePyTorchTGIInference = "huggingface-pytorch-tgi-inference"
+	// SageMaker Algorithm HuggingFace TEI
+	RepositoryHuggingFaceTEI = "tei"
+	// SageMaker Algorithm HuggingFace TEI CPU
+	RepositoryHuggingFaceTEICPU = "tei-cpu"
 	// SageMaker Algorithm IP Insights
-	repositoryIPInsights = "ipinsights"
+	RepositoryIPInsights = "ipinsights"
+	// SageMaker Algorithm Image Classification
+	RepositoryImageClassification = "image-classification"
+	// SageMaker DLC Inferentia MXNet
+	RepositoryInferentiaMXNet = "sagemaker-neo-mxnet"
+	// SageMaker DLC Inferentia PyTorch
+	RepositoryInferentiaPyTorch = "sagemaker-neo-pytorch"
 	// SageMaker Algorithm k-means
-	repositoryKMeans = "kmeans"
+	RepositoryKMeans = "kmeans"
 	// SageMaker Algorithm k-nearest-neighbor
-	repositoryKNearestNeighbor = "knn"
+	RepositoryKNearestNeighbor = "knn"
 	// SageMaker Algorithm Latent Dirichlet Allocation
-	repositoryLDA = "lda"
+	RepositoryLDA = "lda"
 	// SageMaker Algorithm Linear Learner
-	repositoryLinearLearner = "linear-learner"
+	RepositoryLinearLearner = "linear-learner"
+	// SageMaker DLC MXNet Training
+	RepositoryMXNetTraining = "mxnet-training"
+	// SageMaker DLC MXNet Inference
+	RepositoryMXNetInference = "mxnet-inference"
+	// SageMaker DLC MXNet Inference EIA
+	RepositoryMXNetInferenceEIA = "mxnet-inference-eia"
+	// SageMaker DLC Sagemaker MXNet
+	RepositorySagemakerMXNet = "sagemaker-mxnet"
+	// SageMaker DLC Sagemaker MXNet Serving
+	RepositorySagemakerMXNetServing = "sagemaker-mxnet-serving"
+	// SageMaker DLC Sagemaker MXNet EIA
+	RepositorySagemakerMXNetEIA = "sagemaker-mxnet-eia"
+	// SageMaker DLC Sagemaker MXNet Serving EIA
+	RepositorySagemakerMXNetServingEIA = "sagemaker-mxnet-serving-eia"
+	// SageMaker DLC MXNet Coach
+	RepositoryMXNetCoach = "sagemaker-rl-mxnet"
 	// SageMaker Model Monitor
-	repositoryModelMonitor = "sagemaker-model-monitor-analyzer"
+	RepositoryModelMonitor = "sagemaker-model-monitor-analyzer"
 	// SageMaker Algorithm Neural Topic Model
-	repositoryNeuralTopicModel = "ntm"
-	// SageMaker Algorithm Object2Vec
-	repositoryObject2Vec = "object2vec"
+	RepositoryNeuralTopicModel = "ntm"
+	// SageMaker Algorithm Neo Image Classification
+	RepositoryNeoImageClassification = "image-classification-neo"
+	// SageMaker DLC Neo MXNet
+	RepositoryNeoMXNet = "sagemaker-inference-mxnet"
+	// SageMaker DLC Neo PyTorch
+	RepositoryNeoPyTorch = "sagemaker-inference-pytorch"
+	// SageMaker DLC Neo Tensorflow
+	RepositoryNeoTensorflow = "sagemaker-inference-tensorflow"
+	// SageMaker DLC Neo XGBoost
+	RepositoryNeoXGBoost = "xgboost-neo"
 	// SageMaker Algorithm Object Detection
-	repositoryObjectDetection = "object-detection"
+	RepositoryObjectDetection = "object-detection"
+	// SageMaker Algorithm Object2Vec
+	RepositoryObject2Vec = "object2vec"
 	// SageMaker Algorithm PCA
-	repositoryPCA = "pca"
+	RepositoryPCA = "pca"
+	// SageMaker DLC PyTorch Training
+	RepositoryPyTorchTraining = "pytorch-training"
+	// SageMaker DLC PyTorch Training NeuronX
+	RepositoryPyTorchTrainingNeuronX = "pytorch-training-neuronx"
+	// SageMaker DLC PyTorch Training Compiler
+	RepositoryPyTorchTrainingCompiler = "pytorch-trcomp-training"
+	// SageMaker DLC Sagemaker PyTorch Inference
+	RepositoryPyTorchInference = "pytorch-inference"
+	// SageMaker DLC PyTorch Inference EIA
+	RepositoryPyTorchInferenceEIA = "pytorch-inference-eia"
+	// SageMaker DLC PyTorch Inference Graviton
+	RepositoryPyTorchInferenceGraviton = "pytorch-inference-graviton"
+	// SageMaker DLC PyTorch Inference NeuronX
+	RepositoryPyTorchInferenceNeuronX = "pytorch-inference-neuronx"
+	// SageMaker DLC Sagemaker PyTorch
+	RepositorySagemakerPyTorch = "sagemaker-pytorch"
 	// SageMaker Algorithm Random Cut Forest
-	repositoryRandomCutForest = "randomcutforest"
-	// SageMaker Algorithm Semantic Segmentation
-	repositorySemanticSegmentation = "semantic-segmentation"
-	// SageMaker Algorithm Seq2Seq
-	repositorySeq2Seq = "seq2seq"
-	// SageMaker Algorithm XGBoost
-	repositoryXGBoost = "sagemaker-xgboost"
+	RepositoryRandomCutForest = "randomcutforest"
+	// SageMaker DLC RL Ray PyTorch
+	RepositoryRLRayPyTorch = "sagemaker-rl-ray-container"
+	// SageMaker DLC RL Coach Tensorflow
+	RepositoryRLCoachPyTorch = "sagemaker-rl-coach-container"
 	// SageMaker Library scikit-learn
-	repositoryScikitLearn = "sagemaker-scikit-learn"
-	// SageMaker Library Spark ML
-	repositorySparkML = "sagemaker-sparkml-serving"
-	// SageMaker Library TensorFlow Serving
-	repositoryTensorFlowServing = "sagemaker-tensorflow-serving"
-	// SageMaker Library TensorFlow Serving EIA
-	repositoryTensorFlowServingEIA = "sagemaker-tensorflow-serving-eia"
-	// SageMaker Repo MXNet Inference
-	repositoryMXNetInference = "mxnet-inference"
-	// SageMaker Repo MXNet Inference EIA
-	repositoryMXNetInferenceEIA = "mxnet-inference-eia"
-	// SageMaker Repo MXNet Training
-	repositoryMXNetTraining = "mxnet-training"
-	// SageMaker Repo PyTorch Inference
-	repositoryPyTorchInference = "pytorch-inference"
-	// SageMaker Repo PyTorch Inference EIA
-	repositoryPyTorchInferenceEIA = "pytorch-inference-eia"
-	// SageMaker Repo PyTorch Training
-	repositoryPyTorchTraining = "pytorch-training"
-	// SageMaker Repo TensorFlow Inference
-	repositoryTensorFlowInference = "tensorflow-inference"
+	RepositoryScikitLearn = "sagemaker-scikit-learn"
+	// SageMaker Algorithm Semantic Segmentation
+	RepositorySemanticSegmentation = "semantic-segmentation"
+	// SageMaker Algorithm Seq2Seq
+	RepositorySeq2Seq = "seq2seq"
+	// SageMaker Algorithm Spark
+	RepositorySpark = "sagemaker-spark-processing"
+	// SageMaker Algorithm Spark ML
+	RepositorySparkML = "sagemaker-sparkml-serving"
+	// SageMaker DLC TensorFlow Training
+	RepositoryTensorFlowTraining = "tensorflow-training"
+	// SageMaker DLC TensorFlow Inference
+	RepositoryTensorFlowInference = "tensorflow-inference"
 	// SageMaker Repo TensorFlow Inference EIA
-	repositoryTensorFlowInferenceEIA = "tensorflow-inference-eia"
-	// SageMaker Repo TensorFlow Training
-	repositoryTensorFlowTraining = "tensorflow-training"
-	// SageMaker Repo HuggingFace TensorFlow Training
-	repositoryHuggingFaceTensorFlowTraining = "huggingface-tensorflow-training"
-	// SageMaker Repo HuggingFace TensorFlow Inference
-	repositoryHuggingFaceTensorFlowInference = "huggingface-tensorflow-inference"
-	// SageMaker Repo HuggingFace PyTorch Training
-	repositoryHuggingFacePyTorchTraining = "huggingface-pytorch-training"
-	// SageMaker Repo HuggingFace PyTorch Inference
-	repositoryHuggingFacePyTorchInference = "huggingface-pytorch-inference"
+	RepositoryTensorFlowInferenceEIA = "tensorflow-inference-eia"
+	// SageMaker DLC TensorFlow Inference Graviton
+	RepositoryTensorFlowInferenceGraviton = "tensorflow-inference-graviton"
+	// SageMaker DLC Sagemaker TensorFlow
+	RepositorySagemakerTensorFlow = "sagemaker-tensorflow"
+	// SageMaker DLC Sagemaker TensorFlow EIA
+	RepositorySagemakerTensorFlowEIA = "sagemaker-tensorflow-eia"
+	// SageMaker DLC Sagemaker TensorFlow Serving
+	RepositoryTensorFlowServing = "sagemaker-tensorflow-serving"
+	// SageMaker DLC Sagemaker TensorFlow Serving EIA
+	RepositoryTensorFlowServingEIA = "sagemaker-tensorflow-serving-eia"
+	// SageMaker DLC Sagemaker TensorFlow Serving
+	RepositorySagemakerTensorFlowScriptMode = "sagemaker-tensorflow-scriptmode"
+	// SageMaker DLC Tensorflow Coach
+	RepositoryTensorflowCoach = "sagemaker-rl-tensorflow"
+	// SageMaker DLC Tensorflow Inferentia
+	RepositoryTensorflowInferentia = "sagemaker-neo-tensorflow"
+	// SageMaker Algorithm StabilityAI
+	RepositoryStabilityAI = "stabilityai-pytorch-inference"
+	// SageMaker Algorithm VW
+	RepositoryVW = "sagemaker-rl-vw-container"
+	// SageMaker Algorithm XGBoost
+	RepositoryXGBoost = "sagemaker-xgboost"
+	// SageMaker Base Python
+	RepositorySagemakerBasePython = "sagemaker-base-python"
+	// SageMaker Geospatial
+	RepositorySagemakerGeospatial = "sagemaker-geospatial-v1-0"
+	// SageMaker NVIDIA Triton Inference
+	RepositoryNVIDIATritonInference = "sagemaker-tritonserver"
 )
 
 // https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/blazingtext.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/image-classification.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/object-detection.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/semantic-segmentation.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/seq2seq.json
 
-var prebuiltECRImageIDByRegion_blazing = map[string]string{
+var PrebuiltECRImageIDByRegion_blazing = map[string]string{
 	endpoints.AfSouth1RegionID:     "455444449433",
 	endpoints.ApEast1RegionID:      "286214385809",
 	endpoints.ApNortheast1RegionID: "501404015308",
 	endpoints.ApNortheast2RegionID: "306986355934",
 	endpoints.ApNortheast3RegionID: "867004704886",
 	endpoints.ApSouth1RegionID:     "991648021394",
+	endpoints.ApSouth2RegionID:     "628508329040",
 	endpoints.ApSoutheast1RegionID: "475088953585",
 	endpoints.ApSoutheast2RegionID: "544295431143",
+	endpoints.ApSoutheast3RegionID: "951798379941",
+	endpoints.ApSoutheast4RegionID: "106583098589",
 	endpoints.CaCentral1RegionID:   "469771592824",
+	endpoints.CaWest1RegionID:      "190319476487",
 	endpoints.CnNorth1RegionID:     "390948362332",
 	endpoints.CnNorthwest1RegionID: "387376663083",
 	endpoints.EuCentral1RegionID:   "813361260812",
+	endpoints.EuCentral2RegionID:   "680994064768",
 	endpoints.EuNorth1RegionID:     "669576153137",
 	endpoints.EuSouth1RegionID:     "257386234256",
+	endpoints.EuSouth2RegionID:     "104374241257",
 	endpoints.EuWest1RegionID:      "685385470294",
 	endpoints.EuWest2RegionID:      "644912444149",
 	endpoints.EuWest3RegionID:      "749696950732",
-	// endpoints.MeCentral1RegionID:   "",
-	endpoints.MeSouth1RegionID:   "249704162688",
-	endpoints.SaEast1RegionID:    "855470959533",
-	endpoints.UsEast1RegionID:    "811284229777",
-	endpoints.UsEast2RegionID:    "825641698319",
-	endpoints.UsGovWest1RegionID: "226302683700",
-	endpoints.UsWest1RegionID:    "632365934929",
-	endpoints.UsWest2RegionID:    "433757028032",
+	endpoints.IlCentral1RegionID:   "898809789911",
+	endpoints.MeCentral1RegionID:   "272398656194",
+	endpoints.MeSouth1RegionID:     "249704162688",
+	endpoints.SaEast1RegionID:      "855470959533",
+	endpoints.UsEast1RegionID:      "811284229777",
+	endpoints.UsEast2RegionID:      "825641698319",
+	endpoints.UsGovEast1RegionID:   "237065988967",
+	endpoints.UsGovWest1RegionID:   "226302683700",
+	endpoints.UsIsoEast1RegionID:   "490574956308",
+	endpoints.UsIsobEast1RegionID:  "765400339828",
+	endpoints.UsWest1RegionID:      "632365934929",
+	endpoints.UsWest2RegionID:      "433757028032",
 }
 
-// https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/clarify.json
 
-var prebuiltECRImageIDByRegion_deepAR = map[string]string{
+var PrebuiltECRImageIDByRegion_clarify = map[string]string{
+	endpoints.AfSouth1RegionID:     "811711786498",
+	endpoints.ApEast1RegionID:      "098760798382",
+	endpoints.ApNortheast1RegionID: "377024640650",
+	endpoints.ApNortheast2RegionID: "263625296855",
+	endpoints.ApNortheast3RegionID: "912233562940",
+	endpoints.ApSouth1RegionID:     "452307495513",
+	endpoints.ApSoutheast1RegionID: "834264404009",
+	endpoints.ApSoutheast2RegionID: "007051062584",
+	endpoints.ApSoutheast3RegionID: "705930551576",
+	endpoints.CaCentral1RegionID:   "675030665977",
+	endpoints.CnNorth1RegionID:     "122526803553",
+	endpoints.CnNorthwest1RegionID: "122578899357",
+	endpoints.EuCentral1RegionID:   "017069133835",
+	endpoints.EuNorth1RegionID:     "763603941244",
+	endpoints.EuSouth1RegionID:     "638885417683",
+	endpoints.EuWest1RegionID:      "131013547314",
+	endpoints.EuWest2RegionID:      "440796970383",
+	endpoints.EuWest3RegionID:      "341593696636",
+	endpoints.MeSouth1RegionID:     "835444307964",
+	endpoints.SaEast1RegionID:      "520018980103",
+	endpoints.UsEast1RegionID:      "205585389593",
+	endpoints.UsEast2RegionID:      "211330385671",
+	endpoints.UsGovWest1RegionID:   "598674086554",
+	endpoints.UsWest1RegionID:      "740489534195",
+	endpoints.UsWest2RegionID:      "306415355426",
+}
+
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/data-wrangler.json
+
+var PrebuiltECRImageIDByRegion_dataWrangler = map[string]string{
+	endpoints.AfSouth1RegionID:     "143210264188",
+	endpoints.ApEast1RegionID:      "707077482487",
+	endpoints.ApNortheast1RegionID: "649008135260",
+	endpoints.ApNortheast2RegionID: "131546521161",
+	endpoints.ApNortheast3RegionID: "913387583493",
+	endpoints.ApSouth1RegionID:     "089933028263",
+	endpoints.ApSoutheast1RegionID: "119527597002",
+	endpoints.ApSoutheast2RegionID: "422173101802",
+	endpoints.CaCentral1RegionID:   "557239378090",
+	endpoints.CnNorth1RegionID:     "245909111842",
+	endpoints.CnNorthwest1RegionID: "249157047649",
+	endpoints.EuCentral1RegionID:   "024640144536",
+	endpoints.EuNorth1RegionID:     "054986407534",
+	endpoints.EuSouth1RegionID:     "488287956546",
+	endpoints.EuWest1RegionID:      "245179582081",
+	endpoints.EuWest2RegionID:      "894491911112",
+	endpoints.EuWest3RegionID:      "807237891255",
+	endpoints.IlCentral1RegionID:   "406833011540",
+	endpoints.MeSouth1RegionID:     "376037874950",
+	endpoints.SaEast1RegionID:      "424196993095",
+	endpoints.UsEast1RegionID:      "663277389841",
+	endpoints.UsEast2RegionID:      "415577184552",
+	endpoints.UsWest1RegionID:      "926135532090",
+	endpoints.UsWest2RegionID:      "174368400705",
+}
+
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/debugger.json
+
+var PrebuiltECRImageIDByRegion_debugger = map[string]string{
+	endpoints.AfSouth1RegionID:     "314341159256",
+	endpoints.ApEast1RegionID:      "199566480951",
+	endpoints.ApNortheast1RegionID: "430734990657",
+	endpoints.ApNortheast2RegionID: "578805364391",
+	endpoints.ApNortheast3RegionID: "479947661362",
+	endpoints.ApSouth1RegionID:     "904829902805",
+	endpoints.ApSoutheast1RegionID: "972752614525",
+	endpoints.ApSoutheast2RegionID: "184798709955",
+	endpoints.CaCentral1RegionID:   "519511493484",
+	endpoints.CnNorth1RegionID:     "618459771430",
+	endpoints.CnNorthwest1RegionID: "658757709296",
+	endpoints.EuCentral1RegionID:   "482524230118",
+	endpoints.EuNorth1RegionID:     "314864569078",
+	endpoints.EuSouth1RegionID:     "563282790590",
+	endpoints.EuWest1RegionID:      "929884845733",
+	endpoints.EuWest2RegionID:      "250201462417",
+	endpoints.EuWest3RegionID:      "447278800020",
+	endpoints.MeSouth1RegionID:     "986000313247",
+	endpoints.SaEast1RegionID:      "818342061345",
+	endpoints.UsEast1RegionID:      "503895931360",
+	endpoints.UsEast2RegionID:      "915447279597",
+	endpoints.UsGovWest1RegionID:   "515509971035",
+	endpoints.UsWest1RegionID:      "685455198987",
+	endpoints.UsWest2RegionID:      "895741380848",
+}
+
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/inferentia-mxnet.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/inferentia-pytorch.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/image-classification-neo.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/neo-mxnet.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/neo-pytorch.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/neo-tensorflow.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/xgboost-neo.json
+
+var PrebuiltECRImageIDByRegion_inferentiaNeo = map[string]string{
+	endpoints.AfSouth1RegionID:     "774647643957",
+	endpoints.ApEast1RegionID:      "110948597952",
+	endpoints.ApNortheast1RegionID: "941853720454",
+	endpoints.ApNortheast2RegionID: "151534178276",
+	endpoints.ApNortheast3RegionID: "925152966179",
+	endpoints.ApSouth1RegionID:     "763008648453",
+	endpoints.ApSoutheast1RegionID: "324986816169",
+	endpoints.ApSoutheast2RegionID: "355873309152",
+	endpoints.CaCentral1RegionID:   "464438896020",
+	endpoints.CnNorth1RegionID:     "472730292857",
+	endpoints.CnNorthwest1RegionID: "474822919863",
+	endpoints.EuCentral1RegionID:   "746233611703",
+	endpoints.EuNorth1RegionID:     "601324751636",
+	endpoints.EuSouth1RegionID:     "966458181534",
+	endpoints.EuWest1RegionID:      "802834080501",
+	endpoints.EuWest2RegionID:      "205493899709",
+	endpoints.EuWest3RegionID:      "254080097072",
+	endpoints.IlCentral1RegionID:   "275950707576",
+	endpoints.MeSouth1RegionID:     "836785723513",
+	endpoints.SaEast1RegionID:      "756306329178",
+	endpoints.UsEast1RegionID:      "785573368785",
+	endpoints.UsEast2RegionID:      "007439368137",
+	endpoints.UsGovWest1RegionID:   "263933020539",
+	endpoints.UsIsoEast1RegionID:   "167761179201",
+	endpoints.UsIsobEast1RegionID:  "406031935815",
+	endpoints.UsWest1RegionID:      "710691900526",
+	endpoints.UsWest2RegionID:      "301217895009",
+}
+
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/chainer.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/pytorch.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/coach-mxnet.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/mxnet.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/coach-tensorflow.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/tensorflow.json
+
+var PrebuiltECRImageIDByRegion_sagemakerCustom = map[string]string{
+	endpoints.AfSouth1RegionID:     "313743910680",
+	endpoints.ApEast1RegionID:      "057415533634",
+	endpoints.ApNortheast1RegionID: "520713654638",
+	endpoints.ApNortheast2RegionID: "520713654638",
+	endpoints.ApSouth1RegionID:     "520713654638",
+	endpoints.ApSoutheast1RegionID: "520713654638",
+	endpoints.ApSoutheast2RegionID: "520713654638",
+	endpoints.CaCentral1RegionID:   "520713654638",
+	endpoints.CnNorth1RegionID:     "422961961927",
+	endpoints.CnNorthwest1RegionID: "423003514399",
+	endpoints.EuCentral1RegionID:   "520713654638",
+	endpoints.EuNorth1RegionID:     "520713654638",
+	endpoints.EuSouth1RegionID:     "048378556238",
+	endpoints.EuWest1RegionID:      "520713654638",
+	endpoints.EuWest2RegionID:      "520713654638",
+	endpoints.EuWest3RegionID:      "520713654638",
+	endpoints.MeSouth1RegionID:     "724002660598",
+	endpoints.SaEast1RegionID:      "520713654638",
+	endpoints.UsEast1RegionID:      "520713654638",
+	endpoints.UsEast2RegionID:      "520713654638",
+	endpoints.UsGovWest1RegionID:   "246785580436",
+	endpoints.UsIsoEast1RegionID:   "744548109606",
+	endpoints.UsIsobEast1RegionID:  "453391408702",
+	endpoints.UsWest1RegionID:      "520713654638",
+	endpoints.UsWest2RegionID:      "520713654638",
+}
+
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/ray-pytorch.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/coach-tensorflow.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/vw.json
+
+var PrebuiltECRImageIDByRegion_sagemakerRL = map[string]string{
+	endpoints.ApNortheast1RegionID: "462105765813",
+	endpoints.ApNortheast2RegionID: "462105765813",
+	endpoints.ApSouth1RegionID:     "462105765813",
+	endpoints.ApSoutheast1RegionID: "462105765813",
+	endpoints.ApSoutheast2RegionID: "462105765813",
+	endpoints.CaCentral1RegionID:   "462105765813",
+	endpoints.EuCentral1RegionID:   "462105765813",
+	endpoints.EuWest1RegionID:      "462105765813",
+	endpoints.EuWest2RegionID:      "462105765813",
+	endpoints.UsEast1RegionID:      "462105765813",
+	endpoints.UsEast2RegionID:      "462105765813",
+	endpoints.UsWest1RegionID:      "462105765813",
+	endpoints.UsWest2RegionID:      "462105765813",
+}
+
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/spark.json
+
+var PrebuiltECRImageIDByRegion_spark = map[string]string{
+	endpoints.AfSouth1RegionID:     "309385258863",
+	endpoints.ApEast1RegionID:      "732049463269",
+	endpoints.ApNortheast1RegionID: "411782140378",
+	endpoints.ApNortheast2RegionID: "860869212795",
+	endpoints.ApNortheast3RegionID: "102471314380",
+	endpoints.ApSouth1RegionID:     "105495057255",
+	endpoints.ApSouth2RegionID:     "873151114052",
+	endpoints.ApSoutheast1RegionID: "759080221371",
+	endpoints.ApSoutheast2RegionID: "440695851116",
+	endpoints.ApSoutheast3RegionID: "800295151634",
+	endpoints.ApSoutheast4RegionID: "819679513684",
+	endpoints.CaCentral1RegionID:   "446299261295",
+	endpoints.CaWest1RegionID:      "000907499111",
+	endpoints.CnNorth1RegionID:     "671472414489",
+	endpoints.CnNorthwest1RegionID: "844356804704",
+	endpoints.EuCentral1RegionID:   "906073651304",
+	endpoints.EuCentral2RegionID:   "142351485170",
+	endpoints.EuNorth1RegionID:     "330188676905",
+	endpoints.EuSouth1RegionID:     "753923664805",
+	endpoints.EuSouth2RegionID:     "833944533722",
+	endpoints.EuWest1RegionID:      "571004829621",
+	endpoints.EuWest2RegionID:      "836651553127",
+	endpoints.EuWest3RegionID:      "136845547031",
+	endpoints.IlCentral1RegionID:   "408426139102",
+	endpoints.MeCentral1RegionID:   "395420993607",
+	endpoints.MeSouth1RegionID:     "750251592176",
+	endpoints.SaEast1RegionID:      "737130764395",
+	endpoints.UsEast1RegionID:      "173754725891",
+	endpoints.UsEast2RegionID:      "314815235551",
+	endpoints.UsGovEast1RegionID:   "260923028637",
+	endpoints.UsGovWest1RegionID:   "271483468897",
+	endpoints.UsWest1RegionID:      "667973535471",
+	endpoints.UsWest2RegionID:      "153931337802",
+}
+
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/sagemaker-base-python.json
+
+var PrebuiltECRImageIDByRegion_sagemakerBasePython = map[string]string{
+	endpoints.AfSouth1RegionID:     "559312083959",
+	endpoints.ApEast1RegionID:      "493642496378",
+	endpoints.ApNortheast1RegionID: "102112518831",
+	endpoints.ApNortheast2RegionID: "806072073708",
+	endpoints.ApNortheast3RegionID: "792733760839",
+	endpoints.ApSouth1RegionID:     "394103062818",
+	endpoints.ApSoutheast1RegionID: "492261229750",
+	endpoints.ApSoutheast2RegionID: "452832661640",
+	endpoints.ApSoutheast3RegionID: "276181064229",
+	endpoints.CaCentral1RegionID:   "310906938811",
+	endpoints.CnNorth1RegionID:     "390048526115",
+	endpoints.CnNorthwest1RegionID: "390780980154",
+	endpoints.EuCentral1RegionID:   "936697816551",
+	endpoints.EuNorth1RegionID:     "243637512696",
+	endpoints.EuSouth1RegionID:     "592751261982",
+	endpoints.EuSouth2RegionID:     "127363102723",
+	endpoints.EuWest1RegionID:      "470317259841",
+	endpoints.EuWest2RegionID:      "712779665605",
+	endpoints.EuWest3RegionID:      "615547856133",
+	endpoints.IlCentral1RegionID:   "380164790875",
+	endpoints.MeCentral1RegionID:   "103105715889",
+	endpoints.MeSouth1RegionID:     "117516905037",
+	endpoints.SaEast1RegionID:      "782484402741",
+	endpoints.UsEast1RegionID:      "081325390199",
+	endpoints.UsEast2RegionID:      "429704687514",
+	endpoints.UsGovEast1RegionID:   "107072934176",
+	endpoints.UsGovWest1RegionID:   "107173498710",
+	endpoints.UsWest1RegionID:      "742091327244",
+	endpoints.UsWest2RegionID:      "236514542706",
+}
+
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/sagemaker-geospatial.json
+
+var PrebuiltECRImageIDByRegion_sagemakerGeospatial = map[string]string{
+	endpoints.UsWest2RegionID: "081189585635",
+}
+
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/forecasting-deepar.json
+
+var PrebuiltECRImageIDByRegion_deepAR = map[string]string{
 	endpoints.AfSouth1RegionID:     "455444449433",
 	endpoints.ApEast1RegionID:      "286214385809",
 	endpoints.ApNortheast1RegionID: "633353088612",
 	endpoints.ApNortheast2RegionID: "204372634319",
+	endpoints.ApNortheast3RegionID: "867004704886",
 	endpoints.ApSouth1RegionID:     "991648021394",
+	endpoints.ApSouth2RegionID:     "628508329040",
 	endpoints.ApSoutheast1RegionID: "475088953585",
 	endpoints.ApSoutheast2RegionID: "514117268639",
+	endpoints.ApSoutheast3RegionID: "951798379941",
+	endpoints.ApSoutheast4RegionID: "106583098589",
 	endpoints.CaCentral1RegionID:   "469771592824",
+	endpoints.CaWest1RegionID:      "190319476487",
 	endpoints.CnNorth1RegionID:     "390948362332",
 	endpoints.CnNorthwest1RegionID: "387376663083",
 	endpoints.EuCentral1RegionID:   "495149712605",
+	endpoints.EuCentral2RegionID:   "680994064768",
 	endpoints.EuNorth1RegionID:     "669576153137",
 	endpoints.EuSouth1RegionID:     "257386234256",
+	endpoints.EuSouth2RegionID:     "104374241257",
 	endpoints.EuWest1RegionID:      "224300973850",
 	endpoints.EuWest2RegionID:      "644912444149",
 	endpoints.EuWest3RegionID:      "749696950732",
-	// endpoints.MeCentral1RegionID:   "",
-	endpoints.MeSouth1RegionID:   "249704162688",
-	endpoints.SaEast1RegionID:    "855470959533",
-	endpoints.UsEast1RegionID:    "522234722520",
-	endpoints.UsEast2RegionID:    "566113047672",
-	endpoints.UsGovWest1RegionID: "226302683700",
-	endpoints.UsWest1RegionID:    "632365934929",
-	endpoints.UsWest2RegionID:    "156387875391",
+	endpoints.IlCentral1RegionID:   "898809789911",
+	endpoints.MeCentral1RegionID:   "272398656194",
+	endpoints.MeSouth1RegionID:     "249704162688",
+	endpoints.SaEast1RegionID:      "855470959533",
+	endpoints.UsEast1RegionID:      "522234722520",
+	endpoints.UsEast2RegionID:      "566113047672",
+	endpoints.UsGovEast1RegionID:   "237065988967",
+	endpoints.UsGovWest1RegionID:   "226302683700",
+	endpoints.UsIsoEast1RegionID:   "490574956308",
+	endpoints.UsIsobEast1RegionID:  "765400339828",
+	endpoints.UsWest1RegionID:      "632365934929",
+	endpoints.UsWest2RegionID:      "156387875391",
 }
 
-// https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/factorization-machines.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/ipinsights.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/linear-learner.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/ntm.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/object2vec.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/pca.json
 
 var PrebuiltECRImageIDByRegion_factorMachines = map[string]string{
 	endpoints.AfSouth1RegionID:     "455444449433",
@@ -157,30 +539,40 @@ var PrebuiltECRImageIDByRegion_factorMachines = map[string]string{
 	endpoints.ApNortheast2RegionID: "835164637446",
 	endpoints.ApNortheast3RegionID: "867004704886",
 	endpoints.ApSouth1RegionID:     "991648021394",
+	endpoints.ApSouth2RegionID:     "628508329040",
 	endpoints.ApSoutheast1RegionID: "475088953585",
 	endpoints.ApSoutheast2RegionID: "712309505854",
+	endpoints.ApSoutheast3RegionID: "951798379941",
+	endpoints.ApSoutheast4RegionID: "106583098589",
 	endpoints.CaCentral1RegionID:   "469771592824",
+	endpoints.CaWest1RegionID:      "190319476487",
 	endpoints.CnNorth1RegionID:     "390948362332",
 	endpoints.CnNorthwest1RegionID: "387376663083",
 	endpoints.EuCentral1RegionID:   "664544806723",
+	endpoints.EuCentral2RegionID:   "680994064768",
 	endpoints.EuNorth1RegionID:     "669576153137",
 	endpoints.EuSouth1RegionID:     "257386234256",
+	endpoints.EuSouth2RegionID:     "104374241257",
 	endpoints.EuWest1RegionID:      "438346466558",
 	endpoints.EuWest2RegionID:      "644912444149",
 	endpoints.EuWest3RegionID:      "749696950732",
-	// endpoints.MeCentral1RegionID:   "",
-	endpoints.MeSouth1RegionID:   "249704162688",
-	endpoints.SaEast1RegionID:    "855470959533",
-	endpoints.UsEast1RegionID:    "382416733822",
-	endpoints.UsEast2RegionID:    "404615174143",
-	endpoints.UsGovWest1RegionID: "226302683700",
-	endpoints.UsWest1RegionID:    "632365934929",
-	endpoints.UsWest2RegionID:    "174872318107",
+	endpoints.IlCentral1RegionID:   "898809789911",
+	endpoints.MeCentral1RegionID:   "272398656194",
+	endpoints.MeSouth1RegionID:     "249704162688",
+	endpoints.SaEast1RegionID:      "855470959533",
+	endpoints.UsEast1RegionID:      "382416733822",
+	endpoints.UsEast2RegionID:      "404615174143",
+	endpoints.UsGovEast1RegionID:   "237065988967",
+	endpoints.UsGovWest1RegionID:   "226302683700",
+	endpoints.UsIsoEast1RegionID:   "490574956308",
+	endpoints.UsIsobEast1RegionID:  "765400339828",
+	endpoints.UsWest1RegionID:      "632365934929",
+	endpoints.UsWest2RegionID:      "174872318107",
 }
 
-// https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/lda.json
 
-var prebuiltECRImageIDByRegion_lda = map[string]string{
+var PrebuiltECRImageIDByRegion_lda = map[string]string{
 	endpoints.ApNortheast1RegionID: "258307448986",
 	endpoints.ApNortheast2RegionID: "293181348795",
 	endpoints.ApSouth1RegionID:     "991648021394",
@@ -193,127 +585,111 @@ var prebuiltECRImageIDByRegion_lda = map[string]string{
 	endpoints.UsEast1RegionID:      "766337827248",
 	endpoints.UsEast2RegionID:      "999911452149",
 	endpoints.UsGovWest1RegionID:   "226302683700",
+	endpoints.UsIsoEast1RegionID:   "490574956308",
+	endpoints.UsIsobEast1RegionID:  "765400339828",
 	endpoints.UsWest1RegionID:      "632365934929",
 	endpoints.UsWest2RegionID:      "266724342769",
 }
 
-// https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/xgboost.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/huggingface-tei.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/huggingface-tei-cpu.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/sparkml-serving.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/sklearn.json
 
-var prebuiltECRImageIDByRegion_xgBoost = map[string]string{
+var PrebuiltECRImageIDByRegion_XGBoost = map[string]string{
 	endpoints.AfSouth1RegionID:     "510948584623",
 	endpoints.ApEast1RegionID:      "651117190479",
 	endpoints.ApNortheast1RegionID: "354813040037",
 	endpoints.ApNortheast2RegionID: "366743142698",
 	endpoints.ApNortheast3RegionID: "867004704886",
 	endpoints.ApSouth1RegionID:     "720646828776",
+	endpoints.ApSouth2RegionID:     "628508329040",
 	endpoints.ApSoutheast1RegionID: "121021644041",
 	endpoints.ApSoutheast2RegionID: "783357654285",
+	endpoints.ApSoutheast3RegionID: "951798379941",
+	endpoints.ApSoutheast4RegionID: "106583098589",
 	endpoints.CaCentral1RegionID:   "341280168497",
+	endpoints.CaWest1RegionID:      "190319476487",
 	endpoints.CnNorth1RegionID:     "450853457545",
 	endpoints.CnNorthwest1RegionID: "451049120500",
 	endpoints.EuCentral1RegionID:   "492215442770",
+	endpoints.EuCentral2RegionID:   "680994064768",
 	endpoints.EuNorth1RegionID:     "662702820516",
 	endpoints.EuSouth1RegionID:     "978288397137",
+	endpoints.EuSouth2RegionID:     "104374241257",
 	endpoints.EuWest1RegionID:      "141502667606",
 	endpoints.EuWest2RegionID:      "764974769150",
 	endpoints.EuWest3RegionID:      "659782779980",
-	// endpoints.MeCentral1RegionID:   "",
-	endpoints.MeSouth1RegionID:   "801668240914",
-	endpoints.SaEast1RegionID:    "737474898029",
-	endpoints.UsEast1RegionID:    "683313688378",
-	endpoints.UsEast2RegionID:    "257758044811",
-	endpoints.UsGovWest1RegionID: "414596584902",
-	endpoints.UsWest1RegionID:    "746614075791",
-	endpoints.UsWest2RegionID:    "246618743249",
-}
-
-// https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
-// https://docs.aws.amazon.com/sagemaker/latest/dg/pre-built-docker-containers-scikit-learn-spark.html
-
-var PrebuiltECRImageIDByRegion_sparkML = map[string]string{
-	endpoints.AfSouth1RegionID:     "510948584623",
-	endpoints.ApEast1RegionID:      "651117190479",
-	endpoints.ApNortheast1RegionID: "354813040037",
-	endpoints.ApNortheast2RegionID: "366743142698",
-	endpoints.ApSouth1RegionID:     "720646828776",
-	endpoints.ApSoutheast1RegionID: "121021644041",
-	endpoints.ApSoutheast2RegionID: "783357654285",
-	endpoints.CaCentral1RegionID:   "341280168497",
-	endpoints.CnNorth1RegionID:     "450853457545",
-	endpoints.CnNorthwest1RegionID: "451049120500",
-	endpoints.EuCentral1RegionID:   "492215442770",
-	endpoints.EuNorth1RegionID:     "662702820516",
-	endpoints.EuSouth1RegionID:     "978288397137",
-	endpoints.EuWest1RegionID:      "141502667606",
-	endpoints.EuWest2RegionID:      "764974769150",
-	endpoints.EuWest3RegionID:      "659782779980",
-	// endpoints.MeCentral1RegionID:   "",
-	endpoints.MeSouth1RegionID:   "801668240914",
-	endpoints.SaEast1RegionID:    "737474898029",
-	endpoints.UsEast1RegionID:    "683313688378",
-	endpoints.UsEast2RegionID:    "257758044811",
-	endpoints.UsGovWest1RegionID: "414596584902",
-	endpoints.UsWest1RegionID:    "746614075791",
-	endpoints.UsWest2RegionID:    "246618743249",
+	endpoints.IlCentral1RegionID:   "898809789911",
+	endpoints.MeCentral1RegionID:   "272398656194",
+	endpoints.MeSouth1RegionID:     "801668240914",
+	endpoints.SaEast1RegionID:      "737474898029",
+	endpoints.UsEast1RegionID:      "683313688378",
+	endpoints.UsEast2RegionID:      "257758044811",
+	endpoints.UsGovEast1RegionID:   "237065988967",
+	endpoints.UsGovWest1RegionID:   "414596584902",
+	endpoints.UsIsoEast1RegionID:   "833128469047",
+	endpoints.UsIsobEast1RegionID:  "281123927165",
+	endpoints.UsWest1RegionID:      "746614075791",
+	endpoints.UsWest2RegionID:      "246618743249",
 }
 
 // https://github.com/aws/deep-learning-containers/blob/master/available_images.md
 // https://github.com/aws/sagemaker-tensorflow-serving-container
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/autogluon.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/djl-deepspeed.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/djl-fastertransformer.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/djl-lmi.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/djl-neuronx.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/djl-tensorrtllm.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/pytorch.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/stabilityai.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/sagemaker-tritonserver.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/tensorflow.json
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/huggingface-llm.json
 
-var prebuiltECRImageIDByRegion_deepLearning = map[string]string{
+var PrebuiltECRImageIDByRegion_deepLearning = map[string]string{
 	endpoints.AfSouth1RegionID:     "626614931356",
 	endpoints.ApEast1RegionID:      "871362719292",
 	endpoints.ApNortheast1RegionID: "763104351884",
 	endpoints.ApNortheast2RegionID: "763104351884",
+	endpoints.ApNortheast3RegionID: "364406365360",
 	endpoints.ApSouth1RegionID:     "763104351884",
+	endpoints.ApSouth2RegionID:     "772153158452",
 	endpoints.ApSoutheast1RegionID: "763104351884",
 	endpoints.ApSoutheast2RegionID: "763104351884",
+	endpoints.ApSoutheast3RegionID: "907027046896",
+	endpoints.ApSoutheast4RegionID: "457447274322",
 	endpoints.CaCentral1RegionID:   "763104351884",
+	endpoints.CaWest1RegionID:      "204538143572",
 	endpoints.CnNorth1RegionID:     "727897471807",
 	endpoints.CnNorthwest1RegionID: "727897471807",
 	endpoints.EuCentral1RegionID:   "763104351884",
+	endpoints.EuCentral2RegionID:   "380420809688",
 	endpoints.EuNorth1RegionID:     "763104351884",
 	endpoints.EuWest1RegionID:      "763104351884",
 	endpoints.EuWest2RegionID:      "763104351884",
 	endpoints.EuWest3RegionID:      "763104351884",
-	// endpoints.MeCentral1RegionID:   "",
-	endpoints.MeSouth1RegionID:   "217643126080",
-	endpoints.SaEast1RegionID:    "763104351884",
-	endpoints.UsEast1RegionID:    "763104351884",
-	endpoints.UsEast2RegionID:    "763104351884",
-	endpoints.UsIsoEast1RegionID: "886529160074",
-	endpoints.UsWest1RegionID:    "763104351884",
-	endpoints.UsWest2RegionID:    "763104351884",
+	endpoints.EuSouth1RegionID:     "692866216735",
+	endpoints.EuSouth2RegionID:     "503227376785",
+	endpoints.IlCentral1RegionID:   "780543022126",
+	endpoints.MeCentral1RegionID:   "914824155844",
+	endpoints.MeSouth1RegionID:     "217643126080",
+	endpoints.SaEast1RegionID:      "763104351884",
+	endpoints.UsEast1RegionID:      "763104351884",
+	endpoints.UsEast2RegionID:      "763104351884",
+	endpoints.UsWest1RegionID:      "763104351884",
+	endpoints.UsWest2RegionID:      "763104351884",
+	endpoints.UsGovEast1RegionID:   "446045086412",
+	endpoints.UsGovWest1RegionID:   "442386744353",
+	endpoints.UsIsoEast1RegionID:   "886529160074",
+	endpoints.UsIsobEast1RegionID:  "094389454867",
 }
 
-// https://github.com/aws/sagemaker-tensorflow-serving-container
+// https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/model-monitor.json
 
-var prebuiltECRImageIDByRegion_tensorFlowServing = map[string]string{
-	endpoints.ApEast1RegionID:      "057415533634",
-	endpoints.ApNortheast1RegionID: "520713654638",
-	endpoints.ApNortheast2RegionID: "520713654638",
-	endpoints.ApSouth1RegionID:     "520713654638",
-	endpoints.ApSoutheast1RegionID: "520713654638",
-	endpoints.ApSoutheast2RegionID: "520713654638",
-	endpoints.CaCentral1RegionID:   "520713654638",
-	endpoints.CnNorth1RegionID:     "520713654638",
-	endpoints.CnNorthwest1RegionID: "520713654638",
-	endpoints.EuCentral1RegionID:   "520713654638",
-	endpoints.EuNorth1RegionID:     "520713654638",
-	endpoints.EuWest1RegionID:      "520713654638",
-	endpoints.EuWest2RegionID:      "520713654638",
-	endpoints.EuWest3RegionID:      "520713654638",
-	// endpoints.MeCentral1RegionID:   "",
-	endpoints.MeSouth1RegionID: "724002660598",
-	endpoints.SaEast1RegionID:  "520713654638",
-	endpoints.UsEast1RegionID:  "520713654638",
-	endpoints.UsEast2RegionID:  "520713654638",
-	endpoints.UsWest1RegionID:  "520713654638",
-	endpoints.UsWest2RegionID:  "520713654638",
-}
-
-// https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor-pre-built-container.html
-var prebuiltECRImageIDByRegion_modelMonitor = map[string]string{
+var PrebuiltECRImageIDByRegion_modelMonitor = map[string]string{
 	endpoints.AfSouth1RegionID:     "875698925577",
 	endpoints.ApEast1RegionID:      "001633400207",
 	endpoints.ApNortheast1RegionID: "574779866223",
@@ -329,14 +705,16 @@ var prebuiltECRImageIDByRegion_modelMonitor = map[string]string{
 	endpoints.EuCentral1RegionID:   "048819808253",
 	endpoints.EuNorth1RegionID:     "895015795356",
 	endpoints.EuSouth1RegionID:     "933208885752",
+	endpoints.EuSouth2RegionID:     "437450045455",
 	endpoints.EuWest1RegionID:      "468650794304",
 	endpoints.EuWest2RegionID:      "749857270468",
 	endpoints.EuWest3RegionID:      "680080141114",
+	endpoints.IlCentral1RegionID:   "843974653677",
+	endpoints.MeCentral1RegionID:   "588750061953",
 	endpoints.MeSouth1RegionID:     "607024016150",
 	endpoints.SaEast1RegionID:      "539772159869",
 	endpoints.UsEast1RegionID:      "156813124566",
 	endpoints.UsEast2RegionID:      "777275614652",
-	endpoints.UsGovWest1RegionID:   "362178532790",
 	endpoints.UsWest1RegionID:      "890145073186",
 	endpoints.UsWest2RegionID:      "159807026194",
 }
@@ -350,41 +728,87 @@ func DataSourcePrebuiltECRImage() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					repositoryBlazingText,
-					repositoryDeepARForecasting,
-					repositoryFactorizationMachines,
-					repositoryImageClassification,
-					repositoryIPInsights,
-					repositoryKMeans,
-					repositoryKNearestNeighbor,
-					repositoryLDA,
-					repositoryLinearLearner,
-					repositoryModelMonitor,
-					repositoryMXNetInference,
-					repositoryMXNetInferenceEIA,
-					repositoryMXNetTraining,
-					repositoryNeuralTopicModel,
-					repositoryObject2Vec,
-					repositoryObjectDetection,
-					repositoryPCA,
-					repositoryPyTorchInference,
-					repositoryPyTorchInferenceEIA,
-					repositoryPyTorchTraining,
-					repositoryRandomCutForest,
-					repositoryScikitLearn,
-					repositorySemanticSegmentation,
-					repositorySeq2Seq,
-					repositorySparkML,
-					repositoryTensorFlowInference,
-					repositoryTensorFlowInferenceEIA,
-					repositoryTensorFlowServing,
-					repositoryTensorFlowServingEIA,
-					repositoryTensorFlowTraining,
-					repositoryHuggingFaceTensorFlowTraining,
-					repositoryHuggingFaceTensorFlowInference,
-					repositoryHuggingFacePyTorchTraining,
-					repositoryHuggingFacePyTorchInference,
-					repositoryXGBoost,
+					RepositoryAutoGluonTraining,
+					RepositoryAutoGluonInference,
+					RepositoryBlazingText,
+					RepositoryChainer,
+					RepositoryClarify,
+					RepositoryDJLDeepSpeed,
+					RepositoryDataWrangler,
+					RepositoryDebugger,
+					RepositoryDeepARForecasting,
+					RepositoryFactorizationMachines,
+					RepositoryHuggingFaceTensorFlowTraining,
+					RepositoryHuggingFacePyTorchTraining,
+					RepositoryHuggingFacePyTorchTrainingNeuronX,
+					RepositoryHuggingFacePyTorchTrainingCompiler,
+					RepositoryHuggingFaceTensorFlowTrainingCompiler,
+					RepositoryHuggingFaceTensorFlowInference,
+					RepositoryHuggingFacePyTorchInference,
+					RepositoryHuggingFacePyTorchInferenceNeuron,
+					RepositoryHuggingFacePyTorchInferenceNeuronX,
+					RepositoryHuggingFacePyTorchTGIInference,
+					RepositoryHuggingFaceTEI,
+					RepositoryHuggingFaceTEICPU,
+					RepositoryIPInsights,
+					RepositoryImageClassification,
+					RepositoryInferentiaMXNet,
+					RepositoryInferentiaPyTorch,
+					RepositoryKMeans,
+					RepositoryKNearestNeighbor,
+					RepositoryLDA,
+					RepositoryLinearLearner,
+					RepositoryModelMonitor,
+					RepositoryMXNetTraining,
+					RepositoryMXNetInference,
+					RepositoryMXNetInferenceEIA,
+					RepositoryMXNetCoach,
+					RepositoryNeuralTopicModel,
+					RepositoryNeoImageClassification,
+					RepositoryNeoMXNet,
+					RepositoryNeoPyTorch,
+					RepositoryNeoTensorflow,
+					RepositoryNeoXGBoost,
+					RepositoryNVIDIATritonInference,
+					RepositoryObjectDetection,
+					RepositoryObject2Vec,
+					RepositoryPCA,
+					RepositoryPyTorchTraining,
+					RepositoryPyTorchTrainingNeuronX,
+					RepositoryPyTorchTrainingCompiler,
+					RepositoryPyTorchInference,
+					RepositoryPyTorchInferenceEIA,
+					RepositoryPyTorchInferenceGraviton,
+					RepositoryPyTorchInferenceNeuronX,
+					RepositoryRandomCutForest,
+					RepositoryRLRayPyTorch,
+					RepositoryRLCoachPyTorch,
+					RepositorySagemakerBasePython,
+					RepositorySagemakerGeospatial,
+					RepositorySagemakerMXNet,
+					RepositorySagemakerMXNetServing,
+					RepositorySagemakerMXNetEIA,
+					RepositorySagemakerMXNetServingEIA,
+					RepositorySagemakerPyTorch,
+					RepositorySagemakerTensorFlow,
+					RepositorySagemakerTensorFlowEIA,
+					RepositoryScikitLearn,
+					RepositorySemanticSegmentation,
+					RepositorySeq2Seq,
+					RepositorySpark,
+					RepositorySparkML,
+					RepositoryTensorFlowTraining,
+					RepositoryTensorFlowInference,
+					RepositoryTensorFlowInferenceEIA,
+					RepositoryTensorFlowInferenceGraviton,
+					RepositoryTensorFlowServing,
+					RepositoryTensorFlowServingEIA,
+					RepositorySagemakerTensorFlowScriptMode,
+					RepositoryTensorflowCoach,
+					RepositoryTensorflowInferentia,
+					RepositoryStabilityAI,
+					RepositoryVW,
+					RepositoryXGBoost,
 				}, false),
 			},
 
@@ -433,38 +857,93 @@ func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData,
 
 	id := ""
 	switch repo {
-	case repositoryBlazingText,
-		repositoryImageClassification,
-		repositoryObjectDetection,
-		repositorySemanticSegmentation,
-		repositorySeq2Seq:
-		id = prebuiltECRImageIDByRegion_blazing[region]
-	case repositoryDeepARForecasting:
-		id = prebuiltECRImageIDByRegion_deepAR[region]
-	case repositoryLDA:
-		id = prebuiltECRImageIDByRegion_lda[region]
-	case repositoryModelMonitor:
-		id = prebuiltECRImageIDByRegion_modelMonitor[region]
-	case repositoryXGBoost:
-		id = prebuiltECRImageIDByRegion_xgBoost[region]
-	case repositoryScikitLearn, repositorySparkML:
-		id = PrebuiltECRImageIDByRegion_sparkML[region]
-	case repositoryTensorFlowServing, repositoryTensorFlowServingEIA:
-		id = prebuiltECRImageIDByRegion_tensorFlowServing[region]
-	case repositoryMXNetInference,
-		repositoryMXNetInferenceEIA,
-		repositoryMXNetTraining,
-		repositoryPyTorchInference,
-		repositoryPyTorchInferenceEIA,
-		repositoryPyTorchTraining,
-		repositoryTensorFlowInference,
-		repositoryTensorFlowInferenceEIA,
-		repositoryTensorFlowTraining,
-		repositoryHuggingFaceTensorFlowTraining,
-		repositoryHuggingFaceTensorFlowInference,
-		repositoryHuggingFacePyTorchTraining,
-		repositoryHuggingFacePyTorchInference:
-		id = prebuiltECRImageIDByRegion_deepLearning[region]
+	case RepositoryBlazingText,
+		RepositoryImageClassification,
+		RepositoryObjectDetection,
+		RepositorySemanticSegmentation,
+		RepositorySeq2Seq:
+		id = PrebuiltECRImageIDByRegion_blazing[region]
+	case RepositoryClarify:
+		id = PrebuiltECRImageIDByRegion_clarify[region]
+	case RepositoryDataWrangler:
+		id = PrebuiltECRImageIDByRegion_dataWrangler[region]
+	case RepositoryDebugger:
+		id = PrebuiltECRImageIDByRegion_debugger[region]
+	case RepositoryDeepARForecasting:
+		id = PrebuiltECRImageIDByRegion_deepAR[region]
+	case RepositoryInferentiaMXNet,
+		RepositoryInferentiaPyTorch,
+		RepositoryMXNetCoach,
+		RepositoryNeoImageClassification,
+		RepositoryNeoMXNet,
+		RepositoryNeoPyTorch,
+		RepositoryNeoTensorflow,
+		RepositoryNeoXGBoost,
+		RepositoryTensorflowInferentia:
+		id = PrebuiltECRImageIDByRegion_inferentiaNeo[region]
+	case RepositoryLDA:
+		id = PrebuiltECRImageIDByRegion_lda[region]
+	case RepositoryModelMonitor:
+		id = PrebuiltECRImageIDByRegion_modelMonitor[region]
+	case RepositoryXGBoost,
+		RepositoryScikitLearn,
+		RepositorySparkML,
+		RepositoryHuggingFaceTEI,
+		RepositoryHuggingFaceTEICPU:
+		id = PrebuiltECRImageIDByRegion_XGBoost[region]
+	case RepositoryChainer,
+		RepositorySagemakerMXNet,
+		RepositorySagemakerMXNetServing,
+		RepositorySagemakerMXNetEIA,
+		RepositorySagemakerMXNetServingEIA,
+		RepositorySagemakerPyTorch,
+		RepositorySagemakerTensorFlow,
+		RepositorySagemakerTensorFlowEIA,
+		RepositorySagemakerTensorFlowScriptMode,
+		RepositoryTensorflowCoach,
+		RepositoryTensorFlowServing,
+		RepositoryTensorFlowServingEIA:
+		id = PrebuiltECRImageIDByRegion_sagemakerCustom[region]
+	case RepositoryAutoGluonTraining,
+		RepositoryAutoGluonInference,
+		RepositoryDJLDeepSpeed,
+		RepositoryHuggingFaceTensorFlowTraining,
+		RepositoryHuggingFacePyTorchTraining,
+		RepositoryHuggingFacePyTorchTrainingNeuronX,
+		RepositoryHuggingFacePyTorchTrainingCompiler,
+		RepositoryHuggingFaceTensorFlowTrainingCompiler,
+		RepositoryHuggingFaceTensorFlowInference,
+		RepositoryHuggingFacePyTorchInference,
+		RepositoryHuggingFacePyTorchInferenceNeuron,
+		RepositoryHuggingFacePyTorchInferenceNeuronX,
+		RepositoryHuggingFacePyTorchTGIInference,
+		RepositoryMXNetTraining,
+		RepositoryMXNetInference,
+		RepositoryMXNetInferenceEIA,
+		RepositoryPyTorchTraining,
+		RepositoryPyTorchTrainingNeuronX,
+		RepositoryPyTorchTrainingCompiler,
+		RepositoryPyTorchInference,
+		RepositoryPyTorchInferenceEIA,
+		RepositoryPyTorchInferenceGraviton,
+		RepositoryPyTorchInferenceNeuronX,
+		RepositoryStabilityAI,
+		RepositoryTensorFlowTraining,
+		RepositoryTensorFlowInference,
+		RepositoryTensorFlowInferenceEIA,
+		RepositoryTensorFlowInferenceGraviton,
+		RepositoryNVIDIATritonInference:
+		id = PrebuiltECRImageIDByRegion_deepLearning[region]
+	case RepositoryRLRayPyTorch,
+		RepositoryRLCoachPyTorch,
+		RepositoryVW:
+		id = PrebuiltECRImageIDByRegion_sagemakerRL[region]
+	case RepositorySagemakerBasePython:
+		id = PrebuiltECRImageIDByRegion_sagemakerBasePython[region]
+	case RepositorySagemakerGeospatial:
+		id = PrebuiltECRImageIDByRegion_sagemakerGeospatial[region]
+	case RepositorySpark:
+		id = PrebuiltECRImageIDByRegion_spark[region]
 	default:
 		id = PrebuiltECRImageIDByRegion_factorMachines[region]
 	}
