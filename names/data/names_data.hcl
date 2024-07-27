@@ -6083,7 +6083,7 @@ service "memorydb" {
 
   sdk {
     id             = "MemoryDB"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {

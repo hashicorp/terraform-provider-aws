@@ -144,6 +144,7 @@ import (
 	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
 	mediapackagev2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
 	mediastore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediastore"
+	memorydb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/memorydb"
 	mq_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mq"
 	mwaa_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mwaa"
 	neptunegraph_sdkv2 "github.com/aws/aws-sdk-go-v2/service/neptunegraph"
@@ -228,7 +229,6 @@ import (
 	licensemanager_sdkv1 "github.com/aws/aws-sdk-go/service/licensemanager"
 	locationservice_sdkv1 "github.com/aws/aws-sdk-go/service/locationservice"
 	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
-	memorydb_sdkv1 "github.com/aws/aws-sdk-go/service/memorydb"
 	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
 	networkmanager_sdkv1 "github.com/aws/aws-sdk-go/service/networkmanager"
 	opensearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/opensearchservice"
@@ -877,8 +877,8 @@ func (c *AWSClient) MediaStoreClient(ctx context.Context) *mediastore_sdkv2.Clie
 	return errs.Must(client[*mediastore_sdkv2.Client](ctx, c, names.MediaStore, make(map[string]any)))
 }
 
-func (c *AWSClient) MemoryDBConn(ctx context.Context) *memorydb_sdkv1.MemoryDB {
-	return errs.Must(conn[*memorydb_sdkv1.MemoryDB](ctx, c, names.MemoryDB, make(map[string]any)))
+func (c *AWSClient) MemoryDBClient(ctx context.Context) *memorydb_sdkv2.Client {
+	return errs.Must(client[*memorydb_sdkv2.Client](ctx, c, names.MemoryDB, make(map[string]any)))
 }
 
 func (c *AWSClient) NeptuneConn(ctx context.Context) *neptune_sdkv1.Neptune {
