@@ -110,7 +110,8 @@ func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta
 
 	for _, responseFilter := range response.Filters {
 		if aws.ToString(responseFilter.Name) == d.Id() {
-			filter = &responseFilter
+			rf := responseFilter
+			filter = &rf
 			break
 		}
 	}

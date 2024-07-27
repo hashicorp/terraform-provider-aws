@@ -187,7 +187,7 @@ func testAccCheckDomainMailFromDestroy(ctx context.Context) resource.TestCheckFu
 			}
 
 			input := &ses.GetIdentityMailFromDomainAttributesInput{
-				Identities: []string{string(rs.Primary.ID)},
+				Identities: []string{rs.Primary.ID},
 			}
 
 			out, err := conn.GetIdentityMailFromDomainAttributes(ctx, input)

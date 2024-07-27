@@ -228,7 +228,8 @@ func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, m
 	var thisEventDestination *awstypes.EventDestination
 	for _, eventDestination := range output.EventDestinations {
 		if aws.ToString(eventDestination.Name) == d.Id() {
-			thisEventDestination = &eventDestination
+			ed := eventDestination
+			thisEventDestination = &ed
 			break
 		}
 	}
