@@ -13,13 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -283,8 +283,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		ClusterName:             aws.String(name),
 		NodeType:                aws.String(d.Get("node_type").(string)),
-		NumReplicasPerShard:     aws.Int64(int64(d.Get("num_replicas_per_shard").(int))),
-		NumShards:               aws.Int64(int64(d.Get("num_shards").(int))),
+		NumReplicasPerShard:     aws.Int32(int32(d.Get("num_replicas_per_shard").(int))),
+		NumShards:               aws.Int32(int32(d.Get("num_shards").(int))),
 		Tags:                    getTagsIn(ctx),
 		TLSEnabled:              aws.Bool(d.Get("tls_enabled").(bool)),
 	}
@@ -314,16 +314,16 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk(names.AttrPort); ok {
-		input.Port = aws.Int64(int64(v.(int)))
+		input.Port = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
-		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+		input.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("snapshot_arns"); ok && len(v.([]interface{})) > 0 {
 		v := v.([]interface{})
-		input.SnapshotArns = flex.ExpandStringList(v)
+		input.SnapshotArns = flex.ExpandStringValueList(v)
 		log.Printf("[DEBUG] Restoring MemoryDB Cluster (%s) from S3 snapshots %#v", name, v)
 	}
 
@@ -333,7 +333,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("snapshot_retention_limit"); ok {
-		input.SnapshotRetentionLimit = aws.Int64(int64(v.(int)))
+		input.SnapshotRetentionLimit = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("snapshot_window"); ok {
@@ -348,7 +348,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.SubnetGroupName = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating MemoryDB Cluster: %s", input)
+	log.Printf("[DEBUG] Creating MemoryDB Cluster: %+v", input)
 	_, err := conn.CreateCluster(ctx, input)
 
 	if err != nil {
@@ -399,13 +399,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("num_replicas_per_shard") {
 			input.ReplicaConfiguration = &awstypes.ReplicaConfigurationRequest{
-				ReplicaCount: aws.Int64(int64(d.Get("num_replicas_per_shard").(int))),
+				ReplicaCount: int32(d.Get("num_replicas_per_shard").(int)),
 			}
 		}
 
 		if d.HasChange("num_shards") {
 			input.ShardConfiguration = &awstypes.ShardConfigurationRequest{
-				ShardCount: aws.Int64(int64(d.Get("num_shards").(int))),
+				ShardCount: int32(d.Get("num_shards").(int)),
 			}
 		}
 
@@ -425,12 +425,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				return sdkdiag.AppendErrorf(diags, "unable to update MemoryDB Cluster (%s): removing all security groups is not possible", d.Id())
 			}
 
-			input.SecurityGroupIds = flex.ExpandStringSet(v)
+			input.SecurityGroupIds = flex.ExpandStringValueSet(v)
 			waitSecurityGroupsActive = true
 		}
 
 		if d.HasChange("snapshot_retention_limit") {
-			input.SnapshotRetentionLimit = aws.Int64(int64(d.Get("snapshot_retention_limit").(int)))
+			input.SnapshotRetentionLimit = aws.Int32(int32(d.Get("snapshot_retention_limit").(int)))
 		}
 
 		if d.HasChange("snapshot_window") {
@@ -502,7 +502,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set(names.AttrPort, v.Port)
 	}
 
-	if v := aws.ToString(cluster.DataTiering); v != "" {
+	if v := string(cluster.DataTiering); v != "" {
 		b, err := strconv.ParseBool(v)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading data_tiering for MemoryDB Cluster (%s): %s", d.Id(), err)
@@ -570,7 +570,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	log.Printf("[DEBUG] Deleting MemoryDB Cluster: (%s)", d.Id())
 	_, err := conn.DeleteCluster(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeClusterNotFoundFault) {
+	if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
 		return diags
 	}
 
@@ -604,28 +604,20 @@ func flattenEndpoint(endpoint *awstypes.Endpoint) []interface{} {
 		m[names.AttrAddress] = v
 	}
 
-	if v := aws.ToInt64(endpoint.Port); v != 0 {
-		m[names.AttrPort] = v
+	if endpoint.Port != 0 {
+		m[names.AttrPort] = endpoint.Port
 	}
 
 	return []interface{}{m}
 }
 
-func flattenShards(shards []*awstypes.Shard) *schema.Set {
+func flattenShards(shards []awstypes.Shard) *schema.Set {
 	shardSet := schema.NewSet(shardHash, nil)
 
 	for _, shard := range shards {
-		if shard == nil {
-			continue
-		}
-
 		nodeSet := schema.NewSet(nodeHash, nil)
 
 		for _, node := range shard.Nodes {
-			if node == nil {
-				continue
-			}
-
 			nodeSet.Add(map[string]interface{}{
 				names.AttrAvailabilityZone: aws.ToString(node.AvailabilityZone),
 				names.AttrCreateTime:       aws.ToTime(node.CreateTime).Format(time.RFC3339),
@@ -636,7 +628,7 @@ func flattenShards(shards []*awstypes.Shard) *schema.Set {
 
 		shardSet.Add(map[string]interface{}{
 			names.AttrName: aws.ToString(shard.Name),
-			"num_nodes":    int(aws.ToInt64(shard.NumberOfNodes)),
+			"num_nodes":    int(aws.ToInt32(shard.NumberOfNodes)),
 			"nodes":        nodeSet,
 			"slots":        aws.ToString(shard.Slots),
 		})
@@ -651,14 +643,14 @@ func flattenShards(shards []*awstypes.Shard) *schema.Set {
 //
 // For the sake of caution, this search is limited to stable shards.
 func deriveClusterNumReplicasPerShard(cluster *awstypes.Cluster) (int, error) {
-	var maxNumberOfNodesPerShard int64
+	var maxNumberOfNodesPerShard int32
 
 	for _, shard := range cluster.Shards {
 		if aws.ToString(shard.Status) != ClusterShardStatusAvailable {
 			continue
 		}
 
-		n := aws.ToInt64(shard.NumberOfNodes)
+		n := aws.ToInt32(shard.NumberOfNodes)
 		if n > maxNumberOfNodesPerShard {
 			maxNumberOfNodesPerShard = n
 		}

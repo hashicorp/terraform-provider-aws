@@ -189,7 +189,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set(names.AttrPort, v.Port)
 	}
 
-	if v := aws.ToString(cluster.DataTiering); v != "" {
+	if v := string(cluster.DataTiering); v != "" {
 		b, err := strconv.ParseBool(v)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading data_tiering for MemoryDB Cluster (%s): %s", d.Id(), err)
