@@ -7,9 +7,10 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/memorydb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/memorydb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -81,7 +82,7 @@ func ResourceACL() *schema.Resource {
 func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &memorydb.CreateACLInput{
@@ -94,7 +95,7 @@ func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[DEBUG] Creating MemoryDB ACL: %s", input)
-	_, err := conn.CreateACLWithContext(ctx, input)
+	_, err := conn.CreateACL(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating MemoryDB ACL (%s): %s", name, err)
@@ -112,7 +113,7 @@ func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &memorydb.UpdateACLInput{
@@ -140,7 +141,7 @@ func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 		initialUserNames := map[string]struct{}{}
 		for _, userName := range initialState.UserNames {
-			initialUserNames[aws.StringValue(userName)] = struct{}{}
+			initialUserNames[aws.ToString(userName)] = struct{}{}
 		}
 
 		for _, v := range oldSet.Difference(newSet).List() {
@@ -155,7 +156,7 @@ func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		if len(input.UserNamesToAdd) > 0 || len(input.UserNamesToRemove) > 0 {
 			log.Printf("[DEBUG] Updating MemoryDB ACL (%s)", d.Id())
 
-			_, err := conn.UpdateACLWithContext(ctx, input)
+			_, err := conn.UpdateACL(ctx, input)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating MemoryDB ACL (%s): %s", d.Id(), err)
 			}
@@ -172,7 +173,7 @@ func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	acl, err := FindACLByName(ctx, conn, d.Id())
 
@@ -189,7 +190,7 @@ func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set(names.AttrARN, acl.ARN)
 	d.Set("minimum_engine_version", acl.MinimumEngineVersion)
 	d.Set(names.AttrName, acl.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(acl.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(acl.Name)))
 	d.Set("user_names", flex.FlattenStringSet(acl.UserNames))
 
 	return diags
@@ -198,14 +199,14 @@ func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface
 func resourceACLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting MemoryDB ACL: (%s)", d.Id())
-	_, err := conn.DeleteACLWithContext(ctx, &memorydb.DeleteACLInput{
+	_, err := conn.DeleteACL(ctx, &memorydb.DeleteACLInput{
 		ACLName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeACLNotFoundFault) {
+	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeACLNotFoundFault) {
 		return diags
 	}
 
