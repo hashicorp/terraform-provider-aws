@@ -146,6 +146,7 @@ import (
 	mediastore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediastore"
 	mq_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mq"
 	mwaa_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mwaa"
+	neptune_sdkv2 "github.com/aws/aws-sdk-go-v2/service/neptune"
 	neptunegraph_sdkv2 "github.com/aws/aws-sdk-go-v2/service/neptunegraph"
 	networkfirewall_sdkv2 "github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	networkmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/networkmonitor"
@@ -229,7 +230,6 @@ import (
 	locationservice_sdkv1 "github.com/aws/aws-sdk-go/service/locationservice"
 	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
 	memorydb_sdkv1 "github.com/aws/aws-sdk-go/service/memorydb"
-	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
 	networkmanager_sdkv1 "github.com/aws/aws-sdk-go/service/networkmanager"
 	opensearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/opensearchservice"
 	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
@@ -881,8 +881,8 @@ func (c *AWSClient) MemoryDBConn(ctx context.Context) *memorydb_sdkv1.MemoryDB {
 	return errs.Must(conn[*memorydb_sdkv1.MemoryDB](ctx, c, names.MemoryDB, make(map[string]any)))
 }
 
-func (c *AWSClient) NeptuneConn(ctx context.Context) *neptune_sdkv1.Neptune {
-	return errs.Must(conn[*neptune_sdkv1.Neptune](ctx, c, names.Neptune, make(map[string]any)))
+func (c *AWSClient) NeptuneClient(ctx context.Context) *neptune_sdkv2.Client {
+	return errs.Must(client[*neptune_sdkv2.Client](ctx, c, names.Neptune, make(map[string]any)))
 }
 
 func (c *AWSClient) NeptuneGraphClient(ctx context.Context) *neptunegraph_sdkv2.Client {
