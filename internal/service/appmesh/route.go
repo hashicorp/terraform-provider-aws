@@ -124,6 +124,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 											names.AttrPort: {
 												Type:         schema.TypeInt,
 												Optional:     true,
+												Computed:     true,
 												ValidateFunc: validation.IsPortNumber,
 											},
 											"virtual_node": {
@@ -418,6 +419,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 													names.AttrPort: {
 														Type:         schema.TypeInt,
 														Optional:     true,
+														Computed:     true,
 														ValidateFunc: validation.IsPortNumber,
 													},
 													"virtual_node": {
@@ -675,6 +677,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 													names.AttrPort: {
 														Type:         schema.TypeInt,
 														Optional:     true,
+														Computed:     true,
 														ValidateFunc: validation.IsPortNumber,
 													},
 													"virtual_node": {
