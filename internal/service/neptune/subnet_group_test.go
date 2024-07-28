@@ -9,7 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go-v2/service/neptune"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -23,7 +24,7 @@ import (
 
 func TestAccNeptuneSubnetGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBSubnetGroup
+	var v awstypes.DBSubnetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_subnet_group.test"
 
@@ -56,7 +57,7 @@ func TestAccNeptuneSubnetGroup_basic(t *testing.T) {
 
 func TestAccNeptuneSubnetGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBSubnetGroup
+	var v awstypes.DBSubnetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_subnet_group.test"
 
@@ -80,7 +81,7 @@ func TestAccNeptuneSubnetGroup_disappears(t *testing.T) {
 
 func TestAccNeptuneSubnetGroup_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBSubnetGroup
+	var v awstypes.DBSubnetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_subnet_group.test"
 
@@ -109,7 +110,7 @@ func TestAccNeptuneSubnetGroup_nameGenerated(t *testing.T) {
 
 func TestAccNeptuneSubnetGroup_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBSubnetGroup
+	var v awstypes.DBSubnetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_subnet_group.test"
 
@@ -138,7 +139,7 @@ func TestAccNeptuneSubnetGroup_namePrefix(t *testing.T) {
 
 func TestAccNeptuneSubnetGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBSubnetGroup
+	var v awstypes.DBSubnetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_subnet_group.test"
 
@@ -184,7 +185,7 @@ func TestAccNeptuneSubnetGroup_tags(t *testing.T) {
 
 func TestAccNeptuneSubnetGroup_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v neptune.DBSubnetGroup
+	var v awstypes.DBSubnetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_subnet_group.test"
 
@@ -216,7 +217,7 @@ func TestAccNeptuneSubnetGroup_update(t *testing.T) {
 
 func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_neptune_subnet_group" {
@@ -240,7 +241,7 @@ func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckSubnetGroupExists(ctx context.Context, n string, v *neptune.DBSubnetGroup) resource.TestCheckFunc {
+func testAccCheckSubnetGroupExists(ctx context.Context, n string, v *awstypes.DBSubnetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -251,7 +252,7 @@ func testAccCheckSubnetGroupExists(ctx context.Context, n string, v *neptune.DBS
 			return fmt.Errorf("No Neptune Subnet Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 		output, err := tfneptune.FindSubnetGroupByName(ctx, conn, rs.Primary.ID)
 

@@ -6,8 +6,9 @@ package neptune
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/neptune"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -122,7 +123,7 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 
 func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	input := &neptune.DescribeOrderableDBInstanceOptionsInput{}
 
@@ -146,17 +147,17 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 		input.Vpc = aws.Bool(v.(bool))
 	}
 
-	var orderableDBInstance *neptune.OrderableDBInstanceOption
+	var orderableDBInstance *awstypes.OrderableDBInstanceOption
 	var err error
 	if preferredInstanceClasses := flex.ExpandStringValueList(d.Get("preferred_instance_classes").([]interface{})); len(preferredInstanceClasses) > 0 {
-		var orderableDBInstances []*neptune.OrderableDBInstanceOption
+		var orderableDBInstances []*awstypes.OrderableDBInstanceOption
 
 		orderableDBInstances, err = findOrderableDBInstances(ctx, conn, input)
 		if err == nil {
 		PreferredInstanceClassLoop:
 			for _, preferredInstanceClass := range preferredInstanceClasses {
 				for _, v := range orderableDBInstances {
-					if preferredInstanceClass == aws.StringValue(v.DBInstanceClass) {
+					if preferredInstanceClass == aws.ToString(v.DBInstanceClass) {
 						orderableDBInstance = v
 						break PreferredInstanceClassLoop
 					}
@@ -175,9 +176,9 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Neptune Orderable DB Instance", err))
 	}
 
-	d.SetId(aws.StringValue(orderableDBInstance.DBInstanceClass))
-	d.Set(names.AttrAvailabilityZones, tfslices.ApplyToAll(orderableDBInstance.AvailabilityZones, func(v *neptune.AvailabilityZone) string {
-		return aws.StringValue(v.Name)
+	d.SetId(aws.ToString(orderableDBInstance.DBInstanceClass))
+	d.Set(names.AttrAvailabilityZones, tfslices.ApplyToAll(orderableDBInstance.AvailabilityZones, func(v *awstypes.AvailabilityZone) string {
+		return aws.ToString(v.Name)
 	}))
 	d.Set(names.AttrEngine, orderableDBInstance.Engine)
 	d.Set(names.AttrEngineVersion, orderableDBInstance.EngineVersion)
@@ -202,7 +203,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func findOrderableDBInstance(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeOrderableDBInstanceOptionsInput) (*neptune.OrderableDBInstanceOption, error) {
+func findOrderableDBInstance(ctx context.Context, conn *neptune.Client, input *neptune.DescribeOrderableDBInstanceOptionsInput) (*awstypes.OrderableDBInstanceOption, error) {
 	output, err := findOrderableDBInstances(ctx, conn, input)
 
 	if err != nil {
@@ -212,8 +213,8 @@ func findOrderableDBInstance(ctx context.Context, conn *neptune.Neptune, input *
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findOrderableDBInstances(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeOrderableDBInstanceOptionsInput) ([]*neptune.OrderableDBInstanceOption, error) {
-	var output []*neptune.OrderableDBInstanceOption
+func findOrderableDBInstances(ctx context.Context, conn *neptune.Client, input *neptune.DescribeOrderableDBInstanceOptionsInput) ([]*awstypes.OrderableDBInstanceOption, error) {
+	var output []*awstypes.OrderableDBInstanceOption
 
 	err := conn.DescribeOrderableDBInstanceOptionsPagesWithContext(ctx, input, func(page *neptune.DescribeOrderableDBInstanceOptionsOutput, lastPage bool) bool {
 		if page == nil {

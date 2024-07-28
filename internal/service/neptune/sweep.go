@@ -8,8 +8,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/neptune"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
@@ -83,7 +84,7 @@ func sweepEventSubscriptions(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.NeptuneConn(ctx)
+	conn := client.NeptuneClient(ctx)
 	input := &neptune.DescribeEventSubscriptionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -95,7 +96,7 @@ func sweepEventSubscriptions(region string) error {
 		for _, v := range page.EventSubscriptionsList {
 			r := ResourceEventSubscription()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.CustSubscriptionId))
+			d.SetId(aws.ToString(v.CustSubscriptionId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -127,7 +128,7 @@ func sweepClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.NeptuneConn(ctx)
+	conn := client.NeptuneClient(ctx)
 	input := &neptune.DescribeDBClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -137,8 +138,8 @@ func sweepClusters(region string) error {
 		}
 
 		for _, v := range page.DBClusters {
-			arn := aws.StringValue(v.DBClusterArn)
-			id := aws.StringValue(v.DBClusterIdentifier)
+			arn := aws.ToString(v.DBClusterArn)
+			id := aws.ToString(v.DBClusterIdentifier)
 
 			r := ResourceCluster()
 			d := r.Data(nil)
@@ -189,7 +190,7 @@ func sweepClusterSnapshots(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.NeptuneConn(ctx)
+	conn := client.NeptuneClient(ctx)
 	input := &neptune.DescribeDBClusterSnapshotsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -201,7 +202,7 @@ func sweepClusterSnapshots(region string) error {
 		for _, v := range page.DBClusterSnapshots {
 			r := ResourceClusterSnapshot()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.DBClusterSnapshotIdentifier))
+			d.SetId(aws.ToString(v.DBClusterSnapshotIdentifier))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -233,7 +234,7 @@ func sweepClusterParameterGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.NeptuneConn(ctx)
+	conn := client.NeptuneClient(ctx)
 	input := &neptune.DescribeDBClusterParameterGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -243,7 +244,7 @@ func sweepClusterParameterGroups(region string) error {
 		}
 
 		for _, v := range page.DBClusterParameterGroups {
-			name := aws.StringValue(v.DBClusterParameterGroupName)
+			name := aws.ToString(v.DBClusterParameterGroupName)
 
 			if strings.HasPrefix(name, "default.") {
 				log.Printf("[INFO] Skipping Neptune Cluster Parameter Group: %s", name)
@@ -284,7 +285,7 @@ func sweepClusterInstances(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.NeptuneConn(ctx)
+	conn := client.NeptuneClient(ctx)
 	input := &neptune.DescribeDBInstancesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -294,9 +295,9 @@ func sweepClusterInstances(region string) error {
 		}
 
 		for _, v := range page.DBInstances {
-			id := aws.StringValue(v.DBInstanceIdentifier)
+			id := aws.ToString(v.DBInstanceIdentifier)
 
-			if state := aws.StringValue(v.DBInstanceStatus); state == dbInstanceStatusDeleting {
+			if state := aws.ToString(v.DBInstanceStatus); state == dbInstanceStatusDeleting {
 				log.Printf("[INFO] Skipping Neptune Cluster Instance %s: DBInstanceStatus=%s", id, state)
 				continue
 			}
@@ -337,7 +338,7 @@ func sweepGlobalClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.NeptuneConn(ctx)
+	conn := client.NeptuneClient(ctx)
 	input := &neptune.DescribeGlobalClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -349,7 +350,7 @@ func sweepGlobalClusters(region string) error {
 		for _, v := range page.GlobalClusters {
 			r := ResourceGlobalCluster()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.GlobalClusterIdentifier))
+			d.SetId(aws.ToString(v.GlobalClusterIdentifier))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -381,7 +382,7 @@ func sweepParameterGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.NeptuneConn(ctx)
+	conn := client.NeptuneClient(ctx)
 	input := &neptune.DescribeDBParameterGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -391,7 +392,7 @@ func sweepParameterGroups(region string) error {
 		}
 
 		for _, v := range page.DBParameterGroups {
-			name := aws.StringValue(v.DBParameterGroupName)
+			name := aws.ToString(v.DBParameterGroupName)
 
 			if strings.HasPrefix(name, "default.") {
 				log.Printf("[INFO] Skipping Neptune Parameter Group: %s", name)
@@ -432,7 +433,7 @@ func sweepSubnetGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.NeptuneConn(ctx)
+	conn := client.NeptuneClient(ctx)
 	input := &neptune.DescribeDBSubnetGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -444,7 +445,7 @@ func sweepSubnetGroups(region string) error {
 		for _, v := range page.DBSubnetGroups {
 			r := ResourceSubnetGroup()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.DBSubnetGroupName))
+			d.SetId(aws.ToString(v.DBSubnetGroupName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

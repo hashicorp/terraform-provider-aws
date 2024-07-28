@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/neptune"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -69,13 +70,13 @@ func TestAccNeptuneOrderableDBInstanceDataSource_preferred(t *testing.T) {
 }
 
 func testAccPreCheckOrderableDBInstance(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 	input := &neptune.DescribeOrderableDBInstanceOptionsInput{
 		Engine: aws.String("mysql"),
 	}
 
-	_, err := conn.DescribeOrderableDBInstanceOptionsWithContext(ctx, input)
+	_, err := conn.DescribeOrderableDBInstanceOptions(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

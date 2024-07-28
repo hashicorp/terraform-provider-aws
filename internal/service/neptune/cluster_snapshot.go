@@ -8,9 +8,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/neptune"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -105,7 +106,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 
 func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	clusterSnapshotID := d.Get("db_cluster_snapshot_identifier").(string)
 	input := &neptune.CreateDBClusterSnapshotInput{
@@ -113,7 +114,7 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 		DBClusterSnapshotIdentifier: aws.String(clusterSnapshotID),
 	}
 
-	_, err := conn.CreateDBClusterSnapshotWithContext(ctx, input)
+	_, err := conn.CreateDBClusterSnapshot(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster Snapshot (%s): %s", clusterSnapshotID, err)
@@ -130,7 +131,7 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	snapshot, err := FindClusterSnapshotByID(ctx, conn, d.Id())
 
@@ -145,7 +146,7 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
-	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(snapshot.AvailabilityZones))
+	d.Set(names.AttrAvailabilityZones, snapshot.AvailabilityZones)
 	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
 	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)
 	d.Set("db_cluster_snapshot_identifier", snapshot.DBClusterSnapshotIdentifier)
@@ -165,14 +166,14 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
+	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Neptune Cluster Snapshot: %s", d.Id())
-	_, err := conn.DeleteDBClusterSnapshotWithContext(ctx, &neptune.DeleteDBClusterSnapshotInput{
+	_, err := conn.DeleteDBClusterSnapshot(ctx, &neptune.DeleteDBClusterSnapshotInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault) {
+	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeDBClusterSnapshotNotFoundFault) {
 		return diags
 	}
 
@@ -183,7 +184,7 @@ func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func FindClusterSnapshotByID(ctx context.Context, conn *neptune.Neptune, id string) (*neptune.DBClusterSnapshot, error) {
+func FindClusterSnapshotByID(ctx context.Context, conn *neptune.Client, id string) (*awstypes.DBClusterSnapshot, error) {
 	input := &neptune.DescribeDBClusterSnapshotsInput{
 		DBClusterSnapshotIdentifier: aws.String(id),
 	}
@@ -194,7 +195,7 @@ func FindClusterSnapshotByID(ctx context.Context, conn *neptune.Neptune, id stri
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.DBClusterSnapshotIdentifier) != id {
+	if aws.ToString(output.DBClusterSnapshotIdentifier) != id {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -203,7 +204,7 @@ func FindClusterSnapshotByID(ctx context.Context, conn *neptune.Neptune, id stri
 	return output, nil
 }
 
-func findClusterSnapshot(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBClusterSnapshotsInput) (*neptune.DBClusterSnapshot, error) {
+func findClusterSnapshot(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBClusterSnapshotsInput) (*awstypes.DBClusterSnapshot, error) {
 	output, err := findClusterSnapshots(ctx, conn, input)
 
 	if err != nil {
@@ -213,8 +214,8 @@ func findClusterSnapshot(ctx context.Context, conn *neptune.Neptune, input *nept
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findClusterSnapshots(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBClusterSnapshotsInput) ([]*neptune.DBClusterSnapshot, error) {
-	var output []*neptune.DBClusterSnapshot
+func findClusterSnapshots(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBClusterSnapshotsInput) ([]*awstypes.DBClusterSnapshot, error) {
+	var output []*awstypes.DBClusterSnapshot
 
 	err := conn.DescribeDBClusterSnapshotsPagesWithContext(ctx, input, func(page *neptune.DescribeDBClusterSnapshotsOutput, lastPage bool) bool {
 		if page == nil {
@@ -230,7 +231,7 @@ func findClusterSnapshots(ctx context.Context, conn *neptune.Neptune, input *nep
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault) {
+	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeDBClusterSnapshotNotFoundFault) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -244,7 +245,7 @@ func findClusterSnapshots(ctx context.Context, conn *neptune.Neptune, input *nep
 	return output, nil
 }
 
-func statusClusterSnapshot(ctx context.Context, conn *neptune.Neptune, id string) retry.StateRefreshFunc {
+func statusClusterSnapshot(ctx context.Context, conn *neptune.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindClusterSnapshotByID(ctx, conn, id)
 
@@ -256,11 +257,11 @@ func statusClusterSnapshot(ctx context.Context, conn *neptune.Neptune, id string
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, aws.ToString(output.Status), nil
 	}
 }
 
-func waitClusterSnapshotCreated(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBClusterSnapshot, error) {
+func waitClusterSnapshotCreated(ctx context.Context, conn *neptune.Client, id string, timeout time.Duration) (*awstypes.DBClusterSnapshot, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{clusterSnapshotStatusCreating},
 		Target:     []string{clusterSnapshotStatusAvailable},
@@ -272,7 +273,7 @@ func waitClusterSnapshotCreated(ctx context.Context, conn *neptune.Neptune, id s
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*neptune.DBClusterSnapshot); ok {
+	if output, ok := outputRaw.(*awstypes.DBClusterSnapshot); ok {
 		return output, err
 	}
 
