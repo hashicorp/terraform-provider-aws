@@ -304,11 +304,11 @@ func testAccCheckFileSystemAssociationDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckFileSystemAssociationExists(ctx context.Context, resourceName string, v *awstypes.FileSystemAssociationInfo) resource.TestCheckFunc {
+func testAccCheckFileSystemAssociationExists(ctx context.Context, n string, v *awstypes.FileSystemAssociationInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)

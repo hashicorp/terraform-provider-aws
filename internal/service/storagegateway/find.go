@@ -168,32 +168,3 @@ func findSMBFileShareByARN(ctx context.Context, conn *storagegateway.Client, arn
 
 	return &output.SMBFileShareInfoList[0], nil
 }
-
-func findFileSystemAssociationByARN(ctx context.Context, conn *storagegateway.Client, arn string) (*awstypes.FileSystemAssociationInfo, error) {
-	input := &storagegateway.DescribeFileSystemAssociationsInput{
-		FileSystemAssociationARNList: []string{arn},
-	}
-
-	output, err := conn.DescribeFileSystemAssociations(ctx, input)
-
-	if operationErrorCode(err) == operationErrCodeFileSystemAssociationNotFound {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.FileSystemAssociationInfoList) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.FileSystemAssociationInfoList); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &output.FileSystemAssociationInfoList[0], nil
-}

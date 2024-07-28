@@ -117,19 +117,3 @@ func statusSMBFileShare(ctx context.Context, conn *storagegateway.Client, arn st
 		return output, aws.ToString(output.FileShareStatus), nil
 	}
 }
-
-func statusFileSystemAssociation(ctx context.Context, conn *storagegateway.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findFileSystemAssociationByARN(ctx, conn, arn)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.ToString(output.FileSystemAssociationStatus), nil
-	}
-}
