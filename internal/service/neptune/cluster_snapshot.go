@@ -11,11 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -173,7 +173,7 @@ func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, 
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeDBClusterSnapshotNotFoundFault) {
+	if errs.IsA[*awstypes.DBClusterSnapshotNotFoundFault](err) {
 		return diags
 	}
 
@@ -211,35 +211,29 @@ func findClusterSnapshot(ctx context.Context, conn *neptune.Client, input *neptu
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findClusterSnapshots(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBClusterSnapshotsInput) ([]*awstypes.DBClusterSnapshot, error) {
-	var output []*awstypes.DBClusterSnapshot
+func findClusterSnapshots(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBClusterSnapshotsInput) ([]awstypes.DBClusterSnapshot, error) {
+	var output []awstypes.DBClusterSnapshot
 
-	err := conn.DescribeDBClusterSnapshotsPagesWithContext(ctx, input, func(page *neptune.DescribeDBClusterSnapshotsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := neptune.NewDescribeDBClusterSnapshotsPaginator(conn, input)
 
-		for _, v := range page.DBClusterSnapshots {
-			if v != nil {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.DBClusterSnapshotNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeDBClusterSnapshotNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		output = append(output, page.DBClusterSnapshots...)
 	}
 
 	return output, nil
