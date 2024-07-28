@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_macie2_classification_job: Add `managed_data_identifier_ids` argument
+```
+
+```release-note:enhancement
+resource/aws_macie2_classification_job: Add `managed_data_identifier_selector` argument
+```

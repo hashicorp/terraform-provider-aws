@@ -114,6 +114,16 @@ func ResourceClassificationJob() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(macie2.JobType_Values(), false),
 			},
+			"managed_data_identifier_ids": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"managed_data_identifier_selector": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(macie2.ManagedDataIdentifierSelector_Values(), false),
+			},
 			"s3_job_definition": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -605,6 +615,12 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 	if v, ok := d.GetOk("initial_run"); ok {
 		input.InitialRun = aws.Bool(v.(bool))
 	}
+	if v, ok := d.GetOk("managed_data_identifier_ids"); ok {
+		input.ManagedDataIdentifierIds = flex.ExpandStringList(v.([]interface{}))
+	}
+	if v, ok := d.GetOk("managed_data_identifier_selector"); ok {
+		input.ManagedDataIdentifierSelector = aws.String(v.(string))
+	}
 
 	var err error
 	var output *macie2.CreateClassificationJobOutput
@@ -677,6 +693,10 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.Set("job_id", resp.JobId)
 	d.Set("job_arn", resp.JobArn)
+	d.Set("managed_data_managed_data_identifier_selector", resp.ManagedDataIdentifierSelector)
+	if err = d.Set("managed_data_identifier_ids", flex.FlattenStringList(resp.ManagedDataIdentifierIds)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie ClassificationJob (%s): %s", "managed_data_identifier_ids", d.Id(), err)
+	}
 	status := aws.StringValue(resp.JobStatus)
 	if status == macie2.JobStatusComplete || status == macie2.JobStatusIdle || status == macie2.JobStatusPaused {
 		status = macie2.JobStatusRunning
