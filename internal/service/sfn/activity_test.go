@@ -6,8 +6,11 @@ package sfn_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
+
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -117,6 +120,67 @@ func TestAccSFNActivity_tags(t *testing.T) {
 	})
 }
 
+func TestAccSFNActivity_encryptionConfigurationCustomerManagedKmsKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sfn_activity.test"
+	reusePeriodSeconds := 900
+	kmsKeyResource := "aws_kms_key.kms_key_for_sfn"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckActivityDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccActivityConfig_encryptionConfigurationCustomerManagedKmsKey(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckActivityExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeCustomerManagedKmsKey)),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", strconv.Itoa(reusePeriodSeconds)),
+					resource.TestCheckResourceAttrSet(resourceName, "encryption_configuration.0.kms_key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key_id", kmsKeyResource, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSFNActivity_encryptionConfigurationAwsOwnedKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sfn_activity.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckActivityDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccActivityConfig_encryptionConfigurationAWSOwnedKey(rName, string(awstypes.EncryptionTypeAwsOwnedKey)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckActivityExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeAwsOwnedKey)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckActivityExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -163,6 +227,12 @@ func testAccCheckActivityDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
+func testAccActivityConfig_kmsBase() string {
+	return `
+resource "aws_kms_key" "kms_key_for_sfn" {}
+`
+}
+
 func testAccActivityConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sfn_activity" "test" {
@@ -194,4 +264,28 @@ resource "aws_sfn_activity" "test" {
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
+}
+
+func testAccActivityConfig_encryptionConfigurationCustomerManagedKmsKey(rName string, rType string, reusePeriodSeconds int) string {
+	return acctest.ConfigCompose(testAccActivityConfig_kmsBase(), fmt.Sprintf(`
+resource "aws_sfn_activity" "test" {
+  name = %[1]q
+  encryption_configuration {
+    kms_key_id        = aws_kms_key.kms_key_for_sfn.arn
+	type = %[2]q
+	kms_data_key_reuse_period_seconds = %[3]d
+  }
+}
+`, rName, rType, reusePeriodSeconds))
+}
+
+func testAccActivityConfig_encryptionConfigurationAWSOwnedKey(rName string, rType string) string {
+	return acctest.ConfigCompose(testAccActivityConfig_kmsBase(), fmt.Sprintf(`
+resource "aws_sfn_activity" "test" {
+  name = %[1]q
+  encryption_configuration {
+	type = %[2]q
+  }
+}
+`, rName, rType))
 }
