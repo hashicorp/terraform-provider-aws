@@ -14,14 +14,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -111,7 +112,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 		Tags:               getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Creating MemoryDB Parameter Group: %s", input)
+	log.Printf("[DEBUG] Creating MemoryDB Parameter Group: %+v", input)
 	output, err := conn.CreateParameterGroup(ctx, input)
 
 	if err != nil {
@@ -227,7 +228,7 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 		ParameterGroupName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeParameterGroupNotFoundFault) {
+	if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
 		return diags
 	}
 
@@ -240,9 +241,9 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 
 // resetParameterGroupParameters resets the given parameters to their default values.
 func resetParameterGroupParameters(ctx context.Context, conn *memorydb.Client, name string, parameters []*awstypes.ParameterNameValue) error {
-	var parameterNames []*string
+	var parameterNames []string
 	for _, parameter := range parameters {
-		parameterNames = append(parameterNames, parameter.ParameterName)
+		parameterNames = append(parameterNames, *parameter.ParameterName)
 	}
 
 	input := memorydb.ResetParameterGroupInput{
@@ -253,7 +254,7 @@ func resetParameterGroupParameters(ctx context.Context, conn *memorydb.Client, n
 	return retry.RetryContext(ctx, 30*time.Second, func() *retry.RetryError {
 		_, err := conn.ResetParameterGroup(ctx, &input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidParameterGroupStateFault, " has pending changes") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterGroupStateFault](err, " has pending changes") {
 				return retry.RetryableError(err)
 			}
 			return retry.NonRetryableError(err)
@@ -266,7 +267,7 @@ func resetParameterGroupParameters(ctx context.Context, conn *memorydb.Client, n
 func modifyParameterGroupParameters(ctx context.Context, conn *memorydb.Client, name string, parameters []*awstypes.ParameterNameValue) error {
 	input := memorydb.UpdateParameterGroupInput{
 		ParameterGroupName:  aws.String(name),
-		ParameterNameValues: parameters,
+		ParameterNameValues: tfslices.Values(parameters),
 	}
 	_, err := conn.UpdateParameterGroup(ctx, &input)
 	return err
@@ -277,8 +278,8 @@ func modifyParameterGroupParameters(ctx context.Context, conn *memorydb.Client, 
 //
 // Parameters given in userDefined will be returned even if the value is equal
 // to the default.
-func listParameterGroupParameters(ctx context.Context, conn *memorydb.Client, family, name string, userDefined map[string]string) ([]*awstypes.Parameter, error) {
-	query := func(ctx context.Context, parameterGroupName string) ([]*awstypes.Parameter, error) {
+func listParameterGroupParameters(ctx context.Context, conn *memorydb.Client, family, name string, userDefined map[string]string) ([]awstypes.Parameter, error) {
+	query := func(ctx context.Context, parameterGroupName string) ([]awstypes.Parameter, error) {
 		input := memorydb.DescribeParametersInput{
 			ParameterGroupName: aws.String(parameterGroupName),
 		}
@@ -311,7 +312,7 @@ func listParameterGroupParameters(ctx context.Context, conn *memorydb.Client, fa
 		return nil, err
 	}
 
-	var result []*awstypes.Parameter
+	var result []awstypes.Parameter
 
 	for _, parameter := range current {
 		name := aws.ToString(parameter.Name)
@@ -380,7 +381,7 @@ func ParameterChanges(o, n interface{}) (remove, addOrUpdate []*awstypes.Paramet
 	return remove, addOrUpdate
 }
 
-func flattenParameters(list []*awstypes.Parameter) []map[string]interface{} {
+func flattenParameters(list []awstypes.Parameter) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, i := range list {
 		if i.Value != nil {
