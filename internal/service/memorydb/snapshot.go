@@ -10,12 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -165,7 +165,7 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating MemoryDB Snapshot: %s", input)
+	log.Printf("[DEBUG] Creating MemoryDB Snapshot: %+v", input)
 	_, err := conn.CreateSnapshot(ctx, input)
 
 	if err != nil {
@@ -226,7 +226,7 @@ func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta in
 		SnapshotName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeSnapshotNotFoundFault) {
+	if errs.IsA[*awstypes.SnapshotNotFoundFault](err) {
 		return diags
 	}
 
@@ -252,10 +252,10 @@ func flattenClusterConfiguration(v *awstypes.ClusterConfiguration) []interface{}
 		"maintenance_window":         aws.ToString(v.MaintenanceWindow),
 		names.AttrName:               aws.ToString(v.Name),
 		"node_type":                  aws.ToString(v.NodeType),
-		"num_shards":                 aws.ToInt64(v.NumShards),
+		"num_shards":                 aws.ToInt32(v.NumShards),
 		names.AttrParameterGroupName: aws.ToString(v.ParameterGroupName),
-		names.AttrPort:               aws.ToInt64(v.Port),
-		"snapshot_retention_limit":   aws.ToInt64(v.SnapshotRetentionLimit),
+		names.AttrPort:               aws.ToInt32(v.Port),
+		"snapshot_retention_limit":   aws.ToInt32(v.SnapshotRetentionLimit),
 		"snapshot_window":            aws.ToString(v.SnapshotWindow),
 		"subnet_group_name":          aws.ToString(v.SubnetGroupName),
 		names.AttrTopicARN:           aws.ToString(v.TopicArn),
