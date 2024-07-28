@@ -18,7 +18,7 @@ const (
 )
 
 // operationErrorCode returns the operation error code from the specified error:
-//   - err is of type awserr.Error and represents a storagegateway.InternalServerError or storagegateway.InvalidGatewayRequestException
+//   - err represents an InternalServerError or InvalidGatewayRequestException
 //   - Error_ is not nil
 //
 // See https://docs.aws.amazon.com/storagegateway/latest/userguide/AWSStorageGatewayAPI.html#APIErrorResponses for details.
@@ -36,11 +36,24 @@ func operationErrorCode(err error) string {
 
 // The API returns multiple responses for a missing gateway.
 func isGatewayNotFoundErr(err error) bool {
-	if errs.IsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](err, "The specified gateway was not found.") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](err, "The specified gateway was not found") {
 		return true
 	}
 
 	if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeGatewayNotFound)) {
+		return true
+	}
+
+	return false
+}
+
+// The API returns multiple responses for a missing volume.
+func isVolumeNotFoundErr(err error) bool {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](err, "The specified volume was not found") {
+		return true
+	}
+
+	if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeVolumeNotFound)) {
 		return true
 	}
 

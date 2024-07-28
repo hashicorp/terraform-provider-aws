@@ -16,6 +16,7 @@ var (
 	ResourceUploadBuffer          = resourceUploadBuffer
 
 	FindCacheByTwoPartKey          = findCacheByTwoPartKey
+	FindCachediSCSIVolumeByARN     = findCachediSCSIVolumeByARN
 	FindFileSystemAssociationByARN = findFileSystemAssociationByARN
 	FindGatewayByARN               = findGatewayByARN
 	FindNFSFileShareByARN          = findNFSFileShareByARN
