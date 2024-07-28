@@ -10,12 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -90,11 +90,11 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &memorydb.CreateSubnetGroupInput{
 		Description:     aws.String(d.Get(names.AttrDescription).(string)),
 		SubnetGroupName: aws.String(name),
-		SubnetIds:       flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+		SubnetIds:       flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		Tags:            getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Creating MemoryDB Subnet Group: %s", input)
+	log.Printf("[DEBUG] Creating MemoryDB Subnet Group: %+v", input)
 	_, err := conn.CreateSubnetGroup(ctx, input)
 
 	if err != nil {
@@ -115,10 +115,10 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input := &memorydb.UpdateSubnetGroupInput{
 			Description:     aws.String(d.Get(names.AttrDescription).(string)),
 			SubnetGroupName: aws.String(d.Id()),
-			SubnetIds:       flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+			SubnetIds:       flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		}
 
-		log.Printf("[DEBUG] Updating MemoryDB Subnet Group: %s", input)
+		log.Printf("[DEBUG] Updating MemoryDB Subnet Group: %+v", input)
 		_, err := conn.UpdateSubnetGroup(ctx, input)
 
 		if err != nil {
@@ -171,7 +171,7 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 		SubnetGroupName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeSubnetGroupNotFoundFault) {
+	if errs.IsA[*awstypes.SubnetGroupNotFoundFault](err) {
 		return diags
 	}
 
