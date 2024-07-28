@@ -10,12 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -71,9 +71,9 @@ func ResourceUser() *schema.Resource {
 							Computed: true,
 						},
 						names.AttrType: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: enum.Validate[awstypes.InputAuthenticationType](),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.InputAuthenticationType](),
 						},
 					},
 				},
@@ -144,8 +144,8 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if v := user.Authentication; v != nil {
 		authenticationMode := map[string]interface{}{
 			"passwords":      d.Get("authentication_mode.0.passwords"),
-			"password_count": aws.ToInt64(v.PasswordCount),
-			names.AttrType:   aws.ToString(v.Type),
+			"password_count": aws.ToInt32(v.PasswordCount),
+			names.AttrType:   string(v.Type),
 		}
 
 		if err := d.Set("authentication_mode", []interface{}{authenticationMode}); err != nil {
@@ -201,7 +201,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		UserName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeUserNotFoundFault) {
+	if errs.IsA[*awstypes.UserNotFoundFault](err) {
 		return diags
 	}
 
@@ -224,11 +224,11 @@ func expandAuthenticationMode(tfMap map[string]interface{}) *awstypes.Authentica
 	apiObject := &awstypes.AuthenticationMode{}
 
 	if v, ok := tfMap["passwords"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Passwords = flex.ExpandStringSet(v)
+		apiObject.Passwords = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
-		apiObject.Type = aws.String(v)
+		apiObject.Type = awstypes.InputAuthenticationType(v)
 	}
 
 	return apiObject
