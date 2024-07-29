@@ -133,8 +133,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - ID of environment profile.
 * `updated_at` - Time of last update to environment profile.
 
-## Timeouts
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Environment Profile using the `example_id_arg`. For example:
