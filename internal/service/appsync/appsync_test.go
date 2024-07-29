@@ -45,6 +45,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			"AuthenticationType_amazonCognitoUserPools":           testAccGraphQLAPI_AuthenticationType_amazonCognitoUserPools,
 			"AuthenticationType_openIDConnect":                    testAccGraphQLAPI_AuthenticationType_openIDConnect,
 			"AuthenticationType_awsLambda":                        testAccGraphQLAPI_AuthenticationType_lambda,
+			"enhancedMetricsConfig":                               testAccGraphQLAPI_enhancedMetricsConfig,
 			"log":                                                 testAccGraphQLAPI_log,
 			"Log_fieldLogLevel":                                   testAccGraphQLAPI_Log_fieldLogLevel,
 			"Log_excludeVerboseContent":                           testAccGraphQLAPI_Log_excludeVerboseContent,
