@@ -35,6 +35,7 @@ const (
 	AppConfigEndpointID                  = "appconfig"
 	AppFabricEndpointID                  = "appfabric"
 	AppIntegrationsEndpointID            = "app-integrations"
+	AppMeshEndpointID                    = "appmesh"
 	AppStreamEndpointID                  = "appstream2"
 	AppSyncEndpointID                    = "appsync"
 	ApplicationAutoscalingEndpointID     = "application-autoscaling"
