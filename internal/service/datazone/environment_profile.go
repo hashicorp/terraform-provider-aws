@@ -34,8 +34,7 @@ import (
 
 // @FrameworkResource("aws_datazone_environment_profile", name="Environment Profile")
 func newResourceEnvironmentProfile(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceEnvironmentProfile{}
-	return r, nil
+	return &resourceEnvironmentProfile{}, nil
 }
 
 const (
