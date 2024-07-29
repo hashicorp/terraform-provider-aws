@@ -4,6 +4,7 @@
 package flex
 
 import (
+	"maps"
 	"reflect"
 	"testing"
 
@@ -130,33 +131,75 @@ func flatteningLogLine(sourceType, targetType reflect.Type) map[string]any {
 	return infoLogLine("Flattening", sourceType, targetType)
 }
 
+func flatteningWithPathLogLine(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return infoWithPathLogLine("Flattening", sourcePath, sourceType, targetPath, targetType)
+}
+
+func convertingLogLine(sourceType, targetType reflect.Type) map[string]any {
+	return logInfo("Converting", map[string]any{
+		logAttrKeySourcePath: "",
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: "",
+		logAttrKeyTargetType: fullTypeName(targetType),
+	})
+}
+
+func convertingWithPathLogLine(sourceFieldPath string, sourceType reflect.Type, targetFieldPath string, targetType reflect.Type) map[string]any {
+	return logInfo("Converting", map[string]any{
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeySourcePath: sourceFieldPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
+		logAttrKeyTargetPath: targetFieldPath,
+	})
+}
+
 func ignoredFieldLogLine(sourceType reflect.Type, sourceFieldName string) map[string]any {
+	return ignoredFieldWithPathLogLine(
+		"", sourceType, sourceFieldName,
+		"",
+	)
+}
+
+func ignoredFieldWithPathLogLine(sourcePath string, sourceType reflect.Type, sourceFieldName string, targetPath string) map[string]any {
 	return map[string]any{
 		"@level":                  hclog.Trace.String(),
 		"@module":                 logModule,
 		"@message":                "Skipping ignored field",
+		logAttrKeySourcePath:      sourcePath,
 		logAttrKeySourceType:      fullTypeName(sourceType),
 		logAttrKeySourceFieldname: sourceFieldName,
+		logAttrKeyTargetPath:      targetPath,
 	}
 }
 
-func mapBlockKeyFieldLogLine(sourceType reflect.Type) map[string]any {
+func mapBlockKeyFieldLogLine(sourcePath string, sourceType reflect.Type, targetPath string) map[string]any {
 	return map[string]any{
 		"@level":                  hclog.Trace.String(),
 		"@module":                 logModule,
 		"@message":                "Skipping map block key",
+		logAttrKeySourcePath:      sourcePath,
 		logAttrKeySourceType:      fullTypeName(sourceType),
 		logAttrKeySourceFieldname: MapBlockKey,
+		logAttrKeyTargetPath:      targetPath,
 	}
 }
 
-func matchedFieldsLogLine(sourceType reflect.Type, sourceFieldName string, targetType reflect.Type, targetFieldName string) map[string]any {
+func matchedFieldsLogLine(sourceFieldName string, sourceType reflect.Type, targetFieldName string, targetType reflect.Type) map[string]any {
+	return matchedFieldsWithPathLogLine(
+		"", sourceFieldName, sourceType,
+		"", targetFieldName, targetType,
+	)
+}
+
+func matchedFieldsWithPathLogLine(sourcePath, sourceFieldName string, sourceType reflect.Type, targetPath, targetFieldName string, targetType reflect.Type) map[string]any {
 	return map[string]any{
 		"@level":                  hclog.Trace.String(),
 		"@module":                 logModule,
 		"@message":                "Matched fields",
+		logAttrKeySourcePath:      sourcePath,
 		logAttrKeySourceType:      fullTypeName(sourceType),
 		logAttrKeySourceFieldname: sourceFieldName,
+		logAttrKeyTargetPath:      targetPath,
 		logAttrKeyTargetType:      fullTypeName(targetType),
 		logAttrKeyTargetFieldname: targetFieldName,
 	}
@@ -167,18 +210,36 @@ func noCorrespondingFieldLogLine(sourceType reflect.Type, sourceFieldName string
 		"@level":                  hclog.Debug.String(),
 		"@module":                 logModule,
 		"@message":                "No corresponding field",
+		logAttrKeySourcePath:      "",
 		logAttrKeySourceType:      fullTypeName(sourceType),
 		logAttrKeySourceFieldname: sourceFieldName,
+		logAttrKeyTargetPath:      "",
 		logAttrKeyTargetType:      fullTypeName(targetType),
 	}
 }
 
 func infoLogLine(message string, sourceType, targetType reflect.Type) map[string]any {
-	return map[string]any{
-		"@level":             hclog.Info.String(),
-		"@module":            logModule,
-		"@message":           message,
+	return logInfo(message, map[string]any{
 		logAttrKeySourceType: fullTypeName(sourceType),
 		logAttrKeyTargetType: fullTypeName(targetType),
+	})
+}
+
+func infoWithPathLogLine(message string, sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return logInfo(message, map[string]any{
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetType: fullTypeName(targetType),
+		logAttrKeyTargetPath: targetPath,
+	})
+}
+
+func logInfo(message string, attrs map[string]any) map[string]any {
+	result := map[string]any{
+		"@level":   hclog.Info.String(),
+		"@module":  logModule,
+		"@message": message,
 	}
+	maps.Copy(result, attrs)
+	return result
 }

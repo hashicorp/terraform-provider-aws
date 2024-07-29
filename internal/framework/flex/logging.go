@@ -17,10 +17,11 @@ const (
 const (
 	logAttrKeySourceType      = "autoflex.source.type"
 	logAttrKeySourceFieldname = "autoflex.source.fieldname"
+	logAttrKeySourcePath      = "autoflex.source.path"
 
-	logAttrKeyTargetKind      = "autoflex.target.kind"
 	logAttrKeyTargetType      = "autoflex.target.type"
 	logAttrKeyTargetFieldname = "autoflex.target.fieldname"
+	logAttrKeyTargetPath      = "autoflex.target.path"
 )
 
 const (

@@ -110,6 +110,9 @@ func autoExpandConvert(ctx context.Context, from, to any, flexer autoFlexer) dia
 func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, valFrom reflect.Value, targetPath path.Path, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
+
 	if valFrom.Kind() == reflect.Invalid {
 		diags.AddError("AutoFlEx", "Cannot expand nil source")
 		return diags
@@ -119,6 +122,11 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 		diags.AddError("AutoFlEx", "Cannot expand into nil target")
 		return diags
 	}
+
+	tflog.SubsystemInfo(ctx, subsystemName, "Converting", map[string]any{
+		logAttrKeySourceType: fullTypeName(valFrom.Type()),
+		logAttrKeyTargetType: fullTypeName(vTo.Type()),
+	})
 
 	if fromExpander, ok := valFrom.Interface().(Expander); ok {
 		diags.Append(expandExpander(ctx, fromExpander, vTo)...)
@@ -745,6 +753,8 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 
 	switch tTo := vTo.Type(); vTo.Kind() {
 	case reflect.Struct:
+		sourcePath := sourcePath.AtListIndex(0)
+		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
 		diags.Append(expander.nestedObjectToStruct(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
 		return diags
 
@@ -754,6 +764,8 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 			//
 			// types.List(OfObject) -> *struct.
 			//
+			sourcePath := sourcePath.AtListIndex(0)
+			ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
 			diags.Append(expander.nestedObjectToStruct(ctx, sourcePath, vFrom, targetPath, tElem, vTo)...)
 			return diags
 		}
@@ -862,6 +874,10 @@ func (expander autoExpander) nestedObjectToSlice(ctx context.Context, sourcePath
 	n := f.Len()
 	t := reflect.MakeSlice(tSlice, n, n)
 	for i := 0; i < n; i++ {
+		sourcePath := sourcePath.AtListIndex(i)
+		targetPath := targetPath.AtListIndex(i)
+		ctx := tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
+		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
 		// Create a new target structure and walk its fields.
 		target := reflect.New(tElem)
 		diags.Append(autoFlexConvertStruct(ctx, sourcePath, f.Index(i).Interface(), targetPath, target.Interface(), expander)...)
@@ -903,6 +919,8 @@ func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, sourcePat
 	f := reflect.ValueOf(from)
 	m := reflect.MakeMap(vTo.Type())
 	for i := 0; i < f.Len(); i++ {
+		sourcePath := sourcePath.AtListIndex(i)
+		ctx := tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
 		// Create a new target structure and walk its fields.
 		target := reflect.New(tElem)
 		diags.Append(autoFlexConvertStruct(ctx, sourcePath, f.Index(i).Interface(), targetPath, target.Interface(), expander)...)

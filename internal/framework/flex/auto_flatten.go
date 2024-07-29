@@ -1039,6 +1039,10 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 
 	t := reflect.ValueOf(to)
 	for i := 0; i < n; i++ {
+		sourcePath := sourcePath.AtListIndex(i)
+		targetPath := targetPath.AtListIndex(i)
+		ctx := tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
+		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
 		target, d := tTo.NewObjectPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {

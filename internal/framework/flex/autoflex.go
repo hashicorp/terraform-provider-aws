@@ -109,6 +109,9 @@ var (
 func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, targetPath path.Path, to any, flexer autoFlexer) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
+
 	valFrom, valTo, d := autoFlexValues(ctx, from, to)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -188,7 +191,7 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 			logAttrKeyTargetFieldname: toFieldName,
 		})
 
-		diags.Append(flexer.convert(ctx, sourcePath, valFrom.Field(i), targetPath, toFieldVal)...)
+		diags.Append(flexer.convert(ctx, sourcePath.AtName(fieldName), valFrom.Field(i), targetPath.AtName(toFieldName), toFieldVal)...)
 		if diags.HasError() {
 			diags.AddError("AutoFlEx", fmt.Sprintf("convert (%s)", fieldName))
 			return diags
