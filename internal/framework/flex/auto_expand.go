@@ -85,6 +85,9 @@ func autoExpandConvert(ctx context.Context, from, to any, flexer autoFlexer) dia
 	sourcePath := path.Empty()
 	targetPath := path.Empty()
 
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
+
 	valFrom, valTo, d := autoFlexValues(ctx, from, to)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -96,6 +99,10 @@ func autoExpandConvert(ctx context.Context, from, to any, flexer autoFlexer) dia
 		if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct &&
 			!typFrom.Implements(reflect.TypeFor[basetypes.ListValuable]()) &&
 			!typFrom.Implements(reflect.TypeFor[basetypes.SetValuable]()) {
+			tflog.SubsystemInfo(ctx, subsystemName, "Converting", map[string]any{
+				logAttrKeySourceType: fullTypeName(valFrom.Type()),
+				logAttrKeyTargetType: fullTypeName(valTo.Type()),
+			})
 			diags.Append(autoFlexConvertStruct(ctx, sourcePath, from, targetPath, to, flexer)...)
 			return diags
 		}

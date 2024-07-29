@@ -141,7 +141,7 @@ func TestExpand(t *testing.T) {
 			WantTarget: &TestFlex00{},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[TestFlex00](), reflect.TypeFor[*TestFlex00]()),
-				// convertingLogLine(reflect.TypeFor[TestFlex00](), reflect.TypeFor[TestFlex00]()),
+				convertingLogLine(reflect.TypeFor[TestFlex00](), reflect.TypeFor[TestFlex00]()),
 			},
 		},
 		{
@@ -151,7 +151,7 @@ func TestExpand(t *testing.T) {
 			WantTarget: &TestFlex00{},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlex00](), reflect.TypeFor[*TestFlex00]()),
-				// convertingLogLine(reflect.TypeFor[TestFlex00](), reflect.TypeFor[TestFlex00]()),
+				convertingLogLine(reflect.TypeFor[TestFlex00](), reflect.TypeFor[TestFlex00]()),
 			},
 		},
 		{
@@ -161,7 +161,7 @@ func TestExpand(t *testing.T) {
 			WantTarget: &TestFlex00{},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF01](), reflect.TypeFor[*TestFlex00]()),
-				// convertingLogLine(reflect.TypeFor[TestFlexTF01](), reflect.TypeFor[TestFlex00]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF01](), reflect.TypeFor[TestFlex00]()),
 				noCorrespondingFieldLogLine(reflect.TypeFor[*TestFlexTF01](), "Field1", reflect.TypeFor[*TestFlex00]()),
 			},
 		},
@@ -176,7 +176,7 @@ func TestExpand(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexAWS01](), reflect.TypeFor[*TestFlexAWS01]()),
-				// convertingLogLine(reflect.TypeFor[TestFlexAWS01](), reflect.TypeFor[TestFlexAWS01]()),
+				convertingLogLine(reflect.TypeFor[TestFlexAWS01](), reflect.TypeFor[TestFlexAWS01]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexAWS01](), "Field1", reflect.TypeFor[*TestFlexAWS01]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[string]()),
 			},
@@ -188,6 +188,7 @@ func TestExpand(t *testing.T) {
 			WantTarget: &TestFlexAWS01{Field1: "a"},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF01](), reflect.TypeFor[*TestFlexAWS01]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF01](), reflect.TypeFor[TestFlexAWS01]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF01](), "Field1", reflect.TypeFor[*TestFlexAWS01]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[string]()),
 			},
@@ -199,6 +200,7 @@ func TestExpand(t *testing.T) {
 			WantTarget: &TestFlexAWS02{Field1: aws.String("a")},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF01](), reflect.TypeFor[*TestFlexAWS02]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF01](), reflect.TypeFor[TestFlexAWS02]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF01](), "Field1", reflect.TypeFor[*TestFlexAWS02]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[*string]()),
 			},
@@ -210,6 +212,7 @@ func TestExpand(t *testing.T) {
 			WantTarget: &TestFlexAWS03{},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF01](), reflect.TypeFor[*TestFlexAWS03]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF01](), reflect.TypeFor[TestFlexAWS03]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF01](), "Field1", reflect.TypeFor[*TestFlexAWS03]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[int64]()),
 				{
@@ -256,6 +259,7 @@ func TestExpand(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF03](), reflect.TypeFor[*TestFlexAWS04]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF03](), reflect.TypeFor[TestFlexAWS04]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF03](), "Field1", reflect.TypeFor[*TestFlexAWS04]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[string]()),
 				matchedFieldsLogLine("Field2", reflect.TypeFor[*TestFlexTF03](), "Field2", reflect.TypeFor[*TestFlexAWS04]()),
@@ -321,6 +325,7 @@ func TestExpand(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF04](), reflect.TypeFor[*TestFlexAWS05]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF04](), reflect.TypeFor[TestFlexAWS05]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF04](), "Field1", reflect.TypeFor[*TestFlexAWS05]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.List](), "Field1", reflect.TypeFor[[]string]()),
 				matchedFieldsLogLine("Field2", reflect.TypeFor[*TestFlexTF04](), "Field2", reflect.TypeFor[*TestFlexAWS05]()),
@@ -400,6 +405,7 @@ func TestExpand(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF09](), reflect.TypeFor[*TestFlexAWS11]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF09](), reflect.TypeFor[TestFlexAWS11]()),
 				matchedFieldsLogLine("City", reflect.TypeFor[*TestFlexTF09](), "Cities", reflect.TypeFor[*TestFlexAWS11]()),
 				convertingWithPathLogLine("City", reflect.TypeFor[types.List](), "Cities", reflect.TypeFor[[]*string]()),
 				matchedFieldsLogLine("Coach", reflect.TypeFor[*TestFlexTF09](), "Coaches", reflect.TypeFor[*TestFlexAWS11]()),
@@ -427,6 +433,7 @@ func TestExpand(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF10](), reflect.TypeFor[*TestFlexAWS12]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF10](), reflect.TypeFor[TestFlexAWS12]()),
 				matchedFieldsLogLine("FieldURL", reflect.TypeFor[*TestFlexTF10](), "FieldUrl", reflect.TypeFor[*TestFlexAWS12]()),
 				convertingWithPathLogLine("FieldURL", reflect.TypeFor[types.String](), "FieldUrl", reflect.TypeFor[*string]()),
 			},
@@ -443,6 +450,7 @@ func TestExpand(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF16](), reflect.TypeFor[*TestFlexAWS18]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF16](), reflect.TypeFor[TestFlexAWS18]()),
 				matchedFieldsLogLine("Name", reflect.TypeFor[*TestFlexTF16](), "IntentName", reflect.TypeFor[*TestFlexAWS18]()),
 				convertingWithPathLogLine("Name", reflect.TypeFor[types.String](), "IntentName", reflect.TypeFor[*string]()),
 			},
@@ -454,6 +462,7 @@ func TestExpand(t *testing.T) {
 			WantTarget: &TestFlexAWS01{Field1: testARN},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF17](), reflect.TypeFor[*TestFlexAWS01]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF17](), reflect.TypeFor[TestFlexAWS01]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF17](), "Field1", reflect.TypeFor[*TestFlexAWS01]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ARN](), "Field1", reflect.TypeFor[string]()),
 			},
@@ -465,6 +474,7 @@ func TestExpand(t *testing.T) {
 			WantTarget: &TestFlexAWS02{Field1: aws.String(testARN)},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF17](), reflect.TypeFor[*TestFlexAWS02]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF17](), reflect.TypeFor[TestFlexAWS02]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF17](), "Field1", reflect.TypeFor[*TestFlexAWS02]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ARN](), "Field1", reflect.TypeFor[*string]()),
 			},
@@ -480,6 +490,7 @@ func TestExpand(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTimeTF01](), reflect.TypeFor[*TestFlexTimeAWS01]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTimeTF01](), reflect.TypeFor[TestFlexTimeAWS01]()),
 				matchedFieldsLogLine("CreationDateTime", reflect.TypeFor[*TestFlexTimeTF01](), "CreationDateTime", reflect.TypeFor[*TestFlexTimeAWS01]()),
 				convertingWithPathLogLine("CreationDateTime", reflect.TypeFor[timetypes.RFC3339](), "CreationDateTime", reflect.TypeFor[*time.Time]()),
 			},
@@ -495,6 +506,7 @@ func TestExpand(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTimeTF01](), reflect.TypeFor[*TestFlexTimeAWS02]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTimeTF01](), reflect.TypeFor[TestFlexTimeAWS02]()),
 				matchedFieldsLogLine("CreationDateTime", reflect.TypeFor[*TestFlexTimeTF01](), "CreationDateTime", reflect.TypeFor[*TestFlexTimeAWS02]()),
 				convertingWithPathLogLine("CreationDateTime", reflect.TypeFor[timetypes.RFC3339](), "CreationDateTime", reflect.TypeFor[time.Time]()),
 			},
@@ -512,6 +524,7 @@ func TestExpand(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF20](), reflect.TypeFor[*TestFlexAWS19]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF20](), reflect.TypeFor[TestFlexAWS19]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF20](), "Field1", reflect.TypeFor[*TestFlexAWS19]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SmithyJSON[smithyjson.JSONStringer]](), "Field1", reflect.TypeFor[smithyjson.JSONStringer]()),
 			},
@@ -542,6 +555,7 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF05](), reflect.TypeFor[*TestFlexAWS06]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF05](), reflect.TypeFor[TestFlexAWS06]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF05](), "Field1", reflect.TypeFor[*TestFlexAWS06]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), "Field1", reflect.TypeFor[*TestFlexAWS01]()),
 				matchedFieldsWithPathLogLine("Field1[0]", "Field1", reflect.TypeFor[*TestFlexTF01](), "Field1", "Field1", reflect.TypeFor[*TestFlexAWS01]()),
@@ -563,6 +577,7 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF06](), reflect.TypeFor[*TestFlexAWS06]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF06](), reflect.TypeFor[TestFlexAWS06]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF06](), "Field1", reflect.TypeFor[*TestFlexAWS06]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF01]](), "Field1", reflect.TypeFor[*TestFlexAWS01]()),
 				matchedFieldsWithPathLogLine("Field1[0]", "Field1", reflect.TypeFor[*TestFlexTF01](), "Field1", "Field1", reflect.TypeFor[*TestFlexAWS01]()),
@@ -576,6 +591,7 @@ func TestExpandGeneric(t *testing.T) {
 			WantTarget: &TestFlexAWS08{Field1: []TestFlexAWS01{}},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF05](), reflect.TypeFor[*TestFlexAWS08]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF05](), reflect.TypeFor[TestFlexAWS08]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF05](), "Field1", reflect.TypeFor[*TestFlexAWS08]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), "Field1", reflect.TypeFor[[]TestFlexAWS01]()),
 			},
@@ -593,6 +609,7 @@ func TestExpandGeneric(t *testing.T) {
 			}},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF05](), reflect.TypeFor[*TestFlexAWS08]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF05](), reflect.TypeFor[TestFlexAWS08]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF05](), "Field1", reflect.TypeFor[*TestFlexAWS08]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), "Field1", reflect.TypeFor[[]TestFlexAWS01]()),
 				matchedFieldsWithPathLogLine("Field1[0]", "Field1", reflect.TypeFor[*TestFlexTF01](), "Field1[0]", "Field1", reflect.TypeFor[*TestFlexAWS01]()),
@@ -608,6 +625,7 @@ func TestExpandGeneric(t *testing.T) {
 			WantTarget: &TestFlexAWS07{Field1: []*TestFlexAWS01{}},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF05](), reflect.TypeFor[*TestFlexAWS07]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF05](), reflect.TypeFor[TestFlexAWS07]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF05](), "Field1", reflect.TypeFor[*TestFlexAWS07]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), "Field1", reflect.TypeFor[[]*TestFlexAWS01]()),
 			},
@@ -625,6 +643,7 @@ func TestExpandGeneric(t *testing.T) {
 			}},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF05](), reflect.TypeFor[*TestFlexAWS07]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF05](), reflect.TypeFor[TestFlexAWS07]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF05](), "Field1", reflect.TypeFor[*TestFlexAWS07]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), "Field1", reflect.TypeFor[[]*TestFlexAWS01]()),
 				matchedFieldsWithPathLogLine("Field1[0]", "Field1", reflect.TypeFor[*TestFlexTF01](), "Field1[0]", "Field1", reflect.TypeFor[*TestFlexAWS01]()),
@@ -640,6 +659,7 @@ func TestExpandGeneric(t *testing.T) {
 			WantTarget: &TestFlexAWS07{Field1: []*TestFlexAWS01{}},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF06](), reflect.TypeFor[*TestFlexAWS07]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF06](), reflect.TypeFor[TestFlexAWS07]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF06](), "Field1", reflect.TypeFor[*TestFlexAWS07]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF01]](), "Field1", reflect.TypeFor[[]*TestFlexAWS01]()),
 			},
@@ -657,6 +677,7 @@ func TestExpandGeneric(t *testing.T) {
 			}},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF06](), reflect.TypeFor[*TestFlexAWS07]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF06](), reflect.TypeFor[TestFlexAWS07]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF06](), "Field1", reflect.TypeFor[*TestFlexAWS07]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF01]](), "Field1", reflect.TypeFor[[]*TestFlexAWS01]()),
 				matchedFieldsWithPathLogLine("Field1[0]", "Field1", reflect.TypeFor[*TestFlexTF01](), "Field1[0]", "Field1", reflect.TypeFor[*TestFlexAWS01]()),
@@ -678,6 +699,7 @@ func TestExpandGeneric(t *testing.T) {
 			}},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF06](), reflect.TypeFor[*TestFlexAWS08]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF06](), reflect.TypeFor[TestFlexAWS08]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF06](), "Field1", reflect.TypeFor[*TestFlexAWS08]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexTF01]](), "Field1", reflect.TypeFor[[]TestFlexAWS01]()),
 				matchedFieldsWithPathLogLine("Field1[0]", "Field1", reflect.TypeFor[*TestFlexTF01](), "Field1[0]", "Field1", reflect.TypeFor[*TestFlexAWS01]()),
@@ -714,6 +736,7 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF07](), reflect.TypeFor[*TestFlexAWS09]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF07](), reflect.TypeFor[TestFlexAWS09]()),
 
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF07](), "Field1", reflect.TypeFor[*TestFlexAWS09]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[string]()),
@@ -753,6 +776,7 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF11](), reflect.TypeFor[*TestFlexAWS13]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF11](), reflect.TypeFor[TestFlexAWS13]()),
 				matchedFieldsLogLine("FieldInner", reflect.TypeFor[*TestFlexTF11](), "FieldInner", reflect.TypeFor[*TestFlexAWS13]()),
 				convertingWithPathLogLine("FieldInner", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), "FieldInner", reflect.TypeFor[map[string]string]()),
 			},
@@ -776,6 +800,7 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF21](), reflect.TypeFor[*TestFlexAWS21]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF21](), reflect.TypeFor[TestFlexAWS21]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF21](), "Field1", reflect.TypeFor[*TestFlexAWS21]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.MapValueOf[fwtypes.MapValueOf[basetypes.StringValue]]](), "Field1", reflect.TypeFor[map[string]map[string]string]()),
 			},
@@ -799,6 +824,7 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF21](), reflect.TypeFor[*TestFlexAWS22]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF21](), reflect.TypeFor[TestFlexAWS22]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*TestFlexTF21](), "Field1", reflect.TypeFor[*TestFlexAWS22]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.MapValueOf[fwtypes.MapValueOf[basetypes.StringValue]]](), "Field1", reflect.TypeFor[map[string]map[string]*string]()),
 			},
@@ -822,6 +848,7 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexTF14](), reflect.TypeFor[*TestFlexAWS16]()),
+				convertingLogLine(reflect.TypeFor[TestFlexTF14](), reflect.TypeFor[TestFlexAWS16]()),
 				matchedFieldsLogLine("FieldOuter", reflect.TypeFor[*TestFlexTF14](), "FieldOuter", reflect.TypeFor[*TestFlexAWS16]()),
 				convertingWithPathLogLine("FieldOuter", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF11]](), "FieldOuter", reflect.TypeFor[TestFlexAWS13]()),
 				matchedFieldsWithPathLogLine("FieldOuter[0]", "FieldInner", reflect.TypeFor[*TestFlexTF11](), "FieldOuter", "FieldInner", reflect.TypeFor[*TestFlexAWS13]()),
@@ -859,6 +886,8 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				convertingLogLine(reflect.TypeFor[TestFlexMapBlockKeyTF01](), reflect.TypeFor[TestFlexMapBlockKeyAWS01]()),
+
 				matchedFieldsLogLine("MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyTF01](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
 				convertingWithPathLogLine("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
 
@@ -906,6 +935,8 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF03](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				convertingLogLine(reflect.TypeFor[TestFlexMapBlockKeyTF03](), reflect.TypeFor[TestFlexMapBlockKeyAWS01]()),
+
 				matchedFieldsLogLine("MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyTF03](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
 				convertingWithPathLogLine("MapBlock", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[TestFlexMapBlockKeyTF02]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
 
@@ -953,6 +984,8 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				convertingLogLine(reflect.TypeFor[TestFlexMapBlockKeyTF01](), reflect.TypeFor[TestFlexMapBlockKeyAWS01]()),
+
 				matchedFieldsLogLine("MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyTF01](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
 				convertingWithPathLogLine("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
 
@@ -1000,6 +1033,8 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF01](), reflect.TypeFor[*TestFlexMapBlockKeyAWS03]()),
+				convertingLogLine(reflect.TypeFor[TestFlexMapBlockKeyTF01](), reflect.TypeFor[TestFlexMapBlockKeyAWS03]()),
+
 				matchedFieldsLogLine("MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyTF01](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS03]()),
 				convertingWithPathLogLine("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02]](), "MapBlock", reflect.TypeFor[map[string]*TestFlexMapBlockKeyAWS02]()),
 
@@ -1047,6 +1082,8 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*TestFlexMapBlockKeyTF04](), reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
+				convertingLogLine(reflect.TypeFor[TestFlexMapBlockKeyTF04](), reflect.TypeFor[TestFlexMapBlockKeyAWS01]()),
+
 				matchedFieldsLogLine("MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyTF04](), "MapBlock", reflect.TypeFor[*TestFlexMapBlockKeyAWS01]()),
 				convertingWithPathLogLine("MapBlock", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF05]](), "MapBlock", reflect.TypeFor[map[string]TestFlexMapBlockKeyAWS02]()),
 
@@ -1099,6 +1136,7 @@ func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 			WantTarget: &aws02{Field1: &aws01{Field1: aws.String("a"), Field2: 1}},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*tf02](), reflect.TypeFor[*aws02]()),
+				convertingLogLine(reflect.TypeFor[tf02](), reflect.TypeFor[aws02]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*tf02](), "Field1", reflect.TypeFor[*aws02]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tf01]](), "Field1", reflect.TypeFor[*aws01]()),
 				matchedFieldsWithPathLogLine("Field1", "Field1", reflect.TypeFor[*tf01](), "Field1", "Field1", reflect.TypeFor[*aws01]()),
@@ -1114,6 +1152,7 @@ func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 			WantTarget: &aws02{},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*tf02](), reflect.TypeFor[*aws02]()),
+				convertingLogLine(reflect.TypeFor[tf02](), reflect.TypeFor[aws02]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*tf02](), "Field1", reflect.TypeFor[*aws02]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tf01]](), "Field1", reflect.TypeFor[*aws01]()),
 			},
@@ -1125,6 +1164,7 @@ func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 			WantTarget: &aws03{Field1: aws01{Field1: aws.String("a"), Field2: 1}},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*tf02](), reflect.TypeFor[*aws03]()),
+				convertingLogLine(reflect.TypeFor[tf02](), reflect.TypeFor[aws03]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*tf02](), "Field1", reflect.TypeFor[*aws03]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tf01]](), "Field1", reflect.TypeFor[aws01]()),
 				matchedFieldsWithPathLogLine("Field1", "Field1", reflect.TypeFor[*tf01](), "Field1", "Field1", reflect.TypeFor[*aws01]()),
@@ -1192,6 +1232,7 @@ func TestExpandComplexSingleNestedBlock(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*tf03](), reflect.TypeFor[*aws03]()),
+				convertingLogLine(reflect.TypeFor[tf03](), reflect.TypeFor[aws03]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*tf03](), "Field1", reflect.TypeFor[*aws03]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[tf02]](), "Field1", reflect.TypeFor[*aws02]()),
 				matchedFieldsWithPathLogLine("Field1", "Field1", reflect.TypeFor[*tf02](), "Field1", "Field1", reflect.TypeFor[*aws02]()),
@@ -1919,6 +1960,7 @@ func TestExpandSimpleNestedBlockWithStringEnum(t *testing.T) {
 			WantTarget: &aws01{Field1: 1, Field2: TestEnumList},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*tf01](), reflect.TypeFor[*aws01]()),
+				convertingLogLine(reflect.TypeFor[tf01](), reflect.TypeFor[aws01]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*tf01](), "Field1", reflect.TypeFor[*aws01]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.Int64](), "Field1", reflect.TypeFor[int64]()),
 				matchedFieldsLogLine("Field2", reflect.TypeFor[*tf01](), "Field2", reflect.TypeFor[*aws01]()),
@@ -1932,6 +1974,7 @@ func TestExpandSimpleNestedBlockWithStringEnum(t *testing.T) {
 			WantTarget: &aws01{Field1: 1, Field2: ""},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*tf01](), reflect.TypeFor[*aws01]()),
+				convertingLogLine(reflect.TypeFor[tf01](), reflect.TypeFor[aws01]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*tf01](), "Field1", reflect.TypeFor[*aws01]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.Int64](), "Field1", reflect.TypeFor[int64]()),
 				matchedFieldsLogLine("Field2", reflect.TypeFor[*tf01](), "Field2", reflect.TypeFor[*aws01]()),
@@ -1979,6 +2022,7 @@ func TestExpandComplexNestedBlockWithStringEnum(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*tf02](), reflect.TypeFor[*aws01]()),
+				convertingLogLine(reflect.TypeFor[tf02](), reflect.TypeFor[aws01]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*tf02](), "Field1", reflect.TypeFor[*aws01]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.Int64](), "Field1", reflect.TypeFor[int64]()),
 				matchedFieldsLogLine("Field2", reflect.TypeFor[*tf02](), "Field2", reflect.TypeFor[*aws01]()),
@@ -2004,6 +2048,7 @@ func TestExpandComplexNestedBlockWithStringEnum(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*tf02](), reflect.TypeFor[*aws01]()),
+				convertingLogLine(reflect.TypeFor[tf02](), reflect.TypeFor[aws01]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*tf02](), "Field1", reflect.TypeFor[*aws01]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.Int64](), "Field1", reflect.TypeFor[int64]()),
 				matchedFieldsLogLine("Field2", reflect.TypeFor[*tf02](), "Field2", reflect.TypeFor[*aws01]()),
@@ -2037,6 +2082,7 @@ func TestExpandOptions(t *testing.T) {
 			WantTarget: &aws01{},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*tf01](), reflect.TypeFor[*aws01]()),
+				convertingLogLine(reflect.TypeFor[tf01](), reflect.TypeFor[aws01]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*tf01](), "Field1", reflect.TypeFor[*aws01]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
 				ignoredFieldLogLine(reflect.TypeFor[*tf01](), "Tags"),
@@ -2057,6 +2103,7 @@ func TestExpandOptions(t *testing.T) {
 			WantTarget: &aws01{Field1: true},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*tf01](), reflect.TypeFor[*aws01]()),
+				convertingLogLine(reflect.TypeFor[tf01](), reflect.TypeFor[aws01]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*tf01](), "Field1", reflect.TypeFor[*aws01]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
 				ignoredFieldLogLine(reflect.TypeFor[*tf01](), "Tags"),
@@ -2085,6 +2132,7 @@ func TestExpandOptions(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*tf01](), reflect.TypeFor[*aws01]()),
+				convertingLogLine(reflect.TypeFor[tf01](), reflect.TypeFor[aws01]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*tf01](), "Field1", reflect.TypeFor[*aws01]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[types.Bool](), "Field1", reflect.TypeFor[bool]()),
 				matchedFieldsLogLine("Tags", reflect.TypeFor[*tf01](), "Tags", reflect.TypeFor[*aws01]()),
@@ -2113,6 +2161,7 @@ func TestExpandOptions(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[*tf01](), reflect.TypeFor[*aws01]()),
+				convertingLogLine(reflect.TypeFor[tf01](), reflect.TypeFor[aws01]()),
 				ignoredFieldLogLine(reflect.TypeFor[*tf01](), "Field1"),
 				matchedFieldsLogLine("Tags", reflect.TypeFor[*tf01](), "Tags", reflect.TypeFor[*aws01]()),
 				convertingWithPathLogLine("Tags", reflect.TypeFor[fwtypes.MapValueOf[basetypes.StringValue]](), "Tags", reflect.TypeFor[map[string]string]()),
@@ -2176,6 +2225,7 @@ func TestExpandInterface(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[testFlexAWSInterfaceSingle]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
 			},
@@ -2195,6 +2245,7 @@ func TestExpandInterface(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFListNestedObject[TestFlexTF01]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFListNestedObject[TestFlexTF01]](), reflect.TypeFor[testFlexAWSInterfaceSingle]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFListNestedObject[TestFlexTF01]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
 				{
@@ -2225,6 +2276,7 @@ func TestExpandInterface(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[testFlexAWSInterfaceSingle]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
 			},
@@ -2240,6 +2292,7 @@ func TestExpandInterface(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[testFlexAWSInterfaceSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
 			},
@@ -2269,6 +2322,7 @@ func TestExpandInterface(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[testFlexAWSInterfaceSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
 			},
@@ -2284,6 +2338,7 @@ func TestExpandInterface(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[testFlexAWSInterfaceSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
 			},
@@ -2313,6 +2368,7 @@ func TestExpandInterface(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), reflect.TypeFor[testFlexAWSInterfaceSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
 			},
@@ -2332,6 +2388,7 @@ func TestExpandInterface(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFObjectValue[testFlexTFInterfaceFlexer]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFObjectValue[testFlexTFInterfaceFlexer]](), reflect.TypeFor[testFlexAWSInterfaceSingle]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFObjectValue[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[testFlexTFInterfaceFlexer]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
 			},
@@ -2361,7 +2418,7 @@ func TestExpandExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFFlexer](), reflect.TypeFor[*testFlexAWSExpander]()),
-				// convertingLogLine(reflect.TypeFor[testFlexTFFlexer](), reflect.TypeFor[testFlexAWSExpander]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFFlexer](), reflect.TypeFor[testFlexAWSExpander]()),
 			},
 		},
 		{
@@ -2388,7 +2445,7 @@ func TestExpandExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFFlexer](), reflect.TypeFor[*testFlexAWSExpanderIncompatible]()),
-				// convertingLogLine(reflect.TypeFor[testFlexTFFlexer](), reflect.TypeFor[testFlexAWSExpanderIncompatible]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFFlexer](), reflect.TypeFor[testFlexAWSExpanderIncompatible]()),
 			},
 		},
 		{
@@ -2403,7 +2460,7 @@ func TestExpandExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFExpanderToNil](), reflect.TypeFor[*testFlexAWSExpander]()),
-				// convertingLogLine(reflect.TypeFor[testFlexTFExpanderToNil](), reflect.TypeFor[testFlexAWSExpander]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFExpanderToNil](), reflect.TypeFor[testFlexAWSExpander]()),
 			},
 		},
 		{
@@ -2438,6 +2495,7 @@ func TestExpandExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[testFlexAWSExpanderSingleStruct]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[testFlexAWSExpander]()),
 			},
@@ -2459,6 +2517,7 @@ func TestExpandExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[testFlexAWSExpanderSingleStruct]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[testFlexAWSExpander]()),
 			},
@@ -2480,6 +2539,7 @@ func TestExpandExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[testFlexAWSExpanderSinglePtr]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
 			},
@@ -2501,6 +2561,7 @@ func TestExpandExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[testFlexAWSExpanderSinglePtr]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
 			},
@@ -2516,6 +2577,7 @@ func TestExpandExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[testFlexAWSExpanderStructSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
 			},
@@ -2545,6 +2607,7 @@ func TestExpandExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[testFlexAWSExpanderStructSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
 			},
@@ -2560,6 +2623,7 @@ func TestExpandExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[testFlexAWSExpanderPtrSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
 			},
@@ -2589,6 +2653,7 @@ func TestExpandExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFExpanderListNestedObject](), reflect.TypeFor[testFlexAWSExpanderPtrSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
 			},
@@ -2604,6 +2669,7 @@ func TestExpandExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[testFlexAWSExpanderStructSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
 			},
@@ -2633,6 +2699,7 @@ func TestExpandExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[testFlexAWSExpanderStructSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
 			},
@@ -2648,6 +2715,7 @@ func TestExpandExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[testFlexAWSExpanderPtrSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
 			},
@@ -2677,6 +2745,7 @@ func TestExpandExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFExpanderSetNestedObject](), reflect.TypeFor[testFlexAWSExpanderPtrSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
 			},
@@ -2696,6 +2765,7 @@ func TestExpandExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFExpanderObjectValue](), reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFExpanderObjectValue](), reflect.TypeFor[testFlexAWSExpanderSingleStruct]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFExpanderObjectValue](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[testFlexAWSExpander]()),
 			},
@@ -2715,6 +2785,7 @@ func TestExpandExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFExpanderObjectValue](), reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFExpanderObjectValue](), reflect.TypeFor[testFlexAWSExpanderSinglePtr]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFExpanderObjectValue](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[testFlexTFFlexer]](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
 			},
@@ -2777,6 +2848,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[testFlexAWSInterfaceSingle]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
 			},
@@ -2796,6 +2868,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFListNestedObject[TestFlexTF01]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFListNestedObject[TestFlexTF01]](), reflect.TypeFor[testFlexAWSInterfaceSingle]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFListNestedObject[TestFlexTF01]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[TestFlexTF01]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
 				{
@@ -2826,6 +2899,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[testFlexAWSInterfaceSingle]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
 			},
@@ -2841,6 +2915,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[testFlexAWSInterfaceSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
 			},
@@ -2870,6 +2945,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[testFlexAWSInterfaceSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFListNestedObject[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
 			},
@@ -2885,6 +2961,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[testFlexAWSInterfaceSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
 			},
@@ -2914,6 +2991,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[testFlexAWSInterfaceSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[[]testFlexAWSInterfaceInterface]()),
 			},
@@ -2933,6 +3011,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFObjectValue[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFObjectValue[testFlexTFInterfaceTypedExpander]](), reflect.TypeFor[testFlexAWSInterfaceSingle]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFObjectValue[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSInterfaceSingle]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[testFlexTFInterfaceTypedExpander]](), "Field1", reflect.TypeFor[testFlexAWSInterfaceInterface]()),
 			},
@@ -2958,7 +3037,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFTypedExpander](), reflect.TypeFor[*testFlexAWSExpander]()),
-				// convertingLogLine(reflect.TypeFor[testFlexTFTypedExpander](), reflect.TypeFor[testFlexAWSExpander]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFTypedExpander](), reflect.TypeFor[testFlexAWSExpander]()),
 			},
 		},
 		{
@@ -2973,7 +3052,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFTypedExpander](), reflect.TypeFor[*testFlexAWSExpanderIncompatible]()),
-				// convertingLogLine(reflect.TypeFor[testFlexTFTypedExpander](), reflect.TypeFor[testFlexAWSExpander]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFTypedExpander](), reflect.TypeFor[testFlexAWSExpanderIncompatible]()),
 			},
 		},
 		{
@@ -2988,7 +3067,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFTypedExpanderToNil](), reflect.TypeFor[*testFlexAWSExpander]()),
-				// convertingLogLine(reflect.TypeFor[testFlexTFTypedExpander](), reflect.TypeFor[testFlexAWSExpander]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFTypedExpanderToNil](), reflect.TypeFor[testFlexAWSExpander]()),
 			},
 		},
 		{
@@ -3008,6 +3087,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[testFlexAWSExpanderSingleStruct]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[testFlexAWSExpander]()),
 			},
@@ -3029,6 +3109,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFTypedExpander]](), reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFTypedExpander]](), reflect.TypeFor[testFlexAWSExpanderSingleStruct]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFSetNestedObject[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[testFlexAWSExpander]()),
 			},
@@ -3050,6 +3131,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[testFlexAWSExpanderSinglePtr]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
 			},
@@ -3071,6 +3153,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[testFlexAWSExpanderSinglePtr]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
 			},
@@ -3086,6 +3169,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[testFlexAWSExpanderStructSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
 			},
@@ -3115,6 +3199,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[testFlexAWSExpanderStructSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
 			},
@@ -3130,6 +3215,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[testFlexAWSExpanderPtrSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
 			},
@@ -3159,6 +3245,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), reflect.TypeFor[testFlexAWSExpanderPtrSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFTypedExpanderListNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ListNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
 			},
@@ -3174,6 +3261,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[testFlexAWSExpanderStructSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
 			},
@@ -3203,6 +3291,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[testFlexAWSExpanderStructSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderStructSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[[]testFlexAWSExpander]()),
 			},
@@ -3218,6 +3307,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[testFlexAWSExpanderPtrSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
 			},
@@ -3247,6 +3337,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), reflect.TypeFor[testFlexAWSExpanderPtrSlice]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFTypedExpanderSetNestedObject](), "Field1", reflect.TypeFor[*testFlexAWSExpanderPtrSlice]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.SetNestedObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[[]*testFlexAWSExpander]()),
 			},
@@ -3266,6 +3357,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFTypedExpanderObjectValue](), reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFTypedExpanderObjectValue](), reflect.TypeFor[testFlexAWSExpanderSingleStruct]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFTypedExpanderObjectValue](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSingleStruct]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[testFlexAWSExpander]()),
 			},
@@ -3285,6 +3377,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				expandingLogLine(reflect.TypeFor[testFlexTFTypedExpanderObjectValue](), reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
+				convertingLogLine(reflect.TypeFor[testFlexTFTypedExpanderObjectValue](), reflect.TypeFor[testFlexAWSExpanderSinglePtr]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[testFlexTFTypedExpanderObjectValue](), "Field1", reflect.TypeFor[*testFlexAWSExpanderSinglePtr]()),
 				convertingWithPathLogLine("Field1", reflect.TypeFor[fwtypes.ObjectValueOf[testFlexTFTypedExpander]](), "Field1", reflect.TypeFor[*testFlexAWSExpander]()),
 			},
