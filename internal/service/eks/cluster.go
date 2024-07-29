@@ -596,13 +596,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		output, err := conn.UpdateClusterConfig(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) logging: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) upgrade policy: %s", d.Id(), err)
 		}
 
 		updateID := aws.ToString(output.Update.Id)
 
 		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) logging update (%s): %s", d.Id(), updateID, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) upgrade policy update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
