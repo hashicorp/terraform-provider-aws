@@ -61,7 +61,7 @@ jobs:
 
       - name: Indicate That Triage is Required
         if: |
-          steps.author.conclusion != 'skipped'
+          github.event.action == 'opened'
           && steps.author.outputs.maintainer == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -69,16 +69,16 @@ jobs:
 
       - name: Add prioritized to Maintainer Contributions
         if: |
-          steps.author.conclusion != 'skipped'
-          && steps.author.outputs.maintainer == 'true'
+          steps.author.outputs.maintainer == 'true'
+          && !contains(github.event.pull_request.labels.*.name, 'prioritized')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr edit "$ISSUE_URL" --add-label prioritized
 
       - name: Credit Core Contributor Contributions
         if: |
-          steps.author.conclusion != 'skipped'
-          && steps.author.outputs.core_contributor == 'true'
+          steps.author.outputs.core_contributor == 'true'
+          && !contains(github.event.pull_request.labels.*.name, 'external-maintainer')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -86,8 +86,8 @@ jobs:
 
       - name: Credit Partner Contributions
         if: |
-          steps.author.conclusion != 'skipped'
-          && steps.author.outputs.partner == 'true'
+          steps.author.outputs.partner == 'true'
+          && !contains(github.event.pull_request.labels.*.name, 'external-maintainer')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -102,9 +102,7 @@ jobs:
           maintainers: ${{ secrets.MAINTAINERS }}
 
       - name: Add prioritized to Maintainer Assignments
-        if: |
-          steps.assignee.conclusion != 'skipped'
-          && steps.assignee.outputs.maintainer == 'true'
+        if: steps.assignee.outputs.maintainer == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
