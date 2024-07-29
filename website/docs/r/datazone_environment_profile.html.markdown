@@ -130,7 +130,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `created_at` - Creation time of environment profile.
 * `created_by` - Creator of environment profile.
-* `id` - ID of environment profile. 
+* `id` - ID of environment profile.
 * `updated_at` - Time of last update to environment profile.
 
 ## Timeouts
