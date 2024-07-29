@@ -53,11 +53,11 @@ func isGatewayNotFoundErr(err error) bool {
 
 // The API returns multiple responses for a missing volume.
 func isVolumeNotFoundErr(err error) bool {
-	if errs.IsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](err, "The specified volume was not found") {
+	if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeVolumeNotFound)) {
 		return true
 	}
 
-	if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeVolumeNotFound)) {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](err, "The specified volume was not found") {
 		return true
 	}
 

@@ -179,24 +179,20 @@ func resourceCachediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, 
 
 	arn := aws.ToString(volume.VolumeARN)
 	d.Set(names.AttrARN, arn)
+	d.Set("kms_encrypted", volume.KMSKey != nil)
 	d.Set(names.AttrKMSKey, volume.KMSKey)
-	if volume.KMSKey != nil {
-		d.Set("kms_encrypted", true)
-	} else {
-		d.Set("kms_encrypted", false)
-	}
 	d.Set(names.AttrSnapshotID, volume.SourceSnapshotId)
 	d.Set("volume_arn", arn)
 	d.Set("volume_id", volume.VolumeId)
 	d.Set("volume_size_in_bytes", volume.VolumeSizeInBytes)
 
-	if volume.VolumeiSCSIAttributes != nil {
-		d.Set("chap_enabled", volume.VolumeiSCSIAttributes.ChapEnabled)
-		d.Set("lun_number", volume.VolumeiSCSIAttributes.LunNumber)
-		d.Set(names.AttrNetworkInterfaceID, volume.VolumeiSCSIAttributes.NetworkInterfaceId)
-		d.Set("network_interface_port", volume.VolumeiSCSIAttributes.NetworkInterfacePort)
+	if attr := volume.VolumeiSCSIAttributes; attr != nil {
+		d.Set("chap_enabled", attr.ChapEnabled)
+		d.Set("lun_number", attr.LunNumber)
+		d.Set(names.AttrNetworkInterfaceID, attr.NetworkInterfaceId)
+		d.Set("network_interface_port", attr.NetworkInterfacePort)
 
-		targetARN := aws.ToString(volume.VolumeiSCSIAttributes.TargetARN)
+		targetARN := aws.ToString(attr.TargetARN)
 		d.Set(names.AttrTargetARN, targetARN)
 
 		gatewayARN, targetName, err := parseVolumeGatewayARNAndTargetNameFromARN(targetARN)
@@ -237,7 +233,7 @@ func resourceCachediSCSIVolumeDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Storage Gateway cached iSCSI volume %q: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Storage Gateway cached iSCSI Volume (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -261,7 +257,6 @@ func findCachediSCSIVolumeByARN(ctx context.Context, conn *storagegateway.Client
 	}
 
 	return output, nil
-
 }
 
 func findCachediSCSIVolume(ctx context.Context, conn *storagegateway.Client, input *storagegateway.DescribeCachediSCSIVolumesInput) (*awstypes.CachediSCSIVolume, error) {
