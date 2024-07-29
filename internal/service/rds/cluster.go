@@ -387,11 +387,14 @@ func resourceCluster() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"restore_to_time": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ForceNew:      true,
-							ValidateFunc:  verify.ValidUTCTimestamp,
-							ConflictsWith: []string{"restore_to_point_in_time.0.use_latest_restorable_time"},
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidUTCTimestamp,
+							ExactlyOneOf: []string{
+								"restore_to_point_in_time.0.restore_to_time",
+								"restore_to_point_in_time.0.use_latest_restorable_time",
+							},
 						},
 						"restore_type": {
 							Type:         schema.TypeString,
@@ -422,10 +425,13 @@ func resourceCluster() *schema.Resource {
 							},
 						},
 						"use_latest_restorable_time": {
-							Type:          schema.TypeBool,
-							Optional:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"restore_to_point_in_time.0.restore_to_time"},
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+							ExactlyOneOf: []string{
+								"restore_to_point_in_time.0.restore_to_time",
+								"restore_to_point_in_time.0.use_latest_restorable_time",
+							},
 						},
 					},
 				},
@@ -891,6 +897,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			Tags:                getTagsIn(ctx),
 		}
 
+		if v, ok := tfMap["restore_to_time"].(string); ok && v != "" {
+			v, _ := time.Parse(time.RFC3339, v)
+			input.RestoreToTime = aws.Time(v)
+		}
+
 		if v, ok := tfMap["source_cluster_identifier"].(string); ok && v != "" {
 			input.SourceDBClusterIdentifier = aws.String(v)
 		}
@@ -899,17 +910,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.SourceDbClusterResourceId = aws.String(v)
 		}
 
-		if v, ok := tfMap["restore_to_time"].(string); ok && v != "" {
-			v, _ := time.Parse(time.RFC3339, v)
-			input.RestoreToTime = aws.Time(v)
-		}
-
 		if v, ok := tfMap["use_latest_restorable_time"].(bool); ok && v {
 			input.UseLatestRestorableTime = aws.Bool(v)
-		}
-
-		if input.RestoreToTime == nil && input.UseLatestRestorableTime == nil {
-			return sdkdiag.AppendErrorf(diags, `Either "restore_to_time" or "use_latest_restorable_time" must be set`)
 		}
 
 		if v, ok := d.GetOk("backtrack_window"); ok {
