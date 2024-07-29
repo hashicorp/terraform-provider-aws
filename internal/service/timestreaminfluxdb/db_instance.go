@@ -24,12 +24,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -39,12 +37,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_timestreaminfluxdb_db_instance", name="Db Instance")
 // @Tags(identifierAttribute="arn")
 func newResourceDBInstance(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -97,17 +95,13 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			names.AttrBucket: schema.StringAttribute{
 				Optional: true,
-				Computed: true,
-				Default:  stringdefault.StaticString(DefaultBucketValue),
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(2),
-					stringvalidator.LengthAtMost(64),
+					stringvalidator.LengthBetween(2, 64),
 					stringvalidator.RegexMatches(
-						// Taken from the model for TimestreamInfluxDB in AWS SDK Go V2
-						// https://github.com/aws/aws-sdk-go-v2/blob/8209abb7fa1aeb513228b4d8c1a459aeb6209d4d/codegen/sdk-codegen/aws-models/timestream-influxdb.json#L768
 						regexache.MustCompile("^[^_][^\"]*$"),
 						"",
 					),
@@ -117,40 +111,23 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					that each data point persists). A bucket belongs to an organization.`,
 			},
 			"db_instance_type": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.StringEnumType[awstypes.DbInstanceType](),
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					stringvalidator.OneOf(
-						string(awstypes.DbInstanceTypeDbInfluxMedium),
-						string(awstypes.DbInstanceTypeDbInfluxLarge),
-						string(awstypes.DbInstanceTypeDbInfluxXlarge),
-						string(awstypes.DbInstanceTypeDbInflux2xlarge),
-						string(awstypes.DbInstanceTypeDbInflux4xlarge),
-						string(awstypes.DbInstanceTypeDbInflux8xlarge),
-						string(awstypes.DbInstanceTypeDbInflux12xlarge),
-						string(awstypes.DbInstanceTypeDbInflux16xlarge),
-					),
 				},
 				Description: `The Timestream for InfluxDB DB instance type to run InfluxDB on.`,
 			},
 			"db_parameter_group_identifier": schema.StringAttribute{
 				Optional: true,
-				// Once a parameter group is associated with a DB instance, it cannot be removed.
-				// Therefore, if db_parameter_group_identifier is removed, a replace of the DB instance
-				// is necessary.
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIf(
-						statementReplaceIf, "Replace db_parameter_group_identifier diff", "Replace db_parameter_group_identifier diff",
+						dbParameterGroupIdentifierReplaceIf, "Replace db_parameter_group_identifier diff", "Replace db_parameter_group_identifier diff",
 					),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(3),
-					stringvalidator.LengthAtMost(64),
+					stringvalidator.LengthBetween(3, 64),
 					stringvalidator.RegexMatches(
-						// Taken from the model for TimestreamInfluxDB in AWS SDK Go V2
-						// https://github.com/aws/aws-sdk-go-v2/blob/8209abb7fa1aeb513228b4d8c1a459aeb6209d4d/codegen/sdk-codegen/aws-models/timestream-influxdb.json#L1390
 						regexache.MustCompile("^[a-zA-Z0-9]+$"),
 						"",
 					),
@@ -158,18 +135,12 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: `The id of the DB parameter group assigned to your DB instance.`,
 			},
 			"db_storage_type": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  stringdefault.StaticString(string(awstypes.DbStorageTypeInfluxIoIncludedT1)),
+				CustomType: fwtypes.StringEnumType[awstypes.DbStorageType](),
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					stringvalidator.OneOf(
-						string(awstypes.DbStorageTypeInfluxIoIncludedT1),
-						string(awstypes.DbStorageTypeInfluxIoIncludedT2),
-						string(awstypes.DbStorageTypeInfluxIoIncludedT3),
-					),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: `The Timestream for InfluxDB DB storage type to read and write InfluxDB data. 
 					You can choose between 3 different types of provisioned Influx IOPS included storage according 
@@ -177,17 +148,12 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					Influx IO Included 16000 IOPS.`,
 			},
 			"deployment_type": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  stringdefault.StaticString(string(awstypes.DeploymentTypeSingleAz)),
+				CustomType: fwtypes.StringEnumType[awstypes.DeploymentType](),
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					stringvalidator.OneOf(
-						string(awstypes.DeploymentTypeSingleAz),
-						string(awstypes.DeploymentTypeWithMultiazStandby),
-					),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: `Specifies whether the DB instance will be deployed as a standalone instance or 
 					with a Multi-AZ standby for high availability.`,
@@ -210,11 +176,8 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(3),
-					stringvalidator.LengthAtMost(40),
+					stringvalidator.LengthBetween(3, 40),
 					stringvalidator.RegexMatches(
-						// Taken from the model for TimestreamInfluxDB in AWS SDK Go V2
-						// https://github.com/aws/aws-sdk-go-v2/blob/8209abb7fa1aeb513228b4d8c1a459aeb6209d4d/codegen/sdk-codegen/aws-models/timestream-influxdb.json#L1215
 						regexache.MustCompile("^[a-zA-z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*$"),
 						"",
 					),
@@ -227,15 +190,12 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"organization": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  stringdefault.StaticString(DefaultOrganizationValue),
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-					stringvalidator.LengthAtMost(64),
+					stringvalidator.LengthBetween(1, 64),
 				},
 				Description: `The name of the initial organization for the initial admin user in InfluxDB. An 
 					InfluxDB organization is a workspace for a group of users.`,
@@ -247,8 +207,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(8),
-					stringvalidator.LengthAtMost(64),
+					stringvalidator.LengthBetween(8, 64),
 					stringvalidator.RegexMatches(regexache.MustCompile("^[a-zA-Z0-9]+$"), ""),
 				},
 				Description: `The password of the initial admin user created in InfluxDB. This password will 
@@ -259,7 +218,6 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 			names.AttrPubliclyAccessible: schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
-				Default:  booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -270,14 +228,12 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: `The Availability Zone in which the standby instance is located when deploying 
 					with a MultiAZ standby instance.`,
 			},
-			names.AttrStatus: schema.StringAttribute{
-				Computed:    true,
-				Description: `The status of the DB instance.`,
-			},
+			//names.AttrStatus: schema.StringAttribute{
+			//	Computed:    true,
+			//	Description: `The status of the DB instance.`,
+			//},
 			names.AttrUsername: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  stringdefault.StaticString(DefaultUsernameValue),
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -297,8 +253,8 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					Manager in your account`,
 			},
 			names.AttrVPCSecurityGroupIDs: schema.SetAttribute{
-				Required:    true,
-				ElementType: types.StringType,
+				CustomType: fwtypes.SetOfStringType,
+				Required:   true,
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.RequiresReplace(),
 				},
@@ -313,14 +269,13 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: `A list of VPC security group IDs to associate with the DB instance.`,
 			},
 			"vpc_subnet_ids": schema.SetAttribute{
-				Required:    true,
-				ElementType: types.StringType,
+				CustomType: fwtypes.SetOfStringType,
+				Required:   true,
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.Set{
-					setvalidator.SizeAtLeast(1),
-					setvalidator.SizeAtMost(3),
+					setvalidator.SizeBetween(1, 3),
 					setvalidator.ValueStringsAre(
 						stringvalidator.LengthAtMost(64),
 						stringvalidator.RegexMatches(regexache.MustCompile("^subnet-[a-z0-9]+$"), ""),
@@ -332,26 +287,32 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 		},
 		Blocks: map[string]schema.Block{
 			"log_delivery_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[logDeliveryConfigurationData](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				Description: `Configuration for sending InfluxDB engine logs to a specified S3 bucket.`,
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"s3_configuration": schema.SingleNestedBlock{
-							Attributes: map[string]schema.Attribute{
-								names.AttrBucketName: schema.StringAttribute{
-									Required: true,
-									Validators: []validator.String{
-										stringvalidator.LengthAtLeast(3),
-										stringvalidator.LengthAtMost(63),
-										stringvalidator.RegexMatches(regexache.MustCompile("^[0-9a-z]+[0-9a-z\\.\\-]*[0-9a-z]+$"), ""),
+						"s3_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[s3ConfigurationData](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrBucketName: schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(3, 63),
+											stringvalidator.RegexMatches(regexache.MustCompile("^[0-9a-z]+[0-9a-z\\.\\-]*[0-9a-z]+$"), ""),
+										},
+										Description: `The name of the S3 bucket to deliver logs to.`,
 									},
-									Description: `The name of the S3 bucket to deliver logs to.`,
-								},
-								names.AttrEnabled: schema.BoolAttribute{
-									Required:    true,
-									Description: `Indicates whether log delivery to the S3 bucket is enabled.`,
+									names.AttrEnabled: schema.BoolAttribute{
+										Required:    true,
+										Description: `Indicates whether log delivery to the S3 bucket is enabled.`,
+									},
 								},
 							},
 							Description: `Configuration for S3 bucket log delivery.`,
@@ -368,7 +329,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-func statementReplaceIf(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+func dbParameterGroupIdentifierReplaceIf(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
 	}
@@ -379,7 +340,7 @@ func statementReplaceIf(ctx context.Context, req planmodifier.StringRequest, res
 		return
 	}
 
-	dbParameterGroupIdentifierRemoved := (!state.DBParameterGroupIdentifier.IsNull() && plan.DBParameterGroupIdentifier.IsNull())
+	dbParameterGroupIdentifierRemoved := !state.DBParameterGroupIdentifier.IsNull() && plan.DBParameterGroupIdentifier.IsNull()
 
 	resp.RequiresReplace = dbParameterGroupIdentifierRemoved
 }
@@ -393,46 +354,15 @@ func (r *resourceDBInstance) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	in := &timestreaminfluxdb.CreateDbInstanceInput{
-		AllocatedStorage:    aws.Int32(int32(plan.AllocatedStorage.ValueInt64())),
-		DbInstanceType:      awstypes.DbInstanceType(plan.DBInstanceType.ValueString()),
-		Name:                aws.String(plan.Name.ValueString()),
-		Password:            aws.String(plan.Password.ValueString()),
-		VpcSecurityGroupIds: flex.ExpandFrameworkStringValueSet(ctx, plan.VPCSecurityGroupIDs),
-		VpcSubnetIds:        flex.ExpandFrameworkStringValueSet(ctx, plan.VPCSubnetIDs),
-		Tags:                getTagsIn(ctx),
-	}
-	if !plan.Bucket.IsNull() {
-		in.Bucket = aws.String(plan.Bucket.ValueString())
-	}
-	if !plan.DBParameterGroupIdentifier.IsNull() {
-		in.DbParameterGroupIdentifier = aws.String(plan.DBParameterGroupIdentifier.ValueString())
-	}
-	if !plan.DBStorageType.IsNull() {
-		in.DbStorageType = awstypes.DbStorageType(plan.DBStorageType.ValueString())
-	}
-	if !plan.DeploymentType.IsNull() {
-		in.DeploymentType = awstypes.DeploymentType(plan.DeploymentType.ValueString())
-	}
-	if !plan.LogDeliveryConfiguration.IsNull() {
-		var tfList []logDeliveryConfigurationData
-		resp.Diagnostics.Append(plan.LogDeliveryConfiguration.ElementsAs(ctx, &tfList, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		in.LogDeliveryConfiguration = expandLogDeliveryConfiguration(tfList)
-	}
-	if !plan.Organization.IsNull() {
-		in.Organization = aws.String(plan.Organization.ValueString())
-	}
-	if !plan.PubliclyAccessible.IsNull() {
-		in.PubliclyAccessible = aws.Bool(plan.PubliclyAccessible.ValueBool())
-	}
-	if !plan.Username.IsNull() {
-		in.Username = aws.String(plan.Username.ValueString())
+	in := timestreaminfluxdb.CreateDbInstanceInput{}
+
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
+
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	out, err := conn.CreateDbInstance(ctx, in)
+	out, err := conn.CreateDbInstance(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionCreating, ResNameDBInstance, plan.Name.String(), err),
@@ -440,6 +370,7 @@ func (r *resourceDBInstance) Create(ctx context.Context, req resource.CreateRequ
 		)
 		return
 	}
+
 	if out == nil || out.Id == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionCreating, ResNameDBInstance, plan.Name.String(), nil),
@@ -448,13 +379,12 @@ func (r *resourceDBInstance) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	// Computed attributes
-	plan.ARN = flex.StringToFramework(ctx, out.Arn)
-	plan.ID = flex.StringToFramework(ctx, out.Id)
-	plan.AvailabilityZone = flex.StringToFramework(ctx, out.AvailabilityZone)
+	state := plan
+	state.ID = flex.StringToFramework(ctx, out.Id)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitDBInstanceCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	output, err := waitDBInstanceCreated(ctx, conn, state.ID.ValueString(), createTimeout)
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForCreation, ResNameDBInstance, plan.Name.String(), err),
@@ -463,26 +393,13 @@ func (r *resourceDBInstance) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	readOut, err := findDBInstanceByID(ctx, conn, plan.ID.ValueString())
-	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, plan.ID.String(), err),
-			err.Error(),
-		)
+	resp.Diagnostics.Append(flex.Flatten(ctx, output, &state)...)
+
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Computed attributes only set after resource is finished creating
-	plan.Endpoint = flex.StringToFramework(ctx, readOut.Endpoint)
-	plan.InfluxAuthParametersSecretARN = flex.StringToFramework(ctx, readOut.InfluxAuthParametersSecretArn)
-	plan.Status = flex.StringToFramework(ctx, (*string)(&readOut.Status))
-	plan.SecondaryAvailabilityZone = flex.StringToFramework(ctx, readOut.SecondaryAvailabilityZone)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceDBInstance) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -495,10 +412,12 @@ func (r *resourceDBInstance) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	out, err := findDBInstanceByID(ctx, conn, state.ID.ValueString())
+
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
+	
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, state.ID.String(), err),
@@ -731,9 +650,9 @@ func (r *resourceDBInstance) ModifyPlan(ctx context.Context, request resource.Mo
 	r.SetTagsAll(ctx, request, response)
 }
 
-func waitDBInstanceCreated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.CreateDbInstanceOutput, error) {
+func waitDBInstanceCreated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.GetDbInstanceOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(string(awstypes.StatusCreating), string(awstypes.StatusUpdating), string(awstypes.StatusModifying)),
+		Pending:                   enum.Slice(awstypes.StatusCreating, awstypes.StatusUpdating, awstypes.StatusModifying),
 		Target:                    enum.Slice(awstypes.StatusAvailable),
 		Refresh:                   statusDBInstance(ctx, conn, id),
 		Timeout:                   timeout,
@@ -742,7 +661,7 @@ func waitDBInstanceCreated(ctx context.Context, conn *timestreaminfluxdb.Client,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*timestreaminfluxdb.CreateDbInstanceOutput); ok {
+	if out, ok := outputRaw.(*timestreaminfluxdb.GetDbInstanceOutput); ok {
 		return out, err
 	}
 
@@ -805,14 +724,15 @@ func findDBInstanceByID(ctx context.Context, conn *timestreaminfluxdb.Client, id
 	}
 
 	out, err := conn.GetDbInstance(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -883,34 +803,34 @@ func expandS3Configuration(tfObj s3ConfigurationData) *awstypes.S3Configuration 
 }
 
 type resourceDBInstanceData struct {
-	AllocatedStorage              types.Int64    `tfsdk:"allocated_storage"`
-	ARN                           types.String   `tfsdk:"arn"`
-	AvailabilityZone              types.String   `tfsdk:"availability_zone"`
-	Bucket                        types.String   `tfsdk:"bucket"`
-	DBInstanceType                types.String   `tfsdk:"db_instance_type"`
-	DBParameterGroupIdentifier    types.String   `tfsdk:"db_parameter_group_identifier"`
-	DBStorageType                 types.String   `tfsdk:"db_storage_type"`
-	DeploymentType                types.String   `tfsdk:"deployment_type"`
-	Endpoint                      types.String   `tfsdk:"endpoint"`
-	ID                            types.String   `tfsdk:"id"`
-	InfluxAuthParametersSecretARN types.String   `tfsdk:"influx_auth_parameters_secret_arn"`
-	LogDeliveryConfiguration      types.List     `tfsdk:"log_delivery_configuration"`
-	Name                          types.String   `tfsdk:"name"`
-	Organization                  types.String   `tfsdk:"organization"`
-	Password                      types.String   `tfsdk:"password"`
-	PubliclyAccessible            types.Bool     `tfsdk:"publicly_accessible"`
-	SecondaryAvailabilityZone     types.String   `tfsdk:"secondary_availability_zone"`
-	Status                        types.String   `tfsdk:"status"`
-	Tags                          types.Map      `tfsdk:"tags"`
-	TagsAll                       types.Map      `tfsdk:"tags_all"`
-	Timeouts                      timeouts.Value `tfsdk:"timeouts"`
-	Username                      types.String   `tfsdk:"username"`
-	VPCSecurityGroupIDs           types.Set      `tfsdk:"vpc_security_group_ids"`
-	VPCSubnetIDs                  types.Set      `tfsdk:"vpc_subnet_ids"`
+	AllocatedStorage              types.Int64                                                   `tfsdk:"allocated_storage"`
+	ARN                           types.String                                                  `tfsdk:"arn"`
+	AvailabilityZone              types.String                                                  `tfsdk:"availability_zone"`
+	Bucket                        types.String                                                  `tfsdk:"bucket"`
+	DBInstanceType                fwtypes.StringEnum[awstypes.DbInstanceType]                   `tfsdk:"db_instance_type"`
+	DBParameterGroupIdentifier    types.String                                                  `tfsdk:"db_parameter_group_identifier"`
+	DBStorageType                 fwtypes.StringEnum[awstypes.DbStorageType]                    `tfsdk:"db_storage_type"`
+	DeploymentType                fwtypes.StringEnum[awstypes.DeploymentType]                   `tfsdk:"deployment_type"`
+	Endpoint                      types.String                                                  `tfsdk:"endpoint"`
+	ID                            types.String                                                  `tfsdk:"id"`
+	InfluxAuthParametersSecretARN types.String                                                  `tfsdk:"influx_auth_parameters_secret_arn"`
+	LogDeliveryConfiguration      fwtypes.ListNestedObjectValueOf[logDeliveryConfigurationData] `tfsdk:"log_delivery_configuration"`
+	Name                          types.String                                                  `tfsdk:"name"`
+	Organization                  types.String                                                  `tfsdk:"organization"`
+	Password                      types.String                                                  `tfsdk:"password"`
+	PubliclyAccessible            types.Bool                                                    `tfsdk:"publicly_accessible"`
+	SecondaryAvailabilityZone     types.String                                                  `tfsdk:"secondary_availability_zone"`
+	Status                        types.String                                                  `tfsdk:"status"`
+	Tags                          types.Map                                                     `tfsdk:"tags"`
+	TagsAll                       types.Map                                                     `tfsdk:"tags_all"`
+	Timeouts                      timeouts.Value                                                `tfsdk:"timeouts"`
+	Username                      types.String                                                  `tfsdk:"username"`
+	VPCSecurityGroupIDs           fwtypes.SetValueOf[types.String]                              `tfsdk:"vpc_security_group_ids"`
+	VPCSubnetIDs                  fwtypes.SetValueOf[types.String]                              `tfsdk:"vpc_subnet_ids"`
 }
 
 type logDeliveryConfigurationData struct {
-	S3Configuration s3ConfigurationData `tfsdk:"s3_configuration"`
+	S3Configuration fwtypes.ListNestedObjectValueOf[s3ConfigurationData] `tfsdk:"s3_configuration"`
 }
 
 type s3ConfigurationData struct {
