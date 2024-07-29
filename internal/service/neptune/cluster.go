@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -341,7 +342,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		DBClusterIdentifier:              aws.String(clusterID),
 		DeletionProtection:               aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 		Engine:                           aws.String(d.Get(names.AttrEngine).(string)),
-		Port:                             aws.Int64(int64(d.Get(names.AttrPort).(int))),
+		Port:                             aws.Int32(int32(d.Get(names.AttrPort).(int))),
 		ServerlessV2ScalingConfiguration: serverlessConfiguration,
 		StorageEncrypted:                 aws.Bool(d.Get(names.AttrStorageEncrypted).(bool)),
 		Tags:                             getTagsIn(ctx),
@@ -351,7 +352,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		DBClusterIdentifier:              aws.String(clusterID),
 		DeletionProtection:               aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 		Engine:                           aws.String(d.Get(names.AttrEngine).(string)),
-		Port:                             aws.Int64(int64(d.Get(names.AttrPort).(int))),
+		Port:                             aws.Int32(int32(d.Get(names.AttrPort).(int))),
 		ServerlessV2ScalingConfiguration: serverlessConfiguration,
 		SnapshotIdentifier:               aws.String(d.Get("snapshot_identifier").(string)),
 		Tags:                             getTagsIn(ctx),
@@ -364,25 +365,25 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 		v := v.(*schema.Set)
 
-		inputC.AvailabilityZones = flex.ExpandStringSet(v)
-		inputR.AvailabilityZones = flex.ExpandStringSet(v)
+		inputC.AvailabilityZones = flex.ExpandStringValueSet(v)
+		inputR.AvailabilityZones = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := d.GetOk("backup_retention_period"); ok {
-		v := int64(v.(int))
+		v := int32(v.(int))
 
-		inputC.BackupRetentionPeriod = aws.Int64(v)
+		inputC.BackupRetentionPeriod = aws.Int32(v)
 		if restoreDBClusterFromSnapshot {
 			clusterUpdate = true
-			inputM.BackupRetentionPeriod = aws.Int64(v)
+			inputM.BackupRetentionPeriod = aws.Int32(v)
 		}
 	}
 
 	if v, ok := d.GetOk("enable_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
 		v := v.(*schema.Set)
 
-		inputC.EnableCloudwatchLogsExports = flex.ExpandStringSet(v)
-		inputR.EnableCloudwatchLogsExports = flex.ExpandStringSet(v)
+		inputC.EnableCloudwatchLogsExports = flex.ExpandStringValueSet(v)
+		inputR.EnableCloudwatchLogsExports = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
@@ -457,11 +458,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		v := v.(*schema.Set)
 
-		inputC.VpcSecurityGroupIds = flex.ExpandStringSet(v)
-		inputR.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+		inputC.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
+		inputR.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		if restoreDBClusterFromSnapshot {
 			clusterUpdate = true
-			inputM.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+			inputM.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 	}
 
@@ -594,7 +595,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("backup_retention_period") {
-			input.BackupRetentionPeriod = aws.Int64(int64(d.Get("backup_retention_period").(int)))
+			input.BackupRetentionPeriod = aws.Int32(int32(d.Get("backup_retention_period").(int)))
 		}
 
 		if d.HasChange("copy_tags_to_snapshot") {
@@ -613,13 +614,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			disableLogTypes := old.(*schema.Set).Difference(new.(*schema.Set))
 
 			if disableLogTypes.Len() > 0 {
-				logs.SetDisableLogTypes(flex.ExpandStringSet(disableLogTypes))
+				logs.DisableLogTypes = flex.ExpandStringValueSet(disableLogTypes)
 			}
 
 			enableLogTypes := new.(*schema.Set).Difference(old.(*schema.Set))
 
 			if enableLogTypes.Len() > 0 {
-				logs.SetEnableLogTypes(flex.ExpandStringSet(enableLogTypes))
+				logs.EnableLogTypes = flex.ExpandStringValueSet(enableLogTypes)
 			}
 
 			input.CloudwatchLogsExportConfiguration = logs
@@ -663,9 +664,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange(names.AttrVPCSecurityGroupIDs) {
 			if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
-				input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+				input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 			} else {
-				input.VpcSecurityGroupIds = aws.StringSlice([]string{})
+				input.VpcSecurityGroupIds = []string{}
 			}
 		}
 
@@ -678,7 +679,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					return true, err
 				}
 
-				if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeInvalidDBClusterStateFault) {
+				if errs.IsA[*awstypes.InvalidDBClusterStateFault](err) {
 					return true, err
 				}
 
@@ -772,11 +773,11 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Deleting Neptune Cluster: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidDBClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteDBCluster(ctx, input)
-	}, awstypes.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state")
+	}, "is not currently in the available state")
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeDBClusterNotFoundFault) {
+	if errs.IsA[*awstypes.DBClusterNotFoundFault](err) {
 		return diags
 	}
 
@@ -817,7 +818,7 @@ func removeClusterFromGlobalCluster(ctx context.Context, conn *neptune.Client, c
 
 	_, err := conn.RemoveFromGlobalCluster(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeDBClusterNotFoundFault, awstypes.ErrCodeGlobalClusterNotFoundFault) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "is not found in global cluster") {
+	if errs.IsA[*awstypes.DBClusterNotFoundFault](err) || errs.IsA[*awstypes.GlobalClusterNotFoundFault](err) {
 		return nil
 	}
 
@@ -840,7 +841,7 @@ func FindDBClusterByID(ctx context.Context, conn *neptune.Client, id string) (*a
 	input := &neptune.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(id),
 	}
-	output, err := findDBCluster(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DBCluster]())
+	output, err := findDBCluster(ctx, conn, input, tfslices.PredicateTrue[awstypes.DBCluster]())
 
 	if err != nil {
 		return nil, err
@@ -859,47 +860,45 @@ func FindDBClusterByID(ctx context.Context, conn *neptune.Client, id string) (*a
 func findClusterByARN(ctx context.Context, conn *neptune.Client, arn string) (*awstypes.DBCluster, error) {
 	input := &neptune.DescribeDBClustersInput{}
 
-	return findDBCluster(ctx, conn, input, func(v *awstypes.DBCluster) bool {
+	return findDBCluster(ctx, conn, input, func(v awstypes.DBCluster) bool {
 		return aws.ToString(v.DBClusterArn) == arn
 	})
 }
 
-func findDBCluster(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBClustersInput, filter tfslices.Predicate[*awstypes.DBCluster]) (*awstypes.DBCluster, error) {
+func findDBCluster(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBClustersInput, filter tfslices.Predicate[awstypes.DBCluster]) (*awstypes.DBCluster, error) {
 	output, err := findDBClusters(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDBClusters(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBClustersInput, filter tfslices.Predicate[*awstypes.DBCluster]) ([]*awstypes.DBCluster, error) {
-	var output []*awstypes.DBCluster
+func findDBClusters(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBClustersInput, filter tfslices.Predicate[awstypes.DBCluster]) ([]awstypes.DBCluster, error) {
+	var output []awstypes.DBCluster
 
-	err := conn.DescribeDBClustersPagesWithContext(ctx, input, func(page *neptune.DescribeDBClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := neptune.NewDescribeDBClustersPaginator(conn, input)
 
-		for _, v := range page.DBClusters {
-			if v != nil && filter(v) {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.DBClusterNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeDBClusterNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.DBClusters {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
