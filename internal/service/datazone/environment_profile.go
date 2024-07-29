@@ -247,7 +247,7 @@ func (r *resourceEnvironmentProfile) Update(ctx context.Context, req resource.Up
 		plan.ProjectIdentifier.Equal(state.ProjectIdentifier) && plan.DomainIdentifier.Equal(state.DomainIdentifier) {
 		in := &datazone.UpdateEnvironmentProfileInput{}
 
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+		resp.Diagnostics.Append(flex.Expand(ctx, state, in)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -260,23 +260,23 @@ func (r *resourceEnvironmentProfile) Update(ctx context.Context, req resource.Up
 			)
 			return
 		}
-		plan.AwsAccountId = flex.StringToFramework(ctx, out.AwsAccountId)
-		plan.AwsAccountRegion = flex.StringToFramework(ctx, out.AwsAccountRegion)
-		plan.CreatedAt = flex.TimeToFramework(ctx, out.CreatedAt)
-		plan.CreatedBy = flex.StringToFramework(ctx, out.CreatedBy)
-		plan.Description = flex.StringToFramework(ctx, out.Description)
-		plan.DomainIdentifier = flex.StringToFramework(ctx, out.DomainId)
-		plan.EnvironmentBlueprintIdentifier = flex.StringToFramework(ctx, out.EnvironmentBlueprintId)
-		plan.Id = flex.StringToFramework(ctx, out.Id)
-		plan.Name = flex.StringToFramework(ctx, out.Name)
-		plan.ProjectIdentifier = flex.StringToFramework(ctx, out.ProjectId)
-		plan.UpdatedAt = flex.TimeToFramework(ctx, out.UpdatedAt)
+		state.AwsAccountId = flex.StringToFramework(ctx, out.AwsAccountId)
+		state.AwsAccountRegion = flex.StringToFramework(ctx, out.AwsAccountRegion)
+		state.CreatedAt = flex.TimeToFramework(ctx, out.CreatedAt)
+		state.CreatedBy = flex.StringToFramework(ctx, out.CreatedBy)
+		state.Description = flex.StringToFramework(ctx, out.Description)
+		state.DomainIdentifier = flex.StringToFramework(ctx, out.DomainId)
+		state.EnvironmentBlueprintIdentifier = flex.StringToFramework(ctx, out.EnvironmentBlueprintId)
+		state.Id = flex.StringToFramework(ctx, out.Id)
+		state.Name = flex.StringToFramework(ctx, out.Name)
+		state.ProjectIdentifier = flex.StringToFramework(ctx, out.ProjectId)
+		state.UpdatedAt = flex.TimeToFramework(ctx, out.UpdatedAt)
 
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceEnvironmentProfile) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

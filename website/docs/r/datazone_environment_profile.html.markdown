@@ -5,15 +5,9 @@ page_title: "AWS: aws_datazone_environment_profile"
 description: |-
   Terraform resource for managing an AWS DataZone Environment Profile.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_datazone_environment_profile
+
 Terraform resource for managing an AWS DataZone Environment Profile.
 
 ## Example Usage
@@ -97,13 +91,13 @@ resource "aws_datazone_environment_blueprint_configuration" "test" {
 }
 
 resource "aws_datazone_environment_profile" "example" {
-  aws_account_id = data.aws_caller_identity.example.account_id
-	aws_account_region = data.aws_region.example.name
-	environment_blueprint_identifier = data.aws_datazone_environment_blueprint.example.id
-	description = "desc"
-	name = "example-name"
-	project_identifier = aws_datazone_project.example.id
-	domain_identifier = aws_datazone_domain.example.id
+  aws_account_id                   = data.aws_caller_identity.example.account_id
+  aws_account_region               = data.aws_region.example.name
+  environment_blueprint_identifier = data.aws_datazone_environment_blueprint.example.id
+  description                      = "desc"
+  name                             = "example-name"
+  project_identifier               = aws_datazone_project.example.id
+  domain_identifier                = aws_datazone_domain.example.id
   user_parameters {
     name  = "consumerGlueDbName"
     value = "value"
