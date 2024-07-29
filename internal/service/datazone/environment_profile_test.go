@@ -251,10 +251,6 @@ resource "aws_datazone_environment_blueprint_configuration" "test" {
 
 func testAccEnvironmentProfileConfig_basic(rName, domainName, projectName string) string {
 	return acctest.ConfigCompose(testAccEnvironmentProfileConfig_base(domainName, projectName), fmt.Sprintf(`
-
-
-
-
 resource "aws_datazone_environment_profile" "test" {
   aws_account_id                   = data.aws_caller_identity.test.account_id
   aws_account_region               = data.aws_region.test.name
