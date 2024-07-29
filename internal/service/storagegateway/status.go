@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
@@ -42,21 +41,5 @@ func statusStorediSCSIVolume(ctx context.Context, conn *storagegateway.Client, v
 		}
 
 		return output, aws.ToString(output.StorediSCSIVolumes[0].VolumeStatus), nil
-	}
-}
-
-func statusSMBFileShare(ctx context.Context, conn *storagegateway.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findSMBFileShareByARN(ctx, conn, arn)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.ToString(output.FileShareStatus), nil
 	}
 }

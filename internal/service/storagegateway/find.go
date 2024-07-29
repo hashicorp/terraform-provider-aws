@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -83,33 +82,4 @@ func findUploadBufferDisk(ctx context.Context, conn *storagegateway.Client, gate
 	}
 
 	return &result, err
-}
-
-func findSMBFileShareByARN(ctx context.Context, conn *storagegateway.Client, arn string) (*awstypes.SMBFileShareInfo, error) {
-	input := &storagegateway.DescribeSMBFileSharesInput{
-		FileShareARNList: []string{arn},
-	}
-
-	output, err := conn.DescribeSMBFileShares(ctx, input)
-
-	if operationErrorCode(err) == operationErrCodeFileShareNotFound {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.SMBFileShareInfoList) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.SMBFileShareInfoList); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &output.SMBFileShareInfoList[0], nil
 }
