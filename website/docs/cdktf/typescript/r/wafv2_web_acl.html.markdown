@@ -802,6 +802,7 @@ An SQL injection match condition identifies the part of web requests, such as th
 The `sqliMatchStatement` block supports the following arguments:
 
 * `fieldToMatch` - (Optional) Part of a web request that you want AWS WAF to inspect. See [`fieldToMatch`](#field_to_match-block) below for details.
+* `sensitivityLevel` - (Optional) Sensitivity that you want AWS WAF to use to inspect for SQL injection attacks. Valid values include: `LOW`, `HIGH`.
 * `textTransformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. At least one transformation is required. See [`textTransformation`](#text_transformation-block) below for details.
 
 ### `xssMatchStatement` Block
@@ -1218,4 +1219,4 @@ Using `terraform import`, import WAFv2 Web ACLs using `ID/Name/Scope`. For examp
 % terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4d5cc2755c11ee17ed48162c5f3f9e5bc71cb1c30afe0cae4bcadc19cff9f553 -->
+<!-- cache-key: cdktf-0.20.1 input-9672e028287df333075e1fca65b0e8637d2a1f2c48f7560dc66dd21c1a63eb68 -->

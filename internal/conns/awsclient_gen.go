@@ -19,6 +19,7 @@ import (
 	applicationautoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
 	applicationinsights_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationinsights"
 	applicationsignals_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationsignals"
+	appmesh_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appmesh"
 	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
 	appstream_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appstream"
 	appsync_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appsync"
@@ -214,7 +215,6 @@ import (
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
-	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
@@ -305,8 +305,8 @@ func (c *AWSClient) AppIntegrationsClient(ctx context.Context) *appintegrations_
 	return errs.Must(client[*appintegrations_sdkv2.Client](ctx, c, names.AppIntegrations, make(map[string]any)))
 }
 
-func (c *AWSClient) AppMeshConn(ctx context.Context) *appmesh_sdkv1.AppMesh {
-	return errs.Must(conn[*appmesh_sdkv1.AppMesh](ctx, c, names.AppMesh, make(map[string]any)))
+func (c *AWSClient) AppMeshClient(ctx context.Context) *appmesh_sdkv2.Client {
+	return errs.Must(client[*appmesh_sdkv2.Client](ctx, c, names.AppMesh, make(map[string]any)))
 }
 
 func (c *AWSClient) AppRunnerClient(ctx context.Context) *apprunner_sdkv2.Client {

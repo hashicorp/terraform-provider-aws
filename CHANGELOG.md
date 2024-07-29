@@ -7,6 +7,7 @@ ENHANCEMENTS:
 * resource/aws_elasticache_user_group_association: Add configurable create and delete timeouts ([#38559](https://github.com/hashicorp/terraform-provider-aws/issues/38559))
 * resource/aws_vpc: Support `ipv6_cidr_block` sizes between `/44` and `/60` in increments of /4 ([#35614](https://github.com/hashicorp/terraform-provider-aws/issues/35614))
 * resource/aws_vpc: Support `ipv6_netmask_length` values between `44` and `60` in increments of 4 ([#35614](https://github.com/hashicorp/terraform-provider-aws/issues/35614))
+* resource/aws_vpc_ipv6_cidr_block_association: Add `assign_generated_ipv6_cidr_block` and `ipv6_pool` arguments ([#27274](https://github.com/hashicorp/terraform-provider-aws/issues/27274))
 * resource/aws_vpc_ipv6_cidr_block_association: Support `ipv6_cidr_block` sizes between `/44` and `/60` in increments of /4 ([#35614](https://github.com/hashicorp/terraform-provider-aws/issues/35614))
 * resource/aws_vpc_ipv6_cidr_block_association: Support `ipv6_netmask_length` values between `44` and `60` in increments of 4 ([#35614](https://github.com/hashicorp/terraform-provider-aws/issues/35614))
 * resource/aws_vpc_security_group_egress_rule: Add `tags` to the `AuthorizeSecurityGroupEgress` EC2 API call instead of making a separate `CreateTags` call ([#35614](https://github.com/hashicorp/terraform-provider-aws/issues/35614))
