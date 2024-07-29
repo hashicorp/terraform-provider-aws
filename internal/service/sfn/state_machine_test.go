@@ -538,7 +538,7 @@ func TestAccSFNStateMachine_encryptionConfigurationCustomerManagedKMSKey(t *test
 	})
 }
 
-func TestAccSFNStateMachine_encryptionConfigurationAwsOwnedKey(t *testing.T) {
+func TestAccSFNStateMachine_encryptionConfigurationServiceOwnedKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"

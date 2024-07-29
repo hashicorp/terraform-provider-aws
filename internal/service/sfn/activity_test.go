@@ -152,7 +152,7 @@ func TestAccSFNActivity_encryptionConfigurationCustomerManagedKMSKey(t *testing.
 	})
 }
 
-func TestAccSFNActivity_encryptionConfigurationAwsOwnedKey(t *testing.T) {
+func TestAccSFNActivity_encryptionConfigurationServiceOwnedKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sfn_activity.test"

@@ -367,9 +367,9 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 				d.HasChange("tracing_configuration.0.enabled") && output.TracingConfiguration != nil && output.TracingConfiguration.Enabled != d.Get("tracing_configuration.0.enabled").(bool) ||
 				d.HasChange("logging_configuration.0.include_execution_data") && output.LoggingConfiguration != nil && output.LoggingConfiguration.IncludeExecutionData != d.Get("logging_configuration.0.include_execution_data").(bool) ||
 				d.HasChange("logging_configuration.0.level") && output.LoggingConfiguration != nil && string(output.LoggingConfiguration.Level) != d.Get("logging_configuration.0.level").(string) ||
-				d.HasChange("encryption_configuration.0.kms_key_id") && output.EncryptionConfiguration != nil && output.EncryptionConfiguration.KmsKeyId != nil && *output.EncryptionConfiguration.KmsKeyId != d.Get("encryption_configuration.0.kms_key_id") ||
+				d.HasChange("encryption_configuration.0.kms_key_id") && output.EncryptionConfiguration != nil && output.EncryptionConfiguration.KmsKeyId != nil && aws.ToString(output.EncryptionConfiguration.KmsKeyId) != d.Get("encryption_configuration.0.kms_key_id") ||
 				d.HasChange("encryption_configuration.0.encryption_type") && output.EncryptionConfiguration != nil && string(output.EncryptionConfiguration.Type) != d.Get("encryption_configuration.0.encryption_type").(string) ||
-				d.HasChange("encryption_configuration.0.kms_data_key_reuse_period_seconds") && output.EncryptionConfiguration != nil && output.EncryptionConfiguration.KmsDataKeyReusePeriodSeconds != nil && int(*output.EncryptionConfiguration.KmsDataKeyReusePeriodSeconds) != d.Get("encryption_configuration.0.kms_data_key_reuse_period_seconds").(int) {
+				d.HasChange("encryption_configuration.0.kms_data_key_reuse_period_seconds") && output.EncryptionConfiguration != nil && output.EncryptionConfiguration.KmsDataKeyReusePeriodSeconds != nil && aws.ToInt32(output.EncryptionConfiguration.KmsDataKeyReusePeriodSeconds) != int32(d.Get("encryption_configuration.0.kms_data_key_reuse_period_seconds").(int)) {
 				return retry.RetryableError(fmt.Errorf("Step Functions State Machine (%s) eventual consistency", d.Id()))
 			}
 

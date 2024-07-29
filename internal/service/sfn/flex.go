@@ -42,7 +42,7 @@ func flattenEncryptionConfiguration(apiObject *awstypes.EncryptionConfiguration)
 	}
 
 	if v := apiObject.KmsDataKeyReusePeriodSeconds; v != nil {
-		tfMap["kms_data_key_reuse_period_seconds"] = *v
+		tfMap["kms_data_key_reuse_period_seconds"] = aws.ToInt32(v)
 	}
 
 	return tfMap
