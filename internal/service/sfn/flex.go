@@ -16,16 +16,16 @@ func expandEncryptionConfiguration(tfMap map[string]interface{}) *awstypes.Encry
 
 	apiObject := &awstypes.EncryptionConfiguration{}
 
+	if v, ok := tfMap["kms_data_key_reuse_period_seconds"].(int); ok && v != 0 {
+		apiObject.KmsDataKeyReusePeriodSeconds = aws.Int32(int32(v))
+	}
+
 	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = awstypes.EncryptionType(v)
-	}
-
-	if v, ok := tfMap["kms_data_key_reuse_period_seconds"].(int); ok && v != 0 {
-		apiObject.KmsDataKeyReusePeriodSeconds = aws.Int32(int32(v))
 	}
 
 	return apiObject
@@ -37,7 +37,7 @@ func flattenEncryptionConfiguration(apiObject *awstypes.EncryptionConfiguration)
 	}
 
 	tfMap := map[string]interface{}{
-		names.AttrKMSKeyID: apiObject.KmsKeyId,
+		names.AttrKMSKeyID: aws.ToString(apiObject.KmsKeyId),
 		names.AttrType:     apiObject.Type,
 	}
 

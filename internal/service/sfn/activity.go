@@ -50,14 +50,14 @@ func resourceActivity() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
 						"kms_data_key_reuse_period_seconds": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(60, 900),
+						},
+						names.AttrKMSKeyID: {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						names.AttrType: {
 							Type:             schema.TypeString,
@@ -124,8 +124,6 @@ func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set(names.AttrCreationDate, output.CreationDate.Format(time.RFC3339))
-	d.Set(names.AttrName, output.Name)
-
 	if output.EncryptionConfiguration != nil {
 		if err := d.Set(names.AttrEncryptionConfiguration, []interface{}{flattenEncryptionConfiguration(output.EncryptionConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
@@ -133,6 +131,7 @@ func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta inte
 	} else {
 		d.Set(names.AttrEncryptionConfiguration, nil)
 	}
+	d.Set(names.AttrName, output.Name)
 
 	return diags
 }
