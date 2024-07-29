@@ -125,7 +125,6 @@ func (r *resourceEnvironmentProfile) Schema(ctx context.Context, req resource.Sc
 					Attributes: map[string]schema.Attribute{
 						names.AttrName: schema.StringAttribute{
 							Optional: true,
-							Computed: false,
 						},
 						names.AttrValue: schema.StringAttribute{
 							Optional: true,
