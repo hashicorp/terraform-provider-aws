@@ -224,7 +224,6 @@ func testAccAuthorizerEnvProfImportStateIdFunc(resourceName string) resource.Imp
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-
 		return strings.Join([]string{rs.Primary.Attributes["domain_identifier"], rs.Primary.ID, rs.Primary.Attributes["environment_blueprint_identifier"], rs.Primary.Attributes["project_identifier"]}, ":"), nil
 	}
 }

@@ -135,16 +135,16 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Environment Profile using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Environment Profile using the `id`. For example:
 
 ```terraform
 import {
   to = aws_datazone_environment_profile.example
-  id = "environment_profile-id-12345678"
+  id = "domain_identifier:environment_profile_id:environment_blueprint_identifier:project_identifier"
 }
 ```
 
-Using `terraform import`, import DataZone Environment Profile using the `example_id_arg`. For example:
+Using `terraform import`, import DataZone Environment Profile using the `id`. For example:
 
 ```console
 % terraform import aws_datazone_environment_profile.example environment_profile-id-12345678

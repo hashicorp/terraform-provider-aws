@@ -80,11 +80,6 @@ func (r *resourceEnvironmentProfile) Schema(ctx context.Context, req resource.Sc
 			},
 			names.AttrID: schema.StringAttribute{
 				Computed: true,
-				/*
-					Validators: []validator.String{
-						stringvalidator.RegexMatches(regexache.MustCompile("^[a-zA-Z0-9_-]{1,36}$"), "must match ^[a-zA-Z0-9_-]{1,36}$"),
-					},
-				*/
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
