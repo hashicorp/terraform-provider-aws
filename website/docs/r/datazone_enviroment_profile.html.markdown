@@ -14,7 +14,6 @@ TIP: A few guiding principles for writing documentation:
 5. Use accessible and inclusive language.
 --->`
 # Resource: aws_datazone_environment_profile
-
 Terraform resource for managing an AWS DataZone Environment Profile.
 
 ## Example Usage
@@ -22,7 +21,6 @@ Terraform resource for managing an AWS DataZone Environment Profile.
 ### Basic Usage
 
 ```terraform
-
 resource "aws_iam_role" "domain_execution_role" {
   name = "example-name"
   assume_role_policy = jsonencode({
@@ -99,14 +97,17 @@ resource "aws_datazone_environment_blueprint_configuration" "test" {
 }
 
 resource "aws_datazone_environment_profile" "example" {
-	aws_account_id = data.aws_caller_identity.example.account_id
+  aws_account_id = data.aws_caller_identity.example.account_id
 	aws_account_region = data.aws_region.example.name
 	environment_blueprint_identifier = data.aws_datazone_environment_blueprint.example.id
 	description = "desc"
 	name = "example-name"
 	project_identifier = aws_datazone_project.example.id
-	domain_identifier = aws_datazone_domain.example.i
-
+	domain_identifier = aws_datazone_domain.example.id
+  user_parameters {
+    name  = "consumerGlueDbName"
+    value = "value"
+  }
 }
 ```
 

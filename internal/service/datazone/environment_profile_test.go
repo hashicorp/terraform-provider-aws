@@ -61,8 +61,8 @@ func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(envProfName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(envProfName, "created_by"),
 					resource.TestCheckResourceAttr(envProfName, names.AttrDescription, "desc"),
-					resource.TestCheckResourceAttrSet(envProfName, "user_parameters.0.name"),
-					resource.TestCheckResourceAttrSet(envProfName, "user_parameters.0.value"),
+					resource.TestCheckResourceAttr(envProfName, "user_parameters.0.name", "consumerGlueDbName"),
+					resource.TestCheckResourceAttr(envProfName, "user_parameters.0.value", "value"),
 					resource.TestCheckResourceAttrPair(envProfName, "domain_identifier", domainName, names.AttrID),
 					resource.TestCheckResourceAttrPair(envProfName, "environment_blueprint_identifier", blueName, names.AttrID),
 					resource.TestCheckResourceAttrSet(envProfName, names.AttrID),
@@ -81,11 +81,14 @@ func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 				Config: testAccEnvironmentProfileConfig_update(epName, dName, pName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentProfileExists(ctx, envProfName, &environmentprofile),
+					testAccCheckEnvironmentProfileExists(ctx, envProfName, &environmentprofile),
 					resource.TestCheckResourceAttrPair(envProfName, names.AttrAWSAccountID, callName, names.AttrAccountID),
 					resource.TestCheckResourceAttrPair(envProfName, "aws_account_region", regionName, names.AttrName),
 					resource.TestCheckResourceAttrSet(envProfName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(envProfName, "created_by"),
-					resource.TestCheckResourceAttr(envProfName, names.AttrDescription, names.AttrDescription),
+					resource.TestCheckResourceAttr(envProfName, names.AttrDescription, "description"),
+					resource.TestCheckResourceAttr(envProfName, "user_parameters.0.name", "consumerGlueDbName"),
+					resource.TestCheckResourceAttr(envProfName, "user_parameters.0.value", "value"),
 					resource.TestCheckResourceAttrPair(envProfName, "domain_identifier", domainName, names.AttrID),
 					resource.TestCheckResourceAttrPair(envProfName, "environment_blueprint_identifier", blueName, names.AttrID),
 					resource.TestCheckResourceAttrSet(envProfName, names.AttrID),
@@ -263,7 +266,7 @@ resource "aws_datazone_environment_profile" "test" {
   domain_identifier                = aws_datazone_domain.test.id
   user_parameters {
     name  = "consumerGlueDbName"
-    value = "hi"
+    value = "value"
   }
 
 }
@@ -286,7 +289,7 @@ resource "aws_datazone_environment_profile" "test" {
   domain_identifier                = aws_datazone_domain.test.id
   user_parameters {
     name  = "consumerGlueDbName"
-    value = "hi"
+    value = "value"
   }
 }
 `, rName))
