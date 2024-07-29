@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -84,31 +83,6 @@ func findUploadBufferDisk(ctx context.Context, conn *storagegateway.Client, gate
 	}
 
 	return &result, err
-}
-
-func findGatewayByARN(ctx context.Context, conn *storagegateway.Client, arn string) (*storagegateway.DescribeGatewayInformationOutput, error) {
-	input := &storagegateway.DescribeGatewayInformationInput{
-		GatewayARN: aws.String(arn),
-	}
-
-	output, err := conn.DescribeGatewayInformation(ctx, input)
-
-	if operationErrorCode(err) == operationErrCodeGatewayNotFound || tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeGatewayNotFound)) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
 }
 
 func findNFSFileShareByARN(ctx context.Context, conn *storagegateway.Client, arn string) (*awstypes.NFSFileShareInfo, error) {

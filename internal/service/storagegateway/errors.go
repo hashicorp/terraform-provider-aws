@@ -36,11 +36,15 @@ func operationErrorCode(err error) string {
 
 // The API returns multiple responses for a missing gateway.
 func isGatewayNotFoundErr(err error) bool {
-	if errs.IsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](err, "The specified gateway was not found") {
+	if operationErrorCode(err) == operationErrCodeGatewayNotFound {
 		return true
 	}
 
 	if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeGatewayNotFound)) {
+		return true
+	}
+
+	if errs.IsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](err, "The specified gateway was not found") {
 		return true
 	}
 

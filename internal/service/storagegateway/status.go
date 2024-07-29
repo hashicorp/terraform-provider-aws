@@ -16,49 +16,8 @@ import (
 )
 
 const (
-	gatewayStatusConnected          = "GatewayConnected"
 	storediSCSIVolumeStatusNotFound = "NotFound"
 )
-
-func statusGateway(ctx context.Context, conn *storagegateway.Client, gatewayARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &storagegateway.DescribeGatewayInformationInput{
-			GatewayARN: aws.String(gatewayARN),
-		}
-
-		output, err := conn.DescribeGatewayInformation(ctx, input)
-
-		if errs.IsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](err, "The specified gateway is not connected") {
-			return output, string(awstypes.ErrorCodeGatewayNotConnected), nil
-		}
-
-		if err != nil {
-			return output, "", err
-		}
-
-		return output, gatewayStatusConnected, nil
-	}
-}
-
-func statusGatewayJoinDomain(ctx context.Context, conn *storagegateway.Client, gatewayARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &storagegateway.DescribeSMBSettingsInput{
-			GatewayARN: aws.String(gatewayARN),
-		}
-
-		output, err := conn.DescribeSMBSettings(ctx, input)
-
-		if errs.IsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](err, "The specified gateway is not connected") {
-			return output, string(awstypes.ActiveDirectoryStatusUnknownError), nil
-		}
-
-		if err != nil {
-			return output, string(awstypes.ActiveDirectoryStatusUnknownError), err
-		}
-
-		return output, string(output.ActiveDirectoryStatus), nil
-	}
-}
 
 // statusStorediSCSIVolume fetches the Volume and its Status
 func statusStorediSCSIVolume(ctx context.Context, conn *storagegateway.Client, volumeARN string) retry.StateRefreshFunc {

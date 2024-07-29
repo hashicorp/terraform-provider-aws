@@ -289,7 +289,7 @@ func waitFileSystemAssociationAvailable(ctx context.Context, conn *storagegatewa
 		Target:  []string{fileSystemAssociationStatusAvailable},
 		Refresh: statusFileSystemAssociation(ctx, conn, fileSystemArn),
 		Timeout: timeout,
-		Delay:   fileSystemAssociationAvailableDelay,
+		Delay:   5 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -309,7 +309,7 @@ func waitFileSystemAssociationDeleted(ctx context.Context, conn *storagegateway.
 		Target:         []string{},
 		Refresh:        statusFileSystemAssociation(ctx, conn, fileSystemArn),
 		Timeout:        timeout,
-		Delay:          fileSystemAssociationDeletedDelay,
+		Delay:          5 * time.Second,
 		NotFoundChecks: 1,
 	}
 

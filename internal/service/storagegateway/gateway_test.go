@@ -897,11 +897,11 @@ func testAccCheckGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckGatewayExists(ctx context.Context, resourceName string, gateway *storagegateway.DescribeGatewayInformationOutput) resource.TestCheckFunc {
+func testAccCheckGatewayExists(ctx context.Context, n string, v *storagegateway.DescribeGatewayInformationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
@@ -912,7 +912,7 @@ func testAccCheckGatewayExists(ctx context.Context, resourceName string, gateway
 			return err
 		}
 
-		*gateway = *output
+		*v = *output
 
 		return nil
 	}
