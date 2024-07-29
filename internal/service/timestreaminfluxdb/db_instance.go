@@ -5,13 +5,11 @@ package timestreaminfluxdb
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -21,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -68,6 +65,7 @@ const (
 type resourceDBInstance struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
 func (r *resourceDBInstance) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -417,7 +415,7 @@ func (r *resourceDBInstance) Read(ctx context.Context, req resource.ReadRequest,
 		resp.State.RemoveResource(ctx)
 		return
 	}
-	
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, state.ID.String(), err),
@@ -426,96 +424,11 @@ func (r *resourceDBInstance) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	state.ARN = flex.StringToFramework(ctx, out.Arn)
-	state.AllocatedStorage = flex.Int32ToFramework(ctx, out.AllocatedStorage)
-	state.AvailabilityZone = flex.StringToFramework(ctx, out.AvailabilityZone)
-	state.DBInstanceType = flex.StringToFramework(ctx, (*string)(&out.DbInstanceType))
-	state.DBParameterGroupIdentifier = flex.StringToFramework(ctx, out.DbParameterGroupIdentifier)
-	state.DBStorageType = flex.StringToFramework(ctx, (*string)(&out.DbStorageType))
-	state.DeploymentType = flex.StringToFramework(ctx, (*string)(&out.DeploymentType))
-	state.Endpoint = flex.StringToFramework(ctx, out.Endpoint)
-	state.ID = flex.StringToFramework(ctx, out.Id)
-	state.InfluxAuthParametersSecretARN = flex.StringToFramework(ctx, out.InfluxAuthParametersSecretArn)
-	logDeliveryConfiguration, d := flattenLogDeliveryConfiguration(ctx, out.LogDeliveryConfiguration)
-	resp.Diagnostics.Append(d...)
-	state.LogDeliveryConfiguration = logDeliveryConfiguration
-	state.Name = flex.StringToFramework(ctx, out.Name)
-	state.PubliclyAccessible = flex.BoolToFramework(ctx, out.PubliclyAccessible)
-	state.SecondaryAvailabilityZone = flex.StringToFramework(ctx, out.SecondaryAvailabilityZone)
-	state.Status = flex.StringToFramework(ctx, (*string)(&out.Status))
-	state.VPCSecurityGroupIDs = flex.FlattenFrameworkStringValueSet[string](ctx, out.VpcSecurityGroupIds)
-	state.VPCSubnetIDs = flex.FlattenFrameworkStringValueSet[string](ctx, out.VpcSubnetIds)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 
-	// timestreaminfluxdb.GetDbInstance will not return InfluxDB managed attributes, like username,
-	// bucket, organization, or password. All of these attributes are stored in a secret indicated by
-	// out.InfluxAuthParametersSecretArn. To support importing, these attributes must be read from the
-	// secret.
-	secretsConn := r.Meta().SecretsManagerClient(ctx)
-	secretsOut, err := secretsConn.GetSecretValue(ctx, &secretsmanager.GetSecretValueInput{
-		SecretId: out.InfluxAuthParametersSecretArn,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, state.ID.String(), err),
-			err.Error(),
-		)
+	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	secrets := make(map[string]string)
-	if err := json.Unmarshal([]byte(aws.ToString(secretsOut.SecretString)), &secrets); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if username, ok := secrets[names.AttrUsername]; ok {
-		state.Username = flex.StringValueToFramework[string](ctx, username)
-	} else {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if password, ok := secrets[names.AttrPassword]; ok {
-		state.Password = flex.StringValueToFramework[string](ctx, password)
-	} else {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if organization, ok := secrets["organization"]; ok {
-		state.Organization = flex.StringValueToFramework[string](ctx, organization)
-	} else {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if bucket, ok := secrets[names.AttrBucket]; ok {
-		state.Bucket = flex.StringValueToFramework[string](ctx, bucket)
-	} else {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	tags, err := listTags(ctx, conn, state.ARN.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	setTagsOut(ctx, Tags(tags))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -643,9 +556,6 @@ func (r *resourceDBInstance) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-func (r *resourceDBInstance) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
 func (r *resourceDBInstance) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
@@ -668,10 +578,10 @@ func waitDBInstanceCreated(ctx context.Context, conn *timestreaminfluxdb.Client,
 	return nil, err
 }
 
-func waitDBInstanceUpdated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.UpdateDbInstanceOutput, error) {
+func waitDBInstanceUpdated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.GetDbInstanceOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(string(awstypes.StatusModifying), string(awstypes.StatusUpdating)),
-		Target:                    enum.Slice(string(awstypes.StatusAvailable)),
+		Pending:                   enum.Slice(awstypes.StatusModifying, awstypes.StatusUpdating),
+		Target:                    enum.Slice(awstypes.StatusAvailable),
 		Refresh:                   statusDBInstance(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -679,17 +589,17 @@ func waitDBInstanceUpdated(ctx context.Context, conn *timestreaminfluxdb.Client,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*timestreaminfluxdb.UpdateDbInstanceOutput); ok {
+	if out, ok := outputRaw.(*timestreaminfluxdb.GetDbInstanceOutput); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func waitDBInstanceDeleted(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.DeleteDbInstanceOutput, error) {
+func waitDBInstanceDeleted(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.GetDbInstanceOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:      enum.Slice(string(awstypes.StatusDeleting), string(awstypes.StatusModifying), string(awstypes.StatusUpdating), string(awstypes.StatusAvailable)),
-		Target:       enum.Slice[string](),
+		Pending:      enum.Slice(awstypes.StatusDeleting, awstypes.StatusModifying, awstypes.StatusUpdating, awstypes.StatusAvailable),
+		Target:       []string{},
 		Refresh:      statusDBInstance(ctx, conn, id),
 		Timeout:      timeout,
 		Delay:        30 * time.Second,
@@ -697,7 +607,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *timestreaminfluxdb.Client,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*timestreaminfluxdb.DeleteDbInstanceOutput); ok {
+	if out, ok := outputRaw.(*timestreaminfluxdb.GetDbInstanceOutput); ok {
 		return out, err
 	}
 
