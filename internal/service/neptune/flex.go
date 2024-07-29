@@ -5,19 +5,18 @@ package neptune
 
 import (
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandParameters(configured []interface{}) []*awstypes.Parameter {
-	parameters := make([]*awstypes.Parameter, 0, len(configured))
+func expandParameters(configured []interface{}) []awstypes.Parameter {
+	parameters := make([]awstypes.Parameter, 0, len(configured))
 
 	for _, pRaw := range configured {
 		data := pRaw.(map[string]interface{})
 
-		p := &awstypes.Parameter{
-			ApplyMethod:    aws.String(data["apply_method"].(string)),
+		p := awstypes.Parameter{
+			ApplyMethod:    awstypes.ApplyMethod(data["apply_method"].(string)),
 			ParameterName:  aws.String(data[names.AttrName].(string)),
 			ParameterValue: aws.String(data[names.AttrValue].(string)),
 		}
@@ -28,7 +27,7 @@ func expandParameters(configured []interface{}) []*awstypes.Parameter {
 	return parameters
 }
 
-func flattenParameters(list []*awstypes.Parameter) []map[string]interface{} {
+func flattenParameters(list []awstypes.Parameter) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 
 	for _, i := range list {

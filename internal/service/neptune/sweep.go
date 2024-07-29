@@ -10,10 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -88,9 +87,18 @@ func sweepEventSubscriptions(region string) error {
 	input := &neptune.DescribeEventSubscriptionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeEventSubscriptionsPagesWithContext(ctx, input, func(page *neptune.DescribeEventSubscriptionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := neptune.NewDescribeEventSubscriptionsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Neptune Event Subscription sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("listing Neptune Event Subscriptions (%s): %w", region, err)
 		}
 
 		for _, v := range page.EventSubscriptionsList {
@@ -100,17 +108,6 @@ func sweepEventSubscriptions(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Neptune Event Subscription sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("listing Neptune Event Subscriptions (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -132,9 +129,18 @@ func sweepClusters(region string) error {
 	input := &neptune.DescribeDBClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeDBClustersPagesWithContext(ctx, input, func(page *neptune.DescribeDBClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := neptune.NewDescribeDBClustersPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Neptune Cluster sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("listing Neptune Clusters (%s): %w", region, err)
 		}
 
 		for _, v := range page.DBClusters {
@@ -162,17 +168,6 @@ func sweepClusters(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Neptune Cluster sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("listing Neptune Clusters (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -194,9 +189,18 @@ func sweepClusterSnapshots(region string) error {
 	input := &neptune.DescribeDBClusterSnapshotsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeDBClusterSnapshotsPagesWithContext(ctx, input, func(page *neptune.DescribeDBClusterSnapshotsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := neptune.NewDescribeDBClusterSnapshotsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Neptune Cluster Snapshot sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("listing Neptune Cluster Snapshots (%s): %w", region, err)
 		}
 
 		for _, v := range page.DBClusterSnapshots {
@@ -206,17 +210,6 @@ func sweepClusterSnapshots(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Neptune Cluster Snapshot sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("listing Neptune Cluster Snapshots (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -238,9 +231,18 @@ func sweepClusterParameterGroups(region string) error {
 	input := &neptune.DescribeDBClusterParameterGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeDBClusterParameterGroupsPagesWithContext(ctx, input, func(page *neptune.DescribeDBClusterParameterGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := neptune.NewDescribeDBClusterParameterGroupsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Neptune Cluster Parameter Group sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Neptune Cluster Parameter Groups (%s): %w", region, err)
 		}
 
 		for _, v := range page.DBClusterParameterGroups {
@@ -257,17 +259,6 @@ func sweepClusterParameterGroups(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Neptune Cluster Parameter Group sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Neptune Cluster Parameter Groups (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -289,9 +280,18 @@ func sweepClusterInstances(region string) error {
 	input := &neptune.DescribeDBInstancesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeDBInstancesPagesWithContext(ctx, input, func(page *neptune.DescribeDBInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := neptune.NewDescribeDBInstancesPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Neptune Cluster Instance sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("listing Neptune Cluster Instances (%s): %w", region, err)
 		}
 
 		for _, v := range page.DBInstances {
@@ -310,17 +310,6 @@ func sweepClusterInstances(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Neptune Cluster Instance sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("listing Neptune Cluster Instances (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -342,9 +331,18 @@ func sweepGlobalClusters(region string) error {
 	input := &neptune.DescribeGlobalClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeGlobalClustersPagesWithContext(ctx, input, func(page *neptune.DescribeGlobalClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := neptune.NewDescribeGlobalClustersPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Neptune Global Cluster sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("listing Neptune Global Clusters (%s): %w", region, err)
 		}
 
 		for _, v := range page.GlobalClusters {
@@ -354,17 +352,6 @@ func sweepGlobalClusters(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Neptune Global Cluster sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("listing Neptune Global Clusters (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -386,9 +373,18 @@ func sweepParameterGroups(region string) error {
 	input := &neptune.DescribeDBParameterGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeDBParameterGroupsPagesWithContext(ctx, input, func(page *neptune.DescribeDBParameterGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := neptune.NewDescribeDBParameterGroupsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Neptune Parameter Group sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Neptune Parameter Groups (%s): %w", region, err)
 		}
 
 		for _, v := range page.DBParameterGroups {
@@ -405,17 +401,6 @@ func sweepParameterGroups(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Neptune Parameter Group sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Neptune Parameter Groups (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -437,9 +422,18 @@ func sweepSubnetGroups(region string) error {
 	input := &neptune.DescribeDBSubnetGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeDBSubnetGroupsPagesWithContext(ctx, input, func(page *neptune.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := neptune.NewDescribeDBSubnetGroupsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Neptune Subnet Group sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Neptune Subnet Groups (%s): %w", region, err)
 		}
 
 		for _, v := range page.DBSubnetGroups {
@@ -449,17 +443,6 @@ func sweepSubnetGroups(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Neptune Subnet Group sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Neptune Subnet Groups (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
