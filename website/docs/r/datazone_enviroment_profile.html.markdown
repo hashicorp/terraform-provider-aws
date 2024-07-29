@@ -22,12 +22,88 @@ Terraform resource for managing an AWS DataZone Environment Profile.
 ### Basic Usage
 
 ```terraform
+
+resource "aws_iam_role" "domain_execution_role" {
+  name = "example-name"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = ["sts:AssumeRole", "sts:TagSession"]
+        Effect = "Allow"
+        Principal = {
+          Service = "datazone.amazonaws.com"
+        }
+      },
+      {
+        Action = ["sts:AssumeRole", "sts:TagSession"]
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudformation.amazonaws.com"
+        }
+      },
+    ]
+  })
+
+  inline_policy {
+    name = "example-name"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action = [
+            "datazone:*",
+            "ram:*",
+            "sso:*",
+            "kms:*",
+          ]
+          Effect   = "Allow"
+          Resource = "*"
+        },
+      ]
+    })
+  }
+}
+
+resource "aws_datazone_domain" "test" {
+  name                  = "example-name"
+  domain_execution_role = aws_iam_role.domain_execution_role.arn
+}
+
+resource "aws_security_group" "test" {
+  name = "example-name"
+}
+
+resource "aws_datazone_project" "test" {
+  domain_identifier   = aws_datazone_domain.test.id
+  glossary_terms      = ["2N8w6XJCwZf"]
+  name                = "example-name"
+  description         = "desc"
+  skip_deletion_check = true
+}
+
+data "aws_caller_identity" "test" {}
+data "aws_region" "test" {}
+
+data "aws_datazone_environment_blueprint" "test" {
+  domain_id = aws_datazone_domain.test.id
+  name      = "DefaultDataLake"
+  managed   = true
+}
+
+resource "aws_datazone_environment_blueprint_configuration" "test" {
+  domain_id                = aws_datazone_domain.test.id
+  environment_blueprint_id = data.aws_datazone_environment_blueprint.test.id
+  provisioning_role_arn    = aws_iam_role.domain_execution_role.arn
+  enabled_regions          = [data.aws_region.test.name]
+}
+
 resource "aws_datazone_environment_profile" "example" {
 	aws_account_id = data.aws_caller_identity.example.account_id
 	aws_account_region = data.aws_region.example.name
 	environment_blueprint_identifier = data.aws_datazone_environment_blueprint.example.id
 	description = "desc"
-	name = "name"
+	name = "example-name"
 	project_identifier = aws_datazone_project.example.id
 	domain_identifier = aws_datazone_domain.example.i
 
@@ -61,13 +137,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `created_by` - Creator of environment profile.
 * `id` - ID of environment profile. 
 * `updated_at` - Time of last update to environment profile.
-* `user_parameters` - Array of user parameters of the environment profile with the following attributes:
-    * `field_type` - Filed type of the parameter.
-    * `key_name` - Key name of the parameter.
-    * `default_value` -  Default value of the parameter.
-    * `description` - Description of the parameter.
-    * `is_editable` -  Bool that specifies if the parameter is editable.
-    * `is_optional` - Bool that specifies if the parameter is editable.
 
 ## Timeouts
 
