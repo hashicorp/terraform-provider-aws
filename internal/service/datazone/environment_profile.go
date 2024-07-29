@@ -43,7 +43,6 @@ const (
 
 type resourceEnvironmentProfile struct {
 	framework.ResourceWithConfigure
-	framework.WithTimeouts
 }
 
 func (r *resourceEnvironmentProfile) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
