@@ -104,7 +104,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	var engineVersion *awstypes.DBEngineVersion
 	var err error
 	if preferredVersions := flex.ExpandStringValueList(d.Get("preferred_versions").([]interface{})); len(preferredVersions) > 0 {
-		var engineVersions []*awstypes.DBEngineVersion
+		var engineVersions []awstypes.DBEngineVersion
 
 		engineVersions, err = findEngineVersions(ctx, conn, input)
 
@@ -114,7 +114,8 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 			for _, preferredVersion := range preferredVersions {
 				for _, v := range engineVersions {
 					if preferredVersion == aws.ToString(v.EngineVersion) {
-						engineVersion = v
+						engVersion := v
+						engineVersion = &engVersion
 						break PreferredVersionLoop
 					}
 				}
@@ -137,12 +138,12 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("engine_description", engineVersion.DBEngineDescription)
 	d.Set("exportable_log_types", engineVersion.ExportableLogTypes)
 	d.Set("parameter_group_family", engineVersion.DBParameterGroupFamily)
-	d.Set("supported_timezones", tfslices.ApplyToAll(engineVersion.SupportedTimezones, func(v *awstypes.Timezone) string {
+	d.Set("supported_timezones", tfslices.ApplyToAll(engineVersion.SupportedTimezones, func(v awstypes.Timezone) string {
 		return aws.ToString(v.TimezoneName)
 	}))
 	d.Set("supports_log_exports_to_cloudwatch", engineVersion.SupportsLogExportsToCloudwatchLogs)
 	d.Set("supports_read_replica", engineVersion.SupportsReadReplica)
-	d.Set("valid_upgrade_targets", tfslices.ApplyToAll(engineVersion.ValidUpgradeTarget, func(v *awstypes.UpgradeTarget) string {
+	d.Set("valid_upgrade_targets", tfslices.ApplyToAll(engineVersion.ValidUpgradeTarget, func(v awstypes.UpgradeTarget) string {
 		return aws.ToString(v.EngineVersion)
 	}))
 
@@ -159,28 +160,22 @@ func findEngineVersion(ctx context.Context, conn *neptune.Client, input *neptune
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findEngineVersions(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBEngineVersionsInput) ([]*awstypes.DBEngineVersion, error) {
-	var output []*awstypes.DBEngineVersion
+func findEngineVersions(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBEngineVersionsInput) ([]awstypes.DBEngineVersion, error) {
+	var output []awstypes.DBEngineVersion
 
-	err := conn.DescribeDBEngineVersionsPagesWithContext(ctx, input, func(page *neptune.DescribeDBEngineVersionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := neptune.NewDescribeDBEngineVersionsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
-		for _, v := range page.DBEngineVersions {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
+		output = append(output, page.DBEngineVersions...)
 	}
 
 	return output, nil
