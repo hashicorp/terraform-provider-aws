@@ -264,7 +264,7 @@ func findFileSystemAssociations(ctx context.Context, conn *storagegateway.Client
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.FileSystemAssociationInfoList, err
+	return output.FileSystemAssociationInfoList, nil
 }
 
 func statusFileSystemAssociation(ctx context.Context, conn *storagegateway.Client, arn string) retry.StateRefreshFunc {

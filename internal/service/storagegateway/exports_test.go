@@ -22,6 +22,7 @@ var (
 	FindNFSFileShareByARN          = findNFSFileShareByARN
 	FindSMBFileShareByARN          = findSMBFileShareByARN
 	FindStorediSCSIVolumeByARN     = findStorediSCSIVolumeByARN
+	FindTapePoolByARN              = findTapePoolByARN
 	FindUploadBufferDisk           = findUploadBufferDisk
 
 	CacheParseResourceID                      = cacheParseResourceID

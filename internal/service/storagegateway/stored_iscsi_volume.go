@@ -298,7 +298,7 @@ func findStorediSCSIVolumes(ctx context.Context, conn *storagegateway.Client, in
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.StorediSCSIVolumes, err
+	return output.StorediSCSIVolumes, nil
 }
 
 func statusStorediSCSIVolume(ctx context.Context, conn *storagegateway.Client, volumeARN string) retry.StateRefreshFunc {

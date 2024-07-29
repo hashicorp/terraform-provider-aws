@@ -432,7 +432,7 @@ func findNFSFileShares(ctx context.Context, conn *storagegateway.Client, input *
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.NFSFileShareInfoList, err
+	return output.NFSFileShareInfoList, nil
 }
 
 func statusNFSFileShare(ctx context.Context, conn *storagegateway.Client, arn string) retry.StateRefreshFunc {

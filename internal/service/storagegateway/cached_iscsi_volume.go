@@ -287,7 +287,7 @@ func findCachediSCSIVolumes(ctx context.Context, conn *storagegateway.Client, in
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.CachediSCSIVolumes, err
+	return output.CachediSCSIVolumes, nil
 }
 
 func parseVolumeGatewayARNAndTargetNameFromARN(inputARN string) (string, string, error) {

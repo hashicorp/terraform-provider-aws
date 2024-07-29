@@ -503,7 +503,7 @@ func findSMBFileShares(ctx context.Context, conn *storagegateway.Client, input *
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.SMBFileShareInfoList, err
+	return output.SMBFileShareInfoList, nil
 }
 
 func statusSMBFileShare(ctx context.Context, conn *storagegateway.Client, arn string) retry.StateRefreshFunc {
