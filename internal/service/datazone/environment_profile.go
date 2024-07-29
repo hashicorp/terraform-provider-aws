@@ -247,7 +247,7 @@ func (r *resourceEnvironmentProfile) Update(ctx context.Context, req resource.Up
 		plan.ProjectIdentifier.Equal(state.ProjectIdentifier) && plan.DomainIdentifier.Equal(state.DomainIdentifier) {
 		in := &datazone.UpdateEnvironmentProfileInput{}
 
-		resp.Diagnostics.Append(flex.Expand(ctx, state, in)...)
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}

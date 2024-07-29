@@ -90,14 +90,14 @@ resource "aws_datazone_environment_blueprint_configuration" "test" {
   enabled_regions          = [data.aws_region.test.name]
 }
 
-resource "aws_datazone_environment_profile" "example" {
-  aws_account_id                   = data.aws_caller_identity.example.account_id
-  aws_account_region               = data.aws_region.example.name
-  environment_blueprint_identifier = data.aws_datazone_environment_blueprint.example.id
-  description                      = "desc"
+resource "aws_datazone_environment_profile" "test" {
+  aws_account_id                   = data.aws_caller_identity.test.account_id
+  aws_account_region               = data.aws_region.test.name
+  description                      = "description"
+  environment_blueprint_identifier = data.aws_datazone_environment_blueprint.test.id
   name                             = "example-name"
-  project_identifier               = aws_datazone_project.example.id
-  domain_identifier                = aws_datazone_domain.example.id
+  project_identifier               = aws_datazone_project.test.id
+  domain_identifier                = aws_datazone_domain.test.id
   user_parameters {
     name  = "consumerGlueDbName"
     value = "value"
