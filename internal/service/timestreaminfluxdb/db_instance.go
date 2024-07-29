@@ -52,13 +52,7 @@ func newResourceDBInstance(_ context.Context) (resource.ResourceWithConfigure, e
 }
 
 const (
-	// If not provided, CreateDbInstance will use the below default values
-	// for bucket and organization. These values need to be set in Terraform
-	// because GetDbInstance won't return them.
-	DefaultBucketValue       = names.AttrBucket
-	DefaultOrganizationValue = "organization"
-	DefaultUsernameValue     = "admin"
-	ResNameDBInstance        = "DB Instance"
+	ResNameDBInstance = "DB Instance"
 )
 
 type resourceDBInstance struct {
@@ -80,8 +74,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					int64planmodifier.RequiresReplace(),
 				},
 				Validators: []validator.Int64{
-					int64validator.AtLeast(20),
-					int64validator.AtMost(16384),
+					int64validator.Between(20, 16384),
 				},
 				Description: `The amount of storage to allocate for your DB storage type in GiB (gibibytes).`,
 			},
@@ -89,9 +82,11 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 			names.AttrAvailabilityZone: schema.StringAttribute{
 				Computed:    true,
 				Description: `The Availability Zone in which the DB instance resides.`,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrBucket: schema.StringAttribute{
-				Optional: true,
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -162,6 +157,9 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 			names.AttrID: framework.IDAttribute(),
 			"influx_auth_parameters_secret_arn": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: `The Amazon Resource Name (ARN) of the AWS Secrets Manager secret containing the 
 					initial InfluxDB authorization parameters. The secret value is a JSON formatted 
 					key-value pair holding InfluxDB authorization values: organization, bucket, 
@@ -217,18 +215,18 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.UseStateForUnknown(),
 				},
 				Description: `Configures the DB instance with a public IP to facilitate access.`,
 			},
 			"secondary_availability_zone": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: `The Availability Zone in which the standby instance is located when deploying 
 					with a MultiAZ standby instance.`,
 			},
-			//names.AttrStatus: schema.StringAttribute{
-			//	Computed:    true,
-			//	Description: `The status of the DB instance.`,
-			//},
 			names.AttrUsername: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -643,7 +641,6 @@ type resourceDBInstanceData struct {
 	Password                      types.String                                                  `tfsdk:"password"`
 	PubliclyAccessible            types.Bool                                                    `tfsdk:"publicly_accessible"`
 	SecondaryAvailabilityZone     types.String                                                  `tfsdk:"secondary_availability_zone"`
-	Status                        types.String                                                  `tfsdk:"status"`
 	Tags                          types.Map                                                     `tfsdk:"tags"`
 	TagsAll                       types.Map                                                     `tfsdk:"tags_all"`
 	Timeouts                      timeouts.Value                                                `tfsdk:"timeouts"`
