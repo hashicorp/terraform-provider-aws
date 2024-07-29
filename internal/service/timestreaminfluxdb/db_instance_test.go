@@ -61,7 +61,7 @@ func TestAccTimestreamInfluxDBDBInstance_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"username", "password", "organization"},
+				ImportStateVerifyIgnore: []string{"bucket", "username", "password", "organization"},
 			},
 		},
 	})
@@ -492,13 +492,13 @@ func testAccDBInstanceConfig_basic(rName string) string {
 resource "aws_timestreaminfluxdb_db_instance" "test" {
   name                   = %[1]q
   allocated_storage      = 20
-  username = "admin"
+  username               = "admin"
   password               = "testpassword"
-  vpc_subnet_ids         = [aws_subnet.test.id]
+  vpc_subnet_ids         = aws_subnet.test.*.id
   vpc_security_group_ids = [aws_security_group.test.id]
   db_instance_type       = "db.influx.medium"
-  bucket = "initial"
-  organization = "organization"
+  bucket                 = "initial"
+  organization           = "organization"
 }
 `, rName))
 }
@@ -531,14 +531,14 @@ resource "aws_s3_bucket_policy" "allow_timestreaminfluxdb" {
 
 resource "aws_timestreaminfluxdb_db_instance" "test" {
   allocated_storage      = 20
-  username = "admin"
+  username               = "admin"
   password               = "testpassword"
   vpc_subnet_ids         = [aws_subnet.test_subnet.id]
   vpc_security_group_ids = [aws_security_group.test_security_group.id]
   db_instance_type       = "db.influx.medium"
   publicly_accessible    = false
-  bucket = "initial"
-  organization = "organization"
+  bucket                 = "initial"
+  organization           = "organization"
   name                   = %[1]q
 
   log_delivery_configuration {
@@ -579,14 +579,14 @@ resource "aws_s3_bucket_policy" "allow_timestreaminfluxdb" {
 
 resource "aws_timestreaminfluxdb_db_instance" "test" {
   allocated_storage      = 20
-  username = "admin"
+  username               = "admin"
   password               = "testpassword"
   vpc_subnet_ids         = [aws_subnet.test_subnet.id]
   vpc_security_group_ids = [aws_security_group.test_security_group.id]
   db_instance_type       = "db.influx.medium"
   publicly_accessible    = false
-  bucket = "initial"
-  organization = "organization"
+  bucket                 = "initial"
+  organization           = "organization"
   name                   = %[1]q
 
   log_delivery_configuration {
