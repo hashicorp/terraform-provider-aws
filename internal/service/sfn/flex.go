@@ -6,6 +6,7 @@ package sfn
 import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandEncryptionConfiguration(tfMap map[string]interface{}) *awstypes.EncryptionConfiguration {
@@ -15,11 +16,11 @@ func expandEncryptionConfiguration(tfMap map[string]interface{}) *awstypes.Encry
 
 	apiObject := &awstypes.EncryptionConfiguration{}
 
-	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = awstypes.EncryptionType(v)
 	}
 
@@ -36,8 +37,8 @@ func flattenEncryptionConfiguration(apiObject *awstypes.EncryptionConfiguration)
 	}
 
 	tfMap := map[string]interface{}{
-		"kms_key_id": apiObject.KmsKeyId,
-		"type":       apiObject.Type,
+		names.AttrKMSKeyID: apiObject.KmsKeyId,
+		names.AttrType:     apiObject.Type,
 	}
 
 	if v := apiObject.KmsDataKeyReusePeriodSeconds; v != nil {

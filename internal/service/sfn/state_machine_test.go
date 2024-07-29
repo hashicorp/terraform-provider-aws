@@ -444,7 +444,7 @@ func TestAccSFNStateMachine_expressLogging(t *testing.T) {
 	})
 }
 
-func TestAccSFNStateMachine_encryptionConfigurationCustomerManagedKmsKey(t *testing.T) {
+func TestAccSFNStateMachine_encryptionConfigurationCustomerManagedKMSKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
@@ -462,7 +462,7 @@ func TestAccSFNStateMachine_encryptionConfigurationCustomerManagedKmsKey(t *test
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStateMachineConfig_encryptionConfigurationCustomerManagedKmsKey_1(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds1),
+				Config: testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_1(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
@@ -471,11 +471,11 @@ func TestAccSFNStateMachine_encryptionConfigurationCustomerManagedKmsKey(t *test
 					resource.TestCheckResourceAttrSet(resourceName, "definition"),
 					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeCustomerManagedKmsKey)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", fmt.Sprint(reusePeriodSeconds1)),
 					resource.TestCheckResourceAttrSet(resourceName, "encryption_configuration.0.kms_key_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key_id", kmsKeyResource1, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key_id", kmsKeyResource1, names.AttrARN),
 				),
 			},
 			{
@@ -485,7 +485,7 @@ func TestAccSFNStateMachine_encryptionConfigurationCustomerManagedKmsKey(t *test
 			},
 			//Update periodReuseSeconds
 			{
-				Config: testAccStateMachineConfig_encryptionConfigurationCustomerManagedKmsKey_1(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds2),
+				Config: testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_1(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
@@ -494,16 +494,16 @@ func TestAccSFNStateMachine_encryptionConfigurationCustomerManagedKmsKey(t *test
 					resource.TestCheckResourceAttrSet(resourceName, "definition"),
 					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeCustomerManagedKmsKey)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", fmt.Sprint(reusePeriodSeconds2)),
 					resource.TestCheckResourceAttrSet(resourceName, "encryption_configuration.0.kms_key_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key_id", kmsKeyResource1, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key_id", kmsKeyResource1, names.AttrARN),
 				),
 			},
 			//Update kmsKeyId
 			{
-				Config: testAccStateMachineConfig_encryptionConfigurationCustomerManagedKmsKey_2(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds2),
+				Config: testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_2(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
@@ -512,16 +512,16 @@ func TestAccSFNStateMachine_encryptionConfigurationCustomerManagedKmsKey(t *test
 					resource.TestCheckResourceAttrSet(resourceName, "definition"),
 					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeCustomerManagedKmsKey)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", fmt.Sprint(reusePeriodSeconds2)),
 					resource.TestCheckResourceAttrSet(resourceName, "encryption_configuration.0.kms_key_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key_id", kmsKeyResource2, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key_id", kmsKeyResource2, names.AttrARN),
 				),
 			},
 			//Update Encryption Key Type
 			{
-				Config: testAccStateMachineConfig_encryptionConfigurationAWSOwnedKey(rName, string(awstypes.EncryptionTypeAwsOwnedKey)),
+				Config: testAccStateMachineConfig_encryptionConfigurationServiceOwnedKey(rName, string(awstypes.EncryptionTypeAwsOwnedKey)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
@@ -530,7 +530,7 @@ func TestAccSFNStateMachine_encryptionConfigurationCustomerManagedKmsKey(t *test
 					resource.TestCheckResourceAttrSet(resourceName, "definition"),
 					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeAwsOwnedKey)),
 				),
 			},
@@ -553,7 +553,7 @@ func TestAccSFNStateMachine_encryptionConfigurationAwsOwnedKey(t *testing.T) {
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStateMachineConfig_encryptionConfigurationAWSOwnedKey(rName, string(awstypes.EncryptionTypeAwsOwnedKey)),
+				Config: testAccStateMachineConfig_encryptionConfigurationServiceOwnedKey(rName, string(awstypes.EncryptionTypeAwsOwnedKey)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
@@ -562,7 +562,7 @@ func TestAccSFNStateMachine_encryptionConfigurationAwsOwnedKey(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "definition"),
 					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeAwsOwnedKey)),
 				),
 			},
@@ -573,7 +573,7 @@ func TestAccSFNStateMachine_encryptionConfigurationAwsOwnedKey(t *testing.T) {
 			},
 			//Update Encryption Type
 			{
-				Config: testAccStateMachineConfig_encryptionConfigurationCustomerManagedKmsKey_1(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds),
+				Config: testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_1(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
@@ -582,11 +582,11 @@ func TestAccSFNStateMachine_encryptionConfigurationAwsOwnedKey(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "definition"),
 					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeCustomerManagedKmsKey)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", fmt.Sprint(reusePeriodSeconds)),
 					resource.TestCheckResourceAttrSet(resourceName, "encryption_configuration.0.kms_key_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key_id", kmsKeyResource1, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key_id", kmsKeyResource1, names.AttrARN),
 				),
 			},
 		},
@@ -1101,7 +1101,7 @@ EOF
 `, rName))
 }
 
-func testAccStateMachineConfig_encryptionConfigurationCustomerManagedKmsKey_1(rName string, rType string, reusePeriodSeconds int32) string {
+func testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_1(rName string, rType string, reusePeriodSeconds int32) string {
 	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -1136,15 +1136,15 @@ resource "aws_sfn_state_machine" "test" {
 EOF
 
   encryption_configuration {
-    kms_key_id        = aws_kms_key.kms_key_for_sfn_1.arn
-	type = %[2]q
-	kms_data_key_reuse_period_seconds = %[3]d
+    kms_key_id                        = aws_kms_key.kms_key_for_sfn_1.arn
+    type                              = %[2]q
+    kms_data_key_reuse_period_seconds = %[3]d
   }
 }
 `, rName, rType, reusePeriodSeconds))
 }
 
-func testAccStateMachineConfig_encryptionConfigurationCustomerManagedKmsKey_2(rName string, rType string, reusePeriodSeconds int32) string {
+func testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_2(rName string, rType string, reusePeriodSeconds int32) string {
 	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -1179,15 +1179,15 @@ resource "aws_sfn_state_machine" "test" {
 EOF
 
   encryption_configuration {
-    kms_key_id        = aws_kms_key.kms_key_for_sfn_2.arn
-	type = %[2]q
-	kms_data_key_reuse_period_seconds = %[3]d
+    kms_key_id                        = aws_kms_key.kms_key_for_sfn_2.arn
+    type                              = %[2]q
+    kms_data_key_reuse_period_seconds = %[3]d
   }
 }
 `, rName, rType, reusePeriodSeconds))
 }
 
-func testAccStateMachineConfig_encryptionConfigurationAWSOwnedKey(rName string, rType string) string {
+func testAccStateMachineConfig_encryptionConfigurationServiceOwnedKey(rName string, rType string) string {
 	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -1222,7 +1222,7 @@ resource "aws_sfn_state_machine" "test" {
 EOF
 
   encryption_configuration {
-	type = %[2]q
+    type = %[2]q
   }
 }
 `, rName, rType))

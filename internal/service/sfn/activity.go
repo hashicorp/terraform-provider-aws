@@ -50,7 +50,7 @@ func resourceActivity() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -59,7 +59,7 @@ func resourceActivity() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(60, 900),
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.EncryptionType](),
@@ -128,7 +128,7 @@ func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if output.EncryptionConfiguration != nil {
 		if err := d.Set(names.AttrEncryptionConfiguration, []interface{}{flattenEncryptionConfiguration(output.EncryptionConfiguration)}); err != nil {
-			return diag.Errorf("setting encryption_configuration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 		}
 	} else {
 		d.Set(names.AttrEncryptionConfiguration, nil)

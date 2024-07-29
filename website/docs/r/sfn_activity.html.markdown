@@ -29,9 +29,9 @@ resource "aws_sfn_activity" "sfn_activity" {
   name = "my-activity"
 
   encryption_configuration {
-    kms_key_id        = aws_kms_key.kms_key_for_sfn.arn
-    type = "CUSTOMER_MANAGED_KMS_KEY"
-	  kms_data_key_reuse_period_seconds = 900
+    kms_key_id                        = aws_kms_key.kms_key_for_sfn.arn
+    type                              = "CUSTOMER_MANAGED_KMS_KEY"
+    kms_data_key_reuse_period_seconds = 900
   }
 }
 ```
@@ -43,7 +43,6 @@ This resource supports the following arguments:
 * `encryption_configuration` - (Optional) Defines what encryption configuration is used to encrypt data in the Activity. For more information see the section [Data at rest encyption](https://docs.aws.amazon.com/step-functions/latest/dg/encryption-at-rest.html) in the AWS Step Functions User Guide.
 * `name` - (Required) The name of the activity to create.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
 
 ### `encryption_configuration` Configuration Block
 

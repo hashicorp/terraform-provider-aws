@@ -149,9 +149,9 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
 EOF
 
   encryption_configuration {
-    kms_key_id        = aws_kms_key.kms_key_for_sfn.arn
-    type = "CUSTOMER_MANAGED_KMS_KEY"
-	  kms_data_key_reuse_period_seconds = 900
+    kms_key_id                        = aws_kms_key.kms_key_for_sfn.arn
+    type                              = "CUSTOMER_MANAGED_KMS_KEY"
+    kms_data_key_reuse_period_seconds = 900
   }
 }
 ```
