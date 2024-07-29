@@ -17,6 +17,15 @@ func validPrincipal(v interface{}, k string) (ws []string, errors []error) {
 		return ws, errors
 	}
 
+	// IAMPrincipals special grant has format {account_id}:IAMPrincipals
+	if len(value) == 26 && value[13:26] == "IAMPrincipals" && value[12] == ':' {
+		return ws, errors
+		wsAccount, errorsAccount := verify.ValidAccountID(value[0:12], k)
+		if len(errorsAccount) == 0 {
+			return wsAccount, errorsAccount
+		}
+	}
+
 	// https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html
 	// Principal is an AWS account
 	// --principal DataLakePrincipalIdentifier=111122223333
