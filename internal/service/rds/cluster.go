@@ -387,11 +387,14 @@ func resourceCluster() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"restore_to_time": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ForceNew:      true,
-							ValidateFunc:  verify.ValidUTCTimestamp,
-							ConflictsWith: []string{"restore_to_point_in_time.0.use_latest_restorable_time"},
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidUTCTimestamp,
+							ExactlyOneOf: []string{
+								"restore_to_point_in_time.0.restore_to_time",
+								"restore_to_point_in_time.0.use_latest_restorable_time",
+							},
 						},
 						"restore_type": {
 							Type:         schema.TypeString,
@@ -401,18 +404,34 @@ func resourceCluster() *schema.Resource {
 						},
 						"source_cluster_identifier": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 							ValidateFunc: validation.Any(
 								verify.ValidARN,
 								validIdentifier,
 							),
+							ExactlyOneOf: []string{
+								"restore_to_point_in_time.0.source_cluster_identifier",
+								"restore_to_point_in_time.0.source_cluster_resource_id",
+							},
+						},
+						"source_cluster_resource_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+							ExactlyOneOf: []string{
+								"restore_to_point_in_time.0.source_cluster_identifier",
+								"restore_to_point_in_time.0.source_cluster_resource_id",
+							},
 						},
 						"use_latest_restorable_time": {
-							Type:          schema.TypeBool,
-							Optional:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"restore_to_point_in_time.0.restore_to_time"},
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+							ExactlyOneOf: []string{
+								"restore_to_point_in_time.0.restore_to_time",
+								"restore_to_point_in_time.0.use_latest_restorable_time",
+							},
 						},
 					},
 				},
@@ -872,11 +891,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &rds.RestoreDBClusterToPointInTimeInput{
-			CopyTagsToSnapshot:        aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
-			DBClusterIdentifier:       aws.String(identifier),
-			DeletionProtection:        aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
-			SourceDBClusterIdentifier: aws.String(tfMap["source_cluster_identifier"].(string)),
-			Tags:                      getTagsIn(ctx),
+			CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
+			DBClusterIdentifier: aws.String(identifier),
+			DeletionProtection:  aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
+			Tags:                getTagsIn(ctx),
 		}
 
 		if v, ok := tfMap["restore_to_time"].(string); ok && v != "" {
@@ -884,12 +902,16 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.RestoreToTime = aws.Time(v)
 		}
 
-		if v, ok := tfMap["use_latest_restorable_time"].(bool); ok && v {
-			input.UseLatestRestorableTime = aws.Bool(v)
+		if v, ok := tfMap["source_cluster_identifier"].(string); ok && v != "" {
+			input.SourceDBClusterIdentifier = aws.String(v)
 		}
 
-		if input.RestoreToTime == nil && input.UseLatestRestorableTime == nil {
-			return sdkdiag.AppendErrorf(diags, `Either "restore_to_time" or "use_latest_restorable_time" must be set`)
+		if v, ok := tfMap["source_cluster_resource_id"].(string); ok && v != "" {
+			input.SourceDbClusterResourceId = aws.String(v)
+		}
+
+		if v, ok := tfMap["use_latest_restorable_time"].(bool); ok && v {
+			input.UseLatestRestorableTime = aws.Bool(v)
 		}
 
 		if v, ok := d.GetOk("backtrack_window"); ok {
@@ -1900,4 +1922,132 @@ func waitDBClusterDeleted(ctx context.Context, conn *rds.RDS, id string, timeout
 	}
 
 	return nil, err
+}
+
+func expandScalingConfiguration(tfMap map[string]interface{}) *rds.ScalingConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &rds.ScalingConfiguration{}
+
+	if v, ok := tfMap["auto_pause"].(bool); ok {
+		apiObject.AutoPause = aws.Bool(v)
+	}
+
+	if v, ok := tfMap[names.AttrMaxCapacity].(int); ok {
+		apiObject.MaxCapacity = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["min_capacity"].(int); ok {
+		apiObject.MinCapacity = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["seconds_before_timeout"].(int); ok {
+		apiObject.SecondsBeforeTimeout = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["seconds_until_auto_pause"].(int); ok {
+		apiObject.SecondsUntilAutoPause = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["timeout_action"].(string); ok && v != "" {
+		apiObject.TimeoutAction = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenScalingConfigurationInfo(apiObject *rds.ScalingConfigurationInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AutoPause; v != nil {
+		tfMap["auto_pause"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.MaxCapacity; v != nil {
+		tfMap[names.AttrMaxCapacity] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.MaxCapacity; v != nil {
+		tfMap[names.AttrMaxCapacity] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.MinCapacity; v != nil {
+		tfMap["min_capacity"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.SecondsBeforeTimeout; v != nil {
+		tfMap["seconds_before_timeout"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.SecondsUntilAutoPause; v != nil {
+		tfMap["seconds_until_auto_pause"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.TimeoutAction; v != nil {
+		tfMap["timeout_action"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func expandServerlessV2ScalingConfiguration(tfMap map[string]interface{}) *rds.ServerlessV2ScalingConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &rds.ServerlessV2ScalingConfiguration{}
+
+	if v, ok := tfMap[names.AttrMaxCapacity].(float64); ok && v != 0.0 {
+		apiObject.MaxCapacity = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["min_capacity"].(float64); ok && v != 0.0 {
+		apiObject.MinCapacity = aws.Float64(v)
+	}
+
+	return apiObject
+}
+
+func flattenServerlessV2ScalingConfigurationInfo(apiObject *rds.ServerlessV2ScalingConfigurationInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.MaxCapacity; v != nil {
+		tfMap[names.AttrMaxCapacity] = aws.Float64Value(v)
+	}
+
+	if v := apiObject.MinCapacity; v != nil {
+		tfMap["min_capacity"] = aws.Float64Value(v)
+	}
+
+	return tfMap
+}
+
+// TODO Move back to 'flex.go' once migrate to AWS SDK for Go v2.
+func flattenManagedMasterUserSecret(apiObject *rds.MasterUserSecret) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if v := apiObject.KmsKeyId; v != nil {
+		tfMap[names.AttrKMSKeyID] = aws.StringValue(v)
+	}
+	if v := apiObject.SecretArn; v != nil {
+		tfMap["secret_arn"] = aws.StringValue(v)
+	}
+	if v := apiObject.SecretStatus; v != nil {
+		tfMap["secret_status"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }

@@ -121,7 +121,7 @@ func TestAccCloudSearchDomain_indexFields(t *testing.T) {
 				Config: testAccDomainConfig_indexFieldsUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccDomainExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "index_field.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", acctest.Ct4),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						names.AttrName:         "literal_test",
 						names.AttrType:         "literal",
@@ -140,6 +140,13 @@ func TestAccCloudSearchDomain_indexFields(t *testing.T) {
 						names.AttrType:    "text",
 						"analysis_scheme": "_en_default_",
 						"highlight":       acctest.CtTrue,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
+						names.AttrName: "i",
+						names.AttrType: "literal",
+						"return":       acctest.CtTrue,
+						"search":       acctest.CtFalse,
+						"sort":         acctest.CtTrue,
 					}),
 				),
 			},
@@ -401,6 +408,14 @@ resource "aws_cloudsearch_domain" "test" {
     analysis_scheme = "_en_default_"
     highlight       = true
     search          = true
+  }
+
+  index_field {
+    name   = "i"
+    type   = "literal"
+    return = true
+    search = false
+    sort   = true
   }
 }
 `, rName)

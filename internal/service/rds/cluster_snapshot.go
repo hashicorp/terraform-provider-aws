@@ -396,9 +396,5 @@ func findDBClusterSnapshotAttributes(ctx context.Context, conn *rds.Client, inpu
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	f := func(v types.DBClusterSnapshotAttribute) bool {
-		return filter(&v)
-	}
-
-	return tfslices.Filter(output.DBClusterSnapshotAttributesResult.DBClusterSnapshotAttributes, f), nil
+	return tfslices.Filter(output.DBClusterSnapshotAttributesResult.DBClusterSnapshotAttributes, tfslices.PredicateValue(filter)), nil
 }
