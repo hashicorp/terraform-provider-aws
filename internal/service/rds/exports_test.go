@@ -11,6 +11,7 @@ var (
 	ResourceClusterParameterGroup   = resourceClusterParameterGroup
 	ResourceClusterRoleAssociation  = resourceClusterRoleAssociation
 	ResourceClusterSnapshot         = resourceClusterSnapshot
+	ResourceCustomDBEngineVersion   = resourceCustomDBEngineVersion
 	ResourceEventSubscription       = resourceEventSubscription
 	ResourceParameterGroup          = resourceParameterGroup
 	ResourceProxy                   = resourceProxy
@@ -21,6 +22,7 @@ var (
 	ResourceSnapshotCopy            = resourceSnapshotCopy
 	ResourceSubnetGroup             = resourceSubnetGroup
 
+	FindCustomDBEngineVersionByTwoPartKey      = findCustomDBEngineVersionByTwoPartKey
 	FindDBClusterEndpointByID                  = findDBClusterEndpointByID
 	FindDBClusterParameterGroupByName          = findDBClusterParameterGroupByName
 	FindDBClusterRoleByTwoPartKey              = findDBClusterRoleByTwoPartKey
