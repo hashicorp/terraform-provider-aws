@@ -12,12 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -203,7 +203,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		_, err := conn.ModifyGlobalCluster(ctx, input)
 
-		if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeGlobalClusterNotFoundFault) {
+		if errs.IsA[*awstypes.GlobalClusterNotFoundFault](err) {
 			return diags
 		}
 
@@ -279,13 +279,13 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Deleting Neptune Global Cluster: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidGlobalClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteGlobalCluster(ctx, &neptune.DeleteGlobalClusterInput{
 			GlobalClusterIdentifier: aws.String(d.Id()),
 		})
-	}, awstypes.ErrCodeInvalidGlobalClusterStateFault, "is not empty")
+	}, "is not empty")
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeGlobalClusterNotFoundFault) {
+	if errs.IsA[*awstypes.GlobalClusterNotFoundFault](err) {
 		return diags
 	}
 
@@ -304,7 +304,7 @@ func FindGlobalClusterByID(ctx context.Context, conn *neptune.Client, id string)
 	input := &neptune.DescribeGlobalClustersInput{
 		GlobalClusterIdentifier: aws.String(id),
 	}
-	output, err := findGlobalCluster(ctx, conn, input, tfslices.PredicateTrue[*awstypes.GlobalCluster]())
+	output, err := findGlobalCluster(ctx, conn, input, tfslices.PredicateTrue[awstypes.GlobalCluster]())
 
 	if err != nil {
 		return nil, err
@@ -330,49 +330,47 @@ func FindGlobalClusterByID(ctx context.Context, conn *neptune.Client, id string)
 func findGlobalClusterByClusterARN(ctx context.Context, conn *neptune.Client, arn string) (*awstypes.GlobalCluster, error) {
 	input := &neptune.DescribeGlobalClustersInput{}
 
-	return findGlobalCluster(ctx, conn, input, func(v *awstypes.GlobalCluster) bool {
-		return slices.ContainsFunc(v.GlobalClusterMembers, func(v *awstypes.GlobalClusterMember) bool {
+	return findGlobalCluster(ctx, conn, input, func(v awstypes.GlobalCluster) bool {
+		return slices.ContainsFunc(v.GlobalClusterMembers, func(v awstypes.GlobalClusterMember) bool {
 			return aws.ToString(v.DBClusterArn) == arn
 		})
 	})
 }
 
-func findGlobalCluster(ctx context.Context, conn *neptune.Client, input *neptune.DescribeGlobalClustersInput, filter tfslices.Predicate[*awstypes.GlobalCluster]) (*awstypes.GlobalCluster, error) {
+func findGlobalCluster(ctx context.Context, conn *neptune.Client, input *neptune.DescribeGlobalClustersInput, filter tfslices.Predicate[awstypes.GlobalCluster]) (*awstypes.GlobalCluster, error) {
 	output, err := findGlobalClusters(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findGlobalClusters(ctx context.Context, conn *neptune.Client, input *neptune.DescribeGlobalClustersInput, filter tfslices.Predicate[*awstypes.GlobalCluster]) ([]*awstypes.GlobalCluster, error) {
-	var output []*awstypes.GlobalCluster
+func findGlobalClusters(ctx context.Context, conn *neptune.Client, input *neptune.DescribeGlobalClustersInput, filter tfslices.Predicate[awstypes.GlobalCluster]) ([]awstypes.GlobalCluster, error) {
+	var output []awstypes.GlobalCluster
 
-	err := conn.DescribeGlobalClustersPagesWithContext(ctx, input, func(page *neptune.DescribeGlobalClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := neptune.NewDescribeGlobalClustersPaginator(conn, input)
 
-		for _, v := range page.GlobalClusters {
-			if v != nil && filter(v) {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.GlobalClusterNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeGlobalClusterNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.GlobalClusters {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
@@ -447,7 +445,7 @@ func waitGlobalClusterDeleted(ctx context.Context, conn *neptune.Client, id stri
 	return nil, err
 }
 
-func flattenGlobalClusterMembers(apiObjects []*awstypes.GlobalClusterMember) []interface{} {
+func flattenGlobalClusterMembers(apiObjects []awstypes.GlobalClusterMember) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
