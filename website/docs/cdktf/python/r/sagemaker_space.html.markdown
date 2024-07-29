@@ -39,18 +39,22 @@ class MyConvertedCode(TerraformStack):
 This resource supports the following arguments:
 
 * `domain_id` - (Required) The ID of the associated Domain.
-* `ownership_settings` - (Optional) A collection of ownership settings. See [`ownership_settings` Block](#ownership_settings-block) below.
+* `ownership_settings` - (Optional) A collection of ownership settings. Required if `space_sharing_settings` is set. See [`ownership_settings` Block](#ownership_settings-block) below.
 * `space_display_name` - (Optional) The name of the space that appears in the SageMaker Studio UI.
 * `space_name` - (Required) The name of the space.
 * `space_settings` - (Required) A collection of space settings. See [`space_settings` Block](#space_settings-block) below.
-* `space_sharing_settings` - (Optional) A collection of space sharing settings. See [`space_sharing_settings` Block](#space_sharing_settings-block) below.
+* `space_sharing_settings` - (Optional) A collection of space sharing settings. Required if `ownership_settings` is set. See [`space_sharing_settings` Block](#space_sharing_settings-block) below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `ownership_settings` Block
 
+The `ownership_settings` block supports the following arguments:
+
 * `owner_user_profile_name` - (Required) The user profile who is the owner of the private space.
 
 ### `space_settings` Block
+
+The `space_settings` block supports the following arguments:
 
 * `app_type` - (Optional) The type of app created within the space.
 * `code_editor_app_settings` - (Optional) The Code Editor application settings. See [`code_editor_app_settings` Block](#code_editor_app_settings-block) below.
@@ -58,27 +62,36 @@ This resource supports the following arguments:
 * `jupyter_lab_app_settings` - (Optional) The settings for the JupyterLab application. See [`jupyter_lab_app_settings` Block](#jupyter_lab_app_settings-block) below.
 * `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [`jupyter_server_app_settings` Block](#jupyter_server_app_settings-block) below.
 * `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [`kernel_gateway_app_settings` Block](#kernel_gateway_app_settings-block) below.
+* `space_storage_settings` - (Optional) The storage settings. See [`space_storage_settings` Block](#space_storage_settings-block) below.
 
 ### `space_sharing_settings` Block
+
+The `space_sharing_settings` block supports the following argument:
 
 * `sharing_type` - (Required) Specifies the sharing type of the space. Valid values are `Private` and `Shared`.
 
 ### `code_editor_app_settings` Block
 
-* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
-* `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+The `code_editor_app_settings` block supports the following argument:
+
+* `default_resource_spec` - (Required) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
 
 ### `custom_file_system` Block
 
-* `efs_file_system` - (Optional) A custom file system in Amazon EFS. See [`efs_file_system` Block](#efs_file_system-block) below.
+The `custom_file_system` block supports the following argument:
+
+* `efs_file_system` - (Required) A custom file system in Amazon EFS. See [`efs_file_system` Block](#efs_file_system-block) below.
 
 ### `jupyter_lab_app_settings` Block
 
+The `jupyter_lab_app_settings` block supports the following arguments:
+
 * `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. See [`code_repository` Block](#code_repository-block) below.
-* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
-* `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+* `default_resource_spec` - (Required) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
 
 ### `jupyter_server_app_settings` Block
+
+The `jupyter_server_app_settings` block supports the following arguments:
 
 * `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. See [`code_repository` Block](#code_repository-block) below.
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
@@ -86,15 +99,27 @@ This resource supports the following arguments:
 
 ### `kernel_gateway_app_settings` Block
 
-* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
+The `kernel_gateway_app_settings` block supports the following arguments:
+
+* `default_resource_spec` - (Required) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
 * `custom_image` - (Optional) A list of custom SageMaker images that are configured to run as a KernelGateway app. See [`custom_image` Block](#custom_image-block) below.
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
+### `space_storage_settings` Block
+
+The `space_storage_settings` block supports the following argument:
+
+* `ebs_storage_settings` - (Required) A collection of EBS storage settings for a space. See [`ebs_storage_settings` Block](#ebs_storage_settings-block) below.
+
 ### `code_repository` Block
 
-* `repository_url` - (Optional) The URL of the Git repository.
+The `code_repository` block supports the following argument:
+
+* `repository_url` - (Required) The URL of the Git repository.
 
 ### `default_resource_spec` Block
+
+The `default_resource_spec` block supports the following arguments:
 
 * `instance_type` - (Optional) The instance type.
 * `lifecycle_config_arn` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configuration attached to the Resource.
@@ -104,13 +129,23 @@ This resource supports the following arguments:
 
 ### `efs_file_system` Block
 
-* `file_system_id` - (Optional) The ID of your Amazon EFS file system.
+The `efs_file_system` block supports the following argument:
+
+* `file_system_id` - (Required) The ID of your Amazon EFS file system.
 
 ### `custom_image` Block
+
+The `custom_image` block supports the following arguments:
 
 * `app_image_config_name` - (Required) The name of the App Image Config.
 * `image_name` - (Required) The name of the Custom Image.
 * `image_version_number` - (Optional) The version number of the Custom Image.
+
+### `ebs_storage_settings` Block
+
+The `ebs_storage_settings` block supports the following argument:
+
+* `ebs_volume_size_in_gb` - (Required) The size of an EBS storage volume for a space.
 
 ## Attribute Reference
 
@@ -147,4 +182,4 @@ Using `terraform import`, import SageMaker Spaces using the `id`. For example:
 % terraform import aws_sagemaker_space.test_space arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9f41f02d6a7c757bb3780ec7f7388fc75d33cf3123da6ef33d12ebd2489f74e2 -->
+<!-- cache-key: cdktf-0.20.1 input-b3e17b39793c37f2fefabeb98ab4bdbd74dcfb087df2995c78e61ef0faf9ecdc -->
