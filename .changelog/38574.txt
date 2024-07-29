@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_sfn_activity: Add support for `EncryptionConfiguration` attribute to enable encryption withCustomer Managed KMS Keys.
+```
+
+```release-note:enhancement
+resource/aws_sfn_state_machine: Add support for `EncryptionConfiguration` attribute to enable encryption withCustomer Managed KMS Keys.
+```
