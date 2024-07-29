@@ -85,35 +85,6 @@ func findUploadBufferDisk(ctx context.Context, conn *storagegateway.Client, gate
 	return &result, err
 }
 
-func findNFSFileShareByARN(ctx context.Context, conn *storagegateway.Client, arn string) (*awstypes.NFSFileShareInfo, error) {
-	input := &storagegateway.DescribeNFSFileSharesInput{
-		FileShareARNList: []string{arn},
-	}
-
-	output, err := conn.DescribeNFSFileShares(ctx, input)
-
-	if operationErrorCode(err) == operationErrCodeFileShareNotFound {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.NFSFileShareInfoList) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.NFSFileShareInfoList); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &output.NFSFileShareInfoList[0], nil
-}
-
 func findSMBFileShareByARN(ctx context.Context, conn *storagegateway.Client, arn string) (*awstypes.SMBFileShareInfo, error) {
 	input := &storagegateway.DescribeSMBFileSharesInput{
 		FileShareARNList: []string{arn},

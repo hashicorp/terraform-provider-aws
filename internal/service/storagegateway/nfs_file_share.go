@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -224,9 +225,8 @@ func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
 	fileShareDefaults, err := expandNFSFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Storage Gateway NFS File Share: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &storagegateway.CreateNFSFileShareInput{
@@ -274,7 +274,6 @@ func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 		input.VPCEndpointDNSName = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Storage Gateway NFS File Share: %#v", input)
 	output, err := conn.CreateNFSFileShare(ctx, input)
 
 	if err != nil {
@@ -346,9 +345,8 @@ func resourceNFSFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		fileShareDefaults, err := expandNFSFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
-
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Storage Gateway NFS File Share (%s): %s", d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &storagegateway.UpdateNFSFileShareInput{
@@ -384,7 +382,6 @@ func resourceNFSFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 			input.NotificationPolicy = aws.String(v.(string))
 		}
 
-		log.Printf("[DEBUG] Updating Storage Gateway NFS File Share: %#v", input)
 		_, err = conn.UpdateNFSFileShare(ctx, input)
 
 		if err != nil {
@@ -397,6 +394,116 @@ func resourceNFSFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	return append(diags, resourceNFSFileShareRead(ctx, d, meta)...)
+}
+
+func findNFSFileShareByARN(ctx context.Context, conn *storagegateway.Client, arn string) (*awstypes.NFSFileShareInfo, error) {
+	input := &storagegateway.DescribeNFSFileSharesInput{
+		FileShareARNList: []string{arn},
+	}
+
+	return findNFSFileShare(ctx, conn, input)
+}
+
+func findNFSFileShare(ctx context.Context, conn *storagegateway.Client, input *storagegateway.DescribeNFSFileSharesInput) (*awstypes.NFSFileShareInfo, error) {
+	output, err := findNFSFileShares(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findNFSFileShares(ctx context.Context, conn *storagegateway.Client, input *storagegateway.DescribeNFSFileSharesInput) ([]awstypes.NFSFileShareInfo, error) {
+	output, err := conn.DescribeNFSFileShares(ctx, input)
+
+	if operationErrorCode(err) == operationErrCodeFileShareNotFound {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.NFSFileShareInfoList, err
+}
+
+func statusNFSFileShare(ctx context.Context, conn *storagegateway.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findNFSFileShareByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.FileShareStatus), nil
+	}
+}
+
+func waitNFSFileShareCreated(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.NFSFileShareInfo, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{fileShareStatusCreating},
+		Target:  []string{fileShareStatusAvailable},
+		Refresh: statusNFSFileShare(ctx, conn, arn),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NFSFileShareInfo); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitNFSFileShareUpdated(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.NFSFileShareInfo, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{fileShareStatusUpdating},
+		Target:  []string{fileShareStatusAvailable},
+		Refresh: statusNFSFileShare(ctx, conn, arn),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NFSFileShareInfo); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitNFSFileShareDeleted(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.NFSFileShareInfo, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:        []string{fileShareStatusAvailable, fileShareStatusDeleting, fileShareStatusForceDeleting},
+		Target:         []string{},
+		Refresh:        statusNFSFileShare(ctx, conn, arn),
+		Timeout:        timeout,
+		Delay:          5 * time.Second,
+		NotFoundChecks: 1,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NFSFileShareInfo); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func resourceNFSFileShareDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -423,70 +530,70 @@ func resourceNFSFileShareDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func expandNFSFileShareDefaults(l []interface{}) (*awstypes.NFSFileShareDefaults, error) {
-	if len(l) == 0 || l[0] == nil {
+func expandNFSFileShareDefaults(tfList []interface{}) (*awstypes.NFSFileShareDefaults, error) {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil, nil
 	}
 
-	m := l[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
-	groupID, err := strconv.ParseInt(m["group_id"].(string), 10, 64)
+	groupID, err := strconv.ParseInt(tfMap["group_id"].(string), 10, 64)
 	if err != nil {
 		return nil, err
 	}
 
-	ownerID, err := strconv.ParseInt(m[names.AttrOwnerID].(string), 10, 64)
+	ownerID, err := strconv.ParseInt(tfMap[names.AttrOwnerID].(string), 10, 64)
 	if err != nil {
 		return nil, err
 	}
 
-	nfsFileShareDefaults := &awstypes.NFSFileShareDefaults{
-		DirectoryMode: aws.String(m["directory_mode"].(string)),
-		FileMode:      aws.String(m["file_mode"].(string)),
+	apiObject := &awstypes.NFSFileShareDefaults{
+		DirectoryMode: aws.String(tfMap["directory_mode"].(string)),
+		FileMode:      aws.String(tfMap["file_mode"].(string)),
 		GroupId:       aws.Int64(groupID),
 		OwnerId:       aws.Int64(ownerID),
 	}
 
-	return nfsFileShareDefaults, nil
+	return apiObject, nil
 }
 
-func flattenNFSFileShareDefaults(nfsFileShareDefaults *awstypes.NFSFileShareDefaults) []interface{} {
-	if nfsFileShareDefaults == nil {
+func flattenNFSFileShareDefaults(apiObject *awstypes.NFSFileShareDefaults) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"directory_mode":  aws.ToString(nfsFileShareDefaults.DirectoryMode),
-		"file_mode":       aws.ToString(nfsFileShareDefaults.FileMode),
-		"group_id":        strconv.Itoa(int(aws.ToInt64(nfsFileShareDefaults.GroupId))),
-		names.AttrOwnerID: strconv.Itoa(int(aws.ToInt64(nfsFileShareDefaults.OwnerId))),
+	tfMap := map[string]interface{}{
+		"directory_mode":  aws.ToString(apiObject.DirectoryMode),
+		"file_mode":       aws.ToString(apiObject.FileMode),
+		"group_id":        strconv.Itoa(int(aws.ToInt64(apiObject.GroupId))),
+		names.AttrOwnerID: strconv.Itoa(int(aws.ToInt64(apiObject.OwnerId))),
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
 
-func expandNFSFileShareCacheAttributes(l []interface{}) *awstypes.CacheAttributes {
-	if len(l) == 0 || l[0] == nil {
+func expandNFSFileShareCacheAttributes(tfList []interface{}) *awstypes.CacheAttributes {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
-	ca := &awstypes.CacheAttributes{
-		CacheStaleTimeoutInSeconds: aws.Int32(int32(m["cache_stale_timeout_in_seconds"].(int))),
+	apiObject := &awstypes.CacheAttributes{
+		CacheStaleTimeoutInSeconds: aws.Int32(int32(tfMap["cache_stale_timeout_in_seconds"].(int))),
 	}
 
-	return ca
+	return apiObject
 }
 
-func flattenNFSFileShareCacheAttributes(ca *awstypes.CacheAttributes) []interface{} {
-	if ca == nil {
+func flattenNFSFileShareCacheAttributes(apiObject *awstypes.CacheAttributes) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"cache_stale_timeout_in_seconds": aws.ToInt32(ca.CacheStaleTimeoutInSeconds),
+	tfMap := map[string]interface{}{
+		"cache_stale_timeout_in_seconds": aws.ToInt32(apiObject.CacheStaleTimeoutInSeconds),
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }

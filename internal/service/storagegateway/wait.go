@@ -14,8 +14,6 @@ import (
 
 const (
 	storediSCSIVolumeAvailableTimeout = 5 * time.Minute
-	nfsFileShareAvailableDelay        = 5 * time.Second
-	nfsFileShareDeletedDelay          = 5 * time.Second
 	smbFileShareAvailableDelay        = 5 * time.Second
 	smbFileShareDeletedDelay          = 5 * time.Second
 )
@@ -32,61 +30,6 @@ func waitStorediSCSIVolumeAvailable(ctx context.Context, conn *storagegateway.Cl
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*storagegateway.DescribeStorediSCSIVolumesOutput); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitNFSFileShareCreated(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.NFSFileShareInfo, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{fileShareStatusCreating},
-		Target:  []string{fileShareStatusAvailable},
-		Refresh: statusNFSFileShare(ctx, conn, arn),
-		Timeout: timeout,
-		Delay:   nfsFileShareAvailableDelay,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.NFSFileShareInfo); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitNFSFileShareDeleted(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.NFSFileShareInfo, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:        []string{fileShareStatusAvailable, fileShareStatusDeleting, fileShareStatusForceDeleting},
-		Target:         []string{},
-		Refresh:        statusNFSFileShare(ctx, conn, arn),
-		Timeout:        timeout,
-		Delay:          nfsFileShareDeletedDelay,
-		NotFoundChecks: 1,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.NFSFileShareInfo); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitNFSFileShareUpdated(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.NFSFileShareInfo, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{fileShareStatusUpdating},
-		Target:  []string{fileShareStatusAvailable},
-		Refresh: statusNFSFileShare(ctx, conn, arn),
-		Timeout: timeout,
-		Delay:   nfsFileShareAvailableDelay,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.NFSFileShareInfo); ok {
 		return output, err
 	}
 

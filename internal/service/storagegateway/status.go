@@ -45,22 +45,6 @@ func statusStorediSCSIVolume(ctx context.Context, conn *storagegateway.Client, v
 	}
 }
 
-func statusNFSFileShare(ctx context.Context, conn *storagegateway.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findNFSFileShareByARN(ctx, conn, arn)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.ToString(output.FileShareStatus), nil
-	}
-}
-
 func statusSMBFileShare(ctx context.Context, conn *storagegateway.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findSMBFileShareByARN(ctx, conn, arn)

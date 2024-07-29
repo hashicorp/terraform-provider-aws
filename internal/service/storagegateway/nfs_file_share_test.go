@@ -709,11 +709,11 @@ func testAccCheckNFSFileShareDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckNFSFileShareExists(ctx context.Context, resourceName string, nfsFileShare *awstypes.NFSFileShareInfo) resource.TestCheckFunc {
+func testAccCheckNFSFileShareExists(ctx context.Context, n string, v *awstypes.NFSFileShareInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
@@ -724,7 +724,7 @@ func testAccCheckNFSFileShareExists(ctx context.Context, resourceName string, nf
 			return err
 		}
 
-		*nfsFileShare = *output
+		*v = *output
 
 		return nil
 	}
