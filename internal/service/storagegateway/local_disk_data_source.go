@@ -5,7 +5,6 @@ package storagegateway
 
 import (
 	"context"
-	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
@@ -54,10 +53,10 @@ func dataSourceLocalDiskRead(ctx context.Context, d *schema.ResourceData, meta i
 		GatewayARN: aws.String(d.Get("gateway_arn").(string)),
 	}
 
-	log.Printf("[DEBUG] Reading Storage Gateway Local Disk: %#v", input)
 	output, err := conn.ListLocalDisks(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Local Disk: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Local Disks: %s", err)
 	}
 
 	if output == nil || len(output.Disks) == 0 {
