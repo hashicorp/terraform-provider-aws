@@ -36,7 +36,7 @@ func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 	pName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	envProfName := "aws_datazone_environment_profile.test"
-	domainName := "aws_datazone_domain_profile.test"
+	domainName := "aws_datazone_domain.test"
 	callName := "data.aws_caller_identity.test"
 	projectName := "aws_datazone_project.test"
 	regionName := "data.aws_region.test"
@@ -61,7 +61,8 @@ func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(envProfName, "created_at"),
 					resource.TestCheckResourceAttrSet(envProfName, "created_by"),
 					resource.TestCheckResourceAttr(envProfName, "description", "desc"),
-					resource.TestCheckResourceAttrSet(envProfName, "user_parameters"),
+					resource.TestCheckResourceAttrSet(envProfName, "user_parameters.0.name"),
+					resource.TestCheckResourceAttrSet(envProfName, "user_parameters.0.value"),
 					resource.TestCheckResourceAttrPair(envProfName, "domain_identifier", domainName, names.AttrID),
 					resource.TestCheckResourceAttrPair(envProfName, "environment_blueprint_identifier", blueName, "id"),
 					resource.TestCheckResourceAttrSet(envProfName, names.AttrID),
@@ -258,6 +259,11 @@ resource "aws_datazone_environment_profile" "test" {
   name                             = %[1]q
   project_identifier               = aws_datazone_project.test.id
   domain_identifier                = aws_datazone_domain.test.id
+    user_parameters {
+	name = "consumerGlueDbName"
+	value = "hi"
+  }
+
 }
 `, rName))
 }
@@ -274,6 +280,10 @@ resource "aws_datazone_environment_profile" "test" {
   name                             = %[1]q
   project_identifier               = aws_datazone_project.test.id
   domain_identifier                = aws_datazone_domain.test.id
+  user_parameters {
+	name = "consumerGlueDbName"
+	value = "hi"
+  }
 }
 `, rName))
 }

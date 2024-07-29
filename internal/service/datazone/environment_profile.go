@@ -18,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -25,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -113,29 +116,32 @@ func (r *resourceEnvironmentProfile) Schema(ctx context.Context, req resource.Sc
 				Computed:   true,
 			},
 		},
-		/*
-			Blocks: map[string]schema.Block{
-				"user_parameters": schema.SetNestedBlock{
-					CustomType: fwtypes.NewSetNestedObjectTypeOf[dUserParameters](ctx),
-					NestedObject: schema.NestedBlockObject{
-						Attributes: map[string]schema.Attribute{
-							"name": schema.StringAttribute{
-								Optional: true,
-							},
-							"value": schema.StringAttribute{
-								Optional: true,
-							},
+		Blocks: map[string]schema.Block{
+			"user_parameters": schema.SetNestedBlock{
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplace(),
+					setplanmodifier.RequiresReplaceIfConfigured(),
+				},
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[dUserParameters](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Optional: true,
+							Computed: false,
+						},
+						"value": schema.StringAttribute{
+							Optional: true,
+							Computed: false,
 						},
 					},
 				},
 			},
-		*/
+		},
 	}
 }
 
 func (r *resourceEnvironmentProfile) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
-
 	var plan dEnvProfile
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -167,7 +173,18 @@ func (r *resourceEnvironmentProfile) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+	plan.AwsAccountId = flex.StringToFramework(ctx, out.AwsAccountId)
+	plan.AwsAccountRegion = flex.StringToFramework(ctx, out.AwsAccountRegion)
+	plan.CreatedAt = flex.TimeToFramework(ctx, out.CreatedAt)
+	plan.CreatedBy = flex.StringToFramework(ctx, out.CreatedBy)
+	plan.Description = flex.StringToFramework(ctx, out.Description)
+	plan.DomainIdentifier = flex.StringToFramework(ctx, out.DomainId)
+	plan.EnvironmentBlueprintIdentifier = flex.StringToFramework(ctx, out.EnvironmentBlueprintId)
+	plan.Id = flex.StringToFramework(ctx, out.Id)
+	plan.Name = flex.StringToFramework(ctx, out.Name)
+	plan.ProjectIdentifier = flex.StringToFramework(ctx, out.ProjectId)
+	plan.UpdatedAt = flex.TimeToFramework(ctx, out.UpdatedAt)
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -199,7 +216,18 @@ func (r *resourceEnvironmentProfile) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	state.AwsAccountId = flex.StringToFramework(ctx, out.AwsAccountId)
+	state.AwsAccountRegion = flex.StringToFramework(ctx, out.AwsAccountRegion)
+	state.CreatedAt = flex.TimeToFramework(ctx, out.CreatedAt)
+	state.CreatedBy = flex.StringToFramework(ctx, out.CreatedBy)
+	state.Description = flex.StringToFramework(ctx, out.Description)
+	state.DomainIdentifier = flex.StringToFramework(ctx, out.DomainId)
+	state.EnvironmentBlueprintIdentifier = flex.StringToFramework(ctx, out.EnvironmentBlueprintId)
+	state.Id = flex.StringToFramework(ctx, out.Id)
+	state.Name = flex.StringToFramework(ctx, out.Name)
+	state.ProjectIdentifier = flex.StringToFramework(ctx, out.ProjectId)
+	state.UpdatedAt = flex.TimeToFramework(ctx, out.UpdatedAt)
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -217,13 +245,14 @@ func (r *resourceEnvironmentProfile) Update(ctx context.Context, req resource.Up
 	}
 	if plan.EnvironmentBlueprintIdentifier.Equal(state.EnvironmentBlueprintIdentifier) &&
 		plan.ProjectIdentifier.Equal(state.ProjectIdentifier) && plan.DomainIdentifier.Equal(state.DomainIdentifier) {
-		in := datazone.UpdateEnvironmentProfileInput{}
+		in := &datazone.UpdateEnvironmentProfileInput{}
 
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		out, err := conn.UpdateEnvironmentProfile(ctx, &in)
+		in.Identifier = state.Id.ValueStringPointer()
+		out, err := conn.UpdateEnvironmentProfile(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.DataZone, create.ErrActionSetting, ResNameEnvironmentProfile, state.Id.ValueString(), err),
@@ -231,7 +260,18 @@ func (r *resourceEnvironmentProfile) Update(ctx context.Context, req resource.Up
 			)
 			return
 		}
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+		plan.AwsAccountId = flex.StringToFramework(ctx, out.AwsAccountId)
+		plan.AwsAccountRegion = flex.StringToFramework(ctx, out.AwsAccountRegion)
+		plan.CreatedAt = flex.TimeToFramework(ctx, out.CreatedAt)
+		plan.CreatedBy = flex.StringToFramework(ctx, out.CreatedBy)
+		plan.Description = flex.StringToFramework(ctx, out.Description)
+		plan.DomainIdentifier = flex.StringToFramework(ctx, out.DomainId)
+		plan.EnvironmentBlueprintIdentifier = flex.StringToFramework(ctx, out.EnvironmentBlueprintId)
+		plan.Id = flex.StringToFramework(ctx, out.Id)
+		plan.Name = flex.StringToFramework(ctx, out.Name)
+		plan.ProjectIdentifier = flex.StringToFramework(ctx, out.ProjectId)
+		plan.UpdatedAt = flex.TimeToFramework(ctx, out.UpdatedAt)
+
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -265,7 +305,7 @@ func (r *resourceEnvironmentProfile) ImportState(ctx context.Context, req resour
 		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "DomainIdentifier:Id"`, req.ID))
 	}
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), parts[1])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_blueprint_identifier"), parts[2])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("project_identifier"), parts[3])...)
 }
@@ -297,12 +337,12 @@ func findEnvironmentProfileByID(ctx context.Context, conn *datazone.Client, id s
 
 type dEnvProfile struct {
 	// entered and or computed
-	AwsAccountId                   types.String `tfsdk:"aws_account_id"`
-	AwsAccountRegion               types.String `tfsdk:"aws_account_region"`
-	Description                    types.String `tfsdk:"description"`
-	Id                             types.String `tfsdk:"id"`
-	EnvironmentBlueprintIdentifier types.String `tfsdk:"environment_blueprint_identifier"`
-	//UserParameters                fwtypes.SetNestedObjectValueOf[dUserParameters] `tfsdk:"user_parameters"`
+	AwsAccountId                   types.String                                    `tfsdk:"aws_account_id"`
+	AwsAccountRegion               types.String                                    `tfsdk:"aws_account_region"`
+	Description                    types.String                                    `tfsdk:"description"`
+	Id                             types.String                                    `tfsdk:"id"`
+	EnvironmentBlueprintIdentifier types.String                                    `tfsdk:"environment_blueprint_identifier"`
+	UserParameters                 fwtypes.SetNestedObjectValueOf[dUserParameters] `tfsdk:"user_parameters"`
 
 	Name              types.String `tfsdk:"name"`
 	ProjectIdentifier types.String `tfsdk:"project_identifier"`
