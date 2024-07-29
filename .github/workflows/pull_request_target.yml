@@ -51,7 +51,6 @@ jobs:
 
       - name: "Community Check: Author"
         id: author
-        if: github.event.action == 'opened'
         uses: ./.github/actions/community_check
         with:
           user_login: ${{ github.event.pull_request.user.login }}
@@ -59,7 +58,7 @@ jobs:
           core_contributors: ${{ secrets.CORE_CONTRIBUTORS }}
           partners: ${{ secrets.PARTNERS }}
 
-      - name: Indicate That Triage is Required
+      - name: Add needs-triage to New Contributions
         if: |
           github.event.action == 'opened'
           && steps.author.outputs.maintainer == 'false'
@@ -67,9 +66,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr edit "$ISSUE_URL" --add-label needs-triage
 
-      - name: Add prioritized to Maintainer Contributions
+      - name: Add prioritized to New Maintainer Contributions
         if: |
-          steps.author.outputs.maintainer == 'true'
+          github.event.action == 'opened'
+          && steps.author.outputs.maintainer == 'true'
           && !contains(github.event.pull_request.labels.*.name, 'prioritized')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -87,7 +87,7 @@ jobs:
       - name: Credit Partner Contributions
         if: |
           steps.author.outputs.partner == 'true'
-          && !contains(github.event.pull_request.labels.*.name, 'external-maintainer')
+          && !contains(github.event.pull_request.labels.*.name, 'partner')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -101,7 +101,7 @@ jobs:
           user_login: ${{ github.event.assignee.login }}
           maintainers: ${{ secrets.MAINTAINERS }}
 
-      - name: Add prioritized to Maintainer Assignments
+      - name: Add prioritized When Assigned to a Maintainer
         if: steps.assignee.outputs.maintainer == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
