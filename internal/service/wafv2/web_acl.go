@@ -282,9 +282,11 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, webACL.Name)
 
-	rules := filterWebACLRules(webACL.Rules, expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List()))
-	if err := d.Set(names.AttrRule, flattenWebACLRules(rules)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+	if _, ok := d.GetOk(names.AttrRule); ok {
+		rules := filterWebACLRules(webACL.Rules, expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List()))
+		if err := d.Set(names.AttrRule, flattenWebACLRules(rules)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+		}
 	}
 
 	d.Set("rule_json", d.Get("rule_json"))
@@ -320,21 +322,21 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			rules = append(rules, findShieldRule(output.WebACL.Rules)...)
 		}
 
-		// if d.HasChange("rule_json") {
-		// 	rules, err := expandWebACLRulesJSON(d.Get("rule_json").(string))
-		// 	if err != nil {
-		// 		return sdkdiag.AppendErrorf(diags, "expanding WAFv2 WebACL JSON rule (%s): %s", d.Id(), err)
-		// 	}
-		// 	if sr := findShieldRule(rules); len(sr) == 0 {
-		// 		output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), aclName, aclScope)
+		if d.HasChange("rule_json") {
+			rules, err := expandWebACLRulesJSON(d.Get("rule_json").(string))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "expanding WAFv2 WebACL JSON rule (%s): %s", d.Id(), err)
+			}
+			if sr := findShieldRule(rules); len(sr) == 0 {
+				output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), aclName, aclScope)
 
-		// 		if err != nil {
-		// 			return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
-		// 		}
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
+				}
 
-		// 		rules = append(rules, findShieldRule(output.WebACL.Rules)...)
-		// 	}
-		// }
+				rules = append(rules, findShieldRule(output.WebACL.Rules)...)
+			}
+		}
 
 		input := &wafv2.UpdateWebACLInput{
 			AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
