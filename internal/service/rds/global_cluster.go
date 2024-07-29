@@ -64,7 +64,13 @@ func ResourceGlobalCluster() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"source_db_cluster_identifier"},
-				ValidateFunc:  validation.StringInSlice(GlobalClusterEngine_Values(), false),
+				ValidateFunc:  validation.StringInSlice(globalClusterEngine_Values(), false),
+			},
+			"engine_lifecycle_support": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(engineLifecycleSupport_Values(), false),
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -144,6 +150,10 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		input.Engine = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("engine_lifecycle_support"); ok {
+		input.EngineLifecycleSupport = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
@@ -160,7 +170,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	// since we cannot have Engine default after adding SourceDBClusterIdentifier:
 	// InvalidParameterValue: When creating standalone global cluster, value for engineName should be specified
 	if input.Engine == nil && input.SourceDBClusterIdentifier == nil {
-		input.Engine = aws.String(GlobalClusterEngineAurora)
+		input.Engine = aws.String(globalClusterEngineAurora)
 	}
 
 	output, err := conn.CreateGlobalClusterWithContext(ctx, input)
@@ -198,6 +208,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrDatabaseName, globalCluster.DatabaseName)
 	d.Set(names.AttrDeletionProtection, globalCluster.DeletionProtection)
 	d.Set(names.AttrEngine, globalCluster.Engine)
+	d.Set("engine_lifecycle_support", globalCluster.EngineLifecycleSupport)
 	d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
 	if err := d.Set("global_cluster_members", flattenGlobalClusterMembers(globalCluster.GlobalClusterMembers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting global_cluster_members: %s", err)

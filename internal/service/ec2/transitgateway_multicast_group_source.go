@@ -82,7 +82,7 @@ func resourceTransitGatewayMulticastGroupSourceRead(ctx context.Context, d *sche
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	multicastDomainID, groupIPAddress, eniID, err := TransitGatewayMulticastGroupSourceParseResourceID(d.Id())
+	multicastDomainID, groupIPAddress, eniID, err := transitGatewayMulticastGroupSourceParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -115,7 +115,7 @@ func resourceTransitGatewayMulticastGroupSourceDelete(ctx context.Context, d *sc
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	multicastDomainID, groupIPAddress, eniID, err := TransitGatewayMulticastGroupSourceParseResourceID(d.Id())
+	multicastDomainID, groupIPAddress, eniID, err := transitGatewayMulticastGroupSourceParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -171,7 +171,7 @@ func transitGatewayMulticastGroupSourceCreateResourceID(multicastDomainID, group
 	return id
 }
 
-func TransitGatewayMulticastGroupSourceParseResourceID(id string) (string, string, string, error) {
+func transitGatewayMulticastGroupSourceParseResourceID(id string) (string, string, string, error) {
 	parts := strings.Split(id, transitGatewayMulticastGroupSourceIDSeparator)
 
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {

@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_network_performance_metric_subscription")
-func ResourceNetworkPerformanceMetricSubscription() *schema.Resource {
+// @SDKResource("aws_vpc_network_performance_metric_subscription", name="VPC Network Performance Metric Subscription")
+func resourceNetworkPerformanceMetricSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkPerformanceMetricSubscriptionCreate,
 		ReadWithoutTimeout:   resourceNetworkPerformanceMetricSubscriptionRead,
@@ -63,14 +63,13 @@ func ResourceNetworkPerformanceMetricSubscription() *schema.Resource {
 
 func resourceNetworkPerformanceMetricSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	source := d.Get(names.AttrSource).(string)
 	destination := d.Get(names.AttrDestination).(string)
 	metric := d.Get("metric").(string)
 	statistic := d.Get("statistic").(string)
-	id := NetworkPerformanceMetricSubscriptionCreateResourceID(source, destination, metric, statistic)
+	id := networkPerformanceMetricSubscriptionCreateResourceID(source, destination, metric, statistic)
 	input := &ec2.EnableAwsNetworkPerformanceMetricSubscriptionInput{
 		Destination: aws.String(destination),
 		Metric:      types.MetricType(metric),
@@ -91,11 +90,9 @@ func resourceNetworkPerformanceMetricSubscriptionCreate(ctx context.Context, d *
 
 func resourceNetworkPerformanceMetricSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	source, destination, metric, statistic, err := NetworkPerformanceMetricSubscriptionResourceID(d.Id())
-
+	source, destination, metric, statistic, err := networkPerformanceMetricSubscriptionParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -123,11 +120,9 @@ func resourceNetworkPerformanceMetricSubscriptionRead(ctx context.Context, d *sc
 
 func resourceNetworkPerformanceMetricSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	source, destination, metric, statistic, err := NetworkPerformanceMetricSubscriptionResourceID(d.Id())
-
+	source, destination, metric, statistic, err := networkPerformanceMetricSubscriptionParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -149,14 +144,14 @@ func resourceNetworkPerformanceMetricSubscriptionDelete(ctx context.Context, d *
 
 const networkPerformanceMetricSubscriptionRuleIDSeparator = "/"
 
-func NetworkPerformanceMetricSubscriptionCreateResourceID(source, destination, metric, statistic string) string {
+func networkPerformanceMetricSubscriptionCreateResourceID(source, destination, metric, statistic string) string {
 	parts := []string{source, destination, metric, statistic}
 	id := strings.Join(parts, networkPerformanceMetricSubscriptionRuleIDSeparator)
 
 	return id
 }
 
-func NetworkPerformanceMetricSubscriptionResourceID(id string) (string, string, string, string, error) {
+func networkPerformanceMetricSubscriptionParseResourceID(id string) (string, string, string, string, error) {
 	parts := strings.Split(id, networkPerformanceMetricSubscriptionRuleIDSeparator)
 
 	if len(parts) == 4 && parts[0] != "" && parts[1] != "" && parts[2] != "" && parts[3] != "" {

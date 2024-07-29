@@ -22,6 +22,7 @@ import (
 
 // @SDKDataSource("aws_ec2_transit_gateway_route_table", name="Transit Gateway Route Table")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceTransitGatewayRouteTable() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayRouteTableRead,
@@ -64,7 +65,7 @@ func dataSourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.Resou
 
 	input := &ec2.DescribeTransitGatewayRouteTablesInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -96,7 +97,7 @@ func dataSourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.Resou
 	d.Set("default_propagation_route_table", transitGatewayRouteTable.DefaultPropagationRouteTable)
 	d.Set(names.AttrTransitGatewayID, transitGatewayRouteTable.TransitGatewayId)
 
-	setTagsOutV2(ctx, transitGatewayRouteTable.Tags)
+	setTagsOut(ctx, transitGatewayRouteTable.Tags)
 
 	return diags
 }

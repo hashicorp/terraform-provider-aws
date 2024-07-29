@@ -399,20 +399,20 @@ func (r tagsDataSourceInterceptor) run(ctx context.Context, d schemaResourceData
 		return ctx, diags
 	}
 
-	// sp, ok := meta.(*conns.AWSClient).ServicePackages[inContext.ServicePackageName]
-	// if !ok {
-	// 	return ctx, diags
-	// }
+	sp, ok := meta.(*conns.AWSClient).ServicePackages[inContext.ServicePackageName]
+	if !ok {
+		return ctx, diags
+	}
 
-	// serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
-	// if err != nil {
-	// 	serviceName = "<service>"
-	// }
+	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
+	if err != nil {
+		serviceName = "<service>"
+	}
 
-	// resourceName := inContext.ResourceName
-	// if resourceName == "" {
-	// 	resourceName = "<thing>"
-	// }
+	resourceName := inContext.ResourceName
+	if resourceName == "" {
+		resourceName = "<thing>"
+	}
 
 	tagsInContext, ok := tftags.FromContext(ctx)
 	if !ok {
@@ -428,21 +428,64 @@ func (r tagsDataSourceInterceptor) run(ctx context.Context, d schemaResourceData
 			tagsInContext.TagsIn = option.Some(tags)
 		}
 	case After:
-		// Set tags and tags_all in state after CRU.
-		// C & U handlers are assumed to tail call the R handler.
+		// Set tags in state after R.
 		switch why {
 		case Read:
-			// Will occur on a refresh when the resource does not exist in AWS and needs to be recreated, e.g. "_disappears" tests.
+			// TODO: can this occur for a data source?
 			if d.Id() == "" {
 				return ctx, diags
 			}
 
-			fallthrough
-		case Create, Update:
 			// If the R handler didn't set tags, try and read them from the service API.
-			// TODO.
-			// if tagsInContext.TagsOut.IsNone() {
-			// }
+			if tagsInContext.TagsOut.IsNone() {
+				if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
+					var identifier string
+					if identifierAttribute == "id" {
+						identifier = d.Id()
+					} else {
+						identifier = d.Get(identifierAttribute).(string)
+					}
+
+					// TODO: can this occur for a data source?
+					// Some old resources may not have the required attribute set after Read:
+					// https://github.com/hashicorp/terraform-provider-aws/issues/31180
+					if identifier != "" {
+						// If the service package has a generic resource list tags methods, call it.
+						var err error
+
+						if v, ok := sp.(interface {
+							ListTags(context.Context, any, string) error
+						}); ok {
+							err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
+						} else if v, ok := sp.(interface {
+							ListTags(context.Context, any, string, string) error
+						}); ok && r.tags.ResourceType != "" {
+							err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+						} else {
+							tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
+								"ServicePackage": sp.ServicePackageName(),
+								"ResourceType":   r.tags.ResourceType,
+							})
+						}
+
+						// ISO partitions may not support tagging, giving error.
+						if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+							return ctx, diags
+						}
+
+						if inContext.ServicePackageName == names.DynamoDB && err != nil {
+							// When a DynamoDB Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`.
+							if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+								err = nil
+							}
+						}
+
+						if err != nil {
+							return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+						}
+					}
+				}
+			}
 
 			// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 			tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig)

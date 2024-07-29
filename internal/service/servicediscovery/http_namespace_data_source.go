@@ -6,8 +6,8 @@ package servicediscovery
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicediscovery"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_service_discovery_http_namespace")
-func DataSourceHTTPNamespace() *schema.Resource {
+// @SDKDataSource("aws_service_discovery_http_namespace", name="HTTP Namespace")
+func dataSourceHTTPNamespace() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHTTPNamespaceRead,
 
@@ -46,26 +46,25 @@ func DataSourceHTTPNamespace() *schema.Resource {
 
 func dataSourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
-	nsSummary, err := findNamespaceByNameAndType(ctx, conn, name, servicediscovery.NamespaceTypeHttp)
+	nsSummary, err := findNamespaceByNameAndType(ctx, conn, name, awstypes.NamespaceTypeHttp)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Service Discovery HTTP Namespace (%s): %s", name, err)
 	}
 
-	namespaceID := aws.StringValue(nsSummary.Id)
-
-	ns, err := FindNamespaceByID(ctx, conn, namespaceID)
+	namespaceID := aws.ToString(nsSummary.Id)
+	ns, err := findNamespaceByID(ctx, conn, namespaceID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Service Discovery HTTP Namespace (%s): %s", namespaceID, err)
 	}
 
 	d.SetId(namespaceID)
-	arn := aws.StringValue(ns.Arn)
+	arn := aws.ToString(ns.Arn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, ns.Description)
 	if ns.Properties != nil && ns.Properties.HttpProperties != nil {

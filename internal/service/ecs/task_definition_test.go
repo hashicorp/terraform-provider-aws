@@ -9,15 +9,16 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/ecs"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -28,6 +29,7 @@ func init() {
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"Unsupported field 'inferenceAccelerators'",
+		"Encountered 'VolumeTypeNotAvailableInZone' error from AmazonEC2",
 	)
 }
 
@@ -60,16 +62,40 @@ func Test_StripRevision(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			if got := tfecs.StripRevision(tc.s); got != tc.want {
+			if got := tfecs.TaskDefinitionARNStripRevision(tc.s); got != tc.want {
 				t.Errorf("StripRevision() = %v, want %v", got, tc.want)
 			}
 		})
 	}
 }
 
+func TestValidTaskDefinitionContainerDefinitions(t *testing.T) {
+	t.Parallel()
+
+	validDefinitions := []string{
+		testValidTaskDefinitionValidContainerDefinitions,
+	}
+	for _, v := range validDefinitions {
+		_, errors := tfecs.ValidTaskDefinitionContainerDefinitions(v, "container_definitions")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid AWS ECS Task Definition Container Definitions: %q", v, errors)
+		}
+	}
+
+	invalidDefinitions := []string{
+		testValidTaskDefinitionInvalidCommandContainerDefinitions,
+	}
+	for _, v := range invalidDefinitions {
+		_, errors := tfecs.ValidTaskDefinitionContainerDefinitions(v, "container_definitions")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid AWS ECS Task Definition Container Definitions", v)
+		}
+	}
+}
+
 func TestAccECSTaskDefinition_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -110,7 +136,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 // Regression for https://github.com/hashicorp/terraform/issues/2370
 func TestAccECSTaskDefinition_scratchVolume(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -139,7 +165,7 @@ func TestAccECSTaskDefinition_scratchVolume(t *testing.T) {
 
 func TestAccECSTaskDefinition_configuredAtLaunch(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -170,7 +196,7 @@ func TestAccECSTaskDefinition_configuredAtLaunch(t *testing.T) {
 
 func TestAccECSTaskDefinition_DockerVolume_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -213,7 +239,7 @@ func TestAccECSTaskDefinition_DockerVolume_basic(t *testing.T) {
 
 func TestAccECSTaskDefinition_DockerVolume_minimal(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -248,7 +274,7 @@ func TestAccECSTaskDefinition_DockerVolume_minimal(t *testing.T) {
 
 func TestAccECSTaskDefinition_runtimePlatform(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -282,7 +308,7 @@ func TestAccECSTaskDefinition_runtimePlatform(t *testing.T) {
 
 func TestAccECSTaskDefinition_Fargate_runtimePlatform(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -316,7 +342,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatform(t *testing.T) {
 
 func TestAccECSTaskDefinition_Fargate_runtimePlatformWithoutArch(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -349,7 +375,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatformWithoutArch(t *testing.T) {
 
 func TestAccECSTaskDefinition_EFSVolume_minimal(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -384,7 +410,7 @@ func TestAccECSTaskDefinition_EFSVolume_minimal(t *testing.T) {
 
 func TestAccECSTaskDefinition_EFSVolume_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -420,7 +446,7 @@ func TestAccECSTaskDefinition_EFSVolume_basic(t *testing.T) {
 
 func TestAccECSTaskDefinition_EFSVolume_transitEncryptionMinimal(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -458,7 +484,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryptionMinimal(t *testing.T) {
 
 func TestAccECSTaskDefinition_EFSVolume_transitEncryption(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -496,7 +522,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryption(t *testing.T) {
 
 func TestAccECSTaskDefinition_EFSVolume_transitEncryptionDisabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -533,7 +559,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryptionDisabled(t *testing.T) 
 
 func TestAccECSTaskDefinition_EFSVolume_accessPoint(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -574,7 +600,7 @@ func TestAccECSTaskDefinition_EFSVolume_accessPoint(t *testing.T) {
 
 func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 	domainName := acctest.RandomDomainName()
@@ -622,7 +648,7 @@ func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
 
 func TestAccECSTaskDefinition_DockerVolume_taskScoped(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -647,10 +673,10 @@ func TestAccECSTaskDefinition_DockerVolume_taskScoped(t *testing.T) {
 // Regression for https://github.com/hashicorp/terraform/issues/2694
 func TestAccECSTaskDefinition_service(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
-	var service ecs.Service
+	var service awstypes.Service
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -685,7 +711,7 @@ func TestAccECSTaskDefinition_service(t *testing.T) {
 
 func TestAccECSTaskDefinition_taskRoleARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -714,7 +740,7 @@ func TestAccECSTaskDefinition_taskRoleARN(t *testing.T) {
 
 func TestAccECSTaskDefinition_networkMode(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -744,7 +770,7 @@ func TestAccECSTaskDefinition_networkMode(t *testing.T) {
 
 func TestAccECSTaskDefinition_ipcMode(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -774,7 +800,7 @@ func TestAccECSTaskDefinition_ipcMode(t *testing.T) {
 
 func TestAccECSTaskDefinition_pidMode(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -804,7 +830,7 @@ func TestAccECSTaskDefinition_pidMode(t *testing.T) {
 
 func TestAccECSTaskDefinition_constraint(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -835,7 +861,7 @@ func TestAccECSTaskDefinition_constraint(t *testing.T) {
 
 func TestAccECSTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after ecs.TaskDefinition
+	var before, after awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -872,7 +898,7 @@ func TestAccECSTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 // Regression for https://github.com/hashicorp/terraform-provider-aws/issues/2336
 func TestAccECSTaskDefinition_arrays(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -901,7 +927,7 @@ func TestAccECSTaskDefinition_arrays(t *testing.T) {
 
 func TestAccECSTaskDefinition_Fargate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -938,7 +964,7 @@ func TestAccECSTaskDefinition_Fargate_basic(t *testing.T) {
 
 func TestAccECSTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -972,7 +998,7 @@ func TestAccECSTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 
 func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -1002,7 +1028,7 @@ func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 // Regression for https://github.com/hashicorp/terraform/issues/3582#issuecomment-286409786
 func TestAccECSTaskDefinition_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -1030,7 +1056,7 @@ func TestAccECSTaskDefinition_disappears(t *testing.T) {
 
 func TestAccECSTaskDefinition_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -1078,7 +1104,7 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 
 func TestAccECSTaskDefinition_proxy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 	containerName := "web"
@@ -1117,7 +1143,7 @@ func TestAccECSTaskDefinition_proxy(t *testing.T) {
 
 func TestAccECSTaskDefinition_inferenceAccelerator(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -1165,7 +1191,7 @@ func TestAccECSTaskDefinition_invalidContainerDefinition(t *testing.T) {
 
 func TestAccECSTaskDefinition_trackLatest(t *testing.T) {
 	ctx := acctest.Context(t)
-	var def ecs.TaskDefinition
+	var def awstypes.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_definition.test"
 
@@ -1195,53 +1221,35 @@ func TestAccECSTaskDefinition_trackLatest(t *testing.T) {
 	})
 }
 
-func testAccTaskDefinitionConfig_proxyConfiguration(rName string, containerName string, proxyType string,
-	ignoredUid string, ignoredGid string, appPorts string, proxyIngressPort string, proxyEgressPort string,
-	egressIgnoredPorts string, egressIgnoredIPs string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
+// https://github.com/hashicorp/terraform-provider-aws/issues/38461.
+func TestAccECSTaskDefinition_unknownContainerDefinitions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_unknownContainerDefinitions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+				),
+			},
+		},
+	})
 }
 
-resource "aws_ecs_task_definition" "test" {
-  family       = %[1]q
-  network_mode = "awsvpc"
-
-  proxy_configuration {
-    type           = %[2]q
-    container_name = %[3]q
-    properties = {
-      IgnoredUID         = %[4]q
-      IgnoredGID         = %[5]q
-      AppPorts           = %[6]q
-      ProxyIngressPort   = %[7]q
-      ProxyEgressPort    = %[8]q
-      EgressIgnoredPorts = %[9]q
-      EgressIgnoredIPs   = %[10]q
-    }
-  }
-
-  container_definitions = <<DEFINITION
-[
-  {
-    "cpu": 128,
-    "essential": true,
-    "image": "nginx:latest",
-    "memory": 128,
-    "name": %[11]q
-  }
-]
-DEFINITION
-}
-`, rName, proxyType, containerName, ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs, containerName)
-}
-
-func testAccCheckTaskDefinitionProxyConfiguration(after *ecs.TaskDefinition, containerName string, proxyType string,
+func testAccCheckTaskDefinitionProxyConfiguration(after *awstypes.TaskDefinition, containerName string, proxyType string,
 	ignoredUid string, ignoredGid string, appPorts string, proxyIngressPort string, proxyEgressPort string,
 	egressIgnoredPorts string, egressIgnoredIPs string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if *after.ProxyConfiguration.Type != proxyType {
-			return fmt.Errorf("Expected (%s) ProxyConfiguration.Type, got (%s)", proxyType, *after.ProxyConfiguration.Type)
+		if string(after.ProxyConfiguration.Type) != proxyType {
+			return fmt.Errorf("Expected (%s) ProxyConfiguration.Type, got (%s)", proxyType, string(after.ProxyConfiguration.Type))
 		}
 
 		if *after.ProxyConfiguration.ContainerName != containerName {
@@ -1256,7 +1264,7 @@ func testAccCheckTaskDefinitionProxyConfiguration(after *ecs.TaskDefinition, con
 
 		propertyLookups := make(map[string]string)
 		for _, property := range properties {
-			propertyLookups[aws.StringValue(property.Name)] = aws.StringValue(property.Value)
+			propertyLookups[aws.ToString(property.Name)] = aws.ToString(property.Value)
 		}
 
 		if propertyLookups["IgnoredUID"] != ignoredUid {
@@ -1291,17 +1299,16 @@ func testAccCheckTaskDefinitionProxyConfiguration(after *ecs.TaskDefinition, con
 	}
 }
 
-func testAccCheckTaskDefinitionRecreated(t *testing.T,
-	before, after *ecs.TaskDefinition) resource.TestCheckFunc {
+func testAccCheckTaskDefinitionRecreated(t *testing.T, before, after *awstypes.TaskDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if *before.Revision == *after.Revision {
+		if before.Revision == after.Revision {
 			t.Fatalf("Expected change of TaskDefinition Revisions, but both were %v", before.Revision)
 		}
 		return nil
 	}
 }
 
-func testAccCheckTaskDefinitionConstraintsAttrs(def *ecs.TaskDefinition) resource.TestCheckFunc {
+func testAccCheckTaskDefinitionConstraintsAttrs(def *awstypes.TaskDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if len(def.PlacementConstraints) != 1 {
 			return fmt.Errorf("Expected (1) placement_constraints, got (%d)", len(def.PlacementConstraints))
@@ -1310,80 +1317,54 @@ func testAccCheckTaskDefinitionConstraintsAttrs(def *ecs.TaskDefinition) resourc
 	}
 }
 
-func TestValidTaskDefinitionContainerDefinitions(t *testing.T) {
-	t.Parallel()
-
-	validDefinitions := []string{
-		testValidTaskDefinitionValidContainerDefinitions,
-	}
-	for _, v := range validDefinitions {
-		_, errors := tfecs.ValidTaskDefinitionContainerDefinitions(v, "container_definitions")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid AWS ECS Task Definition Container Definitions: %q", v, errors)
-		}
-	}
-
-	invalidDefinitions := []string{
-		testValidTaskDefinitionInvalidCommandContainerDefinitions,
-	}
-	for _, v := range invalidDefinitions {
-		_, errors := tfecs.ValidTaskDefinitionContainerDefinitions(v, "container_definitions")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid AWS ECS Task Definition Container Definitions", v)
-		}
-	}
-}
-
 func testAccCheckTaskDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_task_definition" {
 				continue
 			}
 
-			input := ecs.DescribeTaskDefinitionInput{
-				TaskDefinition: aws.String(rs.Primary.Attributes[names.AttrARN]),
-			}
+			_, _, err := tfecs.FindTaskDefinitionByFamilyOrARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
-			out, err := conn.DescribeTaskDefinitionWithContext(ctx, &input)
+			if tfresource.NotFound(err) {
+				return nil
+			}
 
 			if err != nil {
 				return err
 			}
 
-			if out.TaskDefinition != nil && *out.TaskDefinition.Status != ecs.TaskDefinitionStatusInactive {
-				return fmt.Errorf("ECS task definition still exists:\n%#v", *out.TaskDefinition)
-			}
+			return fmt.Errorf("ECS Task Definition %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTaskDefinitionExists(ctx context.Context, name string, def *ecs.TaskDefinition) resource.TestCheckFunc {
+func testAccCheckTaskDefinitionExists(ctx context.Context, n string, v *awstypes.TaskDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
 
-		out, err := conn.DescribeTaskDefinitionWithContext(ctx, &ecs.DescribeTaskDefinitionInput{
-			TaskDefinition: aws.String(rs.Primary.Attributes[names.AttrARN]),
-		})
+		output, _, err := tfecs.FindTaskDefinitionByFamilyOrARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
 		if err != nil {
 			return err
 		}
-		*def = *out.TaskDefinition
+
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckTaskDefinitionDockerVolumeConfigurationAutoprovisionNil(def *ecs.TaskDefinition) resource.TestCheckFunc {
+func testAccCheckTaskDefinitionDockerVolumeConfigurationAutoprovisionNil(def *awstypes.TaskDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if len(def.Volumes) != 1 {
 			return fmt.Errorf("Expected (1) volumes, got (%d)", len(def.Volumes))
@@ -3006,6 +2987,161 @@ TASK_DEFINITION
   }
 
   track_latest = true
+}
+`, rName)
+}
+
+func testAccTaskDefinitionConfig_proxyConfiguration(rName string, containerName string, proxyType string,
+	ignoredUid string, ignoredGid string, appPorts string, proxyIngressPort string, proxyEgressPort string,
+	egressIgnoredPorts string, egressIgnoredIPs string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family       = %[1]q
+  network_mode = "awsvpc"
+
+  proxy_configuration {
+    type           = %[2]q
+    container_name = %[3]q
+    properties = {
+      IgnoredUID         = %[4]q
+      IgnoredGID         = %[5]q
+      AppPorts           = %[6]q
+      ProxyIngressPort   = %[7]q
+      ProxyEgressPort    = %[8]q
+      EgressIgnoredPorts = %[9]q
+      EgressIgnoredIPs   = %[10]q
+    }
+  }
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "nginx:latest",
+    "memory": 128,
+    "name": %[11]q
+  }
+]
+DEFINITION
+}
+`, rName, proxyType, containerName, ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs, containerName)
+}
+
+func testAccTaskDefinitionConfig_unknownContainerDefinitions(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_ssm_parameter" "test" {
+  name  = %[1]q
+  type  = "String"
+  value = "test"
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "test" {
+  name        = %[1]q
+  description = "A test policy"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ssm:*",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.test.arn
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = 1024
+  memory                   = 4096
+  execution_role_arn       = aws_iam_role.test.arn
+
+  # Contains unknown values during plan.
+  container_definitions = jsonencode([
+    {
+      name  = "jenkins"
+      image = "jenkins/jenkins"
+      portMappings = [
+        {
+          containerPort = 1234,
+          hostPort      = 1234
+        }
+      ]
+      environment = [
+        {
+          name  = "example1"
+          value = "123"
+        },
+        {
+          name  = "example2"
+          value = "456"
+        },
+        {
+          name  = "example3"
+          value = "789"
+        }
+      ]
+      secrets = [
+        {
+          name      = "example4"
+          valueFrom = aws_ssm_parameter.test.arn
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.test.name
+          "awslogs-region"        = data.aws_region.current.name
+          "awslogs-stream-prefix" = "ecs"
+        }
+      }
+    }
+  ])
 }
 `, rName)
 }

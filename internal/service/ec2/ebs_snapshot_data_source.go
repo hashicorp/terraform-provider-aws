@@ -23,6 +23,7 @@ import (
 
 // @SDKDataSource("aws_ebs_snapshot", name="EBS Snapshot")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceEBSSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEBSSnapshotRead,
@@ -128,7 +129,7 @@ func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta
 		input.SnapshotIds = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -180,7 +181,7 @@ func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("volume_id", snapshot.VolumeId)
 	d.Set(names.AttrVolumeSize, snapshot.VolumeSize)
 
-	setTagsOutV2(ctx, snapshot.Tags)
+	setTagsOut(ctx, snapshot.Tags)
 
 	return diags
 }

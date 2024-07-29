@@ -8,9 +8,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -154,7 +156,7 @@ func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		return create.AppendDiagError(diags, names.RDS, create.ErrActionCreating, ResNameReservedInstance, fmt.Sprintf("offering_id: %s, reservation_id: %s", d.Get("offering_id").(string), d.Get("reservation_id").(string)), err)
 	}
 
-	d.SetId(aws.ToString(resp.ReservedDBInstance.ReservedDBInstanceId))
+	d.SetId(aws.StringValue(resp.ReservedDBInstance.ReservedDBInstanceId))
 
 	if err := waitReservedInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.AppendDiagError(diags, names.RDS, create.ErrActionWaitingForCreation, ResNameReservedInstance, d.Id(), err)
@@ -204,6 +206,69 @@ func resourceReservedInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 	return resourceReservedInstanceRead(ctx, d, meta)
 }
 
+func FindReservedDBInstanceByID(ctx context.Context, conn *rds.RDS, id string) (*rds.ReservedDBInstance, error) {
+	input := &rds.DescribeReservedDBInstancesInput{
+		ReservedDBInstanceId: aws.String(id),
+	}
+
+	output, err := conn.DescribeReservedDBInstancesWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeReservedDBInstanceNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.ReservedDBInstances) == 0 || output.ReservedDBInstances[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.ReservedDBInstances); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.ReservedDBInstances[0], nil
+}
+
+func statusReservedInstance(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindReservedDBInstanceByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func waitReservedInstanceCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			ReservedInstanceStatePaymentPending,
+		},
+		Target:         []string{ReservedInstanceStateActive},
+		Refresh:        statusReservedInstance(ctx, conn, id),
+		NotFoundChecks: 5,
+		Timeout:        timeout,
+		MinTimeout:     10 * time.Second,
+		Delay:          30 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
 func flattenRecurringCharges(recurringCharges []*rds.RecurringCharge) []interface{} {
 	if len(recurringCharges) == 0 {
 		return []interface{}{}
@@ -213,7 +278,7 @@ func flattenRecurringCharges(recurringCharges []*rds.RecurringCharge) []interfac
 	for _, recurringCharge := range recurringCharges {
 		rawRecurringCharge := map[string]interface{}{
 			"recurring_charge_amount":    recurringCharge.RecurringChargeAmount,
-			"recurring_charge_frequency": aws.ToString(recurringCharge.RecurringChargeFrequency),
+			"recurring_charge_frequency": aws.StringValue(recurringCharge.RecurringChargeFrequency),
 		}
 
 		rawRecurringCharges = append(rawRecurringCharges, rawRecurringCharge)

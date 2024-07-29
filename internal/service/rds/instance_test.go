@@ -14,8 +14,8 @@ import (
 
 	"github.com/YakDriver/regexache"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/rds"
 	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -213,6 +213,50 @@ func TestAccRDSInstance_disappears(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_engineLifecycleSupport_disabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_engineLifecycleSupport_disabled(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceAttributes(&v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`db:.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.InstanceEngineMySQL),
+					resource.TestCheckResourceAttr(resourceName, "engine_lifecycle_support", "open-source-rds-extended-support-disabled"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					names.AttrPassword,
+					"manage_master_user_password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+				},
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_Versions_onlyMajor(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -305,7 +349,7 @@ func TestAccRDSInstance_customIAMInstanceProfile(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -2213,6 +2257,50 @@ func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_parameterGroupNameEquivale
 	})
 }
 
+func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_parameterGroupNamePostgres(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance rds.DBInstance
+	var providers []*schema.Provider
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_CrossRegion_ParameterGroupName_postgres(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExistsWithProvider(ctx, sourceResourceName, &sourceDbInstance, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					resource.TestCheckResourceAttr(sourceResourceName, names.AttrParameterGroupName, fmt.Sprintf("%s-source", rName)),
+					testAccCheckDBInstanceExistsWithProvider(ctx, resourceName, &dbInstance, acctest.RegionProviderFunc(acctest.Region(), &providers)),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrParameterGroupName, "aws_db_parameter_group.test", names.AttrName),
+					testAccCheckInstanceParameterApplyStatusInSync(&dbInstance),
+					testAccCheckInstanceParameterApplyStatusInSync(&sourceDbInstance),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrPassword,
+				},
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_characterSet(t *testing.T) {
 	t.Skip("Skipping due to upstream error")
 	ctx := acctest.Context(t)
@@ -2299,7 +2387,7 @@ func TestAccRDSInstance_SnapshotIdentifier_basic(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -2344,7 +2432,7 @@ func TestAccRDSInstance_SnapshotIdentifier_ManageMasterPasswordKMSKey(t *testing
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -2511,7 +2599,7 @@ func TestAccRDSInstance_SnapshotIdentifier_allocatedStorage(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -2544,7 +2632,7 @@ func TestAccRDSInstance_SnapshotIdentifier_io1Storage(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -2577,7 +2665,7 @@ func TestAccRDSInstance_SnapshotIdentifier_io2Storage(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -2610,7 +2698,7 @@ func TestAccRDSInstance_SnapshotIdentifier_allowMajorVersionUpgrade(t *testing.T
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -2643,7 +2731,7 @@ func TestAccRDSInstance_SnapshotIdentifier_autoMinorVersionUpgrade(t *testing.T)
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -2676,7 +2764,7 @@ func TestAccRDSInstance_SnapshotIdentifier_availabilityZone(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -2708,7 +2796,7 @@ func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodOverride(t *test
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -2741,7 +2829,7 @@ func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodUnset(t *testing
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -2774,7 +2862,7 @@ func TestAccRDSInstance_SnapshotIdentifier_backupWindow(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -2807,7 +2895,7 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupName(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	sourceDbResourceName := "aws_db_instance.source"
@@ -2840,7 +2928,7 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameRAMShared(t *testing
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	sourceDbResourceName := "aws_db_instance.source"
@@ -2877,7 +2965,7 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameVPCSecurityGroupIDs(
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	sourceDbResourceName := "aws_db_instance.source"
@@ -2910,7 +2998,7 @@ func TestAccRDSInstance_SnapshotIdentifier_deletionProtection(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -2953,7 +3041,7 @@ func TestAccRDSInstance_SnapshotIdentifier_iamDatabaseAuthenticationEnabled(t *t
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -2986,7 +3074,7 @@ func TestAccRDSInstance_SnapshotIdentifier_maintenanceWindow(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -3019,7 +3107,7 @@ func TestAccRDSInstance_SnapshotIdentifier_maxAllocatedStorage(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -3052,7 +3140,7 @@ func TestAccRDSInstance_SnapshotIdentifier_monitoring(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -3085,7 +3173,7 @@ func TestAccRDSInstance_SnapshotIdentifier_multiAZ(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -3118,7 +3206,7 @@ func TestAccRDSInstance_SnapshotIdentifier_multiAZSQLServer(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -3152,7 +3240,7 @@ func TestAccRDSInstance_SnapshotIdentifier_parameterGroupName(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -3186,7 +3274,7 @@ func TestAccRDSInstance_SnapshotIdentifier_port(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -3219,7 +3307,7 @@ func TestAccRDSInstance_SnapshotIdentifier_tags(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -3263,7 +3351,7 @@ func TestAccRDSInstance_SnapshotIdentifier_tagsRemove(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -3305,7 +3393,7 @@ func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -3341,7 +3429,7 @@ func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDsTags(t *testing.T)
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
@@ -4555,7 +4643,7 @@ func TestAccRDSInstance_SnapshotIdentifier_performanceInsightsEnabled(t *testing
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -5005,7 +5093,7 @@ func TestAccRDSInstance_Outposts_coIPRestoreToPointInTime(t *testing.T) {
 func TestAccRDSInstance_Outposts_coIPSnapshotIdentifier(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbInstance, sourceDbInstance rds.DBInstance
-	var dbSnapshot rds.DBSnapshot
+	var dbSnapshot types.DBSnapshot
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.test"
@@ -6365,7 +6453,8 @@ func testAccCheckInstanceReplicaAttributes(source, replica *rds.DBInstance) reso
 // The snapshot is deleted.
 func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn1 := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn2 := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_instance" {
@@ -6373,12 +6462,12 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.
 			}
 
 			finalSnapshotID := rs.Primary.Attributes[names.AttrFinalSnapshotIdentifier]
-			output, err := tfrds.FindDBSnapshotByID(ctx, conn, finalSnapshotID)
+			output, err := tfrds.FindDBSnapshotByID(ctx, conn2, finalSnapshotID)
 			if err != nil {
 				return err
 			}
 
-			tags, err := tfrds.ListTags(ctx, conn, aws.StringValue(output.DBSnapshotArn))
+			tags, err := tfrds.ListTags(ctx, conn1, aws.StringValue(output.DBSnapshotArn))
 			if err != nil {
 				return err
 			}
@@ -6387,7 +6476,7 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.
 				return fmt.Errorf("Name tag not found")
 			}
 
-			_, err = conn.DeleteDBSnapshotWithContext(ctx, &rds.DeleteDBSnapshotInput{
+			_, err = conn2.DeleteDBSnapshot(ctx, &rds_sdkv2.DeleteDBSnapshotInput{
 				DBSnapshotIdentifier: aws.String(finalSnapshotID),
 			})
 
@@ -6395,7 +6484,7 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.
 				return err
 			}
 
-			_, err = tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
+			_, err = tfrds.FindDBInstanceByID(ctx, conn1, rs.Primary.Attributes[names.AttrIdentifier])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -6417,7 +6506,8 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.
 // - No DBSnapshot has been produced
 func testAccCheckInstanceDestroyWithoutFinalSnapshot(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn1 := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn2 := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_instance" {
@@ -6425,7 +6515,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(ctx context.Context) resour
 			}
 
 			finalSnapshotID := rs.Primary.Attributes[names.AttrFinalSnapshotIdentifier]
-			_, err := tfrds.FindDBSnapshotByID(ctx, conn, finalSnapshotID)
+			_, err := tfrds.FindDBSnapshotByID(ctx, conn2, finalSnapshotID)
 
 			if err != nil {
 				if !tfresource.NotFound(err) {
@@ -6435,7 +6525,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(ctx context.Context) resour
 				return fmt.Errorf("RDS DB Snapshot %s exists", finalSnapshotID)
 			}
 
-			_, err = tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
+			_, err = tfrds.FindDBInstanceByID(ctx, conn1, rs.Primary.Attributes[names.AttrIdentifier])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -6694,6 +6784,31 @@ resource "aws_db_instance" "test" {
   username            = "tfacctest"
 }
 `)
+}
+
+func testAccInstanceConfig_engineLifecycleSupport_disabled(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier               = %[1]q
+  allocated_storage        = 10
+  backup_retention_period  = 0
+  engine                   = data.aws_rds_orderable_db_instance.test.engine
+  engine_version           = data.aws_rds_orderable_db_instance.test.engine_version
+  engine_lifecycle_support = "open-source-rds-extended-support-disabled"
+  instance_class           = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                  = "test"
+  parameter_group_name     = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  skip_final_snapshot      = true
+  password                 = "avoid-plaintext-passwords"
+  username                 = "tfacctest"
+  # Maintenance Window is stored in lower case in the API, though not strictly
+  # documented. Terraform will downcase this to match (as opposed to throw a
+  # validation error).
+  maintenance_window = "Fri:09:00-Fri:09:30"
+}
+`, rName))
 }
 
 func testAccInstanceConfig_majorVersionOnly(rName string) string {
@@ -9959,6 +10074,66 @@ data "aws_rds_orderable_db_instance" "test" {
   preferred_instance_classes = [%[3]s]
 }
 `, rName, tfrds.InstanceEngineOracleEnterprise, strings.Replace(mainInstanceClasses, "db.t3.small", "frodo", 1), parameters))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_CrossRegion_ParameterGroupName_postgres(rName string) string {
+	parameters := `
+parameter {
+  name         = "client_encoding"
+  value        = "UTF8"
+  apply_method = "pending-reboot"
+}
+`
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		testAccInstanceConfig_orderableClassPostgres(), fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  provider = "aws"
+
+  identifier           = %[1]q
+  replicate_source_db  = aws_db_instance.source.arn
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  skip_final_snapshot  = true
+  apply_immediately    = true
+  parameter_group_name = aws_db_parameter_group.test.name
+}
+
+resource "aws_db_parameter_group" "test" {
+  provider = "aws"
+
+  family = data.aws_rds_engine_version.default.parameter_group_family
+  name   = %[1]q
+
+  %[2]s
+}
+
+resource "aws_db_instance" "source" {
+  provider = "awsalternate"
+
+  identifier              = "%[1]s-source"
+  allocated_storage       = 20
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
+  db_name                 = "MAINDB"
+  username                = "oadmin"
+  password                = "avoid-plaintext-passwords"
+  skip_final_snapshot     = true
+  apply_immediately       = true
+  backup_retention_period = 3
+  parameter_group_name    = aws_db_parameter_group.source.name
+}
+
+resource "aws_db_parameter_group" "source" {
+  provider = "awsalternate"
+
+  family = data.aws_rds_engine_version.default.parameter_group_family
+  name   = "%[1]s-source"
+
+  %[2]s
+}
+`, rName, parameters))
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_CrossRegion_CharacterSet(rName string) string {

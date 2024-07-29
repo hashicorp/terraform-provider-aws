@@ -174,6 +174,16 @@ func RegisterSweepers() {
 		},
 	})
 
+	resource.AddTestSweepers("aws_ec2_managed_prefix_list", &resource.Sweeper{
+		Name: "aws_ec2_managed_prefix_list",
+		F:    sweepManagedPrefixLists,
+		Dependencies: []string{
+			"aws_route_table",
+			"aws_security_group",
+			"aws_networkfirewall_rule_group",
+		},
+	})
+
 	resource.AddTestSweepers("aws_ec2_network_insights_path", &resource.Sweeper{
 		Name: "aws_ec2_network_insights_path",
 		F:    sweepNetworkInsightsPaths,
@@ -810,7 +820,7 @@ func sweepEgressOnlyInternetGateways(region string) error {
 		}
 
 		for _, v := range page.EgressOnlyInternetGateways {
-			r := ResourceEgressOnlyInternetGateway()
+			r := resourceEgressOnlyInternetGateway()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.EgressOnlyInternetGatewayId))
 
@@ -942,7 +952,7 @@ func sweepFlowLogs(region string) error {
 		}
 
 		for _, flowLog := range page.FlowLogs {
-			r := ResourceFlowLog()
+			r := resourceFlowLog()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(flowLog.FlowLogId))
 
@@ -1114,7 +1124,7 @@ func sweepInternetGateways(region string) error {
 				continue
 			}
 
-			r := ResourceInternetGateway()
+			r := resourceInternetGateway()
 			d := r.Data(nil)
 			d.SetId(internetGatewayID)
 			if len(internetGateway.Attachments) > 0 {
@@ -1237,7 +1247,7 @@ func sweepNATGateways(region string) error {
 		}
 
 		for _, v := range page.NatGateways {
-			r := ResourceNATGateway()
+			r := resourceNATGateway()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.NatGatewayId))
 
@@ -1355,6 +1365,51 @@ func sweepNetworkInterfaces(region string) error {
 	return nil
 }
 
+func sweepManagedPrefixLists(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.EC2Client(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := ec2.NewDescribeManagedPrefixListsPaginator(conn, &ec2.DescribeManagedPrefixListsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Managed Prefix List sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Managed Prefix Lists (%s): %w", region, err)
+		}
+
+		for _, v := range page.PrefixLists {
+			if aws.ToString(v.OwnerId) == "AWS" {
+				log.Printf("[DEBUG] Skipping AWS-managed prefix list: %s", aws.ToString(v.PrefixListName))
+				continue
+			}
+
+			r := resourceManagedPrefixList()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.PrefixListId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Managed Prefix Lists (%s): %w", region, err)
+	}
+
+	return nil
+}
+
 func sweepNetworkInsightsPaths(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
@@ -1378,13 +1433,11 @@ func sweepNetworkInsightsPaths(region string) error {
 			errs = multierror.Append(errs, fmt.Errorf("error listing Network Insights Paths for %s: %w", region, err))
 		}
 
-		for _, nip := range page.NetworkInsightsPaths {
-			id := aws.ToString(nip.NetworkInsightsPathId)
-
-			r := ResourceNetworkInsightsPath()
+		for _, v := range page.NetworkInsightsPaths {
+			r := resourceNetworkInsightsPath()
 			d := r.Data(nil)
+			d.SetId(aws.ToString(v.NetworkInsightsPathId))
 
-			d.SetId(id)
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
@@ -1766,7 +1819,7 @@ func sweepSubnets(region string) error {
 				continue
 			}
 
-			r := ResourceSubnet()
+			r := resourceSubnet()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.SubnetId))
 
@@ -1807,7 +1860,7 @@ func sweepTrafficMirrorFilters(region string) error {
 		}
 
 		for _, v := range page.TrafficMirrorFilters {
-			r := ResourceTrafficMirrorFilter()
+			r := resourceTrafficMirrorFilter()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.TrafficMirrorFilterId))
 
@@ -1848,7 +1901,7 @@ func sweepTrafficMirrorSessions(region string) error {
 		}
 
 		for _, v := range page.TrafficMirrorSessions {
-			r := ResourceTrafficMirrorSession()
+			r := resourceTrafficMirrorSession()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.TrafficMirrorSessionId))
 
@@ -1889,7 +1942,7 @@ func sweepTrafficMirrorTargets(region string) error {
 		}
 
 		for _, v := range page.TrafficMirrorTargets {
-			r := ResourceTrafficMirrorTarget()
+			r := resourceTrafficMirrorTarget()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.TrafficMirrorTargetId))
 
@@ -2229,7 +2282,7 @@ func sweepVPCDHCPOptions(region string) error {
 				continue
 			}
 
-			r := ResourceVPCDHCPOptions()
+			r := resourceVPCDHCPOptions()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.DhcpOptionsId))
 
@@ -2327,9 +2380,9 @@ func sweepVPCEndpointConnectionAccepters(region string) error {
 		}
 
 		for _, v := range page.VpcEndpointConnections {
-			id := VPCEndpointConnectionAccepterCreateResourceID(aws.ToString(v.ServiceId), aws.ToString(v.VpcEndpointId))
+			id := vpcEndpointConnectionAccepterCreateResourceID(aws.ToString(v.ServiceId), aws.ToString(v.VpcEndpointId))
 
-			r := ResourceVPCEndpointConnectionAccepter()
+			r := resourceVPCEndpointConnectionAccepter()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -2379,7 +2432,7 @@ func sweepVPCEndpointServices(region string) error {
 				continue
 			}
 
-			r := ResourceVPCEndpointService()
+			r := resourceVPCEndpointService()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -2422,7 +2475,7 @@ func sweepVPCPeeringConnections(region string) error {
 		}
 
 		for _, v := range page.VpcPeeringConnections {
-			r := ResourceVPCPeeringConnection()
+			r := resourceVPCPeeringConnection()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.VpcPeeringConnectionId))
 
@@ -2470,7 +2523,7 @@ func sweepVPCs(region string) error {
 				continue
 			}
 
-			r := ResourceVPC()
+			r := resourceVPC()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.VpcId))
 
@@ -2603,7 +2656,7 @@ func sweepCustomerGateways(region string) error {
 	}
 
 	for _, v := range output.CustomerGateways {
-		if aws.ToString(v.State) == CustomerGatewayStateDeleted {
+		if aws.ToString(v.State) == customerGatewayStateDeleted {
 			continue
 		}
 
@@ -2784,8 +2837,8 @@ func sweepNetworkPerformanceMetricSubscriptions(region string) error {
 		}
 
 		for _, v := range page.Subscriptions {
-			r := ResourceNetworkPerformanceMetricSubscription()
-			id := NetworkPerformanceMetricSubscriptionCreateResourceID(aws.ToString(v.Source), aws.ToString(v.Destination), string(v.Metric), string(v.Statistic))
+			r := resourceNetworkPerformanceMetricSubscription()
+			id := networkPerformanceMetricSubscriptionCreateResourceID(aws.ToString(v.Source), aws.ToString(v.Destination), string(v.Metric), string(v.Statistic))
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -2871,7 +2924,7 @@ func sweepVerifiedAccessEndpoints(region string) error {
 		}
 
 		for _, v := range page.VerifiedAccessEndpoints {
-			r := ResourceVerifiedAccessEndpoint()
+			r := resourceVerifiedAccessEndpoint()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.VerifiedAccessEndpointId))
 
@@ -2914,7 +2967,7 @@ func sweepVerifiedAccessGroups(region string) error {
 		}
 
 		for _, v := range page.VerifiedAccessGroups {
-			r := ResourceVerifiedAccessGroup()
+			r := resourceVerifiedAccessGroup()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.VerifiedAccessGroupId))
 
@@ -2957,7 +3010,7 @@ func sweepVerifiedAccessInstances(region string) error {
 		}
 
 		for _, v := range page.VerifiedAccessInstances {
-			r := ResourceVerifiedAccessInstance()
+			r := resourceVerifiedAccessInstance()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.VerifiedAccessInstanceId))
 
@@ -3000,7 +3053,7 @@ func sweepVerifiedAccessTrustProviders(region string) error {
 		}
 
 		for _, v := range page.VerifiedAccessTrustProviders {
-			r := ResourceVerifiedAccessTrustProvider()
+			r := resourceVerifiedAccessTrustProvider()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.VerifiedAccessTrustProviderId))
 
@@ -3048,9 +3101,9 @@ func sweepVerifiedAccessTrustProviderAttachments(region string) error {
 			for _, v := range v.VerifiedAccessTrustProviders {
 				vatpID := aws.ToString(v.VerifiedAccessTrustProviderId)
 
-				r := ResourceVerifiedAccessInstanceTrustProviderAttachment()
+				r := resourceVerifiedAccessInstanceTrustProviderAttachment()
 				d := r.Data(nil)
-				d.SetId(VerifiedAccessInstanceTrustProviderAttachmentCreateResourceID(vaiID, vatpID))
+				d.SetId(verifiedAccessInstanceTrustProviderAttachmentCreateResourceID(vaiID, vatpID))
 
 				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 			}
