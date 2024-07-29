@@ -110,7 +110,9 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 	var diags diag.Diagnostics
 
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(reflect.TypeOf(from)))
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(reflect.TypeOf(to)))
 
 	valFrom, valTo, d := autoFlexValues(ctx, from, to)
 	diags.Append(d...)
@@ -150,14 +152,12 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 		fieldName := field.Name
 		if opts.IsIgnoredField(fieldName) {
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored field", map[string]any{
-				logAttrKeySourceType:      fullTypeName(reflect.TypeOf(from)),
 				logAttrKeySourceFieldname: fieldName,
 			})
 			continue
 		}
 		if fieldName == MapBlockKey {
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping map block key", map[string]any{
-				logAttrKeySourceType:      fullTypeName(reflect.TypeOf(from)),
 				logAttrKeySourceFieldname: MapBlockKey,
 			})
 			continue
@@ -167,27 +167,21 @@ func autoFlexConvertStruct(ctx context.Context, sourcePath path.Path, from any, 
 		if !toFieldVal.IsValid() {
 			// Corresponding field not found in to.
 			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding field", map[string]any{
-				logAttrKeySourceType:      fullTypeName(reflect.TypeOf(from)),
 				logAttrKeySourceFieldname: fieldName,
-				logAttrKeyTargetType:      fullTypeName(reflect.TypeOf(to)),
 			})
 			continue
 		}
 		if !toFieldVal.CanSet() {
 			// Corresponding field value can't be changed.
 			tflog.SubsystemDebug(ctx, subsystemName, "Field cannot be set", map[string]any{
-				logAttrKeySourceType:      fullTypeName(reflect.TypeOf(from)),
 				logAttrKeySourceFieldname: fieldName,
-				logAttrKeyTargetType:      fullTypeName(reflect.TypeOf(to)),
 				logAttrKeyTargetFieldname: toFieldName,
 			})
 			continue
 		}
 
 		tflog.SubsystemTrace(ctx, subsystemName, "Matched fields", map[string]any{
-			logAttrKeySourceType:      fullTypeName(reflect.TypeOf(from)),
 			logAttrKeySourceFieldname: fieldName,
-			logAttrKeyTargetType:      fullTypeName(reflect.TypeOf(to)),
 			logAttrKeyTargetFieldname: toFieldName,
 		})
 

@@ -365,6 +365,10 @@ type TestFlexAWS22 struct {
 	Field1 map[string]map[string]*string
 }
 
+type awsMapOfStringPointer struct {
+	FieldInner map[string]*string
+}
+
 type testFlexTFListNestedObject[T any] struct {
 	Field1 fwtypes.ListNestedObjectValueOf[T] `tfsdk:"field1"`
 }

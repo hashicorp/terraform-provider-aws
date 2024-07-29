@@ -153,14 +153,14 @@ func convertingWithPathLogLine(sourceFieldPath string, sourceType reflect.Type, 
 	})
 }
 
-func ignoredFieldLogLine(sourceType reflect.Type, sourceFieldName string) map[string]any {
+func ignoredFieldLogLine(sourceType reflect.Type, sourceFieldName string, targetType reflect.Type) map[string]any {
 	return ignoredFieldWithPathLogLine(
 		"", sourceType, sourceFieldName,
-		"",
+		"", targetType,
 	)
 }
 
-func ignoredFieldWithPathLogLine(sourcePath string, sourceType reflect.Type, sourceFieldName string, targetPath string) map[string]any {
+func ignoredFieldWithPathLogLine(sourcePath string, sourceType reflect.Type, sourceFieldName string, targetPath string, targetType reflect.Type) map[string]any {
 	return map[string]any{
 		"@level":                  hclog.Trace.String(),
 		"@module":                 logModule,
@@ -169,10 +169,11 @@ func ignoredFieldWithPathLogLine(sourcePath string, sourceType reflect.Type, sou
 		logAttrKeySourceType:      fullTypeName(sourceType),
 		logAttrKeySourceFieldname: sourceFieldName,
 		logAttrKeyTargetPath:      targetPath,
+		logAttrKeyTargetType:      fullTypeName(targetType),
 	}
 }
 
-func mapBlockKeyFieldLogLine(sourcePath string, sourceType reflect.Type, targetPath string) map[string]any {
+func mapBlockKeyFieldLogLine(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
 	return map[string]any{
 		"@level":                  hclog.Trace.String(),
 		"@module":                 logModule,
@@ -181,6 +182,7 @@ func mapBlockKeyFieldLogLine(sourcePath string, sourceType reflect.Type, targetP
 		logAttrKeySourceType:      fullTypeName(sourceType),
 		logAttrKeySourceFieldname: MapBlockKey,
 		logAttrKeyTargetPath:      targetPath,
+		logAttrKeyTargetType:      fullTypeName(targetType),
 	}
 }
 
@@ -215,6 +217,18 @@ func noCorrespondingFieldLogLine(sourceType reflect.Type, sourceFieldName string
 		logAttrKeySourceFieldname: sourceFieldName,
 		logAttrKeyTargetPath:      "",
 		logAttrKeyTargetType:      fullTypeName(targetType),
+	}
+}
+
+func expandElementsAsLogLine(sourcePath string, sourceType reflect.Type, targetPath string, targetType reflect.Type) map[string]any {
+	return map[string]any{
+		"@level":             hclog.Trace.String(),
+		"@module":            logModule,
+		"@message":           "Expanding with ElementsAs",
+		logAttrKeySourcePath: sourcePath,
+		logAttrKeySourceType: fullTypeName(sourceType),
+		logAttrKeyTargetPath: targetPath,
+		logAttrKeyTargetType: fullTypeName(targetType),
 	}
 }
 

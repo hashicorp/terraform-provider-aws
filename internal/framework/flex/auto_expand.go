@@ -130,10 +130,10 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 		return diags
 	}
 
-	tflog.SubsystemInfo(ctx, subsystemName, "Converting", map[string]any{
-		logAttrKeySourceType: fullTypeName(valFrom.Type()),
-		logAttrKeyTargetType: fullTypeName(vTo.Type()),
-	})
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(valFrom.Type()))
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(vTo.Type()))
+
+	tflog.SubsystemInfo(ctx, subsystemName, "Converting")
 
 	if fromExpander, ok := valFrom.Interface().(Expander); ok {
 		diags.Append(expandExpander(ctx, fromExpander, vTo)...)
@@ -684,6 +684,7 @@ func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.Ma
 				//
 				// types.Map(OfString) -> map[string]string.
 				//
+				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs")
 				var to map[string]string
 				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
 				if diags.HasError() {
@@ -699,6 +700,7 @@ func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.Ma
 					//
 					// types.Map(OfString) -> map[string]*string.
 					//
+					tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs")
 					var to map[string]*string
 					diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
 					if diags.HasError() {

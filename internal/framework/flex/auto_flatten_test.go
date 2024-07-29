@@ -259,7 +259,9 @@ func TestFlatten(t *testing.T) {
 					"from":               float64(reflect.String),
 					"to":                 map[string]any{},
 					logAttrKeySourcePath: "",
+					logAttrKeySourceType: fullTypeName(reflect.TypeFor[*TestFlexAWS01]()),
 					logAttrKeyTargetPath: "",
+					logAttrKeyTargetType: fullTypeName(reflect.TypeFor[*TestFlexTF02]()),
 				},
 			},
 		},
@@ -938,7 +940,7 @@ func TestFlattenGeneric(t *testing.T) {
 			},
 		},
 		{
-			TestName: "map string",
+			TestName: "map of string",
 			Source: &TestFlexAWS13{
 				FieldInner: map[string]string{
 					"x": "y",
@@ -953,6 +955,24 @@ func TestFlattenGeneric(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				flatteningLogLine(reflect.TypeFor[*TestFlexAWS13](), reflect.TypeFor[*TestFlexTF11]()),
 				matchedFieldsLogLine("FieldInner", reflect.TypeFor[*TestFlexAWS13](), "FieldInner", reflect.TypeFor[*TestFlexTF11]()),
+			},
+		},
+		{
+			TestName: "map of string pointer",
+			Source: &awsMapOfStringPointer{
+				FieldInner: map[string]*string{
+					"x": aws.String("y"),
+				},
+			},
+			Target: &TestFlexTF11{},
+			WantTarget: &TestFlexTF11{
+				FieldInner: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
+					"x": types.StringValue("y"),
+				}),
+			},
+			expectedLogLines: []map[string]any{
+				flatteningLogLine(reflect.TypeFor[*awsMapOfStringPointer](), reflect.TypeFor[*TestFlexTF11]()),
+				matchedFieldsLogLine("FieldInner", reflect.TypeFor[*awsMapOfStringPointer](), "FieldInner", reflect.TypeFor[*TestFlexTF11]()),
 			},
 		},
 		{
@@ -1577,7 +1597,7 @@ func TestFlattenOptions(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				flatteningLogLine(reflect.TypeFor[*aws01](), reflect.TypeFor[*tf01]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*aws01](), "Field1", reflect.TypeFor[*tf01]()),
-				ignoredFieldLogLine(reflect.TypeFor[*aws01](), "Tags"),
+				ignoredFieldLogLine(reflect.TypeFor[*aws01](), "Tags", reflect.TypeFor[*tf01]()),
 			},
 		},
 		{
@@ -1595,7 +1615,7 @@ func TestFlattenOptions(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				flatteningLogLine(reflect.TypeFor[*aws01](), reflect.TypeFor[*tf01]()),
 				matchedFieldsLogLine("Field1", reflect.TypeFor[*aws01](), "Field1", reflect.TypeFor[*tf01]()),
-				ignoredFieldLogLine(reflect.TypeFor[*aws01](), "Tags"),
+				ignoredFieldLogLine(reflect.TypeFor[*aws01](), "Tags", reflect.TypeFor[*tf01]()),
 			},
 		},
 		{
@@ -1648,7 +1668,7 @@ func TestFlattenOptions(t *testing.T) {
 			},
 			expectedLogLines: []map[string]any{
 				flatteningLogLine(reflect.TypeFor[*aws01](), reflect.TypeFor[*tf01]()),
-				ignoredFieldLogLine(reflect.TypeFor[*aws01](), "Field1"),
+				ignoredFieldLogLine(reflect.TypeFor[*aws01](), "Field1", reflect.TypeFor[*tf01]()),
 				matchedFieldsLogLine("Tags", reflect.TypeFor[*aws01](), "Tags", reflect.TypeFor[*tf01]()),
 			},
 		},
@@ -1739,7 +1759,9 @@ func TestFlattenInterface(t *testing.T) {
 						},
 					},
 					logAttrKeySourcePath: "",
+					logAttrKeySourceType: fullTypeName(reflect.TypeFor[testFlexAWSInterfaceSingle]()),
 					logAttrKeyTargetPath: "",
+					logAttrKeyTargetType: fullTypeName(reflect.TypeFor[*testFlexTFListNestedObject[TestFlexTF01]]()),
 				},
 			},
 		},
