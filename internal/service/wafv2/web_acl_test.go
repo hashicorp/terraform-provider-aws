@@ -6153,7 +6153,7 @@ resource "aws_wafv2_web_acl" "test" {
 
     VisibilityConfig = {
       CloudwatchMetricsEnabled = false,
-      MetricName                = "friendly-rule-metric-name",
+      MetricName               = "friendly-rule-metric-name",
       SampledRequestsEnabled   = false,
     },
   }])
