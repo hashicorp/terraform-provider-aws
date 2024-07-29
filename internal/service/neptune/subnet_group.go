@@ -10,12 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -85,7 +85,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &neptune.CreateDBSubnetGroupInput{
 		DBSubnetGroupName:        aws.String(name),
 		DBSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
-		SubnetIds:                flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+		SubnetIds:                flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		Tags:                     getTagsIn(ctx),
 	}
 
@@ -138,7 +138,7 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input := &neptune.ModifyDBSubnetGroupInput{
 			DBSubnetGroupName:        aws.String(d.Id()),
 			DBSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
-			SubnetIds:                flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+			SubnetIds:                flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		}
 
 		_, err := conn.ModifyDBSubnetGroup(ctx, input)
@@ -160,7 +160,7 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 		DBSubnetGroupName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeDBSubnetGroupNotFoundFault) {
+	if errs.IsA[*awstypes.DBSubnetGroupNotFoundFault](err) {
 		return diags
 	}
 
@@ -198,35 +198,29 @@ func findDBSubnetGroup(ctx context.Context, conn *neptune.Client, input *neptune
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDBSubnetGroups(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBSubnetGroupsInput) ([]*awstypes.DBSubnetGroup, error) {
-	var output []*awstypes.DBSubnetGroup
+func findDBSubnetGroups(ctx context.Context, conn *neptune.Client, input *neptune.DescribeDBSubnetGroupsInput) ([]awstypes.DBSubnetGroup, error) {
+	var output []awstypes.DBSubnetGroup
 
-	err := conn.DescribeDBSubnetGroupsPagesWithContext(ctx, input, func(page *neptune.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := neptune.NewDescribeDBSubnetGroupsPaginator(conn, input)
 
-		for _, v := range page.DBSubnetGroups {
-			if v != nil {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.DBSubnetGroupNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeDBSubnetGroupNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		output = append(output, page.DBSubnetGroups...)
 	}
 
 	return output, nil
