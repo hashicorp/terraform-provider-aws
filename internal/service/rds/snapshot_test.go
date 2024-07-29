@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -26,7 +26,7 @@ func TestAccRDSSnapshot_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBSnapshot
+	var v types.DBSnapshot
 	resourceName := "aws_db_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -60,7 +60,7 @@ func TestAccRDSSnapshot_share(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBSnapshot
+	var v types.DBSnapshot
 	resourceName := "aws_db_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -100,7 +100,7 @@ func TestAccRDSSnapshot_tags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBSnapshot
+	var v types.DBSnapshot
 	resourceName := "aws_db_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -150,7 +150,7 @@ func TestAccRDSSnapshot_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBSnapshot
+	var v types.DBSnapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_snapshot.test"
 
@@ -174,7 +174,7 @@ func TestAccRDSSnapshot_disappears(t *testing.T) {
 
 func testAccCheckDBSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_snapshot" {
@@ -198,18 +198,14 @@ func testAccCheckDBSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDBSnapshotExists(ctx context.Context, n string, v *rds.DBSnapshot) resource.TestCheckFunc {
+func testAccCheckDBSnapshotExists(ctx context.Context, n string, v *types.DBSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No RDS DB Snapshot ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		output, err := tfrds.FindDBSnapshotByID(ctx, conn, rs.Primary.ID)
 		if err != nil {

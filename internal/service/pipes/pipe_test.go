@@ -395,6 +395,69 @@ func TestAccPipesPipe_update_logConfiguration_cloudwatchLogsLogDestination(t *te
 	})
 }
 
+func TestAccPipesPipe_logConfiguration_includeExecutionData(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipe pipes.DescribePipeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_logConfiguration_includeExecutionData(rName, "null"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.include_execution_data.#", acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_logConfiguration_includeExecutionData(rName, "[\"ALL\"]"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.include_execution_data.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.include_execution_data.0", "ALL"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_logConfiguration_includeExecutionData(rName, "[]"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.include_execution_data.#", acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccPipesPipe_sourceParameters_filterCriteria(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipe pipes.DescribePipeOutput
@@ -1989,6 +2052,34 @@ resource "aws_cloudwatch_log_group" "target" {
 `, rName))
 }
 
+func testAccPipeConfig_logConfiguration_includeExecutionData(rName, includeExecutionData string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base(rName),
+		testAccPipeConfig_baseSQSSource(rName),
+		testAccPipeConfig_baseSQSTarget(rName),
+		fmt.Sprintf(`
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+  source   = aws_sqs_queue.source.arn
+  target   = aws_sqs_queue.target.arn
+  log_configuration {
+    include_execution_data = %[2]s
+    level                  = "INFO"
+    cloudwatch_logs_log_destination {
+      log_group_arn = aws_cloudwatch_log_group.target.arn
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_group" "target" {
+  name = "%[1]s-target"
+}
+`, rName, includeExecutionData))
+}
+
 func testAccPipeConfig_sourceParameters_filterCriteria1(rName, criteria1 string) string {
 	return acctest.ConfigCompose(
 		testAccPipeConfig_base(rName),
@@ -2610,7 +2701,7 @@ resource "aws_iam_role_policy" "source" {
 resource "aws_mq_broker" "source" {
   broker_name             = "%[1]s-source"
   engine_type             = "RabbitMQ"
-  engine_version          = "3.8.11"
+  engine_version          = "3.12.13"
   host_instance_type      = "mq.t3.micro"
   authentication_strategy = "simple"
 
