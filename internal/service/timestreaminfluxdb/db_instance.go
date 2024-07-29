@@ -17,8 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -32,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -412,6 +411,7 @@ func (r *resourceDBInstance) Read(ctx context.Context, req resource.ReadRequest,
 	out, err := findDBInstanceByID(ctx, conn, state.ID.ValueString())
 
 	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -443,30 +443,19 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	// Only fields without RequireReplace() will cause an update.
-	// Any other field changes will cause the resource to be destroyed and recreated.
-	// for aws_timestreaminfluxdb_db_instance this is tags, log_delivery_configuration, and
-	// db_parameter_group_identifier.
 	if !plan.DBParameterGroupIdentifier.Equal(state.DBParameterGroupIdentifier) ||
 		!plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) {
-		in := &timestreaminfluxdb.UpdateDbInstanceInput{
+		in := timestreaminfluxdb.UpdateDbInstanceInput{
 			Identifier: aws.String(plan.ID.ValueString()),
 		}
 
-		if !plan.DBParameterGroupIdentifier.IsNull() && !plan.DBParameterGroupIdentifier.Equal(state.DBParameterGroupIdentifier) {
-			in.DbParameterGroupIdentifier = aws.String(plan.DBParameterGroupIdentifier.ValueString())
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
+
+		if resp.Diagnostics.HasError() {
+			return
 		}
 
-		if !plan.LogDeliveryConfiguration.IsNull() && !plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) {
-			var tfList []logDeliveryConfigurationData
-			resp.Diagnostics.Append(plan.LogDeliveryConfiguration.ElementsAs(ctx, &tfList, false)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-			in.LogDeliveryConfiguration = expandLogDeliveryConfiguration(tfList)
-		}
-
-		out, err := conn.UpdateDbInstance(ctx, in)
+		out, err := conn.UpdateDbInstance(ctx, &in)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
@@ -474,6 +463,7 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 			)
 			return
 		}
+
 		if out == nil || out.Id == nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), nil),
@@ -481,41 +471,23 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 			)
 			return
 		}
-	}
 
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitDBInstanceUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForUpdate, ResNameDBInstance, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		output, err := waitDBInstanceUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForUpdate, ResNameDBInstance, plan.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
 
-	// Update status to current status
-	readOut, err := findDBInstanceByID(ctx, conn, plan.ID.ValueString())
-	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-		return
+		resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan)...)
+
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	// Setting computed attributes
-	plan.ARN = flex.StringToFramework(ctx, readOut.Arn)
-	plan.AvailabilityZone = flex.StringToFramework(ctx, readOut.AvailabilityZone)
-	plan.DBStorageType = flex.StringToFramework(ctx, (*string)(&readOut.DbStorageType))
-	plan.DeploymentType = flex.StringToFramework(ctx, (*string)(&readOut.DeploymentType))
-	plan.Endpoint = flex.StringToFramework(ctx, readOut.Endpoint)
-	plan.ID = flex.StringToFramework(ctx, readOut.Id)
-	plan.InfluxAuthParametersSecretARN = flex.StringToFramework(ctx, readOut.InfluxAuthParametersSecretArn)
-	plan.SecondaryAvailabilityZone = flex.StringToFramework(ctx, readOut.SecondaryAvailabilityZone)
-	plan.Status = flex.StringToFramework(ctx, (*string)(&readOut.Status))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -653,65 +625,6 @@ func findDBInstanceByID(ctx context.Context, conn *timestreaminfluxdb.Client, id
 	return out, nil
 }
 
-func flattenLogDeliveryConfiguration(ctx context.Context, apiObject *awstypes.LogDeliveryConfiguration) (types.List, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: logDeliveryConfigrationAttrTypes}
-
-	if apiObject == nil {
-		return types.ListNull(elemType), diags
-	}
-	s3Configuration, d := flattenS3Configuration(ctx, apiObject.S3Configuration)
-	diags.Append(d...)
-	obj := map[string]attr.Value{
-		"s3_configuration": s3Configuration,
-	}
-	objVal, d := types.ObjectValue(logDeliveryConfigrationAttrTypes, obj)
-	diags.Append(d...)
-
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
-
-	return listVal, diags
-}
-
-func flattenS3Configuration(ctx context.Context, apiObject *awstypes.S3Configuration) (types.Object, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: s3ConfigurationAttrTypes}
-
-	if apiObject == nil {
-		return types.ObjectNull(elemType.AttrTypes), diags
-	}
-
-	obj := map[string]attr.Value{
-		names.AttrBucketName: flex.StringValueToFramework(ctx, *apiObject.BucketName),
-		names.AttrEnabled:    flex.BoolToFramework(ctx, apiObject.Enabled),
-	}
-	objVal, d := types.ObjectValue(s3ConfigurationAttrTypes, obj)
-	diags.Append(d...)
-
-	return objVal, diags
-}
-
-func expandLogDeliveryConfiguration(tfList []logDeliveryConfigurationData) *awstypes.LogDeliveryConfiguration {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	tfObj := tfList[0]
-	apiObject := &awstypes.LogDeliveryConfiguration{
-		S3Configuration: expandS3Configuration(tfObj.S3Configuration),
-	}
-	return apiObject
-}
-
-func expandS3Configuration(tfObj s3ConfigurationData) *awstypes.S3Configuration {
-	apiObject := &awstypes.S3Configuration{
-		BucketName: aws.String(tfObj.BucketName.ValueString()),
-		Enabled:    aws.Bool(tfObj.Enabled.ValueBool()),
-	}
-	return apiObject
-}
-
 type resourceDBInstanceData struct {
 	AllocatedStorage              types.Int64                                                   `tfsdk:"allocated_storage"`
 	ARN                           types.String                                                  `tfsdk:"arn"`
@@ -746,13 +659,4 @@ type logDeliveryConfigurationData struct {
 type s3ConfigurationData struct {
 	BucketName types.String `tfsdk:"bucket_name"`
 	Enabled    types.Bool   `tfsdk:"enabled"`
-}
-
-var logDeliveryConfigrationAttrTypes = map[string]attr.Type{
-	"s3_configuration": types.ObjectType{AttrTypes: s3ConfigurationAttrTypes},
-}
-
-var s3ConfigurationAttrTypes = map[string]attr.Type{
-	names.AttrBucketName: types.StringType,
-	names.AttrEnabled:    types.BoolType,
 }
