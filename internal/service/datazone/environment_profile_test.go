@@ -56,18 +56,18 @@ func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 				Config: testAccEnvironmentProfileConfig_basic(epName, dName, pName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentProfileExists(ctx, envProfName, &environmentprofile),
-					resource.TestCheckResourceAttrPair(envProfName, "aws_account_id", callName, "account_id"),
-					resource.TestCheckResourceAttrPair(envProfName, "aws_account_region", regionName, "name"),
-					resource.TestCheckResourceAttrSet(envProfName, "created_at"),
+					resource.TestCheckResourceAttrPair(envProfName, names.AttrAWSAccountID, callName, names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(envProfName, "aws_account_region", regionName, names.AttrName),
+					resource.TestCheckResourceAttrSet(envProfName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(envProfName, "created_by"),
-					resource.TestCheckResourceAttr(envProfName, "description", "desc"),
+					resource.TestCheckResourceAttr(envProfName, names.AttrDescription, "desc"),
 					resource.TestCheckResourceAttrSet(envProfName, "user_parameters.0.name"),
 					resource.TestCheckResourceAttrSet(envProfName, "user_parameters.0.value"),
 					resource.TestCheckResourceAttrPair(envProfName, "domain_identifier", domainName, names.AttrID),
-					resource.TestCheckResourceAttrPair(envProfName, "environment_blueprint_identifier", blueName, "id"),
+					resource.TestCheckResourceAttrPair(envProfName, "environment_blueprint_identifier", blueName, names.AttrID),
 					resource.TestCheckResourceAttrSet(envProfName, names.AttrID),
 					resource.TestCheckResourceAttr(envProfName, names.AttrName, epName),
-					resource.TestCheckResourceAttrPair(envProfName, "project_identifier", projectName, "id"),
+					resource.TestCheckResourceAttrPair(envProfName, "project_identifier", projectName, names.AttrID),
 				),
 			},
 			{
@@ -75,22 +75,22 @@ func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateIdFunc:       testAccAuthorizerEnvProfImportStateIdFunc(envProfName),
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 			{
 				Config: testAccEnvironmentProfileConfig_update(epName, dName, pName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentProfileExists(ctx, envProfName, &environmentprofile),
-					resource.TestCheckResourceAttrPair(envProfName, "aws_account_id", callName, "account_id"),
-					resource.TestCheckResourceAttrPair(envProfName, "aws_account_region", regionName, "name"),
-					resource.TestCheckResourceAttrSet(envProfName, "created_at"),
+					resource.TestCheckResourceAttrPair(envProfName, names.AttrAWSAccountID, callName, names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(envProfName, "aws_account_region", regionName, names.AttrName),
+					resource.TestCheckResourceAttrSet(envProfName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(envProfName, "created_by"),
-					resource.TestCheckResourceAttr(envProfName, "description", "description"),
+					resource.TestCheckResourceAttr(envProfName, names.AttrDescription, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(envProfName, "domain_identifier", domainName, names.AttrID),
-					resource.TestCheckResourceAttrPair(envProfName, "environment_blueprint_identifier", blueName, "id"),
+					resource.TestCheckResourceAttrPair(envProfName, "environment_blueprint_identifier", blueName, names.AttrID),
 					resource.TestCheckResourceAttrSet(envProfName, names.AttrID),
 					resource.TestCheckResourceAttr(envProfName, names.AttrName, epName),
-					resource.TestCheckResourceAttrPair(envProfName, "project_identifier", projectName, "id"),
+					resource.TestCheckResourceAttrPair(envProfName, "project_identifier", projectName, names.AttrID),
 					resource.TestCheckResourceAttrSet(envProfName, "updated_at"),
 				),
 			},
@@ -99,7 +99,7 @@ func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateIdFunc:       testAccAuthorizerEnvProfImportStateIdFunc(envProfName),
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -228,7 +228,7 @@ func testAccAuthorizerEnvProfImportStateIdFunc(resourceName string) resource.Imp
 }
 
 func testAccEnvironmentProfileConfig_base(domainName, projectName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(projectName, domainName), fmt.Sprint(`
+	return acctest.ConfigCompose(testAccProjectConfig_basic(projectName, domainName), (`
 data "aws_caller_identity" "test" {}
 data "aws_region" "test" {}
 
@@ -251,6 +251,8 @@ func testAccEnvironmentProfileConfig_basic(rName, domainName, projectName string
 	return acctest.ConfigCompose(testAccEnvironmentProfileConfig_base(domainName, projectName), fmt.Sprintf(`
 
 
+
+
 resource "aws_datazone_environment_profile" "test" {
   aws_account_id                   = data.aws_caller_identity.test.account_id
   aws_account_region               = data.aws_region.test.name
@@ -259,9 +261,9 @@ resource "aws_datazone_environment_profile" "test" {
   name                             = %[1]q
   project_identifier               = aws_datazone_project.test.id
   domain_identifier                = aws_datazone_domain.test.id
-    user_parameters {
-	name = "consumerGlueDbName"
-	value = "hi"
+  user_parameters {
+    name  = "consumerGlueDbName"
+    value = "hi"
   }
 
 }
@@ -270,6 +272,8 @@ resource "aws_datazone_environment_profile" "test" {
 
 func testAccEnvironmentProfileConfig_update(rName, domainName, projectName string) string {
 	return acctest.ConfigCompose(testAccEnvironmentProfileConfig_base(domainName, projectName), fmt.Sprintf(`
+
+
 
 
 resource "aws_datazone_environment_profile" "test" {
@@ -281,8 +285,8 @@ resource "aws_datazone_environment_profile" "test" {
   project_identifier               = aws_datazone_project.test.id
   domain_identifier                = aws_datazone_domain.test.id
   user_parameters {
-	name = "consumerGlueDbName"
-	value = "hi"
+    name  = "consumerGlueDbName"
+    value = "hi"
   }
 }
 `, rName))
