@@ -73,14 +73,14 @@ func resourceStateMachine() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
 						"kms_data_key_reuse_period_seconds": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(60, 900),
+						},
+						names.AttrKMSKeyID: {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						names.AttrType: {
 							Type:             schema.TypeString,
@@ -142,20 +142,20 @@ func resourceStateMachine() *schema.Resource {
 				Default:  false,
 				Optional: true,
 			},
+			"revision_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"revision_id": {
+			"state_machine_version_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"state_machine_version_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -207,12 +207,12 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 		Type:       awstypes.StateMachineType(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LoggingConfiguration = expandLoggingConfiguration(v.([]interface{})[0].(map[string]interface{}))
-	}
-
 	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.LoggingConfiguration = expandLoggingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("tracing_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -231,8 +231,7 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "creating Step Functions State Machine (%s): %s", name, err)
 	}
 
-	arn := aws.ToString(outputRaw.(*sfn.CreateStateMachineOutput).StateMachineArn)
-	d.SetId(arn)
+	d.SetId(aws.ToString(outputRaw.(*sfn.CreateStateMachineOutput).StateMachineArn))
 
 	return append(diags, resourceStateMachineRead(ctx, d, meta)...)
 }
@@ -261,14 +260,6 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("definition", output.Definition)
 	d.Set(names.AttrDescription, output.Description)
-	if output.LoggingConfiguration != nil {
-		if err := d.Set(names.AttrLoggingConfiguration, []interface{}{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
-		}
-	} else {
-		d.Set(names.AttrLoggingConfiguration, nil)
-	}
-
 	if output.EncryptionConfiguration != nil {
 		if err := d.Set(names.AttrEncryptionConfiguration, []interface{}{flattenEncryptionConfiguration(output.EncryptionConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
@@ -276,12 +267,18 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	} else {
 		d.Set(names.AttrEncryptionConfiguration, nil)
 	}
-
+	if output.LoggingConfiguration != nil {
+		if err := d.Set(names.AttrLoggingConfiguration, []interface{}{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
+		}
+	} else {
+		d.Set(names.AttrLoggingConfiguration, nil)
+	}
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
 	d.Set("publish", d.Get("publish").(bool))
-	d.Set(names.AttrRoleARN, output.RoleArn)
 	d.Set("revision_id", output.RevisionId)
+	d.Set(names.AttrRoleARN, output.RoleArn)
 	d.Set(names.AttrStatus, output.Status)
 	if output.TracingConfiguration != nil {
 		if err := d.Set("tracing_configuration", []interface{}{flattenTracingConfiguration(output.TracingConfiguration)}); err != nil {
@@ -318,21 +315,12 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		// "You must include at least one of definition or roleArn or you will receive a MissingRequiredParameter error"
+		publish := d.Get("publish").(bool)
 		input := &sfn.UpdateStateMachineInput{
 			Definition:      aws.String(d.Get("definition").(string)),
+			Publish:         publish,
 			RoleArn:         aws.String(d.Get(names.AttrRoleARN).(string)),
 			StateMachineArn: aws.String(d.Id()),
-			Publish:         d.Get("publish").(bool),
-		}
-
-		if v, ok := d.GetOk("publish"); ok && v == true {
-			input.VersionDescription = aws.String(d.Get("version_description").(string))
-		}
-
-		if d.HasChange(names.AttrLoggingConfiguration) {
-			if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.LoggingConfiguration = expandLoggingConfiguration(v.([]interface{})[0].(map[string]interface{}))
-			}
 		}
 
 		if d.HasChange(names.AttrEncryptionConfiguration) {
@@ -341,10 +329,20 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 
+		if d.HasChange(names.AttrLoggingConfiguration) {
+			if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.LoggingConfiguration = expandLoggingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
 		if d.HasChange("tracing_configuration") {
 			if v, ok := d.GetOk("tracing_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.TracingConfiguration = expandTracingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 			}
+		}
+
+		if publish {
+			input.VersionDescription = aws.String(d.Get("version_description").(string))
 		}
 
 		_, err := conn.UpdateStateMachine(ctx, input)
