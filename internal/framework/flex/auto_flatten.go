@@ -107,6 +107,9 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
+
 	valTo, ok := vTo.Interface().(attr.Value)
 	if !ok {
 		// Check for `nil` (i.e. Kind == Invalid) here, because primitive types can be `nil`
@@ -118,6 +121,15 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		diags.AddError("AutoFlEx", fmt.Sprintf("does not implement attr.Value: %s", vTo.Kind()))
 		return diags
 	}
+
+	if vFrom.Kind() == reflect.Invalid {
+		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(nil))
+	} else {
+		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(vFrom.Type()))
+	}
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(vTo.Type()))
+
+	tflog.SubsystemInfo(ctx, subsystemName, "Converting")
 
 	tTo := valTo.Type(ctx)
 	switch k := vFrom.Kind(); k {
