@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * resource/aws_rds_cluster: Mark `restore_to_point_in_time.source_cluster_identifier` as Optional ([#38540](https://github.com/hashicorp/terraform-provider-aws/issues/38540))
 * resource/aws_sfn_activity: Add `encryption_configuration` configuration block to support the use of Customer Managed Keys with AWS KMS to encrypt Step Functions Activity resources ([#38574](https://github.com/hashicorp/terraform-provider-aws/issues/38574))
 * resource/aws_sfn_state_machine: Add `encryption_configuration` configuration block to support the use of Customer Managed Keys with AWS KMS to encrypt Step Functions State Machine resources ([#38574](https://github.com/hashicorp/terraform-provider-aws/issues/38574))
+* resource/aws_ssm_patch_baseline: Remove empty fields from `json` attribute value ([#35950](https://github.com/hashicorp/terraform-provider-aws/issues/35950))
 * resource/aws_vpc: Support `ipv6_cidr_block` sizes between `/44` and `/60` in increments of /4 ([#35614](https://github.com/hashicorp/terraform-provider-aws/issues/35614))
 * resource/aws_vpc: Support `ipv6_netmask_length` values between `44` and `60` in increments of 4 ([#35614](https://github.com/hashicorp/terraform-provider-aws/issues/35614))
 * resource/aws_vpc_ipv6_cidr_block_association: Add `assign_generated_ipv6_cidr_block` and `ipv6_pool` arguments ([#27274](https://github.com/hashicorp/terraform-provider-aws/issues/27274))
