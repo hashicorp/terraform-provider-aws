@@ -675,12 +675,22 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 				switch tMapElem.Elem().Kind() {
 				case reflect.String:
 					from := vFrom.Interface().(map[string]map[string]string)
+					tflog.SubsystemTrace(ctx, subsystemName, "Flattening map", map[string]any{
+						logAttrKeySourceSize: len(from),
+					})
 					elements := make(map[string]attr.Value, len(from))
 					for k, v := range from {
 						innerElements := make(map[string]attr.Value, len(v))
 						for ik, iv := range v {
 							innerElements[ik] = types.StringValue(iv)
 						}
+						tflog.SubsystemTrace(ctx, subsystemName, "Flattening with NewMapValueOf", map[string]any{
+							logAttrKeySourcePath: sourcePath.AtMapKey(k).String(),
+							logAttrKeySourceType: fullTypeName(reflect.TypeOf(v)),
+							logAttrKeySourceSize: len(v),
+							logAttrKeyTargetPath: targetPath.AtMapKey(k).String(),
+							logAttrKeyTargetType: fullTypeName(reflect.TypeOf(innerElements)),
+						})
 						innerMap, d := fwtypes.NewMapValueOf[types.String](ctx, innerElements)
 						diags.Append(d...)
 						if diags.HasError() {
@@ -706,12 +716,22 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 
 				case reflect.Ptr:
 					from := vFrom.Interface().(map[string]map[string]*string)
+					tflog.SubsystemTrace(ctx, subsystemName, "Flattening map", map[string]any{
+						logAttrKeySourceSize: len(from),
+					})
 					elements := make(map[string]attr.Value, len(from))
 					for k, v := range from {
 						innerElements := make(map[string]attr.Value, len(v))
 						for ik, iv := range v {
 							innerElements[ik] = types.StringValue(*iv)
 						}
+						tflog.SubsystemTrace(ctx, subsystemName, "Flattening with NewMapValueOf", map[string]any{
+							logAttrKeySourcePath: sourcePath.AtMapKey(k).String(),
+							logAttrKeySourceType: fullTypeName(reflect.TypeOf(v)),
+							logAttrKeySourceSize: len(v),
+							logAttrKeyTargetPath: targetPath.AtMapKey(k).String(),
+							logAttrKeyTargetType: fullTypeName(reflect.TypeOf(innerElements)),
+						})
 						innerMap, d := fwtypes.NewMapValueOf[types.String](ctx, innerElements)
 						diags.Append(d...)
 						if diags.HasError() {
