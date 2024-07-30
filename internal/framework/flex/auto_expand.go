@@ -960,17 +960,20 @@ func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, sourcePat
 	f := reflect.ValueOf(from)
 	m := reflect.MakeMap(vTo.Type())
 	for i := 0; i < f.Len(); i++ {
-		sourcePath := sourcePath.AtListIndex(i)
-		ctx := tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
-		// Create a new target structure and walk its fields.
-		target := reflect.New(tElem)
-		diags.Append(autoFlexConvertStruct(ctx, sourcePath, f.Index(i).Interface(), targetPath, target.Interface(), expander)...)
+		key, d := blockKeyMap(f.Index(i).Interface())
+		diags.Append(d...)
 		if diags.HasError() {
 			return diags
 		}
 
-		key, d := blockKeyMap(f.Index(i).Interface())
-		diags.Append(d...)
+		sourcePath := sourcePath.AtListIndex(i)
+		targetPath := targetPath.AtMapKey(key.Interface().(string))
+		ctx := tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
+		ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
+
+		// Create a new target structure and walk its fields.
+		target := reflect.New(tElem)
+		diags.Append(autoFlexConvertStruct(ctx, sourcePath, f.Index(i).Interface(), targetPath, target.Interface(), expander)...)
 		if diags.HasError() {
 			return diags
 		}
