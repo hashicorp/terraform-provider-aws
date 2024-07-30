@@ -39,8 +39,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_timestreaminfluxdb_db_instance", name="Db Instance")
+// @FrameworkResource("aws_timestreaminfluxdb_db_instance", name="DB Instance")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb;timestreaminfluxdb.GetDbInstanceOutput")
 func newResourceDBInstance(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceDBInstance{}
 
@@ -351,7 +352,10 @@ func (r *resourceDBInstance) Create(ctx context.Context, req resource.CreateRequ
 
 	in := timestreaminfluxdb.CreateDbInstanceInput{}
 
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
+	option := func(o *flex.AutoFlexOptions) {
+		o.SetIgnoredFields()
+	}
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &in, option)...)
 
 	if resp.Diagnostics.HasError() {
 		return
