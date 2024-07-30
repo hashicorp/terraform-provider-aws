@@ -221,6 +221,10 @@ resource "aws_chatbot_slack_channel_configuration" "test" {
   iam_role_arn       = aws_iam_role.test.arn
   slack_channel_id   = %[2]q
   slack_team_id      = %[3]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, channelID, teamID)
 }
