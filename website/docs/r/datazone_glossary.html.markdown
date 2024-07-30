@@ -109,7 +109,6 @@ The following arguments are optional:
 * `description` - (Optional) Description of the glossary. Must have a length between 0 and 4096.
 * `status` - (Optional) Status of business glossary. Valid values are DISABLED and ENABLED.
 
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
